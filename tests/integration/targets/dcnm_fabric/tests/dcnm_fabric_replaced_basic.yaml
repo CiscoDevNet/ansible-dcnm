@@ -59,9 +59,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - fabric_name: "{{ fabric_name_1 }}"
-      - fabric_name: "{{ fabric_name_2 }}"
-      - fabric_name: "{{ fabric_name_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
 - debug:
     var: result
@@ -770,15 +770,15 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "fabric_name": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "fabric_name": "VXLAN_EVPN_MSD_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
 #                 "sequence_number": 2
 #             },
 #             {
-#                 "fabric_name": "LAN_CLASSIC_Fabric",
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
 #         ],
@@ -853,9 +853,9 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - fabric_name: "{{ fabric_name_1 }}"
-      - fabric_name: "{{ fabric_name_2 }}"
-      - fabric_name: "{{ fabric_name_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
 - debug:
     var: result
@@ -864,11 +864,11 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 3
-      - result.diff[0].fabric_name == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].sequence_number == 1
-      - result.diff[1].fabric_name == fabric_name_2
+      - result.diff[1].FABRIC_NAME == fabric_name_2
       - result.diff[1].sequence_number == 2
-      - result.diff[2].fabric_name == fabric_name_3
+      - result.diff[2].FABRIC_NAME == fabric_name_3
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
       - result.metadata[0].action == "delete"
