@@ -108,7 +108,7 @@ options:
                         description:
                         - Shared MAC address for all leafs (xxxx.xxxx.xxxx)
                         required: true
-                        type: macAddress
+                        type: str
                     ANYCAST_LB_ID:
                         default: 10
                         description:
@@ -120,7 +120,7 @@ options:
                         description:
                         - Anycast or Phantom RP IP Address Range
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     AUTO_SYMMETRIC_DEFAULT_VRF:
                         default: 0
                         description:
@@ -297,7 +297,7 @@ options:
                         description:
                         - Address range to assign P2P Interfabric Connections
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     DCI_SUBNET_TARGET_MASK:
                         default: 30
                         description:
@@ -348,7 +348,7 @@ options:
                         description:
                         - End Address For Switch POAP
                         required: true
-                        type: ipv4
+                        type: str
                     DHCP_IPV6_ENABLE:
                         choices:
                         - DHCPv4
@@ -363,20 +363,20 @@ options:
                         description:
                         - Start Address For Switch POAP
                         required: true
-                        type: ipv4
+                        type: str
                     DNS_SERVER_IP_LIST:
                         default: ''
                         description:
                         - Comma separated list of IP Addresses(v4/v6)
                         required: false
-                        type: ipAddressList
+                        type: str
                     DNS_SERVER_VRF:
                         default: ''
                         description:
                         - One VRF for all DNS servers or a comma separated list of VRFs, one
                             per DNS server
                         required: false
-                        type: string[]
+                        type: str
                     ENABLE_AAA:
                         default: 0
                         description:
@@ -462,7 +462,7 @@ options:
                         description:
                         - Policy-Based Routing (PBR) or Enhanced PBR (ePBR)
                         required: false
-                        type: enum
+                        type: str
                     EXTRA_CONF_INTRA_LINKS:
                         default: ''
                         description:
@@ -574,7 +574,7 @@ options:
                         description:
                         - Comma separated list of IPv4 Addresses (Max 3)
                         required: true
-                        type: ipAddressList
+                        type: str
                     INBAND_MGMT:
                         default: 0
                         description:
@@ -644,19 +644,19 @@ options:
                         description:
                         - 'Overlay Network Identifier Range '
                         required: true
-                        type: integerRange
+                        type: str
                     L3VNI_MCAST_GROUP:
                         default: 239.1.1.0
                         description:
                         - Default Underlay Multicast group IP assigned for every overlay VRF.
                         required: true
-                        type: ipv4
+                        type: str
                     L3_PARTITION_ID_RANGE:
                         default: 50000-59000
                         description:
                         - 'Overlay VRF Identifier Range '
                         required: true
-                        type: integerRange
+                        type: str
                     LINK_STATE_ROUTING:
                         choices:
                         - ospf
@@ -677,43 +677,43 @@ options:
                         description:
                         - Typically Loopback0 IPv6 Address Range
                         required: true
-                        type: ipv6_subnet
+                        type: str
                     LOOPBACK0_IP_RANGE:
                         default: 10.2.0.0/22
                         description:
                         - Typically Loopback0 IP Address Range
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     LOOPBACK1_IPV6_RANGE:
                         default: fd00::a03:0/118
                         description:
                         - Typically Loopback1 and Anycast Loopback IPv6 Address Range
                         required: true
-                        type: ipv6_subnet
+                        type: str
                     LOOPBACK1_IP_RANGE:
                         default: 10.3.0.0/22
                         description:
                         - Typically Loopback1 IP Address Range
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     MACSEC_ALGORITHM:
                         default: AES_128_CMAC
                         description:
                         - AES_128_CMAC or AES_256_CMAC
                         required: true
-                        type: enum
+                        type: str
                     MACSEC_CIPHER_SUITE:
                         default: GCM-AES-XPN-256
                         description:
                         - Configure Cipher Suite
                         required: true
-                        type: enum
+                        type: str
                     MACSEC_FALLBACK_ALGORITHM:
                         default: AES_128_CMAC
                         description:
                         - AES_128_CMAC or AES_256_CMAC
                         required: true
-                        type: enum
+                        type: str
                     MACSEC_FALLBACK_KEY_STRING:
                         default: ''
                         description:
@@ -737,7 +737,7 @@ options:
                         description:
                         - Default Gateway For Management VRF On The Switch
                         required: true
-                        type: ipv4
+                        type: str
                     MGMT_PREFIX:
                         default: 24
                         description:
@@ -767,57 +767,57 @@ options:
                         description:
                         - Used for VXLAN to MPLS SR/LDP Handoff
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     MST_INSTANCE_RANGE:
                         default: 0
                         description:
                         - 'MST instance range, Example: 0-3,5,7-9, Default is 0'
                         required: true
-                        type: integerRange
+                        type: str
                     MULTICAST_GROUP_SUBNET:
                         default: 239.1.1.0/25
                         description:
                         - Multicast pool prefix between 8 to 30. A multicast group IP from
                             this pool is used for BUM traffic for each overlay network.
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     NETFLOW_EXPORTER_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Exporters
                         required: true
-                        type: structureArray
+                        type: list
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
                         required: true
-                        type: structureArray
+                        type: list
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Records
                         required: true
-                        type: structureArray
+                        type: list
                     NETWORK_VLAN_RANGE:
                         default: 2300-2999
                         description:
                         - 'Per Switch Overlay Network VLAN Range '
                         required: true
-                        type: integerRange
+                        type: str
                     NTP_SERVER_IP_LIST:
                         default: ''
                         description:
                         - Comma separated list of IP Addresses(v4/v6)
                         required: false
-                        type: ipAddressList
+                        type: str
                     NTP_SERVER_VRF:
                         default: ''
                         description:
                         - One VRF for all NTP servers or a comma separated list of VRFs, one
                             per NTP server
                         required: false
-                        type: string[]
+                        type: str
                     NVE_LB_ID:
                         default: 1
                         description:
@@ -841,7 +841,7 @@ options:
                         description:
                         - 'Per switch tracked object ID Range '
                         required: false
-                        type: integerRange
+                        type: str
                     OSPF_AREA_ID:
                         default: 0.0.0.0
                         description:
@@ -871,7 +871,7 @@ options:
                         description:
                         - VRF/Network configuration using config-profile or CLI
                         required: false
-                        type: enum
+                        type: str
                     PER_VRF_LOOPBACK_AUTO_PROVISION:
                         default: 0
                         description:
@@ -884,7 +884,7 @@ options:
                         - Prefix pool to assign IP addresses to loopbacks on VTEPs on a per
                             VRF basis
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     PHANTOM_RP_LB_ID1:
                         default: 2
                         description:
@@ -963,13 +963,13 @@ options:
                         description:
                         - No description available
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     ROUTE_MAP_SEQUENCE_NUMBER_RANGE:
                         default: 1-65534
                         description:
                         - No description available
                         required: true
-                        type: integerRange
+                        type: str
                     RP_COUNT:
                         choices:
                         - 2
@@ -1008,13 +1008,13 @@ options:
                         description:
                         - Core-facing Interface list on Seed Switch (e.g. e1/1-30,e1/32)
                         required: false
-                        type: interfaceRange
+                        type: str
                     SERVICE_NETWORK_VLAN_RANGE:
                         default: 3000-3199
                         description:
                         - 'Per Switch Overlay Service Network VLAN Range '
                         required: true
-                        type: integerRange
+                        type: str
                     SITE_ID:
                         default: ''
                         description:
@@ -1026,7 +1026,7 @@ options:
                         description:
                         - 'Per switch SLA ID Range '
                         required: false
-                        type: integerRange
+                        type: str
                     SNMP_SERVER_HOST_TRAP:
                         default: 1
                         description:
@@ -1038,7 +1038,7 @@ options:
                         description:
                         - Core-facing Interface list on all Spines (e.g. e1/1-30,e1/32)
                         required: false
-                        type: interfaceRange
+                        type: str
                     STATIC_UNDERLAY_IP_ALLOC:
                         default: 0
                         description:
@@ -1050,7 +1050,7 @@ options:
                         description:
                         - Bridge priority for the spanning tree in increments of 4096
                         required: true
-                        type: enum
+                        type: str
                     STP_ROOT_OPTION:
                         choices:
                         - rpvst+
@@ -1068,7 +1068,7 @@ options:
                         description:
                         - 'Vlan range, Example: 1,3-5,7,9-11, Default is 1-3967'
                         required: true
-                        type: integerRange
+                        type: str
                     STRICT_CC_MODE:
                         default: 0
                         description:
@@ -1081,13 +1081,13 @@ options:
                         description:
                         - 'Per Border Dot1q Range For VRF Lite Connectivity '
                         required: true
-                        type: integerRange
+                        type: str
                     SUBNET_RANGE:
                         default: 10.4.0.0/16
                         description:
                         - Address range to assign Numbered and Peer Link SVI IPs
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     SUBNET_TARGET_MASK:
                         choices:
                         - 30
@@ -1102,21 +1102,21 @@ options:
                         description:
                         - Comma separated list of IP Addresses(v4/v6)
                         required: false
-                        type: ipAddressList
+                        type: str
                     SYSLOG_SERVER_VRF:
                         default: ''
                         description:
                         - One VRF for all Syslog servers or a comma separated list of VRFs,
                             one per Syslog server
                         required: false
-                        type: string[]
+                        type: str
                     SYSLOG_SEV:
                         default: ''
                         description:
                         - 'Comma separated list of Syslog severity values, one per Syslog
                             server '
                         required: false
-                        type: string[]
+                        type: str
                     TCAM_ALLOCATION:
                         default: 1
                         description:
@@ -1141,13 +1141,13 @@ options:
                         description:
                         - Must be a subset of IGP/BGP Loopback Prefix Pool
                         required: true
-                        type: ipv4
+                        type: str
                     UNNUM_DHCP_START:
                         default: ''
                         description:
                         - Must be a subset of IGP/BGP Loopback Prefix Pool
                         required: true
-                        type: ipv4
+                        type: str
                     USE_LINK_LOCAL:
                         default: 1
                         description:
@@ -1159,7 +1159,7 @@ options:
                         description:
                         - IPv6 Address range to assign Numbered and Peer Link SVI IPs
                         required: true
-                        type: ipv6_subnet
+                        type: str
                     V6_SUBNET_TARGET_MASK:
                         choices:
                         - 126
@@ -1186,7 +1186,7 @@ options:
                         description:
                         - vPC Domain id range to use for new pairings
                         required: false
-                        type: integerRange
+                        type: str
                     VPC_ENABLE_IPv6_ND_SYNC:
                         default: 1
                         description:
@@ -1207,13 +1207,13 @@ options:
                         description:
                         - No description available
                         required: false
-                        type: integerRange
+                        type: str
                     VPC_PEER_LINK_VLAN:
                         default: 3600
                         description:
                         - 'VLAN range for vPC Peer Link SVI '
                         required: true
-                        type: integerRange
+                        type: str
                     VRF_LITE_AUTOCONFIG:
                         choices:
                         - Manual
@@ -1232,7 +1232,7 @@ options:
                         description:
                         - 'Per Switch Overlay VRF VLAN Range '
                         required: true
-                        type: integerRange
+                        type: str
                     default_network:
                         choices:
                         - Default_Network_Universal
@@ -1334,7 +1334,7 @@ options:
                         description:
                         - AES_128_CMAC or AES_256_CMAC
                         required: true
-                        type: enum
+                        type: str
                     CLOUDSEC_AUTOCONFIG:
                         default: 0
                         description:
@@ -1346,7 +1346,7 @@ options:
                         description:
                         - If set to strict, data across site must be encrypted.
                         required: true
-                        type: enum
+                        type: str
                     CLOUDSEC_KEY_STRING:
                         default: ''
                         description:
@@ -1364,7 +1364,7 @@ options:
                         description:
                         - Address range to assign P2P DCI Links
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     DCI_SUBNET_TARGET_MASK:
                         default: 30
                         description:
@@ -1420,19 +1420,19 @@ options:
                         description:
                         - 'Overlay Network Identifier Range '
                         required: true
-                        type: integerRange
+                        type: str
                     L3_PARTITION_ID_RANGE:
                         default: 50000-59000
                         description:
                         - 'Overlay VRF Identifier Range '
                         required: true
-                        type: integerRange
+                        type: str
                     LOOPBACK100_IP_RANGE:
                         default: 10.10.0.0/24
                         description:
                         - Typically Loopback100 IP Address Range
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     MS_IFC_BGP_AUTH_KEY_TYPE:
                         choices:
                         - 3
@@ -1473,7 +1473,7 @@ options:
                             on Route-Server for Multi-Site EVPN peering with BGWs), e.g. 128.89.0.1,
                             128.89.0.2
                         required: false
-                        type: ipAddressList
+                        type: str
                     RS_ROUTING_TAG:
                         default: 54321
                         description:
@@ -1599,7 +1599,7 @@ options:
                         description:
                         - End Address For Switch POAP
                         required: true
-                        type: ipv4
+                        type: str
                     DHCP_IPV6_ENABLE:
                         choices:
                         - DHCPv4
@@ -1614,7 +1614,7 @@ options:
                         description:
                         - Start Address For Switch POAP
                         required: true
-                        type: ipv4
+                        type: str
                     ENABLE_AAA:
                         default: 0
                         description:
@@ -1681,7 +1681,7 @@ options:
                         description:
                         - Default Gateway For Management VRF On The Switch
                         required: true
-                        type: ipv4
+                        type: str
                     MGMT_PREFIX:
                         default: 24
                         description:
@@ -1711,31 +1711,31 @@ options:
                         description:
                         - MPLS Loopback IP Address Range
                         required: true
-                        type: ipv4_subnet
+                        type: str
                     NETFLOW_EXPORTER_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Exporters
                         required: true
-                        type: structureArray
+                        type: list
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
                         required: true
-                        type: structureArray
+                        type: list
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Records
                         required: true
-                        type: structureArray
+                        type: list
                     NETFLOW_SAMPLER_LIST:
                         default: ''
                         description:
                         - One or multiple netflow Samplers. Applicable to N7K only
                         required: false
-                        type: structureArray
+                        type: list
                     NXAPI_HTTPS_PORT:
                         default: 443
                         description:
@@ -1787,7 +1787,7 @@ options:
                         description:
                         - 'Per Border Dot1q Range For VRF Lite Connectivity '
                         required: true
-                        type: integerRange
+                        type: str
                     enableRealTimeBackup:
                         default: 0
                         description:
