@@ -72,7 +72,7 @@ options:
                 - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
                 suboptions:
                     AAA_REMOTE_IP_ENABLED:
-                        default: 0
+                        default: false
                         description:
                         - Enable only, when IP Authorization is enabled in the AAA Server
                         required: false
@@ -84,20 +84,20 @@ options:
                         required: false
                         type: str
                     ADVERTISE_PIP_BGP:
-                        default: 0
+                        default: false
                         description:
                         - For Primary VTEP IP Advertisement As Next-Hop Of Prefix Routes
                         required: false
                         type: bool
                     ADVERTISE_PIP_ON_BORDER:
-                        default: 1
+                        default: true
                         description:
                         - Enable advertise-pip on vPC borders and border gateways only. Applicable
                             only when vPC advertise-pip is not enabled
                         required: false
                         type: bool
                     ANYCAST_BGW_ADVERTISE_PIP:
-                        default: 0
+                        default: false
                         description:
                         - To advertise Anycast Border Gateway PIP as VTEP. Effective on MSD
                             fabric Recalculate Config
@@ -122,7 +122,7 @@ options:
                         required: false
                         type: str
                     AUTO_SYMMETRIC_DEFAULT_VRF:
-                        default: 0
+                        default: false
                         description:
                         - Whether to auto generate Default VRF interface and BGP peering configuration
                             on managed neighbor devices. If set, auto created VRF Lite IFC
@@ -130,7 +130,7 @@ options:
                         required: false
                         type: bool
                     AUTO_SYMMETRIC_VRF_LITE:
-                        default: 0
+                        default: false
                         description:
                         - Whether to auto generate VRF LITE sub-interface and BGP peering
                             configuration on managed neighbor devices. If set, auto created
@@ -138,7 +138,7 @@ options:
                         required: false
                         type: bool
                     AUTO_UNIQUE_VRF_LITE_IP_PREFIX:
-                        default: 0
+                        default: false
                         description:
                         - When enabled, IP prefix allocated to the VRF LITE IFC is not reused
                             on VRF extension over VRF LITE IFC. Instead, unique IP Subnet
@@ -146,7 +146,7 @@ options:
                         required: false
                         type: bool
                     AUTO_VRFLITE_IFC_DEFAULT_VRF:
-                        default: 0
+                        default: false
                         description:
                         - Whether to auto generate Default VRF interface and BGP peering configuration
                             on VRF LITE IFC auto deployment. If set, auto created VRF Lite
@@ -161,7 +161,7 @@ options:
                         required: false
                         type: str
                     BFD_AUTH_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Valid for P2P Interfaces only
                         required: false
@@ -179,31 +179,31 @@ options:
                         required: false
                         type: int
                     BFD_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Valid for IPv4 Underlay only
                         required: false
                         type: bool
                     BFD_IBGP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
                         type: bool
                     BFD_ISIS_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
                         type: bool
                     BFD_OSPF_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
                         type: bool
                     BFD_PIM_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -216,7 +216,7 @@ options:
                         required: false
                         type: str
                     BGP_AUTH_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -249,7 +249,7 @@ options:
                         required: false
                         type: str
                     BOOTSTRAP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Automatic IP Assignment For POAP
                         required: false
@@ -267,14 +267,14 @@ options:
                         required: false
                         type: str
                     BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS:
-                        default: 0
+                        default: false
                         description:
                         - Enable to skip overlay network interface attachments for Brownfield
                             and Host Port Resync cases
                         required: false
                         type: bool
                     CDP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Enable CDP on management interface
                         required: false
@@ -338,7 +338,7 @@ options:
                         required: false
                         type: str
                     DHCP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Automatic IP Assignment For POAP From Local DHCP Server
                         required: false
@@ -378,81 +378,81 @@ options:
                         required: false
                         type: str
                     ENABLE_AAA:
-                        default: 0
+                        default: false
                         description:
                         - Include AAA configs from Manageability tab during device bootup
                         required: false
                         type: bool
                     ENABLE_DEFAULT_QUEUING_POLICY:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
                         type: bool
                     ENABLE_FABRIC_VPC_DOMAIN_ID:
-                        default: 0
+                        default: false
                         description:
                         - (Not Recommended)
                         required: false
                         type: bool
                     ENABLE_MACSEC:
-                        default: 0
+                        default: false
                         description:
                         - Enable MACsec in the fabric
                         required: false
                         type: bool
                     ENABLE_NETFLOW:
-                        default: 0
+                        default: false
                         description:
                         - Enable Netflow on VTEPs
                         required: false
                         type: bool
                     ENABLE_NGOAM:
-                        default: 1
+                        default: true
                         description:
                         - Enable the Next Generation (NG) OAM feature for all switches in
                             the fabric to aid in trouble-shooting VXLAN EVPN fabrics
                         required: false
                         type: bool
                     ENABLE_NXAPI:
-                        default: 1
+                        default: true
                         description:
                         - Enable HTTPS NX-API
                         required: false
                         type: bool
                     ENABLE_NXAPI_HTTP:
-                        default: 1
+                        default: true
                         description:
                         - No description available
                         required: false
                         type: bool
                     ENABLE_PBR:
-                        default: 0
+                        default: false
                         description:
                         - When ESR option is ePBR, enable ePBR will enable pbr, sla sender
                             and epbr features on the switch
                         required: false
                         type: bool
                     ENABLE_PVLAN:
-                        default: 0
+                        default: false
                         description:
                         - Enable PVLAN on switches except spines and super spines
                         required: false
                         type: bool
                     ENABLE_TENANT_DHCP:
-                        default: 1
+                        default: true
                         description:
                         - No description available
                         required: false
                         type: bool
                     ENABLE_TRM:
-                        default: 0
+                        default: false
                         description:
                         - For Overlay Multicast Support In VXLAN Fabrics
                         required: false
                         type: bool
                     ENABLE_VPC_PEER_LINK_NATIVE_VLAN:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -515,7 +515,7 @@ options:
                         required: false
                         type: int
                     FABRIC_VPC_QOS:
-                        default: 0
+                        default: false
                         description:
                         - Qos on spines for guaranteed delivery of vPC Fabric Peering communication
                         required: false
@@ -527,7 +527,7 @@ options:
                         required: false
                         type: str
                     FEATURE_PTP:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -548,7 +548,7 @@ options:
                         required: false
                         type: int
                     HOST_INTF_ADMIN_STATE:
-                        default: 1
+                        default: true
                         description:
                         - No description available
                         required: false
@@ -576,13 +576,13 @@ options:
                         required: false
                         type: str
                     INBAND_MGMT:
-                        default: 0
+                        default: false
                         description:
                         - Manage switches with only Inband connectivity
                         required: false
                         type: bool
                     ISIS_AUTH_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -621,13 +621,13 @@ options:
                         required: false
                         type: int
                     ISIS_OVERLOAD_ENABLE:
-                        default: 1
+                        default: true
                         description:
                         - When enabled, set the overload bit for an elapsed time after a reload
                         required: false
                         type: bool
                     ISIS_P2P_ENABLE:
-                        default: 1
+                        default: true
                         description:
                         - This will enable network point-to-point on fabric interfaces which
                             are numbered
@@ -751,7 +751,7 @@ options:
                         required: false
                         type: int
                     MPLS_HANDOFF:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -852,7 +852,7 @@ options:
                         required: false
                         type: str
                     OSPF_AUTH_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -876,7 +876,7 @@ options:
                         required: false
                         type: str
                     PER_VRF_LOOPBACK_AUTO_PROVISION:
-                        default: 0
+                        default: false
                         description:
                         - Auto provision a loopback on a VTEP on VRF attachment
                         required: false
@@ -913,7 +913,7 @@ options:
                         required: false
                         type: int
                     PIM_HELLO_AUTH_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Valid for IPv4 Underlay only
                         required: false
@@ -925,7 +925,7 @@ options:
                         required: false
                         type: str
                     PM_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -1031,7 +1031,7 @@ options:
                         required: false
                         type: str
                     SNMP_SERVER_HOST_TRAP:
-                        default: 1
+                        default: true
                         description:
                         - Configure NDFC as a receiver for SNMP traps
                         required: false
@@ -1043,7 +1043,7 @@ options:
                         required: false
                         type: str
                     STATIC_UNDERLAY_IP_ALLOC:
-                        default: 0
+                        default: false
                         description:
                         - Checking this will disable Dynamic Underlay IP Address Allocations
                         required: false
@@ -1073,7 +1073,7 @@ options:
                         required: false
                         type: str
                     STRICT_CC_MODE:
-                        default: 0
+                        default: false
                         description:
                         - Enable bi-directional compliance checks to flag additional configs
                             in the running config that are not in the intent/expected config
@@ -1121,14 +1121,14 @@ options:
                         required: false
                         type: str
                     TCAM_ALLOCATION:
-                        default: 1
+                        default: true
                         description:
                         - TCAM commands are automatically generated for VxLAN and vPC Fabric
                             Peering when Enabled
                         required: false
                         type: bool
                     UNDERLAY_IS_V6:
-                        default: 0
+                        default: false
                         description:
                         - If not enabled, IPv4 underlay is used
                         required: false
@@ -1152,7 +1152,7 @@ options:
                         required: false
                         type: str
                     USE_LINK_LOCAL:
-                        default: 1
+                        default: true
                         description:
                         - If not enabled, Spine-Leaf interfaces will use global IPv6 addresses
                         required: false
@@ -1191,7 +1191,7 @@ options:
                         required: false
                         type: str
                     VPC_ENABLE_IPv6_ND_SYNC:
-                        default: 1
+                        default: true
                         description:
                         - Enable IPv6 ND synchronization between vPC peers
                         required: false
@@ -1339,7 +1339,7 @@ options:
                         required: false
                         type: str
                     CLOUDSEC_AUTOCONFIG:
-                        default: 0
+                        default: false
                         description:
                         - Auto Config CloudSec on Border Gateways
                         required: false
@@ -1382,31 +1382,31 @@ options:
                         required: false
                         type: int
                     ENABLE_BGP_BFD:
-                        default: 0
+                        default: false
                         description:
                         - For auto-created Multi-Site Underlay IFCs
                         required: false
                         type: bool
                     ENABLE_BGP_LOG_NEIGHBOR_CHANGE:
-                        default: 0
+                        default: false
                         description:
                         - For auto-created Multi-Site Underlay IFCs
                         required: false
                         type: bool
                     ENABLE_BGP_SEND_COMM:
-                        default: 0
+                        default: false
                         description:
                         - For auto-created Multi-Site Underlay IFCs
                         required: false
                         type: bool
                     ENABLE_PVLAN:
-                        default: 0
+                        default: false
                         description:
                         - Enable PVLAN on MSD and its child fabrics
                         required: false
                         type: bool
                     ENABLE_RS_REDIST_DIRECT:
-                        default: 0
+                        default: false
                         description:
                         - For auto-created Multi-Site overlay IFCs in Route Servers. Applicable
                             only when Multi-Site Overlay IFC Deployment Method is Centralized_To_Route_Server.
@@ -1452,7 +1452,7 @@ options:
                         required: false
                         type: str
                     MS_IFC_BGP_PASSWORD_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - eBGP password for Multi-Site underlay/overlay IFCs
                         required: false
@@ -1464,7 +1464,7 @@ options:
                         required: false
                         type: int
                     MS_UNDERLAY_AUTOCONFIG:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -1485,7 +1485,7 @@ options:
                         required: false
                         type: int
                     TOR_AUTO_DEPLOY:
-                        default: 0
+                        default: false
                         description:
                         - Enables Overlay VLANs on uplink between ToRs and Leafs
                         required: false
@@ -1556,7 +1556,7 @@ options:
                 elements: dict
                 suboptions:
                     AAA_REMOTE_IP_ENABLED:
-                        default: 0
+                        default: false
                         description:
                         - Enable only, when IP Authorization is enabled in the AAA Server
                         required: false
@@ -1574,7 +1574,7 @@ options:
                         required: false
                         type: str
                     BOOTSTRAP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Automatic IP Assignment For POAP
                         required: false
@@ -1586,13 +1586,13 @@ options:
                         required: false
                         type: str
                     CDP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Enable CDP on management interface
                         required: false
                         type: bool
                     DHCP_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - Automatic IP Assignment For POAP From Local DHCP Server
                         required: false
@@ -1619,25 +1619,25 @@ options:
                         required: false
                         type: str
                     ENABLE_AAA:
-                        default: 0
+                        default: false
                         description:
                         - Include AAA configs from Advanced tab during device bootup
                         required: false
                         type: bool
                     ENABLE_NETFLOW:
-                        default: 0
+                        default: false
                         description:
                         - Enable Netflow on VTEPs
                         required: false
                         type: bool
                     ENABLE_NXAPI:
-                        default: 0
+                        default: false
                         description:
                         - Enable HTTPS NX-API
                         required: false
                         type: bool
                     ENABLE_NXAPI_HTTP:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -1655,26 +1655,26 @@ options:
                         required: false
                         type: str
                     FEATURE_PTP:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
                         type: bool
                     INBAND_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - 'Enable POAP over Inband Interface (Pre-req: Inband Mgmt Knob should
                             be Enabled)'
                         required: false
                         type: bool
                     INBAND_MGMT:
-                        default: 0
+                        default: false
                         description:
                         - Import switches with inband connectivity
                         required: false
                         type: bool
                     IS_READ_ONLY:
-                        default: 1
+                        default: true
                         description:
                         - If enabled, fabric is only monitored. No configuration will be deployed
                         required: false
@@ -1698,7 +1698,7 @@ options:
                         required: false
                         type: int
                     MPLS_HANDOFF:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -1756,7 +1756,7 @@ options:
                         required: false
                         type: int
                     PM_ENABLE:
-                        default: 0
+                        default: false
                         description:
                         - No description available
                         required: false
@@ -1784,7 +1784,7 @@ options:
                         required: false
                         type: int
                     SNMP_SERVER_HOST_TRAP:
-                        default: 1
+                        default: true
                         description:
                         - Configure NDFC as a receiver for SNMP traps
                         required: false
@@ -1796,14 +1796,14 @@ options:
                         required: false
                         type: str
                     enableRealTimeBackup:
-                        default: 0
+                        default: false
                         description:
                         - Backup hourly only if there is any config deployment since last
                             backup
                         required: false
                         type: bool
                     enableScheduledBackup:
-                        default: 0
+                        default: false
                         description:
                         - Backup at the specified time
                         required: false

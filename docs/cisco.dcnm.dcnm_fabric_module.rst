@@ -142,10 +142,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable only, when IP Authorization is enabled in the AAA Server</div>
@@ -200,10 +199,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Automatic IP Assignment For POAP</div>
@@ -240,10 +238,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable CDP on management interface</div>
@@ -262,10 +259,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Automatic IP Assignment For POAP From Local DHCP Server</div>
@@ -341,10 +337,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Include AAA configs from Advanced tab during device bootup</div>
@@ -363,10 +358,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable Netflow on VTEPs</div>
@@ -385,10 +379,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable HTTPS NX-API</div>
@@ -407,10 +400,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -429,10 +421,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Backup hourly only if there is any config deployment since last backup</div>
@@ -451,10 +442,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Backup at the specified time</div>
@@ -509,10 +499,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -531,10 +520,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable POAP over Inband Interface (Pre-req: Inband Mgmt Knob should be Enabled)</div>
@@ -553,10 +541,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Import switches with inband connectivity</div>
@@ -576,9 +563,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>If enabled, fabric is only monitored. No configuration will be deployed</div>
@@ -651,10 +637,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -821,10 +806,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -920,9 +904,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>Configure NDFC as a receiver for SNMP traps</div>
@@ -1073,10 +1056,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Auto Config CloudSec on Border Gateways</div>
@@ -1264,10 +1246,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>For auto-created Multi-Site Underlay IFCs</div>
@@ -1286,10 +1267,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>For auto-created Multi-Site Underlay IFCs</div>
@@ -1308,10 +1288,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>For auto-created Multi-Site Underlay IFCs</div>
@@ -1330,10 +1309,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable PVLAN on MSD and its child fabrics</div>
@@ -1352,10 +1330,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>For auto-created Multi-Site overlay IFCs in Route Servers. Applicable only when Multi-Site Overlay IFC Deployment Method is Centralized_To_Route_Server.</div>
@@ -1507,10 +1484,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>eBGP password for Multi-Site underlay/overlay IFCs</div>
@@ -1547,10 +1523,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -1643,10 +1618,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enables Overlay VLANs on uplink between ToRs and Leafs</div>
@@ -1706,10 +1680,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable only, when IP Authorization is enabled in the AAA Server</div>
@@ -1746,10 +1719,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>For Primary VTEP IP Advertisement As Next-Hop Of Prefix Routes</div>
@@ -1769,9 +1741,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>Enable advertise-pip on vPC borders and border gateways only. Applicable only when vPC advertise-pip is not enabled</div>
@@ -1790,10 +1761,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>To advertise Anycast Border Gateway PIP as VTEP. Effective on MSD fabric Recalculate Config</div>
@@ -1866,10 +1836,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Whether to auto generate Default VRF interface and BGP peering configuration on managed neighbor devices. If set, auto created VRF Lite IFC links will have Auto Deploy Default VRF for Peer enabled.</div>
@@ -1888,10 +1857,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Whether to auto generate VRF LITE sub-interface and BGP peering configuration on managed neighbor devices. If set, auto created VRF Lite IFC links will have Auto Deploy for Peer enabled.</div>
@@ -1910,10 +1878,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>When enabled, IP prefix allocated to the VRF LITE IFC is not reused on VRF extension over VRF LITE IFC. Instead, unique IP Subnet is allocated for each VRF extension over VRF LITE IFC.</div>
@@ -1932,10 +1899,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Whether to auto generate Default VRF interface and BGP peering configuration on VRF LITE IFC auto deployment. If set, auto created VRF Lite IFC links will have Auto Deploy Default VRF enabled.</div>
@@ -1972,10 +1938,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Valid for P2P Interfaces only</div>
@@ -2030,10 +1995,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Valid for IPv4 Underlay only</div>
@@ -2052,10 +2016,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2074,10 +2037,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2096,10 +2058,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2118,10 +2079,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2158,10 +2118,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2255,10 +2214,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Automatic IP Assignment For POAP</div>
@@ -2313,10 +2271,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable to skip overlay network interface attachments for Brownfield and Host Port Resync cases</div>
@@ -2335,10 +2292,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable CDP on management interface</div>
@@ -2557,10 +2513,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Automatic IP Assignment For POAP From Local DHCP Server</div>
@@ -2672,10 +2627,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Include AAA configs from Manageability tab during device bootup</div>
@@ -2694,10 +2648,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2716,10 +2669,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>(Not Recommended)</div>
@@ -2738,10 +2690,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable MACsec in the fabric</div>
@@ -2760,10 +2711,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable Netflow on VTEPs</div>
@@ -2783,9 +2733,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>Enable the Next Generation (NG) OAM feature for all switches in the fabric to aid in trouble-shooting VXLAN EVPN fabrics</div>
@@ -2805,9 +2754,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>Enable HTTPS NX-API</div>
@@ -2827,9 +2775,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2848,10 +2795,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>When ESR option is ePBR, enable ePBR will enable pbr, sla sender and epbr features on the switch</div>
@@ -2870,10 +2816,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable PVLAN on switches except spines and super spines</div>
@@ -2893,9 +2838,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -2914,10 +2858,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>For Overlay Multicast Support In VXLAN Fabrics</div>
@@ -2936,10 +2879,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -3167,10 +3109,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Qos on spines for guaranteed delivery of vPC Fabric Peering communication</div>
@@ -3207,10 +3148,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -3269,9 +3209,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -3344,10 +3283,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Manage switches with only Inband connectivity</div>
@@ -3366,10 +3304,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -3482,9 +3419,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>When enabled, set the overload bit for an elapsed time after a reload</div>
@@ -3504,9 +3440,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>This will enable network point-to-point on fabric interfaces which are numbered</div>
@@ -3870,10 +3805,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -4185,10 +4119,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -4261,10 +4194,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Auto provision a loopback on a VTEP on VRF attachment</div>
@@ -4373,10 +4305,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Valid for IPv4 Underlay only</div>
@@ -4413,10 +4344,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>No description available</div>
@@ -4722,9 +4652,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>Configure NDFC as a receiver for SNMP traps</div>
@@ -4761,10 +4690,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Checking this will disable Dynamic Underlay IP Address Allocations</div>
@@ -4841,10 +4769,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>Enable bi-directional compliance checks to flag additional configs in the running config that are not in the intent/expected config</div>
@@ -4975,9 +4902,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>TCAM commands are automatically generated for VxLAN and vPC Fabric Peering when Enabled</div>
@@ -4996,10 +4922,9 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li>no</li>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
                                     <li>yes</li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">0</div>
                 </td>
                 <td>
                         <div>If not enabled, IPv4 underlay is used</div>
@@ -5073,9 +4998,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>If not enabled, Spine-Leaf interfaces will use global IPv6 addresses</div>
@@ -5188,9 +5112,8 @@ Parameters
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
                                     <li>no</li>
-                                    <li>yes</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
                         </ul>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
                 </td>
                 <td>
                         <div>Enable IPv6 ND synchronization between vPC peers</div>
