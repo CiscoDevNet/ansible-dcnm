@@ -113,8 +113,6 @@ options:
                         default: 10
                         description:
                         - 'Used for vPC Peering in VXLANv6 Fabrics '
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     ANYCAST_RP_IP_RANGE:
@@ -242,8 +240,6 @@ options:
                         default: 0
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     BOOTSTRAP_CONF:
@@ -306,8 +302,6 @@ options:
                         default: 30
                         description:
                         - No description available
-                        max: 31
-                        min: 8
                         required: true
                         type: int
                     DEFAULT_QUEUING_POLICY_CLOUDSCALE:
@@ -506,8 +500,6 @@ options:
                         default: 9216
                         description:
                         - . Must be an even number
-                        max: 9216
-                        min: 576
                         required: true
                         type: int
                     FABRIC_NAME:
@@ -553,8 +545,6 @@ options:
                         default: 180
                         description:
                         - NVE Source Inteface HoldDown Time  in seconds
-                        max: 1500
-                        min: 1
                         required: false
                         type: int
                     HOST_INTF_ADMIN_STATE:
@@ -607,8 +597,6 @@ options:
                         default: 127
                         description:
                         - No description available
-                        max: 65535
-                        min: 0
                         required: true
                         type: int
                     ISIS_AUTH_KEYCHAIN_NAME:
@@ -649,16 +637,12 @@ options:
                         default: 9216
                         description:
                         - . Must be an even number
-                        max: 9216
-                        min: 1500
                         required: true
                         type: int
                     L2_SEGMENT_ID_RANGE:
                         default: 30000-49000
                         description:
                         - 'Overlay Network Identifier Range '
-                        max: 16777214
-                        min: 1
                         required: true
                         type: integerRange
                     L3VNI_MCAST_GROUP:
@@ -671,8 +655,6 @@ options:
                         default: 50000-59000
                         description:
                         - 'Overlay VRF Identifier Range '
-                        max: 16777214
-                        min: 1
                         required: true
                         type: integerRange
                     LINK_STATE_ROUTING:
@@ -760,16 +742,12 @@ options:
                         default: 24
                         description:
                         - No description available
-                        max: 30
-                        min: 8
                         required: true
                         type: int
                     MGMT_V6PREFIX:
                         default: 64
                         description:
                         - No description available
-                        max: 126
-                        min: 64
                         required: false
                         type: int
                     MPLS_HANDOFF:
@@ -782,8 +760,6 @@ options:
                         default: 101
                         description:
                         - 'Used for VXLAN to MPLS SR/LDP Handoff '
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     MPLS_LOOPBACK_IP_RANGE:
@@ -827,8 +803,6 @@ options:
                         default: 2300-2999
                         description:
                         - 'Per Switch Overlay Network VLAN Range '
-                        max: 4094
-                        min: 2
                         required: true
                         type: integerRange
                     NTP_SERVER_IP_LIST:
@@ -848,8 +822,6 @@ options:
                         default: 1
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     NXAPI_HTTPS_PORT:
@@ -868,8 +840,6 @@ options:
                         default: 100-299
                         description:
                         - 'Per switch tracked object ID Range '
-                        max: 512
-                        min: 1
                         required: false
                         type: integerRange
                     OSPF_AREA_ID:
@@ -894,8 +864,6 @@ options:
                         default: 127
                         description:
                         - No description available
-                        max: 255
-                        min: 0
                         required: true
                         type: int
                     OVERLAY_MODE:
@@ -921,32 +889,24 @@ options:
                         default: 2
                         description:
                         - 'Used for Bidir-PIM Phantom RP '
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     PHANTOM_RP_LB_ID2:
                         default: 3
                         description:
                         - 'Used for Fallback Bidir-PIM Phantom RP '
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     PHANTOM_RP_LB_ID3:
                         default: 4
                         description:
                         - 'Used for second Fallback Bidir-PIM Phantom RP '
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     PHANTOM_RP_LB_ID4:
                         default: 5
                         description:
                         - 'Used for third Fallback Bidir-PIM Phantom RP '
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     PIM_HELLO_AUTH_ENABLE:
@@ -981,16 +941,12 @@ options:
                         default: 0
                         description:
                         - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
-                        max: 127
-                        min: 0
                         required: true
                         type: int
                     PTP_LB_ID:
                         default: 0
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     REPLICATION_MODE:
@@ -1012,8 +968,6 @@ options:
                         default: 1-65534
                         description:
                         - No description available
-                        max: 65534
-                        min: 1
                         required: true
                         type: integerRange
                     RP_COUNT:
@@ -1029,8 +983,6 @@ options:
                         default: 254
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     RP_MODE:
@@ -1061,24 +1013,18 @@ options:
                         default: 3000-3199
                         description:
                         - 'Per Switch Overlay Service Network VLAN Range '
-                        max: 4094
-                        min: 2
                         required: true
                         type: integerRange
                     SITE_ID:
                         default: ''
                         description:
                         - For EVPN Multi-Site Support . Defaults to Fabric ASN
-                        max: 281474976710655
-                        min: 1
                         required: false
                         type: str
                     SLA_ID_RANGE:
                         default: 10000-19999
                         description:
                         - 'Per switch SLA ID Range '
-                        max: 2147483647
-                        min: 1
                         required: false
                         type: integerRange
                     SNMP_SERVER_HOST_TRAP:
@@ -1134,8 +1080,6 @@ options:
                         default: 2-511
                         description:
                         - 'Per Border Dot1q Range For VRF Lite Connectivity '
-                        max: 4093
-                        min: 2
                         required: true
                         type: integerRange
                     SUBNET_RANGE:
@@ -1171,8 +1115,6 @@ options:
                         description:
                         - 'Comma separated list of Syslog severity values, one per Syslog
                             server '
-                        max: 7
-                        min: 0
                         required: false
                         type: string[]
                     TCAM_ALLOCATION:
@@ -1231,16 +1173,12 @@ options:
                         default: 360
                         description:
                         - No description available
-                        max: 3600
-                        min: 240
                         required: true
                         type: int
                     VPC_DELAY_RESTORE:
                         default: 150
                         description:
                         - No description available
-                        max: 3600
-                        min: 1
                         required: true
                         type: int
                     VPC_DOMAIN_ID_RANGE:
@@ -1268,16 +1206,12 @@ options:
                         default: 500
                         description:
                         - No description available
-                        max: 4096
-                        min: 1
                         required: false
                         type: integerRange
                     VPC_PEER_LINK_VLAN:
                         default: 3600
                         description:
                         - 'VLAN range for vPC Peer Link SVI '
-                        max: 4094
-                        min: 2
                         required: true
                         type: integerRange
                     VRF_LITE_AUTOCONFIG:
@@ -1297,8 +1231,6 @@ options:
                         default: 2000-2299
                         description:
                         - 'Per Switch Overlay VRF VLAN Range '
-                        max: 4094
-                        min: 2
                         required: true
                         type: integerRange
                     default_network:
@@ -1437,8 +1369,6 @@ options:
                         default: 30
                         description:
                         - 'Target Mask for Subnet Range '
-                        max: 31
-                        min: 8
                         required: true
                         type: int
                     DELAY_RESTORE:
@@ -1446,8 +1376,6 @@ options:
                         description:
                         - Multi-Site underlay and overlay control plane convergence time  in
                             seconds
-                        max: 1000
-                        min: 30
                         required: false
                         type: int
                     ENABLE_BGP_BFD:
@@ -1491,16 +1419,12 @@ options:
                         default: 30000-49000
                         description:
                         - 'Overlay Network Identifier Range '
-                        max: 16777214
-                        min: 1
                         required: true
                         type: integerRange
                     L3_PARTITION_ID_RANGE:
                         default: 50000-59000
                         description:
                         - 'Overlay VRF Identifier Range '
-                        max: 16777214
-                        min: 1
                         required: true
                         type: integerRange
                     LOOPBACK100_IP_RANGE:
@@ -1534,8 +1458,6 @@ options:
                         default: 100
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     MS_UNDERLAY_AUTOCONFIG:
@@ -1764,16 +1686,12 @@ options:
                         default: 24
                         description:
                         - No description available
-                        max: 30
-                        min: 8
                         required: true
                         type: int
                     MGMT_V6PREFIX:
                         default: 64
                         description:
                         - No description available
-                        max: 126
-                        min: 64
                         required: false
                         type: int
                     MPLS_HANDOFF:
@@ -1786,8 +1704,6 @@ options:
                         default: 101
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     MPLS_LOOPBACK_IP_RANGE:
@@ -1852,16 +1768,12 @@ options:
                         default: 0
                         description:
                         - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
-                        max: 127
-                        min: 0
                         required: true
                         type: int
                     PTP_LB_ID:
                         default: 0
                         description:
                         - No description available
-                        max: 1023
-                        min: 0
                         required: true
                         type: int
                     SNMP_SERVER_HOST_TRAP:
@@ -1874,8 +1786,6 @@ options:
                         default: 2-511
                         description:
                         - 'Per Border Dot1q Range For VRF Lite Connectivity '
-                        max: 4093
-                        min: 2
                         required: true
                         type: integerRange
                     enableRealTimeBackup:
