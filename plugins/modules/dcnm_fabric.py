@@ -107,19 +107,19 @@ options:
                         default: 2020.0000.00aa
                         description:
                         - Shared MAC address for all leafs (xxxx.xxxx.xxxx)
-                        required: true
+                        required: false
                         type: str
                     ANYCAST_LB_ID:
                         default: 10
                         description:
                         - 'Used for vPC Peering in VXLANv6 Fabrics '
-                        required: true
+                        required: false
                         type: int
                     ANYCAST_RP_IP_RANGE:
                         default: 10.254.254.0/24
                         description:
                         - Anycast or Phantom RP IP Address Range
-                        required: true
+                        required: false
                         type: str
                     AUTO_SYMMETRIC_DEFAULT_VRF:
                         default: 0
@@ -170,13 +170,13 @@ options:
                         default: ''
                         description:
                         - Encrypted SHA1 secret value
-                        required: true
+                        required: false
                         type: str
                     BFD_AUTH_KEY_ID:
                         default: 100
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     BFD_ENABLE:
                         default: 0
@@ -213,7 +213,7 @@ options:
                         description:
                         - 1-4294967295 | 1-65535.0-65535 It is a good practice to have a unique
                             ASN for each Fabric.
-                        required: true
+                        required: false
                         type: str
                     BGP_AUTH_ENABLE:
                         default: 0
@@ -225,7 +225,7 @@ options:
                         default: ''
                         description:
                         - Encrypted BGP Authentication Key based on type
-                        required: true
+                        required: false
                         type: str
                     BGP_AUTH_KEY_TYPE:
                         choices:
@@ -234,13 +234,13 @@ options:
                         default: 3
                         description:
                         - 'BGP Key Encryption Type: 3 - 3DES, 7 - Cisco'
-                        required: true
+                        required: false
                         type: str
                     BGP_LB_ID:
                         default: 0
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     BOOTSTRAP_CONF:
                         default: ''
@@ -290,19 +290,19 @@ options:
                         description:
                         - Fabric Wide CoPP Policy. Customized CoPP policy should be provided
                             when manual is selected
-                        required: true
+                        required: false
                         type: str
                     DCI_SUBNET_RANGE:
                         default: 10.33.0.0/16
                         description:
                         - Address range to assign P2P Interfabric Connections
-                        required: true
+                        required: false
                         type: str
                     DCI_SUBNET_TARGET_MASK:
                         default: 30
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     DEFAULT_QUEUING_POLICY_CLOUDSCALE:
                         choices:
@@ -312,7 +312,7 @@ options:
                         description:
                         - Queuing Policy for all 92xx, -EX, -FX, -FX2, -FX3, -GX series switches
                             in the fabric
-                        required: true
+                        required: false
                         type: str
                     DEFAULT_QUEUING_POLICY_OTHER:
                         choices:
@@ -320,7 +320,7 @@ options:
                         default: queuing_policy_default_other
                         description:
                         - Queuing Policy for all other switches in the fabric
-                        required: true
+                        required: false
                         type: str
                     DEFAULT_QUEUING_POLICY_R_SERIES:
                         choices:
@@ -328,7 +328,7 @@ options:
                         default: queuing_policy_default_r_series
                         description:
                         - Queuing Policy for all R-Series switches in the fabric
-                        required: true
+                        required: false
                         type: str
                     DEFAULT_VRF_REDIS_BGP_RMAP:
                         default: extcon-rmap-filter
@@ -347,7 +347,7 @@ options:
                         default: ''
                         description:
                         - End Address For Switch POAP
-                        required: true
+                        required: false
                         type: str
                     DHCP_IPV6_ENABLE:
                         choices:
@@ -362,7 +362,7 @@ options:
                         default: ''
                         description:
                         - Start Address For Switch POAP
-                        required: true
+                        required: false
                         type: str
                     DNS_SERVER_IP_LIST:
                         default: ''
@@ -494,25 +494,25 @@ options:
                         default: p2p
                         description:
                         - Numbered(Point-to-Point) or Unnumbered
-                        required: true
+                        required: false
                         type: str
                     FABRIC_MTU:
                         default: 9216
                         description:
                         - . Must be an even number
-                        required: true
+                        required: false
                         type: int
                     FABRIC_NAME:
                         default: ''
                         description:
                         - Please provide the fabric name to create it (Max Size 32)
-                        required: true
+                        required: false
                         type: str
                     FABRIC_VPC_DOMAIN_ID:
                         default: 1
                         description:
                         - vPC Domain Id to be used on all vPC pairs
-                        required: true
+                        required: false
                         type: int
                     FABRIC_VPC_QOS:
                         default: 0
@@ -524,7 +524,7 @@ options:
                         default: spine_qos_for_fabric_vpc_peering
                         description:
                         - Qos Policy name should be same on all spines
-                        required: true
+                        required: false
                         type: str
                     FEATURE_PTP:
                         default: 0
@@ -539,7 +539,7 @@ options:
                         default: Disable
                         description:
                         - Enable to clean switch configuration without reload when PreserveConfig=no
-                        required: true
+                        required: false
                         type: str
                     HD_TIME:
                         default: 180
@@ -573,7 +573,7 @@ options:
                         default: ''
                         description:
                         - Comma separated list of IPv4 Addresses (Max 3)
-                        required: true
+                        required: false
                         type: str
                     INBAND_MGMT:
                         default: 0
@@ -591,19 +591,19 @@ options:
                         default: ''
                         description:
                         - Cisco Type 7 Encrypted
-                        required: true
+                        required: false
                         type: str
                     ISIS_AUTH_KEYCHAIN_KEY_ID:
                         default: 127
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     ISIS_AUTH_KEYCHAIN_NAME:
                         default: ''
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: str
                     ISIS_LEVEL:
                         choices:
@@ -612,13 +612,13 @@ options:
                         default: level-2
                         description:
                         - 'Supported IS types: level-1, level-2'
-                        required: true
+                        required: false
                         type: str
                     ISIS_OVERLOAD_ELAPSE_TIME:
                         default: 60
                         description:
                         - Clear the overload bit after an elapsed time in seconds
-                        required: true
+                        required: false
                         type: int
                     ISIS_OVERLOAD_ENABLE:
                         default: 1
@@ -637,25 +637,25 @@ options:
                         default: 9216
                         description:
                         - . Must be an even number
-                        required: true
+                        required: false
                         type: int
                     L2_SEGMENT_ID_RANGE:
                         default: 30000-49000
                         description:
                         - 'Overlay Network Identifier Range '
-                        required: true
+                        required: false
                         type: str
                     L3VNI_MCAST_GROUP:
                         default: 239.1.1.0
                         description:
                         - Default Underlay Multicast group IP assigned for every overlay VRF.
-                        required: true
+                        required: false
                         type: str
                     L3_PARTITION_ID_RANGE:
                         default: 50000-59000
                         description:
                         - 'Overlay VRF Identifier Range '
-                        required: true
+                        required: false
                         type: str
                     LINK_STATE_ROUTING:
                         choices:
@@ -664,85 +664,85 @@ options:
                         default: ospf
                         description:
                         - Used for Spine-Leaf Connectivity
-                        required: true
+                        required: false
                         type: str
                     LINK_STATE_ROUTING_TAG:
                         default: UNDERLAY
                         description:
                         - Underlay Routing Process Tag
-                        required: true
+                        required: false
                         type: str
                     LOOPBACK0_IPV6_RANGE:
                         default: fd00::a02:0/119
                         description:
                         - Typically Loopback0 IPv6 Address Range
-                        required: true
+                        required: false
                         type: str
                     LOOPBACK0_IP_RANGE:
                         default: 10.2.0.0/22
                         description:
                         - Typically Loopback0 IP Address Range
-                        required: true
+                        required: false
                         type: str
                     LOOPBACK1_IPV6_RANGE:
                         default: fd00::a03:0/118
                         description:
                         - Typically Loopback1 and Anycast Loopback IPv6 Address Range
-                        required: true
+                        required: false
                         type: str
                     LOOPBACK1_IP_RANGE:
                         default: 10.3.0.0/22
                         description:
                         - Typically Loopback1 IP Address Range
-                        required: true
+                        required: false
                         type: str
                     MACSEC_ALGORITHM:
                         default: AES_128_CMAC
                         description:
                         - AES_128_CMAC or AES_256_CMAC
-                        required: true
+                        required: false
                         type: str
                     MACSEC_CIPHER_SUITE:
                         default: GCM-AES-XPN-256
                         description:
                         - Configure Cipher Suite
-                        required: true
+                        required: false
                         type: str
                     MACSEC_FALLBACK_ALGORITHM:
                         default: AES_128_CMAC
                         description:
                         - AES_128_CMAC or AES_256_CMAC
-                        required: true
+                        required: false
                         type: str
                     MACSEC_FALLBACK_KEY_STRING:
                         default: ''
                         description:
                         - Cisco Type 7 Encrypted Octet String
-                        required: true
+                        required: false
                         type: str
                     MACSEC_KEY_STRING:
                         default: ''
                         description:
                         - Cisco Type 7 Encrypted Octet String
-                        required: true
+                        required: false
                         type: str
                     MACSEC_REPORT_TIMER:
                         default: 5
                         description:
                         - MACsec Operational Status periodic report timer in minutes
-                        required: true
+                        required: false
                         type: int
                     MGMT_GW:
                         default: ''
                         description:
                         - Default Gateway For Management VRF On The Switch
-                        required: true
+                        required: false
                         type: str
                     MGMT_PREFIX:
                         default: 24
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     MGMT_V6PREFIX:
                         default: 64
@@ -760,50 +760,50 @@ options:
                         default: 101
                         description:
                         - 'Used for VXLAN to MPLS SR/LDP Handoff '
-                        required: true
+                        required: false
                         type: int
                     MPLS_LOOPBACK_IP_RANGE:
                         default: 10.101.0.0/25
                         description:
                         - Used for VXLAN to MPLS SR/LDP Handoff
-                        required: true
+                        required: false
                         type: str
                     MST_INSTANCE_RANGE:
                         default: 0
                         description:
                         - 'MST instance range, Example: 0-3,5,7-9, Default is 0'
-                        required: true
+                        required: false
                         type: str
                     MULTICAST_GROUP_SUBNET:
                         default: 239.1.1.0/25
                         description:
                         - Multicast pool prefix between 8 to 30. A multicast group IP from
                             this pool is used for BUM traffic for each overlay network.
-                        required: true
+                        required: false
                         type: str
                     NETFLOW_EXPORTER_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Exporters
-                        required: true
+                        required: false
                         type: list
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
-                        required: true
+                        required: false
                         type: list
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Records
-                        required: true
+                        required: false
                         type: list
                     NETWORK_VLAN_RANGE:
                         default: 2300-2999
                         description:
                         - 'Per Switch Overlay Network VLAN Range '
-                        required: true
+                        required: false
                         type: str
                     NTP_SERVER_IP_LIST:
                         default: ''
@@ -822,7 +822,7 @@ options:
                         default: 1
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     NXAPI_HTTPS_PORT:
                         default: 443
@@ -846,7 +846,7 @@ options:
                         default: 0.0.0.0
                         description:
                         - OSPF Area Id in IP address format
-                        required: true
+                        required: false
                         type: str
                     OSPF_AUTH_ENABLE:
                         default: 0
@@ -858,13 +858,13 @@ options:
                         default: ''
                         description:
                         - 3DES Encrypted
-                        required: true
+                        required: false
                         type: str
                     OSPF_AUTH_KEY_ID:
                         default: 127
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     OVERLAY_MODE:
                         default: cli
@@ -883,31 +883,31 @@ options:
                         description:
                         - Prefix pool to assign IP addresses to loopbacks on VTEPs on a per
                             VRF basis
-                        required: true
+                        required: false
                         type: str
                     PHANTOM_RP_LB_ID1:
                         default: 2
                         description:
                         - 'Used for Bidir-PIM Phantom RP '
-                        required: true
+                        required: false
                         type: int
                     PHANTOM_RP_LB_ID2:
                         default: 3
                         description:
                         - 'Used for Fallback Bidir-PIM Phantom RP '
-                        required: true
+                        required: false
                         type: int
                     PHANTOM_RP_LB_ID3:
                         default: 4
                         description:
                         - 'Used for second Fallback Bidir-PIM Phantom RP '
-                        required: true
+                        required: false
                         type: int
                     PHANTOM_RP_LB_ID4:
                         default: 5
                         description:
                         - 'Used for third Fallback Bidir-PIM Phantom RP '
-                        required: true
+                        required: false
                         type: int
                     PIM_HELLO_AUTH_ENABLE:
                         default: 0
@@ -919,7 +919,7 @@ options:
                         default: ''
                         description:
                         - 3DES Encrypted
-                        required: true
+                        required: false
                         type: str
                     PM_ENABLE:
                         default: 0
@@ -935,19 +935,19 @@ options:
                         default: ps-redundant
                         description:
                         - Default Power Supply Mode For The Fabric
-                        required: true
+                        required: false
                         type: str
                     PTP_DOMAIN_ID:
                         default: 0
                         description:
                         - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
-                        required: true
+                        required: false
                         type: int
                     PTP_LB_ID:
                         default: 0
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     REPLICATION_MODE:
                         choices:
@@ -956,19 +956,19 @@ options:
                         default: Multicast
                         description:
                         - Replication Mode for BUM Traffic
-                        required: true
+                        required: false
                         type: str
                     ROUTER_ID_RANGE:
                         default: 10.2.0.0/23
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: str
                     ROUTE_MAP_SEQUENCE_NUMBER_RANGE:
                         default: 1-65534
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: str
                     RP_COUNT:
                         choices:
@@ -977,13 +977,13 @@ options:
                         default: 2
                         description:
                         - Number of spines acting as Rendezvous-Point (RP)
-                        required: true
+                        required: false
                         type: int
                     RP_LB_ID:
                         default: 254
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     RP_MODE:
                         choices:
@@ -992,7 +992,7 @@ options:
                         default: asm
                         description:
                         - Multicast RP Mode
-                        required: true
+                        required: false
                         type: str
                     RR_COUNT:
                         choices:
@@ -1001,7 +1001,7 @@ options:
                         default: 2
                         description:
                         - Number of spines acting as Route-Reflectors
-                        required: true
+                        required: false
                         type: int
                     SEED_SWITCH_CORE_INTERFACES:
                         default: ''
@@ -1013,7 +1013,7 @@ options:
                         default: 3000-3199
                         description:
                         - 'Per Switch Overlay Service Network VLAN Range '
-                        required: true
+                        required: false
                         type: str
                     SITE_ID:
                         default: ''
@@ -1049,7 +1049,7 @@ options:
                         default: 0
                         description:
                         - Bridge priority for the spanning tree in increments of 4096
-                        required: true
+                        required: false
                         type: str
                     STP_ROOT_OPTION:
                         choices:
@@ -1067,7 +1067,7 @@ options:
                         default: 1-3967
                         description:
                         - 'Vlan range, Example: 1,3-5,7,9-11, Default is 1-3967'
-                        required: true
+                        required: false
                         type: str
                     STRICT_CC_MODE:
                         default: 0
@@ -1080,13 +1080,13 @@ options:
                         default: 2-511
                         description:
                         - 'Per Border Dot1q Range For VRF Lite Connectivity '
-                        required: true
+                        required: false
                         type: str
                     SUBNET_RANGE:
                         default: 10.4.0.0/16
                         description:
                         - Address range to assign Numbered and Peer Link SVI IPs
-                        required: true
+                        required: false
                         type: str
                     SUBNET_TARGET_MASK:
                         choices:
@@ -1095,7 +1095,7 @@ options:
                         default: 30
                         description:
                         - Mask for Underlay Subnet IP Range
-                        required: true
+                        required: false
                         type: int
                     SYSLOG_SERVER_IP_LIST:
                         default: ''
@@ -1134,19 +1134,19 @@ options:
                         default: 253
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     UNNUM_DHCP_END:
                         default: ''
                         description:
                         - Must be a subset of IGP/BGP Loopback Prefix Pool
-                        required: true
+                        required: false
                         type: str
                     UNNUM_DHCP_START:
                         default: ''
                         description:
                         - Must be a subset of IGP/BGP Loopback Prefix Pool
-                        required: true
+                        required: false
                         type: str
                     USE_LINK_LOCAL:
                         default: 1
@@ -1158,7 +1158,7 @@ options:
                         default: fd00::a04:0/112
                         description:
                         - IPv6 Address range to assign Numbered and Peer Link SVI IPs
-                        required: true
+                        required: false
                         type: str
                     V6_SUBNET_TARGET_MASK:
                         choices:
@@ -1167,19 +1167,19 @@ options:
                         default: 126
                         description:
                         - Mask for Underlay Subnet IPv6 Range
-                        required: true
+                        required: false
                         type: int
                     VPC_AUTO_RECOVERY_TIME:
                         default: 360
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     VPC_DELAY_RESTORE:
                         default: 150
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     VPC_DOMAIN_ID_RANGE:
                         default: 1-1000
@@ -1200,7 +1200,7 @@ options:
                         default: management
                         description:
                         - Use vPC Peer Keep Alive with Loopback or Management
-                        required: true
+                        required: false
                         type: str
                     VPC_PEER_LINK_PO:
                         default: 500
@@ -1212,7 +1212,7 @@ options:
                         default: 3600
                         description:
                         - 'VLAN range for vPC Peer Link SVI '
-                        required: true
+                        required: false
                         type: str
                     VRF_LITE_AUTOCONFIG:
                         choices:
@@ -1225,13 +1225,13 @@ options:
                             of two Easy Fabrics, and between border devices in Easy Fabric
                             and edge routers in External Fabric. The IP address is taken from
                             the VRF Lite Subnet IP Range pool.
-                        required: true
+                        required: false
                         type: str
                     VRF_VLAN_RANGE:
                         default: 2000-2299
                         description:
                         - 'Per Switch Overlay VRF VLAN Range '
-                        required: true
+                        required: false
                         type: str
                     default_network:
                         choices:
@@ -1240,7 +1240,7 @@ options:
                         default: Default_Network_Universal
                         description:
                         - Default Overlay Network Template For Leafs
-                        required: true
+                        required: false
                         type: str
                     default_pvlan_sec_network:
                         choices:
@@ -1256,7 +1256,7 @@ options:
                         default: Default_VRF_Universal
                         description:
                         - Default Overlay VRF Template For Leafs
-                        required: true
+                        required: false
                         type: str
                     enableRealTimeBackup:
                         default: ''
@@ -1277,13 +1277,13 @@ options:
                         default: Default_Network_Extension_Universal
                         description:
                         - Default Overlay Network Template For Borders
-                        required: true
+                        required: false
                         type: str
                     scheduledTime:
                         default: ''
                         description:
                         - Time (UTC) in 24hr format. (00:00 to 23:59)
-                        required: true
+                        required: false
                         type: str
                     vrf_extension_template:
                         choices:
@@ -1291,7 +1291,7 @@ options:
                         default: Default_VRF_Extension_Universal
                         description:
                         - Default Overlay VRF Template For Borders
-                        required: true
+                        required: false
                         type: str
             VXLAN_EVPN_FABRIC_MSD_PARAMETERS:
                 description:
@@ -1327,13 +1327,13 @@ options:
                         description:
                         - Manual, Auto Overlay EVPN Peering to Route Servers, Auto Overlay
                             EVPN Direct Peering to Border Gateways
-                        required: true
+                        required: false
                         type: str
                     CLOUDSEC_ALGORITHM:
                         default: AES_128_CMAC
                         description:
                         - AES_128_CMAC or AES_256_CMAC
-                        required: true
+                        required: false
                         type: str
                     CLOUDSEC_AUTOCONFIG:
                         default: 0
@@ -1345,31 +1345,31 @@ options:
                         default: ''
                         description:
                         - If set to strict, data across site must be encrypted.
-                        required: true
+                        required: false
                         type: str
                     CLOUDSEC_KEY_STRING:
                         default: ''
                         description:
                         - Cisco Type 7 Encrypted Octet String
-                        required: true
+                        required: false
                         type: str
                     CLOUDSEC_REPORT_TIMER:
                         default: 5
                         description:
                         - CloudSec Operational Status periodic report timer in minutes
-                        required: true
+                        required: false
                         type: int
                     DCI_SUBNET_RANGE:
                         default: 10.10.1.0/24
                         description:
                         - Address range to assign P2P DCI Links
-                        required: true
+                        required: false
                         type: str
                     DCI_SUBNET_TARGET_MASK:
                         default: 30
                         description:
                         - 'Target Mask for Subnet Range '
-                        required: true
+                        required: false
                         type: int
                     DELAY_RESTORE:
                         default: 300
@@ -1413,25 +1413,25 @@ options:
                         default: ''
                         description:
                         - Please provide the fabric name to create it (Max Size 64)
-                        required: true
+                        required: false
                         type: str
                     L2_SEGMENT_ID_RANGE:
                         default: 30000-49000
                         description:
                         - 'Overlay Network Identifier Range '
-                        required: true
+                        required: false
                         type: str
                     L3_PARTITION_ID_RANGE:
                         default: 50000-59000
                         description:
                         - 'Overlay VRF Identifier Range '
-                        required: true
+                        required: false
                         type: str
                     LOOPBACK100_IP_RANGE:
                         default: 10.10.0.0/24
                         description:
                         - Typically Loopback100 IP Address Range
-                        required: true
+                        required: false
                         type: str
                     MS_IFC_BGP_AUTH_KEY_TYPE:
                         choices:
@@ -1440,13 +1440,13 @@ options:
                         default: 3
                         description:
                         - 'BGP Key Encryption Type: 3 - 3DES, 7 - Cisco'
-                        required: true
+                        required: false
                         type: str
                     MS_IFC_BGP_PASSWORD:
                         default: ''
                         description:
                         - Encrypted eBGP Password Hex String
-                        required: true
+                        required: false
                         type: str
                     MS_IFC_BGP_PASSWORD_ENABLE:
                         default: 0
@@ -1458,7 +1458,7 @@ options:
                         default: 100
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     MS_UNDERLAY_AUTOCONFIG:
                         default: 0
@@ -1494,7 +1494,7 @@ options:
                         default: Default_Network_Universal
                         description:
                         - Default Overlay Network Template For Leafs
-                        required: true
+                        required: false
                         type: str
                     default_pvlan_sec_network:
                         choices:
@@ -1510,7 +1510,7 @@ options:
                         default: Default_VRF_Universal
                         description:
                         - Default Overlay VRF Template For Leafs
-                        required: true
+                        required: false
                         type: str
                     enableScheduledBackup:
                         default: ''
@@ -1526,13 +1526,13 @@ options:
                         default: Default_Network_Extension_Universal
                         description:
                         - Default Overlay Network Template For Borders
-                        required: true
+                        required: false
                         type: str
                     scheduledTime:
                         default: ''
                         description:
                         - Time (UTC) in 24hr format. (00:00 to 23:59)
-                        required: true
+                        required: false
                         type: str
                     vrf_extension_template:
                         choices:
@@ -1540,7 +1540,7 @@ options:
                         default: Default_VRF_Extension_Universal
                         description:
                         - Default Overlay VRF Template For Borders
-                        required: true
+                        required: false
                         type: str
             LAN_CLASSIC_PARAMETERS:
                 description:
@@ -1598,7 +1598,7 @@ options:
                         default: ''
                         description:
                         - End Address For Switch POAP
-                        required: true
+                        required: false
                         type: str
                     DHCP_IPV6_ENABLE:
                         choices:
@@ -1613,7 +1613,7 @@ options:
                         default: ''
                         description:
                         - Start Address For Switch POAP
-                        required: true
+                        required: false
                         type: str
                     ENABLE_AAA:
                         default: 0
@@ -1649,7 +1649,7 @@ options:
                         default: ''
                         description:
                         - Please provide the fabric name to create it (Max Size 64)
-                        required: true
+                        required: false
                         type: str
                     FEATURE_PTP:
                         default: 0
@@ -1680,13 +1680,13 @@ options:
                         default: ''
                         description:
                         - Default Gateway For Management VRF On The Switch
-                        required: true
+                        required: false
                         type: str
                     MGMT_PREFIX:
                         default: 24
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     MGMT_V6PREFIX:
                         default: 64
@@ -1704,31 +1704,31 @@ options:
                         default: 101
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     MPLS_LOOPBACK_IP_RANGE:
                         default: 10.102.0.0/25
                         description:
                         - MPLS Loopback IP Address Range
-                        required: true
+                        required: false
                         type: str
                     NETFLOW_EXPORTER_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Exporters
-                        required: true
+                        required: false
                         type: list
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
-                        required: true
+                        required: false
                         type: list
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Records
-                        required: true
+                        required: false
                         type: list
                     NETFLOW_SAMPLER_LIST:
                         default: ''
@@ -1762,19 +1762,19 @@ options:
                         default: ps-redundant
                         description:
                         - Default Power Supply Mode For Bootstrapped NX-OS Switches
-                        required: true
+                        required: false
                         type: str
                     PTP_DOMAIN_ID:
                         default: 0
                         description:
                         - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
-                        required: true
+                        required: false
                         type: int
                     PTP_LB_ID:
                         default: 0
                         description:
                         - No description available
-                        required: true
+                        required: false
                         type: int
                     SNMP_SERVER_HOST_TRAP:
                         default: 1
@@ -1786,7 +1786,7 @@ options:
                         default: 2-511
                         description:
                         - 'Per Border Dot1q Range For VRF Lite Connectivity '
-                        required: true
+                        required: false
                         type: str
                     enableRealTimeBackup:
                         default: 0
@@ -1805,7 +1805,7 @@ options:
                         default: ''
                         description:
                         - Time (UTC) in 24hr format. (00:00 to 23:59)
-                        required: true
+                        required: false
                         type: str
 """
 
