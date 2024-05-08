@@ -356,7 +356,7 @@ EXAMPLES = """
 #       the user must make sure no policies with the same description are created on NDFC out of the playbook.
 #       If the description is not unique, the module will raise an error.
 
-## Below task will policies with description "policy_radius" on swtich1, switch2 and switch3,
+## Below task will create policies with description "policy_radius" on swtich1, switch2 and switch3,
 ## and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
 
 - name: Create policies
@@ -716,6 +716,12 @@ class DcnmPolicy:
             pl
             for pl in plist
             for wp in self.want
+            # exclude the policies that have the source
+            # when the user modifies a policy but has not deployed the policy,
+            # a sub-policy might be created with the same description, but marked as deleted
+            # The signature of this kind of policy is that it as a original policyId as the source
+            # it should be excluded from the match list
+            # as the policy will be deleted once the user deploys the configuration
             if pl.get("source", "") == ""
             and (
                 (pl["templateName"] == wp["templateName"])

@@ -681,15 +681,7 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>Auto</b>&nbsp;&larr;</div></li>
-                                    <li>100Mb</li>
-                                    <li>1Gb</li>
-                                    <li>10Gb</li>
-                                    <li>25Gb</li>
-                                    <li>40Gb</li>
-                                    <li>100Gb</li>
-                        </ul>
+                        <b>Default:</b><br/><div style="color: blue">"Auto"</div>
                 </td>
                 <td>
                         <div>Speed of the interface.</div>

@@ -347,6 +347,26 @@ Parameters
                         <div>The required state of the configuration after module completion.</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>use_desc_as_key</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Flag to enforce using the description parameter as the unique key for policy management.</div>
+                        <div>When set to True, the description parameter must be unique and non-empty for each policy in the playbook. The module will also use the description to find the policy to modify or delete. If exsiting policies have the same description, the module will raise an error. If the existing policy with the matching description is using differnet template name, the module will delete the existing policy and create a new one.</div>
+                </td>
+            </tr>
     </table>
     <br/>
 
@@ -534,6 +554,46 @@ Examples
           - name: POLICY-103103
           - switch:
               - ip: "{{ ansible_switch1 }}"
+
+    # Use the description as key
+
+    # NOTE: As the description of the policy in NDFC/DCNM is not unique,
+    #       the user must make sure no policies with the same description are created on NDFC out of the playbook.
+    #       If the description is not unique, the module will raise an error.
+
+    ## Below task will create policies with description "policy_radius" on swtich1, switch2 and switch3,
+    ## and only create policy "feature bfd" and "feature bash-shell" on the switch1 only
+
+    - name: Create policies
+      cisco.dcnm.dcnm_policy:
+        fabric: fabric_prod
+        use_desc_as_key: true
+        config:
+          - name: switch_freeform
+            create_additional_policy: false
+            description: policy_radius
+            policy_vars:
+              CONF: |
+                radius-server host 10.1.1.2 key 7 "ljw3976!" authentication accounting
+          - switch:
+              - ip: "{{ switch1 }}"
+                policies:
+                  - name: switch_freeform
+                    create_additional_policy: false
+                    priority: 101
+                    description: feature bfd
+                    policy_vars:
+                      CONF: |
+                        feature bfd
+                  - name: switch_freeform
+                    create_additional_policy: false
+                    priority: 102
+                    description: feature bash-shell
+                    policy_vars:
+                      CONF: |
+                        feature bash-shell
+              - ip: "{{ switch2 }}"
+              - ip: "{{ switch3 }}"
 
 
 
