@@ -28,8 +28,8 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm import \
+    Features
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 
@@ -140,7 +140,7 @@ class ControllerFeatures:
             raise ValueError(msg)
 
         self.conversion = ConversionUtils()
-        self.endpoints = ApiEndpoints()
+        self.api_features = Features()
         self._init_properties()
 
     def _init_properties(self):
@@ -164,10 +164,8 @@ class ControllerFeatures:
             msg += "before calling commit."
             raise ValueError(msg)
 
-        path = self.endpoints.fm_features.get("path")
-        verb = self.endpoints.fm_features.get("verb")
-        self.rest_send.path = path
-        self.rest_send.verb = verb
+        self.rest_send.path = self.api_features.path
+        self.rest_send.verb = self.api_features.verb
 
         # Store the current value of check_mode, then disable
         # check_mode since ControllerFeatures() only reads data
