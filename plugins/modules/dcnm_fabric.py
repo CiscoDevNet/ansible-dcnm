@@ -1922,6 +1922,8 @@ from os import environ
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
+    ControllerFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -1981,6 +1983,8 @@ class Common(FabricCommon):
         self.log.debug(msg)
 
         self.endpoints = ApiEndpoints()
+        self.controller_features = ControllerFeatures(params)
+        self.features = {}
 
         self._implemented_states = set()
 
@@ -2048,6 +2052,34 @@ class Common(FabricCommon):
         self.want = []
         for config in merged_configs:
             self.want.append(copy.deepcopy(config))
+
+    def get_controller_features(self) -> None:
+        """
+        -   Retrieve the state of relevant controller features
+        -   Populate self.features
+                -   key: FABRIC_TYPE
+                -   value: True or False
+                        -   True if feature is started for this fabric type
+                        -   False otherwise
+        """
+        method_name = inspect.stack()[0][3]
+        self.features = {}
+        msg = f"{self.class_name}.{method_name}: "
+        msg + f"params = {json_pretty(self.params)}"
+        self.log.debug(msg)
+        self.controller_features.rest_send = RestSend(self.ansible_module)
+        try:
+            self.controller_features.refresh()
+        except ControllerResponseError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Controller returned error when attempting to retrieve "
+            msg += "controller features. "
+            msg += f"Error detail: {error}"
+            self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
+        for fabric_type in self.fabric_types.valid_fabric_types:
+            self.fabric_types.fabric_type = fabric_type
+            self.controller_features.filter = self.fabric_types.feature_name
+            self.features[fabric_type] = self.controller_features.started
 
     @property
     def ansible_module(self):
@@ -2167,12 +2199,21 @@ class Merged(Common):
 
         Build self.need for merged state
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
         self.payloads = {}
         for want in self.want:
 
             fabric_name = want.get("FABRIC_NAME", None)
             fabric_type = want.get("FABRIC_TYPE", None)
+
+            if self.features[fabric_type] is False:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Features required for fabric {fabric_name} "
+                msg += f"of type {fabric_type} are not running on the "
+                msg += "controller. Review controller settings at "
+                msg += "Fabric Controller -> Admin -> System Settings -> "
+                msg += "Feature Management"
+                self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
 
             try:
                 self._verify_playbook_params.config_playbook = want
@@ -2257,6 +2298,7 @@ class Merged(Common):
         self.fabric_details.rest_send = self.rest_send
         self.fabric_summary.rest_send = self.rest_send
 
+        self.get_controller_features()
         self.get_want()
         self.get_have()
         self.get_need()
@@ -2421,11 +2463,26 @@ class Replaced(Common):
 
         Build self.need for replaced state
         """
+        method_name = inspect.stack()[0][3]
         self.payloads = {}
         for want in self.want:
+
+            fabric_name = want.get("FABRIC_NAME", None)
+            fabric_type = want.get("FABRIC_TYPE", None)
+
             # Skip fabrics that do not exist on the controller
-            if want["FABRIC_NAME"] not in self.have.all_data:
+            if fabric_name not in self.have.all_data:
                 continue
+
+            if self.features[fabric_type] is False:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Features required for fabric {fabric_name} "
+                msg += f"of type {fabric_type} are not running on the "
+                msg += "controller. Review controller settings at "
+                msg += "Fabric Controller -> Admin -> System Settings -> "
+                msg += "Feature Management"
+                self.ansible_module.fail_json(f"{msg}", **self.results.failed_result)
+
             self.need_replaced.append(want)
 
     def commit(self):
@@ -2440,6 +2497,7 @@ class Replaced(Common):
         self.fabric_details.rest_send = self.rest_send
         self.fabric_summary.rest_send = self.rest_send
 
+        self.get_controller_features()
         self.get_want()
         self.get_have()
         self.get_need()
