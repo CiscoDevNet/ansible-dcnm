@@ -1545,15 +1545,407 @@ options:
                         - Default Overlay VRF Template For Borders
                         required: false
                         type: str
-            LAN_CLASSIC_PARAMETERS:
+            IPFM_FABRIC_PARAMETERS:
+                description:
+                - IPFM (IP Fabric for Media) fabric specific parameters.
+                - The following parameters are specific to IPFM fabrics.
+                - Fabric for a fully automated deployment of IP Fabric for Media Network with Nexus 9000 switches.
+                - The indentation of these parameters is meant only to logically group them.
+                - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+                suboptions:
+                    AAA_REMOTE_IP_ENABLED:
+                        default: false
+                        description:
+                        - Enable only, when IP Authorization is enabled in the AAA Server
+                        required: false
+                        type: bool
+                    AAA_SERVER_CONF:
+                        default: ''
+                        description:
+                        - AAA Configurations
+                        required: false
+                        type: str
+                    ASM_GROUP_RANGES:
+                        default: ''
+                        description:
+                        - 'ASM group ranges with prefixes (len:4-32) example: 239.1.1.0/25,
+                            max 20 ranges. Enabling SPT-Threshold Infinity to prevent switchover
+                            to source-tree.'
+                        required: false
+                        type: list
+                    BOOTSTRAP_CONF:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_ENABLE:
+                        default: false
+                        description:
+                        - Automatic IP Assignment For POAP
+                        required: false
+                        type: bool
+                    BOOTSTRAP_MULTISUBNET:
+                        default: '#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix'
+                        description:
+                        - 'lines with # prefix are ignored here'
+                        required: false
+                        type: str
+                    CDP_ENABLE:
+                        default: false
+                        description:
+                        - Enable CDP on management interface
+                        required: false
+                        type: bool
+                    DHCP_ENABLE:
+                        default: false
+                        description:
+                        - Automatic IP Assignment For POAP From Local DHCP Server
+                        required: false
+                        type: bool
+                    DHCP_END:
+                        default: ''
+                        description:
+                        - End Address For Switch Out-of-Band POAP
+                        required: false
+                        type: str
+                    DHCP_IPV6_ENABLE:
+                        choices:
+                        - DHCPv4
+                        default: DHCPv4
+                        description:
+                        - No description available
+                        required: false
+                        type: str
+                    DHCP_START:
+                        default: ''
+                        description:
+                        - Start Address For Switch Out-of-Band POAP
+                        required: false
+                        type: str
+                    DNS_SERVER_IP_LIST:
+                        default: ''
+                        description:
+                        - Comma separated list of IP Addresses (v4/v6)
+                        required: false
+                        type: str
+                    DNS_SERVER_VRF:
+                        default: ''
+                        description:
+                        - One VRF for all DNS servers or a comma separated list of VRFs, one
+                            per DNS server
+                        required: false
+                        type: str
+                    ENABLE_AAA:
+                        default: false
+                        description:
+                        - Include AAA configs from Manageability tab during device bootup
+                        required: false
+                        type: bool
+                    ENABLE_ASM:
+                        default: false
+                        description:
+                        - Enable groups with receivers sending (*,G) joins
+                        required: false
+                        type: bool
+                    ENABLE_NBM_PASSIVE:
+                        default: false
+                        description:
+                        - Enable NBM mode to pim-passive for default VRF
+                        required: false
+                        type: bool
+                    EXTRA_CONF_INTRA_LINKS:
+                        default: ''
+                        description:
+                        - Additional CLIs For All Intra-Fabric Links
+                        required: false
+                        type: str
+                    EXTRA_CONF_LEAF:
+                        default: ''
+                        description:
+                        - Additional CLIs For All Leafs and Tier2 Leafs As Captured From Show
+                            Running Configuration
+                        required: false
+                        type: str
+                    EXTRA_CONF_SPINE:
+                        default: ''
+                        description:
+                        - Additional CLIs For All Spines As Captured From Show Running Configuration
+                        required: false
+                        type: str
+                    FABRIC_INTERFACE_TYPE:
+                        choices:
+                        - p2p
+                        default: p2p
+                        description:
+                        - Only Numbered(Point-to-Point) is supported
+                        required: false
+                        type: str
+                    FABRIC_MTU:
+                        default: 9216
+                        description:
+                        - . Must be an even number
+                        required: false
+                        type: int
+                    FABRIC_NAME:
+                        default: ''
+                        description:
+                        - Name of the fabric (Max Size 64)
+                        required: false
+                        type: str
+                    FEATURE_PTP:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ISIS_AUTH_ENABLE:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ISIS_AUTH_KEY:
+                        default: ''
+                        description:
+                        - Cisco Type 7 Encrypted
+                        required: false
+                        type: str
+                    ISIS_AUTH_KEYCHAIN_KEY_ID:
+                        default: 127
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    ISIS_AUTH_KEYCHAIN_NAME:
+                        default: ''
+                        description:
+                        - No description available
+                        required: false
+                        type: str
+                    ISIS_LEVEL:
+                        choices:
+                        - level-1
+                        - level-2
+                        default: level-2
+                        description:
+                        - 'Supported IS types: level-1, level-2'
+                        required: false
+                        type: str
+                    ISIS_P2P_ENABLE:
+                        default: true
+                        description:
+                        - This will enable network point-to-point on fabric interfaces which
+                            are numbered
+                        required: false
+                        type: bool
+                    L2_HOST_INTF_MTU:
+                        default: 9216
+                        description:
+                        - . Must be an even number
+                        required: false
+                        type: int
+                    LINK_STATE_ROUTING:
+                        choices:
+                        - ospf
+                        - is-is
+                        default: ospf
+                        description:
+                        - Used for Spine-Leaf Connectivity
+                        required: false
+                        type: str
+                    LINK_STATE_ROUTING_TAG:
+                        default: 1
+                        description:
+                        - Routing process tag for the fabric
+                        required: false
+                        type: str
+                    LOOPBACK0_IP_RANGE:
+                        default: 10.2.0.0/22
+                        description:
+                        - Routing Loopback IP Address Range
+                        required: false
+                        type: str
+                    MGMT_GW:
+                        default: ''
+                        description:
+                        - Default Gateway For Management VRF On The Switch
+                        required: false
+                        type: str
+                    MGMT_PREFIX:
+                        default: 24
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    NTP_SERVER_IP_LIST:
+                        default: ''
+                        description:
+                        - Comma separated list of IP Addresses (v4/v6)
+                        required: false
+                        type: str
+                    NTP_SERVER_VRF:
+                        default: ''
+                        description:
+                        - One VRF for all NTP servers or a comma separated list of VRFs, one
+                            per NTP server
+                        required: false
+                        type: str
+                    NXAPI_VRF:
+                        choices:
+                        - management
+                        - default
+                        default: management
+                        description:
+                        - VRF used for NX-API communication
+                        required: false
+                        type: str
+                    OSPF_AREA_ID:
+                        default: 0.0.0.0
+                        description:
+                        - OSPF Area Id in IP address format
+                        required: false
+                        type: str
+                    OSPF_AUTH_ENABLE:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    OSPF_AUTH_KEY:
+                        default: ''
+                        description:
+                        - 3DES Encrypted
+                        required: false
+                        type: str
+                    OSPF_AUTH_KEY_ID:
+                        default: 127
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    PIM_HELLO_AUTH_ENABLE:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    PIM_HELLO_AUTH_KEY:
+                        default: ''
+                        description:
+                        - 3DES Encrypted
+                        required: false
+                        type: str
+                    PM_ENABLE:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    POWER_REDUNDANCY_MODE:
+                        choices:
+                        - ps-redundant
+                        - combined
+                        - insrc-redundant
+                        default: ps-redundant
+                        description:
+                        - Default power supply mode for the fabric
+                        required: false
+                        type: str
+                    PTP_DOMAIN_ID:
+                        default: 0
+                        description:
+                        - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
+                        required: false
+                        type: int
+                    PTP_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    PTP_PROFILE:
+                        choices:
+                        - IEEE-1588v2
+                        - SMPTE-2059-2
+                        - AES67-2015
+                        default: SMPTE-2059-2
+                        description:
+                        - Enabled on ISL links only
+                        required: false
+                        type: str
+                    ROUTING_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    RP_IP_RANGE:
+                        default: 10.254.254.0/24
+                        description:
+                        - RP Loopback IP Address Range
+                        required: false
+                        type: str
+                    RP_LB_ID:
+                        default: 254
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    SNMP_SERVER_HOST_TRAP:
+                        default: true
+                        description:
+                        - Configure NDFC as a receiver for SNMP traps
+                        required: false
+                        type: bool
+                    STATIC_UNDERLAY_IP_ALLOC:
+                        default: false
+                        description:
+                        - Checking this will disable Dynamic Fabric IP Address Allocations
+                        required: false
+                        type: bool
+                    SUBNET_RANGE:
+                        default: 10.4.0.0/16
+                        description:
+                        - Address range to assign Numbered IPs
+                        required: false
+                        type: str
+                    SUBNET_TARGET_MASK:
+                        choices:
+                        - 30
+                        - 31
+                        default: 30
+                        description:
+                        - Mask for Fabric Subnet IP Range
+                        required: false
+                        type: int
+                    SYSLOG_SERVER_IP_LIST:
+                        default: ''
+                        description:
+                        - Comma separated list of IP Addresses (v4/v6)
+                        required: false
+                        type: str
+                    SYSLOG_SERVER_VRF:
+                        default: ''
+                        description:
+                        - One VRF for all Syslog servers or a comma separated list of VRFs,
+                            one per Syslog server
+                        required: false
+                        type: str
+                    SYSLOG_SEV:
+                        default: ''
+                        description:
+                        - 'Comma separated list of Syslog severity values, one per Syslog
+                            server '
+                        required: false
+                        type: str
+            LAN_CLASSIC_FABRIC_PARAMETERS:
                 description:
                 - LAN Classic fabric specific parameters.
                 - The following parameters are specific to Classic LAN fabrics.
                 - Fabric to manage a legacy Classic LAN deployment with Nexus switches.
                 - The indentation of these parameters is meant only to logically group them.
                 - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
-                type: list
-                elements: dict
                 suboptions:
                     AAA_REMOTE_IP_ENABLED:
                         default: false
