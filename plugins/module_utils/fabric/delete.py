@@ -289,7 +289,7 @@ class FabricDelete(FabricCommon):
             return
 
         if self.rest_send.result_current.get("success", None) is True:
-            self.results.diff_current = {"fabric_name": fabric_name}
+            self.results.diff_current = {"FABRIC_NAME": fabric_name}
             # need this to match the else clause below since we
             # pass response_current (altered or not) to the results object
             response_current = copy.deepcopy(self.rest_send.response_current)
