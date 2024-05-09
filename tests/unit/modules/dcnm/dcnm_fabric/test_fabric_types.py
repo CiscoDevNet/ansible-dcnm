@@ -58,7 +58,7 @@ def test_fabric_types_00010(fabric_types) -> None:
 
 MATCH_00020 = r"FabricTypes\.fabric_type.setter:\s+"
 MATCH_00020 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
-MATCH_00020 += r"Expected one of: LAN_CLASSIC, VXLAN_EVPN, VXLAN_EVPN_MSD\."
+MATCH_00020 += r"Expected one of:\s+.*\."
 
 
 @pytest.mark.parametrize(

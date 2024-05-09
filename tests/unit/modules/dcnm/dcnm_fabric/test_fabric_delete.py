@@ -350,7 +350,7 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
     assert len(instance.results.result) == 1
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
-    assert instance.results.diff[0].get("fabric_name", None) == "f1"
+    assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
 
     assert instance.results.metadata[0].get("action", None) == "delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
