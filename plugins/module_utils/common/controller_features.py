@@ -23,6 +23,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import logging
 
@@ -136,7 +137,7 @@ class ControllerFeatures:
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
             msg = f"{self.class_name}.__init__(): "
-            msg += "check_mode is required"
+            msg += "check_mode is required."
             raise ValueError(msg)
 
         self.conversion = ConversionUtils()
@@ -145,10 +146,11 @@ class ControllerFeatures:
 
     def _init_properties(self):
         self.properties = {}
-        self.properties["data"] = None
+        self.properties["filter"] = None
         self.properties["rest_send"] = None
         self.properties["result"] = None
         self.properties["response"] = None
+        self.properties["response_data"] = None
 
     def refresh(self):
         """
@@ -161,7 +163,7 @@ class ControllerFeatures:
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.rest_send must be set "
-            msg += "before calling commit."
+            msg += "before calling refresh()."
             raise ValueError(msg)
 
         self.rest_send.path = self.api_features.path
@@ -176,18 +178,22 @@ class ControllerFeatures:
         self.rest_send.commit()
         self.rest_send.check_mode = current_check_mode
 
-        if self.rest_send.result_current["success"] is False:
-            msg = f"{self.class_name}.refresh() failed: {self.rest_send.result_current}"
+        self.properties["result"] = copy.deepcopy(self.rest_send.result_current)
+        if self.result["success"] is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Bad controller response: {self.rest_send.response_current}"
             raise ControllerResponseError(msg)
+
+        self.properties["response"] = copy.deepcopy(self.rest_send.response_current)
 
         self.properties["response_data"] = (
             self.rest_send.response_current.get("DATA", {})
             .get("data", {})
             .get("features", {})
         )
-        if self.response_data is None:
-            msg = f"{self.class_name}.refresh() failed: response "
-            msg += "does not contain DATA key. Controller response: "
+        if self.response_data == {}:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Controller response does not match expected structure: "
             msg += f"{self.rest_send.response_current}"
             raise ControllerResponseError(msg)
 
@@ -260,6 +266,51 @@ class ControllerFeatures:
         return self._get("oper_state")
 
     @property
+    def response(self):
+        """
+        Return the GET response from the Controller
+        """
+        return self.properties.get("response")
+
+    @property
+    def response_data(self):
+        """
+        Return the data retrieved from the request
+        """
+        return self.properties.get("response_data")
+
+    @property
+    def rest_send(self):
+        """
+        -   An instance of the RestSend class.
+        -   Raise ``TypeError`` if the value is not an instance of RestSend.
+        """
+        return self.properties.get("rest_send")
+
+    @rest_send.setter
+    def rest_send(self, value):
+        method_name = inspect.stack()[0][3]
+        test = None
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of RestSend. "
+        try:
+            test = value.class_name
+        except AttributeError as error:
+            msg += f"Error detail: {error}."
+            raise TypeError(msg) from error
+        if test != "RestSend":
+            self.log.debug(msg)
+            raise TypeError(msg)
+        self.properties["rest_send"] = value
+
+    @property
+    def result(self):
+        """
+        Return the GET result from the Controller
+        """
+        return self.properties.get("result")
+
+    @property
     def started(self):
         """
         -   Return True if the filtered feature oper_state is "started".
@@ -271,46 +322,3 @@ class ControllerFeatures:
         if self.oper_state == "started":
             return True
         return False
-
-    @property
-    def response_data(self):
-        """
-        Return the data retrieved from the request
-        """
-        return self.properties.get("response_data")
-
-    @property
-    def result(self):
-        """
-        Return the GET result from the Controller
-        """
-        return self.properties.get("result")
-
-    @property
-    def response(self):
-        """
-        Return the GET response from the Controller
-        """
-        return self.properties.get("response")
-
-    @property
-    def rest_send(self):
-        """
-        -   An instance of the RestSend class.
-        -   Raise ``TypeError`` if the value is not an instance of RestSend.
-        """
-        return self.properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        test = None
-        msg = f"{self.class_name}.rest_send must be an instance of RestSend. "
-        try:
-            test = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if test != "RestSend":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self.properties["rest_send"] = value

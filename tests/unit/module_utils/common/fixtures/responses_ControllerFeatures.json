@@ -1,0 +1,632 @@
+{
+    "test_controller_features_00040a": {
+        "DATA": {
+            "data": {
+                "features": {
+                    "change-mgmt": {
+                        "admin_state": "disabled",
+                        "description": "Tracking, Approval, and Rollback of all Configuration Changes",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "kind": "featurette",
+                        "name": "Change Control",
+                        "oper_state": "",
+                        "predisablecheck": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/rest/chngmgmt/preDisableCheck",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "cvisualizer": {
+                        "admin_state": "disabled",
+                        "description": "Network Visualization of K8s Clusters",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "Kubernetes Visualizer",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "elasticservice": {
+                        "admin_state": "enabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "elastic-service",
+                                "url": "https://dcnm-elasticservice.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "L4-L7 Services",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "installed": "2024-02-05 19:12:57.098455128 +0000 UTC",
+                        "kind": "feature",
+                        "name": "L4-L7 Services",
+                        "oper_state": "started",
+                        "spec": "",
+                        "ui": true
+                    },
+                    "epl": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "eplui",
+                                "url": "https://dcnm-eplui.cisco-ndfc.svc:9443/v3/api-docs"
+                            },
+                            {
+                                "schema": null,
+                                "subpath": "epl",
+                                "url": "https://dcnm-eplapi.cisco-ndfc.svc:8443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Tracking Endpoint IP-MAC Location with Historical Information",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "Endpoint Locator",
+                        "oper_state": "stopped",
+                        "predisablecheck": "https://dcnm-eplapi.cisco-ndfc.svc:8443/epl/preDisableCheck",
+                        "spec": "",
+                        "ui": true
+                    },
+                    "eventmgr-data": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "event",
+                                "url": "https://dcnm-eventmgr.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Event Management on Data Network",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "lan-base": {
+                                "default": true
+                            },
+                            "san": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "kind": "feature",
+                        "name": "Syslog Trap On Data",
+                        "oob_nw_mode": "Data",
+                        "oper_state": "stopped",
+                        "service_network": "Data",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "eventmgr-mgmt": {
+                        "admin_state": "enabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "event",
+                                "url": "https://dcnm-eventmgr.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Event Management on Managemnt Network",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "lan-base": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "installed": "2024-02-05 19:12:59.354572155 +0000 UTC",
+                        "kind": "feature",
+                        "name": "Syslog Trap On Management",
+                        "oob_nw_mode": "Management",
+                        "oper_state": "started",
+                        "service_ip": "172.22.150.254",
+                        "service_network": "Management",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "ficon": {
+                        "admin_state": "disabled",
+                        "description": "FICON feature for SAN fabric",
+                        "featureset": {
+                            "san": {
+                                "default": false
+                            }
+                        },
+                        "kind": "featurette",
+                        "name": "FICON",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "img-mgmt": {
+                        "admin_state": "enabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "imagemanagement",
+                                "url": "https://dcnm-imagemanagement.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Image Management Common",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "lan-base": {
+                                "default": true
+                            },
+                            "san": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "installed": "2024-02-05 19:13:05.296678029 +0000 UTC",
+                        "kind": "feature",
+                        "name": "Image Management Common",
+                        "oper_state": "started",
+                        "predisablecheck": "https://dcnm-imagemanagement.cisco-ndfc.svc:9443/rest/policymgnt/imgMgmtPreDisableCheck",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "infoblox": {
+                        "admin_state": "disabled",
+                        "description": "Integration with IP Address Management (IPAM) Systems",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "IPAM Integration",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": true
+                    },
+                    "lan": {
+                        "admin_state": "enabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "lan-fabric/rest",
+                                "url": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Full LAN functionality in addition to Fabric Discovery",
+                        "featureset": null,
+                        "installed": "2024-02-05 19:13:02.089607918 +0000 UTC",
+                        "kind": "feature-set",
+                        "name": "Fabric Controller",
+                        "oper_state": "started",
+                        "predisablecheck": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/rest/control/fabrics/lanFabricPreDisableCheck",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "lan-base": {
+                        "admin_state": "disabled",
+                        "description": "Discovery, Inventory and Topology for LAN deployments",
+                        "featureset": null,
+                        "kind": "feature-set",
+                        "name": "Fabric Discovery",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "lan-common": {
+                        "admin_state": "enabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "lan-discovery",
+                                "url": "https://dcnm-lan-discovery.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Lan Common",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "lan-base": {
+                                "default": true
+                            }
+                        },
+                        "healthz": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/healthz",
+                        "hidden": true,
+                        "installed": "2024-02-05 19:13:03.528035747 +0000 UTC",
+                        "kind": "feature",
+                        "name": "Lan Common",
+                        "oper_state": "started",
+                        "predisablecheck": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/rest/control/fabrics/lanCommonPreDisableCheck",
+                        "requires": [
+                            "lan-discovery-worker",
+                            "cc"
+                        ],
+                        "spec": "",
+                        "ui": true
+                    },
+                    "nxcloud": {
+                        "admin_state": "disabled",
+                        "description": "Nexus Cloud Connector",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "hidden": true,
+                        "kind": "feature",
+                        "name": "Nexus Cloud Connector",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "openstackviz": {
+                        "admin_state": "disabled",
+                        "description": "Network Visualization of Openstack Clusters",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "Openstack Visualizer",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "pm": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "pm",
+                                "url": "https://dcnm-pm.cisco-ndfc.svc:9443/v3/api-docs"
+                            },
+                            {
+                                "schema": null,
+                                "subpath": "pm",
+                                "url": "https://dcnm-pm-worker.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Monitor Environment and Interface Statistics",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            },
+                            "san": {
+                                "default": true
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "Performance Monitoring",
+                        "oper_state": "stopped",
+                        "predisablecheck": "https://dcnm-pm.cisco-ndfc.svc:9443/pmPreDisableCheck",
+                        "requires": [
+                            "pm-worker"
+                        ],
+                        "spec": "",
+                        "ui": false
+                    },
+                    "pmn": {
+                        "admin_state": "enabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "pmn",
+                                "url": "https://dcnm-pmn.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Media Controller for IP Fabrics",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "healthz": "https://dcnm-pmn.cisco-ndfc:9443/healthz",
+                        "installed": "2024-05-09 17:25:50.710270448 +0000 UTC",
+                        "kind": "feature",
+                        "name": "IP Fabric for Media",
+                        "oper_state": "started",
+                        "predisablecheck": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/rest/control/fabrics/lanIPFMPreDisableCheck",
+                        "requires": [
+                            "pmn-telemetry-mgmt",
+                            "pmn-telemetry-data"
+                        ],
+                        "spec": "",
+                        "ui": true
+                    },
+                    "pmn-telemetry-data": {
+                        "admin_state": "disabled",
+                        "description": "Media Controller for IP Fabrics",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "hidden": true,
+                        "kind": "feature",
+                        "name": "IP Fabric for Media",
+                        "oob_nw_mode": "Data",
+                        "oper_state": "",
+                        "requires": [
+                            "pmn-telemetry-data-worker"
+                        ],
+                        "service_network": "Data",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "pmn-telemetry-mgmt": {
+                        "admin_state": "enabled",
+                        "description": "Media Controller for IP Fabrics",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "hidden": true,
+                        "installed": "2024-05-09 17:25:51.650786638 +0000 UTC",
+                        "kind": "feature",
+                        "name": "IP Fabric for Media",
+                        "oob_nw_mode": "Management",
+                        "oper_state": "started",
+                        "requires": [
+                            "pmn-telemetry-mgmt-worker"
+                        ],
+                        "service_ip": "172.22.150.238",
+                        "service_network": "Management",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "poap-data": {
+                        "admin_state": "disabled",
+                        "description": "POAP service on Data Network",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "lan-base": {
+                                "default": true
+                            },
+                            "san": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "kind": "feature",
+                        "name": "POAP Service On  Data",
+                        "oob_nw_mode": "Data",
+                        "oper_state": "stopped",
+                        "service_network": "Data",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "poap-mgmt": {
+                        "admin_state": "enabled",
+                        "description": "POAP service on Managemnt Network",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "lan-base": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "installed": "2024-02-05 19:13:06.853864082 +0000 UTC",
+                        "kind": "feature",
+                        "name": "POAP Service On Management",
+                        "oob_nw_mode": "Management",
+                        "oper_state": "started",
+                        "service_ip": "172.22.150.253",
+                        "service_network": "Management",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "preport": {
+                        "admin_state": "enabled",
+                        "description": "Programmable report application",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            },
+                            "san": {
+                                "default": true
+                            }
+                        },
+                        "hidden": true,
+                        "installed": "2024-02-05 19:13:00.916698974 +0000 UTC",
+                        "kind": "feature",
+                        "name": "Programmable report application",
+                        "oper_state": "started",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "ptp": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "ptp",
+                                "url": "https://dcnm-ptp.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Monitor Precision Timing Protocol (PTP) Statistics",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "PTP Monitoring",
+                        "oper_state": "",
+                        "requires": [
+                            "pmn-telemetry-mgmt",
+                            "pmn-telemetry-data"
+                        ],
+                        "spec": "",
+                        "ui": true
+                    },
+                    "san": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "san-discovery",
+                                "url": "https://dcnm-san-discovery-manager.cisco-ndfc.svc:9443/v3/api-docs"
+                            },
+                            {
+                                "schema": null,
+                                "subpath": "san-discovery",
+                                "url": "https://dcnm-san-inventory.cisco-ndfc.svc:9443/v3/api-docs"
+                            },
+                            {
+                                "schema": null,
+                                "subpath": "san-config",
+                                "url": "https://dcnm-san-config.cisco-ndfc.svc:9443/v3/api-docs"
+                            },
+                            {
+                                "schema": null,
+                                "subpath": "storage",
+                                "url": "https://dcnm-storage.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "SAN Management for MDS and Nexus switches",
+                        "featureset": null,
+                        "healthz": "https://dcnm-san-discovery-manager.cisco-ndfc.svc:9443/healthz",
+                        "kind": "feature-set",
+                        "name": "SAN Controller",
+                        "oper_state": "",
+                        "predisablecheck": "https://dcnm-san-discovery-manager.cisco-ndfc.svc:9443/san/sanPreDisableCheck",
+                        "requires": [
+                            "san-discovery-worker"
+                        ],
+                        "spec": "",
+                        "ui": true
+                    },
+                    "san-dm": {
+                        "admin_state": "disabled",
+                        "description": "SAN Web Device Manager",
+                        "featureset": {
+                            "san": {
+                                "default": true
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "SAN Web Device Manager",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "san-insight": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "san-insight",
+                                "url": "https://dcnm-san-insight-ui.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "SAN Analytics Visualization",
+                        "featureset": {
+                            "san": {
+                                "default": false
+                            }
+                        },
+                        "healthz": "https://dcnm-san-insight-manager.cisco-ndfc.svc:9443/healthz",
+                        "kind": "feature",
+                        "name": "SAN Insights",
+                        "oper_state": "",
+                        "requires": [
+                            "san-insights-pp-worker",
+                            "san-insights-rc-worker"
+                        ],
+                        "spec": "",
+                        "ui": false
+                    },
+                    "vmmplugin": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "vmm",
+                                "url": "https://dcnm-vmm.cisco-ndfc.svc:9443/v3/api-docs"
+                            }
+                        ],
+                        "description": "Network Visualization of Virtual Machines",
+                        "featureset": {
+                            "lan": {
+                                "default": false
+                            },
+                            "san": {
+                                "default": false
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "VMM Visualizer",
+                        "oper_state": "",
+                        "spec": "",
+                        "ui": false
+                    },
+                    "vxlan": {
+                        "admin_state": "disabled",
+                        "apidoc": [
+                            {
+                                "schema": null,
+                                "subpath": "",
+                                "url": "https://sgm.cisco-ndfc.svc:9443/api-docs"
+                            }
+                        ],
+                        "description": "Automation, Compliance, and Management for NX-OS and Other devices",
+                        "featureset": {
+                            "lan": {
+                                "default": true
+                            }
+                        },
+                        "kind": "feature",
+                        "name": "Fabric Builder",
+                        "oper_state": "stopped",
+                        "predisablecheck": "https://dcnm-lan-fabric.cisco-ndfc.svc:9443/rest/control/fabrics/lanVXLANPreDisableCheck",
+                        "spec": "",
+                        "ui": false
+                    }
+                },
+                "name": "",
+                "version": 201
+            },
+            "status": "success"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/features",
+        "RETURN_CODE": 200
+    },
+    "test_controller_features_00050a": {
+        "DATA": {},
+        "MESSAGE": "Internal server error",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/features",
+        "RETURN_CODE": 500
+    },
+    "test_controller_features_00060a": {
+        "DATA": {},
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/features",
+        "RETURN_CODE": 200
+    }
+}
