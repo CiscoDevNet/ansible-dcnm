@@ -13,17 +13,21 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common import Common
 
 __metaclass__ = type
 __author__ = "Allen Robel"
 
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common import \
+    Common
+
+
 class FM(Common):
     """
     V1 API Feature Manager (FM) endpoints common methods and properties.
     """
+
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
@@ -31,32 +35,36 @@ class FM(Common):
         self.fm = f"{self.api_v1}/fm"
         self.log.debug("ENTERED api.v1.Common()")
 
+
 class Features(FM):
     """
     V1 API Feature Manager (FM) features endpoint.
     """
+
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self._build_properties()
         self.log.debug("ENTERED api.v1.fm.Features()")
-    
+
     def _build_properties(self):
         self.properties["path"] = f"{self.fm}/features"
         self.properties["verb"] = "GET"
+
 
 class Version(FM):
     """
     V1 API Feature Manager (FM) about/version endpoint.
     """
+
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self._build_properties()
         self.log.debug("ENTERED api.v1.fm.Version()")
-    
+
     def _build_properties(self):
         self.properties["path"] = f"{self.fm}/about/version"
         self.properties["verb"] = "GET"

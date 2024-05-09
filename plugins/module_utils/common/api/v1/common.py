@@ -13,17 +13,21 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.common_api import CommonApi
 
 __metaclass__ = type
 __author__ = "Allen Robel"
 
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.common_api import \
+    CommonApi
+
+
 class Common(CommonApi):
     """
     v1 API enpoints common methods and properties.
     """
+
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
