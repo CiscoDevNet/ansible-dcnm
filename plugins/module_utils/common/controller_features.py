@@ -292,7 +292,7 @@ class ControllerFeatures:
         method_name = inspect.stack()[0][3]
         test = None
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of RestSend. "
+        msg += "value must be an instance of RestSend. "
         try:
             test = value.class_name
         except AttributeError as error:

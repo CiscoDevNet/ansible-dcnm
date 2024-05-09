@@ -1573,6 +1573,7 @@ options:
                             to source-tree.'
                         required: false
                         type: list
+                        elements: str
                     BOOTSTRAP_CONF:
                         default: ''
                         description:
@@ -1755,7 +1756,7 @@ options:
                         required: false
                         type: str
                     LINK_STATE_ROUTING_TAG:
-                        default: 1
+                        default: "1"
                         description:
                         - Routing process tag for the fabric
                         required: false

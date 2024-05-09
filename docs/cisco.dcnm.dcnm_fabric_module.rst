@@ -176,6 +176,7 @@ Parameters
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
                         <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
                     </div>
                 </td>
                 <td>
@@ -738,7 +739,7 @@ Parameters
                     </div>
                 </td>
                 <td>
-                        <b>Default:</b><br/><div style="color: blue">1</div>
+                        <b>Default:</b><br/><div style="color: blue">"1"</div>
                 </td>
                 <td>
                         <div>Routing process tag for the fabric</div>
