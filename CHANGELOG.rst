@@ -8,6 +8,31 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.5.0`_
+=====================
+
+**Release Date:** ``2023-05-09``
+
+Added
+-----
+
+- The following new modules are included in this release
+    - ``dcnm_image_upgrade`` - Module for managing NDFC image upgrade
+    - ``dcnm_image_upload`` - Module for managing NDFC image upload
+    - ``dcnm_image_policy`` - Module for managing NDFC image policy
+    - ``dcnm_vpc_pair`` - Module for managing dcnm NDFC switch pairs
+    - ``dcnm_fabric`` - Module for managing NDFC fabrics
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/276
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/278
+- Fix for inventory issue when non-zero max hop value is set.
+- Fix for enhanced error reporting in inventory module.
+- Fix for config not required for overridden state.
+- Fix for switch role based default ethernet interface policy.
+
 `3.4.3`_
 =====================
 
@@ -446,6 +471,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.5.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.3...3.5.0
 .. _3.4.3: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.2...3.4.3
 .. _3.4.2: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.1...3.4.2
 .. _3.4.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.0...3.4.1
