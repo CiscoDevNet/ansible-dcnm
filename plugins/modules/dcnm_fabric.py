@@ -2244,6 +2244,9 @@ EXAMPLES = """
         BGP_AS: 65000
         ANYCAST_GW_MAC: 0001.aabb.ccdd
         UNDERLAY_IS_V6: false
+        EXTRA_CONF_LEAF: |
+          interface Ethernet1/1-16
+            description managed by NDFC
         DEPLOY: false
     -   FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
