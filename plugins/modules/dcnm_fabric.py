@@ -2064,9 +2064,6 @@ class Common(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
         self.features = {}
-        msg = f"{self.class_name}.{method_name}: "
-        msg + f"params = {json_pretty(self.params)}"
-        self.log.debug(msg)
         self.controller_features.rest_send = RestSend(self.ansible_module)
         try:
             self.controller_features.refresh()
