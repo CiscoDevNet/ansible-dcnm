@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_image_upload
 **DCNM Ansible Module for managing images.**
 
 
-Version added: 2.1.0
+Version added: 3.5.0
 
 .. contents::
    :local:

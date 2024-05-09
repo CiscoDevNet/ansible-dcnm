@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2024 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_vpc_pair
 short_description: DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.
-version_added: "1.1.0"
+version_added: "3.5.0"
 description:
     - "DCNM Ansible Module for managing VPC switch pairs."
 author: Mallik Mudigonda(@mmudigon)

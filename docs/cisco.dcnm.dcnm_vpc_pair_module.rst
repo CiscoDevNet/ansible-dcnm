@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_vpc_pair
 **DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.**
 
 
-Version added: 1.1.0
+Version added: 3.5.0
 
 .. contents::
    :local:

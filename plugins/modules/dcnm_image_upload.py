@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_image_upload
 short_description: DCNM Ansible Module for managing images.
-version_added: "2.1.0"
+version_added: "3.5.0"
 description:
     - "DCNM Ansible Module for the following image management operations"
     - "Upload, Delete, and Display NXOS images from the controller"
