@@ -26,10 +26,10 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm import \
     Features
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 
