@@ -20,7 +20,7 @@ Added
     - ``dcnm_image_upgrade`` - Module for managing NDFC image upgrade
     - ``dcnm_image_upload`` - Module for managing NDFC image upload
     - ``dcnm_image_policy`` - Module for managing NDFC image policy
-    - ``dcnm_vpc_pair`` - Module for managing dcnm NDFC switch pairs
+    - ``dcnm_vpc_pair`` - Module for managing dcnm NDFC vPC switch pairs
     - ``dcnm_fabric`` - Module for managing NDFC fabrics
 
 Fixed
