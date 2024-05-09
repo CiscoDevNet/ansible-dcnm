@@ -10,35 +10,20 @@
 
   vars:
     # This testcase field can run any test in the tests directory for the role
-    testcase: spine_leaf_basic
-    fabric_name: fabric-name
-    spine1: n9k-spine1.example.com
-    spine2: n9k-spine2.example.com
-    leaf1: n9k-leaf1.example.com
-    leaf2: n9k-leaf2.example.com
-    leaf3: n9k-leaf3.example.com
-    leaf4: n9k-leaf4.example.com
-    username: admin
-    password: "secret-password"
+    # testcase: dcnm_fabric_deleted_basic
+    testcase: dcnm_fabric_merged_basic
+    # testcase: dcnm_fabric_merged_save_deploy
+    # testcase: dcnm_fabric_merged_basic_ipfm
+    # testcase: dcnm_fabric_replaced_basic
+    # testcase: dcnm_fabric_replaced_save_deploy
+    fabric_name_1: VXLAN_EVPN_Fabric
+    fabric_type_1: VXLAN_EVPN
+    fabric_name_2: VXLAN_EVPN_MSD_Fabric
+    fabric_type_2: VXLAN_EVPN_MSD
+    fabric_name_3: LAN_CLASSIC_Fabric
+    fabric_type_3: LAN_CLASSIC
+    fabric_name_4: IPFM_Fabric
+    fabric_type_4: IPFM
 
   roles:
     - dcnm_fabric
-
-# Uncomment the following play if you want to verify connectivity between
-# host a and host c and d across the vxlan fabric setup by test spine_leaf_basic
-#
-
-# - hosts: nxos
-#   gather_facts: no
-#   connection: ansible.netcommon.network_cli
-#
-#   tasks:
-#     - name: Verify IP reachability for vni 4000
-#       nxos_ping:
-#         dest: 192.168.1.20
-#         state: present
-#
-#     - name: Verify IP reachability for vni 7000
-#       nxos_ping:
-#         dest: 192.168.2.20
-#         state: present
