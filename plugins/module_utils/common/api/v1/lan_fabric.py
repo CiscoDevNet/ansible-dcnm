@@ -19,38 +19,18 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common import \
+    Common
 
 
-class CommonApi:
+class LanFabric(Common):
     """
-    API endpoints common methods and properties.
+    V1 API lan-fabrics endpoints common methods and properties.
     """
 
     def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.conversion = ConversionUtils()
-        self.log.debug("ENTERED api.CommonApi()")
-        self.api = "/appcenter/cisco/ndfc/api"
-        self._init_properties()
-
-    def _init_properties(self):
-        self.properties = {}
-        self.properties["path"] = None
-        self.properties["verb"] = None
-
-    @property
-    def path(self):
-        """
-        Return the endpoint path.
-        """
-        return self.properties["path"]
-
-    @property
-    def verb(self):
-        """
-        Return the endpoint verb.
-        """
-        return self.properties["verb"]
+        self.lan_fabric = f"{self.api_v1}/lan-fabric"
+        self.log.debug("ENTERED api.v1.LanFabric()")
