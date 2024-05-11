@@ -32,6 +32,9 @@ class CommonApi:
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.conversion = ConversionUtils()
+        # Popuate in subclasses to indicate which properties
+        # are mandatory for the subclass.
+        self.required_properties = set()
         self.log.debug("ENTERED api.CommonApi()")
         self.api = "/appcenter/cisco/ndfc/api"
         self._init_properties()
