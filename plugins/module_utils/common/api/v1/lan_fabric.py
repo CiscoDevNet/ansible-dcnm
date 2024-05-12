@@ -25,7 +25,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.v1_common
 
 class LanFabric(V1Common):
     """
-    V1 API lan-fabrics endpoints common methods and properties.
+    ## V1 API - LanFabric()
+
+    ### Description
+    Common methods and properties for LanFabric() subclasses
+
+    ### Endpoint
+    ``/appcenter/cisco/ndfc/api/v1/lan-fabric``
     """
 
     def __init__(self):

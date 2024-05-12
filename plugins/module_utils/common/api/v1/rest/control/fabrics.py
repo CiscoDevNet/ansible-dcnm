@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=line-too-long
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -26,10 +26,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabri
 
 class Fabrics(LanFabric):
     """
-    ## V1 API Fabrics - Fabrics
+    ## V1 API Fabrics - LanFabric().Fabrics()
 
     ### Description
-    Fabrics endpoints common methods and properties.
+    Common methods and properties for Fabrics() subclasses.
+
+    ### Endpoint
+    -   ``/lan-fabric/rest/control/fabrics/{fabric_name}``
     """
 
     def __init__(self):
@@ -84,10 +87,15 @@ class Fabrics(LanFabric):
 
 class EpFabricConfigDeploy(Fabrics):
     """
-    ## V1 API Fabrics - EpFabricConfigDeploy
+    ## V1 API - Fabrics().EpFabricConfigDeploy()
 
     ### Description
     Return endpoint to initiate config-deploy on fabric_name.
+
+    ### Endpoint
+    -   ``/fabrics/{fabric_name}/config-deploy``
+    -   ``/fabrics/{fabric_name}/config-deploy?forceShowRun={force_show_run}``
+    -   ``/fabrics/{fabric_name}/config-deploy?inclAllMSDSwitches={include_all_msd_switches}``
 
     ### Raises
     - ValueError: If fabric_name is not set.
@@ -182,10 +190,14 @@ class EpFabricConfigDeploy(Fabrics):
 
 class EpFabricConfigSave(Fabrics):
     """
-    ## V1 API Fabrics - EpFabricConfigSave
+    ## V1 API - Fabrics().EpFabricConfigSave()
 
     ### Description
     Return endpoint to initiate config-save on fabric_name.
+
+    Endpoint:
+    - ``/fabrics/{fabric_name}/config-save``
+    - ``/fabrics/{fabric_name}/config-save?ticketId={ticket_id}``
 
     ### Raises
     - ValueError: If fabric_name is not set.
@@ -258,10 +270,13 @@ class EpFabricConfigSave(Fabrics):
 
 class EpFabricDelete(Fabrics):
     """
-    ## V1 API Fabrics - EpFabricDelete
+    ## V1 API - Fabrics().EpFabricDelete()
 
     ### Description
     Return endpoint to delete ``fabric_name``.
+
+    ### Endpoint
+    ``/fabrics/{fabric_name}``
 
     ### Raises
     - ValueError: If fabric_name is not set.
@@ -304,10 +319,13 @@ class EpFabricDelete(Fabrics):
 
 class EpFabricDetails(Fabrics):
     """
-    ## V1 API Fabrics - EpFabricDetails
+    ## V1 API - Fabrics().EpFabricDetails()
 
     ### Description
     Return the endpoint to query ``fabric_name`` details.
+
+    ### Endpoint
+    ``/fabrics/{fabric_name}``
 
     ### Raises
     - ValueError: If fabric_name is not set.
@@ -346,10 +364,13 @@ class EpFabricDetails(Fabrics):
 
 class EpFabricFreezeMode(Fabrics):
     """
-    ## V1 API Fabrics - EpFabricFreezeMode
+    ## V1 API - Fabrics().EpFabricFreezeMode()
 
     ### Description
     Return the endpoint to query ``fabric_name`` freezemode status.
+
+    ### Endpoint
+    ``/fabrics/{fabric_name}/freezemode``
 
     ### Raises
     - ValueError: If fabric_name is not set.

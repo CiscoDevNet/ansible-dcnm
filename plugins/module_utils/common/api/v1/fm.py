@@ -25,7 +25,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.v1_common
 
 class FM(V1Common):
     """
-    V1 API Feature Manager (FM) endpoints common methods and properties.
+    ## V1 API Feature Manager (FM)
+
+    ### Description
+    Common methods and properties for
+    ``/appcenter/cisco/ndfc/api/v1/fm``
+    endpoints.
     """
 
     def __init__(self):
@@ -38,7 +43,13 @@ class FM(V1Common):
 
 class Features(FM):
     """
-    V1 API Feature Manager (FM) features endpoint.
+    ## V1 API Feature Manager (FM) - Features
+
+    ### Description
+    Common methods and properties
+
+    ### Endpoint
+    ``/fm/features``
     """
 
     def __init__(self):
@@ -55,7 +66,13 @@ class Features(FM):
 
 class Version(FM):
     """
-    V1 API Feature Manager (FM) about/version endpoint.
+    ## V1 API Feature Manager (FM) about/version.
+
+    ### Description
+    Common methods and properties
+
+    ### Endpoint
+    ``/fm/about/version``
     """
 
     def __init__(self):

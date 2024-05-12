@@ -25,7 +25,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.common impor
 
 class V1Common(Common):
     """
-    v1 API enpoints common methods and properties.
+    ## v1 API enpoints - V1Common
+
+    ### Description
+    Common methods and properties for subclasses.
+
+    ### Endpoint
+    ``/appcenter/cisco/ndfc/api/v1/``
     """
 
     def __init__(self):

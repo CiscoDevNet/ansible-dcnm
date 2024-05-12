@@ -25,7 +25,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
 
 class Common:
     """
-    API endpoints common methods and properties.
+    ## API endpoints - Common
+
+    ### Description
+    Common methods and properties for subclasses.
+
+    ### Endpoint
+    ``/appcenter/cisco/ndfc/api``
     """
 
     def __init__(self):
