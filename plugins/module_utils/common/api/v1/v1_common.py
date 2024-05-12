@@ -19,11 +19,11 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.common_api import \
-    CommonApi
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.common import \
+    Common
 
 
-class Common(CommonApi):
+class V1Common(Common):
     """
     v1 API enpoints common methods and properties.
     """

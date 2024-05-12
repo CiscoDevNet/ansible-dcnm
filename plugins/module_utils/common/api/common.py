@@ -23,7 +23,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 
 
-class CommonApi:
+class Common:
     """
     API endpoints common methods and properties.
     """

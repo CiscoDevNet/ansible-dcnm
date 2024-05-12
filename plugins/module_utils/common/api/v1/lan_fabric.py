@@ -19,11 +19,11 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common import \
-    Common
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.v1_common import \
+    V1Common
 
 
-class LanFabric(Common):
+class LanFabric(V1Common):
     """
     V1 API lan-fabrics endpoints common methods and properties.
     """

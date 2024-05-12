@@ -75,7 +75,89 @@ class Fabrics(LanFabric):
             raise ValueError(msg)
         return f"{self.rest_control_fabrics}/{self.fabric_name}"
 
-class FabricsDelete(Fabrics):
+class EpFabricConfigDeploy(Fabrics):
+    """
+    - V1 API Fabrics: fabric config-deploy endpoint.
+    - parameters:
+        - force_show_run: boolean
+            - default: False
+        - include_all_msd_switches: boolean
+            - default: False
+        - fabric_name: string
+            - required
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self._build_properties()
+        self.log.debug(f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}")
+
+    def _build_properties(self):
+        super()._build_properties()
+        self.properties["verb"] = "POST"
+        self.properties["force_show_run"] = False
+        self.properties["include_all_msd_switches"] = False
+
+    @property
+    def force_show_run(self):
+        """
+        - getter: Return the force_show_run.
+        - setter: Set the force_show_run.
+        - setter: Raise ``ValueError`` if force_show_run is not valid.
+        - Default: False
+        """
+        return self.properties["force_show_run"]
+
+    @force_show_run.setter
+    def force_show_run(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "force_show_run must be a boolean."
+            raise ValueError(msg)
+        self.properties["force_show_run"] = value
+
+    @property
+    def include_all_msd_switches(self):
+        """
+        - getter: Return the include_all_msd_switches.
+        - setter: Set the include_all_msd_switches.
+        - setter: Raise ``ValueError`` if include_all_msd_switches is not valid.
+        - Default: False
+        """
+        return self.properties["include_all_msd_switches"]
+
+    @include_all_msd_switches.setter
+    def include_all_msd_switches(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "include_all_msd_switches must be a boolean."
+            raise ValueError(msg)
+        self.properties["include_all_msd_switches"] = value
+
+    @property
+    def path(self):
+        """
+        - Override the path property to mandate fabric_name is set.
+        - Raise ``ValueError`` if fabric_name is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        if self.fabric_name is None and "fabric_name" in self.required_properties:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_name must be set prior to accessing path."
+            raise ValueError(msg)
+        _path = f"{self.rest_control_fabrics}/{self.fabric_name}"
+        _path += "/config-deploy?"
+        _path += f"forceShowRun={self.force_show_run}"
+        _path += f"&inclAllMSDSwitches={self.include_all_msd_switches}"
+        return _path
+
+
+class EpFabricDelete(Fabrics):
     """
     V1 API Fabrics: fabric delete endpoint.
     """
@@ -92,7 +174,7 @@ class FabricsDelete(Fabrics):
         super()._build_properties()
         self.properties["verb"] = "DELETE"
 
-class FabricsDetails(Fabrics):
+class EpFabricDetails(Fabrics):
     """
     V1 API Fabrics: fabric details endpoint.
     """
