@@ -19,18 +19,17 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.v1_common import \
-    V1Common
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common_v1 import \
+    CommonV1
 
 
-class FM(V1Common):
+class FM(CommonV1):
     """
-    ## V1 API Feature Manager (FM)
+    ## V1 API Feature Manager (FM) - CommonV1().FM()
 
     ### Description
-    Common methods and properties for
+    Common methods and properties for FM() subclasses
     ``/appcenter/cisco/ndfc/api/v1/fm``
-    endpoints.
     """
 
     def __init__(self):
@@ -38,12 +37,12 @@ class FM(V1Common):
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fm = f"{self.api_v1}/fm"
-        self.log.debug("ENTERED api.v1.Common()")
+        self.log.debug("ENTERED api.v1.CommonV1()")
 
 
-class Features(FM):
+class EpFeatures(FM):
     """
-    ## V1 API Feature Manager (FM) - Features
+    ## V1 API Feature Manager (FM) - FM().EpFeatures()
 
     ### Description
     Common methods and properties
@@ -64,7 +63,7 @@ class Features(FM):
         self.properties["verb"] = "GET"
 
 
-class Version(FM):
+class EpVersion(FM):
     """
     ## V1 API Feature Manager (FM) about/version.
 
