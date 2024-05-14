@@ -1,5 +1,7 @@
 plugins/modules/dcnm_vrf.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_image_policy.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_network.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_image_upgrade.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_interface.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_inventory.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_policy.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
@@ -10,6 +12,9 @@ plugins/modules/dcnm_service_route_peering.py validate-modules:missing-gplv3-lic
 plugins/modules/dcnm_service_policy.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_resource_manager.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_links.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_vpc_pair.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_image_upload.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_fabric.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_rest.py import-2.6!skip
 plugins/modules/dcnm_rest.py import-2.7!skip
 plugins/httpapi/dcnm.py import-3.8!skip

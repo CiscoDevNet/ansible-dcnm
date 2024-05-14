@@ -1,0 +1,108 @@
+{
+    "TEST_NOTES": [
+        "Mocked response_current value."
+    ],
+    "test_image_policy_create_bulk_00035a": {
+        "agnostic": false,
+        "epldImgName": "n9000-epld.10.3.2.F.img",
+        "nxosVersion": "10.3.1_nxos64-cs_64bit",
+        "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+        "platform": "N9K",
+        "policyDescr": "image policy of 10.3(3)F",
+        "policyName": "FOO",
+        "policyType": "PLATFORM",
+        "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000",
+        "sequence_number": 1
+    },
+    "test_image_policy_query_00030a": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "lastOperDataObject": [
+                {
+                    "agnostic": false,
+                    "epldImgName": "n9000-epld.10.2.5.M.img",
+                    "nxosVersion": "10.2.5_nxos64-cs_64bit",
+                    "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+                    "platform": "N9K",
+                    "policyDescr": "KR5M image policy",
+                    "policyName": "KR5M",
+                    "policyType": "PLATFORM",
+                    "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+                }
+            ]
+        }
+    },
+    "test_image_policy_query_00031a": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "lastOperDataObject": [
+                {
+                    "agnostic": false,
+                    "epldImgName": "n9000-epld.10.2.5.M.img",
+                    "nxosVersion": "10.2.5_nxos64-cs_64bit",
+                    "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+                    "platform": "N9K",
+                    "policyDescr": "KR5M image policy",
+                    "policyName": "KR5M",
+                    "policyType": "PLATFORM",
+                    "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+                }
+            ]
+        }
+    },
+    "test_image_policy_query_00032a": {
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+        "RETURN_CODE": 200,
+        "DATA": {
+            "lastOperDataObject": [
+                {
+                    "agnostic": false,
+                    "epldImgName": "n9000-epld.10.2.5.M.img",
+                    "imageName": "nxos64-cs.10.2.5.M.bin",
+                    "nxosVersion": "10.2.5_nxos64-cs_64bit",
+                    "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+                    "platform": "N9K/N3K",
+                    "platformPolicies": "",
+                    "policyDescr": "KR5M",
+                    "policyName": "KR5M",
+                    "policyType": "PLATFORM",
+                    "ref_count": 0,
+                    "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+                },
+                {
+                    "agnostic": false,
+                    "epldImgName": "n9000-epld.10.3.1.F.img",
+                    "imageName": "nxos64-cs.10.3.1.F.bin",
+                    "nxosVersion": "10.3.1_nxos64-cs_64bit",
+                    "packageName": "",
+                    "platform": "N9K/N3K",
+                    "platformPolicies": "",
+                    "policyDescr": "NR3F",
+                    "policyName": "NR3F",
+                    "policyType": "PLATFORM",
+                    "ref_count": 0,
+                    "rpmimages": null
+                }
+            ]
+        }
+    },
+    "test_image_policy_query_00033a": {
+        "DATA": {
+            "lastOperDataObject": [],
+            "message": "",
+            "status": "SUCCESS"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
+        "RETURN_CODE": 200
+    }
+}

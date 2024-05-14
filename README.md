@@ -34,6 +34,10 @@ Name | Description
 ### Modules
 Name | Description
 --- | ---
+[cisco.dcnm.dcnm_fabric](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_fabric_module.rst)|Manage creation and configuration of NDFC fabrics.
+[cisco.dcnm.dcnm_image_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_policy_module.rst)|Image policy management for Nexus Dashboard Fabric Controller
+[cisco.dcnm.dcnm_image_upgrade](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upgrade_module.rst)|Image management for Nexus switches
+[cisco.dcnm.dcnm_image_upload](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upload_module.rst)|DCNM Ansible Module for managing images.
 [cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
 [cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_links](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_links_module.rst)|DCNM ansible module for managing Links.
@@ -45,6 +49,7 @@ Name | Description
 [cisco.dcnm.dcnm_service_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_policy_module.rst)|DCNM ansible module for managing service policies.
 [cisco.dcnm.dcnm_service_route_peering](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_route_peering_module.rst)|DCNM Ansible Module for managing Service Route Peerings.
 [cisco.dcnm.dcnm_template](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_template_module.rst)|DCNM Ansible Module for managing templates.
+[cisco.dcnm.dcnm_vpc_pair](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vpc_pair_module.rst)|DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.
 [cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
 
 <!--end collection content-->
@@ -63,7 +68,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.4.3
+    version: 3.5.0
 ```
 ## Using this collection
 

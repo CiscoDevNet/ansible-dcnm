@@ -1,0 +1,1357 @@
+{
+  "vpc_pair_null_vpc_info_resp":  [],
+
+  "vpc_pair_null_vpc-policyo_resp":  [],
+
+  "vpc_pair_null_template_resp": {},
+
+  "vpc_pair_null_deploy_resp": {},
+
+  "vpc_pair_null_vpc_policy_resp": {},
+
+  "vpc_pair_sync_status_in_sync":
+  {
+    "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/inventory/switchesByFabric",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "ipAddress": "10.122.84.174",
+        "ccStatus": "In-Sync"
+      },
+      {
+        "ipAddress": "10.122.84.175",
+        "ccStatus": "In-Sync"
+      },
+      {
+        "ipAddress": "10.122.85.174",
+        "ccStatus": "In-Sync"
+      },
+      {
+        "ipAddress": "10.122.85.175",
+        "ccStatus": "In-Sync"
+      },
+      {
+        "ipAddress": "10.122.86.174",
+        "ccStatus": "In-Sync"
+      },
+      {
+        "ipAddress": "10.122.86.175",
+        "ccStatus": "In-Sync"
+      }
+    ]
+  },
+
+    "vpc_pair_sync_status_not_in_sync":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/inventory/switchesByFabric",
+      "MESSAGE": "OK",
+      "DATA": [
+      {
+        "ipAddress": "10.122.84.174",
+        "ccStatus": "Not-In-Sync"
+      },
+      {
+        "ipAddress": "10.122.84.175",
+        "ccStatus": "Not-In-Sync"
+      },
+      {
+        "ipAddress": "10.122.85.174",
+        "ccStatus": "Not-In-Sync"
+      },
+      {
+        "ipAddress": "10.122.85.175",
+        "ccStatus": "Not-In-Sync"
+      },
+      {
+        "ipAddress": "10.122.86.174",
+        "ccStatus": "Not-In-Sync"
+      },
+      {
+        "ipAddress": "10.122.86.175",
+        "ccStatus": "Not-In-Sync"
+      }
+      ]
+    },
+
+    "vpc_pair_info_resp_00003":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777660",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777660,
+        "peerTwoDbId": 777620,
+        "peerOneSerialNumber": "SAL1820SDPP",
+        "peerTwoSerialNumber": "SAL1819S6K3"
+      }
+    },
+
+    "vpc_pair_policy_resp_00003":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPP",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": "",
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER2_MEMBER_INTERFACES": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": "",
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    },
+
+    "vpc_pair_info_resp_00003_1":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777670",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777670,
+        "peerTwoDbId": 777630,
+        "peerOneSerialNumber": "SAL1820SDPQ",
+        "peerTwoSerialNumber": "SAL1819S6K4"
+      }
+    },
+
+    "vpc_pair_policy_resp_00003_1":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPQ",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+        }
+      }
+    },
+    "vpc_pair_info_resp_00003_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777680",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777680,
+        "peerTwoDbId": 777640,
+        "peerOneSerialNumber": "SAL1820SDPR",
+        "peerTwoSerialNumber": "SAL1819S6K5"
+      }
+    },
+
+    "vpc_pair_policy_resp_00003_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPR",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+        }
+      }
+    },
+
+    "vpc_pair_info_resp_1":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777661",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777660,
+        "peerTwoDbId": 777620,
+        "peerOneSerialNumber": "SAL1820SDPP",
+        "peerTwoSerialNumber": "SAL1819S6K3"
+      }
+    },
+
+    "vpc_pair_policy_resp_1":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPQ",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": "",
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER2_MEMBER_INTERFACES": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": "",
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    },
+
+    "vpc_pair_info_resp_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777661",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777661,
+        "peerTwoDbId": 777621,
+        "peerOneSerialNumber": "SAL1820SDPQ",
+        "peerTwoSerialNumber": "SAL1819S6K4"
+      }
+    },
+
+    "vpc_pair_policy_resp_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPQ",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": "",
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER2_MEMBER_INTERFACES": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": "",
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    },
+
+    "vpc_pair_info_resp_3":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777662",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777662,
+        "peerTwoDbId": 777622,
+        "peerOneSerialNumber": "SAL1820SDPR",
+        "peerTwoSerialNumber": "SAL1819S6K5"
+      }
+    },
+
+    "vpc_pair_policy_resp_3":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPR",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": "",
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER2_MEMBER_INTERFACES": "",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": "",
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    },
+
+    "vpc_pair_template_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/vpc_pair",
+      "MESSAGE": "OK",
+      "DATA": {
+        "instanceClassId": 2654,
+        "assignedInstanceClassId": 0,
+        "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=vpc_pair:type=false",
+        "name": "vpc_pair",
+        "description": " ",
+        "userDefined": true,
+        "parameters": [
+        {
+          "name": "DOMAIN_ID",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+            "min": "1",
+            "max": "1000"
+          },
+          "annotations": {
+            "IsVPCDomainID": "true",
+            "DisplayName": "vPC Domain ID",
+            "Description": "vPC Domain ID",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER1_KEEP_ALIVE_LOCAL_IP",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-1 vPC Keep-alive Local IP Address",
+            "Description": "IP address of a L3 interface in non-default VRF on Peer 1",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER2_KEEP_ALIVE_LOCAL_IP",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-2 vPC Keep-alive Local IP Address",
+            "Description": "IP address of a L3 interface in non-default VRF on Peer 2",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "KEEP_ALIVE_VRF",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "vPC Keep-alive VRF Name",
+            "Description": "Name of VRF used for keep-alive, enter &#39;default&#39; for default VRF",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "KEEP_ALIVE_HOLD_TIMEOUT",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+            "min": "3",
+            "max": "10",
+            "defaultValue": "3"
+          },
+          "annotations": {
+            "DisplayName": "vPC Keep-alive Hold Timeout",
+            "Description": "Hold timeout to ignore stale peer alive messages, default is 3 if not specified",
+            "IsMandatory": "false",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "isVpcPlus",
+          "description":"None",
+          "parameterType": "boolean",
+          "metaProperties": {
+            "defaultValue": "false"
+          },
+          "annotations": {
+            "DisplayName": "vPC&#43;",
+            "Description": "Check this if it&#39;s a vPC&#43; topology",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "fabricPath_switch_id",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "FabricPath switch ID",
+            "IsShow": "isVpcPlus==true",
+            "Description": "Fabricpath switch ID",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "isVTEPS",
+          "description":"None",
+          "parameterType": "boolean",
+          "metaProperties": {
+            "defaultValue": "false"
+          },
+          "annotations": {
+            "DisplayName": "Configure VTEPS",
+            "IsShow": "isVpcPlus!=true",
+            "Description": "Check this to configure NVE source loopback interface",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "NVE_INTERFACE",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+            "min": "1",
+            "max": "4",
+            "defaultValue": "1"
+          },
+          "annotations": {
+            "DisplayName": "NVE interface",
+            "IsShow": "isVTEPS==true",
+            "Description": "NVE interface",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER1_SOURCE_LOOPBACK",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer 1 NVE source loopback ID",
+            "IsShow": "isVTEPS==true",
+            "Description": "Peer 1 NVE source loopback interface ID",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER2_SOURCE_LOOPBACK",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer 2 NVE source loopback ID",
+            "IsShow": "isVTEPS==true",
+            "Description": "Peer 2 NVE source loopback interface ID",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER1_PRIMARY_IP",
+          "description":"None",
+          "parameterType": "ipV4Address",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer 1 loopback interface&#39;s primary IP",
+            "IsShow": "isVTEPS==true",
+            "Description": "Primary IP address for NVE source loopback interface",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER2_PRIMARY_IP",
+          "description":"None",
+          "parameterType": "ipV4Address",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer 2 loopback interface&#39;s primary IP",
+            "IsShow": "isVTEPS==true",
+            "Description": "Primary IP address for NVE source loopback interface",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "LOOPBACK_SECONDARY_IP",
+          "description":"None",
+          "parameterType": "ipV4Address",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Loopback interface&#39;s secondary IP",
+            "IsShow": "isVTEPS==true",
+            "Description": "Secondary IP address for NVE source loopback interface. This should be same on both devices",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER1_DOMAIN_CONF",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-1 vPC Domain Freeform Config",
+            "IsMultiLineString": "true",
+            "Description": "Additional CLI for Peer-1 vPC Domain",
+            "IsMandatory": "false",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER2_DOMAIN_CONF",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-2 vPC Domain Freeform Config",
+            "IsMultiLineString": "true",
+            "Description": "Additional CLI for Peer-2 vPC Domain",
+            "IsMandatory": "false",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER1_PCID",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+            "min": "1",
+            "max": "4096"
+          },
+          "annotations": {
+            "DisplayName": "Peer-1 Peerlink Port-Channel ID",
+            "Description": "Peer-1 Peerlink port-channel number (Min:1, Max:4096)",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER2_PCID",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+            "min": "1",
+            "max": "4096"
+          },
+          "annotations": {
+            "DisplayName": "Peer-2 Peerlink Port-Channel ID",
+            "Description": "Peer-2 Peerlink port-channel number (Min:1, Max:4096)",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER1_MEMBER_INTERFACES",
+          "description":"None",
+          "parameterType": "interfaceRange",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-1 Peerlink Member Interfaces",
+            "Description": "A list of member interfaces for Peer-1 [e.g. e1/5,eth1/7-9]",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER2_MEMBER_INTERFACES",
+          "description":"None",
+          "parameterType": "interfaceRange",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-2 Peerlink Member Interfaces",
+            "Description": "A list of member interfaces for Peer-2 [e.g. e1/5,eth1/7-9]",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PC_MODE",
+          "description":"None",
+          "parameterType": "enum",
+          "metaProperties": {
+            "defaultValue": "active",
+            "validValues": "on,active,passive"
+          },
+          "annotations": {
+            "DisplayName": "Port Channel Mode",
+            "Description": "Channel mode options: on, active and passive",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER1_PO_DESC",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+            "minLength": "1",
+            "maxLength": "254"
+          },
+          "annotations": {
+            "DisplayName": "Peer-1 Peerlink Port Channel Description",
+            "Description": "Add description to the port-channel (Max Size 254)",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER2_PO_DESC",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+            "minLength": "1",
+            "maxLength": "254"
+          },
+          "annotations": {
+            "DisplayName": "Peer-2 Peerlink Port Channel Description",
+            "Description": "Add description to the port-channel (Max Size 254)",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "ADMIN_STATE",
+          "description":"None",
+          "parameterType": "boolean",
+          "metaProperties": {
+            "defaultValue": "true"
+          },
+          "annotations": {
+            "DisplayName": "Enable VPC Peerlink Port Channel",
+            "Description": "Uncheck to disable the vPC Peerlink port-channel",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "ALLOWED_VLANS",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+            "defaultValue": "all"
+          },
+          "annotations": {
+            "DisplayName": "Trunk Allowed Vlans",
+            "Description": "Allowed values: &#39;none&#39;, &#39;all&#39;, or vlan ranges (ex: 1-200,500-2000,3000)",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "PEER1_PO_CONF",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-1 Peerlink PO Freeform Config",
+            "IsMultiLineString": "true",
+            "Description": "Additional CLI for Peer-1 vPC Peerlink port-channel",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "PEER2_PO_CONF",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Peer-2 Peerlink PO Freeform Config",
+            "IsMultiLineString": "true",
+            "Description": "Additional CLI for Peer-2 vPC Peerlink port-channel",
+            "IsMandatory": "false",
+            "Section": "vPC Peerlink"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": true
+        },
+        {
+          "name": "clear_policy",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+            "defaultValue": "false"
+          },
+          "annotations": {
+            "IsInternal": "true"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        },
+        {
+          "name": "FABRIC_NAME",
+          "description":"None",
+          "parameterType": "string",
+          "metaProperties": {
+
+          },
+          "annotations": {
+            "DisplayName": "Fabric Name",
+            "Description": "Fabric Name",
+            "IsInternal": "true"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        }
+        ]
+      }
+    },
+
+    "vpc_pair_template_resp_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/vpc_pair",
+      "MESSAGE": "OK",
+      "DATA": {
+        "instanceClassId": 2654,
+        "assignedInstanceClassId": 0,
+        "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=vpc_pair:type=false",
+        "name": "vpc_pair_2",
+        "description": " ",
+        "userDefined": true,
+        "parameters": [
+        {
+          "name": "DOMAIN_ID",
+          "description":"None",
+          "parameterType": "integer",
+          "metaProperties": {
+            "min": "1",
+            "max": "1000"
+          },
+          "annotations": {
+            "IsVPCDomainID": "true",
+            "DisplayName": "vPC Domain ID",
+            "Description": "vPC Domain ID",
+            "Section": "vPC Domain"
+          },
+          "structureParameters": {
+
+          },
+          "parameterTypeStructure": false,
+          "defaultValue":"None",
+          "optional": false
+        }
+        ]
+      }
+    },
+
+    "vpc_pair_access_info_1":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "MESSAGE": "OK",
+      "DATA": {
+        "readonly": "False"
+      }
+
+    },
+
+    "vpc_pair_access_info_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "MESSAGE": "OK",
+      "DATA": {
+        "readonly": "True"
+      }
+    },
+
+    "vpc_pair_delete_succ_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber=SAL1820SDPP",
+      "MESSAGE": "OK",
+      "DATA": "Invalid JSON response: VPC pair for SAL1820SDPP successfulLy deleted"
+    },
+
+    "vpc_pair_delete_succ_resp_2":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber=SAL1820SDPP",
+      "MESSAGE": "OK",
+      "DATA": "VPC Pair could not be deleted"
+    },
+
+    "vpc_pair_delete_fail_resp":
+    {
+      "RETURN_CODE": 500,
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber=SAL1820SDPP",
+      "MESSAGE": "",
+      "DATA": "Invalid JSON response"
+    },
+
+    "vpc_pair_create_succ_resp":
+    {
+      "DATA": "Invalid JSON response: VPC pair successfully created",
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair",
+      "RETURN_CODE": 200
+    },
+
+    "vpc_pair_create_fail_resp":
+    {
+      "DATA": "Invalid JSON response",
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair",
+      "RETURN_CODE": 500
+    },
+
+    "vpc_pair_modify_succ_resp":
+    {
+      "DATA": "Invalid JSON response",
+      "MESSAGE": "OK",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair",
+      "RETURN_CODE": 200
+    },
+
+    "vpc_pair_modify_fail_resp":
+    {
+      "DATA": "Invalid JSON response",
+      "MESSAGE": "",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair",
+      "RETURN_CODE": 500
+    },
+
+    "vpc_pair_deploy_succ_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/config-deploy/SAL1819S6K3?forceShowRun=false",
+      "MESSAGE": "OK",
+      "DATA": {
+        "status": "Config deployment has been triggered"
+      }
+    },
+
+    "vpc_pair_deploy_fail_resp":
+    {
+      "RETURN_CODE": 500,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/config-deploy/SAL1819S6K3?forceShowRun=false",
+      "MESSAGE": "",
+      "DATA": {
+        "status": "Config deployment has been triggered"
+      }
+    },
+
+    "vpc_pair_config_save_succ_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/config-save",
+      "MESSAGE": "OK",
+      "DATA": {
+        "status": "Config save is completed"
+      }
+    },
+
+    "vpc_pair_config_save_fail_resp":
+    {
+      "RETURN_CODE": 500,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/config-save",
+      "MESSAGE": "",
+      "DATA": {
+        "status": "Config save is completed"
+      }
+    },
+
+    "vpc_pair_inv_details_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi/inventory",
+      "MESSAGE": "",
+      "DATA": {
+        "10.122.84.174": {
+          "switchRoleEnum": "Leaf",
+          "fabricTechnology": "LANClassic",
+          "ipAddress": "10.122.84.174",
+          "fabricName": "mmudigon-svi",
+          "logicalName": "dt-n9k1",
+          "switchDbID": 777660,
+          "serialNumber": "SAL1820SDPP",
+          "managable": true
+        },
+        "10.122.84.175": {
+          "switchRoleEnum": "Leaf",
+          "fabricTechnology": "LANClassic",
+          "ipAddress": "10.122.84.175",
+          "fabricName": "mmudigon-svi",
+          "logicalName": "dt-n9k2-1",
+          "switchDbID": 777620,
+          "serialNumber": "SAL1819S6K3",
+          "managable": true
+        }
+      }
+    },
+
+    "vpc_pair_fab_details_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-svi",
+      "MESSAGE": "",
+      "DATA": {
+        "fabricName": "mmudigon-svi",
+        "fabricTechnology": "LANClassic",
+        "nvPairs": {
+        }
+      }
+    },
+
+    "vpc_pair_info_resp_84":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777660",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777660,
+        "peerTwoDbId": 777620,
+        "peerOneSerialNumber": "SAL1820SDPP",
+        "peerTwoSerialNumber": "SAL1819S6K3"
+      }
+    },
+
+    "vpc_pair_policy_resp_84":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPP",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "e1/20",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": 133,
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.84.174",
+          "PEER2_MEMBER_INTERFACES": "e1/20",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": 133,
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.84.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    },
+    "vpc_pair_info_resp_85":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777670",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777670,
+        "peerTwoDbId": 777630,
+        "peerOneSerialNumber": "SAL1820SDPQ",
+        "peerTwoSerialNumber": "SAL1819S6K4"
+      }
+    },
+
+    "vpc_pair_policy_resp_85":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPQ",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "e1/30",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": 143,
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.85.174",
+          "PEER2_MEMBER_INTERFACES": "e1/30",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": 143,
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.85.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    },
+
+    "vpc_pair_info_resp_86":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/inventory?switchId=777680",
+      "MESSAGE": "OK",
+      "DATA": {
+        "peerOneDbId": 777680,
+        "peerTwoDbId": 777640,
+        "peerOneSerialNumber": "SAL1820SDPR",
+        "peerTwoSerialNumber": "SAL1819S6K5"
+      }
+    },
+
+    "vpc_pair_policy_resp_86":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.122.84.66:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/policy?serialNumber=SAL1820SDPR",
+      "MESSAGE": "OK",
+      "DATA": {
+        "template": "vpc_pair",
+        "nv_pairs": {
+          "KEEP_ALIVE_VRF": "management",
+          "PEER1_SOURCE_LOOPBACK": "",
+          "PEER2_PRIMARY_IP": "",
+          "PEER1_MEMBER_INTERFACES": "e1/40",
+          "DOMAIN_ID": "1000",
+          "PC_MODE": "active",
+          "PRIORITY": "500",
+          "PEER2_DOMAIN_CONF": "",
+          "PEER1_PRIMARY_IP": "",
+          "isVpcPlus": "false",
+          "PEER1_DOMAIN_CONF": "",
+          "PEER2_PCID": 153,
+          "POLICY_DESC": "",
+          "KEEP_ALIVE_HOLD_TIMEOUT": "3",
+          "NVE_INTERFACE": "1",
+          "clear_policy": "false",
+          "PEER1_KEEP_ALIVE_LOCAL_IP": "10.122.86.174",
+          "PEER2_MEMBER_INTERFACES": "e1/40",
+          "PEER1_PO_DESC": "",
+          "PEER2_SOURCE_LOOPBACK": "",
+          "PEER2_PO_DESC": "",
+          "LOOPBACK_SECONDARY_IP": "",
+          "FABRIC_NAME": "mmudigon-svi",
+          "PEER1_PCID": 153,
+          "POLICY_ID": "POLICY-894550",
+          "isVTEPS": "false",
+          "fabricPath_switch_id": "",
+          "PEER2_PO_CONF": "",
+          "PEER1_PO_CONF": "",
+          "ADMIN_STATE": "true",
+          "PEER2_KEEP_ALIVE_LOCAL_IP": "10.122.86.175",
+          "ALLOWED_VLANS": "all"
+        }
+      }
+    }
+}

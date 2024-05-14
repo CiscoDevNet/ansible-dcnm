@@ -62,7 +62,7 @@
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -165,7 +165,7 @@
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -250,7 +250,7 @@
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -336,7 +336,7 @@
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -418,7 +418,7 @@
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
-          - '"is created successfully" in item["DATA"]["successList"][0]["message"]'
+          - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:

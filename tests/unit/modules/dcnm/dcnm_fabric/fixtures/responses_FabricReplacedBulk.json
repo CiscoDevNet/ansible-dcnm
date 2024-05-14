@@ -1,0 +1,9 @@
+{
+    "test_fabric_replaced_bulk_00240a": {
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "PUT",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1/Easy_Fabric",
+        "RETURN_CODE": 200
+    }
+}

@@ -1,7 +1,7 @@
 ---
 namespace: cisco
 name: dcnm
-version: 3.4.3
+version: 3.5.0
 readme: README.md
 authors:
   - Shrishail Kariyappanavar <nkshrishail>
@@ -9,6 +9,8 @@ authors:
   - Karthik Babu Harichandra Babu <kharicha>
   - Mike Wiebe <mikewiebe>
   - Praveen Ramoorthy <praveenramoorthy>
+  - Allen Robel <allenrobel>
+  - Shangxin Du <dsx1123>
 description: Ansible collection for the Cisco Nexus® Dashboard Fabric Controller (NDFC) - formerly DCNM
 license: Apache-2.0
 tags: [cisco, ndfc, dcnm, nxos, networking, vxlan]

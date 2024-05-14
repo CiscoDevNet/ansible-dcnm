@@ -1,0 +1,254 @@
+{
+  "image_upload_merge_without_source_config": [
+  {
+    "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+  }],
+
+    "image_upload_merge_all_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    },
+    {
+      "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+      "source": "local"
+    },
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_merge_9_3_10_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_merge_9_3_8_config": [
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_merge_rpm_config": [
+    {
+      "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+      "source": "local"
+    }],
+
+    "image_upload_merge_9_3_8_and_rpm_config": [
+    {
+      "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+      "source": "local"
+    },
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_merge_9_3_8_and_9_3_10_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    },
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_merge_9_3_10_and_rpm_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    },
+    {
+      "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+      "source": "local"
+    }],
+
+    "image_upload_delete_rpm_config": [
+    {
+      "name": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+    }],
+
+    "image_upload_delete_9_3_10_config": [
+    {
+      "name": "nxos.9.3.10.bin"
+    }],
+
+    "image_upload_delete_9_3_8_config": [
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_delete_all_config": [
+    {
+      "name": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+    },
+    {
+      "name": "nxos.9.3.10.bin"
+    },
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_delete_9_3_10_and_rpm_config": [
+    {
+      "name": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+    },
+    {
+      "name": "nxos.9.3.10.bin"
+    }],
+
+    "image_upload_delete_9_3_8_and_rpm_config": [
+    {
+      "name": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+    },
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_delete_9_3_8_and_9_3_10_config": [
+    {
+      "name": "nxos.9.3.10.bin"
+    },
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_delete_non_exist_config": [
+    {
+      "name": "no-such-image.bin"
+    }],
+
+    "image_upload_override_all_new_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    },
+    {
+      "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+      "source": "local"
+    },
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_override_9_3_10_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_override_9_3_8_config": [
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_override_rpm_config": [
+    {
+      "path": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+      "source": "local"
+    }],
+
+    "image_upload_override_9_3_8_and_9_3_10_config": [
+    {
+      "source": "scp",
+      "path": "/opt/file/nxos/nxos.9.3.10.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    },
+    {
+      "source": "sftp",
+      "path": "/opt/file/nxos/nxos.9.3.8.bin",
+      "password": "ins3965!",
+      "remote_server": "10.195.225.200",
+      "username": "shdu"
+    }],
+
+    "image_upload_query_all_config": [
+    {
+      "name": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+    },
+    {
+      "name": "nxos.9.3.10.bin"
+    },
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_query_rpm_config": [
+    {
+      "name": "/Users/mmudigon/NXOS-Images/nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm"
+    }],
+
+    "image_upload_query_9_3_8_config": [
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_query_9_3_10_config": [
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_query_9_3_8_and_9_3_10_config": [
+    {
+      "name": "nxos.9.3.10.bin"
+    },
+    {
+      "name": "nxos.9.3.8.bin"
+    }],
+
+    "image_upload_query_exist_and_non_exist_config": [
+    {
+      "name": "nxos.9.3.8.bin"
+    },
+    {
+      "name": "no-such-image.bin"
+    }],
+
+    "image_upload_query_non_exist_config": [
+    {
+      "name": "no-such-image.bin"
+    }]
+}

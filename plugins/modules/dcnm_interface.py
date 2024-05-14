@@ -447,7 +447,6 @@ options:
             description:
             - Speed of the interface.
             type: str
-            choices: ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
             default: Auto
           int_vrf:
             description:
@@ -1852,6 +1851,21 @@ class DcnmIntf:
             )
         self.log_msg(f"HAVE ALL = {lhave_all}")
 
+    def dcnm_intf_xlate_speed(self, speed):
+
+        # Controllers accept speed value in a particular format i.e. 1Gb, 100Gb etc. To make the playbook input
+        # case insensitive for speed, this routine translates  the incoming speed to appropriate format.
+
+        if speed == "":
+            return ""
+
+        if speed.lower() == "auto":
+            return "auto".capitalize()
+        else:
+            comp = re.compile("([0-9]+)([a-zA-Z]+)")
+            match = comp.match(speed)
+            return str(match.group(1)) + match.group(2).capitalize()
+
     # New Interfaces
     def dcnm_intf_get_if_name(self, name, if_type):
 
@@ -2005,6 +2019,7 @@ class DcnmIntf:
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
@@ -2018,6 +2033,7 @@ class DcnmIntf:
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
             access_vlan=dict(type="str", default=""),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
@@ -2033,6 +2049,7 @@ class DcnmIntf:
             ipv4_mask_len=dict(type="int", default=8),
             route_tag=dict(type="str", default=""),
             mtu=dict(type="int", default=9216, range_min=576, range_max=9216),
+            speed=dict(type="str", default="Auto"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
@@ -2077,6 +2094,7 @@ class DcnmIntf:
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
             peer1_allowed_vlans=dict(type="str", default="none"),
             peer2_allowed_vlans=dict(type="str", default="none"),
             peer1_cmds=dict(type="list"),
@@ -2100,6 +2118,7 @@ class DcnmIntf:
             bpdu_guard=dict(type="str", default="true"),
             port_type_fast=dict(type="bool", default=True),
             mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
             peer1_access_vlan=dict(type="str", default=""),
             peer2_access_vlan=dict(type="str", default=""),
             peer1_cmds=dict(type="list"),
@@ -2141,6 +2160,7 @@ class DcnmIntf:
                 type="int", range_min=64, range_max=127, default=64
             ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
+            speed=dict(type="str", default="Auto"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
@@ -2165,6 +2185,7 @@ class DcnmIntf:
             int_vrf=dict(type="str", default="default"),
             ipv6_addr=dict(type="ipv6", default=""),
             route_tag=dict(type="str", default=""),
+            speed=dict(type="str", default="Auto"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
@@ -2572,6 +2593,11 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
                 delem[profile]["admin_state"]
             ).lower()
+            intf["interfaces"][0]["nvPairs"][
+                "SPEED"
+            ] = self.dcnm_intf_xlate_speed(
+                str(delem[profile].get("speed", ""))
+            )
 
     def dcnm_intf_get_vpc_payload(self, delem, intf, profile):
 
@@ -2710,6 +2736,9 @@ class DcnmIntf:
             delem[profile]["admin_state"]
         ).lower()
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_sub_intf_payload(self, delem, intf, profile):
 
@@ -2754,6 +2783,9 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_loopback_payload(self, delem, intf, profile):
 
@@ -2779,6 +2811,10 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
         # Properties for mode 'lo' Loopback Interfaces
         if delem[profile]["mode"] == "lo":
@@ -2813,8 +2849,12 @@ class DcnmIntf:
             # properties that can be modified.  They will be updated from the
             # self.have dictionary to reflect the actual values later in the
             # code workflow that walks the want values and compares to have values.
-            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_PROTO"] = "PLACE_HOLDER"
-            intf["interfaces"][0]["nvPairs"]["DCI_ROUTING_TAG"] = "PLACE_HOLDER"
+            intf["interfaces"][0]["nvPairs"][
+                "DCI_ROUTING_PROTO"
+            ] = "PLACE_HOLDER"
+            intf["interfaces"][0]["nvPairs"][
+                "DCI_ROUTING_TAG"
+            ] = "PLACE_HOLDER"
 
     def dcnm_intf_get_eth_payload(self, delem, intf, profile):
 
@@ -2835,9 +2875,6 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
-                delem[profile]["speed"]
-            )
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
             ]
@@ -2851,9 +2888,6 @@ class DcnmIntf:
             ).lower()
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
-            )
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
-                delem[profile]["speed"]
             )
             intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
                 "access_vlan"
@@ -2878,9 +2912,6 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
-                delem[profile]["speed"]
-            )
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
@@ -2903,9 +2934,6 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
-            intf["interfaces"][0]["nvPairs"]["SPEED"] = str(
-                delem[profile]["speed"]
-            )
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
         if delem[profile]["mode"] != "monitor":
@@ -2921,6 +2949,11 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
                 delem[profile]["admin_state"]
             ).lower()
+            intf["interfaces"][0]["nvPairs"][
+                "SPEED"
+            ] = self.dcnm_intf_xlate_speed(
+                str(delem[profile].get("speed", ""))
+            )
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -2965,6 +2998,10 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["NETFLOW_MONITOR"] = str(
                 delem[profile]["netflow_monitor"]
             )
+
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_aa_fex_payload(self, delem, intf, profile):
 
@@ -3031,6 +3068,10 @@ class DcnmIntf:
             )
 
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+        intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
+            str(delem[profile].get("speed", ""))
+        )
 
     def dcnm_intf_get_svi_payload(self, delem, intf, profile):
 
@@ -3135,8 +3176,11 @@ class DcnmIntf:
 
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
-            # we don't need SPEED for SVI interfaces
-            intf["interfaces"][0]["nvPairs"].pop("SPEED")
+            intf["interfaces"][0]["nvPairs"][
+                "SPEED"
+            ] = self.dcnm_intf_xlate_speed(
+                str(delem[profile].get("speed", ""))
+            )
 
     # New Interfaces
     def dcnm_get_intf_payload(self, delem, sw):
@@ -3432,7 +3476,7 @@ class DcnmIntf:
             if (state == "replaced") or (state == "overridden"):
                 # Special handling is required for mode 'mpls' loopback interfaces.
                 # They will contain either of the following two read_only properties.
-                if k in ['DCI_ROUTING_PROTO', 'DCI_ROUTING_TAG']:
+                if k in ["DCI_ROUTING_PROTO", "DCI_ROUTING_TAG"]:
                     return "copy_and_add"
 
                 return "add"
@@ -3560,7 +3604,12 @@ class DcnmIntf:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
                                     if "SPEED" in nv_keys:
-                                        nv_keys.remove("SPEED")
+                                        # Remove 'SPEED' only if it is not included in 'have'.
+                                        if (
+                                            d[k][index][ik].get("SPEED", None)
+                                            is None
+                                        ):
+                                            nv_keys.remove("SPEED")
                                     for nk in nv_keys:
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
@@ -3736,57 +3785,123 @@ class DcnmIntf:
         intf_nv = intf.get("interfaces")[0].get("nvPairs")
         have_nv = have.get("interfaces")[0].get("nvPairs")
 
-        if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("IP") != have_nv.get("IP"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("PREFIX") != have_nv.get("PREFIX"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("ROUTING_TAG") != have_nv.get("ROUTING_TAG"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("MTU") != have_nv.get("MTU"):
-            return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("SPEED") != have_nv.get("SPEED"):
+        if (
+            str(intf_nv.get("SPEED")).lower()
+            != str(have_nv.get("SPEED")).lower()
+        ):
             return "DCNM_INTF_NOT_MATCH"
         if intf_nv.get("DESC") != have_nv.get("DESC"):
             return "DCNM_INTF_NOT_MATCH"
         if intf_nv.get("CONF") != have_nv.get("CONF"):
             return "DCNM_INTF_NOT_MATCH"
-        if intf_nv.get("ADMIN_STATE") != have_nv.get("ADMIN_STATE"):
+        if (
+            str(intf_nv.get("ADMIN_STATE")).lower()
+            != str(have_nv.get("ADMIN_STATE")).lower()
+        ):
             return "DCNM_INTF_NOT_MATCH"
+        if str(intf_nv.get("MTU")).lower() != str(have_nv.get("MTU")).lower():
+            return "DCNM_INTF_NOT_MATCH"
+
+        if intf.get("policy") == "int_routed_host":
+            if intf_nv.get("INTF_VRF") != have_nv.get("INTF_VRF"):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("IP")).lower()
+                != str(have_nv.get("IP")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("PREFIX")).lower()
+                != str(have_nv.get("PREFIX")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("ROUTING_TAG")).lower()
+                != str(have_nv.get("ROUTING_TAG")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+        elif intf.get("policy") == "int_trunk_host":
+            if (
+                str(intf_nv.get("BPDUGUARD_ENABLED")).lower()
+                != str(have_nv.get("BPDUGUARD_ENABLED")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+                != str(have_nv.get("PORTTYPE_FAST_ENABLED")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("ALLOWED_VLANS")).lower()
+                != str(have_nv.get("ALLOWED_VLANS")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
 
-        # default payload to be sent to DCNM for override case
         eth_payload = {
-            "policy": self.pol_types[self.dcnm_version]["eth_routed"],
+            "policy": "",
             "interfaces": [
                 {
                     "interfaceType": "INTERFACE_ETHERNET",
-                    "serialNumber": sno,
+                    "serialNumber": "",
                     "ifName": "",
-                    "fabricName": fabric,
+                    "fabricName": "",
                     "nvPairs": {
                         "interfaceType": "INTERFACE_ETHERNET",
-                        "INTF_VRF": "",
-                        "IP": "",
-                        "PREFIX": "",
-                        "ROUTING_TAG": "",
-                        "MTU": "9216",
-                        "SPEED": "Auto",
+                        "MTU": "",
+                        "SPEED": "",
                         "DESC": "",
-                        "CONF": "no shutdown",
-                        "ADMIN_STATE": "true",
-                        "INTF_NAME": ifname,
+                        "CONF": "",
+                        "ADMIN_STATE": True,
+                        "INTF_NAME": "",
                     },
                 }
             ],
         }
 
-        eth_payload["interfaces"][0]["ifName"] = ifname
-        eth_payload["interfaces"][0]["serialNumber"] = sno
-        eth_payload["interfaces"][0]["fabricName"] = fabric
+        # Default payload depends on switch role. For switches with 'leaf' role the default policy must be
+        # 'trunk'. For other roles it must be 'routed'.
+
+        if self.sno_to_switch_role[sno] == "leaf":
+            # default ehternet 'trunk' payload to be sent to DCNM for override case
+            eth_payload["policy"] = self.pol_types[self.dcnm_version][
+                "eth_trunk"
+            ]
+            eth_payload["interfaces"][0]["nvPairs"]["MTU"] = "jumbo"
+            eth_payload["interfaces"][0]["nvPairs"]["SPEED"] = "Auto"
+            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = "no shutdown"
+            eth_payload["interfaces"][0]["nvPairs"][
+                "BPDUGUARD_ENABLED"
+            ] = False
+            eth_payload["interfaces"][0]["nvPairs"][
+                "PORTTYPE_FAST_ENABLED"
+            ] = True
+            eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
+            eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+
+            eth_payload["interfaces"][0]["ifName"] = ifname
+            eth_payload["interfaces"][0]["serialNumber"] = sno
+            eth_payload["interfaces"][0]["fabricName"] = fabric
+
+        else:
+            # default ehternet 'routed' payload to be sent to DCNM for override case
+            eth_payload["policy"] = self.pol_types[self.dcnm_version][
+                "eth_routed"
+            ]
+            eth_payload["interfaces"][0]["nvPairs"]["MTU"] = 9216
+            eth_payload["interfaces"][0]["nvPairs"]["SPEED"] = "Auto"
+            eth_payload["interfaces"][0]["nvPairs"]["CONF"] = "no shutdown"
+            eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            eth_payload["interfaces"][0]["nvPairs"]["INTF_VRF"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["IP"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["PREFIX"] = ""
+            eth_payload["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = ""
+
+            eth_payload["interfaces"][0]["ifName"] = ifname
+            eth_payload["interfaces"][0]["serialNumber"] = sno
+            eth_payload["interfaces"][0]["fabricName"] = fabric
 
         return eth_payload
 
@@ -3951,10 +4066,11 @@ class DcnmIntf:
                         delem["serialNumber"] = sno
                         delem["ifName"] = name
                         delem["fabricName"] = self.fabric
-                        self.diff_deploy.append(delem)
-                        self.changed_dict[0]["deploy"].append(
-                            copy.deepcopy(delem)
-                        )
+                        if str(deploy).lower() == "true":
+                            self.diff_deploy.append(delem)
+                            self.changed_dict[0]["deploy"].append(
+                                copy.deepcopy(delem)
+                            )
             # Sub-interafces are returned as INTERFACE_ETHERNET in have_all. So do an
             # additional check to see if it is physical. If not assume it to be sub-interface
             # for now. We will have to re-visit this check if there are additional non-physical
@@ -4061,12 +4177,15 @@ class DcnmIntf:
                             del_list.append(have)
 
                         if str(deploy).lower() == "true":
-                            self.diff_delete_deploy[
-                                self.int_index[have["ifType"]]
-                            ].append(delem)
-                            self.changed_dict[0]["delete_deploy"].append(
-                                copy.deepcopy(delem)
-                            )
+                            if (have["complianceStatus"] == "In-Sync") or (
+                                have["complianceStatus"] == "Pending"
+                            ):
+                                self.diff_delete_deploy[
+                                    self.int_index[have["ifType"]]
+                                ].append(delem)
+                                self.changed_dict[0]["delete_deploy"].append(
+                                    copy.deepcopy(delem)
+                                )
 
         for intf in defer_list:
             # Check if the 'source' for the ethernet interface is one of the interfaces that is already deleted.
@@ -4224,12 +4343,18 @@ class DcnmIntf:
                                         self.changed_dict[0][
                                             "replaced"
                                         ].append(copy.deepcopy(uelem))
-                                        delem["serialNumber"] = intf[
-                                            "serialNumber"
-                                        ]
-                                        delem["ifName"] = if_name
-                                        delem["fabricName"] = self.fabric
-                                        self.diff_deploy.append(delem)
+                                        if (
+                                            str(
+                                                cfg.get("deploy", "true")
+                                            ).lower()
+                                            == "true"
+                                        ):
+                                            delem["serialNumber"] = intf[
+                                                "serialNumber"
+                                            ]
+                                            delem["ifName"] = if_name
+                                            delem["fabricName"] = self.fabric
+                                            self.diff_deploy.append(delem)
                         else:
                             intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(
                                 intf
@@ -4759,6 +4884,19 @@ class DcnmIntf:
             ]
 
             managable = dict(managable_ip + managable_hosts)
+
+            # Build a mapping of serial numbers to switch roles. This will be required to build default ethernet
+            # payload during overridden state. for switch role leaf the default policy for ethernet interface must
+            # be 'trunk' and for other roles it must be 'routed'.
+            self.sno_to_switch_role = {}
+            for key in self.inventory_data:
+                self.sno_to_switch_role.update(
+                    {
+                        self.inventory_data[key][
+                            "serialNumber"
+                        ]: self.inventory_data[key]["switchRole"]
+                    }
+                )
 
             # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
             ronly_sw_list = []

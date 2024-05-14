@@ -43,6 +43,7 @@
           feature hsrp
 
           ##
+  tags: sanity
   register: result
 
 # Create the policy to deploy lacp, interface-vlan and hsrp features on the switches
@@ -69,6 +70,7 @@
     deploy: true
     state: merged
   register: result
+  tags: sanity
 
 # Determine the version of Controller
 - name: Determine version of DCNM or NDFC
@@ -173,6 +175,7 @@
       "peerOneId": "{{ ansible_cxt_fabric_sno1 }}",
       "peerTwoId": "{{ ansible_cxt_fabric_sno2 }}",
       "useVirtualPeerlink": false,
+      "templateName": "vpc_pair",
       "nvPairs": {
         "DOMAIN_ID": "{{ ansible_cxt_vpc_domain_id }}",
         "PEER1_KEEP_ALIVE_LOCAL_IP": "{{ ansible_cxt_fabric_sw1 }}",

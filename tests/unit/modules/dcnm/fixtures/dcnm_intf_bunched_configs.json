@@ -6,7 +6,7 @@
         "serialNumber": "SAL1819SAN8",
         "isVpcConfigured": "True",
         "vpcDomain": 1,
-        "switchRoleEnum": "Leaf",
+        "switchRole": "Leaf",
         "managable": "True"
     },
       "192.168.1.109": {
@@ -14,7 +14,7 @@
         "serialNumber": "FOX1821H035",
         "isVpcConfigured": "True",
         "vpcDomain": 1,
-        "switchRoleEnum": "Leaf",
+        "switchRole": "Leaf",
         "managable": "True"
       },
       "10.69.69.1": {
@@ -22,7 +22,7 @@
         "serialNumber": "TEST-SNO-1",
         "isVpcConfigured": "True",
         "vpcDomain": 1,
-        "switchRoleEnum": "None",
+        "switchRole": "None",
         "managable": "False"
       }
   },
@@ -210,7 +210,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/32",
@@ -236,7 +236,7 @@
 				"cmds": [
 					"no shutdown"
 				],
-				"speed": "auto",
+				"speed": "Auto",
 				"description": "eth interface acting as routed"
 			},
 			"name": "eth1/22",
@@ -261,7 +261,7 @@
 				"admin_state": "False",
 				"ifname": "Ethernet1/13",
 				"route_tag": "",
-				"speed": "auto",
+				"speed": "Auto",
 				"cmds": [
 					"no shutdown"
 				],
@@ -289,7 +289,7 @@
 				"admin_state": "False",
 				"ifname": "Ethernet1/14",
 				"route_tag": "",
-				"speed": "auto",
+				"speed": "Auto",
 				"cmds": [
 					"no shutdown"
 				],

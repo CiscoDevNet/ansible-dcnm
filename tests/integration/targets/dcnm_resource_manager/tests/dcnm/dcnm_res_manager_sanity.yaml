@@ -1,0 +1,218 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: SANITY- Remove local log file
+  local_action: command rm -f res_mgr.log
+  tags: sanity
+  
+- name: SANITY- Delete Resources
+  cisco.dcnm.dcnm_resource_manager: &rm_delete
+    state: deleted                                 # choose form [merged, deleted, query]
+    fabric: "{{ ansible_it_fabric }}"
+    config:
+      - entity_name: "l3_vni_fabric"               # A unique name to identify the resource
+        pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "L3_VNI"                        # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+
+      - entity_name: "l2_vni_fabric"               # A unique name to identify the resource
+        pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "L2_VNI"                        # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+
+      - entity_name: "loopback_dev"                # A unique name to identify the resource
+        pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK_ID"                   # Based on the 'poolType', select appropriate name
+        scope_type: "device"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch:                                    # provide the switch information to which the given resource is attached
+          - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch2 }}"
+
+      - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}" # A unique name to identify the resource
+        pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "VPC_ID"                        # Based on the 'poolType', select appropriate name
+        scope_type: "device_pair"                  # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch:                                    # provide the switch information to which the given resource is attached
+          - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch2 }}"
+
+      - entity_name: "mmudigon-2"                  # A unique name to identify the resource
+        pool_type: "IP"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK0_IP_POOL"             # Based on the 'poolType', select appropriate name
+        scope_type: "fabric"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+
+      - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_10 }}" # A unique name to identify the resource
+        pool_type: "IP"                            # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "LOOPBACK1_IP_POOL"             # Based on the 'poolType', select appropriate name
+        scope_type: "device_interface"             # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch:                                    # provide the switch information to which the given resource is attached
+          - "{{ ansible_switch1 }}"
+
+      - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"  # A unique name to identify the resource
+        pool_type: "SUBNET"                        # choose from ['ID', 'IP', 'SUBNET']
+        pool_name: "SUBNET"                        # Based on the 'poolType', select appropriate name
+        scope_type: "link"                         # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+        switch:                                    # provide the switch information to which the given resource is attached
+          - "{{ ansible_switch1 }}"
+  register: result
+  tags: sanity
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  tags: sanity
+
+- tags: sanity
+  block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: SANITY- Create Resources
+      cisco.dcnm.dcnm_resource_manager: &rm_merge
+        state: merged                                # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}"
+        config:
+          - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L3_VNI"                      # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            resource: "101"                          # The value of the resource being created
+
+          - entity_name: "l2_vni_fabric"             # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "L2_VNI"                      # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            resource: "102"                          # The value of the resource being created
+
+          - entity_name: "loopback_dev"              # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK_ID"                 # Based on the 'poolType', select appropriate name
+            scope_type: "device"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            resource: "200"                          # The value of the resource being created
+
+          - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"  # A unique name to identify the resource
+            pool_type: "ID"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "VPC_ID"                      # Based on the 'poolType', select appropriate name
+            scope_type: "device_pair"                # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"
+              - "{{ ansible_switch2 }}"
+            resource: "500"                          # The value of the resource being created
+
+          - entity_name: "mmudigon-2"                # A unique name to identify the resource
+            pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK0_IP_POOL"           # Based on the 'poolType', select appropriate name
+            scope_type: "fabric"                     # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            resource: "110.1.1.1"                    # The value of the resource being created
+
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_10 }}"  # A unique name to identify the resource
+            pool_type: "IP"                          # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "LOOPBACK1_IP_POOL"           # Based on the 'poolType', select appropriate name
+            scope_type: "device_interface"           # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"
+            resource: "fe:80::04"                    # The value of the resource being created
+
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"  # A unique name to identify the resource
+            pool_type: "SUBNET"                      # choose from ['ID', 'IP', 'SUBNET']
+            pool_name: "SUBNET"                      # Based on the 'poolType', select appropriate name
+            scope_type: "link"                       # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
+            switch:                                  # provide the switch information to which the given resource is to be attached
+              - "{{ ansible_switch1 }}"
+            resource: "fe:80:0505::05/64"            # The value of the resource being created
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 9'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["response"] | length) == 9'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+##############################################
+##               QUERY                      ##
+##############################################
+
+    - name: SANITY- Query all Resources - no filters
+      cisco.dcnm.dcnm_resource_manager:
+        state: query                                 # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}"
+      register: result
+
+    - assert:
+        that:
+          - '(result["response"] | length) != 0'
+
+    - name: SANITY- Creating entity_names
+      set_fact:
+        entity_names:
+          - "l3_vni_fabric"
+          - "l2_vni_fabric"
+          - "loopback_dev"
+          - "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"
+          - "{{ ansible_sno_2 }}~{{ ansible_sno_1 }}"
+          - "{{ ansible_sno_1 }}~{{ intf_1_10 }}"
+          - "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"
+          - "{{ ansible_sno_2 }}~{{ intf_1_3 }}~{{ ansible_sno_1 }}~{{ intf_1_3 }}"
+          - "mmudigon-2"
+
+    - name: SANITY- Query Resources - filter by entity name
+      cisco.dcnm.dcnm_resource_manager:
+        state: query                                 # choose form [merged, deleted, query]
+        fabric: "{{ ansible_it_fabric }}"
+        config:
+          - entity_name: "l3_vni_fabric"             # A unique name to identify the resource
+          - entity_name: "l2_vni_fabric"             # A unique name to identify the resource
+          - entity_name: "loopback_dev"              # A unique name to identify the resource
+          - entity_name: "{{ ansible_sno_1 }}~{{ ansible_sno_2 }}"  # A unique name to identify the resource
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_10 }}"  # A unique name to identify the resource
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_2 }}~{{ ansible_sno_2 }}~{{ intf_1_2 }}"  # A unique name to identify the resource
+          - entity_name: "mmudigon-2"  # A unique name to identify the resource
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_2 }}"  # A unique name to identify the resource
+          - entity_name: "{{ ansible_sno_1 }}~{{ intf_1_3 }}~{{ ansible_sno_2 }}~{{ intf_1_3 }}"  # A unique name to identify the resource
+
+      register: result
+
+    - assert:
+        that:
+          - 'item["entityName"] in {{ entity_names }}'
+      loop: '{{ result.response }}'
+
+
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: SANITY- Delete Resources
+      cisco.dcnm.dcnm_resource_manager: *rm_delete
+      register: result
+      when: IT_CONTEXT is not defined
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 9'
+          - '(result["response"][0]["DATA"]["successList"] | length) == 9'
+      when: IT_CONTEXT is not defined
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined

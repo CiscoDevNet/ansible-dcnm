@@ -1,0 +1,379 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: SANITY- Remove local log file
+  local_action: command rm -f sp.log
+  #tags: sanity
+
+- name: SANITY- Delete service policies
+  cisco.dcnm.dcnm_service_policy: &dcnm_sp_del_all
+    fabric: "{{ ansible_it_fabric }}"                     # mandatory
+    service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
+    state: deleted                                        # optional, default merged
+    config:
+      - name: service_policy_1                            # mandatory
+        node_name: "{{ ansible_snode_1 }}"                # mandatory
+
+      - name: service_policy_2                            # mandatory
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+
+      - name: service_policy_3                            # mandatory
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+
+      - name: service_policy_4                            # mandatory
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+
+      - name: service_policy_5                            # mandatory
+        node_name: "{{ ansible_snode_2 }}"                # mandatory
+  register: result
+  #tags: sanity
+
+- assert:
+    that:
+        - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  #tags: sanity
+
+  #tags: sanity
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: SANITY- Create service policy including all optional objects
+      cisco.dcnm.dcnm_service_policy: &dcnm_sp_create_all
+        fabric: "{{ ansible_it_fabric }}"                     # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
+        attach: true                                          # optional, default true
+        deploy: true                                          # optional, default true
+        state: merged                                         # optional, default merged
+        config:
+          - name: service_policy_1                            # mandatory
+            node_name: "{{ ansible_snode_1 }}"                # mandatory
+            rp_name: "{{ ansible_fw_rp1 }}"                   # mandatory
+            src_vrf: "{{ ansible_vrf_11 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_11 }}"                  # mandatory
+            src_network: "{{ ansible_net_11 }}"               # mandatory
+            dest_network: "{{ ansible_net_12 }}"              # mandatory
+            next_hop: 192.161.1.100                           # mandatory
+            reverse_next_hop: 192.161.2.100                   # mandatory
+            policy:
+              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  none                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_10                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
+              route_map_num: 101                              # optional, default value will be auto-generated
+              reverse_route_map_num: 102                      # optional, default value will be auto-generated
+
+          - name: service_policy_2                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+            rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
+            src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
+            src_network: "{{ ansible_net_21 }}"               # mandatory
+            dest_network: "{{ ansible_net_22 }}"              # mandatory
+            next_hop: ""                                      # mandatory
+            reverse_next_hop: 192.164.1.100                   # mandatory
+            policy:
+              proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_20                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_20                    # optional, default value will be auto-generated
+              route_map_num: 201                              # optional, default value will be auto-generated
+              reverse_route_map_num: 202                      # optional, default value will be auto-generated
+
+          - name: service_policy_3                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+            rp_name: "{{ ansible_adc_rp5 }}"                  # mandatory
+            src_vrf: "{{ ansible_vrf_31 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_31 }}"                  # mandatory
+            src_network: "{{ ansible_net_31 }}"               # mandatory
+            dest_network: "{{ ansible_net_32 }}"              # mandatory
+            next_hop: ""                                      # mandatory
+            reverse_next_hop: 192.165.2.100                   # mandatory
+            policy:
+              proto: ip                                       # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 3000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 3001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_30                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_30                    # optional, default value will be auto-generated
+              route_map_num: 301                              # optional, default value will be auto-generated
+              reverse_route_map_num: 302                      # optional, default value will be auto-generated
+
+          - name: service_policy_4                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+            rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
+            src_vrf: "{{ ansible_vrf_41 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_41 }}"                  # mandatory
+            src_network: "{{ ansible_net_41 }}"               # mandatory
+            dest_network: "{{ ansible_net_42 }}"              # mandatory
+            next_hop: ""                                      # mandatory
+            reverse_next_hop: 192.166.2.100                   # mandatory
+            policy:
+              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 4000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 4001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_40                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_40                    # optional, default value will be auto-generated
+              route_map_num: 401                              # optional, default value will be auto-generated
+              reverse_route_map_num: 402                      # optional, default value will be auto-generated
+
+          - name: service_policy_5                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+            rp_name: "{{ ansible_adc_rp6 }}"                  # mandatory
+            src_vrf: "{{ ansible_vrf_41 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_41 }}"                  # mandatory
+            src_network: "{{ ansible_net_41 }}"               # mandatory
+            dest_network: "{{ ansible_net_42 }}"              # mandatory
+            next_hop: ""                                      # mandatory
+            reverse_next_hop: 192.166.2.100                   # mandatory
+            policy:
+              proto: icmp                                     # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_50                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_50                    # optional, default value will be auto-generated
+              route_map_num: 501                              # optional, default value will be auto-generated
+              reverse_route_map_num: 502                      # optional, default value will be auto-generated
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 5'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 5'
+
+    - name: SANITY- Query service policies based on service node and policy name
+      cisco.dcnm.dcnm_service_policy: 
+        fabric: "{{ ansible_it_fabric }}"                     # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
+        state: query                                          # optional, default merged
+        config:
+          - name: service_policy_1                            # mandatory
+            node_name: "{{ ansible_snode_1 }}"                # mandatory
+
+          - name: service_policy_2                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+
+          - name: service_policy_3                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+
+          - name: service_policy_4                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+
+          - name: service_policy_5                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 5'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result.response | length) == 5'
+
+
+
+##############################################
+##               OVERRRIDE                  ##
+##############################################
+
+    - name: SANITY- Override and delete all service policies without any new one
+      cisco.dcnm.dcnm_service_policy:
+        fabric: "{{ ansible_it_fabric }}"                     # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
+        state: overridden                                     # optional, default merged
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 5'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: SANITY- Create service policy including all optional objects
+      cisco.dcnm.dcnm_service_policy:
+        fabric: "{{ ansible_it_fabric }}"                     # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
+        attach: true                                          # optional, default true
+        deploy: true                                          # optional, default true
+        state: merged                                         # optional, default merged
+        config:
+          - name: service_policy_1                            # mandatory
+            node_name: "{{ ansible_snode_1 }}"                # mandatory
+            rp_name: "{{ ansible_fw_rp1 }}"                   # mandatory
+            src_vrf: "{{ ansible_vrf_11 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_11 }}"                  # mandatory
+            src_network: "{{ ansible_net_11 }}"               # mandatory
+            dest_network: "{{ ansible_net_12 }}"              # mandatory
+            next_hop: 192.161.1.100                           # mandatory
+            reverse_next_hop: 192.161.2.100                   # mandatory
+            policy:
+              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  none                          # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_10                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_10                    # optional, default value will be auto-generated
+              route_map_num: 101                              # optional, default value will be auto-generated
+              reverse_route_map_num: 102                      # optional, default value will be auto-generated
+
+          - name: service_policy_2                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+            rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
+            src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
+            src_network: "{{ ansible_net_21 }}"               # mandatory
+            dest_network: "{{ ansible_net_22 }}"              # mandatory
+            next_hop: ""                                      # mandatory
+            reverse_next_hop: 192.164.1.100                   # mandatory
+            policy:
+              proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+##############################################
+##               REPLACE                    ##
+##############################################
+
+    - name: SANITY- Replace some of the objects in already created policy
+      cisco.dcnm.dcnm_service_policy: &dcnm_sp_replace_all
+        fabric: "{{ ansible_it_fabric }}"                     # mandatory
+        service_fabric: "{{ ansible_it_service_fabric }}"     # mandatory
+        attach: true                                          # optional, default true
+        deploy: true                                          # optional, default true
+        state: replaced                                       # optional, default merged
+        config:
+          - name: service_policy_1                            # mandatory
+            node_name: "{{ ansible_snode_1 }}"                # mandatory
+            rp_name: "{{ ansible_fw_rp1 }}"                   # mandatory
+            src_vrf: "{{ ansible_vrf_11 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_11 }}"                  # mandatory
+            src_network: "{{ ansible_net_11 }}"               # mandatory
+            dest_network: "{{ ansible_net_12 }}"              # mandatory
+            next_hop: 192.161.1.100                           # mandatory
+            reverse_next_hop: 192.161.2.100                   # mandatory
+            policy:
+              proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 501                                   # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 502                                  # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: deny                                    # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+
+          - name: service_policy_2                            # mandatory
+            node_name: "{{ ansible_snode_2 }}"                # mandatory
+            rp_name: "{{ ansible_adc_rp4 }}"                  # mandatory
+            src_vrf: "{{ ansible_vrf_21 }}"                   # mandatory
+            dest_vrf: "{{ ansible_vrf_21 }}"                  # mandatory
+            src_network: "{{ ansible_net_21 }}"               # mandatory
+            dest_network: "{{ ansible_net_22 }}"              # mandatory
+            next_hop: ""                                      # mandatory
+            reverse_next_hop: 192.164.1.100                   # mandatory
+            policy:
+              proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
+              src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
+              dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              action: permit                                  # optional, default=permit, choices=[permit, deny]
+              next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
+              acl_name: fwd_acl_21                            # optional, default value will be auto-generated
+              reverse_acl_name: rev_acl_22                    # optional, default value will be auto-generated
+              route_map_num: 2201                             # optional, default value will be auto-generated
+              reverse_route_map_num: 2202                     # optional, default value will be auto-generated
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 2'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 2'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: SANITY- Replace service policies  - Idempotence
+      cisco.dcnm.dcnm_service_policy: *dcnm_sp_replace_all
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+##############################################
+##                CLEANUP                   ##
+##############################################
+
+  always:
+
+    - name: SANITY- Delete service policies
+      cisco.dcnm.dcnm_service_policy: *dcnm_sp_del_all
+      register: result
+      when: IT_CONTEXT is not defined
+      tags: sanity
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
+      tags: sanity

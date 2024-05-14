@@ -2876,7 +2876,6 @@ class DcnmNetwork:
 
                 if (
                     state == "merged"
-                    or state == "overridden"
                     or state == "replaced"
                     or state == "query"
                 ):

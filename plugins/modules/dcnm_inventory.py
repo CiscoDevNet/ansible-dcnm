@@ -89,7 +89,9 @@ options:
         required: true
       max_hops:
         description:
-        - Maximum Hops to reach the switch
+        - Maximum Hops to reach the switch.
+        - This parameter is deprecated(as on 2024-03-06)
+        - Defaults to 0 irrespective of configured value.
         type: int
         required: false
         default: 0
@@ -702,8 +704,12 @@ class DcnmInventory:
             self.module.fail_json(msg=response)
 
         if "DATA" in response:
-            return response["DATA"]
-
+            switch = []
+            for sw in response["DATA"]:
+                if inv["seedIP"] == sw["ipaddr"]:
+                    switch.append(sw)
+                    return switch
+            return 0
         else:
             return 0
 
@@ -742,7 +748,7 @@ class DcnmInventory:
                 "snmpV3AuthProtocol": pro,
                 "username": inv["user_name"],
                 "password": inv["password"],
-                "maxHops": inv["max_hops"],
+                "maxHops": 0,
                 "cdpSecondTimeout": "5",
                 "role": inv["role"].replace(" ", "_"),
                 "preserveConfig": inv["preserve_config"],
@@ -909,6 +915,9 @@ class DcnmInventory:
         for want_c in self.want_create:
             found = False
             match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
+            if match is None:
+                msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
+                self.module.fail_json(msg=msg)
             serial_num = match.groups()[0]
             for have_c in self.have_create:
                 if (
