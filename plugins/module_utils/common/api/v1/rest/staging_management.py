@@ -42,9 +42,9 @@ class StagingManagement(ImageManagement):
         self.log.debug("ENTERED api.v1.StagingManagement()")
 
 
-class EpStageImage(StagingManagement):
+class EpImageStage(StagingManagement):
     """
-    ## V1 API - StagingManagement().EpStageImage()
+    ## V1 API - StagingManagement().EpImageStage()
 
     ### Description
     Return endpoint information for stage-image.
@@ -57,11 +57,34 @@ class EpStageImage(StagingManagement):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.StagingManagement.EpStageImage()")
+        self.log.debug("ENTERED api.v1.StagingManagement.EpImageStage()")
         self._build_properties()
 
     def _build_properties(self):
         self.properties["path"] = f"{self.staging_management}/stage-image"
+        self.properties["verb"] = "POST"
+
+
+class EpImageValidate(StagingManagement):
+    """
+    ## V1 API - StagingManagement().EpImageValidate()
+
+    ### Description
+    Return endpoint information for validate-image.
+
+    ### Endpoint
+    -   ``/rest/stagingmanagement/validate-image``
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED api.v1.StagingManagement.EpImageValidate()")
+        self._build_properties()
+
+    def _build_properties(self):
+        self.properties["path"] = f"{self.staging_management}/validate-image"
         self.properties["verb"] = "POST"
 
 
@@ -86,26 +109,3 @@ class EpStageInfo(StagingManagement):
     def _build_properties(self):
         self.properties["path"] = f"{self.staging_management}/stage-info"
         self.properties["verb"] = "GET"
-
-
-class EpValidateImage(StagingManagement):
-    """
-    ## V1 API - StagingManagement().EpValidateImage()
-
-    ### Description
-    Return endpoint information for validate-image.
-
-    ### Endpoint
-    -   ``/rest/stagingmanagement/validate-image``
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.StagingManagement.EpValidateImage()")
-        self._build_properties()
-
-    def _build_properties(self):
-        self.properties["path"] = f"{self.staging_management}/validate-image"
-        self.properties["verb"] = "POST"
