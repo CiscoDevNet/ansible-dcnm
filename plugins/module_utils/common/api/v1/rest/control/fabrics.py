@@ -106,13 +106,18 @@ class EpFabricConfigDeploy(Fabrics):
     ### Verb
     -   POST
 
-    ### Parameters:
+    ### Parameters
     - force_show_run: boolean
+        - set the ``forceShowRun`` value
         - default: False
     - include_all_msd_switches: boolean
+        - set the ``inclAllMSDSwitches`` value
         - default: False
     - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
         - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python
@@ -212,11 +217,14 @@ class EpFabricConfigSave(Fabrics):
     ### Verb
     -   POST
 
-    ### Parameters:
-    -   fabric_name: string
-            -   required
+    ### Parameters
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
     -   ticket_id: string
             -   optional unless Change Control is enabled
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python
@@ -295,8 +303,11 @@ class EpFabricDelete(Fabrics):
     -   DELETE
 
     ### Parameters
-    -   fabric_name: string
-            -   required
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python
@@ -347,8 +358,11 @@ class EpFabricDetails(Fabrics):
     -   GET
 
     ### Parameters
-    -   fabric_name: string
-            -   required
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python
@@ -395,8 +409,11 @@ class EpFabricFreezeMode(Fabrics):
     -   GET
 
     ### Parameters
-        - fabric_name: string
-            - required
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python

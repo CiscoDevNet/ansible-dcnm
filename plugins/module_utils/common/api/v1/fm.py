@@ -45,13 +45,27 @@ class EpFeatures(FM):
     ## V1 API Feature Manager (FM) - FM().EpFeatures()
 
     ### Description
-    Common methods and properties
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     ``/fm/features``
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpFeatures()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -71,13 +85,27 @@ class EpVersion(FM):
     ## V1 API Feature Manager (FM) about/version.
 
     ### Description
-    Common methods and properties
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     ``/fm/about/version``
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpVersion()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):

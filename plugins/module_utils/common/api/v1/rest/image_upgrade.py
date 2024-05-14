@@ -54,14 +54,20 @@ class EpInstallOptions(ImageUpgrade):
     ## V1 API - Fabrics().EpInstallOptions()
 
     ### Description
-    Return endpoint information for install-options.
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     -   ``/rest/imageupgrade/install-options``
 
-    ### Raises
+    ### Verb
+    -   POST
 
-    ### Parameters:
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python
@@ -90,14 +96,20 @@ class EpUpgradeImage(ImageUpgrade):
     ## V1 API - Fabrics().EpUpgradeImage()
 
     ### Description
-    Return endpoint information for upgrade-image.
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     -   ``/rest/imageupgrade/upgrade-image``
 
-    ### Raises
+    ### Verb
+    -   POST
 
-    ### Parameters:
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
 
     ### Usage
     ```python

@@ -50,11 +50,25 @@ class EpPolicies(PolicyMgnt):
     ### Description
     Return endpoint information.
 
-    ### Path path
+    ### Raises
+    -   None
+
+    ### Path
     -   ``/rest/policymgnt/policies``
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPolicies()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -76,11 +90,25 @@ class EpPoliciesAllAttached(PolicyMgnt):
     ### Description
     Return endpoint information.
 
+    ### Raises
+    -   None
+
     ### Path
     -   ``/rest/policymgnt/all-attached-policies``
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPoliciesAllAttached()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -102,11 +130,25 @@ class EpPolicyAttach(PolicyMgnt):
     ### Description
     Return endpoint information.
 
+    ### Raises
+    -   None
+
     ### Path
     -   ``/rest/policymgnt/attach-policy``
 
     ### Verb
     -   POST
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPolicyAttach()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -128,11 +170,25 @@ class EpPolicyCreate(PolicyMgnt):
     ### Description
     Return endpoint information.
 
-    ### Path path
+    ### Raises
+    -   None
+
+    ### Path
     -   ``/rest/policymgnt/platform-policy``
 
     ### Verb
     -   POST
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPolicyCreate()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -154,11 +210,25 @@ class EpPolicyDetach(PolicyMgnt):
     ### Description
     Return endpoint information.
 
+    ### Raises
+    -   None
+
     ### Path
     -   ``/rest/policymgnt/detach-policy``
 
     ### Verb
     -   DELETE
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPolicyDetach()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -188,6 +258,21 @@ class EpPolicyInfo(PolicyMgnt):
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   policy_name: str
+            -   set the policy_name
+            -   required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPolicyInfo()
+    instance.policy_name = "MyPolicy"
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):

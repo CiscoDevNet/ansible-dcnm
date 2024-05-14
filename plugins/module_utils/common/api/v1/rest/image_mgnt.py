@@ -49,11 +49,25 @@ class EpBootFlashInfo(ImageMgnt):
     ### Description
     Return endpoint information for bootflash-info.
 
+    ### Raises
+    -   None
+
     ### Path
     -   ``/rest/imagemgnt/bootFlash/bootflash-info``
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpBootFlashInfo()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):

@@ -47,13 +47,27 @@ class EpImageStage(StagingManagement):
     ## V1 API - StagingManagement().EpImageStage()
 
     ### Description
-    Return endpoint information for stage-image.
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     -   ``/rest/stagingmanagement/stage-image``
 
     ### Verb
     -   POST
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpImageStage()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -73,13 +87,27 @@ class EpImageValidate(StagingManagement):
     ## V1 API - StagingManagement().EpImageValidate()
 
     ### Description
-    Return endpoint information for validate-image.
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     -   ``/rest/stagingmanagement/validate-image``
 
     ### Verb
     -   POST
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpImageValidate()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
@@ -99,13 +127,27 @@ class EpStageInfo(StagingManagement):
     ## V1 API - StagingManagement().EpStageInfo()
 
     ### Description
-    Return endpoint information for stage-info.
+    Return endpoint information.
+
+    ### Raises
+    -   None
 
     ### Path
     -   ``/rest/stagingmanagement/stage-info``
 
     ### Verb
     -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpStageInfo()
+    path = instance.path
+    verb = instance.verb
+    ```
     """
 
     def __init__(self):
