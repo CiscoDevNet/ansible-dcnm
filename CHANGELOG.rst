@@ -11,7 +11,7 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 `3.5.0`_
 =====================
 
-**Release Date:** ``2023-05-10``
+**Release Date:** ``2023-05-14``
 
 Added
 -----
