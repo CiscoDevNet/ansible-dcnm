@@ -23,12 +23,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.image_man
     ImageManagement
 
 
-class ImageMgmt(ImageManagement):
+class ImageMgnt(ImageManagement):
     """
-    ## V1 API - ImageManagement().ImageMgmt()
+    ## V1 API - ImageManagement().ImageMgnt()
 
     ### Description
-    Common methods and properties for ImageMgmt() subclasses
+    Common methods and properties for ImageMgnt() subclasses
 
     ### Endpoint
     ``/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt``
@@ -42,9 +42,9 @@ class ImageMgmt(ImageManagement):
         self.log.debug("ENTERED api.v1.ImageMgmt()")
 
 
-class EpBootFlashInfo(ImageMgmt):
+class EpBootFlashInfo(ImageMgnt):
     """
-    ## V1 API - ImageMgmt().EpBootFlashInfo()
+    ## V1 API - ImageMgnt().EpBootFlashInfo()
 
     ### Description
     Return endpoint information for bootflash-info.
@@ -57,7 +57,7 @@ class EpBootFlashInfo(ImageMgmt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.ImageMgmt.EpBootFlash()")
+        self.log.debug("ENTERED api.v1.ImageMgnt.EpBootFlash()")
         self._build_properties()
 
     def _build_properties(self):
