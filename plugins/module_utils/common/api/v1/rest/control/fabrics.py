@@ -155,7 +155,8 @@ class EpFabricConfigDeploy(Fabrics):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "force_show_run must be a boolean."
+            msg += f"Expected boolean for {method_name}. "
+            msg += f"Got {value} with type {type(value).__name__}."
             raise ValueError(msg)
         self.properties["force_show_run"] = value
 
@@ -174,7 +175,8 @@ class EpFabricConfigDeploy(Fabrics):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "include_all_msd_switches must be a boolean."
+            msg += f"Expected boolean for {method_name}. "
+            msg += f"Got {value} with type {type(value).__name__}."
             raise ValueError(msg)
         self.properties["include_all_msd_switches"] = value
 
@@ -256,7 +258,8 @@ class EpFabricConfigSave(Fabrics):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "ticket_id must be a string."
+            msg += f"Expected string for {method_name}. "
+            msg += f"Got {value} with type {type(value).__name__}."
             raise ValueError(msg)
         self.properties["ticket_id"] = value
 
