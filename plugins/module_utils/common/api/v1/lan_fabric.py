@@ -30,7 +30,7 @@ class LanFabric(CommonV1):
     ### Description
     Common methods and properties for CommonV1().LanFabric() subclasses
 
-    ### Endpoint
+    ### Path
     ``/appcenter/cisco/ndfc/api/v1/lan-fabric``
     """
 

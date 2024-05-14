@@ -28,7 +28,7 @@ import inspect
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm import \
-    Features
+    EpFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
@@ -141,7 +141,7 @@ class ControllerFeatures:
             raise ValueError(msg)
 
         self.conversion = ConversionUtils()
-        self.api_features = Features()
+        self.api_features = EpFeatures()
         self._init_properties()
 
     def _init_properties(self):

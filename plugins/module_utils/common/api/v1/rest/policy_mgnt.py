@@ -31,7 +31,7 @@ class PolicyMgnt(ImageManagement):
     ### Description
     Common methods and properties for PolicyMgnt() subclasses
 
-    ### Endpoint
+    ### Path
     ``/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt``
     """
 
@@ -50,10 +50,10 @@ class EpPolicies(PolicyMgnt):
     ### Description
     Return endpoint information.
 
-    ### Endpoint path
+    ### Path path
     -   ``/rest/policymgnt/policies``
 
-    ### Endpoint verb
+    ### Verb
     -   GET
     """
 
@@ -76,10 +76,10 @@ class EpPoliciesAllAttached(PolicyMgnt):
     ### Description
     Return endpoint information.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/policymgnt/all-attached-policies``
 
-    ### Endpoint verb
+    ### Verb
     -   GET
     """
 
@@ -102,10 +102,10 @@ class EpPolicyAttach(PolicyMgnt):
     ### Description
     Return endpoint information.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/policymgnt/attach-policy``
 
-    ### Endpoint verb
+    ### Verb
     -   POST
     """
 
@@ -128,10 +128,10 @@ class EpPolicyCreate(PolicyMgnt):
     ### Description
     Return endpoint information.
 
-    ### Endpoint path
+    ### Path path
     -   ``/rest/policymgnt/platform-policy``
 
-    ### Endpoint verb
+    ### Verb
     -   POST
     """
 
@@ -152,12 +152,12 @@ class EpPolicyDetach(PolicyMgnt):
     ## V1 API - PolicyMgnt().EpPolicyDetach()
 
     ### Description
-    Return endpoint information for detach-policy.
+    Return endpoint information.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/policymgnt/detach-policy``
 
-    ### Endpoint verb
+    ### Verb
     -   DELETE
     """
 
@@ -178,12 +178,15 @@ class EpPolicyInfo(PolicyMgnt):
     ## V1 API - PolicyMgnt().EpPolicyInfo()
 
     ### Description
-    Return endpoint information for detach-policy.
+    Return endpoint information.
 
-    ### Endpoint
+    ### Raises
+    -  ``ValueError``: If path is accessed before setting policy_name.
+
+    ### Path
     -   ``/rest/policymgnt/image-policy/{policy_name}``
 
-    ### Endpoint verb
+    ### Verb
     -   GET
     """
 

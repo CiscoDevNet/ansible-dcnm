@@ -31,7 +31,7 @@ class Fabrics(LanFabric):
     ### Description
     Common methods and properties for Fabrics() subclasses.
 
-    ### Endpoint
+    ### Path
     -   ``/lan-fabric/rest/control/fabrics/{fabric_name}``
     """
 
@@ -92,16 +92,19 @@ class EpFabricConfigDeploy(Fabrics):
     ### Description
     Return endpoint to initiate config-deploy on fabric_name.
 
-    ### Endpoint
+     ### Raises
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+    -   ``ValueError``: If force_show_run is not boolean.
+    -   ``ValueError``: If include_all_msd_switches is not boolean.
+
+    ### Path
     -   ``/fabrics/{fabric_name}/config-deploy``
     -   ``/fabrics/{fabric_name}/config-deploy?forceShowRun={force_show_run}``
     -   ``/fabrics/{fabric_name}/config-deploy?inclAllMSDSwitches={include_all_msd_switches}``
 
-    ### Raises
-    - ValueError: If fabric_name is not set.
-    - ValueError: If fabric_name is invalid.
-    - ValueError: If force_show_run is not boolean.
-    - ValueError: If include_all_msd_switches is not boolean.
+    ### Verb
+    -   POST
 
     ### Parameters:
     - force_show_run: boolean
@@ -195,20 +198,23 @@ class EpFabricConfigSave(Fabrics):
     ### Description
     Return endpoint to initiate config-save on fabric_name.
 
-    Endpoint:
-    - ``/fabrics/{fabric_name}/config-save``
-    - ``/fabrics/{fabric_name}/config-save?ticketId={ticket_id}``
-
     ### Raises
-    - ValueError: If fabric_name is not set.
-    - ValueError: If fabric_name is invalid.
-    - ValueError: If ticket_id is not a string.
+    -  ``ValueError``: If fabric_name is not set.
+    -  ``ValueError``: If fabric_name is invalid.
+    -  ``ValueError``: If ticket_id is not a string.
+
+    ### Path
+    -  ``/fabrics/{fabric_name}/config-save``
+    -  ``/fabrics/{fabric_name}/config-save?ticketId={ticket_id}``
+
+    ### Verb
+    -   POST
 
     ### Parameters:
-    - fabric_name: string
-        - required
-    - ticket_id: string
-        - optional unless Change Control is enabled
+    -   fabric_name: string
+            -   required
+    -   ticket_id: string
+            -   optional unless Change Control is enabled
 
     ### Usage
     ```python
@@ -275,16 +281,19 @@ class EpFabricDelete(Fabrics):
     ### Description
     Return endpoint to delete ``fabric_name``.
 
-    ### Endpoint
-    ``/fabrics/{fabric_name}``
-
     ### Raises
-    - ValueError: If fabric_name is not set.
-    - ValueError: If fabric_name is invalid.
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+
+    ### Path
+    -   ``/fabrics/{fabric_name}``
+
+    ### Verb
+    -   DELETE
 
     ### Parameters
-    - fabric_name: string
-        - required
+    -   fabric_name: string
+            -   required
 
     ### Usage
     ```python
@@ -324,16 +333,19 @@ class EpFabricDetails(Fabrics):
     ### Description
     Return the endpoint to query ``fabric_name`` details.
 
-    ### Endpoint
-    ``/fabrics/{fabric_name}``
-
     ### Raises
-    - ValueError: If fabric_name is not set.
-    - ValueError: If fabric_name is invalid.
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+
+    ### Path
+    -   ``/fabrics/{fabric_name}``
+
+    ### Verb
+    -   GET
 
     ### Parameters
-    - fabric_name: string
-        - required
+    -   fabric_name: string
+            -   required
 
     ### Usage
     ```python
@@ -369,12 +381,15 @@ class EpFabricFreezeMode(Fabrics):
     ### Description
     Return the endpoint to query ``fabric_name`` freezemode status.
 
-    ### Endpoint
-    ``/fabrics/{fabric_name}/freezemode``
-
     ### Raises
-    - ValueError: If fabric_name is not set.
-    - ValueError: If fabric_name is invalid.
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+
+    ### Path
+    -   ``/fabrics/{fabric_name}/freezemode``
+
+    ### Verb
+    -   GET
 
     ### Parameters
         - fabric_name: string

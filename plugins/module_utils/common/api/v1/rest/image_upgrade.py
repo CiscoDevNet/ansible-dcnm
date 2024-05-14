@@ -30,7 +30,7 @@ class ImageUpgrade(ImageManagement):
     ### Description
     Common methods and properties for ImageUpgrade() subclasses.
 
-    ### Endpoint
+    ### Path
     -   ``/imagemanagement/rest/imageupgrade``
     """
 
@@ -56,7 +56,7 @@ class EpInstallOptions(ImageUpgrade):
     ### Description
     Return endpoint information for install-options.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/imageupgrade/install-options``
 
     ### Raises
@@ -92,7 +92,7 @@ class EpUpgradeImage(ImageUpgrade):
     ### Description
     Return endpoint information for upgrade-image.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/imageupgrade/upgrade-image``
 
     ### Raises

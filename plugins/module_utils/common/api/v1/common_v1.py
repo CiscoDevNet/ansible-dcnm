@@ -30,7 +30,7 @@ class CommonV1(Common):
     ### Description
     Common methods and properties for API v1 subclasses.
 
-    ### Endpoint
+    ### Path
     ``/appcenter/cisco/ndfc/api/v1/``
     """
 

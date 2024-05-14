@@ -30,7 +30,7 @@ class ImageMgnt(ImageManagement):
     ### Description
     Common methods and properties for ImageMgnt() subclasses
 
-    ### Endpoint
+    ### Path
     ``/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt``
     """
 
@@ -49,8 +49,11 @@ class EpBootFlashInfo(ImageMgnt):
     ### Description
     Return endpoint information for bootflash-info.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/imagemgnt/bootFlash/bootflash-info``
+
+    ### Verb
+    -   GET
     """
 
     def __init__(self):

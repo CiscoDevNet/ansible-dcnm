@@ -47,8 +47,11 @@ class EpFeatures(FM):
     ### Description
     Common methods and properties
 
-    ### Endpoint
+    ### Path
     ``/fm/features``
+
+    ### Verb
+    -   GET
     """
 
     def __init__(self):
@@ -70,8 +73,11 @@ class EpVersion(FM):
     ### Description
     Common methods and properties
 
-    ### Endpoint
+    ### Path
     ``/fm/about/version``
+
+    ### Verb
+    -   GET
     """
 
     def __init__(self):

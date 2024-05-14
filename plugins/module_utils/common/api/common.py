@@ -30,7 +30,7 @@ class Common:
     ### Description
     Common methods and properties for subclasses.
 
-    ### Endpoint
+    ### Path
     ``/appcenter/cisco/ndfc/api``
     """
 

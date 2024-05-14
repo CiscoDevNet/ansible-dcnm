@@ -30,7 +30,7 @@ class StagingManagement(ImageManagement):
     ### Description
     Common methods and properties for StagingManagement() subclasses
 
-    ### Endpoint
+    ### Path
     ``/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement``
     """
 
@@ -49,8 +49,11 @@ class EpImageStage(StagingManagement):
     ### Description
     Return endpoint information for stage-image.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/stagingmanagement/stage-image``
+
+    ### Verb
+    -   POST
     """
 
     def __init__(self):
@@ -72,8 +75,11 @@ class EpImageValidate(StagingManagement):
     ### Description
     Return endpoint information for validate-image.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/stagingmanagement/validate-image``
+
+    ### Verb
+    -   POST
     """
 
     def __init__(self):
@@ -95,8 +101,11 @@ class EpStageInfo(StagingManagement):
     ### Description
     Return endpoint information for stage-info.
 
-    ### Endpoint
+    ### Path
     -   ``/rest/stagingmanagement/stage-info``
+
+    ### Verb
+    -   GET
     """
 
     def __init__(self):

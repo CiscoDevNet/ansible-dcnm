@@ -15,28 +15,25 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Allen Robel"
-
-import logging
-
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common_v1 import \
-    CommonV1
 
 
-class ImageManagement(CommonV1):
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.image_mgnt import \
+    EpBootFlashInfo
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    does_not_raise
+
+PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt"
+
+
+def test_ep_image_mgnt_00010():
     """
-    ## V1 API - ImageManagement()
+    ### Class
+    -   EpBootFlashInfo
 
-    ### Description
-    Common methods and properties for CommonV1().ImageManagement() subclasses
-
-    ### Path
-    ``/appcenter/cisco/ndfc/api/v1/imagemanagement``
+    ### Summary
+    -   Verify path and verb
     """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.image_management = f"{self.api_v1}/imagemanagement"
-        self.log.debug("ENTERED api.v1.ImageManagement()")
+    with does_not_raise():
+        instance = EpBootFlashInfo()
+    assert instance.path == f"{PATH_PREFIX}/bootFlash/bootflash-info"
+    assert instance.verb == "GET"
