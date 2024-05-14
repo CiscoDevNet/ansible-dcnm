@@ -188,3 +188,10 @@ class FabricTypes:
         Return a sorted list() of valid fabric types.
         """
         return self._properties["valid_fabric_types"]
+
+    @property
+    def valid_fabric_template_names(self):
+        """
+        Return a sorted list() of valid fabric template names.
+        """
+        return sorted(self._fabric_type_to_template_name_map.values())

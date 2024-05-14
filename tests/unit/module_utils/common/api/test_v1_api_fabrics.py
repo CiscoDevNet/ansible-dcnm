@@ -19,12 +19,14 @@ __metaclass__ = type
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import (
-    EpFabricConfigDeploy, EpFabricConfigSave, EpFabricDelete, EpFabricDetails, EpFabricFreezeMode)
+    EpFabricConfigDeploy, EpFabricConfigSave, EpFabricCreate, EpFabricDelete, EpFabricDetails,
+    EpFabricFreezeMode, EpFabricUpdate)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise
 
 PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics"
 FABRIC_NAME = "MyFabric"
+TEMPLATE_NAME = "Easy_Fabric"
 
 def test_ep_fabrics_00010():
     """
@@ -264,6 +266,98 @@ def test_ep_fabrics_00150():
 def test_ep_fabrics_00200():
     """
     ### Class
+    -   EpFabricCreate
+
+    ### Summary
+    -   Verify path and verb
+    """
+    with does_not_raise():
+        instance = EpFabricCreate()
+        instance.fabric_name = FABRIC_NAME
+        instance.template_name = TEMPLATE_NAME
+    assert instance.path == f"{PATH_PREFIX}/{FABRIC_NAME}/{TEMPLATE_NAME}"
+    assert instance.verb == "POST"
+
+
+def test_ep_fabrics_00240():
+    """
+    ### Class
+    -   EpFabricCreate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if path is accessed
+        before setting ``fabric_name``.
+
+    """
+    with does_not_raise():
+        instance = EpFabricCreate()
+    match = r"EpFabricCreate\.path_fabric_name_template_name:\s+"
+    match += r"fabric_name must be set prior to accessing path\."
+    with pytest.raises(ValueError, match=match):
+        instance.path  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00250():
+    """
+    ### Class
+    -   EpFabricCreate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if ``fabric_name``
+        is invalid.
+    """
+    fabric_name = "1_InvalidFabricName"
+    with does_not_raise():
+        instance = EpFabricCreate()
+    match = r"EpFabricCreate.fabric_name:\s+"
+    match += r"ConversionUtils\.validate_fabric_name:\s+"
+    match += rf"Invalid fabric name: {fabric_name}\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_name = fabric_name  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00260():
+    """
+    ### Class
+    -   EpFabricCreate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if path is accessed
+        before setting ``template_name``.
+
+    """
+    with does_not_raise():
+        instance = EpFabricCreate()
+        instance.fabric_name = FABRIC_NAME
+    match = r"EpFabricCreate\.path_fabric_name_template_name:\s+"
+    match += r"template_name must be set prior to accessing path\."
+    with pytest.raises(ValueError, match=match):
+        instance.path  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00270():
+    """
+    ### Class
+    -   EpFabricCreate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if ``template_name``
+        is invalid.
+    """
+    template_name = "Invalid_Template_Name"
+    with does_not_raise():
+        instance = EpFabricCreate()
+        instance.fabric_name = FABRIC_NAME
+    match = r"EpFabricCreate.template_name:\s+"
+    match += r"Invalid template_name: Invalid_Template_Name\.\s+"
+    match += r"Expected one of:.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.template_name = template_name  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00400():
+    """
+    ### Class
     -   EpFabricDelete
 
     ### Summary
@@ -276,7 +370,7 @@ def test_ep_fabrics_00200():
     assert instance.verb == "DELETE"
 
 
-def test_ep_fabrics_00240():
+def test_ep_fabrics_00440():
     """
     ### Class
     -   EpFabricDelete
@@ -294,7 +388,7 @@ def test_ep_fabrics_00240():
         instance.path  # pylint: disable=pointless-statement
 
 
-def test_ep_fabrics_00250():
+def test_ep_fabrics_00450():
     """
     ### Class
     -   EpFabricDelete
@@ -313,7 +407,7 @@ def test_ep_fabrics_00250():
         instance.fabric_name = fabric_name  # pylint: disable=pointless-statement
 
 
-def test_ep_fabrics_00300():
+def test_ep_fabrics_00500():
     """
     ### Class
     -   EpFabricDetails
@@ -328,7 +422,7 @@ def test_ep_fabrics_00300():
     assert instance.verb == "GET"
 
 
-def test_ep_fabrics_00340():
+def test_ep_fabrics_00540():
     """
     ### Class
     -   EpFabricDetails
@@ -346,7 +440,7 @@ def test_ep_fabrics_00340():
         instance.path  # pylint: disable=pointless-statement
 
 
-def test_ep_fabrics_00350():
+def test_ep_fabrics_00550():
     """
     ### Class
     -   EpFabricDetails
@@ -365,7 +459,7 @@ def test_ep_fabrics_00350():
         instance.fabric_name = fabric_name  # pylint: disable=pointless-statement
 
 
-def test_ep_fabrics_00400():
+def test_ep_fabrics_00600():
     """
     ### Class
     -   EpFabricFreezeMode
@@ -380,7 +474,7 @@ def test_ep_fabrics_00400():
     assert instance.verb == "GET"
 
 
-def test_ep_fabrics_00440():
+def test_ep_fabrics_00640():
     """
     ### Class
     -   EpFabricFreezeMode
@@ -398,7 +492,7 @@ def test_ep_fabrics_00440():
         instance.path  # pylint: disable=pointless-statement
 
 
-def test_ep_fabrics_00450():
+def test_ep_fabrics_00650():
     """
     ### Class
     -   EpFabricFreezeMode
@@ -415,3 +509,98 @@ def test_ep_fabrics_00450():
     match += rf"Invalid fabric name: {fabric_name}\."
     with pytest.raises(ValueError, match=match):
         instance.fabric_name = fabric_name  # pylint: disable=pointless-statement
+
+
+# NOTE: EpFabricSummary tests are in test_v1_api_switches.py
+
+
+def test_ep_fabrics_00700():
+    """
+    ### Class
+    -   EpFabricUpdate
+
+    ### Summary
+    -   Verify path and verb
+    """
+    with does_not_raise():
+        instance = EpFabricUpdate()
+        instance.fabric_name = FABRIC_NAME
+        instance.template_name = TEMPLATE_NAME
+    assert instance.path == f"{PATH_PREFIX}/{FABRIC_NAME}/{TEMPLATE_NAME}"
+    assert instance.verb == "PUT"
+
+
+def test_ep_fabrics_00740():
+    """
+    ### Class
+    -   EpFabricUpdate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if path is accessed
+        before setting ``fabric_name``.
+
+    """
+    with does_not_raise():
+        instance = EpFabricUpdate()
+    match = r"EpFabricUpdate\.path_fabric_name_template_name:\s+"
+    match += r"fabric_name must be set prior to accessing path\."
+    with pytest.raises(ValueError, match=match):
+        instance.path  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00750():
+    """
+    ### Class
+    -   EpFabricUpdate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if ``fabric_name``
+        is invalid.
+    """
+    fabric_name = "1_InvalidFabricName"
+    with does_not_raise():
+        instance = EpFabricUpdate()
+    match = r"EpFabricUpdate.fabric_name:\s+"
+    match += r"ConversionUtils\.validate_fabric_name:\s+"
+    match += rf"Invalid fabric name: {fabric_name}\."
+    with pytest.raises(ValueError, match=match):
+        instance.fabric_name = fabric_name  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00760():
+    """
+    ### Class
+    -   EpFabricUpdate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if path is accessed
+        before setting ``template_name``.
+
+    """
+    with does_not_raise():
+        instance = EpFabricUpdate()
+        instance.fabric_name = FABRIC_NAME
+    match = r"EpFabricUpdate\.path_fabric_name_template_name:\s+"
+    match += r"template_name must be set prior to accessing path\."
+    with pytest.raises(ValueError, match=match):
+        instance.path  # pylint: disable=pointless-statement
+
+
+def test_ep_fabrics_00770():
+    """
+    ### Class
+    -   EpFabricUpdate
+
+    ### Summary
+    -   Verify ``ValueError`` is raised if ``template_name``
+        is invalid.
+    """
+    template_name = "Invalid_Template_Name"
+    with does_not_raise():
+        instance = EpFabricUpdate()
+        instance.fabric_name = FABRIC_NAME
+    match = r"EpFabricUpdate.template_name:\s+"
+    match += r"Invalid template_name: Invalid_Template_Name\.\s+"
+    match += r"Expected one of:.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.template_name = template_name  # pylint: disable=pointless-statement

@@ -22,6 +22,8 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric import \
     LanFabric
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
+    FabricTypes
 
 
 class Fabrics(LanFabric):
@@ -39,6 +41,7 @@ class Fabrics(LanFabric):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.fabric_types = FabricTypes()
         self.rest_control_fabrics = f"{self.lan_fabric}/rest/control/fabrics"
         msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
         self.log.debug(msg)
@@ -49,6 +52,7 @@ class Fabrics(LanFabric):
         - Set the fabric_name property.
         """
         self.properties["fabric_name"] = None
+        self.properties["template_name"] = None
 
     @property
     def fabric_name(self):
@@ -83,6 +87,46 @@ class Fabrics(LanFabric):
             msg += "fabric_name must be set prior to accessing path."
             raise ValueError(msg)
         return f"{self.rest_control_fabrics}/{self.fabric_name}"
+
+    @property
+    def path_fabric_name_template_name(self):
+        """
+        -   Endpoint path property, including fabric_name and template_name.
+        -   Raise ``ValueError`` if fabric_name is not set and
+            ``self.required_properties`` contains "fabric_name".
+        -   Raise ``ValueError`` if template_name is not set and
+            ``self.required_properties`` contains "template_name".
+        """
+        method_name = inspect.stack()[0][3]
+        if self.fabric_name is None and "fabric_name" in self.required_properties:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_name must be set prior to accessing path."
+            raise ValueError(msg)
+        if self.template_name is None and "template_name" in self.required_properties:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "template_name must be set prior to accessing path."
+            raise ValueError(msg)
+        return f"{self.rest_control_fabrics}/{self.fabric_name}/{self.template_name}"
+
+    @property
+    def template_name(self):
+        """
+        - getter: Return the template_name.
+        - setter: Set the template_name.
+        - setter: Raise ``ValueError`` if template_name is not a string.
+        """
+        return self.properties["template_name"]
+
+    @template_name.setter
+    def template_name(self, value):
+        method_name = inspect.stack()[0][3]
+        if value not in self.fabric_types.valid_fabric_template_names:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid template_name: {value}. "
+            msg += "Expected one of: "
+            msg += f"{', '.join(self.fabric_types.valid_fabric_template_names)}."
+            raise ValueError(msg)
+        self.properties["template_name"] = value
 
 
 class EpFabricConfigDeploy(Fabrics):
@@ -285,6 +329,68 @@ class EpFabricConfigSave(Fabrics):
         return _path
 
 
+class EpFabricCreate(Fabrics):
+    """
+    ## V1 API - Fabrics().EpFabricCreate()
+
+    ### Description
+    Return endpoint information.
+
+    ### Raises
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+    -   ``ValueError``: If template_name is not set.
+    -   ``ValueError``: If template_name is not a valid fabric template name.
+
+    ### Path
+    -   ``/rest/control/fabrics/{FABRIC_NAME}/{TEMPLATE_NAME}``
+
+    ### Verb
+    -   POST
+
+    ### Parameters
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    - template_name: string
+        - set the ``template_name`` to be used in the path
+        - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpFabricCreate()
+    instance.fabric_name = "MyFabric"
+    instance.template_name = "Easy_Fabric"
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self.required_properties.add("template_name")
+        self._build_properties()
+        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        self.log.debug(msg)
+
+    def _build_properties(self):
+        super()._build_properties()
+        self.properties["verb"] = "POST"
+
+    @property
+    def path(self):
+        """
+        - Endpoint for fabric create.
+        - Raise ``ValueError`` if fabric_name is not set.
+        """
+        return self.path_fabric_name_template_name
+
+
 class EpFabricDelete(Fabrics):
     """
     ## V1 API - Fabrics().EpFabricDelete()
@@ -440,3 +546,65 @@ class EpFabricFreezeMode(Fabrics):
     @property
     def path(self):
         return f"{self.path_fabric_name}/freezemode"
+
+
+class EpFabricUpdate(Fabrics):
+    """
+    ## V1 API - Fabrics().EpFabricUpdate()
+
+    ### Description
+    Return endpoint information.
+
+    ### Raises
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+    -   ``ValueError``: If template_name is not set.
+    -   ``ValueError``: If template_name is not a valid fabric template name.
+
+    ### Path
+    -   ``/rest/control/fabrics/{FABRIC_NAME}/{TEMPLATE_NAME}``
+
+    ### Verb
+    -   PUT
+
+    ### Parameters
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    - template_name: string
+        - set the ``template_name`` to be used in the path
+        - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpFabricUpdate()
+    instance.fabric_name = "MyFabric"
+    instance.template_name = "Easy_Fabric_IPFM"
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self.required_properties.add("template_name")
+        self._build_properties()
+        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        self.log.debug(msg)
+
+    def _build_properties(self):
+        super()._build_properties()
+        self.properties["verb"] = "PUT"
+
+    @property
+    def path(self):
+        """
+        - Endpoint for fabric create.
+        - Raise ``ValueError`` if fabric_name is not set.
+        """
+        return self.path_fabric_name_template_name
