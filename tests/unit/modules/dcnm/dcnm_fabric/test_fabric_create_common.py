@@ -32,10 +32,12 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
+    EpFabricCreate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    does_not_raise, fabric_create_common_fixture,
+    MockAnsibleModule, does_not_raise, fabric_create_common_fixture,
     payloads_fabric_create_common)
 
 
@@ -54,7 +56,7 @@ def test_fabric_create_common_00010(fabric_create_common) -> None:
     with does_not_raise():
         instance = fabric_create_common
         instance._build_properties()
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_fabric_create, EpFabricCreate)
     assert instance.class_name == "FabricCreateCommon"
     assert instance.action == "create"
     assert instance.check_mode is False
@@ -99,12 +101,12 @@ def test_fabric_create_common_00032(monkeypatch, fabric_create_common) -> None:
     - FabricCreateCommon
         - __init__()
         - _set_fabric_create_endpoint
-        - endpoints.fabric_create
+        - ep_fabric_create.fabric_name setter
 
     Summary
-    -   ``ValueError`` is raised when endpoints.fabric_create() raises an exception.
+    -   ``ValueError`` is raised when ep_fabric_create.fabric_name raises an exception.
     -   Since ``fabric_name`` and ``template_name`` are already verified in
-        _set_fabric_create_endpoint, ApiEndpoints().fabric_create() needs
+        _set_fabric_create_endpoint, EpFabricCreate().fabric_name setter needs
         to be mocked to raise an exception.
     """
     method_name = inspect.stack()[0][3]
@@ -112,23 +114,177 @@ def test_fabric_create_common_00032(monkeypatch, fabric_create_common) -> None:
 
     payload = payloads_fabric_create_common(key)
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpFabricCreate:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.fabric_create() method to raise an exception.
+        Mock the EpFabricCreate.fabric_name setter property
+        to raise ``ValueError``.
         """
 
         @property
-        def fabric_create(self):
+        def fabric_name(self):
             """
             Mocked method
             """
-            raise ValueError("mocked exception")
+
+        @fabric_name.setter
+        def fabric_name(self, value):
+            """
+            Mocked method
+            """
+            msg = "MockEpFabricCreate.fabric_name: mocked exception."
+            raise ValueError(msg)
 
     with does_not_raise():
         instance = fabric_create_common
-        instance.endpoints = MockApiEndpoints()
+        monkeypatch.setattr(instance, "ep_fabric_create", MockEpFabricCreate())
+        instance.ep_fabric_create = MockEpFabricCreate()
         instance._build_properties()
 
-    match = "mocked exception"
+    match = r"MockEpFabricCreate\.fabric_name: mocked exception\."
     with pytest.raises(ValueError, match=match):
         instance._set_fabric_create_endpoint(payload)
+
+
+def test_fabric_create_common_00033(monkeypatch, fabric_create_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricCreateCommon
+        - __init__()
+        - _set_fabric_create_endpoint
+        - ep_fabric_create.template_name setter
+
+    Summary
+    -   ``ValueError`` is raised when ep_fabric_create.template_name raises an exception.
+    -   Since ``fabric_name`` and ``template_name`` are already verified in
+        _set_fabric_create_endpoint, EpFabricCreate().template_name setter needs
+        to be mocked to raise an exception.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    payload = payloads_fabric_create_common(key)
+
+    class MockEpFabricCreate:  # pylint: disable=too-few-public-methods
+        """
+        Mock the EpFabricCreate.template_name setter property
+        to raise ``ValueError``.
+        """
+
+        @property
+        def template_name(self):
+            """
+            Mocked method
+            """
+
+        @template_name.setter
+        def template_name(self, value):
+            """
+            Mocked method
+            """
+            msg = "MockEpFabricCreate.template_name: mocked exception."
+            raise ValueError(msg)
+
+    with does_not_raise():
+        instance = fabric_create_common
+        monkeypatch.setattr(instance, "ep_fabric_create", MockEpFabricCreate())
+        instance.ep_fabric_create = MockEpFabricCreate()
+        instance._build_properties()
+
+    match = r"MockEpFabricCreate\.template_name: mocked exception\."
+    with pytest.raises(ValueError, match=match):
+        instance._set_fabric_create_endpoint(payload)
+
+
+def test_fabric_create_common_00040(monkeypatch, fabric_create_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricCreateCommon
+        - __init__()
+        - _set_fabric_create_endpoint
+        - fabric_types.template_name getter
+
+    Summary
+    -   ``ValueError`` is raised when fabric_types.template_name getter raises
+        an exception.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    payload = payloads_fabric_create_common(key)
+
+    class MockFabricTypes:  # pylint: disable=too-few-public-methods
+        """
+        Mock the FabricTypes.template_name setter property
+        to raise ``ValueError``.
+        """
+
+        @property
+        def valid_fabric_types(self):
+            """
+            Return fabric_type matching payload FABRIC_TYPE
+            """
+            return ["VXLAN_EVPN"]
+
+        @property
+        def template_name(self):
+            """
+            Mocked method
+            """
+            msg = "MockEpFabricCreate.template_name: mocked exception."
+            raise ValueError(msg)
+
+    with does_not_raise():
+        instance = fabric_create_common
+        monkeypatch.setattr(instance, "fabric_types", MockFabricTypes())
+        instance._build_properties()
+
+    match = r"MockEpFabricCreate\.template_name: mocked exception\."
+    with pytest.raises(ValueError, match=match):
+        instance._set_fabric_create_endpoint(payload)
+
+
+def test_fabric_create_common_00050(monkeypatch, fabric_create_common) -> None:
+    """
+    Classes and Methods
+    - FabricCommon
+        - __init__()
+    - FabricCreateCommon
+        - __init__()
+        - _set_fabric_create_endpoint
+        - _send_payloads()
+
+    Summary
+    -   _send_payloads() re-raises ``ValueError`` when
+        _set_fabric_create_endpoint() raises ``ValueError``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    payload = payloads_fabric_create_common(key)
+
+    def mock_set_fabric_create_endpoint(
+        *args,
+    ):  # pylint: disable=too-few-public-methods
+        """
+        Mock the FabricCreateCommon()._set_fabric_create_endpoint()
+        to raise ``ValueError``.
+        """
+        msg = "mock_set_fabric_endpoint(): mocked exception."
+        raise ValueError(msg)
+
+    with does_not_raise():
+        instance = fabric_create_common
+        instance.rest_send = RestSend(MockAnsibleModule())
+        monkeypatch.setattr(
+            instance, "_set_fabric_create_endpoint", mock_set_fabric_create_endpoint
+        )
+        instance._build_properties()
+        instance._payloads_to_commit = [payload]
+
+    match = r"mock_set_fabric_endpoint\(\): mocked exception\."
+    with pytest.raises(ValueError, match=match):
+        instance._send_payloads()

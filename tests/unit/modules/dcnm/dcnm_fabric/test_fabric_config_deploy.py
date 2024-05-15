@@ -422,7 +422,7 @@ def test_fabric_config_deploy_00200(
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    class EpFabricConfigDeploy:  # pylint: disable=too-few-public-methods
+    class MockEpFabricConfigDeploy:  # pylint: disable=too-few-public-methods
         """
         Mock the EpFabricConfigDeploy.path getter property
         to raise ``ValueError``.
@@ -461,7 +461,7 @@ def test_fabric_config_deploy_00200(
 
     with does_not_raise():
         instance = fabric_config_deploy
-        monkeypatch.setattr(instance, "ep_config_deploy", EpFabricConfigDeploy())
+        monkeypatch.setattr(instance, "ep_config_deploy", MockEpFabricConfigDeploy())
         instance.fabric_details = fabric_details_by_name
         instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
         instance.payload = payload
