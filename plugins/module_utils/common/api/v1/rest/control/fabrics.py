@@ -165,12 +165,12 @@ class EpFabricConfigDeploy(Fabrics):
 
     ### Usage
     ```python
-    fabric_config_deploy = EpFabricConfigDeploy()
-    fabric_config_deploy.fabric_name = "MyFabric"
-    fabric_config_deploy.force_show_run = True
-    fabric_config_deploy.include_all_msd_switches = True
-    path = fabric_config_deploy.path
-    verb = fabric_config_deploy.verb
+    instance = EpFabricConfigDeploy()
+    instance.fabric_name = "MyFabric"
+    instance.force_show_run = True
+    instance.include_all_msd_switches = True
+    path = instance.path
+    verb = instance.verb
     ```
     """
 
@@ -272,11 +272,11 @@ class EpFabricConfigSave(Fabrics):
 
     ### Usage
     ```python
-    fabric_config_save = EpFabricConfigSave()
-    fabric_config_save.fabric_name = "MyFabric"
-    fabric_config_save.ticket_id = "MyTicket1234"
-    path = fabric_config_save.path
-    verb = fabric_config_save.verb
+    instance = EpFabricConfigSave()
+    instance.fabric_name = "MyFabric"
+    instance.ticket_id = "MyTicket1234"
+    path = instance.path
+    verb = instance.verb
     ```
     """
 
@@ -417,10 +417,10 @@ class EpFabricDelete(Fabrics):
 
     ### Usage
     ```python
-    fabric_delete = EpFabricDelete()
-    fabric_delete.fabric_name = "MyFabric"
-    path = fabric_delete.path
-    verb = fabric_delete.verb
+    instance = EpFabricDelete()
+    instance.fabric_name = "MyFabric"
+    path = instance.path
+    verb = instance.verb
     ```
     """
 
@@ -472,10 +472,10 @@ class EpFabricDetails(Fabrics):
 
     ### Usage
     ```python
-    fabric_details = EpFabricDelete()
-    fabric_details.fabric_name = "MyFabric"
-    path = fabric_details.path
-    verb = fabric_details.verb
+    instance = EpFabricDelete()
+    instance.fabric_name = "MyFabric"
+    path = instance.path
+    verb = instance.verb
     ```
     """
 
@@ -523,10 +523,10 @@ class EpFabricFreezeMode(Fabrics):
 
     ### Usage
     ```python
-    fabric_details = EpFabricDelete()
-    fabric_details.fabric_name = "MyFabric"
-    path = fabric_details.path
-    verb = fabric_details.verb
+    instance = EpFabricDelete()
+    instance.fabric_name = "MyFabric"
+    path = instance.path
+    verb = instance.verb
     ```
     """
 
@@ -608,3 +608,48 @@ class EpFabricUpdate(Fabrics):
         - Raise ``ValueError`` if fabric_name is not set.
         """
         return self.path_fabric_name_template_name
+
+
+class EpFabrics(Fabrics):
+    """
+    ## V1 API - Fabrics().EpFabrics()
+
+    ### Description
+    Return the endpoint to query fabrics.
+
+    ### Raises
+    -   None
+
+    ### Path
+    -   ``/rest/control/fabrics``
+
+    ### Verb
+    -   GET
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpFabrics()
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._build_properties()
+        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        self.log.debug(msg)
+
+    def _build_properties(self):
+        super()._build_properties()
+        self.properties["verb"] = "GET"
+
+    @property
+    def path(self):
+        return self.rest_control_fabrics
