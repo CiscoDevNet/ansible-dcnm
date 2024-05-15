@@ -22,14 +22,15 @@ import copy
 import inspect
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
+    EpFabrics
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
-    EpFabrics
+
 
 class FabricDetails(FabricCommon):
     """
