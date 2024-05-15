@@ -19,14 +19,15 @@ __metaclass__ = type
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import (
-    EpFabricConfigDeploy, EpFabricConfigSave, EpFabricCreate, EpFabricDelete, EpFabricDetails,
-    EpFabricFreezeMode, EpFabricUpdate)
+    EpFabricConfigDeploy, EpFabricConfigSave, EpFabricCreate, EpFabricDelete,
+    EpFabricDetails, EpFabricFreezeMode, EpFabricUpdate)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise
 
 PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics"
 FABRIC_NAME = "MyFabric"
 TEMPLATE_NAME = "Easy_Fabric"
+
 
 def test_ep_fabrics_00010():
     """
@@ -153,7 +154,9 @@ def test_ep_fabrics_00070():
     match += r"Expected boolean for include_all_msd_switches\.\s+"
     match += r"Got NOT_BOOLEAN with type str\."
     with pytest.raises(ValueError, match=match):
-        instance.include_all_msd_switches = "NOT_BOOLEAN"  # pylint: disable=pointless-statement
+        instance.include_all_msd_switches = (
+            "NOT_BOOLEAN"  # pylint: disable=pointless-statement
+        )
 
 
 def test_ep_fabrics_00100():

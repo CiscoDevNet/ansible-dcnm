@@ -33,7 +33,7 @@ import inspect
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm import (
-    Features,
+    EpFeatures,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import (
     ConversionUtils,
@@ -70,7 +70,7 @@ def test_controller_features_00010(controller_features) -> None:
     with does_not_raise():
         instance = controller_features
     assert instance.class_name == "ControllerFeatures"
-    assert isinstance(instance.api_features, Features)
+    assert isinstance(instance.api_features, EpFeatures)
     assert isinstance(instance.conversion, ConversionUtils)
     assert instance.check_mode is False
     assert instance.filter is None

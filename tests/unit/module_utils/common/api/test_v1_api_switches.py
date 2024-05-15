@@ -18,13 +18,14 @@ __metaclass__ = type
 
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.switches import (
-    EpFabricSummary)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.switches import \
+    EpFabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise
 
 PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/switches"
 FABRIC_NAME = "MyFabric"
+
 
 def test_ep_switches_00010():
     """
