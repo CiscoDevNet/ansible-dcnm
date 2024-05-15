@@ -20,6 +20,8 @@ import copy
 import inspect
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
+    EpFabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 # Import Results() only for the case where the user has not set Results()
@@ -30,8 +32,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class FabricDelete(FabricCommon):
@@ -78,7 +78,7 @@ class FabricDelete(FabricCommon):
 
         self._fabrics_to_delete = []
         self._build_properties()
-        self._endpoints = ApiEndpoints()
+        self.ep_fabric_delete = EpFabricDelete()
 
         self._cannot_delete_fabric_reason = None
 
@@ -145,17 +145,12 @@ class FabricDelete(FabricCommon):
         - Raise ``ValueError`` if the endpoint assignment fails
         """
         try:
-            self._endpoints.fabric_name = fabric_name
+            self.ep_fabric_delete.fabric_name = fabric_name
         except (ValueError, TypeError) as error:
             raise ValueError(error) from error
 
-        try:
-            endpoint = self._endpoints.fabric_delete
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        self.path = endpoint.get("path")
-        self.verb = endpoint.get("verb")
+        self.path = self.ep_fabric_delete.path
+        self.verb = self.ep_fabric_delete.verb
 
     def _validate_commit_parameters(self):
         """
