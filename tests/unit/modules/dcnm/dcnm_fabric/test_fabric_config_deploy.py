@@ -42,12 +42,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
     FabricConfigDeploy
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_config_deploy_fixture, fabric_details_by_name_fixture,
@@ -443,9 +437,6 @@ def test_fabric_config_deploy_00200(
             msg = "mocked EpFabricConfigDeploy().path getter exception"
             raise ValueError(msg)
 
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.common.api.v1.rest.control.fabrics"
-
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
@@ -512,9 +503,9 @@ def test_fabric_config_deploy_00210(
     -   FabricConfigDeploy() properties are set
     -   FabricConfigDeploy.fabric_name is set "f1"
     -   FabricConfigDeploy().commit() is called.
-    -   FabricConfigDeploy().commit() sets ApiEndpoints().fabric_name
+    -   FabricConfigDeploy().commit() sets EpFabricConfigDeploy().fabric_name
     -   FabricConfigDeploy().commit() accesses
-        ApiEndpoints().fabric_config_deploy to set verb and path
+        EpFabricConfigDeploy().path/verb to set path and verb
     -   FabricConfigDeploy().commit() calls
         FabricConfigDeploy()_can_fabric_be_deployed()
     -   FabricConfigDeploy()._can_fabric_be_deployed() calls
@@ -635,9 +626,9 @@ def test_fabric_config_deploy_00220(
         -   unit_test == True
     -   FabricConfigDeploy().results is set to Results() class.
     -   FabricConfigDeploy().commit() is called.
-    -   FabricConfigDeploy().commit() sets ApiEndpoints().fabric_name
+    -   FabricConfigDeploy().commit() sets EpFabricConfigDeploy().fabric_name
     -   FabricConfigDeploy().commit() accesses
-        ApiEndpoints().fabric_config_deploy to set verb and path
+        EpFabricConfigDeploy().path/verb to set path and verb
     -   FabricConfigDeploy() calls RestSend().commit() which sets
         RestSend().response_current to a dict with keys:
         -   DATA == {"status": "Configuration deployment failed."}

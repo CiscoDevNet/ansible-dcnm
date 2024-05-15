@@ -22,6 +22,8 @@ import inspect
 import logging
 from typing import Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
+    EpFabricConfigSave
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 # Used only to verify RestSend instance in rest_send property setter
@@ -30,8 +32,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import
 # Used only to verify RestSend instance in rest_send property setter
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class FabricConfigSave:
@@ -87,7 +87,7 @@ class FabricConfigSave:
         self._init_properties()
 
         self.conversion = ConversionUtils()
-        self.endpoints = ApiEndpoints()
+        self.ep_config_save = EpFabricConfigSave()
 
         msg = "ENTERED FabricConfigSave(): "
         msg += f"check_mode: {self.check_mode}, "
@@ -162,9 +162,9 @@ class FabricConfigSave:
             return
 
         try:
-            self.endpoints.fabric_name = self.fabric_name
-            self.path = self.endpoints.fabric_config_save.get("path")
-            self.verb = self.endpoints.fabric_config_save.get("verb")
+            self.ep_config_save.fabric_name = self.fabric_name
+            self.path = self.ep_config_save.path
+            self.verb = self.ep_config_save.verb
         except ValueError as error:
             raise ValueError(error) from error
 

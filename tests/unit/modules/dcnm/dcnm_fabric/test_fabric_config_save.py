@@ -32,6 +32,8 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
+    EpFabricConfigSave
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
@@ -40,8 +42,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
     FabricConfigSave
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_config_save_fixture, params, responses_fabric_config_save)
@@ -71,7 +71,7 @@ def test_fabric_config_save_00010(fabric_config_save) -> None:
     assert instance.verb is None
     assert instance.state == "merged"
     assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_config_save, EpFabricConfigSave)
 
 
 def test_fabric_config_save_00011() -> None:
@@ -342,47 +342,24 @@ def test_fabric_config_save_00080(monkeypatch, fabric_config_save) -> None:
 
     Summary
     -   Verify that FabricConfigSave().commit()
-        re-raises ``ValueError`` when ApiEndpoints() raises
+        re-raises ``ValueError`` when EpFabricConfigSave() raises
         ``ValueError``.
     """
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpFabricConfigSave:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.fabric_config_save getter property
+        Mock the EpFabricConfigSave.path getter property
         to raise ``ValueError``.
         """
 
-        def validate_fabric_name(self, value="MyFabric"):
-            """
-            Mocked method required for test, but not relevant to test result.
-            """
-
         @property
-        def fabric_config_save(self):
+        def path(self):
             """
             -   Mocked property getter.
             -   Raise ``ValueError``.
             """
-            msg = "mocked ApiEndpoints().fabric_config_save getter exception"
+            msg = "mocked EpFabricConfigSave().path getter exception"
             raise ValueError(msg)
-
-        @property
-        def fabric_name(self):
-            """
-            -   Mocked fabric_config_save property getter
-            """
-            return self._fabric_name
-
-        @fabric_name.setter
-        def fabric_name(self, value):
-            """
-            -   Mocked fabric_name property setter
-            """
-            self._fabric_name = value
-
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints."
-    PATCH_API_ENDPOINTS += "fabric_config_save"
 
     payload = {
         "FABRIC_NAME": "f1",
@@ -391,14 +368,14 @@ def test_fabric_config_save_00080(monkeypatch, fabric_config_save) -> None:
         "DEPLOY": True,
     }
 
-    match = r"mocked ApiEndpoints\(\)\.fabric_config_save getter exception"
-
     with does_not_raise():
         instance = fabric_config_save
-        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
+        monkeypatch.setattr(instance, "ep_config_save", MockEpFabricConfigSave())
         instance.payload = payload
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
+
+    match = r"mocked EpFabricConfigSave\(\)\.path getter exception"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -427,9 +404,9 @@ def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
     -   FabricConfigSave() properties are set
     -   FabricConfigSave.fabric_name is set "f1"
     -   FabricConfigSave().commit() is called.
-    -   FabricConfigSave().commit() sets ApiEndpoints().fabric_name
+    -   FabricConfigSave().commit() sets EpFabricConfigSave().fabric_name
     -   FabricConfigSave().commit() accesses
-        ApiEndpoints().fabric_config_save to set verb and path
+        EpFabricConfigSave().path/verb to set verb and path
     -   FabricConfigSave() calls RestSend().commit() which sets
         RestSend().response_current to a dict with keys:
         -   DATA == {"status": "Configuration deployment completed."}
@@ -531,9 +508,9 @@ def test_fabric_config_save_00100(monkeypatch, fabric_config_save) -> None:
         -   unit_test == True
     -   FabricConfigSave().results is set to Results() class.
     -   FabricConfigSave().commit() is called.
-    -   FabricConfigSave().commit() sets ApiEndpoints().fabric_name
+    -   FabricConfigSave().commit() sets EpFabricConfigSave().fabric_name
     -   FabricConfigSave().commit() accesses
-        ApiEndpoints().fabric_config_save to set verb and path
+        EpFabricConfigSave().path/verb to set path and verb
     -   FabricConfigSave() calls RestSend().commit() which sets
         RestSend().response_current to a dict with keys:
         -   DATA == {"status": "Configuration deployment failed."}
