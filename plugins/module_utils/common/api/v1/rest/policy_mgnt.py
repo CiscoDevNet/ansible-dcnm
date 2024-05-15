@@ -295,7 +295,7 @@ class EpPolicyInfo(PolicyMgnt):
             msg += f"{self.class_name}.policy_name must be set before "
             msg += f"accessing {method_name}."
             raise ValueError(msg)
-        return f"{self.properties["path"]}/{self.policy_name}"
+        return f"{self.properties['path']}/{self.policy_name}"
 
     @property
     def policy_name(self):
