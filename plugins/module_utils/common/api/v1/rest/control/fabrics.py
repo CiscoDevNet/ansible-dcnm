@@ -548,56 +548,7 @@ class EpFabricFreezeMode(Fabrics):
         return f"{self.path_fabric_name}/freezemode"
 
 
-class EpFabricSummary(Fabrics):
-    """
-    ## V1 API - Fabrics().EpFabricSummary()
-
-    ### Description
-    Return the endpoint to query fabric summary information
-    for ``fabric_name``.
-
-    ### Raises
-    -   ``ValueError``: If fabric_name is not set.
-    -   ``ValueError``: If fabric_name is invalid.
-
-    ### Path
-    -   ``/rest/control/fabrics/summary/{fabric_name}/overview``
-
-    ### Verb
-    -   GET
-
-    ### Parameters
-    - fabric_name: string
-        - set the ``fabric_name`` to be used in the path
-        - required
-    -   path: retrieve the path for the endpoint
-    -   verb: retrieve the verb for the endpoint
-
-    ### Usage
-    ```python
-    instance = EpFabricSummary()
-    instance.fabric_name = "MyFabric"
-    path = instance.path
-    verb = instance.verb
-    ```
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.required_properties.add("fabric_name")
-        self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
-        self.log.debug(msg)
-
-    def _build_properties(self):
-        super()._build_properties()
-        self.properties["verb"] = "GET"
-
-    @property
-    def path(self):
-        return f"{self.path_fabric_name}/overview"
+# class EpFabricSummary() See module_utils/common/api/v1/rest/control/switches.py
 
 
 class EpFabricUpdate(Fabrics):
