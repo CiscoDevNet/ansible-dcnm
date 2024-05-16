@@ -23,7 +23,7 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.fabrics import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.control.switches import \
     EpFabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils

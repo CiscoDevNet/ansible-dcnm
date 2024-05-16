@@ -18,12 +18,14 @@
   vars:
     # This testcase field can run any test in the tests directory for the role
     # testcase: dcnm_fabric_deleted_basic
+    # testcase: dcnm_fabric_deleted_basic_ipfm
     # testcase: dcnm_fabric_merged_basic
-    # testcase: dcnm_fabric_merged_save_deploy
-    # testcase: dcnm_fabric_replaced_basic
-    # testcase: dcnm_fabric_replaced_save_deploy
     # testcase: dcnm_fabric_merged_basic_ipfm
+    # testcase: dcnm_fabric_merged_save_deploy
     # testcase: dcnm_fabric_merged_save_deploy_ipfm
+    # testcase: dcnm_fabric_replaced_basic
+    # testcase: dcnm_fabric_replaced_basic_ipfm
+    # testcase: dcnm_fabric_replaced_save_deploy
     # testcase: dcnm_fabric_replaced_save_deploy_ipfm
     fabric_name_1: VXLAN_EVPN_Fabric
     fabric_type_1: VXLAN_EVPN
@@ -35,6 +37,8 @@
     fabric_type_4: IPFM
     leaf_1: 172.22.150.103
     leaf_2: 172.22.150.104
+    nxos_username: admin
+    nxos_password: myNxosPassword
 
   roles:
     - dcnm_fabric
