@@ -32,7 +32,7 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import (
     EpFeatures,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import (

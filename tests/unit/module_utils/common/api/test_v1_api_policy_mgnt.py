@@ -18,7 +18,7 @@ __metaclass__ = type
 
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import (
     EpPolicies, EpPoliciesAllAttached, EpPolicyAttach, EpPolicyCreate,
     EpPolicyDetach, EpPolicyInfo)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \

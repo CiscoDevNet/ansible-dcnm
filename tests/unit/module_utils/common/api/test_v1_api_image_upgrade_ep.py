@@ -17,7 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import (
     EpInstallOptions, EpUpgradeImage)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise

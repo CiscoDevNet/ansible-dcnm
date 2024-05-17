@@ -32,7 +32,7 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricConfigSave
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils

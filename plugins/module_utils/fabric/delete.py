@@ -20,7 +20,7 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
