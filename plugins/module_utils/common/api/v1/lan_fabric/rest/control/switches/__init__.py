@@ -20,33 +20,33 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric import \
-    LanFabric
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control import \
+    Control
 
 
-class Switches(LanFabric):
+class Switches(Control):
     """
-    ## V1 API Fabrics - LanFabric().Switches()
+    ## api.v1.lan_fabric.rest.control.switches.Switches()
 
     ### Description
-    Common methods and properties for Fabrics() subclasses.
+    Common methods and properties for Switches() subclasses.
 
     ### Path
-    -   ``/lan-fabric/rest/control/switches/{fabric_name}``
+    -   ``/api/v1/lan-fabric/rest/control/switches/{fabric_name}``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.rest_control_switches = f"{self.lan_fabric}/rest/control/switches"
-        msg = f"ENTERED api.v1.LanFabric.Switches.{self.class_name}"
+        self.switches = f"{self.control}/switches"
+        msg = f"ENTERED api.v1.lan_fabric.rest.control.switches.{self.class_name}"
         self.log.debug(msg)
         self._build_properties()
 
     def _build_properties(self):
         """
-        - Set the fabric_name property.
+        Populate properties specific to this class and its subclasses.
         """
         self.properties["fabric_name"] = None
 
@@ -82,12 +82,12 @@ class Switches(LanFabric):
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name must be set prior to accessing path."
             raise ValueError(msg)
-        return f"{self.rest_control_switches}/{self.fabric_name}"
+        return f"{self.switches}/{self.fabric_name}"
 
 
 class EpFabricSummary(Switches):
     """
-    ## V1 API - Switches().EpFabricSummary()
+    ##api.v1.lan_fabric.rest.control.switches.EpFabricSummary()
 
     ### Description
     Return endpoint information.
@@ -97,7 +97,7 @@ class EpFabricSummary(Switches):
     -   ``ValueError``: If fabric_name is invalid.
 
     ### Path
-    -   ``/switches/{fabric_name}/overview``
+    -   ``/api/v1/lan-fabric/rest/control/switches/{fabric_name}/overview``
 
     ### Verb
     -   GET
@@ -124,7 +124,8 @@ class EpFabricSummary(Switches):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Switches.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.switches."
+        msg += f"{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):

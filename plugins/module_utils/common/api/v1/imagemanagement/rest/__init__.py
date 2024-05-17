@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=line-too-long
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -19,47 +19,31 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement import \
+    ImageManagement
 
 
-class Common:
+class Rest(ImageManagement):
     """
-    ## API endpoints - Common
+    ## api.v1.imagemanagement.rest.Rest()
 
     ### Description
-    Common methods and properties for subclasses.
+    Common methods and properties api.v1.imagemanagement.rest subclasses.
 
     ### Path
-    ``/appcenter/cisco/ndfc/api``
+    -   ``/api/v1/imagemanagement/rest``
     """
 
     def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.conversion = ConversionUtils()
-        # Popuate in subclasses to indicate which properties
-        # are mandatory for the subclass.
-        self.required_properties = set()
-        self.log.debug("ENTERED api.CommonApi()")
-        self.api = "/appcenter/cisco/ndfc/api"
-        self._init_properties()
+        self.rest = f"{self.imagemanagement}/rest"
+        msg = f"ENTERED api.v1.imagemanagement.rest.{self.class_name}"
+        self.log.debug(msg)
+        self._build_properties()
 
-    def _init_properties(self):
-        self.properties = {}
-        self.properties["path"] = None
-        self.properties["verb"] = None
-
-    @property
-    def path(self):
+    def _build_properties(self):
         """
-        Return the endpoint path.
+        -   Populate properties specific to this class and its subclasses.
         """
-        return self.properties["path"]
-
-    @property
-    def verb(self):
-        """
-        Return the endpoint verb.
-        """
-        return self.properties["verb"]

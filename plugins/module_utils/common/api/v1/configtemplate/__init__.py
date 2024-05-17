@@ -19,23 +19,24 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api import Api
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1 import \
+    V1
 
 
-class V1(Api):
+class ConfigTemplate(V1):
     """
-    ## v1 API enpoints - Api().V1()
+    ## V1 API - ConfigTemplate()
 
     ### Description
-    Common methods and properties for API v1 subclasses.
+    Common methods and properties for api.v1.ConfigTemplate() subclasses
 
     ### Path
-    ``/appcenter/cisco/ndfc/api/v1/``
+    ``/appcenter/cisco/ndfc/api/v1/configtemplate``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.V1()")
-        self.v1 = f"{self.api}/v1"
+        self.configtemplate = f"{self.v1}/configtemplate"
+        self.log.debug("ENTERED api.v1.configtemplate.ConfigTemplate()")

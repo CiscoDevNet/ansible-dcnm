@@ -20,13 +20,13 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.image_management import \
-    ImageManagement
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest import \
+    Rest
 
 
-class PolicyMgnt(ImageManagement):
+class PolicyMgnt(Rest):
     """
-    ## V1 API - ImageManagement().PolicyMgnt()
+    ## api.v1.imagemanagement.rest.policymgnt.PolicyMgnt()
 
     ### Description
     Common methods and properties for PolicyMgnt() subclasses
@@ -39,13 +39,13 @@ class PolicyMgnt(ImageManagement):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.policy_mgmt = f"{self.image_management}/rest/policymgnt"
+        self.policymgnt = f"{self.rest}/policymgnt"
         self.log.debug("ENTERED api.v1.PolicyMgnt()")
 
 
 class EpPolicies(PolicyMgnt):
     """
-    ## V1 API - PolicyMgnt().EpPolicies()
+    ## api.v1.imagemanagement.rest.policymgnt.EpPolicies()
 
     ### Description
     Return endpoint information.
@@ -54,7 +54,7 @@ class EpPolicies(PolicyMgnt):
     -   None
 
     ### Path
-    -   ``/rest/policymgnt/policies``
+    -   ``/api/v1/imagemanagement/rest/policymgnt/policies``
 
     ### Verb
     -   GET
@@ -75,12 +75,17 @@ class EpPolicies(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.PolicyMgnt.EpPolicies()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.policy_mgmt}/policies"
-        self.properties["verb"] = "GET"
+    @property
+    def path(self):
+        return f"{self.policymgnt}/policies"
+
+    @property
+    def verb(self):
+        return "GET"
 
 
 class EpPoliciesAllAttached(PolicyMgnt):
@@ -115,12 +120,17 @@ class EpPoliciesAllAttached(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.PolicyMgnt.EpPoliciesAllAttached()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.policy_mgmt}/all-attached-policies"
-        self.properties["verb"] = "GET"
+    @property
+    def path(self):
+        return f"{self.policymgnt}/all-attached-policies"
+
+    @property
+    def verb(self):
+        return "GET"
 
 
 class EpPolicyAttach(PolicyMgnt):
@@ -155,12 +165,17 @@ class EpPolicyAttach(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.PolicyMgnt.EpPolicyAttach()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.policy_mgmt}/attach-policy"
-        self.properties["verb"] = "POST"
+    @property
+    def path(self):
+        return f"{self.policymgnt}/attach-policy"
+
+    @property
+    def verb(self):
+        return "POST"
 
 
 class EpPolicyCreate(PolicyMgnt):
@@ -195,12 +210,17 @@ class EpPolicyCreate(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.PolicyMgnt.EpPolicyCreate()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.policy_mgmt}/platform-policy"
-        self.properties["verb"] = "POST"
+    @property
+    def path(self):
+        return f"{self.policymgnt}/platform-policy"
+
+    @property
+    def verb(self):
+        return "POST"
 
 
 class EpPolicyDetach(PolicyMgnt):
@@ -235,12 +255,17 @@ class EpPolicyDetach(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.PolicyMgnt.EpPolicyDetach()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.policy_mgmt}/detach-policy"
-        self.properties["verb"] = "DELETE"
+    @property
+    def path(self):
+        return f"{self.policymgnt}/detach-policy"
+
+    @property
+    def verb(self):
+        return "DELETE"
 
 
 class EpPolicyInfo(PolicyMgnt):
@@ -279,13 +304,10 @@ class EpPolicyInfo(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.PolicyMgnt.EpPolicyDetach()")
-        self._build_properties()
-
-    def _build_properties(self):
-        self.properties["policy_name"] = None
-        self.properties["path"] = f"{self.policy_mgmt}/image-policy"
-        self.properties["verb"] = "GET"
+        self._policy_name = None
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
 
     @property
     def path(self):
@@ -295,7 +317,11 @@ class EpPolicyInfo(PolicyMgnt):
             msg += f"{self.class_name}.policy_name must be set before "
             msg += f"accessing {method_name}."
             raise ValueError(msg)
-        return f"{self.properties['path']}/{self.policy_name}"
+        return f"{self.policymgnt}/image-policy/{self.policy_name}"
+
+    @property
+    def verb(self):
+        return "GET"
 
     @property
     def policy_name(self):
@@ -303,8 +329,8 @@ class EpPolicyInfo(PolicyMgnt):
         - getter: Return the policy_name.
         - setter: Set the policy_name.
         """
-        return self.properties["policy_name"]
+        return self._policy_name
 
     @policy_name.setter
     def policy_name(self, value):
-        self.properties["policy_name"] = value
+        self._policy_name = value

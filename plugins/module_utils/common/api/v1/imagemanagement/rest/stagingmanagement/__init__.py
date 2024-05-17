@@ -19,32 +19,34 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.image_management import \
-    ImageManagement
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest import \
+    Rest
 
 
-class StagingManagement(ImageManagement):
+class StagingManagement(Rest):
     """
-    ## V1 API - ImageManagement().StagingManagement()
+    ## api.v1.imagemanagement.rest.stagingmanagement.StagingManagement()
 
     ### Description
     Common methods and properties for StagingManagement() subclasses
 
     ### Path
-    ``/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement``
+    ``/api/v1/imagemanagement/rest/stagingmanagement``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.staging_management = f"{self.image_management}/rest/stagingmanagement"
-        self.log.debug("ENTERED api.v1.StagingManagement()")
+        self.stagingmanagement = f"{self.rest}/stagingmanagement"
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"stagingmanagement.{self.class_name}"
+        self.log.debug(msg)
 
 
 class EpImageStage(StagingManagement):
     """
-    ## V1 API - StagingManagement().EpImageStage()
+    ## api.v1.imagemanagement.rest.stagingmanagement.EpImageStage()
 
     ### Description
     Return endpoint information.
@@ -53,7 +55,7 @@ class EpImageStage(StagingManagement):
     -   None
 
     ### Path
-    -   ``/rest/stagingmanagement/stage-image``
+    -   ``/api/v1/imagemanagement/rest/stagingmanagement/stage-image``
 
     ### Verb
     -   POST
@@ -74,12 +76,17 @@ class EpImageStage(StagingManagement):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.StagingManagement.EpImageStage()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"stagingmanagement.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.staging_management}/stage-image"
-        self.properties["verb"] = "POST"
+    @property
+    def path(self):
+        return f"{self.stagingmanagement}/stage-image"
+
+    @property
+    def verb(self):
+        return "POST"
 
 
 class EpImageValidate(StagingManagement):
@@ -93,7 +100,7 @@ class EpImageValidate(StagingManagement):
     -   None
 
     ### Path
-    -   ``/rest/stagingmanagement/validate-image``
+    -   ``/api/v1/imagemanagement/rest/stagingmanagement/validate-image``
 
     ### Verb
     -   POST
@@ -114,12 +121,17 @@ class EpImageValidate(StagingManagement):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.StagingManagement.EpImageValidate()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"stagingmanagement.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.staging_management}/validate-image"
-        self.properties["verb"] = "POST"
+    @property
+    def path(self):
+        return f"{self.stagingmanagement}/validate-image"
+
+    @property
+    def verb(self):
+        return "POST"
 
 
 class EpStageInfo(StagingManagement):
@@ -133,7 +145,7 @@ class EpStageInfo(StagingManagement):
     -   None
 
     ### Path
-    -   ``/rest/stagingmanagement/stage-info``
+    -   ``/api/v1/imagemanagement/rest/stagingmanagement/stage-info``
 
     ### Verb
     -   GET
@@ -154,9 +166,14 @@ class EpStageInfo(StagingManagement):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.StagingManagement.EpStageInfo()")
-        self._build_properties()
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"stagingmanagement.{self.class_name}"
+        self.log.debug(msg)
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.staging_management}/stage-info"
-        self.properties["verb"] = "GET"
+    @property
+    def path(self):
+        return f"{self.stagingmanagement}/stage-info"
+
+    @property
+    def verb(self):
+        return "GET"

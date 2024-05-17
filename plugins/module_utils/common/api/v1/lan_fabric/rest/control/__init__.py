@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=line-too-long
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -19,23 +19,25 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api import Api
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest import \
+    Rest
 
 
-class V1(Api):
+class Control(Rest):
     """
-    ## v1 API enpoints - Api().V1()
+    ## api.v1.lan_fabric.rest.control.Control()
 
     ### Description
-    Common methods and properties for API v1 subclasses.
+    Common methods and properties for Control() subclasses.
 
     ### Path
-    ``/appcenter/cisco/ndfc/api/v1/``
+    -   ``/api/v1/lan-fabric/rest/control``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.v1.V1()")
-        self.v1 = f"{self.api}/v1"
+        self.control = f"{self.rest}/control"
+        msg = f"ENTERED api.v1.lan_fabric.rest.control.{self.class_name}"
+        self.log.debug(msg)

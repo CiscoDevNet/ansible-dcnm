@@ -19,24 +19,24 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common_v1 import \
-    CommonV1
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1 import \
+    V1
 
 
-class ImageManagement(CommonV1):
+class LanFabric(V1):
     """
-    ## V1 API - ImageManagement()
+    ## api.v1.lan-fabric.LanFabric()
 
     ### Description
-    Common methods and properties for CommonV1().ImageManagement() subclasses
+    Common methods and properties for api.v1.lan-fabric.LanFabric() subclasses
 
     ### Path
-    ``/appcenter/cisco/ndfc/api/v1/imagemanagement``
+    ``/appcenter/cisco/ndfc/api/v1/lan-fabric``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.image_management = f"{self.api_v1}/imagemanagement"
-        self.log.debug("ENTERED api.v1.ImageManagement()")
+        self.lan_fabric = f"{self.v1}/lan-fabric"
+        self.log.debug("ENTERED api.v1.lan-fabric.LanFabric()")

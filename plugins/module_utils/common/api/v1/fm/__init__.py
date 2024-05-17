@@ -19,16 +19,18 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common_v1 import \
-    CommonV1
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1 import \
+    V1
 
 
-class FM(CommonV1):
+class FM(V1):
     """
-    ## V1 API Feature Manager (FM) - CommonV1().FM()
+    ## api.v1.fm.FM()
 
     ### Description
     Common methods and properties for FM() subclasses
+
+    ### Path
     ``/appcenter/cisco/ndfc/api/v1/fm``
     """
 
@@ -36,13 +38,13 @@ class FM(CommonV1):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.fm = f"{self.api_v1}/fm"
-        self.log.debug("ENTERED api.v1.CommonV1()")
+        self.fm = f"{self.v1}/fm"
+        self.log.debug("ENTERED api.v1.fm.FM()")
 
 
 class EpFeatures(FM):
     """
-    ## V1 API Feature Manager (FM) - FM().EpFeatures()
+    ## api.v1.fm.EpFeatures()
 
     ### Description
     Return endpoint information.
@@ -51,7 +53,7 @@ class EpFeatures(FM):
     -   None
 
     ### Path
-    ``/fm/features``
+    ``/api/v1/fm/features``
 
     ### Verb
     -   GET
@@ -72,17 +74,20 @@ class EpFeatures(FM):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._build_properties()
-        self.log.debug("ENTERED api.v1.fm.Features()")
+        self.log.debug("ENTERED api.v1.fm.EpFeatures()")
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.fm}/features"
-        self.properties["verb"] = "GET"
+    @property
+    def path(self):
+        return f"{self.fm}/features"
+
+    @property
+    def verb(self):
+        return "GET"
 
 
 class EpVersion(FM):
     """
-    ## V1 API Feature Manager (FM) about/version.
+    ## api.v1.fm.EpVersion()
 
     ### Description
     Return endpoint information.
@@ -91,7 +96,7 @@ class EpVersion(FM):
     -   None
 
     ### Path
-    ``/fm/about/version``
+    ``/api/v1/fm/about/version``
 
     ### Verb
     -   GET
@@ -112,9 +117,12 @@ class EpVersion(FM):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._build_properties()
-        self.log.debug("ENTERED api.v1.fm.Version()")
+        self.log.debug("ENTERED api.v1.fm.EpVersion()")
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.fm}/about/version"
-        self.properties["verb"] = "GET"
+    @property
+    def path(self):
+        return f"{self.fm}/about/version"
+
+    @property
+    def verb(self):
+        return "GET"

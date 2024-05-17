@@ -19,27 +19,27 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.image_management import \
-    ImageManagement
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest import \
+    Rest
 
 
-class ImageUpgrade(ImageManagement):
+class ImageUpgrade(Rest):
     """
-    ## V1 API Fabrics - ImageManagement().ImageUpgrade()
+    ## api.v1.imagemanagement.rest.imageupgrade.ImageUpgrade()
 
     ### Description
     Common methods and properties for ImageUpgrade() subclasses.
 
     ### Path
-    -   ``/imagemanagement/rest/imageupgrade``
+    -   ``/api/v1/imagemanagement/rest/imageupgrade``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.rest_image_upgrade = f"{self.image_management}/rest/imageupgrade"
-        msg = f"ENTERED api.v1.ImageManagement.{self.class_name}"
+        self.imageupgrade = f"{self.rest}/imageupgrade"
+        msg = f"ENTERED api.v1.imagemanagement.rest.{self.class_name}"
         self.log.debug(msg)
         self._build_properties()
 
@@ -60,7 +60,7 @@ class EpInstallOptions(ImageUpgrade):
     -   None
 
     ### Path
-    -   ``/rest/imageupgrade/install-options``
+    -   ``/api/v1/imagemanagement/rest/imageupgrade/install-options``
 
     ### Verb
     -   POST
@@ -81,14 +81,23 @@ class EpInstallOptions(ImageUpgrade):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._build_properties()
-        msg = f"ENTERED api.v1.ImageUpgrade.{self.class_name}"
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"imageupgrade.{self.class_name}"
         self.log.debug(msg)
 
-    def _build_properties(self):
-        super()._build_properties()
-        self.properties["verb"] = "POST"
-        self.properties["path"] = f"{self.rest_image_upgrade}/install-options"
+    @property
+    def path(self):
+        """
+        - Return the path for the endpoint.
+        """
+        return f"{self.imageupgrade}/install-options"
+
+    @property
+    def verb(self):
+        """
+        - Return the verb for the endpoint.
+        """
+        return "POST"
 
 
 class EpUpgradeImage(ImageUpgrade):
@@ -102,7 +111,7 @@ class EpUpgradeImage(ImageUpgrade):
     -   None
 
     ### Path
-    -   ``/rest/imageupgrade/upgrade-image``
+    -   ``/api/v1/imagemanagement/rest/imageupgrade/upgrade-image``
 
     ### Verb
     -   POST
@@ -123,11 +132,20 @@ class EpUpgradeImage(ImageUpgrade):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._build_properties()
-        msg = f"ENTERED api.v1.ImageUpgrade.{self.class_name}"
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"imageupgrade.{self.class_name}"
         self.log.debug(msg)
 
-    def _build_properties(self):
-        super()._build_properties()
-        self.properties["verb"] = "POST"
-        self.properties["path"] = f"{self.rest_image_upgrade}/upgrade-image"
+    @property
+    def path(self):
+        """
+        - Return the path for the endpoint.
+        """
+        return f"{self.imageupgrade}/upgrade-image"
+
+    @property
+    def verb(self):
+        """
+        - Return the verb for the endpoint.
+        """
+        return "POST"

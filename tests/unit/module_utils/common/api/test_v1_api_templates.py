@@ -18,7 +18,7 @@ __metaclass__ = type
 
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.rest.config.templates import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates import (
     EpTemplate, EpTemplates)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise

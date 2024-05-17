@@ -19,24 +19,24 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.common_v1 import \
-    CommonV1
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1 import \
+    V1
 
 
-class ConfigTemplate(CommonV1):
+class ImageManagement(V1):
     """
-    ## V1 API - ConfigTemplate()
+    ## V1 API - ImageManagement()
 
     ### Description
-    Common methods and properties for CommonV1().ConfigTemplate() subclasses
+    Common methods and properties for CommonV1().ImageManagement() subclasses
 
     ### Path
-    ``/appcenter/cisco/ndfc/api/v1/configtemplate``
+    ``/appcenter/cisco/ndfc/api/v1/imagemanagement``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.config_template = f"{self.api_v1}/configtemplate"
-        self.log.debug("ENTERED api.v1.ConfigTemplate()")
+        self.imagemanagement = f"{self.v1}/imagemanagement"
+        self.log.debug("ENTERED api.v1.imagemanagement.ImageManagement()")

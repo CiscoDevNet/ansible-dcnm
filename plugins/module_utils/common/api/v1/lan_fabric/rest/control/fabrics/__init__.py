@@ -20,21 +20,21 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric import \
-    LanFabric
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control import \
+    Control
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
     FabricTypes
 
 
-class Fabrics(LanFabric):
+class Fabrics(Control):
     """
-    ## V1 API Fabrics - LanFabric().Fabrics()
+    ## api.v1.lan-fabric.rest.control.fabrics.Fabrics()
 
     ### Description
     Common methods and properties for Fabrics() subclasses.
 
     ### Path
-    -   ``/lan-fabric/rest/control/fabrics/{fabric_name}``
+    -   ``/api/v1/lan-fabric/rest/control/fabrics``
     """
 
     def __init__(self):
@@ -42,8 +42,8 @@ class Fabrics(LanFabric):
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fabric_types = FabricTypes()
-        self.rest_control_fabrics = f"{self.lan_fabric}/rest/control/fabrics"
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        self.fabrics = f"{self.control}/fabrics"
+        msg = f"ENTERED api.v1.lan_fabric.rest.control.fabrics.{self.class_name}"
         self.log.debug(msg)
         self._build_properties()
 
@@ -86,7 +86,7 @@ class Fabrics(LanFabric):
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_name must be set prior to accessing path."
             raise ValueError(msg)
-        return f"{self.rest_control_fabrics}/{self.fabric_name}"
+        return f"{self.fabrics}/{self.fabric_name}"
 
     @property
     def path_fabric_name_template_name(self):
@@ -106,7 +106,7 @@ class Fabrics(LanFabric):
             msg = f"{self.class_name}.{method_name}: "
             msg += "template_name must be set prior to accessing path."
             raise ValueError(msg)
-        return f"{self.rest_control_fabrics}/{self.fabric_name}/{self.template_name}"
+        return f"{self.fabrics}/{self.fabric_name}/{self.template_name}"
 
     @property
     def template_name(self):
@@ -131,7 +131,7 @@ class Fabrics(LanFabric):
 
 class EpFabricConfigDeploy(Fabrics):
     """
-    ## V1 API - Fabrics().EpFabricConfigDeploy()
+    ## api.v1.lan-fabric.rest.control.fabrics.EpFabricConfigDeploy()
 
     ### Description
     Return endpoint to initiate config-deploy on fabric_name.
@@ -180,7 +180,8 @@ class EpFabricConfigDeploy(Fabrics):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -286,7 +287,8 @@ class EpFabricConfigSave(Fabrics):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -375,7 +377,8 @@ class EpFabricCreate(Fabrics):
         self.required_properties.add("fabric_name")
         self.required_properties.add("template_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -430,7 +433,8 @@ class EpFabricDelete(Fabrics):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -485,7 +489,8 @@ class EpFabricDetails(Fabrics):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -536,7 +541,8 @@ class EpFabricFreezeMode(Fabrics):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -565,7 +571,7 @@ class EpFabricUpdate(Fabrics):
     -   ``ValueError``: If template_name is not a valid fabric template name.
 
     ### Path
-    -   ``/rest/control/fabrics/{FABRIC_NAME}/{TEMPLATE_NAME}``
+    ``/api/v1/lan-fabric/rest/control/fabrics/{FABRIC_NAME}/{TEMPLATE_NAME}``
 
     ### Verb
     -   PUT
@@ -596,13 +602,9 @@ class EpFabricUpdate(Fabrics):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.required_properties.add("fabric_name")
         self.required_properties.add("template_name")
-        self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        super()._build_properties()
-        self.properties["verb"] = "PUT"
 
     @property
     def path(self):
@@ -611,6 +613,10 @@ class EpFabricUpdate(Fabrics):
         - Raise ``ValueError`` if fabric_name is not set.
         """
         return self.path_fabric_name_template_name
+
+    @property
+    def verb(self):
+        return "PUT"
 
 
 class EpFabrics(Fabrics):
@@ -624,7 +630,7 @@ class EpFabrics(Fabrics):
     -   None
 
     ### Path
-    -   ``/rest/control/fabrics``
+    -   ``/api/v1/lan-fabric/rest/control/fabrics``
 
     ### Verb
     -   GET
@@ -646,7 +652,8 @@ class EpFabrics(Fabrics):
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self._build_properties()
-        msg = f"ENTERED api.v1.LanFabric.Fabrics.{self.class_name}"
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -655,4 +662,4 @@ class EpFabrics(Fabrics):
 
     @property
     def path(self):
-        return self.rest_control_fabrics
+        return self.fabrics

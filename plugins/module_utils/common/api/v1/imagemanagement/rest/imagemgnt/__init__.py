@@ -19,13 +19,13 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.image_management import \
-    ImageManagement
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest import \
+    Rest
 
 
-class ImageMgnt(ImageManagement):
+class ImageMgnt(Rest):
     """
-    ## V1 API - ImageManagement().ImageMgnt()
+    ## api.v1.imagemanagement.rest.imagemgt.ImageMgnt()
 
     ### Description
     Common methods and properties for ImageMgnt() subclasses
@@ -38,13 +38,13 @@ class ImageMgnt(ImageManagement):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.image_mgmt = f"{self.image_management}/rest/imagemgnt"
-        self.log.debug("ENTERED api.v1.ImageMgmt()")
+        self.image_mgmt = f"{self.rest}/imagemgnt"
+        self.log.debug("ENTERED api.v1.imagemanagement.rest.imagemgnt.ImageMgnt()")
 
 
 class EpBootFlashInfo(ImageMgnt):
     """
-    ## V1 API - ImageMgnt().EpBootFlashInfo()
+    ## api.v1.imagemanagement.rest.imagemgnt.EpBootFlashInfo()
 
     ### Description
     Return endpoint information for bootflash-info.
@@ -53,7 +53,7 @@ class EpBootFlashInfo(ImageMgnt):
     -   None
 
     ### Path
-    -   ``/rest/imagemgnt/bootFlash/bootflash-info``
+    -   ``/api/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info``
 
     ### Verb
     -   GET
@@ -75,8 +75,11 @@ class EpBootFlashInfo(ImageMgnt):
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED api.v1.ImageMgnt.EpBootFlash()")
-        self._build_properties()
 
-    def _build_properties(self):
-        self.properties["path"] = f"{self.image_mgmt}/bootFlash/bootflash-info"
-        self.properties["verb"] = "GET"
+    @property
+    def path(self):
+        return f"{self.image_mgmt}/bootFlash/bootflash-info"
+
+    @property
+    def verb(self):
+        return "GET"
