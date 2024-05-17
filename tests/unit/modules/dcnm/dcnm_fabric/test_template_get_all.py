@@ -32,6 +32,8 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
+    EpTemplates
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
@@ -58,9 +60,7 @@ def test_template_get_all_00010(template_get_all) -> None:
     with does_not_raise():
         instance = template_get_all
     assert instance.class_name == "TemplateGetAll"
-    assert isinstance(instance.endpoints, ApiEndpoints)
-    assert instance.path is None
-    assert instance.verb is None
+    assert isinstance(instance.ep_templates, EpTemplates)
     assert instance.response == []
     assert instance.response_current == {}
     assert instance.result == []
@@ -71,7 +71,8 @@ def test_template_get_all_00010(template_get_all) -> None:
 
 
 MATCH_00020 = r"TemplateGetAll\.rest_send: "
-MATCH_00020 += r"rest_send must be an instance of RestSend\."
+MATCH_00020 += r"value must be an instance of RestSend.\s+"
+MATCH_00020 += r"Got value .* of type .*\."
 
 
 @pytest.mark.parametrize(
@@ -109,14 +110,19 @@ def test_template_get_all_00020(template_get_all, value, expected, raised) -> No
 
 
 MATCH_00030 = r"TemplateGetAll\.results: "
-MATCH_00030 += r"results must be an instance of Results\."
+MATCH_00030 += r"value must be an instance of Results.\s+"
+MATCH_00030 += r"Got value .* of type .*\."
 
 
 @pytest.mark.parametrize(
     "value, expected, raised",
     [
         (Results(), does_not_raise(), False),
-        (MockAnsibleModule(), pytest.raises(TypeError, match=MATCH_00030), True),
+        (
+            RestSend(MockAnsibleModule()),
+            pytest.raises(TypeError, match=MATCH_00030),
+            True,
+        ),
         (None, pytest.raises(TypeError, match=MATCH_00030), True),
         ("foo", pytest.raises(TypeError, match=MATCH_00030), True),
         (10, pytest.raises(TypeError, match=MATCH_00030), True),
@@ -308,43 +314,3 @@ def test_template_get_all_00063(monkeypatch, template_get_all) -> None:
     assert len(instance.result) == 1
     assert instance.result_current.get("success", None) is True
     assert instance.result_current.get("found", None) is True
-
-
-def test_template_get_all_00070(monkeypatch, template_get_all) -> None:
-    """
-    Classes and Methods
-    - TemplateGetAll
-        - __init__()
-        - _set_template_endpoint()
-
-    Summary
-    -   Verify that TemplateGetAll()._set_templates_endpoint() re-raises
-        ``ValueError`` when ApiEndpoints() raises ``ValueError``.
-    """
-
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
-        """
-        Mock the ApiEndpoints.templates getter property to raise ``ValueError``.
-        """
-
-        @property
-        def templates(self):
-            """
-            -   Mocked property getter.
-            -   Raise ``ValueError``.
-            """
-            print("GETTER EXCEPTION")
-            raise ValueError("mocked ApiEndpoints().templates getter exception")
-
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.templates"
-
-    match = r"mocked ApiEndpoints\(\)\.templates getter exception"
-
-    with does_not_raise():
-        instance = template_get_all
-        instance.results = Results()
-        instance.rest_send = RestSend(MockAnsibleModule())
-        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
-    with pytest.raises(ValueError, match=match):
-        instance.refresh()
