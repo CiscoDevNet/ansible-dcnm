@@ -28,12 +28,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
-# Used only to verify RestSend instance in rest_send property setter
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-# Used only to verify RestSend instance in rest_send property setter
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 
 
 class FabricConfigDeploy:
@@ -391,9 +385,15 @@ class FabricConfigDeploy:
     @rest_send.setter
     def rest_send(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, RestSend):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be an instance of RestSend."
+        _class_name = None
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "value must be an instance of RestSend. "
+        try:
+            _class_name = value.class_name
+        except AttributeError as error:
+            msg += f"Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_name != "RestSend":
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["rest_send"] = value
@@ -411,9 +411,17 @@ class FabricConfigDeploy:
     @results.setter
     def results(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, Results):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be an instance of Results."
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "value must be an instance of Results. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        _class_name = None
+        try:
+            _class_name = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            self.log.debug(msg)
+            raise TypeError(msg) from error
+        if _class_name != "Results":
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["results"] = value

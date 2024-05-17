@@ -174,7 +174,7 @@ def test_fabric_config_deploy_00020(
 
 
 MATCH_00030 = r"FabricConfigDeploy\.rest_send: "
-MATCH_00030 += r"rest_send must be an instance of RestSend\."
+MATCH_00030 += r"value must be an instance of RestSend\."
 
 
 @pytest.mark.parametrize(
@@ -214,7 +214,7 @@ def test_fabric_config_deploy_00030(
 
 
 MATCH_00040 = r"FabricConfigDeploy\.results: "
-MATCH_00040 += r"results must be an instance of Results\."
+MATCH_00040 += r"value must be an instance of Results\."
 
 
 @pytest.mark.parametrize(

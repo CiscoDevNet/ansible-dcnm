@@ -32,29 +32,19 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import (
-    EpFeatures,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import (
-    ConversionUtils,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import (
-    ControllerFeatures,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import (
-    ControllerResponseError,
-)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import (
-    RestSend,
-)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import \
+    EpFeatures
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
+    ControllerFeatures
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+    RestSend
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    MockAnsibleModule,
-    ResponseGenerator,
-    does_not_raise,
-    controller_features_fixture,
-    responses_controller_features,
-    params,
-)
+    MockAnsibleModule, ResponseGenerator, controller_features_fixture,
+    does_not_raise, params, responses_controller_features)
 
 
 def test_controller_features_00010(controller_features) -> None:

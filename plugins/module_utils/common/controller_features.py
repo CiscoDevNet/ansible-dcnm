@@ -290,15 +290,15 @@ class ControllerFeatures:
     @rest_send.setter
     def rest_send(self, value):
         method_name = inspect.stack()[0][3]
-        test = None
+        _class_name = None
         msg = f"{self.class_name}.{method_name}: "
         msg += "value must be an instance of RestSend. "
         try:
-            test = value.class_name
+            _class_name = value.class_name
         except AttributeError as error:
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
-        if test != "RestSend":
+        if _class_name != "RestSend":
             self.log.debug(msg)
             raise TypeError(msg)
         self.properties["rest_send"] = value
