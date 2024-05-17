@@ -2316,10 +2316,10 @@ import logging
 from os import environ
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
     ControllerFeatures
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -2331,8 +2331,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
     FabricCreateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
@@ -2378,7 +2376,6 @@ class Common(FabricCommon):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
         self.controller_features = ControllerFeatures(params)
         self.features = {}
 

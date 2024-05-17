@@ -40,8 +40,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     responses_template_get_all, template_get_all_fixture)
