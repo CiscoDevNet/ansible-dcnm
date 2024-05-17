@@ -32,6 +32,8 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
+    EpTemplate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
@@ -58,9 +60,7 @@ def test_template_get_00010(template_get) -> None:
     with does_not_raise():
         instance = template_get
     assert instance.class_name == "TemplateGet"
-    assert isinstance(instance.endpoints, ApiEndpoints)
-    assert instance.path is None
-    assert instance.verb is None
+    assert isinstance(instance.ep_template, EpTemplate)
     assert instance.response == []
     assert instance.response_current == {}
     assert instance.result == []
@@ -72,7 +72,8 @@ def test_template_get_00010(template_get) -> None:
 
 
 MATCH_00020 = r"TemplateGet\.rest_send: "
-MATCH_00020 += r"rest_send must be an instance of RestSend\."
+MATCH_00020 += r"value must be an instance of RestSend.\s+"
+MATCH_00020 += r"Got value .* of type .*\."
 
 
 @pytest.mark.parametrize(
@@ -110,7 +111,8 @@ def test_template_get_00020(template_get, value, expected, raised) -> None:
 
 
 MATCH_00030 = r"TemplateGet\.results: "
-MATCH_00030 += r"results must be an instance of Results\."
+MATCH_00030 += r"value must be an instance of Results.\s+"
+MATCH_00030 += r"Got value .* of type .*\."
 
 
 @pytest.mark.parametrize(
@@ -388,44 +390,32 @@ def test_template_get_00070(monkeypatch, template_get) -> None:
 
     Summary
     -   Verify that TemplateGet()._set_template_endpoint() re-raises
-        ``ValueError`` when ApiEndpoints() raises ``ValueError``.
+        ``ValueError`` when EpTemplate() raises ``ValueError``.
     """
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpTemplate:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.template getter property to raise ``ValueError``.
+        Mock the EpTemplate.template_name setter property to raise ``ValueError``.
         """
-
-        @property
-        def template(self):
-            """
-            -   Mocked property getter.
-            -   Raise ``ValueError``.
-            """
-            raise ValueError("mocked ApiEndpoints().template getter exception")
 
         @property
         def template_name(self):
             """
             -   Mocked template_name property getter
             """
-            return self._template_name
 
         @template_name.setter
         def template_name(self, value):
             """
             -   Mocked template_name property setter
             """
-            self._template_name = value
+            raise ValueError("mocked EpTemplate().template_name setter exception.")
 
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.template_name"
-
-    match = r"mocked ApiEndpoints\(\)\.template getter exception"
+    match = r"mocked EpTemplate\(\)\.template_name setter exception\."
 
     with does_not_raise():
         instance = template_get
-        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
-        instance.template_name = "Easy_Fabric"
+        monkeypatch.setattr(instance, "ep_template", MockEpTemplate())
     with pytest.raises(ValueError, match=match):
+        instance.template_name = "Easy_Fabric"  # pylint: disable=pointless-statement
         instance._set_template_endpoint()
