@@ -149,27 +149,21 @@ class FabricReplacedCommon(FabricCommon):
             payload_to_send_to_controller.update(result)
         ```
         """
-        raise_value_error = False
+        method_name = inspect.stack()[0][3]
         if playbook is None:
             if default is None:
                 return None
-            if controller != default and controller is not None and controller != "":
-                return {parameter: default}
-            if controller != default and (controller is None or controller == ""):
-                return None
             if controller == default:
                 return None
-            raise_value_error = True
-            msg = "UNHANDLED case when playbook value is None. "
+            if controller is None or controller == "":
+                return None
+            return {parameter: default}
         if playbook is not None:
             if playbook == controller:
                 return None
-            if playbook != controller:
-                return {parameter: playbook}
-            raise_value_error = True
-            msg = "UNHANDLED case when playbook value is not None. "
-        if raise_value_error is False:
-            msg = "UNHANDLED case "
+            return {parameter: playbook}
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "UNHANDLED case "
         msg += f"parameter {parameter}, "
         msg += f"playbook: {playbook}, "
         msg += f"controller: {controller}, "

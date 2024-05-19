@@ -393,9 +393,11 @@ def test_fabric_replaced_bulk_00031(
         ("PARAM_8", None, "b", None, None),
         ("PARAM_9", None, None, None, None),
         ("PARAM_10", "a", None, None, {"PARAM_10": "a"}),
-        ("PARAM_11", "a", "b", None, {"PARAM_11": "a"}),
-        ("PARAM_12", "a", None, "c", {"PARAM_12": "a"}),
-        ("PARAM_13", None, None, "c", None),
+        ("PARAM_11", "a", "a", None, None),
+        ("PARAM_12", "a", "b", None, {"PARAM_12": "a"}),
+        ("PARAM_13", "a", None, "a", {"PARAM_13": "a"}),
+        ("PARAM_14", "a", None, "c", {"PARAM_14": "a"}),
+        ("PARAM_15", None, None, "c", None),
     ],
 )
 def test_fabric_replaced_bulk_00040(

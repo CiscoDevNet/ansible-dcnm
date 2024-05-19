@@ -79,10 +79,10 @@ class FabricTypes:
         # Map fabric type to the feature name that must be running
         # on the controller to enable the fabric type.
         self._fabric_type_to_feature_name_map = {}
+        self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
+        self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
-        self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
-        self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
 
         self._valid_fabric_types = sorted(self._fabric_type_to_template_name_map.keys())
 
