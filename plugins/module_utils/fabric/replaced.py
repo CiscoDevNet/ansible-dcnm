@@ -135,7 +135,6 @@ class FabricReplacedCommon(FabricCommon):
         -   None if the parameter does not need to be updated.
         -   A dict with the parameter and playbook value if the parameter
             needs to be updated.
-        -   raise ``ValueError`` for any unhandled case(s).
 
         Usage:
         ```python
