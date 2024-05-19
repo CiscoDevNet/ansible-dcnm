@@ -149,7 +149,6 @@ class FabricReplacedCommon(FabricCommon):
             payload_to_send_to_controller.update(result)
         ```
         """
-        method_name = inspect.stack()[0][3]
         if playbook is None:
             if default is None:
                 return None
@@ -158,17 +157,9 @@ class FabricReplacedCommon(FabricCommon):
             if controller is None or controller == "":
                 return None
             return {parameter: default}
-        if playbook is not None:
-            if playbook == controller:
-                return None
-            return {parameter: playbook}
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "UNHANDLED case "
-        msg += f"parameter {parameter}, "
-        msg += f"playbook: {playbook}, "
-        msg += f"controller: {controller}, "
-        msg += f"default: {default}"
-        raise ValueError(msg)
+        if playbook == controller:
+            return None
+        return {parameter: playbook}
 
     def _verify_value_types_for_comparison(
         self, fabric_name, parameter, user_value, controller_value, default_value
