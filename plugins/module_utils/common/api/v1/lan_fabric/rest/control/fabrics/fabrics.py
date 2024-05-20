@@ -134,7 +134,8 @@ class EpFabricConfigDeploy(Fabrics):
     ## api.v1.lan-fabric.rest.control.fabrics.EpFabricConfigDeploy()
 
     ### Description
-    Return endpoint to initiate config-deploy on fabric_name.
+    Return endpoint to initiate config-deploy on fabric_name
+    or fabric_name + switch_id.
 
      ### Raises
     -   ``ValueError``: If fabric_name is not set.
@@ -146,22 +147,38 @@ class EpFabricConfigDeploy(Fabrics):
     -   ``/fabrics/{fabric_name}/config-deploy``
     -   ``/fabrics/{fabric_name}/config-deploy?forceShowRun={force_show_run}``
     -   ``/fabrics/{fabric_name}/config-deploy?inclAllMSDSwitches={include_all_msd_switches}``
+    -   ``/fabrics/{fabric_name}/config-deploy/{switch_id}``
+    -   ``/fabrics/{fabric_name}/config-deploy/{switch_id}/?forceShowRun={force_show_run}``
 
     ### Verb
     -   POST
 
     ### Parameters
-    - force_show_run: boolean
-        - set the ``forceShowRun`` value
-        - default: False
-    - include_all_msd_switches: boolean
-        - set the ``inclAllMSDSwitches`` value
-        - default: False
-    - fabric_name: string
-        - set the ``fabric_name`` to be used in the path
-        - required
-    -   path: retrieve the path for the endpoint
-    -   verb: retrieve the verb for the endpoint
+    -   fabric_name:
+            -   set the ``fabric_name`` to be used in the path
+            -   string
+            -   required
+    -   force_show_run: boolean
+            -   set the ``forceShowRun`` value
+            -   boolean
+            -   default: False
+            -   optional
+    -   include_all_msd_switches: boolean
+            -   set the ``inclAllMSDSwitches`` value
+            -   boolean
+            -   default: False
+            -   optional
+    -   path:
+            -   retrieve the path for the endpoint
+            -   string
+    -   switch_id: string
+            -   set the ``switch_id`` to be used in the path
+            -   string
+            -   optional
+            -   if set, ``include_all_msd_switches`` is not added to the path
+    -   verb:
+            -   retrieve the verb for the endpoint
+            -   string (e.g. GET, POST, PUT, DELETE)
 
     ### Usage
     ```python
@@ -186,17 +203,20 @@ class EpFabricConfigDeploy(Fabrics):
 
     def _build_properties(self):
         super()._build_properties()
-        self.properties["verb"] = "POST"
         self.properties["force_show_run"] = False
         self.properties["include_all_msd_switches"] = False
+        self.properties["switch_id"] = None
+        self.properties["verb"] = "POST"
 
     @property
     def force_show_run(self):
         """
-        - getter: Return the force_show_run value.
-        - setter: Set the force_show_run value.
-        - setter: Raise ``ValueError`` if force_show_run is not a boolean.
-        - Default: False
+        -   getter: Return the force_show_run value.
+        -   setter: Set the force_show_run value.
+        -   setter: Raise ``ValueError`` if force_show_run is
+            not a boolean.
+        -   Default: False
+        -   Optional
         """
         return self.properties["force_show_run"]
 
@@ -213,10 +233,15 @@ class EpFabricConfigDeploy(Fabrics):
     @property
     def include_all_msd_switches(self):
         """
-        - getter: Return the include_all_msd_switches.
-        - setter: Set the include_all_msd_switches.
-        - setter: Raise ``ValueError`` if include_all_msd_switches is a boolean.
-        - Default: False
+        -   getter: Return the include_all_msd_switches.
+        -   setter: Set the include_all_msd_switches.
+        -   setter: Raise ``ValueError`` if include_all_msd_switches
+            is not a boolean.
+        -   Default: False
+        -   Optional
+        -   Notes:
+            -   ``include_all_msd_switches`` is removed from the path if
+                ``switch_id`` is set.
         """
         return self.properties["include_all_msd_switches"]
 
@@ -237,10 +262,37 @@ class EpFabricConfigDeploy(Fabrics):
         - Raise ``ValueError`` if fabric_name is not set.
         """
         _path = self.path_fabric_name
-        _path += "/config-deploy?"
-        _path += f"forceShowRun={self.force_show_run}"
-        _path += f"&inclAllMSDSwitches={self.include_all_msd_switches}"
+        _path += "/config-deploy"
+        if self.switch_id:
+            _path += f"/{self.switch_id}"
+        _path += f"?forceShowRun={self.force_show_run}"
+        if not self.switch_id:
+            _path += f"&inclAllMSDSwitches={self.include_all_msd_switches}"
         return _path
+
+    @property
+    def switch_id(self):
+        """
+        -   getter: Return the switch_id value.
+        -   setter: Set the switch_id value.
+        -   setter: Raise ``ValueError`` if switch_id is not a string.
+        -   Default: None
+        -   Optional
+        -   Notes:
+            -   ``include_all_msd_switches`` is removed from the path if
+                ``switch_id`` is set.
+        """
+        return self.properties["switch_id"]
+
+    @switch_id.setter
+    def switch_id(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, str):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Expected string for {method_name}. "
+            msg += f"Got {value} with type {type(value).__name__}."
+            raise ValueError(msg)
+        self.properties["switch_id"] = value
 
 
 class EpFabricConfigSave(Fabrics):
