@@ -126,13 +126,9 @@ import inspect
 import json
 import logging
 from os import environ
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpMaintenanceModeDisable, EpMaintenanceModeEnable
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
@@ -149,20 +145,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
 
-# TODO: Write a VerifyPlaybookParams class for maintenance mode
-class VerifyPlaybookParams:
-    """
-    Verify the playbook parameters for the maintenance mode module
-    """
-
-    def __init__(self):
-        self.class_name = self
 
 def json_pretty(msg):
     """
     Return a pretty-printed JSON string for logging messages
     """
     return json.dumps(msg, indent=4, sort_keys=True)
+
 
 class ParamsSpec:
     """
@@ -273,12 +262,14 @@ class ParamsSpec:
         -   setter: raise ``ValueError`` if value is not a dict
         """
         return self._properties["params"]
+
     @params.setter
     def params(self, value: Dict[str, Any]) -> None:
         """
         -   setter: set the params
         """
         self._properties["params"] = value
+
 
 class Common:
     """
@@ -303,6 +294,8 @@ class Common:
             msg += "state is required"
             raise ValueError(msg)
 
+        self._init_properties()
+
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
@@ -319,19 +312,22 @@ class Common:
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self._verify_playbook_params = VerifyPlaybookParams()
-    
         self.switch_details = SwitchDetails()
         self.switch_details.results = self.results
 
         # populated in self.validate_input()
         self.payloads = {}
 
+        # populated in self.get_want()
+        self.validated_configs = []
+
         self.config = self.params.get("config")
         if not isinstance(self.config, dict):
             msg = "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
             raise ValueError(msg)
+
+        self.validator = ParamsValidate(self.ansible_module)
 
         self.validated = []
         self.have = {}
@@ -340,8 +336,6 @@ class Common:
         self._implemented_states = set()
         # populated in self._merge_global_and_switch_configs()
         self.switch_configs = []
-
-        self._init_properties()
 
     def _init_properties(self):
         self._properties = {}
@@ -403,16 +397,18 @@ class Common:
         ### self.want structure
 
         ```json
-        {
-            "192.168.1.2" {
+        [
+            {
+                "ip_address": "192.168.1.2",
                 "mode": "maintenance",
                 "deploy": false
             },
-            "192.168.1.3" {
-                "mode": "normal",
-                "deploy": true
+            {
+                "ip_address": "192.168.1.3",
+                "mode": "maintenance",
+                "deploy": false
             }
-        }
+        ]
         ```
         """
         msg = "ENTERED"
@@ -438,7 +434,6 @@ class Common:
 
         # validate the merged configs
         self.validated_configs = []
-        self.validator = ParamsValidate(self.ansible_module)
         self.validator.params_spec = params_spec.params_spec
         for config in merged_configs:
             self.validator.parameters = config
@@ -511,6 +506,7 @@ class Common:
             msg += f"got {type(value).__name__}."
             raise ValueError(msg)
         self._properties["ansible_module"] = value
+
 
 class Merged(Common):
     """
@@ -609,7 +605,7 @@ class Merged(Common):
             mode = switch.get("mode", None)
             serial_number = switch.get("serial_number", None)
             fabric_name = switch.get("fabric_name", None)
-            deploy = switch.get("deploy", False)
+            # deploy = switch.get("deploy", False)
             try:
                 instance.fabric_name = fabric_name
                 instance.ip_address = ip_address
@@ -651,7 +647,8 @@ class Query(Common):
         self.switch_details.rest_send = RestSend(self.ansible_module)
         self.switch_details.refresh()
         # self.config has already been validated
-        for ip_address in self.want.keys():
+        for item in self.want:
+            ip_address = item.get("ip_address")
             self.switch_details.filter = ip_address
             serial_number = self.switch_details.serial_number
             if serial_number is None:
@@ -662,10 +659,10 @@ class Query(Common):
             mode = self.switch_details.mode
             fabric_name = self.switch_details.fabric_name
             self.results.diff_current = {
-                    "fabric_name": fabric_name,
-                    "ip_address": ip_address,
-                    "mode": mode,
-                    "serial_number": serial_number,
+                "fabric_name": fabric_name,
+                "ip_address": ip_address,
+                "mode": mode,
+                "serial_number": serial_number,
             }
             self.results.changed = False
             self.results.action = "query"
@@ -697,7 +694,7 @@ def main():
         "choices": ["merged", "query"],
         "default": "merged",
         "required": False,
-        "type": "str"
+        "type": "str",
     }
 
     ansible_module = AnsibleModule(
