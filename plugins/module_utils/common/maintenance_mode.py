@@ -287,7 +287,7 @@ class MaintenanceMode:
         else:
             self.results.diff_current = {
                 "ip_address": self.ip_address,
-                f"{self.action}": "OK",
+                f"{self.action}": self.mode,
             }
 
         self.results.action = self.action
