@@ -149,7 +149,7 @@ class Results:
         "success": true
     }
 
-    An examplke of a metadata dict would be (sequence_number is added by Results):
+    An example of a metadata dict would be (sequence_number is added by Results):
 
     {
         "action": "merge",
@@ -301,7 +301,24 @@ class Results:
 
     def build_final_result(self):
         """
-        Build the final result
+        Build the final result.  This consists of the following:
+        ```json
+        {
+            "changed": True, # or False
+            "failed": True,
+            "diff": {
+                [<list of dict containing changes>],
+            },
+            "response": {
+                [<list of dict containing controller responses>],
+            },
+            "result": {
+                [<list of dict containing results (from handle_response() functions)>],
+            },
+            "metadata": {
+                [<list of dict containing metadata>],
+            }
+        ```
         """
         msg = f"self.changed: {self.changed}, "
         msg = f"self.failed: {self.failed}, "
@@ -424,9 +441,9 @@ class Results:
     @property
     def diff_current(self):
         """
-        Return the current diff
-
-        This is a dict of the current diff set by the handler.
+        -   getter: Return the current diff
+        -   setter: Set the current diff
+        -   setter: raise ``ValueError`` if value is not a dict
         """
         value = self.properties.get("diff_current")
         value["sequence_number"] = self.task_sequence_number
@@ -472,7 +489,9 @@ class Results:
         List of dicts representing the metadata (if any)
         for each diff.
 
-        raise ValueError if value is not a dict
+        -   getter: Return the metadata
+        -   setter: Append value to the metadata list
+        -   setter: raise ``ValueError`` if value is not a dict
         """
         return self.properties["metadata"]
 
@@ -489,8 +508,8 @@ class Results:
     @property
     def metadata_current(self):
         """
-        Return the current metadata which is comprised of the
-        properties action, check_mode, and state.
+        -   getter: Return the current metadata which is comprised of the
+            properties action, check_mode, and state.
         """
         value = {}
         value["action"] = self.action
@@ -506,6 +525,10 @@ class Results:
         instance.commit() must be called first.
 
         This is a dict of the current response from the controller.
+
+        -   getter: Return the current response
+        -   setter: Set the current response
+        -   setter: raise ``ValueError`` if value is not a dict
         """
         value = self.properties.get("response_current")
         value["sequence_number"] = self.task_sequence_number
@@ -528,6 +551,10 @@ class Results:
         instance.commit() must be called first.
 
         This is a list of responses from the controller.
+
+        -   getter: Return the response list
+        -   setter: Append value to the response list
+        -   setter: raise ``ValueError`` if value is not a dict
         """
         return self.properties.get("response")
 
@@ -545,7 +572,11 @@ class Results:
     @property
     def response_data(self):
         """
-        Return the contents of the DATA key within current_response.
+        -   getter: Return the contents of the DATA key within
+            ``current_response``.
+        -   setter: set ``response_data`` to the value passed in
+            which should be the contents of the DATA key within
+            ``current_response``.
         """
         return self.properties.get("response_data")
 
@@ -560,6 +591,10 @@ class Results:
         instance.commit() must be called first.
 
         This is a list of results from the controller.
+
+        -   getter: Return the result list
+        -   setter: Append value to the result list
+        -   setter: raise ``ValueError`` if value is not a dict
         """
         return self.properties.get("result")
 
@@ -581,6 +616,10 @@ class Results:
         instance.commit() must be called first.
 
         This is a dict containing the current result.
+
+        -   getter: Return the current result
+        -   setter: Set the current result
+        -   setter: raise ``ValueError`` if value is not a dict
         """
         value = self.properties.get("result_current")
         value["sequence_number"] = self.task_sequence_number
@@ -599,7 +638,11 @@ class Results:
     @property
     def state(self):
         """
-        Ansible state
+        The Ansible state
+
+        -   getter: Return the state
+        -   setter: Set the state
+        -   setter: raise ``ValueError`` if value is not a string
         """
         return self.properties["state"]
 
