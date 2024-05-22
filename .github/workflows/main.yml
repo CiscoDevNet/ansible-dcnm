@@ -71,12 +71,6 @@ jobs:
         name: collection
         path: .cache/collection-tarballs
 
-    - name: Create ansible.cfg file
-      run: |
-       echo "[galaxy]" > ansible.cfg
-       echo "server = https://old-galaxy.ansible.com/" >> ansible.cfg
-       cat ansible.cfg
-
     - name: Install the collection tarball
       run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
 
@@ -114,12 +108,6 @@ jobs:
         name: collection
         path: .cache/collection-tarballs
 
-    - name: Create ansible.cfg file
-      run: |
-       echo "[galaxy]" > ansible.cfg
-       echo "server = https://old-galaxy.ansible.com/" >> ansible.cfg
-       cat ansible.cfg
-       
     - name: Install the collection tarball
       run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
 
