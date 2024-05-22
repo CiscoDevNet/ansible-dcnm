@@ -247,8 +247,7 @@ class EpFabricConfigDeploy(Fabrics):
     ```python
     instance = EpFabricConfigDeploy()
     instance.fabric_name = "MyFabric"
-    instance.force_show_run = True
-    instance.include_all_msd_switches = True
+    instance.switch_id = "CHM1234567"
     path = instance.path
     verb = instance.verb
     ```
