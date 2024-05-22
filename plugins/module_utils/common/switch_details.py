@@ -242,6 +242,24 @@ class SwitchDetails:
         return self._get("logicalName")
 
     @property
+    def maintenance_mode(self):
+        """
+        -   Return a synthesized value for ``maintenanceMode`` status of the
+            filtered switch, if it exists.
+        -   Return ``mode`` otherwise.
+        -   Example: ``inconsistent``, ``maintenance``, ``migration``, ``normal``
+
+        ### NOTES
+        -   ``mode`` is the current NDFC configured value of the switch's
+            ``systemMode`` (``system_mode``), whereas ``system_mode`` is the
+            current value on the switch.  When these differ, NDFC displays
+            ``inconsistent`` for the switch's Mode.
+        """
+        if self.mode != self.system_mode:
+            return "inconsistent"
+        return self.mode
+
+    @property
     def managable(self):
         """
         -   Return the ``managable`` status of the filtered switch, if it exists.
