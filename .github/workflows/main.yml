@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
+        ansible: [2.14.17, 2.15.12, 2.16.7]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -51,16 +51,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
-        python: [3.8, 3.9]
-        exclude:
-          - ansible: 2.9.26
-            python: 3.9
+        ansible: [2.14.17, 2.15.12, 2.16.7]
+        python: [3.9, 3.10, 3.11, 3.12]
     steps:
-    - name: Set up Python 3.9
+    - name: Set up Python (v${{ matrix.python }})
       uses: actions/setup-python@v1
       with:
-        python-version: 3.9
+        python-version: ${{ matrix.python }}
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -92,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.9.26, 2.10.17, 2.11.12, 2.12.10, 2.13.8, 2.14.2]
+        ansible: [2.14.17, 2.15.12, 2.16.7]
     steps:
     - name: Set up Python 3.9
       uses: actions/setup-python@v1
