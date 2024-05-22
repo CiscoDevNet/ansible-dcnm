@@ -255,7 +255,7 @@ class SwitchDetails:
             current value on the switch.  When these differ, NDFC displays
             ``inconsistent`` for the switch's Mode.
         """
-        if self.mode != self.system_mode:
+        if self.mode.lower() != self.system_mode.lower():
             return "inconsistent"
         return self.mode
 
