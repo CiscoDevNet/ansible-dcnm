@@ -380,6 +380,26 @@ class Common:
                 msg += "does not exist on the controller."
                 self.ansible_module.fail_json(msg, **self.results.failed_result)
             mode = self.switch_details.maintenance_mode
+            if mode == "inconsistent":
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Switch maintenance mode state differs from the "
+                msg += "controller's maintenance mode state for switch "
+                msg += f"with ip_address {ip_address}. This is typically "
+                msg += "resolved by initiating a switch Deploy Config on "
+                msg += "the controller."
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
+            if mode == "migration":
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Switch maintenance mode is in migration state for the "
+                msg += f"switch with ip_address {ip_address}. "
+                msg += "This indicates that the switch configuration is not "
+                msg += "compatible with the switch role in the hosting "
+                msg += "fabric.  The issue might be resolved by initiating a "
+                msg += "fabric Recalculate & Deploy on the controller. "
+                msg += "Failing that, the switch configuration might need to be "
+                msg += "manually modified to match the switch role in the "
+                msg += "hosting fabric."
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
             fabric_name = self.switch_details.fabric_name
             self.have[ip_address] = {}
             self.have[ip_address].update({"maintenance_mode": mode})

@@ -102,22 +102,12 @@ class SwitchDetails:
 
         self.validate_commit_parameters()
 
-        # Regardless of ansible_module.check_mode, we need to get the switch details
-        # So, set check_mode to False
+        # Regardless of ansible_module.check_mode, we need to get the
+        # switch details. So, set check_mode to False.
         self.rest_send.check_mode = False
         self.rest_send.verb = self.verb
         self.rest_send.path = self.path
         self.rest_send.commit()
-
-        msg = "self.rest_send.response_current: "
-        msg += (
-            f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
-        )
-        self.log.debug(msg)
-
-        msg = "self.rest_send.result_current: "
-        msg += f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
         self.results.response_current = self.rest_send.response_current
         self.results.response = self.rest_send.response_current
@@ -141,10 +131,6 @@ class SwitchDetails:
         self.properties["info"] = {}
         for switch in data:
             self.properties["info"][switch["ipAddress"]] = switch
-
-        msg = "self.properties[info]: "
-        msg += f"{json.dumps(self.properties['info'], indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
     def _get(self, item):
         """
@@ -244,17 +230,48 @@ class SwitchDetails:
     @property
     def maintenance_mode(self):
         """
+        ### Summary
         -   Return a synthesized value for ``maintenanceMode`` status of the
             filtered switch, if it exists.
         -   Return ``mode`` otherwise.
-        -   Example: ``inconsistent``, ``maintenance``, ``migration``, ``normal``
+        -   Values:
+                -   ``inconsistent``: ``mode`` and ``system_mode`` differ.
+                    See NOTES.
+                -   ``maintenance``: The switch is in maintenance mode.  It has
+                    withdrawn its routes, etc, from the fabric so that traffic
+                    does not traverse the switch.  Maintenance operations will
+                    not impact traffic in the hosting fabric.
+                -   ``migration``: The switch config is not compatible with the
+                    switch role in the hosting fabric.  Manual remediation is
+                    required.
+                -   ``normal``: The switch is participating as a traffic
+                    forwarding agent in the hosting fabric.
+
+        ### Raises
+        -   ``ValueError`` if ``mode`` cannot be ascertained.
+        -   ``ValueError`` if ``system_mode`` cannot be ascertained.
 
         ### NOTES
         -   ``mode`` is the current NDFC configured value of the switch's
             ``systemMode`` (``system_mode``), whereas ``system_mode`` is the
             current value on the switch.  When these differ, NDFC displays
-            ``inconsistent`` for the switch's Mode.
+            ``inconsistent`` for the switch's ``maintenanceMode`` state.
+            To resolve ``inconsistent`` state, a switch ``config-deploy``
+            must be initiated on the controller.
         """
+        method_name = inspect.stack()[0][3]
+        if self.mode is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "mode is not set.  Either ``filter`` has not been "
+            msg += "set, or the controller response is invalid."
+            raise ValueError(msg)
+        if self.system_mode is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "system_mode is not set.  Either ``filter`` has not been "
+            msg += "set, or the controller response is invalid."
+            raise ValueError(msg)
+        if self.mode.lower() == "migration":
+            return "migration"
         if self.mode.lower() != self.system_mode.lower():
             return "inconsistent"
         return self.mode
