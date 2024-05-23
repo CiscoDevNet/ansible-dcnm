@@ -151,7 +151,8 @@ class SwitchDetails:
 
         if self.filter not in self.properties["info"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.filter} does not exist on the controller."
+            msg += f"Switch with ip_address {self.filter} does not exist on "
+            msg += "the controller."
             raise ValueError(msg)
 
         if item not in self.properties["info"][self.filter]:

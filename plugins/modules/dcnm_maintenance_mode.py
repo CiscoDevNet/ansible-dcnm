@@ -373,7 +373,10 @@ class Common:
         for switch in self.config.get("switches"):
             ip_address = switch.get("ip_address")
             self.switch_details.filter = ip_address
-            serial_number = self.switch_details.serial_number
+            try:
+                serial_number = self.switch_details.serial_number
+            except ValueError as error:
+                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
             if serial_number is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Switch with ip_address {ip_address} "
