@@ -19,7 +19,6 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.inventory.inventory import \
@@ -97,10 +96,14 @@ class SwitchDetails:
 
         ### Raises
         -   ``ControllerResponseError`` if the controller response is not 200.
+        -   ``ValueError`` if mandatory parameters are not set.
         """
         method_name = inspect.stack()[0][3]
 
-        self.validate_commit_parameters()
+        try:
+            self.validate_commit_parameters()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         # Regardless of ansible_module.check_mode, we need to get the
         # switch details. So, set check_mode to False.

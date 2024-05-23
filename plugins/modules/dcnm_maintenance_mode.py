@@ -178,7 +178,10 @@ class ParamsSpec:
     )
 
     params_spec = ParamsSpec()
-    params_spec.params = ansible_module.params
+    try:
+        params_spec.params = ansible_module.params
+    except ValueError as error:
+        ansible_module.fail_json(error)
     params_spec.commit()
     spec = params_spec.params_spec
     ```
@@ -268,6 +271,11 @@ class ParamsSpec:
         """
         -   setter: set the params
         """
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.params.setter: "
+            msg += "expected dict type for value. "
+            msg += f"got {type(value).__name__}."
+            raise ValueError(msg)
         self._properties["params"] = value
 
 
@@ -301,7 +309,10 @@ class Common:
         self.results.check_mode = self.check_mode
 
         self.params_spec = ParamsSpec()
-        self.params_spec.params = self.params
+        try:
+            self.params_spec.params = self.params
+        except ValueError as error:
+            self.ansible_module.fail_json(error, **self.results.failed_result)
         try:
             self.params_spec.commit()
         except ValueError as error:
