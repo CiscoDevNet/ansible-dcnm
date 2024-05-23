@@ -354,12 +354,12 @@ class Common:
         {
             "192.169.1.2": {
                 fabric_name: "MyFabric",
-                mode: "Maintenance",
+                maintenance_mode: "Maintenance",
                 serial_number: "FCI1234567"
             },
             "192.169.1.3": {
                 fabric_name: "YourFabric",
-                mode: "Normal",
+                maintenance_mode: "Normal",
                 serial_number: "FCH2345678"
             }
         }
@@ -379,10 +379,10 @@ class Common:
                 msg += f"Switch with ip_address {ip_address} "
                 msg += "does not exist on the controller."
                 self.ansible_module.fail_json(msg, **self.results.failed_result)
-            mode = self.switch_details.mode
+            mode = self.switch_details.maintenance_mode
             fabric_name = self.switch_details.fabric_name
             self.have[ip_address] = {}
-            self.have[ip_address].update({"mode": mode})
+            self.have[ip_address].update({"maintenance_mode": mode})
             self.have[ip_address].update({"serial_number": serial_number})
             self.have[ip_address].update({"fabric_name": fabric_name})
 
@@ -542,13 +542,13 @@ class Merged(Common):
             "172.22.150.2": {
                 "deploy": false
                 "fabric_name": "MyFabric",
-                "mode": "maintenance",
+                "maintenance_mode": "maintenance",
                 "serial_number": "FCI1234567"
             },
             "172.22.150.3": {
                 "deploy": true
                 "fabric_name": "YourFabric",
-                "mode": "normal",
+                "maintenance_mode": "normal",
                 "serial_number": "HMD2345678"
             }
         }
@@ -560,11 +560,12 @@ class Merged(Common):
                 continue
             serial_number = self.have[want_ip]["serial_number"]
             fabric_name = self.have[want_ip]["fabric_name"]
-            if want.get("mode") != self.have[want_ip]["mode"]:
+            if want.get("mode") != self.have[want_ip]["maintenance_mode"]:
                 self.need[want_ip] = want
+                self.need[want_ip].update({"deploy": want.get("deploy")})
                 self.need[want_ip].update({"fabric_name": fabric_name})
                 self.need[want_ip].update({"serial_number": serial_number})
-                self.need[want_ip].update({"mode": want.get("mode")})
+                self.need[want_ip].update({"maintenance_mode": want.get("mode")})
 
     def commit(self):
         """
@@ -602,11 +603,12 @@ class Merged(Common):
         instance.rest_send = RestSend(self.ansible_module)
         instance.results = self.results
         for ip_address, switch in self.need.items():
-            mode = switch.get("mode", None)
+            mode = switch.get("maintenance_mode", None)
             serial_number = switch.get("serial_number", None)
             fabric_name = switch.get("fabric_name", None)
-            # deploy = switch.get("deploy", False)
+            deploy = switch.get("deploy", False)
             try:
+                instance.deploy = deploy
                 instance.fabric_name = fabric_name
                 instance.ip_address = ip_address
                 instance.mode = mode
