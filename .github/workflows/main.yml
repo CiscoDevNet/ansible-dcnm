@@ -21,7 +21,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.14.17, 2.15.12, 2.16.7]
+        ansible: [2.15.12, 2.16.7]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -51,7 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.14.17, 2.15.12, 2.16.7]
+        ansible: [2.15.12, 2.16.7]
         python: ["3.9", "3.10", "3.11"]
         exclude:
           - ansible: 2.16.7
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.14.17, 2.15.12, 2.16.7]
+        ansible: [2.15.12, 2.16.7]
     steps:
     - name: Set up Python "3.10"
       uses: actions/setup-python@v1
