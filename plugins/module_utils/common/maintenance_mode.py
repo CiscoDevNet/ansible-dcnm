@@ -20,26 +20,43 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
-from typing import Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import (
     EpFabricConfigDeploy, EpMaintenanceModeDisable, EpMaintenanceModeEnable)
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 
 
 class MaintenanceMode:
     """
-    ### Modify the maintenance mode state of switches.
+    ### Summary
+    -   Modify the maintenance mode state of switches.
+    -   Optionally deploy the changes.
 
-    -   Raise ``ValueError`` for any caller errors, e.g. required properties
-        not being set before calling MaintenanceMode().commit().
-    -   Update MaintenanceMode().results to reflect success/failure of
+    ### Raises
+    -   ``ValueError`` in the following methods:
+            -   __init__() if params is missing mandatory parameters
+                ``check_mode`` or ``state``.
+
+    -   ``ValueError`` in the following properties:
+            -   ``config`` if config contains invalid content.
+
+    -   ``ControllerResponseError`` in the following methods:
+            -   ``commit`` if controller response != 200.
+
+    -   ``TypeError`` in the following properties:
+            -   ``rest_send`` if value is not an instance of RestSend.
+            -   ``results`` if value is not an instance of Results.
+
+    ### Details
+    -   Updates MaintenanceMode().results to reflect success/failure of
         the operation on the controller.
-    -   For switches that are to be deployed, initiate a per-fabric
-        bulk config-deploy.
+    -   For switches that are to be deployed, initiates a per-fabric
+        bulk switch config-deploy.
 
-    ### Example value for ``config`` in the Usage section below:
+    ### Example value for ``config`` in the ``Usage`` section below:
     ```json
     [
         {
@@ -69,8 +86,6 @@ class MaintenanceMode:
         -   ``mode``: ``str``.  The intended maintenance mode.  Must be one of
             "maintenance" or "normal".
         -   ``serial_number``: ``str``.  The serial number of the switch.
-
-
 
     ```python
     instance = MaintenanceMode(params)
@@ -112,9 +127,6 @@ class MaintenanceMode:
 
         # Populated in build_deploy_dict()
         self.deploy_dict = {}
-        # Populated in build_endpoints_list()
-        self.endpoints = []
-        self.action_result: Dict[str, bool] = {}
         self.serial_number_to_ip_address = {}
 
         self.valid_modes = ["maintenance", "normal"]
@@ -328,74 +340,6 @@ class MaintenanceMode:
             msg += "serial_number must be present in config."
             raise ValueError(msg)
 
-    def build_deploy_dict(self):
-        """
-        ### Summary
-        -   Build the deploy_dict, keyed on fabric_name, with a list of
-            serial_numbers to deploy for each fabric.
-        """
-        self.deploy_dict = {}
-        for item in self.config:
-            fabric_name = item.get("fabric_name")
-            serial_number = item.get("serial_number")
-            deploy = item.get("deploy")
-            if fabric_name not in self.deploy_dict:
-                self.deploy_dict[fabric_name] = []
-            if deploy is True:
-                self.deploy_dict[fabric_name].append(serial_number)
-
-    def build_endpoints_list(self):
-        """
-        ### Summary
-        -   Build the maintenance_mode endpoints to send to the controller.
-            This is a list of tuples, each containing the path, verb, and
-            comma-separated list of ip addresses.
-            i.e. [(path, verb, ip_addresses), (path, verb, ip_addresses), ...]
-        -   Also populate self.serial_number_to_ip_address dict, keyed on
-            serial_number, and value of ip_address associated with
-            serial_number.  This is used later in the commit() method.
-
-        ### Raises
-        -   ``ValueError`` if ``config`` is not set.
-        """
-        method_name = inspect.stack()[0][3]
-        if self.config is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.config must be set "
-            msg += "before calling commit."
-            raise ValueError(msg)
-
-        self.serial_number_to_ip_address = {}
-        # Populate dict to sort serial_numbers by fabric and mode
-        # This drives endpoint creation further below.
-        mode_dict = {}
-        for item in self.config:
-            fabric_name = item.get("fabric_name")
-            serial_number = item.get("serial_number")
-            mode = item.get("mode")
-            ip_address = item.get("ip_address")
-            self.serial_number_to_ip_address[serial_number] = ip_address
-            if fabric_name not in mode_dict:
-                mode_dict[fabric_name] = {}
-            if mode not in mode_dict[fabric_name]:
-                mode_dict[fabric_name][mode] = []
-            mode_dict[fabric_name][mode].append(serial_number)
-
-        # populate endpoints using mode_dict
-        self.endpoints = []
-        for fabric, data in mode_dict.items():
-            for mode, serial_numbers in data.items():
-                for serial_number in serial_numbers:
-                    ip_address = self.serial_number_to_ip_address[serial_number]
-                    if mode == "normal":
-                        instance = self.ep_maintenance_mode_disable
-                    else:
-                        instance = self.ep_maintenance_mode_enable
-                    instance.fabric_name = fabric
-                    instance.serial_number = serial_number
-                    endpoint = (instance.path, instance.verb, ip_address, mode)
-                    self.endpoints.append(copy.copy(endpoint))
-
     def verify_commit_parameters(self):
         """
         ### Summary
@@ -428,41 +372,70 @@ class MaintenanceMode:
         Initiates the maintenance mode change on the controller.
 
         ### Raises
+        -   ``ValueError`` if ``config`` is not set.
         -   ``ValueError`` if ``rest_send`` is not set.
         -   ``ValueError`` if ``results`` is not set.
+        -   ``ControllerResponseError`` if controller response != 200.
         """
         try:
             self.verify_commit_parameters()
         except ValueError as error:
             raise ValueError(error) from error
 
-        self.change_system_mode()
-        self.deploy_switches()
+        try:
+            self.change_system_mode()
+        except ControllerResponseError as error:
+            raise ControllerResponseError(error) from error
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.deploy_switches()
+        except ControllerResponseError as error:
+            raise ValueError(error) from error
 
     def change_system_mode(self):
         """
-        Change the ``systemMode`` configuration for the switch.
+        ### Summary
+        Send the maintenance mode change request to the controller.
 
         ### Raises
-        -   ``ValueError`` if endpoint resolution fails.
+        -   ``ControllerResponseError`` if controller response != 200.
         """
-        self.build_endpoints_list()
-        for endpoint in self.endpoints:
-            self.rest_send.path = endpoint[0]
-            self.rest_send.verb = endpoint[1]
+        method_name = inspect.stack()[0][3]
+
+        for item in self.config:
+            # Build endpoint
+            mode = item.get("mode")
+            fabric_name = item.get("fabric_name")
+            ip_address = item.get("ip_address")
+            serial_number = item.get("serial_number")
+            if mode == "normal":
+                instance = self.ep_maintenance_mode_disable
+            else:
+                instance = self.ep_maintenance_mode_enable
+            instance.fabric_name = fabric_name
+            instance.serial_number = serial_number
+
+            # Send request
+            self.rest_send.path = instance.path
+            self.rest_send.verb = instance.verb
             self.rest_send.payload = None
             self.rest_send.commit()
 
-            action = "maintenance_mode"
+            # Update diff
             result = self.rest_send.result_current["success"]
             if result is False:
                 self.results.diff_current = {}
             else:
                 self.results.diff_current = {
-                    "ip_address": endpoint[2],
-                    f"{action}": endpoint[3],
+                    "fabric_name": fabric_name,
+                    "ip_address": ip_address,
+                    "maintenance_mode": mode,
+                    "serial_number": serial_number,
                 }
 
+            # register result
             self.results.action = self.action
             self.results.check_mode = self.check_mode
             self.results.state = self.state
@@ -472,16 +445,89 @@ class MaintenanceMode:
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
 
+            if self.results.response_current["RETURN_CODE"] != 200:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Unable to change system mode on switch: "
+                msg += f"fabric_name {fabric_name}, "
+                msg += f"ip_address {ip_address}, "
+                msg += f"serial_number {serial_number}. "
+                msg += f"Got response {self.results.response_current}"
+                raise ControllerResponseError(msg)
+
+    def build_deploy_dict(self):
+        """
+        ### Summary
+        -   Build the deploy_dict
+
+        ### Raises
+        None
+
+        ### Structure
+        -   key: fabric_name
+        -   value: list of serial_numbers to deploy for each fabric
+
+        ### Example
+        ```json
+        {
+            "MyFabric": ["CDM4593459", "CDM4593460"],
+            "YourFabric": ["CDM4593461", "CDM4593462"]
+        }
+        """
+        self.deploy_dict = {}
+        for item in self.config:
+            fabric_name = item.get("fabric_name")
+            serial_number = item.get("serial_number")
+            deploy = item.get("deploy")
+            if fabric_name not in self.deploy_dict:
+                self.deploy_dict[fabric_name] = []
+            if deploy is True:
+                self.deploy_dict[fabric_name].append(serial_number)
+
+    def build_serial_number_to_ip_address(self):
+        """
+        ### Summary
+        Populate self.serial_number_to_ip_address dict.
+
+        ### Raises
+        None
+
+        ### Structure
+        -   key: switch serial_number
+        -   value: associated switch ip_address
+
+        ```json
+        { "CDM4593459": "192.168.1.2" }
+        ```
+        ### Raises
+        None
+
+        ### Notes
+        -   ip_address and serial_number are added to the diff in the
+            ``deploy_switches()`` method.
+        """
+        for item in self.config:
+            serial_number = item.get("serial_number")
+            ip_address = item.get("ip_address")
+            self.serial_number_to_ip_address[serial_number] = ip_address
+
     def deploy_switches(self):
         """
+        ### Summary
         Initiate config-deploy for the switches in ``self.deploy_dict``.
+
+        ### Raises
+        -   ``ControllerResponseError`` if controller response != 200.
         """
+        method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
+        self.build_serial_number_to_ip_address()
         ep_deploy = EpFabricConfigDeploy()
-        for fabric, serial_numbers in self.deploy_dict.items():
-            # Start the config-deploy
-            ep_deploy.fabric_name = fabric
+        for fabric_name, serial_numbers in self.deploy_dict.items():
+            # Build endpoint
+            ep_deploy.fabric_name = fabric_name
             ep_deploy.switch_id = serial_numbers
+
+            # Send request
             self.rest_send.path = ep_deploy.path
             self.rest_send.verb = ep_deploy.verb
             self.rest_send.payload = None
@@ -508,6 +554,15 @@ class MaintenanceMode:
             )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
+
+            if self.results.response_current["RETURN_CODE"] != 200:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Unable to deploy switches: "
+                msg += f"fabric_name {fabric_name}, "
+                msg += "serial_numbers "
+                msg += f"{','.join(serial_numbers)}. "
+                msg += f"Got response {self.results.response_current}"
+                raise ControllerResponseError(msg)
 
         # Use this if we cannot update maintenance mode in frozen fabrics
         # self._can_fabric_be_deployed()
