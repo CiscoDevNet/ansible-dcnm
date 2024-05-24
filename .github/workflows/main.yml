@@ -96,11 +96,11 @@ jobs:
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
-    - name: Install coverage (v4.5.4)
-      run: pip install coverage==4.5.4
+    - name: Install coverage (v7.3.4)
+      run: pip install coverage==7.3.4
     
-    - name: Install pytest (v5.4.1)
-      run: pip install pytest==5.4.1
+    - name: Install pytest (v7.4.4)
+      run: pip install pytest==7.4.4
 
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v1
