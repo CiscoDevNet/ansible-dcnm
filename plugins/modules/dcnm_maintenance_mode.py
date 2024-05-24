@@ -511,24 +511,15 @@ class Merged(Common):
             "192.169.1.2": {
                 fabric_name: "MyFabric",
                 mode: "maintenance",
-                role: "spine",
                 serial_number: "FCI1234567"
             },
             "192.169.1.3": {
                 fabric_name: "YourFabric",
                 mode: "normal",
-                role: "leaf",
                 serial_number: "FCH2345678"
             }
         }
         ```
-        ### NOTES
-        -   We are not currently using ``role``.  We added it to improve
-            error messages, but will need to pass this to MaintenanceMode()
-            in order to do so.  This will require adding a ``role`` property
-            to MaintenanceMode().  But ``role`` is not strictly needed for the
-            MaintenanceMode() class.  Hence, we're not adding this now.  Maybe
-            in a future release.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.switch_details.rest_send = RestSend(self.ansible_module)
@@ -538,15 +529,27 @@ class Merged(Common):
         for switch in self.config.get("switches"):
             ip_address = switch.get("ip_address")
             self.switch_details.filter = ip_address
+            fabric_name = self.switch_details.fabric_name
+
+            if self.switch_details.freeze_mode is True:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric {fabric_name} is in freeze mode. "
+                msg += "Configuration changes are not allowed. "
+                msg += "Ensure that NDFC -> Topology -> Fabric -> Actions -> "
+                msg += "More -> Deployment Enable is selected."
+                self.ansible_module.fail_json(msg, **self.results.failed_result)
+
             try:
                 serial_number = self.switch_details.serial_number
             except ValueError as error:
                 self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+
             if serial_number is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Switch with ip_address {ip_address} "
                 msg += "does not exist on the controller."
                 self.ansible_module.fail_json(msg, **self.results.failed_result)
+
             mode = self.switch_details.maintenance_mode
             if mode == "inconsistent":
                 msg = f"{self.class_name}.{method_name}: "
@@ -568,12 +571,10 @@ class Merged(Common):
                 msg += "manually modified to match the switch role in the "
                 msg += "hosting fabric."
                 self.ansible_module.fail_json(msg, **self.results.failed_result)
-            fabric_name = self.switch_details.fabric_name
-            role = self.switch_details.role
+
             self.have[ip_address] = {}
             self.have[ip_address].update({"fabric_name": fabric_name})
             self.have[ip_address].update({"mode": mode})
-            self.have[ip_address].update({"role": role})
             self.have[ip_address].update({"serial_number": serial_number})
 
     def get_need(self):
@@ -640,9 +641,12 @@ class Merged(Common):
 
     def send_need(self) -> None:
         """
-        Caller: commit()
-
+        ### Summary
         Build and send the payload to modify maintenance mode.
+
+        ### Raises
+        -   ``ValueError`` if MaintenanceMode() raises ``ValueError``
+
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
@@ -656,7 +660,7 @@ class Merged(Common):
             return
 
         instance = MaintenanceMode(self.params)
-        instance.rest_send = RestSend(self.ansible_module)
+        instance.rest_send = self.rest_send
         instance.results = self.results
         try:
             instance.config = self.need
@@ -692,6 +696,9 @@ class Query(Common):
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
         -   ``fabric_name``: The name of the switch's hosting fabric.
+        -   ``freeze_mode``: The current state of the switch's hosting fabric.
+            If freeze_mode is True, configuration changes cannot be made to the
+            fabric or the switches within the fabric.
         -   ``mode``: The current maintenance mode of the switch.
         -   ``role``: The role of the switch in the hosting fabric.
         -   ``serial_number``: The serial number of the switch.
@@ -699,12 +706,14 @@ class Query(Common):
         ```json
         {
             "192.169.1.2": {
+                deployment_disabled: true
                 fabric_name: "MyFabric",
                 mode: "maintenance",
                 role: "spine",
                 serial_number: "FCI1234567"
             },
             "192.169.1.3": {
+                deployment_disabled: false
                 fabric_name: "YourFabric",
                 mode: "normal",
                 role: "leaf",
@@ -731,17 +740,23 @@ class Query(Common):
                 msg += "does not exist on the controller."
                 self.ansible_module.fail_json(msg, **self.results.failed_result)
 
+            fabric_name = self.switch_details.fabric_name
+            freeze_mode = self.switch_details.freeze_mode
             mode = self.switch_details.maintenance_mode
             role = self.switch_details.switch_role
-            fabric_name = self.switch_details.fabric_name
+
             self.have[ip_address] = {}
+            self.have[ip_address].update({"fabric_name": fabric_name})
+            if freeze_mode is True:
+                self.have[ip_address].update({"deployment_disabled": True})
+            else:
+                self.have[ip_address].update({"deployment_disabled": False})
             self.have[ip_address].update({"mode": mode})
             if role is not None:
                 self.have[ip_address].update({"role": role})
             else:
                 self.have[ip_address].update({"role": "na"})
             self.have[ip_address].update({"serial_number": serial_number})
-            self.have[ip_address].update({"fabric_name": fabric_name})
 
     def commit(self) -> None:
         """

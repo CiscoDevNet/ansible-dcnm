@@ -192,6 +192,15 @@ class SwitchDetails:
         return self._get("fabricName")
 
     @property
+    def freeze_mode(self):
+        """
+        -   Return the ``freezeMode`` of the filtered switch's fabric,
+            if it exists.
+        -   Return ``None`` otherwise.
+        """
+        return self._get("freezeMode")
+
+    @property
     def hostname(self):
         """
         -   Return the ``hostName`` of the filtered switch, if it exists.
