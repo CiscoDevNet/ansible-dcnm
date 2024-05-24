@@ -578,6 +578,7 @@ class Merged(Common):
 
     def get_need(self):
         """
+        ### Summary
         Build self.need for merged state.
 
         ### Caller
@@ -585,34 +586,38 @@ class Merged(Common):
 
         ### self.need structure
         ```json
-        {
-            "172.22.150.2": {
-                "deploy": false
+        [
+            {
+                "deploy": false,
                 "fabric_name": "MyFabric",
+                "ip_address": "172.22.150.2",
                 "mode": "maintenance",
                 "serial_number": "FCI1234567"
             },
-            "172.22.150.3": {
-                "deploy": true
+            {
+                "deploy": true,
                 "fabric_name": "YourFabric",
+                "ip_address": "172.22.150.3",
                 "mode": "normal",
                 "serial_number": "HMD2345678"
             }
-        }
+        ]
         """
-        self.need = {}
+        self.need = []
         for want in self.want:
-            key = want.get("ip_address", None)
-            if key not in self.have:
+            ip_address = want.get("ip_address", None)
+            if ip_address not in self.have:
                 continue
-            serial_number = self.have[key]["serial_number"]
-            fabric_name = self.have[key]["fabric_name"]
-            if want.get("mode") != self.have[key]["mode"]:
-                self.need[key] = want
-                self.need[key].update({"deploy": want.get("deploy")})
-                self.need[key].update({"fabric_name": fabric_name})
-                self.need[key].update({"serial_number": serial_number})
-                self.need[key].update({"mode": want.get("mode")})
+            serial_number = self.have[ip_address]["serial_number"]
+            fabric_name = self.have[ip_address]["fabric_name"]
+            if want.get("mode") != self.have[ip_address]["mode"]:
+                need = want
+                need.update({"deploy": want.get("deploy")})
+                need.update({"fabric_name": fabric_name})
+                need.update({"ip_address": ip_address})
+                need.update({"mode": want.get("mode")})
+                need.update({"serial_number": serial_number})
+                self.need.append(copy.copy(need))
 
     def commit(self):
         """
@@ -627,7 +632,11 @@ class Merged(Common):
         self.get_want()
         self.get_have()
         self.get_need()
-        self.send_need()
+        try:
+            self.send_need()
+        except ValueError as error:
+            self.results.build_final_result()
+            self.ansible_module.fail_json(f"{error}", **self.results.final_result)
 
     def send_need(self) -> None:
         """
@@ -649,21 +658,14 @@ class Merged(Common):
         instance = MaintenanceMode(self.params)
         instance.rest_send = RestSend(self.ansible_module)
         instance.results = self.results
-        for ip_address, switch in self.need.items():
-            mode = switch.get("mode", None)
-            serial_number = switch.get("serial_number", None)
-            fabric_name = switch.get("fabric_name", None)
-            deploy = switch.get("deploy", False)
-            try:
-                instance.deploy = deploy
-                instance.fabric_name = fabric_name
-                instance.ip_address = ip_address
-                instance.mode = mode
-                instance.serial_number = serial_number
-                instance.commit()
-            except ValueError as error:
-                self.results.build_final_result()
-                self.ansible_module.fail_json(f"{error}", **self.results.final_result)
+        try:
+            instance.config = self.need
+        except ValueError as error:
+            raise ValueError(error) from error
+        try:
+            instance.commit()
+        except ValueError as error:
+            raise ValueError(error) from error
 
 
 class Query(Common):

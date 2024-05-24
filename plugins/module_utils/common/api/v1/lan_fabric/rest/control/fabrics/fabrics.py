@@ -221,12 +221,12 @@ class EpFabricConfigDeploy(Fabrics):
             -   set the ``fabric_name`` to be used in the path
             -   string
             -   required
-    -   force_show_run: boolean
+    -   force_show_run:
             -   set the ``forceShowRun`` value
             -   boolean
             -   default: False
             -   optional
-    -   include_all_msd_switches: boolean
+    -   include_all_msd_switches:
             -   set the ``inclAllMSDSwitches`` value
             -   boolean
             -   default: False
@@ -234,9 +234,9 @@ class EpFabricConfigDeploy(Fabrics):
     -   path:
             -   retrieve the path for the endpoint
             -   string
-    -   switch_id: string
+    -   switch_id:
             -   set the ``switch_id`` to be used in the path
-            -   string
+            -   string or list
             -   optional
             -   if set, ``include_all_msd_switches`` is not added to the path
     -   verb:
@@ -247,7 +247,9 @@ class EpFabricConfigDeploy(Fabrics):
     ```python
     instance = EpFabricConfigDeploy()
     instance.fabric_name = "MyFabric"
-    instance.switch_id = "CHM1234567"
+    instance.switch_id = ["CHM1234567", "CHM7654321"]
+    # or instance.switch_id = "CHM1234567"
+    # or instance.switch_id = "CHM7654321,CHM1234567"
     path = instance.path
     verb = instance.verb
     ```
@@ -337,21 +339,27 @@ class EpFabricConfigDeploy(Fabrics):
         """
         -   getter: Return the switch_id value.
         -   setter: Set the switch_id value.
-        -   setter: Raise ``ValueError`` if switch_id is not a string.
+        -   setter: Raise ``ValueError`` if switch_id is not a string or list.
         -   Default: None
         -   Optional
         -   Notes:
             -   ``include_all_msd_switches`` is removed from the path if
                 ``switch_id`` is set.
+            -   If value is a list, it is converted to a comma-separated
+                string.
         """
         return self.properties["switch_id"]
 
     @switch_id.setter
     def switch_id(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, str):
+        if isinstance(value, str):
+            pass
+        elif isinstance(value, list):
+            value = ",".join(value)
+        else:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Expected string for {method_name}. "
+            msg += f"Expected string or list for {method_name}. "
             msg += f"Got {value} with type {type(value).__name__}."
             raise ValueError(msg)
         self.properties["switch_id"] = value

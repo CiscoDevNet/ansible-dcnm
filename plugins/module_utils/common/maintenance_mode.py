@@ -30,23 +30,56 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
 
 class MaintenanceMode:
     """
-    # Modify the maintenance mode state of a switch.
+    ### Modify the maintenance mode state of switches.
 
     -   Raise ``ValueError`` for any caller errors, e.g. required properties
-        not being set before calling FabricConfigDeploy().commit().
+        not being set before calling MaintenanceMode().commit().
     -   Update MaintenanceMode().results to reflect success/failure of
         the operation on the controller.
+    -   For switches that are to be deployed, initiate a per-fabric
+        bulk config-deploy.
 
-    ## Usage (where params is AnsibleModule.params)
+    ### Example value for ``config`` in the Usage section below:
+    ```json
+    [
+        {
+            "deploy": false,
+            "fabric_name": "MyFabric",
+            "ip_address": "192.168.1.2",
+            "mode": "maintenance",
+            "serial_number": "FCI1234567"
+        },
+        {
+            "deploy": true,
+            "fabric_name": "YourFabric",
+            "ip_address": "192.168.1.3",
+            "mode": "normal",
+            "serial_number": "HMD2345678"
+        }
+    ]
+    ```
+
+    ### Usage
+    -   Where ``params`` is ``AnsibleModule.params``
+    -   Where ``config`` is a list of dicts, each containing the following:
+        -   ``deploy``: ``bool``.  If True, the switch maintenance mode
+            will be deployed.
+        -   ``fabric_name``: ``str``.  The name of the switch's hosting fabric.
+        -   ``ip_address``: ``str``.  The ip address of the switch.
+        -   ``mode``: ``str``.  The intended maintenance mode.  Must be one of
+            "maintenance" or "normal".
+        -   ``serial_number``: ``str``.  The serial number of the switch.
+
+
 
     ```python
     instance = MaintenanceMode(params)
-    instance.fabric_name = "MyFabric"
-    instance.mode = "maintenance" # or "normal"
-    instance.ip_address = "192.168.1.2"
+    try:
+        instance.config = config
+    except ValueError as error:
+        raise ValueError(error) from error
     instance.rest_send = RestSend(ansible_module)
     instance.results = Results()
-    instance.serial_number = "FDO1234567"
     try:
         instance.commit()
     except ValueError as error:
@@ -77,7 +110,12 @@ class MaintenanceMode:
             msg += "params is missing mandatory state parameter."
             raise ValueError(msg)
 
+        # Populated in build_deploy_dict()
+        self.deploy_dict = {}
+        # Populated in build_endpoints_list()
+        self.endpoints = []
         self.action_result: Dict[str, bool] = {}
+        self.serial_number_to_ip_address = {}
 
         self.valid_modes = ["maintenance", "normal"]
         self.path = None
@@ -95,13 +133,9 @@ class MaintenanceMode:
 
     def _init_properties(self):
         self._properties = {}
-        self._properties["deploy"] = None
-        self._properties["fabric_name"] = None
-        self._properties["ip_address"] = None
-        self._properties["mode"] = None
+        self._properties["config"] = None
         self._properties["rest_send"] = None
         self._properties["results"] = None
-        self._properties["serial_number"] = None
 
     # def _can_fabric_be_deployed(self) -> None:
     #     """
@@ -188,31 +222,193 @@ class MaintenanceMode:
 
     #     self.fabric_can_be_deployed = True
 
-    def verify_commit_parameters(self):
+    def verify_config_parameters(self, value):
         """
-        Verify that required parameters are set before calling commit.
+        Verify that required parameters are present in config.
 
-        -   Raise ``ValueError`` if ``fabric_name`` is not set.
-        -   Raise ``ValueError`` if ``ip_address`` is not set.
-        -   Raise ``ValueError`` if ``mode`` is not set.
-        -   Raise ``ValueError`` if ``rest_send`` is not set.
-        -   Raise ``ValueError`` if ``results`` is not set.
-        -   Raise ``ValueError`` if ``serial_number`` is not set.
+        ### Raises
+        -   ``ValueError`` if ``config`` is not a list.
+        -   ``ValueError`` if ``config`` contains invalid content.
+
+        ### NOTES
+        1. See the following validation methods for details:
+            -   verify_deploy()
+            -   verify_fabric_name()
+            -   verify_ip_address()
+            -   verify_mode()
+            -   verify_serial_number()
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_name is None:
+        if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.fabric_name must be set "
+            msg += f"{self.class_name}.config must be a list. "
+            msg += f"Got type: {type(value).__name__}."
+            raise ValueError(msg)
+
+        for item in value:
+            try:
+                self.verify_deploy(item)
+                self.verify_fabric_name(item)
+                self.verify_ip_address(item)
+                self.verify_mode(item)
+                self.verify_serial_number(item)
+            except ValueError as error:
+                raise ValueError(error) from error
+
+    def verify_deploy(self, item):
+        """
+        -   Raise ``ValueError`` if ``deploy`` is not present.
+        -   Raise ``ValueError`` if ``deploy`` is not a boolean.
+        """
+        method_name = inspect.stack()[0][3]
+        if item.get("deploy", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "deploy must be present in config."
+            raise ValueError(msg)
+        if not isinstance(item.get("deploy", None), bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "deploy must be a boolean."
+            raise ValueError(msg)
+
+    def verify_fabric_name(self, item):
+        """
+        -   Raise ``ValueError`` if ``fabric_name`` is not present.
+        -   Raise ``ValueError`` if ``fabric_name`` is not a valid fabric name.
+        """
+        method_name = inspect.stack()[0][3]
+        if item.get("fabric_name", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_name must be present in config."
+            raise ValueError(msg)
+        try:
+            self.conversion.validate_fabric_name(item.get("fabric_name", None))
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
+
+    def verify_ip_address(self, item):
+        """
+        -   Raise ``ValueError`` if ``ip_address`` is not present.
+        """
+        method_name = inspect.stack()[0][3]
+        if item.get("ip_address", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "ip_address must be present in config."
+            raise ValueError(msg)
+
+    def verify_mode(self, item):
+        """
+        ### Summary
+        Validate the ``mode`` parameter.
+
+        ### Raises
+        -   ``ValueError`` if ``mode`` is not present.
+        -   ``ValueError`` if ``mode`` is not one of "maintenance" or "normal".
+        """
+        method_name = inspect.stack()[0][3]
+        if item.get("mode", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "mode must be present in config."
+            raise ValueError(msg)
+        if item.get("mode", None) not in self.valid_modes:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "mode must be one of 'maintenance' or 'normal'."
+            raise ValueError(msg)
+
+    def verify_serial_number(self, item):
+        """
+        ### Summary
+        Validate the ``serial_number`` parameter.
+
+        ### Raises
+        - ``ValueError`` if ``serial_number`` is not present.
+        """
+        method_name = inspect.stack()[0][3]
+        if item.get("serial_number", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "serial_number must be present in config."
+            raise ValueError(msg)
+
+    def build_deploy_dict(self):
+        """
+        ### Summary
+        -   Build the deploy_dict, keyed on fabric_name, with a list of
+            serial_numbers to deploy for each fabric.
+        """
+        self.deploy_dict = {}
+        for item in self.config:
+            fabric_name = item.get("fabric_name")
+            serial_number = item.get("serial_number")
+            deploy = item.get("deploy")
+            if fabric_name not in self.deploy_dict:
+                self.deploy_dict[fabric_name] = []
+            if deploy is True:
+                self.deploy_dict[fabric_name].append(serial_number)
+
+    def build_endpoints_list(self):
+        """
+        ### Summary
+        -   Build the maintenance_mode endpoints to send to the controller.
+            This is a list of tuples, each containing the path, verb, and
+            comma-separated list of ip addresses.
+            i.e. [(path, verb, ip_addresses), (path, verb, ip_addresses), ...]
+        -   Also populate self.serial_number_to_ip_address dict, keyed on
+            serial_number, and value of ip_address associated with
+            serial_number.  This is used later in the commit() method.
+
+        ### Raises
+        -   ``ValueError`` if ``config`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        if self.config is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{self.class_name}.config must be set "
             msg += "before calling commit."
             raise ValueError(msg)
-        if self.ip_address is None:
+
+        self.serial_number_to_ip_address = {}
+        # Populate dict to sort serial_numbers by fabric and mode
+        # This drives endpoint creation further below.
+        mode_dict = {}
+        for item in self.config:
+            fabric_name = item.get("fabric_name")
+            serial_number = item.get("serial_number")
+            mode = item.get("mode")
+            ip_address = item.get("ip_address")
+            self.serial_number_to_ip_address[serial_number] = ip_address
+            if fabric_name not in mode_dict:
+                mode_dict[fabric_name] = {}
+            if mode not in mode_dict[fabric_name]:
+                mode_dict[fabric_name][mode] = []
+            mode_dict[fabric_name][mode].append(serial_number)
+
+        # populate endpoints using mode_dict
+        self.endpoints = []
+        for fabric, data in mode_dict.items():
+            for mode, serial_numbers in data.items():
+                for serial_number in serial_numbers:
+                    ip_address = self.serial_number_to_ip_address[serial_number]
+                    if mode == "normal":
+                        instance = self.ep_maintenance_mode_disable
+                    else:
+                        instance = self.ep_maintenance_mode_enable
+                    instance.fabric_name = fabric
+                    instance.serial_number = serial_number
+                    endpoint = (instance.path, instance.verb, ip_address, mode)
+                    self.endpoints.append(copy.copy(endpoint))
+
+    def verify_commit_parameters(self):
+        """
+        ### Summary
+        Verify that required parameters are present before calling commit.
+
+        ### Raises
+        -   ``ValueError`` if ``rest_send`` is not set.
+        -   ``ValueError`` if ``results`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        if self.config is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.ip_address must be set "
-            msg += "before calling commit."
-            raise ValueError(msg)
-        if self.mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.mode must be set "
+            msg += f"{self.class_name}.config must be set "
             msg += "before calling commit."
             raise ValueError(msg)
         if self.rest_send is None:
@@ -225,42 +421,96 @@ class MaintenanceMode:
             msg += f"{self.class_name}.results must be set "
             msg += "before calling commit."
             raise ValueError(msg)
-        if self.serial_number is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.serial_number must be set "
-            msg += "before calling commit."
-            raise ValueError(msg)
 
     def commit(self):
         """
-        -   Initiate a config-deploy operation on the controller.
-        -   Re-raise ``ValueError`` if ``fabric_name`` is not set.
-        -   Re-raise ``ValueError`` if ``ip_address`` is not set.
-        -   Re-raise ``ValueError`` if ``mode`` is not set.
-        -   Re-raise ``ValueError`` if ``rest_send`` is not set.
-        -   Re-raise ``ValueError`` if ``results`` is not set.
-        -   Re-raise ``ValueError`` if ``serial_number`` is not set.
-        """
-        method_name = inspect.stack()[0][3]
+        ### Summary
+        Initiates the maintenance mode change on the controller.
 
+        ### Raises
+        -   ``ValueError`` if ``rest_send`` is not set.
+        -   ``ValueError`` if ``results`` is not set.
+        """
         try:
             self.verify_commit_parameters()
         except ValueError as error:
             raise ValueError(error) from error
 
-        # self._can_fabric_be_deployed()
-        # /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabricName}/switches/{serialNumber}/deploy-maintenance-mode
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"action_failed: {self.action_failed}"
-        msg += f"deploy: {self.deploy}, "
-        msg += f"fabric_name: {self.fabric_name}, "
-        msg += f"mode: {self.mode}, "
-        msg += f"ip_address: {self.ip_address}, "
-        # msg += f"fabric_can_be_deployed: {self.fabric_can_be_deployed}, "
-        # msg += f"cannot_perform_action_reason: {self.cannot_perform_action_reason}"
-        msg += f"serial_number: {self.serial_number}, "
-        self.log.debug(msg)
+        self.change_system_mode()
+        self.deploy_switches()
 
+    def change_system_mode(self):
+        """
+        Change the ``systemMode`` configuration for the switch.
+
+        ### Raises
+        -   ``ValueError`` if endpoint resolution fails.
+        """
+        self.build_endpoints_list()
+        for endpoint in self.endpoints:
+            self.rest_send.path = endpoint[0]
+            self.rest_send.verb = endpoint[1]
+            self.rest_send.payload = None
+            self.rest_send.commit()
+
+            action = "maintenance_mode"
+            result = self.rest_send.result_current["success"]
+            if result is False:
+                self.results.diff_current = {}
+            else:
+                self.results.diff_current = {
+                    "ip_address": endpoint[2],
+                    f"{action}": endpoint[3],
+                }
+
+            self.results.action = self.action
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
+
+    def deploy_switches(self):
+        """
+        Initiate config-deploy for the switches in ``self.deploy_dict``.
+        """
+        self.build_deploy_dict()
+        ep_deploy = EpFabricConfigDeploy()
+        for fabric, serial_numbers in self.deploy_dict.items():
+            # Start the config-deploy
+            ep_deploy.fabric_name = fabric
+            ep_deploy.switch_id = serial_numbers
+            self.rest_send.path = ep_deploy.path
+            self.rest_send.verb = ep_deploy.verb
+            self.rest_send.payload = None
+            self.rest_send.commit()
+
+            # Register the result
+            action = "config_deploy"
+            result = self.rest_send.result_current["success"]
+            if result is False:
+                self.results.diff_current = {}
+            else:
+                diff = {}
+                diff.update({f"{action}": result})
+                for serial_number in serial_numbers:
+                    ip_address = self.serial_number_to_ip_address[serial_number]
+                    diff.update({ip_address: serial_number})
+                self.results.diff_current = diff
+
+            self.results.action = action
+            self.results.check_mode = self.check_mode
+            self.results.state = self.state
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
+
+        # Use this if we cannot update maintenance mode in frozen fabrics
+        # self._can_fabric_be_deployed()
         # if self.fabric_can_be_deployed is False:
         #     self.results.diff_current = {}
         #     self.results.action = self.action
@@ -277,166 +527,56 @@ class MaintenanceMode:
         #     self.results.register_task_result()
         #     return
 
-        self.change_system_mode()
-
-        if self.deploy is True:
-            self.deploy_switch()
-
-    def change_system_mode(self):
-        """
-        Change the ``systemMode`` configuration for the switch.
-
-        ### Raises
-        -   ``ValueError`` if endpoint resolution fails.
-        """
-        if self.mode == "maintenance":
-            endpoint = self.ep_maintenance_mode_enable
-        else:
-            endpoint = self.ep_maintenance_mode_disable
-
-        try:
-            endpoint.fabric_name = self.fabric_name
-            endpoint.serial_number = self.serial_number
-            self.path = endpoint.path
-            self.verb = endpoint.verb
-        except ValueError as error:
-            self.results.diff_current = {}
-            self.results.result_current = self.results.failed_result
-            self.results.register_task_result()
-            raise ValueError(error) from error
-
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.payload = None
-        self.rest_send.commit()
-
-        action = "maintenance_mode"
-        result = self.rest_send.result_current["success"]
-        if result is False:
-            self.results.diff_current = {}
-        else:
-            self.results.diff_current = {
-                "ip_address": self.ip_address,
-                f"{action}": self.mode,
-            }
-
-        self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
-        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.results.register_task_result()
-
-    def deploy_switch(self):
-        """
-        Initiate a switch config-deploy.
-        """
-        # Start the config-deploy
-        ep_deploy = EpFabricConfigDeploy()
-        ep_deploy.fabric_name = self.fabric_name
-        ep_deploy.switch_id = self.serial_number
-        self.rest_send.path = ep_deploy.path
-        self.rest_send.verb = ep_deploy.verb
-        self.rest_send.payload = None
-        self.rest_send.commit()
-
-        # Register the result
-        action = "config_deploy"
-        result = self.rest_send.result_current["success"]
-        if result is False:
-            self.results.diff_current = {}
-        else:
-            self.results.diff_current = {
-                "ip_address": self.ip_address,
-                f"{action}": result,
-            }
-
-        self.results.action = action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
-        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.results.register_task_result()
-
     @property
-    def deploy(self):
+    def config(self):
         """
-        Whether to issue a recalculate and deploy on the switch
-        after changing the mode.
+        ### Summary
+        The maintenance mode configurations to be sent to the controller.
 
-        -   getter: Return the deploy value.
-        -   setter: Set the deploy value.
-        -   setter: Raise ``ValueError`` if the value is not a boolean.
-        """
-        return self._properties["deploy"]
+        -   getter: Return the config value.
+        -   setter: Set the config value.
+        -   setter: Raise ``ValueError`` if value is not a list.
+        -   setter: Raise ``ValueError`` if value contains invalid content.
 
-    @deploy.setter
-    def deploy(self, value):
-        if not isinstance(value, bool):
-            msg = f"{self.class_name}.deploy must be a boolean. "
-            msg += f"Got type: {type(value).__name__}."
-            raise ValueError(msg)
-        self._properties["deploy"] = value
-
-    @property
-    def fabric_name(self):
-        """
-        The name of the fabric to which the switch belongs.
-
-        -   getter: Return the fabric_name.
-        -   setter: Set the fabric_name.
-        -   setter: Raise ``ValueError`` if the value is not a valid
-            fabric name.
-        """
-        return self._properties["fabric_name"]
-
-    @fabric_name.setter
-    def fabric_name(self, value):
-        try:
-            self.conversion.validate_fabric_name(value)
-        except (TypeError, ValueError) as error:
-            raise ValueError(error) from error
-        self._properties["fabric_name"] = value
-
-    @property
-    def ip_address(self):
-        """
-        -   The ip_address of the switch.  Used only for more informative
-            error messages.
-        -   Raise ``ValueError`` if the value is not a string.
-        """
-        return self._properties["ip_address"]
-
-    @ip_address.setter
-    def ip_address(self, value):
-        method_name = inspect.stack()[0][3]
-
-        if not isinstance(value, str):
-            msg = f"{self.class_name}.{method_name} must be a string. "
-            msg += f"Got type: {type(value).__name__}."
-            self.log.debug(msg)
-            raise ValueError(msg)
-        self._properties["ip_address"] = value
-
-    @property
-    def mode(self):
-        """
-        The indended maintenance mode.
-        -   getter: Return the mode.
-        -   setter: Set the mode.
-        -   setter: Raise ``ValueError`` if the value is not one of
+        ### Value structure
+        value is a ``list`` of ``dict``.  Each dict must contain the following:
+        -   ``deploy``: ``bool``.  If True, the switch maintenance mode
+            will be deployed.
+        -   ``fabric_name``: ``str``.  The name of the switch's hosting fabric.
+        -   ``ip_address``: ``str``.  The ip address of the switch.
+        -   ``mode``: ``str``.  The intended maintenance mode.  Must be one of
             "maintenance" or "normal".
-        """
-        return self._properties["mode"]
+        -   ``serial_number``: ``str``.  The serial number of the switch.
 
-    @mode.setter
-    def mode(self, value):
-        if value not in self.valid_modes:
-            msg = f"{self.class_name}.mode is invalid. "
-            msg += f"Got value {value}. "
-            msg += f"Expected one of {','.join(self.valid_modes)}."
-            raise ValueError(msg)
-        self._properties["mode"] = value
+        ### Example
+        ```json
+        [
+            {
+                "deploy": false,
+                "fabric_name": "MyFabric",
+                "ip_address": "172.22.150.2",
+                "mode": "maintenance",
+                "serial_number": "FCI1234567"
+            },
+            {
+                "deploy": true,
+                "fabric_name": "YourFabric",
+                "ip_address": "172.22.150.3",
+                "mode": "normal",
+                "serial_number": "HMD2345678"
+            }
+        ]
+        ```
+        """
+        return self._properties["config"]
+
+    @config.setter
+    def config(self, value):
+        try:
+            self.verify_config_parameters(value)
+        except ValueError as error:
+            raise ValueError(error) from error
+        self._properties["config"] = value
 
     @property
     def rest_send(self):
@@ -491,22 +631,3 @@ class MaintenanceMode:
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["results"] = value
-
-    @property
-    def serial_number(self):
-        """
-        -   The serial_number of the switch.
-        -   Raise ``ValueError`` if the value is not a string.
-        """
-        return self._properties["serial_number"]
-
-    @serial_number.setter
-    def serial_number(self, value):
-        method_name = inspect.stack()[0][3]
-
-        if not isinstance(value, str):
-            msg = f"{self.class_name}.{method_name} must be a string. "
-            msg += f"Got type: {type(value).__name__}."
-            self.log.debug(msg)
-            raise ValueError(msg)
-        self._properties["serial_number"] = value
