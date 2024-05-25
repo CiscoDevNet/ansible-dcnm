@@ -771,6 +771,7 @@ class Query(Common):
         super().__init__(params)
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.fabric_details = FabricDetailsByName(self.params)
 
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
@@ -824,9 +825,15 @@ class Query(Common):
             raise ValueError(msg)
 
         self.switch_details.rest_send = RestSend(self.ansible_module)
+        self.fabric_details.rest_send = RestSend(self.ansible_module)
 
         try:
             self.switch_details.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            raise ValueError(error) from error
+
+        try:
+            self.fabric_details.refresh()
         except (ControllerResponseError, ValueError) as error:
             raise ValueError(error) from error
 
@@ -852,9 +859,15 @@ class Query(Common):
             mode = self.switch_details.maintenance_mode
             role = self.switch_details.switch_role
 
+            try:
+                self.fabric_details.filter = fabric_name
+            except ValueError as error:
+                raise ValueError(error) from error
+            fabric_read_only = self.fabric_details.is_read_only
+
             self.have[ip_address] = {}
             self.have[ip_address].update({"fabric_name": fabric_name})
-            if freeze_mode is True:
+            if freeze_mode is True or fabric_read_only is True:
                 self.have[ip_address].update({"deployment_disabled": True})
             else:
                 self.have[ip_address].update({"deployment_disabled": False})
