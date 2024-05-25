@@ -129,6 +129,8 @@ from os import environ
 from typing import Any, Dict
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
@@ -144,6 +146,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+    FabricDetailsByName
 
 
 def json_pretty(msg):
@@ -285,6 +289,11 @@ class Common:
     """
 
     def __init__(self, params):
+        """
+        ### Raises
+        -   ``ValueError`` if params does not contain ``check_mode``
+        -   ``ValueError`` if params does not contain ``state``
+        """
         self.class_name = self.__class__.__name__
         self.params = params
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -308,27 +317,30 @@ class Common:
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
+        self.switch_details = SwitchDetails()
+        self.switch_details.results = self.results
+
         self.params_spec = ParamsSpec()
         try:
             self.params_spec.params = self.params
         except ValueError as error:
-            self.ansible_module.fail_json(error, **self.results.failed_result)
+            raise ValueError(error) from error
+
         try:
             self.params_spec.commit()
         except ValueError as error:
-            self.ansible_module.fail_json(error, **self.results.failed_result)
+            raise ValueError(error) from error
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self.switch_details = SwitchDetails()
-        self.switch_details.results = self.results
-
         # populated in self.validate_input()
         self.payloads = {}
 
+        # initialized in self.get_want()
+        self.validator = None
         # populated in self.get_want()
         self.validated_configs = []
 
@@ -337,8 +349,6 @@ class Common:
             msg = "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
             raise ValueError(msg)
-
-        self.validator = ParamsValidate(self.ansible_module)
 
         self.validated = []
         self.have = {}
@@ -356,6 +366,13 @@ class Common:
         ### Summary
         Build self.want, a list of validated playbook configurations.
 
+        ### Raises
+        -   ``ValueError`` if self.ansible_module is not set
+        -   ``ValueError`` if ParamsSpec() raises ``ValueError``
+        -   ``ValueError`` _merge_global_and_switch_configs()
+            raises ``ValueError``
+
+        ### Details
         1. Merge the playbook global config into each switch config.
         2. Validate the merged configs from step 1 against the param spec.
         3. Populate self.want with the validated configs.
@@ -377,15 +394,30 @@ class Common:
         ]
         ```
         """
-        msg = "ENTERED"
-        self.log.debug(msg)
+        method_name = inspect.stack()[0][3]
+
+        if self.ansible_module is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.ansible_module must be set before calling {method_name}"
+            raise ValueError(msg)
+
         # Generate the params_spec used to validate the configs
         params_spec = ParamsSpec()
-        params_spec.params = self.params
-        params_spec.commit()
+        try:
+            params_spec.params = self.params
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            params_spec.commit()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         # Builds self.switch_configs
-        self._merge_global_and_switch_configs(self.config)
+        try:
+            self._merge_global_and_switch_configs(self.config)
+        except ValueError as error:
+            raise ValueError(error) from error
 
         # If a parameter is missing from the config, and the parameter
         # has a default value, merge the default value for the parameter
@@ -400,6 +432,7 @@ class Common:
 
         # validate the merged configs
         self.validated_configs = []
+        self.validator = ParamsValidate(self.ansible_module)
         self.validator.params_spec = params_spec.params_spec
         for config in merged_configs:
             self.validator.parameters = config
@@ -416,6 +449,9 @@ class Common:
         Merge the global playbook config with each switch config and
         populate a list of merged configs (``self.switch_configs``).
 
+        ### Raises
+        -   ``ValueError`` if playbook is missing list of switches
+
         ### Merge rules
             -   switch_config takes precedence over global_config.
             -   If switch_config is missing a parameter, use parameter
@@ -427,7 +463,7 @@ class Common:
         if not config.get("switches"):
             msg = f"{self.class_name}.{method_name}: "
             msg += "playbook is missing list of switches"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
         self.switch_configs = []
         merged_configs = []
@@ -486,6 +522,7 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.fabric_details = FabricDetailsByName(self.params)
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
@@ -499,6 +536,15 @@ class Merged(Common):
         ### Summary
         Build self.have, a dict containing the current mode of all switches.
 
+        ### Raises
+        -   ``ValueError`` if self.ansible_module is not set
+        -   ``ValueError`` if SwitchDetails() raises ``ControllerResponseError``
+            or ``ValueError``
+        -   ``ValueError`` if the switch's hosting fabric is in ``freezeMode``
+        -   ``ValueError`` if the switch's maintenance mode is ``inconsistent``
+        -   ``ValueError`` if the switch's maintenance mode is ``migration``
+
+        ### self.have structure
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
         -   ``fabric_name``: The name of the switch's hosting fabric.
@@ -522,14 +568,31 @@ class Merged(Common):
         ```
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if self.ansible_module is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"ansible_module must be set before calling {method_name}"
+            raise ValueError(msg)
+
         self.switch_details.rest_send = RestSend(self.ansible_module)
-        self.switch_details.refresh()
+        try:
+            self.switch_details.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            raise ValueError(error) from error
+
+        self.fabric_details.rest_send = RestSend(self.ansible_module)
+        self.fabric_details.results = self.results
+        self.fabric_details.refresh()
+
         self.have = {}
         # self.config has already been validated
         for switch in self.config.get("switches"):
             ip_address = switch.get("ip_address")
             self.switch_details.filter = ip_address
-            fabric_name = self.switch_details.fabric_name
+
+            try:
+                fabric_name = self.switch_details.fabric_name
+            except ValueError as error:
+                raise ValueError(error) from error
 
             if self.switch_details.freeze_mode is True:
                 msg = f"{self.class_name}.{method_name}: "
@@ -537,18 +600,29 @@ class Merged(Common):
                 msg += "Configuration changes are not allowed. "
                 msg += "Ensure that NDFC -> Topology -> Fabric -> Actions -> "
                 msg += "More -> Deployment Enable is selected."
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg)
+
+            try:
+                self.fabric_details.filter = fabric_name
+            except ValueError as error:
+                raise ValueError(error) from error
+
+            if self.fabric_details.is_read_only is True:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric {fabric_name} is in read-only mode. "
+                msg += "Configuration changes are not allowed."
+                raise ValueError(msg)
 
             try:
                 serial_number = self.switch_details.serial_number
             except ValueError as error:
-                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                raise ValueError(error) from error
 
             if serial_number is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Switch with ip_address {ip_address} "
                 msg += "does not exist on the controller."
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg)
 
             mode = self.switch_details.maintenance_mode
             if mode == "inconsistent":
@@ -558,7 +632,8 @@ class Merged(Common):
                 msg += f"with ip_address {ip_address}. This is typically "
                 msg += "resolved by initiating a switch Deploy Config on "
                 msg += "the controller."
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg)
+
             if mode == "migration":
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Switch maintenance mode is in migration state for the "
@@ -570,7 +645,7 @@ class Merged(Common):
                 msg += "Failing that, the switch configuration might need to be "
                 msg += "manually modified to match the switch role in the "
                 msg += "hosting fabric."
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg)
 
             self.have[ip_address] = {}
             self.have[ip_address].update({"fabric_name": fabric_name})
@@ -582,8 +657,8 @@ class Merged(Common):
         ### Summary
         Build self.need for merged state.
 
-        ### Caller
-        commit()
+        ### Raises
+        None
 
         ### self.need structure
         ```json
@@ -622,7 +697,13 @@ class Merged(Common):
 
     def commit(self):
         """
+        ### Summary
         Commit the merged state request
+
+        ### Raises
+        -   ``ValueError`` if get_want() raises ``ValueError``
+        -   ``ValueError`` if get_have() raises ``ValueError``
+        -   ``ValueError`` if send_need() raises ``ValueError``
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
@@ -630,14 +711,22 @@ class Merged(Common):
 
         self.rest_send = RestSend(self.ansible_module)
 
-        self.get_want()
-        self.get_have()
+        try:
+            self.get_want()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.get_have()
+        except ValueError as error:
+            raise ValueError(error) from error
+
         self.get_need()
+
         try:
             self.send_need()
         except ValueError as error:
-            self.results.build_final_result()
-            self.ansible_module.fail_json(f"{error}", **self.results.final_result)
+            raise ValueError(error) from error
 
     def send_need(self) -> None:
         """
@@ -677,9 +766,9 @@ class Query(Common):
     Handle query state
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        super().__init__(ansible_module)
+        super().__init__(params)
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -693,6 +782,12 @@ class Query(Common):
         ### Summary
         Build self.have, a dict containing the current mode of all switches.
 
+        ### Raises
+        -   ``ValueError`` if self.ansible_module is not set
+        -   ``ValueError`` if SwitchDetails() raises ``ControllerResponseError``
+        -   ``ValueError`` if SwitchDetails() raises ``ValueError``
+
+        ### self.have structure
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
         -   ``fabric_name``: The name of the switch's hosting fabric.
@@ -723,22 +818,34 @@ class Query(Common):
         ```
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        if self.ansible_module is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"ansible_module must be set before calling {method_name}"
+            raise ValueError(msg)
+
         self.switch_details.rest_send = RestSend(self.ansible_module)
-        self.switch_details.refresh()
+
+        try:
+            self.switch_details.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            raise ValueError(error) from error
+
         self.have = {}
         # self.config has already been validated
         for switch in self.config.get("switches"):
             ip_address = switch.get("ip_address")
             self.switch_details.filter = ip_address
+
             try:
                 serial_number = self.switch_details.serial_number
             except ValueError as error:
-                self.ansible_module.fail_json(f"{error}", **self.results.failed_result)
+                raise ValueError(error) from error
+
             if serial_number is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Switch with ip_address {ip_address} "
                 msg += "does not exist on the controller."
-                self.ansible_module.fail_json(msg, **self.results.failed_result)
+                raise ValueError(msg)
 
             fabric_name = self.switch_details.fabric_name
             freeze_mode = self.switch_details.freeze_mode
@@ -763,9 +870,20 @@ class Query(Common):
         ### Summary
         Query the switches in self.want that exist on the controller
         and update ``self.results`` with the query results.
+
+        ### Raises
+        -   ``ValueError`` if get_want() raises ``ValueError``
+        -   ``ValueError`` if get_have() raises ``ValueError``
         """
-        self.get_want()
-        self.get_have()
+        try:
+            self.get_want()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.get_have()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         # If we got this far, the request was successful.
         self.results.diff_current = self.have
@@ -821,15 +939,23 @@ def main():
     if ansible_module.params["state"] == "merged":
         task = Merged(ansible_module.params)
         task.ansible_module = ansible_module
-        task.commit()
+        try:
+            task.commit()
+        except ValueError as error:
+            ansible_module.fail_json(f"{error}", **task.results.failed_result)
+
     elif ansible_module.params["state"] == "query":
         task = Query(ansible_module.params)
         task.ansible_module = ansible_module
-        task.commit()
+        try:
+            task.commit()
+        except ValueError as error:
+            ansible_module.fail_json(f"{error}", **task.results.failed_result)
+
     else:
         # We should never get here since the state parameter has
         # already been validated.
-        msg = f"Unknown state {task.ansible_module.params['state']}"
+        msg = f"Unknown state {ansible_module.params['state']}"
         ansible_module.fail_json(msg)
 
     task.results.build_final_result()
