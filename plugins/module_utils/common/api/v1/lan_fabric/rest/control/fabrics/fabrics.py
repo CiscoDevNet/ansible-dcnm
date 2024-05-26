@@ -135,7 +135,7 @@ class Fabrics(Control):
         """
         - getter: Return the switch serial_number.
         - setter: Set the switch serial_number.
-        - setter: Raise ``ValueError`` if serial_number is not a string.
+        - setter: Raise ``TypeError`` if serial_number is not a string.
         - Default: None
         """
         return self.properties["serial_number"]
@@ -147,7 +147,7 @@ class Fabrics(Control):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Expected string for {method_name}. "
             msg += f"Got {value} with type {type(value).__name__}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["serial_number"] = value
 
     @property
@@ -339,7 +339,7 @@ class EpFabricConfigDeploy(Fabrics):
         """
         -   getter: Return the switch_id value.
         -   setter: Set the switch_id value.
-        -   setter: Raise ``ValueError`` if switch_id is not a string or list.
+        -   setter: Raise ``TypeError`` if switch_id is not a string or list.
         -   Default: None
         -   Optional
         -   Notes:
@@ -353,15 +353,22 @@ class EpFabricConfigDeploy(Fabrics):
     @switch_id.setter
     def switch_id(self, value):
         method_name = inspect.stack()[0][3]
+
+        def error(param, param_type):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Expected string or list for switch_id. "
+            msg += f"Got {param} with type {param_type}."
+            raise TypeError(msg)
+
         if isinstance(value, str):
             pass
         elif isinstance(value, list):
+            for item in value:
+                if not isinstance(item, str):
+                    error(item, type(item).__name__)
             value = ",".join(value)
         else:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Expected string or list for {method_name}. "
-            msg += f"Got {value} with type {type(value).__name__}."
-            raise ValueError(msg)
+            error(value, type(value).__name__)
         self.properties["switch_id"] = value
 
 
@@ -654,149 +661,6 @@ class EpFabricFreezeMode(Fabrics):
         return f"{self.path_fabric_name}/freezemode"
 
 
-class EpMaintenanceModeEnable(Fabrics):
-    """
-    ## V1 API - Fabrics().EpMaintenanceModeEnable()
-
-    ### Description
-    Return endpoint to enable maintenance mode on a switch.
-
-    ### Raises
-    -  ``ValueError``: If ``fabric_name`` is not set.
-    -  ``ValueError``: If ``fabric_name`` is invalid.
-    -  ``ValueError``: If ``serial_number`` is not set.
-    -  ``ValueError``: If ``ticket_id`` is not a string.
-
-    ### Path
-    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode``
-    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode?ticketId={ticket_id}``
-
-    ### Verb
-    -   POST
-
-    ### Parameters
-    - fabric_name: string
-        - set the ``fabric_name`` to be used in the path
-        - required
-    - serial_number: string
-        - set the switch ``serial_number`` to be used in the path
-        - required
-    -   ticket_id: string
-            -   optional unless Change Control is enabled
-    -   path: retrieve the path for the endpoint
-    -   verb: retrieve the verb for the endpoint
-
-    ### Usage
-    ```python
-    instance = EpMaintenanceModeEnable()
-    instance.fabric_name = "MyFabric"
-    instance.serial_number = "CHM1234567"
-    instance.ticket_id = "MyTicket1234"
-    path = instance.path
-    verb = instance.verb
-    ```
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.required_properties.add("fabric_name")
-        self.required_properties.add("serial_number")
-        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
-        msg += f"Fabrics.{self.class_name}"
-        self.log.debug(msg)
-
-    @property
-    def path(self):
-        """
-        - Endpoint for config-save.
-        - Set self.ticket_id if Change Control is enabled.
-        - Raise ``ValueError`` if fabric_name is not set.
-        """
-        _path = self.path_fabric_name_serial_number
-        _path += "/maintenance-mode"
-        if self.ticket_id:
-            _path += f"?ticketId={self.ticket_id}"
-        return _path
-
-    @property
-    def verb(self):
-        return "POST"
-
-
-class EpMaintenanceModeDisable(Fabrics):
-    """
-    ## V1 API - Fabrics().EpMaintenanceModeDisable()
-
-    ### Description
-    Return endpoint to remove switch from maintenance mode
-    (i.e. enable normal mode).
-
-    ### Raises
-    -  ``ValueError``: If ``fabric_name`` is not set.
-    -  ``ValueError``: If ``fabric_name`` is invalid.
-    -  ``ValueError``: If ``serial_number`` is not set.
-    -  ``ValueError``: If ``ticket_id`` is not a string.
-
-    ### Path
-    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode``
-    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode?ticketId={ticket_id}``
-
-    ### Verb
-    -   DELETE
-
-    ### Parameters
-    - fabric_name: string
-        - set the ``fabric_name`` to be used in the path
-        - required
-    - serial_number: string
-        - set the switch ``serial_number`` to be used in the path
-        - required
-    -   ticket_id: string
-            -   optional unless Change Control is enabled
-    -   path: retrieve the path for the endpoint
-    -   verb: retrieve the verb for the endpoint
-
-    ### Usage
-    ```python
-    instance = EpMaintenanceModeDisable()
-    instance.fabric_name = "MyFabric"
-    instance.serial_number = "CHM1234567"
-    instance.ticket_id = "MyTicket1234"
-    path = instance.path
-    verb = instance.verb
-    ```
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.required_properties.add("fabric_name")
-        self.required_properties.add("serial_number")
-        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
-        msg += f"Fabrics.{self.class_name}"
-        self.log.debug(msg)
-
-    @property
-    def path(self):
-        """
-        - Endpoint for config-save.
-        - Set self.ticket_id if Change Control is enabled.
-        - Raise ``ValueError`` if fabric_name is not set.
-        """
-        _path = self.path_fabric_name_serial_number
-        _path += "/maintenance-mode"
-        if self.ticket_id:
-            _path += f"?ticketId={self.ticket_id}"
-        return _path
-
-    @property
-    def verb(self):
-        return "DELETE"
-
-
 # class EpFabricSummary() See module_utils/common/api/v1/rest/control/switches.py
 
 
@@ -906,3 +770,156 @@ class EpFabrics(Fabrics):
     @property
     def path(self):
         return self.fabrics
+
+
+class EpMaintenanceModeEnable(Fabrics):
+    """
+    ## V1 API - Fabrics().EpMaintenanceModeEnable()
+
+    ### Description
+    Return endpoint to enable maintenance mode on a switch.
+
+    ### Raises
+    -  ``ValueError``: If ``fabric_name`` is not set.
+    -  ``ValueError``: If ``fabric_name`` is invalid.
+    -  ``ValueError``: If ``serial_number`` is not set.
+    -  ``ValueError``: If ``ticket_id`` is not a string.
+
+    ### Path
+    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode``
+    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode?ticketId={ticket_id}``
+
+    ### Verb
+    -   POST
+
+    ### Parameters
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    - serial_number: string
+        - set the switch ``serial_number`` to be used in the path
+        - required
+    -   ticket_id: string
+            -   optional unless Change Control is enabled
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpMaintenanceModeEnable()
+    instance.fabric_name = "MyFabric"
+    instance.serial_number = "CHM1234567"
+    instance.ticket_id = "MyTicket1234"
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self.required_properties.add("serial_number")
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
+        self.log.debug(msg)
+
+    @property
+    def path(self):
+        """
+        - Path for maintenance-mode enable
+        - Raise ``ValueError`` if fabric_name is not set.
+        - Raise ``ValueError`` if serial_number is not set.
+        - self.ticket_id is mandatory if Change Control is enabled.
+        """
+        _path = self.path_fabric_name_serial_number
+        _path += "/maintenance-mode"
+        if self.ticket_id:
+            _path += f"?ticketId={self.ticket_id}"
+        return _path
+
+    @property
+    def verb(self):
+        """
+        - Return the verb for the endpoint.
+        - verb: POST
+        """
+        return "POST"
+
+
+class EpMaintenanceModeDisable(Fabrics):
+    """
+    ## V1 API - Fabrics().EpMaintenanceModeDisable()
+
+    ### Description
+    Return endpoint to remove switch from maintenance mode
+    (i.e. enable normal mode).
+
+    ### Raises
+    -  ``ValueError``: If ``fabric_name`` is not set.
+    -  ``ValueError``: If ``fabric_name`` is invalid.
+    -  ``ValueError``: If ``serial_number`` is not set.
+    -  ``ValueError``: If ``ticket_id`` is not a string.
+
+    ### Path
+    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode``
+    -  ``/fabrics/{fabric_name}/switches/{serial_number}/maintenance-mode?ticketId={ticket_id}``
+
+    ### Verb
+    -   DELETE
+
+    ### Parameters
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    - serial_number: string
+        - set the switch ``serial_number`` to be used in the path
+        - required
+    -   ticket_id: string
+            -   optional unless Change Control is enabled
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpMaintenanceModeDisable()
+    instance.fabric_name = "MyFabric"
+    instance.serial_number = "CHM1234567"
+    instance.ticket_id = "MyTicket1234"
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self.required_properties.add("serial_number")
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
+        self.log.debug(msg)
+
+    @property
+    def path(self):
+        """
+        - Path for maintenance-mode disable
+        - Raise ``ValueError`` if fabric_name is not set.
+        - Raise ``ValueError`` if serial_number is not set.
+        - self.ticket_id is mandatory if Change Control is enabled.
+        """
+        _path = self.path_fabric_name_serial_number
+        _path += "/maintenance-mode"
+        if self.ticket_id:
+            _path += f"?ticketId={self.ticket_id}"
+        return _path
+
+    @property
+    def verb(self):
+        """
+        - Return the endpoint verb.
+        - verb: DELETE
+        """
+        return "DELETE"
