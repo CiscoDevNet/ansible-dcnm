@@ -42,6 +42,11 @@ class MaintenanceMode:
 
     -   ``ValueError`` in the following properties:
             -   ``config`` if config contains invalid content.
+            -   ``rest_send`` if value is not an instance of RestSend.
+            -   ``results`` if value is not an instance of Results.
+            -   ``commit`` if config, rest_send, or results are not set.
+            -   ``commit`` if ``EpMaintenanceModeEnable`` or
+                ``EpMaintenanceModeDisable`` raise ``ValueError``.
 
     -   ``ControllerResponseError`` in the following methods:
             -   ``commit`` if controller response != 200.
@@ -148,91 +153,6 @@ class MaintenanceMode:
         self._properties["config"] = None
         self._properties["rest_send"] = None
         self._properties["results"] = None
-
-    # def _can_fabric_be_deployed(self) -> None:
-    #     """
-    #     -   Set self.fabric_can_be_deployed to True if the fabric configuration
-    #         can be deployed.
-    #     -   Set self.fabric_can_be_deployed to False otherwise.
-    #     """
-    #     method_name = inspect.stack()[0][3]
-
-    #     self.fabric_can_be_deployed = False
-
-    #     deploy = self.payload.get("DEPLOY", None)
-    #     if deploy is False or deploy is None:
-    #         msg = f"Fabric {self.fabric_name} DEPLOY is False or None. "
-    #         msg += "Skipping config-deploy."
-    #         self.log.debug(msg)
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = False
-    #         return
-
-    #     try:
-    #         self.fabric_summary.fabric_name = self.fabric_name
-    #     except ValueError as error:
-    #         msg = f"Fabric {self.fabric_name} is invalid. "
-    #         msg += "Cannot deploy fabric. "
-    #         msg += f"Error detail: {error}"
-    #         self.log.debug(msg)
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = True
-    #         return
-
-    #     try:
-    #         self.fabric_summary.refresh()
-    #     except (ControllerResponseError, ValueError) as error:
-    #         msg = f"{self.class_name}.{method_name}: "
-    #         msg += "Error during FabricSummary().refresh(). "
-    #         msg += f"Error detail: {error}"
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = True
-    #         return
-
-    #     if self.fabric_summary.fabric_is_empty is True:
-    #         msg = f"Fabric {self.fabric_name} is empty. "
-    #         msg += "Cannot deploy an empty fabric."
-    #         self.log.debug(msg)
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = False
-    #         return
-
-    #     try:
-    #         self.fabric_details.refresh()
-    #     except ValueError as error:
-    #         msg = f"{self.class_name}.{method_name}: "
-    #         msg += "Error during FabricDetailsByName().refresh(). "
-    #         msg += f"Error detail: {error}"
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = True
-    #         return
-
-    #     self.fabric_details.filter = self.fabric_name
-
-    #     if self.fabric_details.deployment_freeze is True:
-    #         msg = f"Fabric {self.fabric_name} DEPLOYMENT_FREEZE == True. "
-    #         msg += "Cannot deploy a fabric with deployment freeze enabled."
-    #         self.log.debug(msg)
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = False
-    #         return
-
-    #     if self.fabric_details.is_read_only is True:
-    #         msg = f"Fabric {self.fabric_name} IS_READ_ONLY == True. "
-    #         msg += "Cannot deploy a read only fabric."
-    #         self.log.debug(msg)
-    #         self.cannot_perform_action_reason = msg
-    #         self.fabric_can_be_deployed = False
-    #         self.action_failed = False
-    #         return
-
-    #     self.fabric_can_be_deployed = True
 
     def verify_config_parameters(self, value):
         """
@@ -375,7 +295,10 @@ class MaintenanceMode:
         -   ``ValueError`` if ``config`` is not set.
         -   ``ValueError`` if ``rest_send`` is not set.
         -   ``ValueError`` if ``results`` is not set.
-        -   ``ControllerResponseError`` if controller response != 200.
+        -   ``ValueError`` for any exception raised by
+                -   ``verify_commit_parameters()``
+                -   ``change_system_mode()``
+                -   ``deploy_switches()``
         """
         try:
             self.verify_commit_parameters()
@@ -384,14 +307,8 @@ class MaintenanceMode:
 
         try:
             self.change_system_mode()
-        except ControllerResponseError as error:
-            raise ControllerResponseError(error) from error
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
             self.deploy_switches()
-        except ControllerResponseError as error:
+        except (ControllerResponseError, ValueError, TypeError) as error:
             raise ValueError(error) from error
 
     def change_system_mode(self):
@@ -401,6 +318,8 @@ class MaintenanceMode:
 
         ### Raises
         -   ``ControllerResponseError`` if controller response != 200.
+        -  ``ValueError`` if ``fabric_name`` is invalid.
+        -  ``TypeError`` if ``serial_number`` is not a string.
         """
         method_name = inspect.stack()[0][3]
 
@@ -411,15 +330,22 @@ class MaintenanceMode:
             ip_address = item.get("ip_address")
             serial_number = item.get("serial_number")
             if mode == "normal":
-                instance = self.ep_maintenance_mode_disable
+                endpoint = self.ep_maintenance_mode_disable
             else:
-                instance = self.ep_maintenance_mode_enable
-            instance.fabric_name = fabric_name
-            instance.serial_number = serial_number
+                endpoint = self.ep_maintenance_mode_enable
+
+            try:
+                endpoint.fabric_name = fabric_name
+                endpoint.serial_number = serial_number
+            except (TypeError, ValueError) as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error resolving endpoint: "
+                msg += f"Error details: {error}."
+                raise ValueError(msg) from error
 
             # Send request
-            self.rest_send.path = instance.path
-            self.rest_send.verb = instance.verb
+            self.rest_send.path = endpoint.path
+            self.rest_send.verb = endpoint.verb
             self.rest_send.payload = None
             self.rest_send.commit()
 
@@ -517,19 +443,26 @@ class MaintenanceMode:
 
         ### Raises
         -   ``ControllerResponseError`` if controller response != 200.
+        -   ``ValueError`` if endpoint cannot be resolved.
         """
         method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
         self.build_serial_number_to_ip_address()
-        ep_deploy = EpFabricConfigDeploy()
+        endpoint = EpFabricConfigDeploy()
         for fabric_name, serial_numbers in self.deploy_dict.items():
             # Build endpoint
-            ep_deploy.fabric_name = fabric_name
-            ep_deploy.switch_id = serial_numbers
+            try:
+                endpoint.fabric_name = fabric_name
+                endpoint.switch_id = serial_numbers
+            except (TypeError, ValueError) as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error resolving endpoint: "
+                msg += f"Error details: {error}."
+                raise ValueError(msg) from error
 
             # Send request
-            self.rest_send.path = ep_deploy.path
-            self.rest_send.verb = ep_deploy.verb
+            self.rest_send.path = endpoint.path
+            self.rest_send.verb = endpoint.verb
             self.rest_send.payload = None
             self.rest_send.commit()
 
@@ -563,24 +496,6 @@ class MaintenanceMode:
                 msg += f"{','.join(serial_numbers)}. "
                 msg += f"Got response {self.results.response_current}"
                 raise ControllerResponseError(msg)
-
-        # Use this if we cannot update maintenance mode in frozen fabrics
-        # self._can_fabric_be_deployed()
-        # if self.fabric_can_be_deployed is False:
-        #     self.results.diff_current = {}
-        #     self.results.action = self.action
-        #     self.results.check_mode = self.check_mode
-        #     self.results.state = self.state
-        #     self.results.response_current = {
-        #         "RETURN_CODE": 200,
-        #         "MESSAGE": self.cannot_perform_action_reason,
-        #     }
-        #     if self.action_failed is True:
-        #         self.results.result_current = {"changed": False, "success": False}
-        #     else:
-        #         self.results.result_current = {"changed": True, "success": True}
-        #     self.results.register_task_result()
-        #     return
 
     @property
     def config(self):
