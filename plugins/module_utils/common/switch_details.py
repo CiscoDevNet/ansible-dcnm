@@ -172,7 +172,7 @@ class SwitchDetails:
         """
         ### Summary
         Set the query filter.
-        
+
         ### Raises
         None. However, if ``filter`` is not set, or ``filter`` is set to
         a non-existent switch, ``ValueError`` will be raised when accessing
