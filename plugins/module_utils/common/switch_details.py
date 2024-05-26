@@ -170,10 +170,17 @@ class SwitchDetails:
     @property
     def filter(self):
         """
+        ### Summary
         Set the query filter.
+        
+        ### Raises
+        None. However, if ``filter`` is not set, or ``filter`` is set to
+        a non-existent switch, ``ValueError`` will be raised when accessing
+        the various getter properties.
 
-        The filter should be the ip_address of the switch from which to
-        retrieve details.
+        ### Details
+        The filter should be the ip_address of the
+        switch from which to retrieve details.
 
         ``filter`` must be set before accessing this class's properties.
         """
@@ -188,6 +195,8 @@ class SwitchDetails:
         """
         -   Return the ``fabricName`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise.
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("fabricName")
 
@@ -197,6 +206,8 @@ class SwitchDetails:
         -   Return the ``freezeMode`` of the filtered switch's fabric,
             if it exists.
         -   Return ``None`` otherwise.
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("freezeMode")
 
@@ -205,6 +216,8 @@ class SwitchDetails:
         """
         -   Return the ``hostName`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise.
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
 
         ### NOTES
             -   ``hostname`` is None for NDFC version 12.1.2e
@@ -229,6 +242,8 @@ class SwitchDetails:
         -   Return the ``isNonNexus`` status of the filtered switch, if it exists.
         -   Return ``None`` otherwise
         -   Example: false, true
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("isNonNexus")
 
@@ -237,6 +252,8 @@ class SwitchDetails:
         """
         -   Return the ``logicalName`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("logicalName")
 
@@ -292,8 +309,12 @@ class SwitchDetails:
     @property
     def managable(self):
         """
+        -   Yes, managable is misspelled.  It is spelled this way in the
+            controller response.
         -   Return the ``managable`` status of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         -   Example: false, true
         """
         return self._get("managable")
@@ -303,6 +324,8 @@ class SwitchDetails:
         """
         -   Return the ``mode`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         -   ``mode`` is converted from Titlecase to lowercase.
         -   Example: maintenance, migration, normal, inconsistent
         """
@@ -316,6 +339,8 @@ class SwitchDetails:
         """
         -   Return the ``model`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("model")
 
@@ -324,6 +349,8 @@ class SwitchDetails:
         """
         -   Return the ``operStatus`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         -   Example: Minor
         """
         return self._get("operStatus")
@@ -333,6 +360,8 @@ class SwitchDetails:
         """
         -   Return the ``platform`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
 
         ### NOTES
             -   ``platform`` is derived from ``model``.
@@ -348,6 +377,8 @@ class SwitchDetails:
         """
         -   Return the ``release`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         -   Example: 10.2(5)
         """
         return self._get("release")
@@ -379,6 +410,8 @@ class SwitchDetails:
         """
         -   Return the ``switchRole`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("switchRole")
 
@@ -387,6 +420,8 @@ class SwitchDetails:
         """
         -   Return the ``serialNumber`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("serialNumber")
 
@@ -395,6 +430,8 @@ class SwitchDetails:
         """
         -   Return the ``sourceInterface`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("sourceInterface")
 
@@ -403,6 +440,8 @@ class SwitchDetails:
         """
         -   Return the ``sourceVrf`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("sourceVrf")
 
@@ -411,6 +450,8 @@ class SwitchDetails:
         """
         -   Return the ``status`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("status")
 
@@ -419,6 +460,8 @@ class SwitchDetails:
         """
         -   Return the ``switchDbID`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("switchDbID")
 
@@ -427,6 +470,8 @@ class SwitchDetails:
         """
         -   Return the ``switchRole`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("switchRole")
 
@@ -435,6 +480,8 @@ class SwitchDetails:
         """
         -   Return the ``swUUID`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("swUUID")
 
@@ -443,6 +490,8 @@ class SwitchDetails:
         """
         -   Return the ``swUUIDId`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("swUUIDId")
 
@@ -451,5 +500,7 @@ class SwitchDetails:
         """
         -   Return the ``systemMode`` of the filtered switch, if it exists.
         -   Return ``None`` otherwise
+        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
         """
         return self._get("systemMode")
