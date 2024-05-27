@@ -514,12 +514,24 @@ class Common:
 class Merged(Common):
     """
     Handle merged state
+
+    ### Raises
+    -   ``ValueError`` if Common().__init__() raises ``ValueError``
     """
 
     def __init__(self, params):
+        """
+        ### Raises
+        -   ``ValueError`` if Common().__init__() raises ``ValueError``
+        """
         self.class_name = self.__class__.__name__
-        super().__init__(params)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
+        try:
+            super().__init__(params)
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error: {error}"
+            raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fabric_details = FabricDetailsByName(self.params)
@@ -764,11 +776,26 @@ class Merged(Common):
 class Query(Common):
     """
     Handle query state
+
+    ### Raises
+    -   ``ValueError`` if Common().__init__() raises ``ValueError``
+    -   ``ValueError`` if get_want() raises ``ValueError``
+    -   ``ValueError`` if get_have() raises ``ValueError``
     """
 
     def __init__(self, params):
+        """
+        ### Raises
+        -   ``ValueError`` if Common().__init__() raises ``ValueError``
+        """
         self.class_name = self.__class__.__name__
-        super().__init__(params)
+        method_name = inspect.stack()[0][3]
+        try:
+            super().__init__(params)
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error: {error}"
+            raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fabric_details = FabricDetailsByName(self.params)
@@ -950,17 +977,17 @@ def main():
 
     ansible_module.params["check_mode"] = ansible_module.check_mode
     if ansible_module.params["state"] == "merged":
-        task = Merged(ansible_module.params)
-        task.ansible_module = ansible_module
         try:
+            task = Merged(ansible_module.params)
+            task.ansible_module = ansible_module
             task.commit()
         except ValueError as error:
             ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
     elif ansible_module.params["state"] == "query":
-        task = Query(ansible_module.params)
-        task.ansible_module = ansible_module
         try:
+            task = Query(ansible_module.params)
+            task.ansible_module = ansible_module
             task.commit()
         except ValueError as error:
             ansible_module.fail_json(f"{error}", **task.results.failed_result)
