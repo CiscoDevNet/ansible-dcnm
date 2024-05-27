@@ -28,6 +28,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_featu
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
+    MaintenanceMode
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
@@ -95,7 +97,7 @@ class MockAnsibleModule:
     supports_check_mode = True
 
     @staticmethod
-    def fail_json(msg) -> AnsibleFailJson:
+    def fail_json(msg, **kwargs) -> AnsibleFailJson:
         """
         mock the fail_json method
         """
@@ -135,6 +137,14 @@ def log_fixture():
     return Log(MockAnsibleModule)
 
 
+@pytest.fixture(name="maintenance_mode")
+def maintenance_mode_fixture():
+    """
+    return MaintenanceMode
+    """
+    return MaintenanceMode(params)
+
+
 @pytest.fixture(name="merge_dicts")
 def merge_dicts_fixture():
     """
@@ -169,9 +179,19 @@ def merge_dicts_data(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_config_deploy(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_ConfigDeploy.json
+    """
+    response_file = "responses_ConfigDeploy"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_config_deploy: {key} : {response}")
+    return response
+
+
 def responses_controller_features(key: str) -> Dict[str, str]:
     """
-    Return ControllerFeatures controller responses
+    Return data in responses_ControllerFeatures.json
     """
     response_file = "responses_ControllerFeatures"
     response = load_fixture(response_file).get(key)
@@ -180,9 +200,19 @@ def responses_controller_features(key: str) -> Dict[str, str]:
 
 def responses_controller_version(key: str) -> Dict[str, str]:
     """
-    Return ControllerVersion controller responses
+    Return data in responses_ControllerVersion.json
     """
     response_file = "responses_ControllerVersion"
     response = load_fixture(response_file).get(key)
     print(f"responses_controller_version: {key} : {response}")
+    return response
+
+
+def responses_maintenance_mode(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_MaintenanceMode.json
+    """
+    response_file = "responses_MaintenanceMode"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_maintenance_mode: {key} : {response}")
     return response

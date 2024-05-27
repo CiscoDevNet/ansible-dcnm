@@ -109,25 +109,23 @@ class MaintenanceMode:
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.params = params
         self.action = "maintenance_mode"
-        self.cannot_perform_action_reason = ""
-        self.action_failed = False
-        self.fabric_can_be_deployed = False
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory check_mode parameter."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params is missing mandatory parameter: check_mode."
             raise ValueError(msg)
 
         self.state = self.params.get("state", None)
         if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory state parameter."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params is missing mandatory parameter: state."
             raise ValueError(msg)
 
         # Populated in build_deploy_dict()
@@ -135,8 +133,6 @@ class MaintenanceMode:
         self.serial_number_to_ip_address = {}
 
         self.valid_modes = ["maintenance", "normal"]
-        self.path = None
-        self.verb = None
         self._init_properties()
 
         self.conversion = ConversionUtils()
@@ -347,7 +343,13 @@ class MaintenanceMode:
             self.rest_send.path = endpoint.path
             self.rest_send.verb = endpoint.verb
             self.rest_send.payload = None
+            msg = f"ZZZ: {self.class_name}.{method_name}: HERE"
+            self.log.debug(msg)
             self.rest_send.commit()
+
+            msg = f"ZZZ: {self.class_name}.{method_name}: "
+            msg += f"rest_send.response_current: {self.rest_send.response_current}"
+            self.log.debug(msg)
 
             # Update diff
             result = self.rest_send.result_current["success"]
