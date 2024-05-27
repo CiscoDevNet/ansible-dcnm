@@ -395,16 +395,40 @@ def test_maintenance_mode_00120(monkeypatch, maintenance_mode) -> None:
     with does_not_raise():
         instance.commit()
 
+    assert isinstance(instance.results.diff, list)
+    assert isinstance(instance.results.metadata, list)
     assert isinstance(instance.results.response, list)
     assert isinstance(instance.results.result, list)
-    value = "Success"
-    assert instance.results.response[0].get("DATA", {}).get("status") == value
+    assert instance.results.diff[0].get("fabric_name", None) == FABRIC_NAME
+    assert instance.results.diff[0].get("ip_address", None) == "192.168.1.2"
+    assert instance.results.diff[0].get("maintenance_mode", None) == "maintenance"
+    assert instance.results.diff[0].get("sequence_number", None) == 1
+    assert instance.results.diff[0].get("serial_number", None) == "FDO22180ASJ"
+
+    assert instance.results.diff[1].get("config_deploy", None) is True
+    assert instance.results.diff[1].get("sequence_number", None) == 2
+
+    assert instance.results.metadata[0].get("action", None) == "maintenance_mode"
+    assert instance.results.metadata[0].get("sequence_number", None) == 1
+    assert instance.results.metadata[0].get("state", None) == "merged"
+
+    assert instance.results.metadata[1].get("action", None) == "config_deploy"
+    assert instance.results.metadata[1].get("sequence_number", None) == 2
+    assert instance.results.metadata[1].get("state", None) == "merged"
+
+    assert instance.results.response[0].get("DATA", {}).get("status") == "Success"
     assert instance.results.response[0].get("MESSAGE", None) == "OK"
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.response[0].get("METHOD", None) == "POST"
+
     value = "Configuration deployment completed."
     assert instance.results.response[1].get("DATA", {}).get("status") == value
     assert instance.results.response[1].get("MESSAGE", None) == "OK"
     assert instance.results.response[1].get("RETURN_CODE", None) == 200
     assert instance.results.response[1].get("METHOD", None) == "POST"
+
+    assert instance.results.result[0].get("changed", None) is True
     assert instance.results.result[0].get("success", None) is True
+
+    assert instance.results.result[1].get("changed", None) is True
+    assert instance.results.result[1].get("success", None) is True

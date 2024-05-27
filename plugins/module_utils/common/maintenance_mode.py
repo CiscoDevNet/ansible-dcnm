@@ -343,13 +343,7 @@ class MaintenanceMode:
             self.rest_send.path = endpoint.path
             self.rest_send.verb = endpoint.verb
             self.rest_send.payload = None
-            msg = f"ZZZ: {self.class_name}.{method_name}: HERE"
-            self.log.debug(msg)
             self.rest_send.commit()
-
-            msg = f"ZZZ: {self.class_name}.{method_name}: "
-            msg += f"rest_send.response_current: {self.rest_send.response_current}"
-            self.log.debug(msg)
 
             # Update diff
             result = self.rest_send.result_current["success"]
