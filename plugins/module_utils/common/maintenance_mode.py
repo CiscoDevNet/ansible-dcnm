@@ -558,16 +558,17 @@ class MaintenanceMode:
     @rest_send.setter
     def rest_send(self, value):
         method_name = inspect.stack()[0][3]
-        _class_name = None
+        _class_have = None
+        _class_need = "RestSend"
         msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of RestSend. "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
         try:
-            _class_name = value.class_name
+            _class_have = value.class_name
         except AttributeError as error:
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
-        if _class_name != "RestSend":
-            self.log.debug(msg)
+        if _class_have != _class_need:
             raise TypeError(msg)
         self._properties["rest_send"] = value
 
@@ -584,17 +585,16 @@ class MaintenanceMode:
     @results.setter
     def results(self, value):
         method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "Results"
         msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of Results. "
+        msg += f"value must be an instance of {_class_need}. "
         msg += f"Got value {value} of type {type(value).__name__}."
-        _class_name = None
         try:
-            _class_name = value.class_name
+            _class_have = value.class_name
         except AttributeError as error:
             msg += f" Error detail: {error}."
-            self.log.debug(msg)
             raise TypeError(msg) from error
-        if _class_name != "Results":
-            self.log.debug(msg)
+        if _class_have != _class_need:
             raise TypeError(msg)
         self._properties["results"] = value

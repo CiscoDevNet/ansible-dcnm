@@ -404,7 +404,7 @@ class ParamsValidate:
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Expected type {expected_type}. "
-        msg += f"Got type {type(value)} for "
+        msg += f"Got type {type(value).__name__} for "
         msg += f"param {param} with value {value}."
         raise TypeError(msg)
 
@@ -673,7 +673,7 @@ class ParamsValidate:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid parameters. Expected type dict. "
-            msg += f"Got type {type(value)}."
+            msg += f"Got type {type(value).__name__}."
             raise TypeError(msg)
         self.properties["parameters"] = value
 

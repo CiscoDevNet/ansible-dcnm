@@ -158,7 +158,7 @@ def test_params_validate_v2_00210(params_validate_v2) -> None:
     """
     match = "ParamsValidate.parameters: "
     match += "Invalid parameters. Expected type dict. Got type "
-    match += r"\<class 'list'\>\."
+    match += r"list\."
 
     with pytest.raises(TypeError, match=match):
         instance = params_validate_v2
@@ -715,7 +715,7 @@ def test_params_validate_v2_00800(params_validate_v2, value, type_to_verify) -> 
 
     match = "ParamsValidate._ipaddress_guard: "
     match += f"Expected type {type_to_verify}. "
-    match += f"Got type {type(value)} for param foo with value {value}."
+    match += f"Got type {type(value).__name__} for param foo with value {value}."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 

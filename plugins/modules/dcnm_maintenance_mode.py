@@ -126,7 +126,6 @@ import inspect
 import json
 import logging
 from os import environ
-from typing import Any, Dict
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
@@ -199,7 +198,7 @@ class ParamsSpec:
 
         self._properties = {}
         self._properties["params"] = None
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
 
         self.valid_states = ["merged", "query"]
 
@@ -224,11 +223,11 @@ class ParamsSpec:
         if self.params["state"] == "query":
             self._build_params_spec_for_query_state()
 
-    def _build_params_spec_for_merged_state(self) -> Dict[str, Any]:
+    def _build_params_spec_for_merged_state(self) -> dict:
         """
         Build the parameter specifications for ``merged`` state.
         """
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
         self._params_spec["ip_address"] = {}
         self._params_spec["ip_address"]["required"] = True
         self._params_spec["ip_address"]["type"] = "ipv4"
@@ -242,24 +241,24 @@ class ParamsSpec:
         self._params_spec["deploy"]["type"] = "bool"
         self._params_spec["deploy"]["default"] = False
 
-    def _build_params_spec_for_query_state(self) -> Dict[str, Any]:
+    def _build_params_spec_for_query_state(self) -> None:
         """
         Build the parameter specifications for ``query`` state.
         """
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
         self._params_spec["ip_address"] = {}
         self._params_spec["ip_address"]["required"] = True
         self._params_spec["ip_address"]["type"] = "ipv4"
 
     @property
-    def params_spec(self) -> Dict[str, Any]:
+    def params_spec(self) -> dict:
         """
         return the parameter specification
         """
         return self._params_spec
 
     @property
-    def params(self) -> Dict[str, Any]:
+    def params(self) -> dict:
         """
         Expects value to be the return value of
         ``AnsibleModule.params`` property.
@@ -271,7 +270,7 @@ class ParamsSpec:
         return self._properties["params"]
 
     @params.setter
-    def params(self, value: Dict[str, Any]) -> None:
+    def params(self, value: dict) -> None:
         """
         -   setter: set the params
         """
@@ -577,26 +576,34 @@ class Want:
         self._properties["items_key"] = value
 
     @property
-    def want(self) -> Dict[str, Any]:
+    def want(self) -> list[dict]:
         """
-        return the want list
+        ### Summary
+        Return the want list.  See class docstring for structure details.
         """
         return self._properties["want"]
 
     @property
-    def params(self) -> Dict[str, Any]:
+    def params(self) -> dict:
         """
-        Expects value to be the return value of
-        ``AnsibleModule.params`` property.
+        ### Summary
+        The return value of ``AnsibleModule.params`` property
+        (or equivalent dict). This is passed to ``params_spec``
+        and used in playbook config validation.
 
-        -   getter: return the params
-        -   setter: set the params
-        -   setter: raise ``ValueError`` if value is not a dict
+        ### Raises
+        -   setter: raise ``ValueError`` if value is not a ``dict``.
+
+        ### getter
+        Return params
+
+        ### setter
+        Set params
         """
         return self._properties["params"]
 
     @params.setter
-    def params(self, value: Dict[str, Any]) -> None:
+    def params(self, value: dict) -> None:
         """
         -   setter: set the params
         """
@@ -611,43 +618,74 @@ class Want:
     def params_spec(self):
         """
         ### Summary
-        Expects value to be an instance of ParamsSpec().
+        The parameter specification used to validate the playbook config.
+        Expects value to be an instance of ``ParamsSpec()``.
 
         ``params_spec`` is passed to ``validator`` to validate the
         playbook config.
 
-        -   getter: return the params_spec instance
-        -   setter: set the params_spec instance
-        -   setter: raise ``ValueError`` if value is not an instance
+        ### Raises
+        -   setter: raise ``TypeError`` if value is not an instance
             of ParamsSpec()
+
+        ### getter
+        Return params_spec
+
+        ### setter
+        Set params_spec
         """
         return self._properties["params_spec"]
 
     @params_spec.setter
     def params_spec(self, value) -> None:
-        """
-        -   setter: set the params_spec instance
-        """
-        if not isinstance(value, ParamsSpec):
-            msg = f"{self.class_name}.params_spec.setter: "
-            msg += "expected ParamsSpec() instance for value. "
-            msg += f"got {type(value).__name__}."
-            raise ValueError(msg)
+        method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "ParamsSpec"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f"Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
         self._properties["params_spec"] = value
 
     @property
-    def validator(self) -> Any:
+    def validator(self):
         """
-        getter: return the validator
-        setter: set the validator
+        ### Summary
+        ``validator`` is used to validate the playbook config.
+        Expects value to be an instance of ``ParamsValidate()``.
+
+        ### Raises
+        -   setter: ``TypeError`` if value is not an instance of ``ParamsValidate()``
+
+        ### getter
+        Return validator
+
+        ### setter
+        Set validator
         """
         return self._properties["validator"]
 
     @validator.setter
-    def validator(self, value: Any) -> None:
-        """
-        setter: set the validator
-        """
+    def validator(self, value) -> None:
+        method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "ParamsValidate"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
         self._properties["validator"] = value
 
 
@@ -933,11 +971,16 @@ class Merged(Common):
             }
         ]
         """
+        method_name = inspect.stack()[0][3]
         self.need = []
         for want in self.want:
             ip_address = want.get("ip_address", None)
             if ip_address not in self.have:
-                continue
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Switch {ip_address} in fabric {fabric_name} "
+                msg += "not found on the controller."
+                raise ValueError(msg)
+
             serial_number = self.have[ip_address]["serial_number"]
             fabric_name = self.have[ip_address]["fabric_name"]
             if want.get("mode") != self.have[ip_address]["mode"]:
