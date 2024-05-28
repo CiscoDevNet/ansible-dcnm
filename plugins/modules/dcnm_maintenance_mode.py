@@ -576,7 +576,7 @@ class Want:
         self._properties["items_key"] = value
 
     @property
-    def want(self) -> list[dict]:
+    def want(self) -> list:
         """
         ### Summary
         Return the want list.  See class docstring for structure details.
