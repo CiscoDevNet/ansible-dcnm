@@ -134,11 +134,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
     ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -282,6 +282,370 @@ class ParamsSpec:
             raise ValueError(msg)
         self._properties["params"] = value
 
+class Want:
+    """
+    ### Summary
+    Build self.want, a list of validated playbook configurations.
+
+    ### Raises
+    -   ``ValueError`` if ParamsSpec() raises ``ValueError``
+    -   ``ValueError`` _merge_global_and_switch_configs()
+        raises ``ValueError``
+
+    ### Details
+    1. Merge the playbook global config into each switch config.
+    2. Validate the merged configs from step 1 against the param spec.
+    3. Populate self.want with the validated configs.
+
+    ### Usage
+    ```python
+    instance = Want()
+    instance.params = ansible_module.params
+    instance.params_spec = ParamsSpec()
+    instance.results = Results()
+    instance.items_key = "switches"
+    instance.validator = ParamsValidate() 
+    instance.commit()
+    want = instance.want
+    ```
+    ### self.want structure
+
+    ```json
+    [
+        {
+            "ip_address": "192.168.1.2",
+            "mode": "maintenance",
+            "deploy": false
+        },
+        {
+            "ip_address": "192.168.1.3",
+            "mode": "normal",
+            "deploy": true
+        }
+    ]
+    ```
+    """
+    def __init__(self):
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log.debug("ENTERED Want()")
+
+        self._properties = {}
+        self._properties["config"] = None
+        self._properties["items_key"] = None
+        self._properties["params"] = None
+        self._properties["params_spec"] = None
+        self._properties["results"] = None
+        self._properties["validator"] = None
+        self._properties["want"] = []
+
+        self.switch_configs = []
+        self.validator = None
+
+    def generate_params_spec(self) -> None:
+        """
+        ### Summary
+        Generate the params_spec used to validate the configs
+
+        ### Raises
+        -   ``ValueError`` if self.params is not set
+        -   ``ValueError`` if self.params_spec is not set
+        """
+        # Generate the params_spec used to validate the configs
+        if self.params is None:
+            msg = f"{self.class_name}.generate_params_spec(): "
+            msg += "self.params is required"
+            raise ValueError(msg)
+        if self.params_spec is None:
+            msg = f"{self.class_name}.generate_params_spec(): "
+            msg += "self.params_spec is required"
+            raise ValueError(msg)
+        
+        try:
+            self.params_spec.params = self.params
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self.params_spec.commit()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+    def validate_configs(self) -> None:
+        """
+        ### Summary
+        Validate the merged configs against the param spec
+        and populate self.want with the validated configs.
+
+        ### Raises
+        -   ``ValueError`` if self.validator is not set
+
+        """
+        if self.validator is None:
+            msg = f"{self.class_name}.validate_configs(): "
+            msg += "self.validator is required"
+            raise ValueError(msg)
+
+        self.validator.params_spec = self.params_spec.params_spec
+        for config in self.merged_configs:
+            self.validator.parameters = config
+            self.validator.commit()
+            self.want.append(copy.deepcopy(config))
+
+    def build_merged_configs(self) -> None:
+        """
+        ### Summary
+        If a parameter is missing from the config, and the parameter
+        has a default value, merge the default value for the parameter
+        into the config.
+        """
+        self.merged_configs = []
+        merge_defaults = ParamsMergeDefaults()
+        merge_defaults.params_spec = self.params_spec.params_spec
+        for config in self.item_configs:
+            merge_defaults.parameters = config
+            merge_defaults.commit()
+            self.merged_configs.append(merge_defaults.merged_parameters)
+
+        msg = f"{self.class_name}.build_merged_configs(): "
+        msg += f"merged_configs: {json.dumps(self.merged_configs, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def commit(self) -> None:
+        """
+        ### Summary
+        Build self.want, a list of validated playbook configurations.
+
+        ### Raises
+        -   ``ValueError`` if self.params is not set
+        -   ``ValueError`` if self.params_spec is not set
+        -   ``ValueError`` if self.validator is not set
+        -   ``ValueError`` if self.params_spec raises ``ValueError``
+        -   ``ValueError`` if _merge_global_and_switch_configs()
+            raises ``ValueError``
+
+        ### Details
+        See class docstring.
+
+        ### self.want structure
+        See class docstring.
+        """
+        method_name = inspect.stack()[0][3]
+
+        if self.validator is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.validator must be set before calling {method_name}"
+            raise ValueError(msg)
+
+        try:
+            self.generate_params_spec()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        try:
+            self._merge_global_and_item_configs()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        self.build_merged_configs()
+
+        try:
+            self.validate_configs()
+        except ValueError as error:
+            raise ValueError(error) from error
+
+    def _merge_global_and_item_configs(self) -> None:
+        """
+        ### Summary
+        Builds self.item_configs from self.config
+
+        Merge the global playbook config with each item config and
+        populate a list of merged configs (``self.item_configs``).
+
+        ### Raises
+        -   ``ValueError`` if self.config is not set
+        -   ``ValueError`` if self.items_key is not set
+        -   ``ValueError`` if playbook is missing list of items
+        -   ``ValueError`` if merge_dicts raises ``TypeError`` or ``ValueError``
+
+        ### Merge rules
+            -   item_config takes precedence over global_config.
+            -   If item_config is missing a parameter, use parameter
+                from global_config.
+            -   If item_config has a parameter, use it.
+        """
+        method_name = inspect.stack()[0][3]
+
+        if self.config is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.config is required"
+            raise ValueError(msg)
+        if self.items_key is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.items_key is required"
+            raise ValueError(msg)
+        if not self.config.get(self.items_key):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"playbook is missing list of {self.items_key}"
+            raise ValueError(msg)
+
+        self.item_configs = []
+        merged_configs = []
+        for item in self.config[self.items_key]:
+            # we need to rebuild global_config in this loop
+            # because merge_dicts modifies it in place
+            global_config = copy.deepcopy(self.config)
+            global_config.pop(self.items_key, None)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "global_config: "
+            msg += f"{json.dumps(global_config, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "switch PRE_MERGE: "
+            msg += f"{json.dumps(item, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            merge_dicts = MergeDicts()
+            try:
+                merge_dicts.dict1 = global_config
+                merge_dicts.dict2 = item
+                merge_dicts.commit()
+                item_config = merge_dicts.dict_merged
+            except(TypeError, ValueError) as error:
+                raise ValueError(error) from error
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "switch POST_MERGE: "
+            msg += f"{json.dumps(item_config, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            merged_configs.append(item_config)
+        self.item_configs = copy.copy(merged_configs)
+
+    @property
+    def config(self):
+        """
+        ### Summary
+        The playbook configuration to be processed.
+
+        ``config`` is processed by ``_merge_global_and_switch_configs()``
+        to build ``switch_configs``.
+
+        -   getter: return config
+        -   setter: set config
+        -   setter: raise ``ValueError`` if value is not a dict
+        """
+        return self._properties["config"]
+
+    @config.setter
+    def config(self, value) -> None:
+        if not isinstance(value,dict):
+            msg = f"{self.class_name}.config.setter: "
+            msg += "expected dict for value. "
+            msg += f"got {type(value).__name__}."
+            raise ValueError(msg)
+        self._properties["config"] = value
+
+    @property
+    def items_key(self) -> str:
+        """
+        Expects value to be the key for the list of items in the
+        playbook config.
+
+        -   getter: return the items_key
+        -   setter: set the items_key
+        -   setter: raise ``ValueError`` if value is not a string
+        """
+        return self._properties["items_key"]
+
+    @items_key.setter
+    def items_key(self, value: str) -> None:
+        """
+        -   setter: set the items_key
+        """
+        if not isinstance(value, str):
+            msg = f"{self.class_name}.items_key.setter: "
+            msg += "expected string type for value. "
+            msg += f"got {type(value).__name__}."
+            raise ValueError(msg)
+        self._properties["items_key"] = value
+
+    @property
+    def want(self) -> Dict[str, Any]:
+        """
+        return the want list
+        """
+        return self._properties["want"]
+
+    @property
+    def params(self) -> Dict[str, Any]:
+        """
+        Expects value to be the return value of
+        ``AnsibleModule.params`` property.
+
+        -   getter: return the params
+        -   setter: set the params
+        -   setter: raise ``ValueError`` if value is not a dict
+        """
+        return self._properties["params"]
+
+    @params.setter
+    def params(self, value: Dict[str, Any]) -> None:
+        """
+        -   setter: set the params
+        """
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.params.setter: "
+            msg += "expected dict type for value. "
+            msg += f"got {type(value).__name__}."
+            raise ValueError(msg)
+        self._properties["params"] = value
+
+    @property
+    def params_spec(self):
+        """
+        ### Summary
+        Expects value to be an instance of ParamsSpec().
+
+        ``params_spec`` is passed to ``validator`` to validate the
+        playbook config.
+
+        -   getter: return the params_spec instance
+        -   setter: set the params_spec instance
+        -   setter: raise ``ValueError`` if value is not an instance
+            of ParamsSpec()
+        """
+        return self._properties["params_spec"]
+
+    @params_spec.setter
+    def params_spec(self, value) -> None:
+        """
+        -   setter: set the params_spec instance
+        """
+        if not isinstance(value, ParamsSpec):
+            msg = f"{self.class_name}.params_spec.setter: "
+            msg += "expected ParamsSpec() instance for value. "
+            msg += f"got {type(value).__name__}."
+            raise ValueError(msg)
+        self._properties["params_spec"] = value
+
+    @property
+    def validator(self) -> Any:
+        """
+        getter: return the validator
+        setter: set the validator
+        """
+        return self._properties["validator"]
+
+    @validator.setter
+    def validator(self, value: Any) -> None:
+        """
+        setter: set the validator
+        """
+        self._properties["validator"] = value
 
 class Common:
     """
@@ -362,135 +726,17 @@ class Common:
         self._properties["ansible_module"] = None
 
     def get_want(self) -> None:
-        """
-        ### Summary
-        Build self.want, a list of validated playbook configurations.
-
-        ### Raises
-        -   ``ValueError`` if self.ansible_module is not set
-        -   ``ValueError`` if ParamsSpec() raises ``ValueError``
-        -   ``ValueError`` _merge_global_and_switch_configs()
-            raises ``ValueError``
-
-        ### Details
-        1. Merge the playbook global config into each switch config.
-        2. Validate the merged configs from step 1 against the param spec.
-        3. Populate self.want with the validated configs.
-
-        ### self.want structure
-
-        ```json
-        [
-            {
-                "ip_address": "192.168.1.2",
-                "mode": "maintenance",
-                "deploy": false
-            },
-            {
-                "ip_address": "192.168.1.3",
-                "mode": "normal",
-                "deploy": true
-            }
-        ]
-        ```
-        """
-        method_name = inspect.stack()[0][3]
-
-        if self.ansible_module is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"self.ansible_module must be set before calling {method_name}"
-            raise ValueError(msg)
-
-        # Generate the params_spec used to validate the configs
-        params_spec = ParamsSpec()
-        try:
-            params_spec.params = self.params
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            params_spec.commit()
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        # Builds self.switch_configs
-        try:
-            self._merge_global_and_switch_configs(self.config)
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        # If a parameter is missing from the config, and the parameter
-        # has a default value, merge the default value for the parameter
-        # into the config.
-        merged_configs = []
-        merge_defaults = ParamsMergeDefaults(self.ansible_module)
-        merge_defaults.params_spec = params_spec.params_spec
-        for config in self.switch_configs:
-            merge_defaults.parameters = config
-            merge_defaults.commit()
-            merged_configs.append(merge_defaults.merged_parameters)
-
-        # validate the merged configs
-        self.validated_configs = []
-        self.validator = ParamsValidate(self.ansible_module)
-        self.validator.params_spec = params_spec.params_spec
-        for config in merged_configs:
-            self.validator.parameters = config
-            self.validator.commit()
-            self.want.append(copy.deepcopy(config))
-
+        instance = Want()
+        instance.config = self.config
+        instance.items_key = "switches"
+        instance.params = self.params
+        instance.params_spec = ParamsSpec()
+        instance.validator = ParamsValidate()
+        instance.commit()
+        self.want = instance.want
         # Exit if there's nothing to do
         if len(self.want) == 0:
             self.ansible_module.exit_json(**self.results.ok_result)
-
-    def _merge_global_and_switch_configs(self, config) -> None:
-        """
-        ### Summary
-        Merge the global playbook config with each switch config and
-        populate a list of merged configs (``self.switch_configs``).
-
-        ### Raises
-        -   ``ValueError`` if playbook is missing list of switches
-
-        ### Merge rules
-            -   switch_config takes precedence over global_config.
-            -   If switch_config is missing a parameter, use parameter
-                from global_config.
-            -   If switch_config has a parameter, use it.
-        """
-        method_name = inspect.stack()[0][3]
-
-        if not config.get("switches"):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "playbook is missing list of switches"
-            raise ValueError(msg)
-
-        self.switch_configs = []
-        merged_configs = []
-        for switch in config["switches"]:
-            # we need to rebuild global_config in this loop
-            # because merge_dicts modifies it in place
-            global_config = copy.deepcopy(config)
-            global_config.pop("switches", None)
-            msg = (
-                f"global_config: {json.dumps(global_config, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
-
-            msg = f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            merge_dicts = MergeDicts(self.ansible_module)
-            merge_dicts.dict1 = global_config
-            merge_dicts.dict2 = switch
-            merge_dicts.commit()
-            switch_config = merge_dicts.dict_merged
-
-            msg = f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            merged_configs.append(switch_config)
-        self.switch_configs = copy.copy(merged_configs)
 
     @property
     def ansible_module(self):

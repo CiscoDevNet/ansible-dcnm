@@ -27,33 +27,41 @@ from typing import Any, Dict
 
 class MergeDicts:
     """
-    ## DEPRECATED
-    Use ``MergeDicts`` from ``merge_dicts_v2.py`` for
-    all new development.
-
+    ### Summary
     Merge two dictionaries.
 
     Given two dictionaries, dict1 and dict2, merge them into a
     single dictionary, dict_merged, where keys in dict2 have
     precedence over (will overwrite) keys in dict1.
 
-    Example:
+    ### Raises
+    -   ``TypeError`` if ``dict1`` is not a dictionary.
+    -   ``TypeError`` if ``dict2`` is not a dictionary.
+    -   ``ValueError`` if ``dict1`` has not been set before calling commit()
+    -   ``ValueError`` if ``dict2`` has not been set before calling commit()
+    -   ``ValueError`` if ``dict_merged`` is accessed before calling commit()
 
-    module = AnsibleModule(...)
-    instance = MergeDicts(module)
-    instance.dict1 = { "foo": 1, "bar": 2 }
-    instance.dict2 = { "foo": 3, "baz": 4 }
-    instance.commit()
-    dict_merged = instance.dict_merged
+    ### Usage
+    ```python
+    try:
+        instance = MergeDicts()
+        instance.dict1 = { "foo": 1, "bar": 2 }
+        instance.dict2 = { "foo": 3, "baz": 4 }
+        instance.commit()
+        dict_merged = instance.dict_merged
+    except (TypeError, ValueError) as error:
+        handle_error(error)
     print(dict_merged)
+    ```
 
-    Output:
+    ### Output
+    ```json
     { foo: 3, bar: 2, baz: 4 }
+    ```
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED MergeDicts()")
@@ -68,13 +76,17 @@ class MergeDicts:
 
     def commit(self) -> None:
         """
+        ### Summary
         Commit the merged dict.
+
+        ### Raises
+        -   ``ValueError`` if ``dict1`` or ``dict2`` has not been set.
         """
         method_name = inspect.stack()[0][3]
         if self.dict1 is None or self.dict2 is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "dict1 and dict2 must be set before calling commit()"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
         self.properties["dict_merged"] = self.merge_dicts(self.dict1, self.dict2)
 
@@ -85,7 +97,6 @@ class MergeDicts:
         Merge dict2 into dict1 and return dict1.
         Keys in dict2 have precedence over keys in dict1.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         for key in dict2:
             if (
                 key in dict1
@@ -100,22 +111,31 @@ class MergeDicts:
     @property
     def dict_merged(self):
         """
-        Getter for the merged dictionary.
+        ### Summary
+        Returns the merged dictionary.
+
+        ### Raises
+        -   ``ValueError`` if ``dict_merged`` is accessed before
+            ``commit()`` has been called.
         """
         method_name = inspect.stack()[0][3]
         if self.properties["dict_merged"] is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Call instance.commit() before calling "
             msg += f"instance.{method_name}."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         return self.properties["dict_merged"]
 
     @property
     def dict1(self):
         """
-        The dictionary into which dict2 will be merged.
+        ### Summary
+        The dictionary into which ``dict2`` will be merged.
 
-        dict1's keys will be overwritten by dict2's keys.
+        ``dict1``'s keys will be overwritten by ``dict2``'s keys.
+
+        ### Raises
+        -   ``TypeError`` if ``value`` is not a dictionary.
         """
         return self.properties["dict1"]
 
@@ -126,15 +146,19 @@ class MergeDicts:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid value. Expected type dict. "
             msg += f"Got type {type(value)}."
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["dict1"] = copy.deepcopy(value)
 
     @property
     def dict2(self):
         """
-        The dictionary which will be merged into dict1.
+        ### Summary
+        The dictionary which will be merged into ``dict1``.
 
-        dict2's keys will overwrite by dict1's keys.
+        ``dict2``'s keys will overwrite by ``dict1``'s keys.
+
+        ### Raises
+        -   ``TypeError`` if ``value`` is not a dictionary.
         """
         return self.properties["dict2"]
 
@@ -145,5 +169,5 @@ class MergeDicts:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid value. Expected type dict. "
             msg += f"Got type {type(value)}."
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["dict2"] = copy.deepcopy(value)

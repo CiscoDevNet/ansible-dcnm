@@ -32,8 +32,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode
     MaintenanceMode
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
+    MergeDicts as MergeDictsV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
+    ParamsValidate as ParamsValidateV2
 
 from .fixture import load_fixture
 
@@ -153,12 +157,28 @@ def merge_dicts_fixture():
     return MergeDicts(MockAnsibleModule)
 
 
+@pytest.fixture(name="merge_dicts_v2")
+def merge_dicts_v2_fixture():
+    """
+    return MergeDicts() version 2
+    """
+    return MergeDictsV2()
+
+
 @pytest.fixture(name="params_validate")
 def params_validate_fixture():
     """
     return ParamsValidate with mocked AnsibleModule
     """
     return ParamsValidate(MockAnsibleModule)
+
+
+@pytest.fixture(name="params_validate_v2")
+def params_validate_v2_fixture():
+    """
+    return ParamsValidate version 2
+    """
+    return ParamsValidateV2()
 
 
 @contextmanager
@@ -171,11 +191,21 @@ def does_not_raise():
 
 def merge_dicts_data(key: str) -> Dict[str, str]:
     """
-    Return data for merge_dicts unit tests
+    Return data from merge_dicts.json for merge_dicts unit tests.
     """
     data_file = "merge_dicts"
     data = load_fixture(data_file).get(key)
     print(f"merge_dicts_data: {key} : {data}")
+    return data
+
+
+def merge_dicts_v2_data(key: str) -> Dict[str, str]:
+    """
+    Return data from merge_dicts_v2.json for merge_dicts_v2 unit tests.
+    """
+    data_file = "merge_dicts_v2"
+    data = load_fixture(data_file).get(key)
+    print(f"merge_dicts_v2_data: {key} : {data}")
     return data
 
 

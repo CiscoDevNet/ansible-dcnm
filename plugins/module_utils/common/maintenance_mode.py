@@ -235,11 +235,12 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         if item.get("mode", None) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "mode must be present in config."
+            msg += "mode is mandatory, but is missing from the config."
             raise ValueError(msg)
         if item.get("mode", None) not in self.valid_modes:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "mode must be one of 'maintenance' or 'normal'."
+            msg += f"mode must be one of {' or '.join(self.valid_modes)}. "
+            msg += f"Got {item.get('mode', None)}."
             raise ValueError(msg)
 
     def verify_serial_number(self, item):

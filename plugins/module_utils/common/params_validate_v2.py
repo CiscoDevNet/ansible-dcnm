@@ -29,9 +29,6 @@ from ansible.module_utils.common import validation
 
 class ParamsValidate:
     """
-    ## DEPRECATED
-    Use ``ParamsValidate`` from ``params_validate_v2.py`` for all new development.
-
     ### Summary
     Validate playbook parameters.
 
@@ -41,8 +38,6 @@ class ParamsValidate:
             in parameters
 
     ### Usage
-
-    -   Ansible_module is an instance of AnsibleModule):
 
     Assume the following params_spec describing parameters
     ``ip_address`` and ``foo``  .
@@ -82,17 +77,20 @@ class ParamsValidate:
 
     ### Invocation
 
+    Where parameters is a dictionary containing the playbook parameters.
+    Typically this retrieved from ``AnsibleModule`` with
+    ``AnsibleModule.params``.
+
     ```python
-    validator = ParamsValidate(ansible_module)
-    validator.parameters = ansible_module.params
+    validator = ParamsValidate()
+    validator.parameters = AnsibleModule.params
     validator.params_spec = params_spec
     validator.commit()
     ```
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
         self.validation = validation
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -194,85 +192,122 @@ class ParamsValidate:
 
     def commit(self) -> None:
         """
+        ### Summary
         Verify that parameters in self.parameters conform to self.params_spec
+
+        ### Raises
+        -   ``ValueError`` if self.parameters is not set.
+        -   ``ValueError`` if self.params_spec is not set.
+        -   ``ValueError`` if a mandatory parameter is missing.
+        -   ``ValueError`` if a parameter's type is not in the list of
+            valid types for that parameter.
+        -   ``ValueError`` if a non-integer parameter is using range_min
+            or range_max.
+        -   ``ValueError`` if a parameter's value is not in the list of
+            valid choices for that parameter.
+        -   ``ValueError`` if an integer parameter's value is not within the
+            parameter's valid range.
         """
         method_name = inspect.stack()[0][3]
         if self.parameters is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.parameters needs to be set "
             msg += "prior to calling instance.commit()."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
         if self.params_spec is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.params_spec needs to be set "
             msg += "prior to calling instance.commit()."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
-        self._validate_parameters(self.params_spec, self.parameters)
+        try:
+            self._validate_parameters(self.params_spec, self.parameters)
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
 
     def _validate_parameters(self, spec, parameters):
         """
+        ### Summary
         Recursively traverse parameters and verify conformity with spec
+
+        ### Raises
+        -   ``ValueError`` if a mandatory parameter is missing.
+        -   ``ValueError`` if a parameter's type is not in the list of
+            valid types for that parameter.
+        -   ``ValueError`` if a non-integer parameter is using range_min
+            or range_max.
+        -   ``ValueError`` if a parameter's value is not in the list of
+            valid choices for that parameter.
+        -   ``ValueError`` if an integer parameter's value is not within the
+            parameter's valid range.
+        -   ``TypeError`` if range_min or range_max in the parameter specification
+            is not an integer.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        for param in spec:
-            if param in self.reserved_params:
-                continue
+        try:
+            for param in spec:
+                if param in self.reserved_params:
+                    continue
 
-            if isinstance(spec[param], Map):
-                self._validate_parameters(spec[param], parameters.get(param, {}))
+                if isinstance(spec[param], Map):
+                    self._validate_parameters(spec[param], parameters.get(param, {}))
 
-            # We shouldn't hit this since defaults are merged for all
-            # missing parameters, but just in case...
-            if (
-                parameters.get(param, None) is None
-                and spec[param].get("required", False) is True
-            ):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Playbook is missing mandatory parameter: {param}."
-                self.ansible_module.fail_json(msg)
+                if (
+                    parameters.get(param, None) is None
+                    and spec[param].get("required", False) is True
+                ):
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"Playbook is missing mandatory parameter: {param}."
+                    raise ValueError(msg)
 
-            if isinstance(spec[param]["type"], list):
-                parameters[param] = self._verify_multitype(
-                    spec[param], parameters, param
+                if isinstance(spec[param]["type"], list):
+                    parameters[param] = self._verify_multitype(
+                        spec[param], parameters, param
+                    )
+                else:
+                    parameters[param] = self._verify_type(
+                        spec[param]["type"], parameters, param
+                    )
+
+                self._verify_choices(
+                    spec[param].get("choices", None), parameters[param], param
                 )
-            else:
-                parameters[param] = self._verify_type(
-                    spec[param]["type"], parameters, param
-                )
 
-            self._verify_choices(
-                spec[param].get("choices", None), parameters[param], param
-            )
+                if spec[param].get("type", None) != "int" and (
+                    spec[param].get("range_min", None) is not None
+                    or spec[param].get("range_max", None) is not None
+                ):
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"Invalid param_spec for parameter '{param}'. "
+                    msg += "range_min and range_max are only valid for "
+                    msg += "parameters of type int. "
+                    msg += f"Got type {spec[param]['type']} for param {param}."
+                    raise ValueError(msg)
 
-            if spec[param].get("type", None) != "int" and (
-                spec[param].get("range_min", None) is not None
-                or spec[param].get("range_max", None) is not None
-            ):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Invalid param_spec for parameter '{param}'. "
-                msg += "range_min and range_max are only valid for "
-                msg += "parameters of type int. "
-                msg += f"Got type {spec[param]['type']} for param {param}."
-                self.ansible_module.fail_json(msg)
-
-            if (
-                spec[param].get("type", None) == "int"
-                and spec[param].get("range_min", None) is not None
-                and spec[param].get("range_max", None) is not None
-            ):
-                self._verify_integer_range(
-                    spec[param].get("range_min", None),
-                    spec[param].get("range_max", None),
-                    parameters[param],
-                    param,
-                )
+                if (
+                    spec[param].get("type", None) == "int"
+                    and spec[param].get("range_min", None) is not None
+                    and spec[param].get("range_max", None) is not None
+                ):
+                    self._verify_integer_range(
+                        spec[param].get("range_min", None),
+                        spec[param].get("range_max", None),
+                        parameters[param],
+                        param,
+                    )
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
 
     def _verify_choices(self, choices: List[Any], value: Any, param: str) -> None:
         """
+        ### Summary
         Verify that value is one of the choices
+
+        ### Raises
+        -   ``ValueError`` if a parameter's value is not in the list of
+            valid choices for that parameter.
         """
         method_name = inspect.stack()[0][3]
         if choices is None:
@@ -283,13 +318,20 @@ class ParamsValidate:
             msg += f"Invalid value for parameter '{param}'. "
             msg += f"Expected one of {choices}. "
             msg += f"Got {value}"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
     def _verify_integer_range(
         self, range_min: int, range_max: int, value: int, param: str
     ) -> None:
         """
+        ### Summary
         Verify that value is within the range range_min to range_max
+
+        ### Raises
+        -  ``TypeError`` if range_min or range_max in the parameter
+            specification is not an integer.
+        -   ``ValueError`` if the parameter's value is not within the
+            range range_min to range_max.
         """
         method_name = inspect.stack()[0][3]
 
@@ -300,44 +342,54 @@ class ParamsValidate:
                 msg += "range_min and range_max must be integers. Got "
                 msg += f"range_min '{range_min}' type {type(range_min)}, "
                 msg += f"range_max '{range_max}' type {type(range_max)}."
-                self.ansible_module.fail_json(msg)
+                raise TypeError(msg)
 
         if value < range_min or value > range_max:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid value for parameter '{param}'. "
             msg += f"Expected value between {range_min} and {range_max}. "
             msg += f"Got {value}"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
-    def _verify_type(self, expected_type: str, params: Any, param: str) -> Any:
+    def _verify_type(self, expected_type: str, params: Any, param: str):
         """
+        ### Summary
         Verify that value's type matches the expected type
+
+        ### Raises
+        -   ``ValueError`` if expected_type is not in self.valid_expected_types.
+        -   ``TypeError`` if value's type does not match the expected type.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self._verify_expected_type(expected_type, param)
+        try:
+            self._verify_expected_type(expected_type, param)
+        except ValueError as error:
+            raise ValueError(error) from error
 
         value = params[param]
         if expected_type in self._ipaddress_types:
             try:
                 self._ipaddress_guard(expected_type, value, param)
-            except TypeError as err:
-                self._invalid_type(expected_type, value, param, err)
-                return value
+            except TypeError as error:
+                self._invalid_type(expected_type, value, param, error)
 
         try:
-            return self.validations[expected_type](value)
+            return_value = self.validations[expected_type](value)
         except (ValueError, TypeError) as err:
             self._invalid_type(expected_type, value, param, err)
-            return value
+
+        return return_value
 
     def _ipaddress_guard(self, expected_type, value: Any, param: str) -> None:
         """
+        ### Summary
         Guard against int and bool types for ipv4, ipv6, ipv4_subnet,
         and ipv6_subnet type.
 
-        Raise TypeError if value's type is int or bool and
-        expected_type is one of self._ipaddress_types.
+        ### Raises
+        -   ``TypeError`` if value's type is int or bool and expected_type
+            is one of self._ipaddress_types.
 
+        ### Discussion
         The ipaddress module accepts int and bool types and converts
         them to IP addresses or networks.  E.g. True becomes 0.0.0.1,
         False becomes 0.0.0.0, 1 becomes 0.0.0.1, etc.  Because of
@@ -354,36 +406,50 @@ class ParamsValidate:
         msg += f"Expected type {expected_type}. "
         msg += f"Got type {type(value)} for "
         msg += f"param {param} with value {value}."
-        raise TypeError(f"{msg}")
+        raise TypeError(msg)
 
     def _invalid_type(
         self, expected_type: str, value: Any, param: str, error: str = ""
     ) -> None:
         """
-        Calls fail_json when value's type does not match expected_type
+        ### Summary
+        Error message for invalid type
+
+        ### Raises
+        -   ``TypeError``with error message.  Always raises.
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Invalid type for parameter '{param}'. "
         msg += f"Expected {expected_type}. "
         msg += f"Got '{value}'. "
-        msg += f"More info: {error}"
-        self.ansible_module.fail_json(msg)
+        msg += f"Error detail: {error}"
+        raise TypeError(msg)
 
     def _verify_multitype(  # pylint: disable=inconsistent-return-statements
         self, spec: Any, params: Any, param: str
     ) -> Any:
         """
+        ### Summary
         Verify that value's type matches one of the types in expected_types
 
-        NOTES:
+        ### Raises
+        -   ``ValueError`` if value's specification does not contain
+            a ``preferred_type`` key.
+        -   ``TypeError`` if value's type does not match any of the
+            expected types.
+
+        ### NOTES
         1.  We've disabled inconsistent-return-statements.  We're pretty
             sure this method is correct.
         """
         method_name = inspect.stack()[0][3]
 
         # preferred_type is mandatory for multitype
-        self._verify_preferred_type_param_spec_is_present(spec, param)
+        try:
+            self._verify_preferred_type_param_spec_is_present(spec, param)
+        except KeyError as error:
+            raise ValueError(error) from error
 
         # try to convert value to the preferred_type
         preferred_type = spec["preferred_type"]
@@ -424,20 +490,24 @@ class ParamsValidate:
         msg += f"Invalid type for parameter '{param}'. "
         msg += f"Expected one of {expected_types}. "
         msg += f"Got '{value}'."
-        self.ansible_module.fail_json(msg)
+        raise TypeError(msg)
 
     def _verify_preferred_type_param_spec_is_present(
         self, spec: Any, param: str
     ) -> None:
         """
-        verify that spec contains the key 'preferred_type'
+        ### Summary
+        Verify that spec contains the key 'preferred_type'
+
+        ### Raises
+        -   ``KeyError`` if spec does not contain the key 'preferred_type'
         """
         method_name = inspect.stack()[0][3]
         if spec.get("preferred_type", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Invalid param_spec for parameter '{param}'. "
             msg += "If type is a list, preferred_type must be specified."
-            self.ansible_module.fail_json(msg)
+            raise KeyError(msg)
 
     def _verify_preferred_type_for_standard_types(
         self, preferred_type: str, value: Any
@@ -542,9 +612,14 @@ class ParamsValidate:
 
     def _verify_mandatory_param_spec_keys(self, params_spec: dict) -> None:
         """
+        ### Summary
         Recurse over params_spec dictionary and verify that the
         specification for each param contains the mandatory keys
         defined in self.mandatory_param_spec_keys
+
+        ### Raises
+        -   ``ValueError`` if a mandatory key is missing from a
+            parameter specification.
         """
         method_name = inspect.stack()[0][3]
         for param in params_spec:
@@ -559,11 +634,16 @@ class ParamsValidate:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Invalid params_spec. Missing mandatory key "
                 msg += f"'{key}' for param '{param}'."
-                self.ansible_module.fail_json(msg)
+                raise ValueError(msg)
 
     def _verify_expected_type(self, expected_type: str, param: str) -> None:
         """
-        Verify that expected_type is valid
+        ### Summary
+        Verify that expected_type is valid.
+
+        ### Raises
+        -   ``ValueError`` if expected_type is not in
+            self.valid_expected_types.
         """
         method_name = inspect.stack()[0][3]
         if expected_type in self.valid_expected_types:
@@ -573,13 +653,17 @@ class ParamsValidate:
         msg += "Expected one of "
         msg += f"'{','.join(sorted(self.valid_expected_types))}'. "
         msg += f"Got '{expected_type}'."
-        self.ansible_module.fail_json(msg)
+        raise ValueError(msg)
 
     @property
     def parameters(self):
         """
+        ### Summary
         The parameters to validate.
         parameters have the same structure as params_spec.
+
+        ### Raises
+        -   ``TypeError`` if ``parameters`` is not a dict.
         """
         return self.properties["parameters"]
 
@@ -590,13 +674,18 @@ class ParamsValidate:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid parameters. Expected type dict. "
             msg += f"Got type {type(value)}."
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["parameters"] = value
 
     @property
     def params_spec(self):
         """
-        The param specification used to validate the parameters
+        ### Summary
+        The param specification used to validate the parameters.
+
+        ### Raises
+        -   ``TypeError`` if ``params_spec`` is not a dict.
+        -   ``ValueError`` if params_spec is missing mandatory keys.
         """
         return self.properties["params_spec"]
 
@@ -607,6 +696,6 @@ class ParamsValidate:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid params_spec. Expected type dict. "
             msg += f"Got type {type(value)}."
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self._verify_mandatory_param_spec_keys(value)
         self.properties["params_spec"] = value

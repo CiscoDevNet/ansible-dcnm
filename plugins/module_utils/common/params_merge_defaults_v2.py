@@ -27,28 +27,37 @@ from typing import Any, Dict
 
 class ParamsMergeDefaults:
     """
-    ## DEPRECATED
-    Use ``ParamsMergeDefaults`` from ``params_merge_defaults_v2.py`` for
-    all new development.
+    ### Summary
+    Merge default parameters from ``param_spec`` into parameters.
 
-    Merge default parameters into parameters.
+    Given a parameter specification (``params_spec``) and a playbook config
+    (``parameters``) merge key/values from ``params_spec`` which have a default
+    associated with them into ``parameters`` if parameters is missing the
+    corresponding key/value.
 
-    Given a parameter specification (params_spec) and a playbook config
-    (parameters) merge key/values from params_spec which have a default
-    associated with them into parameters (if parameters is missing the
-    corresponding key/value).
+    ### Raises
+    -   ``ValueError`` if ``params_spec`` is None when calling commit().
+    -   ``TypeError`` if ``parameters`` is not a dict.
+    -   ``TypeError`` if ``params_spec`` is not a dict.
+
+    ### Usage
+    ```python
+    instance = ParamsMergeDefaults()
+    instance.params_spec = params_spec
+    instance.parameters = parameters
+    instance.commit()
+    merged_parameters = instance.merged_parameters
+    ```
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ParamsMergeDefaults()")
 
         self._build_properties()
         self._build_reserved_params()
-        self.committed = False
 
     def _build_properties(self):
         """
@@ -79,11 +88,13 @@ class ParamsMergeDefaults:
         self, spec: Dict[str, Any], params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
+        ### Summary
         Merge default parameters into parameters.
 
-        Caller:
-        - commit()
-        Return:
+        ### Callers
+        -   ``commit()``
+
+        ### Returns
         -   A modified copy of params where missing parameters are added if:
             1. they are present in spec
             2. they have a default value defined in spec
@@ -107,21 +118,25 @@ class ParamsMergeDefaults:
 
     def commit(self) -> None:
         """
-        Merge default parameters into parameters.
+        ### Summary
+        Merge default parameters into parameters and populate
+        self.merged_parameters.
 
-        The merged parameters are stored in self.merged_parameters
+        ### Raises
+        -   ``ValueError`` if ``params_spec`` is None.
+        -   ``ValueError`` if ``parameters`` is None.
         """
         method_name = inspect.stack()[0][3]
 
         if self.params_spec is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Cannot commit. params_spec is None."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
         if self.parameters is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Cannot commit. parameters is None."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
         self.properties["merged_parameters"] = self._merge_default_params(
             self.params_spec, self.parameters
@@ -130,22 +145,31 @@ class ParamsMergeDefaults:
     @property
     def merged_parameters(self):
         """
+        ### Summary
         Getter for the merged parameters.
+
+        ### Raises
+        -   ``ValueError`` if ``merged_parameters`` is None,
+            indicating that commit() has not been called.
         """
         if self.properties["merged_parameters"] is None:
             msg = f"{self.class_name}.merged_parameters: "
             msg += "Call instance.commit() before calling merged_parameters."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         return self.properties["merged_parameters"]
 
     @property
     def parameters(self):
         """
+        ### Summary
         The parameters into which defaults are merged.
 
         The merge consists of adding any missing parameters
-        (per a comparison with params_spec) and setting their
-        value to the default value defined in params_spec.
+        (per a comparison with ``params_spec``) and setting their
+        value to the default value defined in ``params_spec``.
+
+        ### Raises
+        -   ``TypeError`` if ``parameters`` is not a dict.
         """
         return self.properties["parameters"]
 
@@ -156,13 +180,17 @@ class ParamsMergeDefaults:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid parameters. Expected type dict. "
             msg += f"Got type {type(value)}."
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["parameters"] = value
 
     @property
     def params_spec(self):
         """
+        ### Summary
         The param specification used to validate the parameters
+
+        ### Raises
+        -   ``TypeError`` if ``params_spec`` is not a dict.
         """
         return self.properties["params_spec"]
 
@@ -173,5 +201,5 @@ class ParamsMergeDefaults:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Invalid params_spec. Expected type dict. "
             msg += f"Got type {type(value)}."
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         self.properties["params_spec"] = value
