@@ -288,9 +288,12 @@ class Want:
     Build self.want, a list of validated playbook configurations.
 
     ### Raises
-    -   ``ValueError`` if ParamsSpec() raises ``ValueError``
-    -   ``ValueError`` _merge_global_and_switch_configs()
-        raises ``ValueError``
+    -   ``ValueError`` in the following cases:
+            -   ``commit()`` is issued before setting mandatory properties
+            -   When passing invalid values to property setters
+    -   ``TypeError`` in the following cases:
+            -   When passing invalid types to property setters
+
 
     ### Details
     1. Merge the playbook global config into each switch config.
@@ -299,14 +302,17 @@ class Want:
 
     ### Usage
     ```python
-    instance = Want()
-    instance.params = ansible_module.params
-    instance.params_spec = ParamsSpec()
-    instance.results = Results()
-    instance.items_key = "switches"
-    instance.validator = ParamsValidate()
-    instance.commit()
-    want = instance.want
+    try:
+        instance = Want()
+        instance.params = ansible_module.params
+        instance.params_spec = ParamsSpec()
+        instance.results = Results()
+        instance.items_key = "switches"
+        instance.validator = ParamsValidate()
+        instance.commit()
+        want = instance.want
+    except (TypeError, ValueError) as error:
+        handle_error(error)
     ```
     ### self.want structure
 
@@ -420,12 +426,16 @@ class Want:
         Build self.want, a list of validated playbook configurations.
 
         ### Raises
-        -   ``ValueError`` if self.params is not set
-        -   ``ValueError`` if self.params_spec is not set
-        -   ``ValueError`` if self.validator is not set
-        -   ``ValueError`` if self.params_spec raises ``ValueError``
-        -   ``ValueError`` if _merge_global_and_switch_configs()
-            raises ``ValueError``
+        -   ``ValueError`` if:
+                -   self.config is not set
+                -   self.item_key is not set
+                -   self.params is not set
+                -   self.params_spec is not set
+                -   self.validator is not set
+                -   self.params_spec raises ``ValueError``
+                -   _merge_global_and_switch_configs() raises ``ValueError``
+                -   merge_dicts() raises `TypeError``` or ``ValueError``
+                -   playbook is missing list of items
 
         ### Details
         See class docstring.
@@ -548,7 +558,7 @@ class Want:
             msg = f"{self.class_name}.config.setter: "
             msg += "expected dict for value. "
             msg += f"got {type(value).__name__}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self._properties["config"] = value
 
     @property
@@ -572,7 +582,7 @@ class Want:
             msg = f"{self.class_name}.items_key.setter: "
             msg += "expected string type for value. "
             msg += f"got {type(value).__name__}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self._properties["items_key"] = value
 
     @property
@@ -611,7 +621,7 @@ class Want:
             msg = f"{self.class_name}.params.setter: "
             msg += "expected dict type for value. "
             msg += f"got {type(value).__name__}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self._properties["params"] = value
 
     @property
@@ -765,7 +775,7 @@ class Common:
             instance.validator = ParamsValidate()
             instance.commit()
             self.want = instance.want
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             raise ValueError(error) from error
         # Exit if there's nothing to do
         if len(self.want) == 0:

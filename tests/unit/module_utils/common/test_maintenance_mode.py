@@ -298,7 +298,7 @@ def test_maintenance_mode_00110(
 
     Summary
     -   Verify MaintenanceMode().commit() raises ``ValueError`` when
-        ``MaintenanceMode().change_system_mode`` raises any of:
+        ``MaintenanceMode().deploy_switches`` raises any of:
             -   ``ControllerResponseError``
             -   ``ValueError``
 

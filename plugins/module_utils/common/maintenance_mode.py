@@ -150,12 +150,13 @@ class MaintenanceMode:
         self._properties["rest_send"] = None
         self._properties["results"] = None
 
-    def verify_config_parameters(self, value):
+    def verify_config_parameters(self, value) -> None:
         """
+        ### Summary
         Verify that required parameters are present in config.
 
         ### Raises
-        -   ``ValueError`` if ``config`` is not a list.
+        -   ``TypeError`` if ``config`` is not a list.
         -   ``ValueError`` if ``config`` contains invalid content.
 
         ### NOTES
@@ -171,7 +172,7 @@ class MaintenanceMode:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.config must be a list. "
             msg += f"Got type: {type(value).__name__}."
-            raise ValueError(msg)
+            raise TypeError(msg)
 
         for item in value:
             try:
@@ -183,10 +184,15 @@ class MaintenanceMode:
             except ValueError as error:
                 raise ValueError(error) from error
 
-    def verify_deploy(self, item):
+    def verify_deploy(self, item) -> None:
         """
-        -   Raise ``ValueError`` if ``deploy`` is not present.
-        -   Raise ``ValueError`` if ``deploy`` is not a boolean.
+        ### Summary
+        Verify the ``deploy`` parameter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``deploy`` is not present.
+                -   `deploy`` is not a boolean.
         """
         method_name = inspect.stack()[0][3]
         if item.get("deploy", None) is None:
@@ -198,10 +204,15 @@ class MaintenanceMode:
             msg += "deploy must be a boolean."
             raise ValueError(msg)
 
-    def verify_fabric_name(self, item):
+    def verify_fabric_name(self, item) -> None:
         """
-        -   Raise ``ValueError`` if ``fabric_name`` is not present.
-        -   Raise ``ValueError`` if ``fabric_name`` is not a valid fabric name.
+        ### Summary
+        Validate the ``fabric_name`` parameter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``fabric_name`` is not present.
+                -   ``fabric_name`` is not a valid fabric name.
         """
         method_name = inspect.stack()[0][3]
         if item.get("fabric_name", None) is None:
@@ -213,9 +224,14 @@ class MaintenanceMode:
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
-    def verify_ip_address(self, item):
+    def verify_ip_address(self, item) -> None:
         """
-        -   Raise ``ValueError`` if ``ip_address`` is not present.
+        ### Summary
+        Validate the ``ip_address`` parameter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``ip_address`` is not present.
         """
         method_name = inspect.stack()[0][3]
         if item.get("ip_address", None) is None:
@@ -223,14 +239,15 @@ class MaintenanceMode:
             msg += "ip_address must be present in config."
             raise ValueError(msg)
 
-    def verify_mode(self, item):
+    def verify_mode(self, item) -> None:
         """
         ### Summary
         Validate the ``mode`` parameter.
 
         ### Raises
-        -   ``ValueError`` if ``mode`` is not present.
-        -   ``ValueError`` if ``mode`` is not one of "maintenance" or "normal".
+        -   ``ValueError`` if:
+                -   ``mode`` is not present.
+                -   ``mode`` is not one of "maintenance" or "normal".
         """
         method_name = inspect.stack()[0][3]
         if item.get("mode", None) is None:
@@ -243,13 +260,14 @@ class MaintenanceMode:
             msg += f"Got {item.get('mode', None)}."
             raise ValueError(msg)
 
-    def verify_serial_number(self, item):
+    def verify_serial_number(self, item) -> None:
         """
         ### Summary
         Validate the ``serial_number`` parameter.
 
         ### Raises
-        - ``ValueError`` if ``serial_number`` is not present.
+        - ``ValueError`` if:
+                -   ``serial_number`` is not present.
         """
         method_name = inspect.stack()[0][3]
         if item.get("serial_number", None) is None:
@@ -257,14 +275,16 @@ class MaintenanceMode:
             msg += "serial_number must be present in config."
             raise ValueError(msg)
 
-    def verify_commit_parameters(self):
+    def verify_commit_parameters(self) -> None:
         """
         ### Summary
         Verify that required parameters are present before calling commit.
 
         ### Raises
-        -   ``ValueError`` if ``rest_send`` is not set.
-        -   ``ValueError`` if ``results`` is not set.
+        -   ``ValueError`` if:
+                -   ``config`` is not set.
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
         """
         method_name = inspect.stack()[0][3]
         if self.config is None:
@@ -283,19 +303,20 @@ class MaintenanceMode:
             msg += "before calling commit."
             raise ValueError(msg)
 
-    def commit(self):
+    def commit(self) -> None:
         """
         ### Summary
         Initiates the maintenance mode change on the controller.
 
         ### Raises
-        -   ``ValueError`` if ``config`` is not set.
-        -   ``ValueError`` if ``rest_send`` is not set.
-        -   ``ValueError`` if ``results`` is not set.
-        -   ``ValueError`` for any exception raised by
-                -   ``verify_commit_parameters()``
-                -   ``change_system_mode()``
-                -   ``deploy_switches()``
+        -   ``ValueError`` if
+                -   ``config`` is not set.
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+                -   any exception is raised by:
+                        -   ``verify_commit_parameters()``
+                        -   ``change_system_mode()``
+                        -   ``deploy_switches()``
         """
         try:
             self.verify_commit_parameters()
@@ -308,15 +329,19 @@ class MaintenanceMode:
         except (ControllerResponseError, ValueError, TypeError) as error:
             raise ValueError(error) from error
 
-    def change_system_mode(self):
+    def change_system_mode(self) -> None:
         """
         ### Summary
         Send the maintenance mode change request to the controller.
 
         ### Raises
-        -   ``ControllerResponseError`` if controller response != 200.
-        -  ``ValueError`` if ``fabric_name`` is invalid.
-        -  ``TypeError`` if ``serial_number`` is not a string.
+        -   ``ControllerResponseError`` if:
+                -   controller response != 200.
+        -  ``ValueError`` if:
+                -   ``fabric_name`` is invalid.
+                -   endpoint cannot be resolved.
+        -  ``TypeError`` if:
+                -   ``serial_number`` is not a string.
         """
         method_name = inspect.stack()[0][3]
 
@@ -377,7 +402,7 @@ class MaintenanceMode:
                 msg += f"Got response {self.results.response_current}"
                 raise ControllerResponseError(msg)
 
-    def build_deploy_dict(self):
+    def build_deploy_dict(self) -> None:
         """
         ### Summary
         -   Build the deploy_dict
@@ -406,7 +431,7 @@ class MaintenanceMode:
             if deploy is True:
                 self.deploy_dict[fabric_name].append(serial_number)
 
-    def build_serial_number_to_ip_address(self):
+    def build_serial_number_to_ip_address(self) -> None:
         """
         ### Summary
         Populate self.serial_number_to_ip_address dict.
@@ -433,14 +458,16 @@ class MaintenanceMode:
             ip_address = item.get("ip_address")
             self.serial_number_to_ip_address[serial_number] = ip_address
 
-    def deploy_switches(self):
+    def deploy_switches(self) -> None:
         """
         ### Summary
         Initiate config-deploy for the switches in ``self.deploy_dict``.
 
         ### Raises
-        -   ``ControllerResponseError`` if controller response != 200.
-        -   ``ValueError`` if endpoint cannot be resolved.
+        -   ``ControllerResponseError`` if:
+                -   controller response != 200.
+        -   ``ValueError`` if:
+                -   endpoint cannot be resolved.
         """
         method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
@@ -495,15 +522,21 @@ class MaintenanceMode:
                 raise ControllerResponseError(msg)
 
     @property
-    def config(self):
+    def config(self) -> list:
         """
         ### Summary
         The maintenance mode configurations to be sent to the controller.
 
-        -   getter: Return the config value.
-        -   setter: Set the config value.
-        -   setter: Raise ``ValueError`` if value is not a list.
-        -   setter: Raise ``ValueError`` if value contains invalid content.
+        ### Raises
+        -   setter: ``ValueError`` if:
+                -   value is not a list.
+                -   value contains invalid content.
+
+        ### getter
+        Return ``config``.
+
+        ### setter
+        Set ``config``.
 
         ### Value structure
         value is a ``list`` of ``dict``.  Each dict must contain the following:
@@ -548,10 +581,17 @@ class MaintenanceMode:
     @property
     def rest_send(self):
         """
-        -   getter: Return an instance of the RestSend class.
-        -   setter: Set an instance of the RestSend class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of RestSend.
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
         """
         return self._properties["rest_send"]
 
@@ -575,10 +615,17 @@ class MaintenanceMode:
     @property
     def results(self):
         """
-        -   getter: Return an instance of the Results class.
-        -   setter: Set an instance of the Results class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of Results.
+        ### Summary
+        An instance of the Results class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of Results.
+
+        ### getter
+        Return an instance of the Results class.
+
+        ### setter
+        Set an instance of the Results class.
         """
         return self._properties["results"]
 
