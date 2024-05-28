@@ -282,6 +282,7 @@ class ParamsSpec:
             raise ValueError(msg)
         self._properties["params"] = value
 
+
 class Want:
     """
     ### Summary
@@ -304,7 +305,7 @@ class Want:
     instance.params_spec = ParamsSpec()
     instance.results = Results()
     instance.items_key = "switches"
-    instance.validator = ParamsValidate() 
+    instance.validator = ParamsValidate()
     instance.commit()
     want = instance.want
     ```
@@ -325,6 +326,7 @@ class Want:
     ]
     ```
     """
+
     def __init__(self):
         self.class_name = self.__class__.__name__
 
@@ -340,7 +342,8 @@ class Want:
         self._properties["validator"] = None
         self._properties["want"] = []
 
-        self.switch_configs = []
+        self.merged_configs = []
+        self.item_configs = []
         self.validator = None
 
     def generate_params_spec(self) -> None:
@@ -361,7 +364,7 @@ class Want:
             msg = f"{self.class_name}.generate_params_spec(): "
             msg += "self.params_spec is required"
             raise ValueError(msg)
-        
+
         try:
             self.params_spec.params = self.params
         except ValueError as error:
@@ -514,7 +517,7 @@ class Want:
                 merge_dicts.dict2 = item
                 merge_dicts.commit()
                 item_config = merge_dicts.dict_merged
-            except(TypeError, ValueError) as error:
+            except (TypeError, ValueError) as error:
                 raise ValueError(error) from error
 
             msg = f"{self.class_name}.{method_name}: "
@@ -542,7 +545,7 @@ class Want:
 
     @config.setter
     def config(self, value) -> None:
-        if not isinstance(value,dict):
+        if not isinstance(value, dict):
             msg = f"{self.class_name}.config.setter: "
             msg += "expected dict for value. "
             msg += f"got {type(value).__name__}."
@@ -647,6 +650,7 @@ class Want:
         """
         self._properties["validator"] = value
 
+
 class Common:
     """
     Common methods, properties, and resources for all states.
@@ -684,17 +688,6 @@ class Common:
         self.switch_details = SwitchDetails()
         self.switch_details.results = self.results
 
-        self.params_spec = ParamsSpec()
-        try:
-            self.params_spec.params = self.params
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            self.params_spec.commit()
-        except ValueError as error:
-            raise ValueError(error) from error
-
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -703,37 +696,39 @@ class Common:
         # populated in self.validate_input()
         self.payloads = {}
 
-        # initialized in self.get_want()
-        self.validator = None
-        # populated in self.get_want()
-        self.validated_configs = []
-
         self.config = self.params.get("config")
         if not isinstance(self.config, dict):
             msg = "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
             raise ValueError(msg)
 
-        self.validated = []
         self.have = {}
-        self.want = []
         self.query = []
-        # populated in self._merge_global_and_switch_configs()
-        self.switch_configs = []
+        self.want = []
 
     def _init_properties(self):
         self._properties = {}
         self._properties["ansible_module"] = None
 
     def get_want(self) -> None:
-        instance = Want()
-        instance.config = self.config
-        instance.items_key = "switches"
-        instance.params = self.params
-        instance.params_spec = ParamsSpec()
-        instance.validator = ParamsValidate()
-        instance.commit()
-        self.want = instance.want
+        """
+        ### Summary
+        Build self.want, a list of validated playbook configurations.
+
+        ### Raises
+        -   ``ValueError`` if Want() instance raises ``ValueError``
+        """
+        try:
+            instance = Want()
+            instance.config = self.config
+            instance.items_key = "switches"
+            instance.params = self.params
+            instance.params_spec = ParamsSpec()
+            instance.validator = ParamsValidate()
+            instance.commit()
+            self.want = instance.want
+        except ValueError as error:
+            raise ValueError(error) from error
         # Exit if there's nothing to do
         if len(self.want) == 0:
             self.ansible_module.exit_json(**self.results.ok_result)
@@ -781,6 +776,7 @@ class Merged(Common):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fabric_details = FabricDetailsByName(self.params)
+        self.rest_send = None
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
