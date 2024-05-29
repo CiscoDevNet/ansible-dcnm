@@ -128,11 +128,9 @@ import logging
 from os import environ
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
-    MaintenanceMode
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import (
+    MaintenanceMode, MaintenanceModeInfo)
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
@@ -349,7 +347,6 @@ class Want:
 
         self.merged_configs = []
         self.item_configs = []
-        self.validator = None
 
     def generate_params_spec(self) -> None:
         """
@@ -840,30 +837,43 @@ class Merged(Common):
 
         ### Raises
         -   ``ValueError`` if self.ansible_module is not set
-        -   ``ValueError`` if SwitchDetails() raises ``ControllerResponseError``
-            or ``ValueError``
-        -   ``ValueError`` if the switch's hosting fabric is in ``freezeMode``
-        -   ``ValueError`` if the switch's maintenance mode is ``inconsistent``
-        -   ``ValueError`` if the switch's maintenance mode is ``migration``
+        -   ``ValueError`` if MaintenanceModeInfo() raises ``ValueError``
 
         ### self.have structure
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
         -   ``fabric_name``: The name of the switch's hosting fabric.
+        -   ``fabric_freeze_mode``: The current ``freezeMode`` state of the switch's
+            hosting fabric.  If ``freeze_mode`` is True, configuration changes cannot
+            be made to the fabric or the switches within the fabric.
+        -   ``fabric_read_only``: The current ``IS_READ_ONLY`` state of the switch's
+            hosting fabric.  If ``fabric_read_only`` is True, configuration changes cannot
+            be made to the fabric or the switches within the fabric.
         -   ``mode``: The current maintenance mode of the switch.
-        -   ``role``: The role of the switch in the hosting fabric.
+            Possible values include: , ``inconsistent``, ``maintenance``,
+            ``migration``, ``normal``.
+        -   ``role``: The role of the switch in the hosting fabric, e.g.
+            ``spine``, ``leaf``, ``border_gateway``, etc.
         -   ``serial_number``: The serial number of the switch.
 
         ```json
         {
             "192.169.1.2": {
+                fabric_deployment_disabled: true
+                fabric_freeze_mode: true,
                 fabric_name: "MyFabric",
+                fabric_read_only: true
                 mode: "maintenance",
+                role: "spine",
                 serial_number: "FCI1234567"
             },
             "192.169.1.3": {
+                fabric_deployment_disabled: false
+                fabric_freeze_mode: false,
                 fabric_name: "YourFabric",
+                fabric_read_only: false
                 mode: "normal",
+                role: "leaf",
                 serial_number: "FCH2345678"
             }
         }
@@ -875,84 +885,96 @@ class Merged(Common):
             msg += f"ansible_module must be set before calling {method_name}"
             raise ValueError(msg)
 
-        self.switch_details.rest_send = RestSend(self.ansible_module)
-        try:
-            self.switch_details.refresh()
-        except (ControllerResponseError, ValueError) as error:
-            raise ValueError(error) from error
+        instance = MaintenanceModeInfo(self.ansible_module.params)
+        instance.rest_send = RestSend(self.ansible_module)
+        instance.results = self.results
+        instance.config = [
+            item["ip_address"] for item in self.config.get("switches", {})
+        ]
+        instance.refresh()
+        self.have = instance.info
 
-        self.fabric_details.rest_send = RestSend(self.ansible_module)
-        self.fabric_details.results = self.results
-        self.fabric_details.refresh()
+    def bail_if_fabric_deployment_disabled(self) -> None:
+        """
+        ### Summary
+        Handle the following cases:
+        -   switch migration mode is ``inconsistent``
+        -   switch migration mode is ``migration``
+        -   fabric is in read-only mode (IS_READ_ONLY is True)
+        -   fabric is in freeze mode (Deployment Disable)
 
-        self.have = {}
-        # self.config has already been validated
-        for switch in self.config.get("switches"):
-            ip_address = switch.get("ip_address")
-            self.switch_details.filter = ip_address
+        ### Raises
+        -   ``ValueError`` if any of the above cases are true
+        """
+        method_name = inspect.stack()[0][3]
+        for ip_address, value in self.have.items():
+            fabric_name = value.get("fabric_name")
+            mode = value.get("mode")
+            serial_number = value.get("serial_number")
+            fabric_deployment_disabled = value.get("fabric_deployment_disabled")
+            fabric_freeze_mode = value.get("fabric_freeze_mode")
+            fabric_read_only = value.get("fabric_read_only")
 
-            try:
-                fabric_name = self.switch_details.fabric_name
-            except ValueError as error:
-                raise ValueError(error) from error
-
-            if self.switch_details.freeze_mode is True:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Fabric {fabric_name} is in freeze mode. "
-                msg += "Configuration changes are not allowed. "
-                msg += "Ensure that NDFC -> Topology -> Fabric -> Actions -> "
-                msg += "More -> Deployment Enable is selected."
-                raise ValueError(msg)
-
-            try:
-                self.fabric_details.filter = fabric_name
-            except ValueError as error:
-                raise ValueError(error) from error
-
-            if self.fabric_details.is_read_only is True:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Fabric {fabric_name} is in read-only mode. "
-                msg += "Configuration changes are not allowed."
-                raise ValueError(msg)
-
-            try:
-                serial_number = self.switch_details.serial_number
-            except ValueError as error:
-                raise ValueError(error) from error
-
-            if serial_number is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Switch with ip_address {ip_address} "
-                msg += "does not exist on the controller."
-                raise ValueError(msg)
-
-            mode = self.switch_details.maintenance_mode
+            additional_info = "Additional info: "
+            additional_info += f"hosting_fabric: {fabric_name}, "
+            additional_info += "fabric_deployment_disabled: "
+            additional_info += f"{fabric_deployment_disabled}, "
+            additional_info += "fabric_freeze_mode: "
+            additional_info += f"{fabric_freeze_mode}, "
+            additional_info += "fabric_read_only: "
+            additional_info += f"{fabric_read_only}, "
+            additional_info += f"maintenance_mode: {mode}. "
             if mode == "inconsistent":
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Switch maintenance mode state differs from the "
                 msg += "controller's maintenance mode state for switch "
-                msg += f"with ip_address {ip_address}. This is typically "
-                msg += "resolved by initiating a switch Deploy Config on "
-                msg += "the controller."
+                msg += f"with ip_address {ip_address}, "
+                msg += f"serial_number {serial_number}. "
+                msg += "This is typically resolved by initiating a switch "
+                msg += "Deploy Config on the controller. "
+                msg += additional_info
                 raise ValueError(msg)
 
             if mode == "migration":
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Switch maintenance mode is in migration state for the "
-                msg += f"switch with ip_address {ip_address}. "
+                msg += "switch with "
+                msg += f"ip_address {ip_address}, "
+                msg += f"serial_number {serial_number}. "
                 msg += "This indicates that the switch configuration is not "
                 msg += "compatible with the switch role in the hosting "
                 msg += "fabric.  The issue might be resolved by initiating a "
                 msg += "fabric Recalculate & Deploy on the controller. "
-                msg += "Failing that, the switch configuration might need to be "
-                msg += "manually modified to match the switch role in the "
-                msg += "hosting fabric."
+                msg += "Failing that, the switch configuration might need to "
+                msg += "be manually modified to match the switch role in the "
+                msg += "hosting fabric. "
+                msg += additional_info
                 raise ValueError(msg)
 
-            self.have[ip_address] = {}
-            self.have[ip_address].update({"fabric_name": fabric_name})
-            self.have[ip_address].update({"mode": mode})
-            self.have[ip_address].update({"serial_number": serial_number})
+            if fabric_read_only is True:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "The hosting fabric is in read-only mode for the "
+                msg += f"switch with ip_address {ip_address}, "
+                msg += f"serial_number {serial_number}. "
+                msg += "The issue can be resolved for LAN_Classic fabrics by "
+                msg += "unchecking 'Fabric Monitor Mode' in the fabric "
+                msg += "settings on the controller. "
+                msg += additional_info
+                raise ValueError(msg)
+
+            if fabric_freeze_mode is True:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "The hosting fabric is in "
+                msg += "'Deployment Disable' state for the switch with "
+                msg += f"ip_address {ip_address}, "
+                msg += f"serial_number {serial_number}. "
+                msg += "Review the 'Deployment Enable / Deployment Disable' "
+                msg += "setting on the controller at: "
+                msg += "Fabric Controller > Overview > "
+                msg += "Topology > <fabric> > Actions > More, and change "
+                msg += "the setting to 'Deployment Enable'. "
+                msg += additional_info
+                raise ValueError(msg)
 
     def get_need(self):
         """
@@ -1028,6 +1050,8 @@ class Merged(Common):
         except ValueError as error:
             raise ValueError(error) from error
 
+        self.bail_if_fabric_deployment_disabled()
+
         self.get_need()
 
         try:
@@ -1045,9 +1069,6 @@ class Merged(Common):
 
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        msg = f"{self.class_name}.{method_name}: entered. "
-        msg += f"self.need: {json_pretty(self.need)}"
-        self.log.debug(msg)
 
         if len(self.need) == 0:
             msg = f"{self.class_name}.{method_name}: "
@@ -1106,33 +1127,41 @@ class Query(Common):
         Build self.have, a dict containing the current mode of all switches.
 
         ### Raises
-        -   ``ValueError`` if self.ansible_module is not set
-        -   ``ValueError`` if SwitchDetails() raises ``ControllerResponseError``
-        -   ``ValueError`` if SwitchDetails() raises ``ValueError``
+        -   ``ValueError`` if MaintenanceModeInfo() raises ``ValueError``
 
         ### self.have structure
         Have is a dict, keyed on switch_ip, where each element is a dict
         with the following structure:
         -   ``fabric_name``: The name of the switch's hosting fabric.
-        -   ``freeze_mode``: The current state of the switch's hosting fabric.
-            If freeze_mode is True, configuration changes cannot be made to the
-            fabric or the switches within the fabric.
+        -   ``fabric_freeze_mode``: The current ``freezeMode`` state of the switch's
+            hosting fabric.  If ``freeze_mode`` is True, configuration changes cannot
+            be made to the fabric or the switches within the fabric.
+        -   ``fabric_read_only``: The current ``IS_READ_ONLY`` state of the switch's
+            hosting fabric.  If ``fabric_read_only`` is True, configuration changes cannot
+            be made to the fabric or the switches within the fabric.
         -   ``mode``: The current maintenance mode of the switch.
-        -   ``role``: The role of the switch in the hosting fabric.
+            Possible values include: , ``inconsistent``, ``maintenance``,
+            ``migration``, ``normal``.
+        -   ``role``: The role of the switch in the hosting fabric, e.g.
+            ``spine``, ``leaf``, ``border_gateway``, etc.
         -   ``serial_number``: The serial number of the switch.
 
         ```json
         {
             "192.169.1.2": {
-                deployment_disabled: true
+                fabric_deployment_disabled: true
+                fabric_freeze_mode: true,
                 fabric_name: "MyFabric",
+                fabric_read_only: true
                 mode: "maintenance",
                 role: "spine",
                 serial_number: "FCI1234567"
             },
             "192.169.1.3": {
-                deployment_disabled: false
+                fabric_deployment_disabled: false
+                fabric_freeze_mode: false,
                 fabric_name: "YourFabric",
+                fabric_read_only: false
                 mode: "normal",
                 role: "leaf",
                 serial_number: "FCH2345678"
@@ -1146,59 +1175,14 @@ class Query(Common):
             msg += f"ansible_module must be set before calling {method_name}"
             raise ValueError(msg)
 
-        self.switch_details.rest_send = RestSend(self.ansible_module)
-        self.fabric_details.rest_send = RestSend(self.ansible_module)
-
-        try:
-            self.switch_details.refresh()
-        except (ControllerResponseError, ValueError) as error:
-            raise ValueError(error) from error
-
-        try:
-            self.fabric_details.refresh()
-        except (ControllerResponseError, ValueError) as error:
-            raise ValueError(error) from error
-
-        self.have = {}
-        # self.config has already been validated
-        for switch in self.config.get("switches"):
-            ip_address = switch.get("ip_address")
-            self.switch_details.filter = ip_address
-
-            try:
-                serial_number = self.switch_details.serial_number
-            except ValueError as error:
-                raise ValueError(error) from error
-
-            if serial_number is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Switch with ip_address {ip_address} "
-                msg += "does not exist on the controller."
-                raise ValueError(msg)
-
-            fabric_name = self.switch_details.fabric_name
-            freeze_mode = self.switch_details.freeze_mode
-            mode = self.switch_details.maintenance_mode
-            role = self.switch_details.switch_role
-
-            try:
-                self.fabric_details.filter = fabric_name
-            except ValueError as error:
-                raise ValueError(error) from error
-            fabric_read_only = self.fabric_details.is_read_only
-
-            self.have[ip_address] = {}
-            self.have[ip_address].update({"fabric_name": fabric_name})
-            if freeze_mode is True or fabric_read_only is True:
-                self.have[ip_address].update({"deployment_disabled": True})
-            else:
-                self.have[ip_address].update({"deployment_disabled": False})
-            self.have[ip_address].update({"mode": mode})
-            if role is not None:
-                self.have[ip_address].update({"role": role})
-            else:
-                self.have[ip_address].update({"role": "na"})
-            self.have[ip_address].update({"serial_number": serial_number})
+        instance = MaintenanceModeInfo(self.ansible_module.params)
+        instance.rest_send = RestSend(self.ansible_module)
+        instance.results = self.results
+        instance.config = [
+            item["ip_address"] for item in self.config.get("switches", {})
+        ]
+        instance.refresh()
+        self.have = instance.info
 
     def commit(self) -> None:
         """
