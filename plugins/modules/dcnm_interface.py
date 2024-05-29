@@ -61,6 +61,16 @@ options:
        over this global flag.
     type: bool
     default: true
+  override_intf_types:
+    description:
+    - A list of interface types which will be deleted/defaulted in overridden/deleted state. If this list is empty, then during
+      overridden/deleted state, all interface types will be defaulted/deleted. If this list includes specific interface types,
+      then only those interface types that are included in the list will be deleted/defaulted.
+    type: list
+    required: false
+    elements: str
+    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex"]
+    default: []
   config:
     description:
     - A dictionary of interface operations
@@ -3977,6 +3987,7 @@ class DcnmIntf:
                 # the given switch may be part of a VPC pair. In that case we
                 # need to get interface information using one switch which returns interfaces
                 # from both the switches
+
                 if not any(
                     d.get("serialNo", None) == self.ip_sn[address]
                     for d in self.have_all
@@ -4004,6 +4015,27 @@ class DcnmIntf:
             name = have["ifName"]
             sno = have["serialNo"]
             fabric = have["fabricName"]
+
+            # Check if this interface type is to be overridden.
+            if self.module.params["override_intf_types"] != []:
+                # Check if it is SUBINTERFACE. For sub-interfaces ifType will be retuened as INTERFACE_ETHERNET. So
+                # for such interfaces, check if SUBINTERFACE is included in override list instead of have['ifType']
+                if (have["ifType"] == "INTERFACE_ETHERNET") and (
+                    (str(have["isPhysical"]).lower() == "none")
+                    or (str(have["isPhysical"]).lower() == "false")
+                ):
+                    # This is a SUBINTERFACE.
+                    if (
+                        "SUBINTERFACE"
+                        not in self.module.params["override_intf_types"]
+                    ):
+                        continue
+                else:
+                    if (
+                        have["ifType"]
+                        not in self.module.params["override_intf_types"]
+                    ):
+                        continue
 
             if (have["ifType"] == "INTERFACE_ETHERNET") and (
                 (str(have["isPhysical"]).lower() != "none")
@@ -4216,8 +4248,11 @@ class DcnmIntf:
                 delem["serialNumber"] = sno
                 delem["ifName"] = intf["ifName"]
                 delem["fabricName"] = self.fabric
-                self.diff_deploy.append(delem)
-                self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+
+                # Deploy only if requested for
+                if str(deploy).lower() == "true":
+                    self.diff_deploy.append(delem)
+                    self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
 
         self.dcnm_intf_compare_want_and_have("overridden")
 
@@ -4842,7 +4877,7 @@ class DcnmIntf:
             self.module.params["state"] == "deleted"
         ):
             self.result["changed"] = (
-                delete or create or deploy or delete_deploy
+                delete or create or replace or deploy or delete_deploy
             )
         else:
             if delete or create or replace or deploy or delete_deploy:
@@ -4864,6 +4899,7 @@ class DcnmIntf:
         """
 
         inv_data = get_fabric_inventory_details(self.module, self.fabric)
+
         self.inventory_data.update(inv_data)
 
         if self.module.params["state"] != "query":
@@ -4937,6 +4973,13 @@ class DcnmIntf:
 
     def dcnm_translate_playbook_info(self, config, ip_sn, hn_sn):
 
+        # Transalte override_intf_types to proper types that can be directly used in overridden state.
+
+        for if_type in self.module.params["override_intf_types"][:]:
+            self.module.params["override_intf_types"].append(
+                self.int_types[if_type]
+            )
+            self.module.params["override_intf_types"].remove(if_type)
         for cfg in config:
             index = 0
             if cfg.get("switch", None) is None:
@@ -4970,6 +5013,22 @@ def main():
             type="str",
             default="merged",
             choices=["merged", "replaced", "overridden", "deleted", "query"],
+        ),
+        override_intf_types=dict(
+            required=False,
+            type="list",
+            elements="str",
+            choices=[
+                "pc",
+                "vpc",
+                "sub_int",
+                "lo",
+                "eth",
+                "svi",
+                "st_fex",
+                "aa_fex",
+            ],
+            default=[],
         ),
         check_deploy=dict(type="bool", default=False),
     )
