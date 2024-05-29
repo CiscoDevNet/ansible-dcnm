@@ -172,14 +172,13 @@ EXAMPLES = """
           secondaryGW1: "3.1.1.1"
           loopbackId: 10
           attach:
-            - fabric: vxlan-fabric
-              networkName: "net1"
-              ipAddress: "FDO1234QWER"
+            - ipAddress: "1.1.1.1"
               attached: true
               vlan: 100
-              switchPorts: "Ethernet1/1,Ethernett1/2"
-              torPorts: "Tor1(Ethernet1/13),Tor2(Ethernet1/14)"
-              instanceValues: ""
+              switchPorts: ["Ethernet1/1","Ethernett1/2"]
+              torPorts:
+                - switch: Tor1
+                  ports: ["Ethernet1/13","Ethernet1/14"]
               deploy: true
 
 """
@@ -188,6 +187,8 @@ import json
 import time
 import copy
 import re
+import datetime
+import inspect
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     get_fabric_inventory_details,
     dcnm_send,
@@ -253,25 +254,19 @@ class DcnmNetworkv2:
         self.diff_input_format = []
         self.dyn_arg_spec = {}
         self.query = []
-        self.dcnm_version = dcnm_version_supported(self.module)
-        self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
-        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
-        self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
-        self.fabric_det = get_fabric_details(module, self.fabric)
-        self.is_ms_fabric = (
-            True if self.fabric_det.get("fabricType") == "MFD" else False
-        )
-        if self.dcnm_version < 12:
-            self.module.fail_json(
-                msg="dcnm_networkv2 module is only supported on NDFC. It is not support on DCNM"
-            )
-        else:
-            self.paths = self.dcnm_network_paths[12]
 
         self.result = dict(changed=False, diff=[], response=[], warnings=[])
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
+
+    def log(self, msg):
+        with open('netv2.log', 'a') as of:
+            callerframerecord = inspect.stack()[1]
+            frame = callerframerecord[0]
+            info = inspect.getframeinfo(frame)
+            d = datetime.datetime.now().replace(microsecond=0).isoformat()
+            of.write("---- %s ---- %s@%s ---- %s \n" % (d, info.lineno, info.function, msg))
 
     def get_diff_delete(self):
         """
@@ -330,6 +325,9 @@ class DcnmNetworkv2:
                     have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
         else:
+            for have_c in self.have_create:
+                diff_delete.update({have_c["networkName"]: "DEPLOYED"})
+
             for have_a in self.have_attach:
                 to_del = []
                 atch_h = have_a["lanAttachList"]
@@ -347,8 +345,6 @@ class DcnmNetworkv2:
                 if to_del:
                     have_a.update({"lanAttachList": to_del})
                     diff_detach.append(have_a)
-
-                diff_delete.update({have_a["networkName"]: "DEPLOYED"})
 
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
@@ -703,7 +699,6 @@ class DcnmNetworkv2:
                 if want_a["networkName"] == have_a["networkName"]:
                     found = True
                     w_attach, w_attach_update, diff_attach_not_w_in_h = get_diff(have_a["lanAttachList"], want_a["lanAttachList"])
-
                     if w_attach:
                         base = want_a.copy()
                         del base["lanAttachList"]
@@ -873,7 +868,6 @@ class DcnmNetworkv2:
             msg2 = "Unable to find Networks under fabric: {0}".format(self.fabric)
 
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-            return
 
         for net in net_objects["DATA"]:
             json_to_dict = net["networkTemplateConfig"]
@@ -1382,9 +1376,9 @@ class DcnmNetworkv2:
 
         if self.wait_for_del_ready():
             for net, state in self.diff_delete.items():
-                # if state == "OUT-OF-SYNC":
-                #     del_failure += net + ","
-                #     continue
+                if state == "OUT-OF-SYNC":
+                    del_failure += net + ","
+                    continue
                 delete_path = path + "/" + net
                 resp = dcnm_send(self.module, method, delete_path)
                 self.result["response"].append(resp)
@@ -1396,8 +1390,7 @@ class DcnmNetworkv2:
                     self.failure(resp)
 
         if del_failure:
-            fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
-            self.result["response"].append(resp)
+            fail_msg = "Deletion of Networks {0} has failed.".format(del_failure[:-1])
             if is_rollback:
                 self.failed_to_rollback = True
                 return
@@ -1464,15 +1457,15 @@ class DcnmNetworkv2:
                 self.module, method, attach_path, json.dumps(self.diff_attach)
             )
             update_in_progress = False
-            for key in resp["DATA"].keys():
-                if re.search(
-                    r"Failed.*Please try after some time", str(resp["DATA"][key])
-                ):
-                    update_in_progress = True
-            if update_in_progress:
-                time.sleep(1)
-                continue
-
+            if resp.get("DATA") and isinstance(resp["DATA"], dict):
+                for key in resp["DATA"].keys():
+                    if re.search(
+                        r"Failed.*Please try after some time", str(resp["DATA"][key])
+                    ):
+                        update_in_progress = True
+                if update_in_progress:
+                    time.sleep(1)
+                    continue
             break
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "attach", self.result["changed"])
@@ -1564,8 +1557,8 @@ class DcnmNetworkv2:
 
         """
 
-        template_name = net.get("net_extension_template", False)
-        ext_template_name = net.get("net_template", False)
+        template_name = net.get("net_template", False)
+        ext_template_name = net.get("net_extension_template", False)
         net_uni_dyn_spec = {}
         net_ext_dyn_spec = {}
 
@@ -1617,7 +1610,7 @@ class DcnmNetworkv2:
         )
 
         net_attach_spec = dict(
-            attached=dict(type="bool", default=False),
+            attached=dict(type="bool", default=True),
             detachSwitchPorts=dict(type="list", default=[]),
             dot1QVlan=dict(type="int", default="1"),
             extensionValues=dict(type="string", default=""),
@@ -1676,8 +1669,8 @@ class DcnmNetworkv2:
                     if att_present:
                         net["attach"] = valid_att
                         for attach in net["attach"]:
-                            if attach.get("ports"):
-                                attach["ports"] = [port.capitalize() for port in attach["ports"]]
+                            if attach.get("switchPorts"):
+                                attach["switchPorts"] = [port.capitalize() for port in attach["switchPorts"]]
                             if attach.get("torPorts"):
                                 valid_tor, invalid_tor = validate_list_of_dicts(
                                     attach["torPorts"], tor_att_spec
@@ -1750,13 +1743,22 @@ class DcnmNetworkv2:
             if found_a:
                 attach = found_a.get("lanAttachList")
                 for atch in attach:
+                    for net in diff_deploy.get(atch["serialNumber"], []):
+                        if net == found_c["net_name"]:
+                            atch.update({"deploy": True})
+                            break
+                    else:
+                        for net in diff_undeploy.get(atch["serialNumber"], []):
+                            if net == found_c["net_name"]:
+                                atch.update({"deploy": False})
+                                break
                     if atch.get("d_key"):
                         del atch["d_key"]
-                    if atch.get("deployment"):
+                    if atch.get("deployment", None) is not None:
                         del atch["deployment"]
                     if atch.get("serialNumber"):
                         del atch["serialNumber"]
-                found_c["attach"].append(attach)
+                found_c["attach"].extend(attach)
 
             diff.append(found_c)
 
@@ -1878,7 +1880,7 @@ class DcnmNetworkv2:
         dict_have = have["networkTemplateConfig"]
 
         for key in dict_want.keys():
-            if cfg.get(key, None) is None:
+            if cfg["network_template_config"].get(key, None) is None:
                 dict_want[key] = dict_have[key]
 
         want.update({"networkTemplateConfig": dict_want})
@@ -1918,6 +1920,37 @@ class DcnmNetworkv2:
 
             self.dcnm_update_network_information(net, match_have[0], match_cfg[0])
 
+    def update_module_info(self):
+
+        """
+        Routine to update version and fabric details
+
+        Parameters:
+            None
+
+        Returns:
+            None
+        """
+
+        self.dcnm_version = dcnm_version_supported(self.module)
+        self.inventory_data = get_fabric_inventory_details(
+            self.module, self.fabric
+        )
+        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
+        self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
+        self.fabric_det = get_fabric_details(self.module, self.fabric)
+
+        self.is_ms_fabric = (
+            True if self.fabric_det.get("fabricType") == "MFD" else False
+        )
+
+        if self.dcnm_version < 12:
+            self.module.fail_json(
+                msg="dcnm_networkv2 module is only supported on NDFC. It is not support on DCNM"
+            )
+        else:
+            self.paths = self.dcnm_network_paths[12]
+
 
 def main():
     """main entry point for module execution"""
@@ -1934,6 +1967,8 @@ def main():
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
     dcnm_netv2 = DcnmNetworkv2(module)
+
+    dcnm_netv2.update_module_info()
 
     if not dcnm_netv2.ip_sn:
         module.fail_json(

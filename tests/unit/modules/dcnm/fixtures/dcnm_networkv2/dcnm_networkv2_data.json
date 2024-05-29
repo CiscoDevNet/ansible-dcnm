@@ -1,0 +1,948 @@
+{
+    "networkv2_want":
+    {
+        "d_key": "networkName",
+        "fabric": "test_netv2",
+        "vrf": "Tenant-1",
+        "networkName": "net1",
+        "networkId": 31001,
+        "networkTemplate": "Default_Network_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "networkTemplateConfig": {
+            "gatewayIpAddress": "2.1.1.1/24",
+            "vlanId": 1001,
+            "nveId": "1",
+            "gatewayIpV6Address": "", 
+            "isLayer2Only": "false",
+            "suppressArp": "", 
+            "mcastGroup": "", 
+            "dhcpServers": "", 
+            "loopbackId": 10, 
+            "vlanName": "", 
+            "intfDescription": "test_interface",
+            "tag": "12345",
+            "mtu": "1500",
+            "trmEnabled": "", 
+            "secondaryGW1": "3.1.1.1/24",
+            "secondaryGW2": "", 
+            "secondaryGW3": "", 
+            "secondaryGW4": "", 
+            "rtBothAuto": "false",
+            "ENABLE_NETFLOW": "false",
+            "enableL3OnBorder": "true",
+            "MULTISITE_CONN": ""
+        }   
+    },
+
+    "networkv2_have_00001":
+    {
+        "id": 743,
+        "fabric": "test_netv2",
+        "networkName": "net1",
+        "networkId": 31001,
+        "networkTemplate": "Default_Network_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "vrf": "Tenant-1",
+        "networkTemplateConfig": {
+            "suppressArp": "",
+            "secondaryGW3": "",
+            "secondaryGW2": "",
+            "loopbackId": "10",
+            "secondaryGW1": "3.1.1.1/24",
+            "enableL3OnBorder": "true",
+            "type": "Normal",
+            "SVI_NETFLOW_MONITOR": "",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "MULTISITE_CONN": "",
+            "ENABLE_NETFLOW": "false",
+            "dhcpServerAddr3": "",
+            "gatewayIpV6Address": "",
+            "dhcpServerAddr2": "",
+            "tag": "12345",
+            "nveId": "1",
+            "vrfDhcp": "",
+            "secondaryGW4": "",
+            "vlanId": "1001",
+            "gatewayIpAddress": "2.1.1.1/24",
+            "vlanName": "",
+            "mtu": "1800",
+            "intfDescription": "test_interface",
+            "mcastGroup": "239.11.11.1",
+            "igmpVersion": "2",
+            "trmEnabled": "",
+            "VLAN_NETFLOW_MONITOR": "",
+            "dhcpServers": ""
+        }
+    },
+
+    "networkv2_have_00002":
+    {
+        "id": 743,
+        "fabric": "test_netv2",
+        "networkName": "net2",
+        "networkId": 31002,
+        "networkTemplate": "Default_Network_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "vrf": "Tenant-1",
+        "networkTemplateConfig": {
+            "suppressArp": "",
+            "secondaryGW3": "",
+            "secondaryGW2": "",
+            "loopbackId": "20",
+            "secondaryGW1": "3.1.1.2/24",
+            "enableL3OnBorder": "true",
+            "type": "Normal",
+            "SVI_NETFLOW_MONITOR": "",
+            "enableIR": "false",
+            "rtBothAuto": "false",
+            "isLayer2Only": "false",
+            "MULTISITE_CONN": "",
+            "ENABLE_NETFLOW": "false",
+            "dhcpServerAddr3": "",
+            "gatewayIpV6Address": "",
+            "dhcpServerAddr2": "",
+            "tag": "12342",
+            "nveId": "1",
+            "vrfDhcp": "",
+            "secondaryGW4": "",
+            "vlanId": "1002",
+            "gatewayIpAddress": "2.1.1.2/24",
+            "vlanName": "",
+            "mtu": "1500",
+            "intfDescription": "test_interface",
+            "mcastGroup": "239.11.11.2",
+            "igmpVersion": "2",
+            "trmEnabled": "",
+            "VLAN_NETFLOW_MONITOR": "",
+            "dhcpServers": ""
+        }
+    },
+
+    "networkv2_cfg_00001":
+    {
+        "net_name": "net1",
+        "vrf_name": "Tenant-1",
+        "net_id": 31001,
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "network_template_config": {
+            "gatewayIpAddress": "2.1.1.1/24",
+            "vlanId": 1001,
+            "intfDescription": "test_interface",
+            "secondaryGW1": "3.1.1.1/24",
+            "loopbackId": 10,
+            "enableL3OnBorder": true
+        }
+    },
+
+    "networkv2_cfg_00002":
+    {
+        "net_name": "net1",
+        "vrf_name": "Tenant-1",
+        "net_id": 31001,
+        "net_template": "Default_Network_Universal",
+        "net_extension_template": "Default_Network_Extension_Universal",
+        "network_template_config": {
+          "gatewayIpAddress": "2.1.1.1/24",
+          "vlanId": 1001,
+          "intfDescription": "test_interface",
+          "mtu": 1800,
+          "secondaryGW1": "3.1.1.1/24",
+          "loopbackId": 10,
+          "enableL3OnBorder": true,
+          "dhcpServers": {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}]},
+          "attach": [
+                {
+                    "ipAddress": "192.168.2.1",
+                    "switchPorts": ["Ethernet1/10", "Ethernet1/11"],
+                    "torPorts": [
+                        {
+                            "switch": "Tor1",
+                            "ports": ["Ethernet1/10", "Ethernet1/11"]
+                        }
+                    ],
+                    "deploy": true
+                }
+            ]
+        }
+    },
+
+    "networkv2_diff_create_00001":
+    [
+        {
+            "d_key": "networkName",
+            "fabric": "test_netv2",
+            "vrf": "Tenant-1",
+            "networkName": "net1",
+            "networkId": 31001,
+            "networkTemplate": "Default_Network_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal",
+            "networkTemplateConfig": {
+                "gatewayIpAddress": "2.1.1.1/24",
+                "vlanId": 1001,
+                "nveId": "1",
+                "gatewayIpV6Address": "",
+                "isLayer2Only": "false",
+                "suppressArp": "",
+                "mcastGroup": "",
+                "dhcpServers": {
+                    "dhcpServers": [
+                        {
+                            "srvrAddr": "1.1.1.1",
+                            "srvrVrf": "vrf1"
+                        }
+                    ]
+                },
+                "loopbackId": 10,
+                "vlanName": "",
+                "intfDescription": "test_interface",
+                "mtu": 1800,
+                "tag": "12345",
+                "trmEnabled": "",
+                "secondaryGW1": "3.1.1.1/24",
+                "secondaryGW2": "",
+                "secondaryGW3": "",
+                "secondaryGW4": "",
+                "rtBothAuto": "false",
+                "ENABLE_NETFLOW": "false",
+                "enableL3OnBorder": "false",
+                "MULTISITE_CONN": ""
+            }
+        }
+    ],
+
+    "networkv2_diff_attach_00001":
+    [
+        {
+            "networkName": "net1",
+            "lanAttachList": [
+                {
+                    "attached": true,
+                    "detachSwitchPorts": "",
+                    "dot1QVlan": "1",
+                    "extensionValues": "",
+                    "fabric": "test_netv2",
+                    "freeformConfig": "",
+                    "ipAddress": "192.168.2.1",
+                    "switchPorts": "Ethernet1/10,Ethernet1/11",
+                    "torPorts": "",
+                    "untagged": false,
+                    "vlan": "-1",
+                    "serialNumber": "9SFRKD0M6AS",
+                    "deployment": true,
+                    "networkName": "net1",
+                    "d_key": "serialNumber"
+                }
+            ]
+        }
+    ], 
+
+    "networkv2_diff_deploy_00001":
+    {
+        "9SFRKD0M6AS": [
+            "net1"
+        ]
+    },
+
+    "networkv2_diff_create_update_00001": [],
+
+    "networkv2_diff_undeploy_00001": [],
+
+    "networkv2_diff_detach_00001": [],
+
+    "networkv2_diff_attach_00002":[],
+
+    "dyn_arg_spec": 
+    {
+        "Default_Network_Universal": {
+            "gatewayIpAddress": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "vlanId": {
+                "type": "integer",
+                "required": false,
+                "default": ""
+            },
+            "nveId": {
+                "type": "integer",
+                "required": false,
+                "default": "1"
+            },
+            "gatewayIpV6Address": {
+                "type": "string[]",
+                "required": false,
+                "default": ""
+            },
+            "isLayer2Only": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "suppressArp": {
+                "type": "boolean",
+                "required": false,
+                "default": ""
+            },
+            "mcastGroup": {
+                "type": "ipV4Address",
+                "required": false,
+                "default": ""
+            },
+            "dhcpServers": {
+                "type": "structureArray",
+                "required": false,
+                "default": ""
+            },
+            "loopbackId": {
+                "type": "integer",
+                "required": false,
+                "default": "",
+                "range_min": "0",
+                "range_max": "1023"
+            },
+            "vlanName": {
+                "type": "string",
+                "required": false,
+                "default": "",
+                "length_min": "0",
+                "length_max": "128"
+            },
+            "intfDescription": {
+                "type": "string",
+                "required": false,
+                "default": ""
+            },
+            "mtu": {
+                "type": "integer",
+                "required": false,
+                "default": "",
+                "range_min": "68",
+                "range_max": "9216"
+            },
+            "tag": {
+                "type": "long",
+                "required": false,
+                "default": "12345",
+                "range_min": "0",
+                "range_max": "4294967295"
+            },
+            "trmEnabled": {
+                "type": "boolean",
+                "required": false,
+                "default": ""
+            },
+            "igmpVersion": {
+                "type": "enum",
+                "required": false,
+                "default": "2",
+                "is_show": "\"trmEnabled==true\""
+            },
+            "secondaryGW1": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "secondaryGW2": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "secondaryGW3": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "secondaryGW4": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "rtBothAuto": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "ENABLE_NETFLOW": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "SVI_NETFLOW_MONITOR": {
+                "type": "string",
+                "required": false,
+                "default": "",
+                "is_show": "\"ENABLE_NETFLOW==true\""
+            },
+            "VLAN_NETFLOW_MONITOR": {
+                "type": "string",
+                "required": false,
+                "default": "",
+                "is_show": "\"ENABLE_NETFLOW==true\""
+            }
+        },
+        "Default_Network_Extension_Universal": {
+            "gatewayIpAddress": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "vlanId": {
+                "type": "integer",
+                "required": false,
+                "default": ""
+            },
+            "nveId": {
+                "type": "integer",
+                "required": false,
+                "default": "1"
+            },
+            "gatewayIpV6Address": {
+                "type": "string[]",
+                "required": false,
+                "default": ""
+            },
+            "isLayer2Only": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "suppressArp": {
+                "type": "boolean",
+                "required": false,
+                "default": ""
+            },
+            "enableL3OnBorder": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "mcastGroup": {
+                "type": "ipV4Address",
+                "required": false,
+                "default": ""
+            },
+            "dhcpServers": {
+                "type": "structureArray",
+                "required": false,
+                "default": ""
+            },
+            "loopbackId": {
+                "type": "integer",
+                "required": false,
+                "default": "",
+                "range_min": "0",
+                "range_max": "1023"
+            },
+            "vlanName": {
+                "type": "string",
+                "required": false,
+                "default": "",
+                "length_min": "0",
+                "length_max": "128"
+            },
+            "intfDescription": {
+                "type": "string",
+                "required": false,
+                "default": ""
+            },
+            "mtu": {
+                "type": "integer",
+                "required": false,
+                "default": "",
+                "range_min": "68",
+                "range_max": "9216"
+            },
+            "tag": {
+                "type": "long",
+                "required": false,
+                "default": "12345",
+                "range_min": "0",
+                "range_max": "4294967295"
+            },
+            "trmEnabled": {
+                "type": "boolean",
+                "required": false,
+                "default": ""
+            },
+            "igmpVersion": {
+                "type": "enum",
+                "required": false,
+                "default": "2",
+                "is_show": "\"trmEnabled==true\""
+            },
+            "secondaryGW1": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "secondaryGW2": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "secondaryGW3": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "secondaryGW4": {
+                "type": "ipV4AddressWithSubnet",
+                "required": false,
+                "default": ""
+            },
+            "rtBothAuto": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "ENABLE_NETFLOW": {
+                "type": "boolean",
+                "required": false,
+                "default": "false"
+            },
+            "SVI_NETFLOW_MONITOR": {
+                "type": "string",
+                "required": false,
+                "default": "",
+                "is_show": "\"ENABLE_NETFLOW==true\""
+            },
+            "VLAN_NETFLOW_MONITOR": {
+                "type": "string",
+                "required": false,
+                "default": "",
+                "is_show": "\"ENABLE_NETFLOW==true\""
+            },
+            "MULTISITE_CONN": {
+                "type": "structureArray",
+                "required": false,
+                "default": ""
+            }
+        }
+    },
+
+    "networkv2_validated_00001": 
+    [
+        {
+            "net_name": "net1",
+            "net_id": 31001,
+            "vrf_name": "Tenant-1",
+            "net_template": "Default_Network_Universal",
+            "net_extension_template": "Default_Network_Extension_Universal",
+            "network_template_config": {
+                "gatewayIpAddress": "2.1.1.1/24",
+                "vlanId": 1001,
+                "nveId": "1",
+                "gatewayIpV6Address": "",
+                "isLayer2Only": "false",
+                "suppressArp": "",
+                "enableL3OnBorder": "true",
+                "mcastGroup": "",
+                "dhcpServers": {
+                    "dhcpServers": [
+                        {
+                            "srvrAddr": "1.1.1.1",
+                            "srvrVrf": "vrf1"
+                        }
+                    ]
+                },
+                "loopbackId": 10,
+                "vlanName": "",
+                "intfDescription": "test_interface",
+                "mtu": 1800,
+                "tag": "12345",
+                "trmEnabled": "",
+                "secondaryGW1": "3.1.1.1/24",
+                "secondaryGW2": "",
+                "secondaryGW3": "",
+                "secondaryGW4": "",
+                "rtBothAuto": "false",
+                "ENABLE_NETFLOW": "false",
+                "MULTISITE_CONN": ""
+            },
+            "attach": [
+                {
+                    "attached": true,
+                    "detachSwitchPorts": [],
+                    "dot1QVlan": "1",
+                    "extensionValues": "",
+                    "fabric": "",
+                    "freeformConfig": "",
+                    "ipAddress": "192.168.2.1",
+                    "switchPorts": [
+                        "Ethernet1/10",
+                        "Ethernet1/11",
+                        "Ethernet1/12"
+                    ],
+                    "torPorts": [
+                        {
+                            "switch": "Tor1",
+                            "ports": [
+                                "Ethernet1/10",
+                                "Ethernet1/11",
+                                "Ethernet1/12"
+                            ]
+                        }
+                    ],
+                    "untagged": false,
+                    "vlan": "-1",
+                    "deploy": true
+                }
+            ]
+        }
+    ],
+    
+    "networkv2_ip_sn": 
+    {
+        "192.168.2.1": "9SFRKD0M6AS",
+        "192.168.2.2": "9KRDG57QQZT",
+        "192.168.2.3": "959A4D0NYXI"
+    },
+
+    "networkv2_hn_sn": 
+    {
+        "leaf1": "9SFRKD0M6AS",
+        "leaf2": "9KRDG57QQZT",
+        "tor": "959A4D0NYXI"
+    },
+
+    "networkv2_ip_fab": 
+    {
+        "192.168.2.1": "test_netv2",
+        "192.168.2.2": "test_netv2",
+        "192.168.2.3": "test_netv2"
+    },
+
+    "networkv2_sn_fab": 
+    {
+        "9SFRKD0M6AS": "test_netv2",
+        "9KRDG57QQZT": "test_netv2",
+        "959A4D0NYXI": "test_netv2"
+    },
+
+    "networkv2_have_create_00001": 
+    [
+        {
+            "id": 748,
+            "fabric": "test_netv2",
+            "networkName": "net1",
+            "networkId": 31001,
+            "networkTemplate": "Default_Network_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal",
+            "vrf": "Tenant-1",
+            "networkTemplateConfig": {
+                "suppressArp": "",
+                "secondaryGW3": "",
+                "secondaryGW2": "",
+                "loopbackId": "10",
+                "secondaryGW1": "3.1.1.1/24",
+                "enableL3OnBorder": "false",
+                "type": "Normal",
+                "SVI_NETFLOW_MONITOR": "",
+                "enableIR": "false",
+                "rtBothAuto": "false",
+                "isLayer2Only": "false",
+                "MULTISITE_CONN": "",
+                "ENABLE_NETFLOW": "false",
+                "dhcpServerAddr3": "",
+                "gatewayIpV6Address": "",
+                "dhcpServerAddr2": "",
+                "tag": "12345",
+                "dhcpServerAddr1": "1.1.1.1",
+                "nveId": "1",
+                "vrfDhcp": "vrf1",
+                "secondaryGW4": "",
+                "vlanId": "1001",
+                "gatewayIpAddress": "2.1.1.1/24",
+                "vlanName": "",
+                "mtu": "1800",
+                "intfDescription": "test_interface",
+                "mcastGroup": "239.11.11.1",
+                "igmpVersion": "2",
+                "trmEnabled": "",
+                "VLAN_NETFLOW_MONITOR": "",
+                "dhcpServers": {
+                    "dhcpServers": [
+                        {
+                            "srvrAddr": "1.1.1.1",
+                            "srvrVrf": "vrf1"
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    
+    "networkv2_have_attach_00001": 
+    [
+        {
+            "networkName": "net1",
+            "lanAttachList": [
+                {
+                    "networkName": "net1",
+                    "ipAddress": "192.168.2.1",
+                    "instanceValues": "",
+                    "torPorts": [
+                        {
+                            "switch": "Tor1",
+                            "ports": [
+                                "Ethernet1/10",
+                                "Ethernet1/11"
+                            ]
+                        }
+                    ],
+                    "fabric": "test_netv2",
+                    "vlan": 1001,
+                    "serialNumber": "9SFRKD0M6AS",
+                    "deployment": true,
+                    "attached": true,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [
+                        "Ethernet1/10",
+                        "Ethernet1/11"
+                    ],
+                    "untagged": false
+                },
+                {
+                    "networkName": "net1",
+                    "ipAddress": "192.168.2.2",
+                    "instanceValues": "",
+                    "torPorts": "",
+                    "fabric": "test_netv2",
+                    "vlan": null,
+                    "serialNumber": "9KRDG57QQZT",
+                    "deployment": false,
+                    "attached": false,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [],
+                    "untagged": false
+                }
+            ]
+        }
+    ],
+
+    "networkv2_have_attach_00002": 
+    [
+        {
+            "networkName": "net2",
+            "lanAttachList": [
+                {
+                    "networkName": "net2",
+                    "ipAddress": "192.168.2.1",
+                    "instanceValues": "",
+                    "torPorts": [
+                        {
+                            "switch": "Tor1",
+                            "ports": [
+                                "Ethernet1/12",
+                                "Ethernet1/13"
+                            ]
+                        }
+                    ],
+                    "fabric": "test_netv2",
+                    "vlan": 1001,
+                    "serialNumber": "9SFRKD0M6AS",
+                    "deployment": true,
+                    "attached": true,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [
+                        "Ethernet1/12",
+                        "Ethernet1/13"
+                    ],
+                    "untagged": false
+                },
+                {
+                    "networkName": "net2",
+                    "ipAddress": "192.168.2.2",
+                    "instanceValues": "",
+                    "torPorts": "",
+                    "fabric": "test_netv2",
+                    "vlan": null,
+                    "serialNumber": "9KRDG57QQZT",
+                    "deployment": false,
+                    "attached": false,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [],
+                    "untagged": false
+                }
+            ]
+        }
+    ],
+
+    "networkv2_want_attach_00001": 
+    [
+        {
+            "networkName": "net1",
+            "lanAttachList": [
+                {
+                    "networkName": "net1",
+                    "ipAddress": "192.168.2.1",
+                    "instanceValues": "",
+                    "torPorts": "",
+                    "fabric": "test_netv2",
+                    "vlan": 1001,
+                    "serialNumber": "9SFRKD0M6AS",
+                    "deployment": false,
+                    "attached": false,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": "",
+                    "untagged": false,
+                    "d_key": "serialNumber"
+                },
+                {
+                    "networkName": "net1",
+                    "ipAddress": "192.168.2.2",
+                    "instanceValues": "",
+                    "torPorts": "",
+                    "fabric": "test_netv2",
+                    "vlan": null,
+                    "serialNumber": "9KRDG57QQZT",
+                    "deployment": false,
+                    "attached": false,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [],
+                    "untagged": false,
+                    "d_key": "serialNumber"
+                }
+            ]
+        }
+    ],
+
+    "networkv2_want_attach_00002": 
+    [
+        {
+            "networkName": "net2",
+            "lanAttachList": [
+                {
+                    "networkName": "net2",
+                    "ipAddress": "192.168.2.1",
+                    "instanceValues": "",
+                    "torPorts": [
+                        {
+                            "switch": "Tor1",
+                            "ports": [
+                                "Ethernet1/12",
+                                "Ethernet1/13"
+                            ]
+                        }
+                    ],
+                    "fabric": "test_netv2",
+                    "vlan": 1001,
+                    "serialNumber": "9SFRKD0M6AS",
+                    "deployment": true,
+                    "attached": true,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [
+                        "Ethernet1/12",
+                        "Ethernet1/13"
+                    ],
+                    "untagged": false,
+                    "d_key": "serialNumber"
+                },
+                {
+                    "networkName": "net2",
+                    "ipAddress": "192.168.2.2",
+                    "instanceValues": "",
+                    "torPorts": "",
+                    "fabric": "test_netv2",
+                    "vlan": null,
+                    "serialNumber": "9KRDG57QQZT",
+                    "deployment": false,
+                    "attached": false,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [],
+                    "untagged": false,
+                    "d_key": "serialNumber"
+                }
+            ]
+        }
+    ],
+
+    "networkv2_want_attach_00003": 
+    [
+        {
+            "networkName": "net1",
+            "lanAttachList": [
+                {
+                    "networkName": "net1",
+                    "ipAddress": "192.168.2.1",
+                    "instanceValues": "",
+                    "torPorts": [
+                        {
+                            "switch": "Tor1",
+                            "ports": [
+                                "Ethernet1/12",
+                                "Ethernet1/13"
+                            ]
+                        }
+                    ],
+                    "fabric": "test_netv1",
+                    "vlan": 1001,
+                    "serialNumber": "9SFRKD0M6AS",
+                    "deployment": true,
+                    "attached": true,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [
+                        "Ethernet1/12",
+                        "Ethernet1/13"
+                    ],
+                    "untagged": false,
+                    "d_key": "serialNumber"
+                },
+                {
+                    "networkName": "net1",
+                    "ipAddress": "192.168.2.2",
+                    "instanceValues": "",
+                    "torPorts": "",
+                    "fabric": "test_netv2",
+                    "vlan": null,
+                    "serialNumber": "9KRDG57QQZT",
+                    "deployment": false,
+                    "attached": false,
+                    "extensionValues": "",
+                    "freeformConfig": "",
+                    "dot1QVlan": 1,
+                    "detachSwitchPorts": "",
+                    "switchPorts": [],
+                    "untagged": false,
+                    "d_key": "serialNumber"
+                }
+            ]
+        }
+    ],
+    
+    "networkv2_diff_delete_00001": 
+        {
+            "net1": "DEPLOYED"
+        }
+}

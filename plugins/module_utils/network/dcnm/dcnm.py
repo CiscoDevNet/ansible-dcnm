@@ -23,18 +23,6 @@ import sys
 from ansible.module_utils.common import validation
 from ansible.module_utils.connection import Connection
 
-import datetime
-import inspect
-
-
-def log(msg):
-    with open('/tmp/netv2.log', 'a') as of:
-        callerframerecord = inspect.stack()[1]
-        frame = callerframerecord[0]
-        info = inspect.getframeinfo(frame)
-        d = datetime.datetime.now().replace(microsecond=0).isoformat()
-        of.write("---- %s ---- %s@%s ---- %s \n" % (d, info.lineno, info.function, msg))
-
 
 def validate_ip_address_format(type, item, invalid_params):
 
