@@ -28,7 +28,6 @@ from ansible.module_utils.connection import Connection
 # Any third party module must be imported as shown. If not ansible sanity tests will fail
 try:
     import requests
-
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
@@ -57,7 +56,8 @@ dcnm_template_type_xlations = {
 
 def validate_ip_address_format(type, item, invalid_params):
 
-    if (type == "ipv4_subnet") or (type == "ipv4"):
+    if ((type == "ipv4_subnet") or (type == "ipv4") or
+       (type == "ipV4AddressWithSubnet") or (type == "ipV4Address")):
         addr_type = "IPv4"
         addr_family = socket.AF_INET
         mask_len = 32
@@ -68,7 +68,7 @@ def validate_ip_address_format(type, item, invalid_params):
 
     if item.strip() != "":
         address = item.split("/")[0]
-        if "subnet" in type:
+        if "subnet" in type.lower():
             if "/" in item:
                 subnet = item.split("/")[1]
                 if not subnet or int(subnet) > mask_len:
@@ -116,13 +116,13 @@ def validate_list_of_dicts(param_list, spec, module=None):
                     item = spec[param].get("default")
             else:
                 type = spec[param].get("type")
-                if type == "str":
+                if type == "str" or type == "string" or type == "string[]":
                     item = v.check_type_str(item)
                     if spec[param].get("length_max"):
-                        if 1 <= len(item) <= spec[param].get("length_max"):
+                        if 1 <= len(item) <= int(spec[param].get("length_max")):
                             pass
                         elif param == "vrf_name" and (
-                            len(item) <= spec[param].get("length_max")
+                            len(item) <= int(spec[param].get("length_max"))
                         ):
                             pass
                         else:
@@ -132,13 +132,13 @@ def validate_list_of_dicts(param_list, spec, module=None):
                                     param, item, spec[param].get("length_max")
                                 )
                             )
-                elif type == "int":
+                elif type == "int" or type == "integer" or type == "long":
                     item = v.check_type_int(item)
                     min_value = 1
                     if spec[param].get("range_min") is not None:
-                        min_value = spec[param].get("range_min")
+                        min_value = int(spec[param].get("range_min"))
                     if spec[param].get("range_max"):
-                        if min_value <= item <= spec[param].get("range_max"):
+                        if min_value <= item <= int(spec[param].get("range_max")):
                             pass
                         else:
                             invalid_params.append(
@@ -147,11 +147,13 @@ def validate_list_of_dicts(param_list, spec, module=None):
                                     param, item, spec[param].get("range_max")
                                 )
                             )
-                elif type == "bool":
+                elif type == "bool" or type == "boolean":
                     item = v.check_type_bool(item)
+                    if type == "boolean":
+                        item = str(item).lower()
                 elif type == "list":
                     item = v.check_type_list(item)
-                elif type == "dict":
+                elif type == "dict" or type == "structureArray":
                     item = v.check_type_dict(item)
                 elif (
                     (type == "ipv4_subnet")
@@ -457,9 +459,6 @@ def dcnm_version_supported(module):
         #   11.5(1), 12.0.1a'
         # For these examples 11 or 12 would be returned
         raw_version = data["version"]
-
-        if raw_version == "DEVEL":
-            raw_version = "11.5(1)"
 
         regex = r"^(\d+)\.\d+"
         mo = re.search(regex, raw_version)
@@ -780,3 +779,225 @@ def dcnm_post_request(path, hdrs, verify_flag, upload_files):
         json_resp["REQUEST_PATH"] = path
         json_resp.pop("message")
     return json_resp
+
+
+def build_arg_spec(module, path):
+    """
+    Builds the argument specification for the module based on the response received from the DCNM template API.
+
+    Args:
+        module: The Ansible module object.
+        path: The API path for template.
+
+    Returns:
+        arg_spec: The argument specification dictionary for the module.
+
+    """
+
+    resp = dcnm_send(module, "GET", path)
+    arg_spec = {}
+
+    if (
+        resp
+        and resp["RETURN_CODE"] == 200
+        and resp["MESSAGE"] == "OK"
+        and resp["DATA"]
+    ):
+        params = resp["DATA"]["parameters"]
+        for i in params:
+            name = None
+            type = "string"
+            default = None
+            required = False
+            range_min = None
+            range_max = None
+            length_max = None
+            length_min = None
+            arg = {}
+            hidden = False
+            reqcode = False
+            isshow = None
+            for key in i.keys():
+                if key == "name":
+                    name = i[key]
+                if key == "parameterType":
+                    type = i[key]
+                # if key ==  "defaultValue":
+                #     default = i[key]
+                if key == "optional":
+                    required = not i[key]
+                if key == "annotations":
+                    k = i[key]
+                    for anonkey in k.keys():
+                        if anonkey == "IsHidden" or anonkey == "IsInternal" or anonkey == "ReadOnly":
+                            if k[anonkey]:
+                                hidden = True
+                                break
+                        # if anonkey == "Section" and
+                        #     (k[anonkey] == "\"Hidden\"" or k[anonkey] == "\"Attach/Hidden\""):
+                        if anonkey == "Section" and k[anonkey] == "\"Hidden\"":
+                            hidden = True
+                            break
+                        if anonkey == "Section" and k[anonkey] == "\"Attach/Hidden\"":
+                            reqcode = True
+                        if anonkey == "IsShow":
+                            isshow = k[anonkey]
+                if hidden:
+                    break
+                if key == "metaProperties":
+                    j = i[key]
+                    for metakey in j.keys():
+                        if metakey == "min":
+                            range_min = j[metakey]
+                        if metakey == "max":
+                            range_max = j[metakey]
+                        if metakey == "defaultValue":
+                            default = j[metakey]
+                        if metakey == "minLength":
+                            length_min = j[metakey]
+                        if metakey == "maxLength":
+                            length_max = j[metakey]
+
+            if not hidden:
+                if reqcode:
+                    required = False
+                vars()[name] = dict(type=type, required=required)
+                if default:
+                    vars()[name].update({"default": default})
+                else:
+                    vars()[name].update({"default": ""})
+                if range_min:
+                    vars()[name].update({"range_min": range_min})
+                if range_max:
+                    vars()[name].update({"range_max": range_max})
+                if length_min:
+                    vars()[name].update({"length_min": length_min})
+                if length_max:
+                    vars()[name].update({"length_max": length_max})
+                if isshow:
+                    vars()[name].update({"is_show": isshow})
+                # vars()[name] = dict(type=type, default=default, required=required,
+                #                   range_min=range_min, range_max=range_max,
+                #                   length_min=length_min, length_max=length_max)
+                arg = {name: vars()[name]}
+                arg_spec.update(arg)
+        return arg_spec
+    else:
+        return []
+
+
+def resolve_dependency(spec, template):
+
+    for param in spec:
+        if spec[param].get("is_show"):
+            value = json.loads(spec[param].get("is_show"))
+            dep = value.split("==")
+            if template.get(dep[0]) != dep[1]:
+                del template[param]
+            del spec[param]["is_show"]
+
+
+def get_diff(have, want):
+    """
+    Compare two dictionaries or lists and return the differences.
+
+    Args:
+        have (dict or list): The existing dictionary or list.
+        want (dict or list): The desired dictionary or list.
+
+    Returns:
+        tuple: A tuple containing three elements:
+            - diff_create (list or dict): The elements in `want` but not in `have`.
+            - diff_create_update (list or dict): The elements in `want` that need to be updated in `have`.
+            - diff_not_w_in_h (list or dict): The elements in `have` but not in `want`.
+    """
+    key_list = []
+
+    if isinstance(have, list):
+        diff_create = []
+        diff_not_w_in_h = have.copy()
+        diff_create_update = []
+
+        for wa in want:
+            keys = wa.get("d_key")
+            if keys:
+                key_list = keys.split(",")
+            found = False
+            for ha in have:
+                # update_param = False
+                match = False
+                if key_list:
+                    for key in key_list:
+                        if wa[key] == ha[key]:
+                            match = True
+                            continue
+                        else:
+                            match = False
+                else:
+                    match = True
+                if match:
+                    diff_not_w_in_h.remove(ha)
+                    found = True
+                    wa_keys = list(wa.keys())
+                    needs_update = False
+                    for wkey in wa_keys:
+                        if wkey == "d_key":
+                            continue
+                        if not ha.get(wkey) and not wa.get(wkey):
+                            continue
+                        if str(ha[wkey]) != str(wa[wkey]):
+                            if isinstance(ha[wkey], dict):
+                                nest_create, nest_create_update, nest_diff_not_w_in_h = get_diff(ha[wkey], wa[wkey])
+                                if nest_create or nest_create_update:
+                                    needs_update = True
+                            else:
+                                needs_update = True
+                    if needs_update:
+                        diff_create_update.append(wa)
+                    break
+            if not found:
+                diff_create.append(wa)
+
+        return diff_create, diff_create_update, diff_not_w_in_h
+    else:
+        diff_create = {}
+        diff_not_w_in_h = have.copy()
+        diff_create_update = {}
+        keys = want.get("d_key")
+        if keys:
+            key_list = keys.split(",")
+        found = False
+        if key_list:
+            match = False
+            for key in key_list:
+                if want[key] == have[key]:
+                    match = True
+                    continue
+                else:
+                    match = False
+        else:
+            match = True
+
+        if match:
+            diff_not_w_in_h = {}
+            found = True
+            wa_keys = list(want.keys())
+            needs_update = False
+            for wkey in wa_keys:
+                if wkey == "d_key":
+                    continue
+                if not have.get(wkey) and not want.get(wkey):
+                    continue
+                if str(have[wkey]) != str(want[wkey]):
+                    if isinstance(have[wkey], dict):
+                        nest_create, nest_create_update, nest_diff_not_w_in_h = get_diff(have[wkey], want[wkey])
+                        if nest_create or nest_create_update:
+                            needs_update = True
+                    else:
+                        needs_update = True
+            if needs_update:
+                diff_create_update.update(want)
+        if not found:
+            diff_create.update(want)
+
+        return diff_create, diff_create_update, diff_not_w_in_h

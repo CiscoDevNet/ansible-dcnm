@@ -1,0 +1,2684 @@
+{
+    "networkv2_inv_details": {
+        "192.168.2.1": {
+            "switchRoleEnum": "Leaf",
+            "vrf": "management",
+            "fabricTechnology": "VXLANFabric",
+            "deviceType": "Switch_Fabric",
+            "fabricId": 6,
+            "name": null,
+            "domainID": 0,
+            "wwn": null,
+            "membership": null,
+            "ports": 0,
+            "model": "N9K-C9300v",
+            "version": null,
+            "upTime": 0,
+            "ipAddress": "192.168.2.1",
+            "mgmtAddress": null,
+            "vendor": "Cisco",
+            "displayHdrs": null,
+            "displayValues": null,
+            "colDBId": 0,
+            "fid": 0,
+            "isLan": false,
+            "is_smlic_enabled": false,
+            "present": true,
+            "licenseViolation": false,
+            "managable": true,
+            "mds": false,
+            "connUnitStatus": 0,
+            "standbySupState": 0,
+            "activeSupSlot": 0,
+            "unmanagableCause": "",
+            "lastScanTime": 0,
+            "fabricName": "test_netv2",
+            "modelType": 0,
+            "logicalName": "leaf1",
+            "switchDbID": 86340,
+            "uid": 0,
+            "release": "10.3(1)",
+            "location": null,
+            "contact": null,
+            "upTimeStr": "21 days, 01:17:37",
+            "upTimeNumber": 0,
+            "network": null,
+            "nonMdsModel": null,
+            "numberOfPorts": 0,
+            "availPorts": 0,
+            "usedPorts": 0,
+            "vsanWwn": null,
+            "vsanWwnName": null,
+            "swWwn": null,
+            "swWwnName": null,
+            "serialNumber": "9SFRKD0M6AS",
+            "domain": null,
+            "principal": null,
+            "status": "ok",
+            "index": 0,
+            "licenseDetail": null,
+            "isPmCollect": false,
+            "sanAnalyticsCapable": false,
+            "vdcId": 0,
+            "vdcName": "",
+            "vdcMac": null,
+            "fcoeEnabled": false,
+            "cpuUsage": 0,
+            "memoryUsage": 0,
+            "scope": null,
+            "fex": false,
+            "health": -1,
+            "npvEnabled": false,
+            "linkName": null,
+            "username": null,
+            "primaryIP": "",
+            "primarySwitchDbID": 0,
+            "secondaryIP": "",
+            "secondarySwitchDbID": 0,
+            "isEchSupport": false,
+            "moduleIndexOffset": 9999,
+            "sysDescr": "",
+            "isTrapDelayed": false,
+            "switchRole": "leaf",
+            "mode": "Normal",
+            "hostName": "leaf1",
+            "ipDomain": "",
+            "systemMode": "Normal",
+            "sourceVrf": "management",
+            "sourceInterface": "mgmt0",
+            "protoDiscSettings": null,
+            "operMode": null,
+            "modules": null,
+            "fexMap": {},
+            "isVpcConfigured": false,
+            "vpcDomain": 0,
+            "role": null,
+            "peer": null,
+            "peerSerialNumber": null,
+            "peerSwitchDbId": 0,
+            "peerlinkState": null,
+            "keepAliveState": null,
+            "consistencyState": false,
+            "sendIntf": null,
+            "recvIntf": null,
+            "interfaces": null,
+            "elementType": null,
+            "monitorMode": null,
+            "freezeMode": null,
+            "cfsSyslogStatus": 1,
+            "isNonNexus": false,
+            "swUUIDId": 86370,
+            "swUUID": "DCNM-UUID-86370",
+            "swType": null,
+            "ccStatus": "In-Sync",
+            "operStatus": "Minor",
+            "intentedpeerName": ""
+        },
+        "192.168.2.2": {
+            "switchRoleEnum": "Leaf",
+            "vrf": "management",
+            "fabricTechnology": "VXLANFabric",
+            "deviceType": "Switch_Fabric",
+            "fabricId": 6,
+            "name": null,
+            "domainID": 0,
+            "wwn": null,
+            "membership": null,
+            "ports": 0,
+            "model": "N9K-C9300v",
+            "version": null,
+            "upTime": 0,
+            "ipAddress": "192.168.2.2",
+            "mgmtAddress": null,
+            "vendor": "Cisco",
+            "displayHdrs": null,
+            "displayValues": null,
+            "colDBId": 0,
+            "fid": 0,
+            "isLan": false,
+            "is_smlic_enabled": false,
+            "present": true,
+            "licenseViolation": false,
+            "managable": true,
+            "mds": false,
+            "connUnitStatus": 0,
+            "standbySupState": 0,
+            "activeSupSlot": 0,
+            "unmanagableCause": "",
+            "lastScanTime": 0,
+            "fabricName": "test_netv2",
+            "modelType": 0,
+            "logicalName": "leaf2",
+            "switchDbID": 86290,
+            "uid": 0,
+            "release": "10.3(1)",
+            "location": null,
+            "contact": null,
+            "upTimeStr": "21 days, 01:17:32",
+            "upTimeNumber": 0,
+            "network": null,
+            "nonMdsModel": null,
+            "numberOfPorts": 0,
+            "availPorts": 0,
+            "usedPorts": 0,
+            "vsanWwn": null,
+            "vsanWwnName": null,
+            "swWwn": null,
+            "swWwnName": null,
+            "serialNumber": "9KRDG57QQZT",
+            "domain": null,
+            "principal": null,
+            "status": "ok",
+            "index": 0,
+            "licenseDetail": null,
+            "isPmCollect": false,
+            "sanAnalyticsCapable": false,
+            "vdcId": 0,
+            "vdcName": "",
+            "vdcMac": null,
+            "fcoeEnabled": false,
+            "cpuUsage": 0,
+            "memoryUsage": 0,
+            "scope": null,
+            "fex": false,
+            "health": -1,
+            "npvEnabled": false,
+            "linkName": null,
+            "username": null,
+            "primaryIP": "",
+            "primarySwitchDbID": 0,
+            "secondaryIP": "",
+            "secondarySwitchDbID": 0,
+            "isEchSupport": false,
+            "moduleIndexOffset": 9999,
+            "sysDescr": "",
+            "isTrapDelayed": false,
+            "switchRole": "leaf",
+            "mode": "Normal",
+            "hostName": "leaf2",
+            "ipDomain": "",
+            "systemMode": "Normal",
+            "sourceVrf": "management",
+            "sourceInterface": "mgmt0",
+            "protoDiscSettings": null,
+            "operMode": null,
+            "modules": null,
+            "fexMap": {},
+            "isVpcConfigured": false,
+            "vpcDomain": 0,
+            "role": null,
+            "peer": null,
+            "peerSerialNumber": null,
+            "peerSwitchDbId": 0,
+            "peerlinkState": null,
+            "keepAliveState": null,
+            "consistencyState": false,
+            "sendIntf": null,
+            "recvIntf": null,
+            "interfaces": null,
+            "elementType": null,
+            "monitorMode": null,
+            "freezeMode": null,
+            "cfsSyslogStatus": 1,
+            "isNonNexus": false,
+            "swUUIDId": 86320,
+            "swUUID": "DCNM-UUID-86320",
+            "swType": null,
+            "ccStatus": "In-Sync",
+            "operStatus": "Minor",
+            "intentedpeerName": ""
+        },
+        "192.168.2.3": {
+            "switchRoleEnum": "Tor",
+            "vrf": "management",
+            "fabricTechnology": "VXLANFabric",
+            "deviceType": "Switch_Fabric",
+            "fabricId": 6,
+            "name": null,
+            "domainID": 0,
+            "wwn": null,
+            "membership": null,
+            "ports": 0,
+            "model": "N9K-C9300v",
+            "version": null,
+            "upTime": 0,
+            "ipAddress": "192.168.2.3",
+            "mgmtAddress": null,
+            "vendor": "Cisco",
+            "displayHdrs": null,
+            "displayValues": null,
+            "colDBId": 0,
+            "fid": 0,
+            "isLan": false,
+            "is_smlic_enabled": false,
+            "present": true,
+            "licenseViolation": false,
+            "managable": true,
+            "mds": false,
+            "connUnitStatus": 0,
+            "standbySupState": 0,
+            "activeSupSlot": 0,
+            "unmanagableCause": "",
+            "lastScanTime": 0,
+            "fabricName": "test_netv2",
+            "modelType": 0,
+            "logicalName": "tor",
+            "switchDbID": 101110,
+            "uid": 0,
+            "release": "10.3(1)",
+            "location": null,
+            "contact": null,
+            "upTimeStr": "21 days, 00:27:44",
+            "upTimeNumber": 0,
+            "network": null,
+            "nonMdsModel": null,
+            "numberOfPorts": 0,
+            "availPorts": 0,
+            "usedPorts": 0,
+            "vsanWwn": null,
+            "vsanWwnName": null,
+            "swWwn": null,
+            "swWwnName": null,
+            "serialNumber": "959A4D0NYXI",
+            "domain": null,
+            "principal": null,
+            "status": "ok",
+            "index": 0,
+            "licenseDetail": null,
+            "isPmCollect": false,
+            "sanAnalyticsCapable": false,
+            "vdcId": 0,
+            "vdcName": "",
+            "vdcMac": null,
+            "fcoeEnabled": false,
+            "cpuUsage": 0,
+            "memoryUsage": 0,
+            "scope": null,
+            "fex": false,
+            "health": -1,
+            "npvEnabled": false,
+            "linkName": null,
+            "username": null,
+            "primaryIP": "",
+            "primarySwitchDbID": 0,
+            "secondaryIP": "",
+            "secondarySwitchDbID": 0,
+            "isEchSupport": false,
+            "moduleIndexOffset": 9999,
+            "sysDescr": "",
+            "isTrapDelayed": false,
+            "switchRole": "tor",
+            "mode": "Normal",
+            "hostName": "tor",
+            "ipDomain": "",
+            "systemMode": "Normal",
+            "sourceVrf": "management",
+            "sourceInterface": "mgmt0",
+            "protoDiscSettings": null,
+            "operMode": null,
+            "modules": null,
+            "fexMap": {},
+            "isVpcConfigured": false,
+            "vpcDomain": 0,
+            "role": null,
+            "peer": null,
+            "peerSerialNumber": null,
+            "peerSwitchDbId": 0,
+            "peerlinkState": null,
+            "keepAliveState": null,
+            "consistencyState": false,
+            "sendIntf": null,
+            "recvIntf": null,
+            "interfaces": null,
+            "elementType": null,
+            "monitorMode": null,
+            "freezeMode": null,
+            "cfsSyslogStatus": 1,
+            "isNonNexus": false,
+            "swUUIDId": 99910,
+            "swUUID": "DCNM-UUID-99910",
+            "swType": null,
+            "ccStatus": "In-Sync",
+            "operStatus": "Minor",
+            "intentedpeerName": ""
+        }
+        },
+
+    "networkv2_fab_details": {
+        "id": 6,
+        "fabricId": "FABRIC-6",
+        "fabricName": "test_netv2",
+        "fabricType": "Switch_Fabric",
+        "fabricTypeFriendly": "Switch Fabric",
+        "fabricTechnology": "VXLANFabric",
+        "fabricTechnologyFriendly": "VXLAN EVPN",
+        "provisionMode": "DCNMTopDown",
+        "deviceType": "n9k",
+        "replicationMode": "Multicast",
+        "operStatus": "MINOR",
+        "asn": "32123",
+        "siteId": "32123",
+        "templateName": "Easy_Fabric",
+        "nvPairs": {
+            "MSO_SITE_ID": "",
+            "PHANTOM_RP_LB_ID1": "",
+            "PHANTOM_RP_LB_ID2": "",
+            "PHANTOM_RP_LB_ID3": "",
+            "IBGP_PEER_TEMPLATE": "",
+            "PHANTOM_RP_LB_ID4": "",
+            "abstract_ospf": "base_ospf",
+            "FEATURE_PTP": "false",
+            "L3_PARTITION_ID_RANGE": "50000-59000",
+            "DHCP_START_INTERNAL": "",
+            "SSPINE_COUNT": "0",
+            "NXC_DEST_VRF": "management",
+            "ADVERTISE_PIP_BGP": "false",
+            "FABRIC_VPC_QOS_POLICY_NAME": "spine_qos_for_fabric_vpc_peering",
+            "BFD_PIM_ENABLE": "false",
+            "DHCP_END": "",
+            "UNDERLAY_IS_V6": "false",
+            "FABRIC_VPC_DOMAIN_ID": "",
+            "SEED_SWITCH_CORE_INTERFACES": "",
+            "ALLOW_NXC_PREV": "true",
+            "FABRIC_MTU_PREV": "9216",
+            "BFD_ISIS_ENABLE": "false",
+            "HD_TIME": "180",
+            "AUTO_UNIQUE_VRF_LITE_IP_PREFIX": "false",
+            "OSPF_AUTH_ENABLE": "false",
+            "LOOPBACK1_IPV6_RANGE": "",
+            "ROUTER_ID_RANGE": "",
+            "MSO_CONNECTIVITY_DEPLOYED": "",
+            "ENABLE_MACSEC": "false",
+            "DEAFULT_QUEUING_POLICY_OTHER": "queuing_policy_default_other",
+            "UNNUM_DHCP_START_INTERNAL": "",
+            "MACSEC_REPORT_TIMER": "",
+            "PREMSO_PARENT_FABRIC": "",
+            "UNNUM_DHCP_END_INTERNAL": "",
+            "PTP_DOMAIN_ID": "",
+            "USE_LINK_LOCAL": "false",
+            "AUTO_SYMMETRIC_VRF_LITE": "false",
+            "BGP_AS_PREV": "32123",
+            "ENABLE_PBR": "false",
+            "DCI_SUBNET_TARGET_MASK": "30",
+            "VPC_PEER_LINK_PO": "500",
+            "ISIS_AUTH_ENABLE": "false",
+            "PER_VRF_LOOPBACK_AUTO_PROVISION": "false",
+            "REPLICATION_MODE": "Multicast",
+            "ANYCAST_RP_IP_RANGE": "110.254.254.0/24",
+            "VPC_ENABLE_IPv6_ND_SYNC": "true",
+            "abstract_isis_interface": "isis_interface",
+            "TCAM_ALLOCATION": "true",
+            "SERVICE_NETWORK_VLAN_RANGE": "3000-3199",
+            "MACSEC_ALGORITHM": "",
+            "ISIS_LEVEL": "level-2",
+            "SUBNET_TARGET_MASK": "30",
+            "abstract_anycast_rp": "anycast_rp",
+            "AUTO_SYMMETRIC_DEFAULT_VRF": "false",
+            "ENABLE_NETFLOW": "false",
+            "DEAFULT_QUEUING_POLICY_R_SERIES": "queuing_policy_default_r_series",
+            "temp_vpc_peer_link": "int_vpc_peer_link_po",
+            "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
+            "ENABLE_FABRIC_VPC_DOMAIN_ID": "false",
+            "IBGP_PEER_TEMPLATE_LEAF": "",
+            "DCI_SUBNET_RANGE": "110.33.0.0/16",
+            "MGMT_GW_INTERNAL": "",
+            "ENABLE_NXAPI": "true",
+            "VRF_LITE_AUTOCONFIG": "Manual",
+            "GRFIELD_DEBUG_FLAG": "Disable",
+            "VRF_VLAN_RANGE": "2000-2299",
+            "ISIS_AUTH_KEYCHAIN_NAME": "",
+            "OBJECT_TRACKING_NUMBER_RANGE": "100-299",
+            "SSPINE_ADD_DEL_DEBUG_FLAG": "Disable",
+            "abstract_bgp_neighbor": "evpn_bgp_rr_neighbor",
+            "OSPF_AUTH_KEY_ID": "",
+            "PIM_HELLO_AUTH_ENABLE": "false",
+            "abstract_feature_leaf": "base_feature_leaf_upg",
+            "BFD_AUTH_ENABLE": "false",
+            "BGP_LB_ID": "0",
+            "LOOPBACK1_IP_RANGE": "10.31.0.0/22",
+            "EXTRA_CONF_TOR": "",
+            "AAA_SERVER_CONF": "",
+            "VPC_PEER_KEEP_ALIVE_OPTION": "management",
+            "AUTO_VRFLITE_IFC_DEFAULT_VRF": "false",
+            "enableRealTimeBackup": "",
+            "V6_SUBNET_TARGET_MASK": "126",
+            "STRICT_CC_MODE": "false",
+            "BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS": "false",
+            "VPC_PEER_LINK_VLAN": "3600",
+            "abstract_trunk_host": "int_trunk_host",
+            "NXAPI_HTTP_PORT": "80",
+            "BGP_AUTH_ENABLE": "false",
+            "MST_INSTANCE_RANGE": "",
+            "PM_ENABLE_PREV": "false",
+            "NXC_PROXY_PORT": "8080",
+            "RP_MODE": "asm",
+            "enableScheduledBackup": "",
+            "abstract_ospf_interface": "ospf_interface_11_1",
+            "BFD_OSPF_ENABLE": "false",
+            "MACSEC_FALLBACK_ALGORITHM": "",
+            "UNNUM_DHCP_END": "",
+            "LOOPBACK0_IP_RANGE": "10.21.0.0/22",
+            "ENABLE_AAA": "false",
+            "DEPLOYMENT_FREEZE": "false",
+            "L2_HOST_INTF_MTU_PREV": "9216",
+            "NETFLOW_MONITOR_LIST": "",
+            "ENABLE_AGENT": "false",
+            "NTP_SERVER_IP_LIST": "",
+            "OVERLAY_MODE": "cli",
+            "MACSEC_FALLBACK_KEY_STRING": "",
+            "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV": "false",
+            "FF": "Easy_Fabric",
+            "STP_ROOT_OPTION": "unmanaged",
+            "FABRIC_TYPE": "Switch_Fabric",
+            "ISIS_OVERLOAD_ENABLE": "false",
+            "NETFLOW_RECORD_LIST": "",
+            "SPINE_COUNT": "0",
+            "abstract_extra_config_bootstrap": "extra_config_bootstrap_11_1",
+            "MPLS_LOOPBACK_IP_RANGE": "",
+            "LINK_STATE_ROUTING_TAG_PREV": "UNDERLAY",
+            "DHCP_ENABLE": "false",
+            "BFD_AUTH_KEY_ID": "",
+            "MSO_SITE_GROUP_NAME": "",
+            "MGMT_PREFIX_INTERNAL": "",
+            "DHCP_IPV6_ENABLE_INTERNAL": "",
+            "BGP_AUTH_KEY_TYPE": "3",
+            "SITE_ID": "32123",
+            "temp_anycast_gateway": "anycast_gateway",
+            "BRFIELD_DEBUG_FLAG": "Disable",
+            "BGP_AS": "32123",
+            "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+            "ISIS_P2P_ENABLE": "false",
+            "ENABLE_NGOAM": "true",
+            "CDP_ENABLE": "false",
+            "PTP_LB_ID": "",
+            "DHCP_IPV6_ENABLE": "",
+            "MACSEC_KEY_STRING": "",
+            "TOPDOWN_CONFIG_RM_TRACKING": "notstarted",
+            "OSPF_AUTH_KEY": "",
+            "ENABLE_FABRIC_VPC_DOMAIN_ID_PREV": "false",
+            "EXTRA_CONF_LEAF": "",
+            "vrf_extension_template": "Default_VRF_Extension_Universal",
+            "DHCP_START": "",
+            "ENABLE_TRM": "false",
+            "ENABLE_PVLAN_PREV": "false",
+            "FEATURE_PTP_INTERNAL": "false",
+            "ENABLE_NXAPI_HTTP": "true",
+            "abstract_isis": "base_isis_level2",
+            "MPLS_LB_ID": "",
+            "FABRIC_VPC_DOMAIN_ID_PREV": "",
+            "ROUTE_MAP_SEQUENCE_NUMBER_RANGE": "1-65534",
+            "NETWORK_VLAN_RANGE": "2300-2999",
+            "STATIC_UNDERLAY_IP_ALLOC": "false",
+            "MGMT_V6PREFIX_INTERNAL": "",
+            "MPLS_HANDOFF": "false",
+            "STP_BRIDGE_PRIORITY": "",
+            "scheduledTime": "",
+            "ANYCAST_LB_ID": "",
+            "MACSEC_CIPHER_SUITE": "",
+            "STP_VLAN_RANGE": "",
+            "MSO_CONTROLER_ID": "",
+            "POWER_REDUNDANCY_MODE": "ps-redundant",
+            "BFD_ENABLE": "false",
+            "abstract_extra_config_leaf": "extra_config_leaf",
+            "ANYCAST_GW_MAC": "2020.0000.00aa",
+            "abstract_dhcp": "base_dhcp",
+            "default_pvlan_sec_network": "",
+            "EXTRA_CONF_SPINE": "",
+            "NTP_SERVER_VRF": "",
+            "SPINE_SWITCH_CORE_INTERFACES": "",
+            "LINK_STATE_ROUTING_TAG": "UNDERLAY",
+            "ISIS_OVERLOAD_ELAPSE_TIME": "",
+            "RP_LB_ID": "254",
+            "BOOTSTRAP_CONF": "",
+            "LINK_STATE_ROUTING": "ospf",
+            "ISIS_AUTH_KEY": "",
+            "network_extension_template": "Default_Network_Extension_Universal",
+            "DNS_SERVER_IP_LIST": "",
+            "DOMAIN_NAME_INTERNAL": "",
+            "ENABLE_EVPN": "true",
+            "abstract_multicast": "base_multicast_11_1",
+            "VPC_DELAY_RESTORE_TIME": "60",
+            "BFD_AUTH_KEY": "",
+            "ESR_OPTION": "PBR",
+            "AGENT_INTF": "eth0",
+            "FABRIC_MTU": "9216",
+            "L3VNI_MCAST_GROUP": "",
+            "UNNUM_BOOTSTRAP_LB_ID": "",
+            "VPC_DOMAIN_ID_RANGE": "1-1000",
+            "HOST_INTF_ADMIN_STATE": "true",
+            "BFD_IBGP_ENABLE": "false",
+            "AUTO_UNIQUE_VRF_LITE_IP_PREFIX_PREV": "false",
+            "VPC_AUTO_RECOVERY_TIME": "360",
+            "DNS_SERVER_VRF": "",
+            "UPGRADE_FROM_VERSION": "",
+            "BANNER": "",
+            "NXC_SRC_INTF": "",
+            "PER_VRF_LOOPBACK_IP_RANGE": "",
+            "SYSLOG_SEV": "",
+            "abstract_loopback_interface": "int_fabric_loopback_11_1",
+            "SYSLOG_SERVER_VRF": "",
+            "EXTRA_CONF_INTRA_LINKS": "",
+            "SNMP_SERVER_HOST_TRAP": "true",
+            "abstract_extra_config_spine": "extra_config_spine",
+            "PIM_HELLO_AUTH_KEY": "",
+            "temp_vpc_domain_mgmt": "vpc_domain_mgmt",
+            "V6_SUBNET_RANGE": "",
+            "SUBINTERFACE_RANGE": "2-511",
+            "abstract_routed_host": "int_routed_host",
+            "BGP_AUTH_KEY": "",
+            "ENABLE_PVLAN": "false",
+            "INBAND_DHCP_SERVERS": "",
+            "default_network": "Default_Network_Universal",
+            "ISIS_AUTH_KEYCHAIN_KEY_ID": "",
+            "MGMT_V6PREFIX": "",
+            "abstract_feature_spine": "base_feature_spine_upg",
+            "ENABLE_DEFAULT_QUEUING_POLICY": "false",
+            "ANYCAST_BGW_ADVERTISE_PIP": "false",
+            "NETFLOW_EXPORTER_LIST": "",
+            "abstract_vlan_interface": "int_fabric_vlan_11_1",
+            "RP_COUNT": "2",
+            "FABRIC_NAME": "test_netv2",
+            "abstract_pim_interface": "pim_interface",
+            "PM_ENABLE": "false",
+            "LOOPBACK0_IPV6_RANGE": "",
+            "dcnmUser": "admin",
+            "DEFAULT_VRF_REDIS_BGP_RMAP": "",
+            "NVE_LB_ID": "1",
+            "OVERLAY_MODE_PREV": "cli",
+            "VPC_DELAY_RESTORE": "150",
+            "NXAPI_HTTPS_PORT": "443",
+            "ENABLE_VPC_PEER_LINK_NATIVE_VLAN": "false",
+            "L2_HOST_INTF_MTU": "9216",
+            "abstract_route_map": "route_map",
+            "INBAND_MGMT_PREV": "false",
+            "EXT_FABRIC_TYPE": "",
+            "abstract_vpc_domain": "base_vpc_domain_11_1",
+            "ACTIVE_MIGRATION": "false",
+            "COPP_POLICY": "strict",
+            "DHCP_END_INTERNAL": "",
+            "BOOTSTRAP_ENABLE": "false",
+            "ADVERTISE_PIP_ON_BORDER": "true",
+            "default_vrf": "Default_VRF_Universal",
+            "NXC_PROXY_SERVER": "",
+            "OSPF_AREA_ID": "0.0.0.0",
+            "abstract_extra_config_tor": "extra_config_tor",
+            "SYSLOG_SERVER_IP_LIST": "",
+            "BOOTSTRAP_ENABLE_PREV": "false",
+            "ENABLE_TENANT_DHCP": "true",
+            "ANYCAST_RP_IP_RANGE_INTERNAL": "110.254.254.0/24",
+            "RR_COUNT": "2",
+            "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
+            "MGMT_GW": "",
+            "UNNUM_DHCP_START": "",
+            "MGMT_PREFIX": "",
+            "abstract_bgp_rr": "evpn_bgp_rr",
+            "INBAND_MGMT": "false",
+            "abstract_bgp": "base_bgp",
+            "SLA_ID_RANGE": "10000-19999",
+            "ENABLE_NETFLOW_PREV": "false",
+            "SUBNET_RANGE": "110.4.0.0/16",
+            "DEAFULT_QUEUING_POLICY_CLOUDSCALE": "queuing_policy_default_8q_cloudscale",
+            "MULTICAST_GROUP_SUBNET": "239.11.11.0/25",
+            "FABRIC_INTERFACE_TYPE": "p2p",
+            "ALLOW_NXC": "true",
+            "OVERWRITE_GLOBAL_NXC": "false",
+            "FABRIC_VPC_QOS": "false",
+            "AAA_REMOTE_IP_ENABLED": "false",
+            "L2_SEGMENT_ID_RANGE": "30000-49000"
+        },
+        "vrfTemplate": "Default_VRF_Universal",
+        "networkTemplate": "Default_Network_Universal",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "networkExtensionTemplate": "Default_Network_Extension_Universal",
+        "modifiedOn": 1713867710252
+    },
+    
+    "resp_net_template": 
+    {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/Default_Network_Universal",
+        "DATA":{
+            "instanceClassId":3170,
+            "assignedInstanceClassId":0,
+            "instanceName":"com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=Default_Network_Universal:type=true",
+            "name":"Default_Network_Universal",
+            "description":" Default Network Universal Template",
+            "userDefined":true,
+            "parameters":[
+               {
+                  "name":"gatewayIpAddress",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Gateway/NetMask",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vlanId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsVlanId":"true",
+                     "IsMandatory":"true",
+                     "Section":"\"Attach/Hidden\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               },
+               {
+                  "name":"segmentId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"true",
+                     "IsSegmentId":"true",
+                     "Section":"\"Hidden\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               },
+               {
+                  "name":"nveId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     "defaultValue":"1"
+                  },
+                  "annotations":{
+                     "DisplayName":"NVE Identifier",
+                     "IsNveId":"true",
+                     "IsMandatory":"true",
+                     "Section":"\"Attach/Hidden\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               },
+               {
+                  "name":"type",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Network Type",
+                     "IsMandatory":"false",
+                     "Section":"\"Hidden\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfName",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "Section":"\"Hidden\"",
+                     "IsMsoManaged":"true",
+                     "IsVrfName":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"gatewayIpV6Address",
+                  "description":"None",
+                  "parameterType":"string[]",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv6 Gateway/Prefix List",
+                     "Description":"example 2001:db8::1/64,2001:db9::1/64",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"isLayer2Only",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "DisplayName":"Layer 2 Only",
+                     "IsMandatory":"false",
+                     "IsLayer2Only":"true",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"suppressArp",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"ARP Suppression",
+                     "Description":"ARP suppression is only supported if SVI is present when Layer-2-Only is not enabled. NX-OS Specific",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"enableIR",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "ReadOnly":"true",
+                     "Description":"Read-only per network, Fabric-wide setting",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Ingress Replication",
+                     "IsIngressReplication":"true",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"mcastGroup",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Multicast Group Address",
+                     "IsMultiCastGroupAddress":"true",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServerAddr1",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"\"vrfDhcp!=null\"",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfDhcp",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "minLength":"0",
+                     "maxLength":"32"
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServerAddr2",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfDhcp2",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "minLength":"0",
+                     "maxLength":"32"
+                  },
+                  "annotations":{
+                     "IsMandatory":"\"dhcpServerAddr2!=null\"",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServerAddr3",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfDhcp3",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "minLength":"0",
+                     "maxLength":"32"
+                  },
+                  "annotations":{
+                     "IsMandatory":"\"dhcpServerAddr3!=null\"",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServers",
+                  "description":"None",
+                  "parameterType":"structureArray",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"DHCP Relay Server Information (Max 16)",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     "srvrAddr":{
+                        "name":"srvrAddr",
+                        "description":"None",
+                        "parameterType":"ipV4Address",
+                        "metaProperties":{
+                           
+                        },
+                        "annotations":{
+                           "IsMandatory":"true",
+                           "DisplayName":"\"Server IP V4 Address\""
+                        },
+                        "structureParameters":{
+                           
+                        },
+                        "parameterTypeStructure":false,
+                        "defaultValue":"None",
+                        "optional":false
+                     },
+                     "srvrVrf":{
+                        "name":"srvrVrf",
+                        "description":"None",
+                        "parameterType":"string",
+                        "metaProperties":{
+                           "minLength":"0",
+                           "maxLength":"32"
+                        },
+                        "annotations":{
+                           "DisplayName":"\"Server VRF\"",
+                           "Description":"\"If management vrf, enter \\'management\\'. If default/global vrf, enter \\'default\\'.\"",
+                           "IsMandatory":"true"
+                        },
+                        "structureParameters":{
+                           
+                        },
+                        "parameterTypeStructure":false,
+                        "defaultValue":"None",
+                        "optional":false
+                     }
+                  },
+                  "parameterTypeStructure":true,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"loopbackId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     "min":"0",
+                     "max":"1023"
+                  },
+                  "annotations":{
+                     "DisplayName":"Loopback ID for DHCP Relay interface (Min:0, Max:1023)",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vlanName",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "regularExpr":"^[^\\?,\\\\,\\s]*$",
+                     "minLength":"0",
+                     "maxLength":"128"
+                  },
+                  "annotations":{
+                     "DisplayName":"VLAN Name",
+                     "Description":"If &gt; 32 chars, enable &#39;system vlan long-name&#39; for NX-OS, disable VTPv1 and VTPv2 or switch to VTPv3 for IOS XE",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"intfDescription",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Interface Description",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"networkName",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Network Name (should be hidden)",
+                     "IsNetworkName":"true",
+                     "IsMandatory":"false",
+                     "Section":"\"Hidden\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"mtu",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     "min":"68",
+                     "max":"9216"
+                  },
+                  "annotations":{
+                     "DisplayName":"MTU for L3 interface",
+                     "Description":"68-9216. NX-OS Specific",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"tag",
+                  "description":"None",
+                  "parameterType":"long",
+                  "metaProperties":{
+                     "min":"0",
+                     "max":"4294967295",
+                     "defaultValue":"12345"
+                  },
+                  "annotations":{
+                     "DisplayName":"Routing Tag",
+                     "Description":"0-4294967295. NX-OS Specific",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"trmEnabled",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "Description":"Enable Tenant Routed Multicast",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"TRM Enable",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"igmpVersion",
+                  "description":"None",
+                  "parameterType":"enum",
+                  "metaProperties":{
+                     "defaultValue":"2",
+                     "validValues":"1,2,3"
+                  },
+                  "annotations":{
+                     "Description":"Version 2-3 for NX-OS, 1-3 for IOS XE. &#39;ip igmp version&#39; command is generated if version is 1 or 3 (switch default is 2)",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"IGMP Version",
+                     "IsShow":"\"trmEnabled==true\"",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW1",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW1",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW2",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW2",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW3",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW3",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW4",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW4",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"rtBothAuto",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "DisplayName":"L2 VNI Route-Target Both Enable",
+                     "Description":"NX-OS Specific",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"ENABLE_NETFLOW",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "DisplayName":"Enable Netflow",
+                     "Description":"Netflow is supported only if it is enabled on fabric. For NX-OS only",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"SVI_NETFLOW_MONITOR",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "Description":"Applicable only if &#39;Layer 2 Only&#39; is not enabled. Provide monitor name defined in fabric setting for Layer 3 Record. For NX-OS only",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Interface Vlan Netflow Monitor",
+                     "IsShow":"\"ENABLE_NETFLOW==true\"",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"VLAN_NETFLOW_MONITOR",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "Description":"Provide monitor name defined in fabric setting for Layer 3 Record. For NX-OS only",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Vlan Netflow Monitor",
+                     "IsShow":"\"ENABLE_NETFLOW==true\"",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"isVPC",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "IsHidden":"true",
+                     "IsMandatory":"false",
+                     "IsVPC":"true",
+                     "IsInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"platformType",
+                  "description":"None",
+                  "parameterType":"enum",
+                  "metaProperties":{
+                     "defaultValue":"Nexus",
+                     "validValues":"Nexus,IOSXE"
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsHidden":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"anycastGMac",
+                  "description":"None",
+                  "parameterType":"macAddress",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Anycast MAC Address Defined in fabric",
+                     "IsHidden":"true",
+                     "IsMandatory":"false"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"gen_address",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsInternal":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"gen_mask",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsInternal":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"flagSet",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsInternal":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               }
+            ]
+        }
+    },
+
+    "resp_net_ext_template": 
+    {
+        "RETURN_CODE": 200,
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/Default_Network_Extension_Universal",
+        "DATA":{
+            "instanceClassId":3167,
+            "assignedInstanceClassId":0,
+            "instanceName":"com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=Default_Network_Extension_Universal:type=true",
+            "name":"Default_Network_Extension_Universal",
+            "description":" Default Network Universal Template for Borders",
+            "userDefined":true,
+            "parameters":[
+               {
+                  "name":"gatewayIpAddress",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Gateway/NetMask",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vlanId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsVlanId":"true",
+                     "IsMandatory":"true",
+                     "Section":"\"Attach/Hidden\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               },
+               {
+                  "name":"segmentId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"true",
+                     "IsSegmentId":"true",
+                     "Section":"\"Hidden\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               },
+               {
+                  "name":"nveId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     "defaultValue":"1"
+                  },
+                  "annotations":{
+                     "DisplayName":"NVE Identifier",
+                     "IsNveId":"true",
+                     "IsMandatory":"true",
+                     "Section":"\"Attach/Hidden\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               },
+               {
+                  "name":"type",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Network Type",
+                     "IsMandatory":"false",
+                     "Section":"\"Hidden\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfName",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "Section":"\"Hidden\"",
+                     "IsMsoManaged":"true",
+                     "IsVrfName":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"gatewayIpV6Address",
+                  "description":"None",
+                  "parameterType":"string[]",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv6 Gateway/Prefix List",
+                     "Description":"example 2001:db8::1/64,2001:db9::1/64",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"isLayer2Only",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "DisplayName":"Layer 2 Only",
+                     "IsMandatory":"false",
+                     "IsLayer2Only":"true",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"suppressArp",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"ARP Suppression",
+                     "Description":"ARP suppression is only supported if SVI is present when Layer-2-Only is not enabled. NX-OS Specific",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"enableIR",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "ReadOnly":"true",
+                     "Description":"Read-only per network, Fabric-wide setting",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Ingress Replication",
+                     "IsIngressReplication":"true",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"enableL3OnBorder",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsEnableL3OnBorder":"true",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Enable L3 Gateway on Border",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"mcastGroup",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Multicast Group Address",
+                     "IsMultiCastGroupAddress":"true",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServerAddr1",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"\"vrfDhcp!=null\"",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfDhcp",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "minLength":"0",
+                     "maxLength":"32"
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServerAddr2",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfDhcp2",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "minLength":"0",
+                     "maxLength":"32"
+                  },
+                  "annotations":{
+                     "IsMandatory":"\"dhcpServerAddr2!=null\"",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServerAddr3",
+                  "description":"None",
+                  "parameterType":"ipV4Address",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vrfDhcp3",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "minLength":"0",
+                     "maxLength":"32"
+                  },
+                  "annotations":{
+                     "IsMandatory":"\"dhcpServerAddr3!=null\"",
+                     "IsMsoManaged":"true",
+                     "Section":"\"Hidden\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"dhcpServers",
+                  "description":"None",
+                  "parameterType":"structureArray",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"DHCP Relay Server Information (Max 16)",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     "srvrAddr":{
+                        "name":"srvrAddr",
+                        "description":"None",
+                        "parameterType":"ipV4Address",
+                        "metaProperties":{
+                           
+                        },
+                        "annotations":{
+                           "IsMandatory":"true",
+                           "DisplayName":"\"Server IP V4 Address\""
+                        },
+                        "structureParameters":{
+                           
+                        },
+                        "parameterTypeStructure":false,
+                        "defaultValue":"None",
+                        "optional":false
+                     },
+                     "srvrVrf":{
+                        "name":"srvrVrf",
+                        "description":"None",
+                        "parameterType":"string",
+                        "metaProperties":{
+                           "minLength":"0",
+                           "maxLength":"32"
+                        },
+                        "annotations":{
+                           "DisplayName":"\"Server VRF\"",
+                           "Description":"\"If management vrf, enter \\'management\\'. If default/global vrf, enter \\'default\\'.\"",
+                           "IsMandatory":"true"
+                        },
+                        "structureParameters":{
+                           
+                        },
+                        "parameterTypeStructure":false,
+                        "defaultValue":"None",
+                        "optional":false
+                     }
+                  },
+                  "parameterTypeStructure":true,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"loopbackId",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     "min":"0",
+                     "max":"1023"
+                  },
+                  "annotations":{
+                     "DisplayName":"Loopback ID for DHCP Relay interface (Min:0, Max:1023)",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"vlanName",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     "regularExpr":"^[^\\?,\\\\,\\s]*$",
+                     "minLength":"0",
+                     "maxLength":"128"
+                  },
+                  "annotations":{
+                     "DisplayName":"VLAN Name",
+                     "Description":"If &gt; 32 chars, enable &#39;system vlan long-name&#39; for NX-OS, disable VTPv1 and VTPv2 or switch to VTPv3 for IOS XE",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"intfDescription",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Interface Description",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"networkName",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Network Name (should be hidden)",
+                     "IsNetworkName":"true",
+                     "IsMandatory":"false",
+                     "Section":"\"Hidden\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"mtu",
+                  "description":"None",
+                  "parameterType":"integer",
+                  "metaProperties":{
+                     "min":"68",
+                     "max":"9216"
+                  },
+                  "annotations":{
+                     "DisplayName":"MTU for L3 interface",
+                     "Description":"68-9216. NX-OS Specific",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"tag",
+                  "description":"None",
+                  "parameterType":"long",
+                  "metaProperties":{
+                     "min":"0",
+                     "max":"4294967295",
+                     "defaultValue":"12345"
+                  },
+                  "annotations":{
+                     "DisplayName":"Routing Tag",
+                     "Description":"0-4294967295. NX-OS Specific",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"trmEnabled",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "Description":"Enable Tenant Routed Multicast",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"TRM Enable",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"igmpVersion",
+                  "description":"None",
+                  "parameterType":"enum",
+                  "metaProperties":{
+                     "defaultValue":"2",
+                     "validValues":"1,2,3"
+                  },
+                  "annotations":{
+                     "Description":"Version 2-3 for NX-OS, 1-3 for IOS XE. &#39;ip igmp version&#39; command is generated if version is 1 or 3 (switch default is 2)",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"IGMP Version",
+                     "IsShow":"\"trmEnabled==true\"",
+                     "Section":"\"Advanced\"",
+                     "IsMsoManaged":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW1",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW1",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW2",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW2",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW3",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW3",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"secondaryGW4",
+                  "description":"None",
+                  "parameterType":"ipV4AddressWithSubnet",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"IPv4 Secondary GW4",
+                     "Description":"example 192.0.2.1/24",
+                     "IsMandatory":"false",
+                     "IsMsoManaged":"true",
+                     "IsGateway":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"rtBothAuto",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "DisplayName":"L2 VNI Route-Target Both Enable",
+                     "Description":"NX-OS Specific",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"ENABLE_NETFLOW",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "DisplayName":"Enable Netflow",
+                     "Description":"Netflow is supported only if it is enabled on fabric. For NX-OS only",
+                     "IsMandatory":"false",
+                     "Section":"\"Advanced\"",
+                     "IsFabricInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"SVI_NETFLOW_MONITOR",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "Description":"Applicable only if &#39;Layer 2 Only&#39; is not enabled. Provide monitor name defined in fabric setting for Layer 3 Record. For NX-OS only",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Interface Vlan Netflow Monitor",
+                     "IsShow":"\"ENABLE_NETFLOW==true\"",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"VLAN_NETFLOW_MONITOR",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "Description":"Provide monitor name defined in fabric setting for Layer 3 Record. For NX-OS only",
+                     "IsMandatory":"false",
+                     "IsFabricInstance":"true",
+                     "DisplayName":"Vlan Netflow Monitor",
+                     "IsShow":"\"ENABLE_NETFLOW==true\"",
+                     "Section":"\"Advanced\""
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"MULTISITE_CONN",
+                  "description":"None",
+                  "parameterType":"structureArray",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"L2 Extension Information",
+                     "Description":"L2 Extension Information",
+                     "IsMandatory":"false",
+                     "Section":"\"MULTISITE\""
+                  },
+                  "structureParameters":{
+                     "IF_NAME":{
+                        "name":"IF_NAME",
+                        "description":"None",
+                        "parameterType":"interface",
+                        "metaProperties":{
+                           
+                        },
+                        "annotations":{
+                           "IsMandatory":"true",
+                           "IsIfName":"true"
+                        },
+                        "structureParameters":{
+                           
+                        },
+                        "parameterTypeStructure":false,
+                        "defaultValue":"None",
+                        "optional":false
+                     }
+                  },
+                  "parameterTypeStructure":true,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"isVPC",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     "defaultValue":"false"
+                  },
+                  "annotations":{
+                     "IsHidden":"true",
+                     "IsMandatory":"false",
+                     "IsVPC":"true",
+                     "IsInstance":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"platformType",
+                  "description":"None",
+                  "parameterType":"enum",
+                  "metaProperties":{
+                     "defaultValue":"Nexus",
+                     "validValues":"Nexus,IOSXE"
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsHidden":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"anycastGMac",
+                  "description":"None",
+                  "parameterType":"macAddress",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "DisplayName":"Anycast MAC Address Defined in fabric",
+                     "IsHidden":"true",
+                     "IsMandatory":"false"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"gen_address",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsInternal":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"gen_mask",
+                  "description":"None",
+                  "parameterType":"string",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsMandatory":"false",
+                     "IsInternal":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":true
+               },
+               {
+                  "name":"flagSet",
+                  "description":"None",
+                  "parameterType":"boolean",
+                  "metaProperties":{
+                     
+                  },
+                  "annotations":{
+                     "IsInternal":"true"
+                  },
+                  "structureParameters":{
+                     
+                  },
+                  "parameterTypeStructure":false,
+                  "defaultValue":"None",
+                  "optional":false
+               }
+            ]
+        }
+    },
+
+    "networkv2_net_objects_00001": 
+    {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "id": 748,
+                "fabric": "test_netv2",
+                "networkName": "net1",
+                "displayName": "net1",
+                "networkId": 31001,
+                "networkTemplate": "Default_Network_Universal",
+                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+                "vrf": "Tenant-1",
+                "tenantName": null,
+                "serviceNetworkTemplate": null,
+                "source": null,
+                "interfaceGroups": null,
+                "primaryNetworkId": -1,
+                "type": "Normal",
+                "primaryNetworkName": null,
+                "vlanId": null,
+                "networkStatus": "DEPLOYED",
+                "hierarchicalKey": "test_netv2",
+                "networkTemplateConfig": {
+                    "suppressArp": "",
+                    "secondaryGW3": "",
+                    "secondaryGW2": "",
+                    "loopbackId": "10",
+                    "secondaryGW1": "3.1.1.1/24",
+                    "enableL3OnBorder": "false",
+                    "type": "Normal",
+                    "SVI_NETFLOW_MONITOR": "",
+                    "enableIR": "false",
+                    "rtBothAuto": "false",
+                    "isLayer2Only": "false",
+                    "MULTISITE_CONN": "",
+                    "ENABLE_NETFLOW": "false",
+                    "dhcpServerAddr3": "",
+                    "gatewayIpV6Address": "",
+                    "dhcpServerAddr2": "",
+                    "tag": "12345",
+                    "dhcpServerAddr1": "1.1.1.1",
+                    "nveId": "1",
+                    "vrfDhcp": "vrf1",
+                    "secondaryGW4": "",
+                    "vlanId": "1001",
+                    "gatewayIpAddress": "2.1.1.1/24",
+                    "vlanName": "",
+                    "mtu": "1800",
+                    "intfDescription": "test_interface",
+                    "mcastGroup": "239.11.11.1",
+                    "igmpVersion": "2",
+                    "trmEnabled": "",
+                    "VLAN_NETFLOW_MONITOR": "",
+                    "dhcpServers": {
+                        "dhcpServers": [
+                            {
+                                "srvrAddr": "1.1.1.1",
+                                "srvrVrf": "vrf1"
+                            }
+                        ]
+                    }
+                }
+            }
+        ]
+    },
+
+    "networkv2_net_attach_objects_00001": 
+    {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks/attachments?network-names=net1",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "networkName": "net1",
+                "lanAttachList": [
+                    {
+                        "networkName": "net1",
+                        "displayName": "net1",
+                        "switchName": "leaf1",
+                        "switchRole": "leaf",
+                        "fabricName": "test_netv2",
+                        "lanAttachState": "DEPLOYED",
+                        "isLanAttached": true,
+                        "portNames": "Ethernet1/10,Ethernet1/11",
+                        "switchSerialNo": "9SFRKD0M6AS",
+                        "peerSerialNo": null,
+                        "switchDbId": 86340,
+                        "ipAddress": "192.168.2.1",
+                        "networkId": 31001,
+                        "vlanId": 1001,
+                        "instanceValues": "{\"isVPC\":\"false\"}",
+                        "entityName": "net1",
+                        "interfaceGroups": null
+                    },
+                    {
+                        "networkName": "net1",
+                        "displayName": "net1",
+                        "switchName": "leaf2",
+                        "switchRole": "leaf",
+                        "fabricName": "test_netv2",
+                        "lanAttachState": "NA",
+                        "isLanAttached": false,
+                        "portNames": null,
+                        "switchSerialNo": "9KRDG57QQZT",
+                        "peerSerialNo": null,
+                        "switchDbId": 86290,
+                        "ipAddress": "192.168.2.2",
+                        "networkId": 31001,
+                        "vlanId": null,
+                        "instanceValues": null,
+                        "entityName": null,
+                        "interfaceGroups": null
+                    }
+                ]
+            }
+        ]
+    },
+
+    "networkv2_net_objects_00002": 
+    {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+        "MESSAGE": "OK",
+        "DATA":
+        {
+            "id": 748,
+            "fabric": "test_netv2",
+            "networkName": "net1",
+            "displayName": "net1",
+            "networkId": 31001,
+            "networkTemplate": "Default_Network_Universal",
+            "networkExtensionTemplate": "Default_Network_Extension_Universal",
+            "vrf": "Tenant-1",
+            "tenantName": null,
+            "serviceNetworkTemplate": null,
+            "source": null,
+            "interfaceGroups": null,
+            "primaryNetworkId": -1,
+            "type": "Normal",
+            "primaryNetworkName": null,
+            "vlanId": null,
+            "networkStatus": "DEPLOYED",
+            "hierarchicalKey": "test_netv2",
+            "networkTemplateConfig": {
+                "suppressArp": "",
+                "secondaryGW3": "",
+                "secondaryGW2": "",
+                "loopbackId": "10",
+                "secondaryGW1": "3.1.1.1/24",
+                "enableL3OnBorder": "false",
+                "type": "Normal",
+                "SVI_NETFLOW_MONITOR": "",
+                "enableIR": "false",
+                "rtBothAuto": "false",
+                "isLayer2Only": "false",
+                "MULTISITE_CONN": "",
+                "ENABLE_NETFLOW": "false",
+                "dhcpServerAddr3": "",
+                "gatewayIpV6Address": "",
+                "dhcpServerAddr2": "",
+                "tag": "12345",
+                "dhcpServerAddr1": "1.1.1.1",
+                "nveId": "1",
+                "vrfDhcp": "vrf1",
+                "secondaryGW4": "",
+                "vlanId": "1001",
+                "gatewayIpAddress": "2.1.1.1/24",
+                "vlanName": "",
+                "mtu": "1800",
+                "intfDescription": "test_interface",
+                "mcastGroup": "239.11.11.1",
+                "igmpVersion": "2",
+                "trmEnabled": "",
+                "VLAN_NETFLOW_MONITOR": "",
+                "dhcpServers": {
+                    "dhcpServers": [
+                        {
+                            "srvrAddr": "1.1.1.1",
+                            "srvrVrf": "vrf1"
+                        }
+                    ]
+                }
+            }
+        }
+    },
+
+    "get_response_00001":
+    {
+            "MESSAGE": "OK",
+            "METHOD": "PUT",
+            "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+            "RETURN_CODE": 200
+    },
+
+    "get_response_00002":
+    {
+      "DATA": "Invalid JSON",
+      "MESSAGE": "ERROR",
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+      "RETURN_CODE": 400
+    },
+
+    "attach_response_00001": {
+        "RETURN_CODE": 200,
+        "METHOD": "POST",
+        "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_poap/networks/attachments",
+        "MESSAGE": "OK",
+        "DATA": {
+            "net1-[9SFRKD0M6AS/leaf1]": "SUCCESS"
+        }   
+    },
+
+    "get_response_00003":
+    {
+            "MESSAGE": "OK",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+            "RETURN_CODE": 200
+    },
+    
+    "get_response_00004":
+    {
+      "DATA": "Invalid JSON",
+      "MESSAGE": "ERROR",
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+      "RETURN_CODE": 400
+    }
+}
