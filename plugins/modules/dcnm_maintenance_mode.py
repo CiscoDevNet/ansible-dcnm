@@ -137,10 +137,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.dcnm_sender import Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
@@ -221,7 +222,7 @@ class ParamsSpec:
         if self.params["state"] == "query":
             self._build_params_spec_for_query_state()
 
-    def _build_params_spec_for_merged_state(self) -> dict:
+    def _build_params_spec_for_merged_state(self) -> None:
         """
         Build the parameter specifications for ``merged`` state.
         """
@@ -774,27 +775,24 @@ class Common:
             self.want = instance.want
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
-        # Exit if there's nothing to do
-        if len(self.want) == 0:
-            self.ansible_module.exit_json(**self.results.ok_result)
 
     @property
-    def ansible_module(self):
+    def rest_send(self):
         """
-        getter: return an instance of AnsibleModule
-        setter: set an instance of AnsibleModule
+        getter: return an instance of RestSend
+        setter: set an instance of RestSend
         """
-        return self._properties["ansible_module"]
+        return self._properties["rest_send"]
 
-    @ansible_module.setter
-    def ansible_module(self, value):
+    @rest_send.setter
+    def rest_send(self, value):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        if not isinstance(value, AnsibleModule):
+        if not isinstance(value, RestSend):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "expected AnsibleModule instance. "
+            msg += "expected RestSend instance. "
             msg += f"got {type(value).__name__}."
             raise ValueError(msg)
-        self._properties["ansible_module"] = value
+        self._properties["rest_send"] = value
 
 
 class Merged(Common):
@@ -821,7 +819,6 @@ class Merged(Common):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fabric_details = FabricDetailsByName(self.params)
-        self.rest_send = None
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
@@ -880,13 +877,9 @@ class Merged(Common):
         ```
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        if self.ansible_module is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"ansible_module must be set before calling {method_name}"
-            raise ValueError(msg)
 
-        instance = MaintenanceModeInfo(self.ansible_module.params)
-        instance.rest_send = RestSend(self.ansible_module)
+        instance = MaintenanceModeInfo(self.params)
+        instance.rest_send = self.rest_send
         instance.results = self.results
         instance.config = [
             item["ip_address"] for item in self.config.get("switches", {})
@@ -894,7 +887,7 @@ class Merged(Common):
         instance.refresh()
         self.have = instance.info
 
-    def bail_if_fabric_deployment_disabled(self) -> None:
+    def fabric_deployment_disabled(self) -> None:
         """
         ### Summary
         Handle the following cases:
@@ -982,7 +975,7 @@ class Merged(Common):
         Build self.need for merged state.
 
         ### Raises
-        None
+        -   ``ValueError`` if the switch is not found on the controller.
 
         ### self.need structure
         ```json
@@ -1030,27 +1023,29 @@ class Merged(Common):
         Commit the merged state request
 
         ### Raises
-        -   ``ValueError`` if get_want() raises ``ValueError``
-        -   ``ValueError`` if get_have() raises ``ValueError``
-        -   ``ValueError`` if send_need() raises ``ValueError``
+        -   ``ValueError`` if:
+                -   ``get_want()`` raises ``ValueError``
+                -   ``get_have()`` raises ``ValueError``
+                -   ``send_need()`` raises ``ValueError``
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
-        self.rest_send = RestSend(self.ansible_module)
-
         try:
             self.get_want()
         except ValueError as error:
             raise ValueError(error) from error
+        # Return if there's nothing to do
+        if len(self.want) == 0:
+            return
 
         try:
             self.get_have()
         except ValueError as error:
             raise ValueError(error) from error
 
-        self.bail_if_fabric_deployment_disabled()
+        self.fabric_deployment_disabled()
 
         self.get_need()
 
@@ -1170,13 +1165,9 @@ class Query(Common):
         ```
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        if self.ansible_module is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"ansible_module must be set before calling {method_name}"
-            raise ValueError(msg)
 
-        instance = MaintenanceModeInfo(self.ansible_module.params)
-        instance.rest_send = RestSend(self.ansible_module)
+        instance = MaintenanceModeInfo(self.params)
+        instance.rest_send = self.rest_send
         instance.results = self.results
         instance.config = [
             item["ip_address"] for item in self.config.get("switches", {})
@@ -1198,6 +1189,9 @@ class Query(Common):
             self.get_want()
         except ValueError as error:
             raise ValueError(error) from error
+        # Return if there's nothing to do
+        if len(self.want) == 0:
+            return
 
         try:
             self.get_have()
@@ -1255,10 +1249,16 @@ def main():
         ansible_module.fail_json(msg)
 
     ansible_module.params["check_mode"] = ansible_module.check_mode
+
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(ansible_module.params)
+    rest_send.sender = sender
+
     if ansible_module.params["state"] == "merged":
         try:
             task = Merged(ansible_module.params)
-            task.ansible_module = ansible_module
+            task.rest_send = rest_send
             task.commit()
         except ValueError as error:
             ansible_module.fail_json(f"{error}", **task.results.failed_result)
@@ -1266,7 +1266,7 @@ def main():
     elif ansible_module.params["state"] == "query":
         try:
             task = Query(ansible_module.params)
-            task.ansible_module = ansible_module
+            task.rest_send = rest_send
             task.commit()
         except ValueError as error:
             ansible_module.fail_json(f"{error}", **task.results.failed_result)

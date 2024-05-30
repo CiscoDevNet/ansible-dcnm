@@ -29,7 +29,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
-# Used in MaintenanceModeInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 
@@ -703,16 +702,29 @@ class MaintenanceModeInfo:
         ```
 
     ### Usage
+    -   Where:
+            -   ``params`` is ``AnsibleModule.params``
+            -   ``config`` is per the above example.
+            -   ``sender`` is an instance of a Sender() class.
+                See ``dcnm_sender.py`` for usage.
+
     ```python
-    instance = MaintenanceModeInfo(AnsibleModule.params)
+    ansible_module = AnsibleModule()
+    # <prepare ansible_module per your needs>
+    params = AnsibleModule.params
+    instance = MaintenanceModeInfo(params)
+
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend()
+    rest_send.sender = sender
     try:
         instance.config = config
-        instance.rest_send = RestSend(ansible_module)
+        instance.rest_send = rest_send
         instance.results = Results()
         instance.refresh()
     except (TypeError, ValueError) as error:
         handle_error(error)
-    deployment_disabled = instance.deployment_disabled
     deployment_disabled = instance.deployment_disabled
     fabric_freeze_mode = instance.fabric_freeze_mode
     fabric_name = instance.fabric_name
@@ -728,7 +740,7 @@ class MaintenanceModeInfo:
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.action = "maintenance_mode_have"
+        self.action = "maintenance_mode_info"
 
         self.params = params
         self.conversions = ConversionUtils()
@@ -844,7 +856,7 @@ class MaintenanceModeInfo:
             raise ValueError(error) from error
 
         info = {}
-        # self.config has already been validated
+        # Populate info dict
         for ip_address in self.config:
             self.switch_details.filter = ip_address
 

@@ -56,6 +56,7 @@ class SwitchDetails:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED common.SwitchDetails()")
 
+        self.action = "switch_details"
         self.conversions = ConversionUtils()
         self.ep_all_switches = EpAllSwitches()
         self.path = self.ep_all_switches.path
@@ -69,7 +70,7 @@ class SwitchDetails:
         self.properties["info"] = {}
         self.properties["params"] = None
 
-    def validate_commit_parameters(self):
+    def validate_commit_parameters(self) -> None:
         """
         Validate that mandatory parameters are set before calling refresh().
 
@@ -89,6 +90,56 @@ class SwitchDetails:
             msg += f"{self.class_name}.refresh()."
             raise ValueError(msg)
 
+    def send_request(self) -> None:
+        """
+        ### Summary
+        Send the request to the controller.
+
+        ### Raises
+        None
+        """
+        # Send request
+        self.rest_send.save_settings()
+        self.rest_send.timeout = 1
+        # Regardless of ansible_module.check_mode, we need to get the
+        # switch details. So, set check_mode to False.
+        self.rest_send.check_mode = False
+        self.rest_send.verb = self.verb
+        self.rest_send.path = self.path
+        self.rest_send.commit()
+        self.rest_send.restore_settings()
+
+    def update_results(self) -> None:
+        """
+        ### Summary
+        Update and register the results.
+
+        ### Raises
+        -   ``ControllerResponseError`` if the controller response is not 200.
+        """
+        method_name = inspect.stack()[0][3]
+        # Update and register results
+        self.results.action = self.action
+        self.results.response_current = self.rest_send.response_current
+        self.results.response = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.result = self.rest_send.result_current
+        # SwitchDetails never changes the controller state
+        self.results.changed = False
+
+        if self.results.response_current["RETURN_CODE"] == 200:
+            self.results.failed = False
+        else:
+            self.results.failed = True
+
+        self.results.register_task_result()
+
+        if self.results.failed is True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Unable to retrieve switch information from the controller. "
+            msg += f"Got response {self.results.response_current}"
+            raise ControllerResponseError(msg)
+
     def refresh(self):
         """
         Refresh switch_details with current switch details from
@@ -98,37 +149,18 @@ class SwitchDetails:
         -   ``ControllerResponseError`` if the controller response is not 200.
         -   ``ValueError`` if mandatory parameters are not set.
         """
-        method_name = inspect.stack()[0][3]
 
         try:
             self.validate_commit_parameters()
         except ValueError as error:
             raise ValueError(error) from error
 
-        # Regardless of ansible_module.check_mode, we need to get the
-        # switch details. So, set check_mode to False.
-        self.rest_send.check_mode = False
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.commit()
+        self.send_request()
 
-        self.results.response_current = self.rest_send.response_current
-        self.results.response = self.rest_send.response_current
-        self.results.result_current = self.rest_send.result_current
-        self.results.result = self.rest_send.result_current
-
-        if self.results.response_current.get("RETURN_CODE") == 200:
-            self.results.failed = False
-        else:
-            self.results.failed = True
-        # SwitchDetails never changes the controller state
-        self.results.changed = False
-
-        if self.results.response_current["RETURN_CODE"] != 200:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Unable to retrieve switch information from the controller. "
-            msg += f"Got response {self.results.response_current}"
-            raise ControllerResponseError(msg)
+        try:
+            self.update_results()
+        except ControllerResponseError as error:
+            raise ControllerResponseError(error) from error
 
         data = self.results.response_current.get("DATA")
         self.properties["info"] = {}
