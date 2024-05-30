@@ -139,6 +139,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
@@ -1245,6 +1247,7 @@ def main():
     sender = Sender()
     sender.ansible_module = ansible_module
     rest_send = RestSend(ansible_module.params)
+    rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
     if ansible_module.params["state"] == "merged":

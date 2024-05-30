@@ -25,26 +25,65 @@ import logging
 
 class ResponseHandler:
     """
-    -   Parse response from the controller and set self.result
-        based on the response.
-    -   Usage:
+    ### Summary:
+    Implement the response handler interface for injection into RestSend().
+
+    ### Raises:
+    -   ``TypeError`` if:
+            -   ``response`` is not a dict.
+    -   ``ValueError`` if:
+            -   ``response`` is missing any fields required by the handler
+                to calculate the result.
+                -   Required fields:
+                        -   ``RETURN_CODE``
+                        -   ``MESSAGE``
+            -   ``verb`` is not valid.
+            -   ``response`` is not set prior to calling ``commit()``.
+            -   ``verb`` is not set prior to calling ``commit()``.
+
+    ### Interface specification:
+    -   setter property: ``response``
+            -   Accepts a dict containing the controller response.
+            -   Raises ``TypeError`` if:
+                    -   ``response`` is not a dict.
+            -   Raises ``ValueError`` if:
+                    -   ``response`` is missing any fields required by the handler
+                        to calculate the result, for example ``RETURN_CODE`` and
+                        ``MESSAGE``.
+    -   getter property: ``result``
+            -   Returns a dict containing the calculated result based on the
+                controller response and the request verb.
+    -   setter property: ``verb``
+            -   Accepts a string containing the request verb.
+            -   Valid verb: One of "DELETE", "GET", "POST", "PUT".
+            -   Raises ``ValueError`` if verb is not valid.
+    -   method: ``commit()``
+            -   Parse ``response`` and set ``result``.
+            -   Raise ``ValueError`` if:
+                    -   ``response`` is not set.
+                    -   ``verb`` is not set.
+
+    ### Usage example
 
     ```python
     # import and instantiate the class
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
     response_handler = ResponseHandler()
 
-    # Set the response from the controller
-    response_handler.response = controller_response
+    try:
+        # Set the response from the controller
+        response_handler.response = controller_response
 
-    # Set the request verb
-    response_handler.verb = "GET"
+        # Set the request verb
+        response_handler.verb = "GET"
 
-    # Call commit to parse the response
-    response_handler.commit()
+        # Call commit to parse the response
+        response_handler.commit()
 
-    # Access the result
-    result = response_handler.result
+        # Access the result
+        result = response_handler.result
+    except (TypeError, ValueError) as error:
+        handle_error(error)
     ```
 
     - NOTES:
@@ -53,6 +92,7 @@ class ResponseHandler:
 
     def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -63,10 +103,13 @@ class ResponseHandler:
         self.return_codes_success = {200, 404}
         self.valid_verbs = {"DELETE", "GET", "POST", "PUT"}
 
+        msg = f"ENTERED common.{self.class_name}.{method_name}"
+        self.log.debug(msg)
+
     def _handle_response(self) -> None:
         """
-        - Call the appropriate handler for response based on verb
-        - Raise ``ValueError`` if verb is unknown
+        ### Summary
+        Call the appropriate handler for response based on verb
         """
         if self.verb == "GET":
             self._get_response()
@@ -75,17 +118,18 @@ class ResponseHandler:
 
     def _get_response(self) -> None:
         """
-        -   Handle controller responses to GET requests and set self.result
-            with the following:
+        ### Summary
+        Handle GET responses from the controller and set self.result.
+        -	self.result is a dict containing:
             -   found:
                     -   False, if response:
-                        - MESSAGE == "Not found" and
-                        - RETURN_CODE == 404
+                            - MESSAGE == "Not found" and
+                            - RETURN_CODE == 404
                     -   True otherwise
             -   success:
                     -   False if response:
-                        - RETURN_CODE != 200 or
-                        - MESSAGE != "OK"
+                            - RETURN_CODE != 200 or
+                            - MESSAGE != "OK"
                     -   True otherwise
         """
         result = {}
@@ -108,8 +152,10 @@ class ResponseHandler:
 
     def _post_put_delete_response(self) -> None:
         """
-        -	Handle POST, PUT, DELETE responses from the controller
-            and set self.result with the following
+        ### Summary
+        Handle POST, PUT, DELETE responses from the controller and set
+        self.result.
+        -	self.result is a dict containing:
             -   changed:
                 - True if changes were made by the controller
                     - ERROR key is not present
@@ -138,10 +184,14 @@ class ResponseHandler:
 
     def commit(self):
         """
-        -   Parse the response from the controller and set self.result
-            based on the response.
-        -   Raise ``ValueError`` if response is not set
-        -   Raise ``ValueError`` if verb is not set
+        ### Summary
+        Parse the response from the controller and set self.result
+        based on the response.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``response`` is not set.
+                -   ``verb`` is not set.
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
@@ -162,13 +212,26 @@ class ResponseHandler:
     @property
     def response(self):
         """
-        -   getter: Return response.
-        -   setter: Set response.
-        -   setter: Raise ``ValueError`` if response is not a dict.
-        -   setter: Raise ``ValueError`` if MESSAGE key is missing
-            in response.
-        -   setter: Raise ``ValueError`` if RETURN_CODE key is missing
-            in response.
+        ### Summary
+        The controller response.
+
+        ### Raises
+        -   setter: ``TypeError`` if:
+                -   ``response`` is not a dict.
+        -   setter: ``ValueError`` if:
+                -   ``response`` is missing any fields required by the handler
+                    to calculate the result.
+                -   Required fields:
+                        -   ``RETURN_CODE``
+                        -   ``MESSAGE``
+
+        ### getter
+        Return the response. Used internally to pass the response
+        between methods.
+
+        ### setter
+        Set response.  External interface to set the response from the
+        controller.
         """
         return self._properties.get("response", None)
 
@@ -179,7 +242,7 @@ class ResponseHandler:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.{method_name} must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         if value.get("MESSAGE", None) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "response must have a MESSAGE key. "
@@ -197,7 +260,7 @@ class ResponseHandler:
         """
         -   getter: Return result.
         -   setter: Set result.
-        -   setter: Raise ``ValueError`` if result is not a dict.
+        -   setter: Raise ``TypeError`` if result is not a dict.
         """
         return self._properties.get("result", None)
 
@@ -208,15 +271,25 @@ class ResponseHandler:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.{method_name} must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self._properties["result"] = value
 
     @property
     def verb(self):
         """
-        -   getter: Return request verb.
-        -   setter: Set request verb.
-        -   setter: Raise ``ValueError`` if request verb is invalid.
+        ### Summary
+        The request verb.
+
+        ### Raises
+        -   setter: ``ValueError`` if:
+                -   ``verb`` is not valid.
+                -   Valid verbs: "DELETE", "GET", "POST", "PUT".
+
+        ### getter
+        Internal interface that returns the request verb.
+
+        ### setter
+        External interface to set the request verb.
         """
         return self._properties.get("verb", None)
 

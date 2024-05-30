@@ -85,6 +85,7 @@ class RestSend:
         self.properties["payload"] = None
         self.properties["response"] = []
         self.properties["response_current"] = {}
+        self.properties["response_handler"] = None
         self.properties["result"] = []
         self.properties["result_current"] = {}
         self.properties["send_interval"] = 5
@@ -115,12 +116,17 @@ class RestSend:
         ### Raises
         -   ``ValueError`` if:
                 -   ``path`` is not set
+                -   ``response_handler`` is not set
                 -   ``sender`` is not set
                 -   ``verb`` is not set
         """
         if self.path is None:
             msg = f"{self.class_name}._verify_commit_parameters: "
             msg += "path must be set before calling commit()."
+            raise ValueError(msg)
+        if self.response_handler is None:
+            msg = f"{self.class_name}._verify_commit_parameters: "
+            msg += "response_handler must be set before calling commit()."
             raise ValueError(msg)
         if self.sender is None:
             msg = f"{self.class_name}._verify_commit_parameters: "
@@ -168,9 +174,9 @@ class RestSend:
         ### See also
         -   ``restore_settings()``
 
-
+        ### NOTES
         -   ``check_mode`` is not saved if it has not yet been initialized.
-        -   ``timeout`` is not save if it has not yet been initialized.
+        -   ``timeout`` is not saved if it has not yet been initialized.
         """
         if self.check_mode is not None:
             self.saved_check_mode = self.check_mode
@@ -216,17 +222,22 @@ class RestSend:
 
         self._verify_commit_parameters()
 
-        self.response_current = {}
-        self.response_current["RETURN_CODE"] = 200
-        self.response_current["METHOD"] = self.verb
-        self.response_current["REQUEST_PATH"] = self.path
-        self.response_current["MESSAGE"] = "OK"
-        self.response_current["CHECK_MODE"] = True
-        self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.result_current = self._handle_response(
-            copy.deepcopy(self.response_current)
-        )
+        response_current = {}
+        response_current["RETURN_CODE"] = 200
+        response_current["METHOD"] = self.verb
+        response_current["REQUEST_PATH"] = self.path
+        response_current["MESSAGE"] = "OK"
+        response_current["CHECK_MODE"] = True
+        response_current["DATA"] = "[simulated-check-mode-response:Success]"
+        self.response_current = response_current
 
+        try:
+            self.response_handler.response = self.response_current
+            self.response_handler.verb = self.verb
+            self.response_handler.commit()
+            self.result_current = self.response_handler.result
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
 
@@ -271,9 +282,16 @@ class RestSend:
             msg += f"Calling sender.commit(): verb {self.verb}, path {self.path}"
 
             self.sender.commit()
-
             self.response_current = self.sender.response
-            self.result_current = self._handle_response(self.response_current)
+
+            # Handle controller response and derive result
+            try:
+                self.response_handler.response = self.response_current
+                self.response_handler.verb = self.verb
+                self.response_handler.commit()
+                self.result_current = self.response_handler.result
+            except ValueError as error:
+                raise ValueError(error) from error
 
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}.  "
@@ -297,11 +315,14 @@ class RestSend:
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
 
-    def _strip_invalid_json_from_response_data(self, response):
+    @staticmethod
+    def _strip_invalid_json_from_response_data(response: dict) -> dict:
         """
+        ### Summary
         Strip "Invalid JSON response:" from response["DATA"] if present
 
-        This just clutters up the output and is not useful to the user.
+        This string in the response clutters up the output and is not
+        useful to the user.
         """
         if "DATA" not in response:
             return response
@@ -310,103 +331,11 @@ class RestSend:
         response["DATA"] = re.sub(r"Invalid JSON response:\s*", "", response["DATA"])
         return response
 
-    def _handle_response(self, response):
-        """
-        ### Summary
-        Call the appropriate handler for response based on verb
-
-        ### Raises
-        -   ``ValueError`` if verb is not a valid verb
-
-        ### Valid verbs
-        -   GET, POST, PUT, DELETE
-        """
-        if self.verb == "GET":
-            return self._handle_get_response(response)
-        if self.verb in {"POST", "PUT", "DELETE"}:
-            return self._handle_post_put_delete_response(response)
-        return self._handle_unknown_request_verbs(response)
-
-    def _handle_unknown_request_verbs(self, response):
-        method_name = inspect.stack()[0][3]
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Unknown request verb ({self.verb}) for response {response}."
-        raise ValueError(msg)
-
-    def _handle_get_response(self, response):
-        """
-        ### Summary
-        Handle GET responses from the controller.
-
-        ### Caller
-        ``self._handle_response()``
-
-        ### Returns
-        ``dict`` with the following keys:
-            - found:
-                - False, if request error was "Not found" and RETURN_CODE == 404
-                - True otherwise
-            - success:
-                - False if RETURN_CODE != 200 or MESSAGE != "OK"
-                - True otherwise
-        """
-        result = {}
-        success_return_codes = {200, 404}
-        if (
-            response.get("RETURN_CODE") == 404
-            and response.get("MESSAGE") == "Not Found"
-        ):
-            result["found"] = False
-            result["success"] = True
-            return result
-        if (
-            response.get("RETURN_CODE") not in success_return_codes
-            or response.get("MESSAGE") != "OK"
-        ):
-            result["found"] = False
-            result["success"] = False
-            return result
-        result["found"] = True
-        result["success"] = True
-        return result
-
-    def _handle_post_put_delete_response(self, response):
-        """
-        ### Summary
-        Handle POST, PUT responses from the controller.
-
-        ### Caller
-        ``self.self._handle_response()``
-
-
-        ### Returns
-        ``dict`` with the following keys:
-            - changed:
-                - True if changes were made to by the controller
-                - False otherwise
-            - success:
-                - False if RETURN_CODE != 200 or MESSAGE != "OK"
-                - True otherwise
-        """
-        result = {}
-        if response.get("ERROR") is not None:
-            result["success"] = False
-            result["changed"] = False
-            return result
-        if response.get("MESSAGE") != "OK" and response.get("MESSAGE") is not None:
-            result["success"] = False
-            result["changed"] = False
-            return result
-        result["success"] = True
-        result["changed"] = True
-        return result
-
     @property
     def check_mode(self):
         """
         ### Summary
-        Determines if dcnm_send should be called.
+        Determines if changes should be made on the controller.
 
         ### Raises
         -   ``TypeError`` if value is not a ``bool``
@@ -414,18 +343,19 @@ class RestSend:
         ### Default
         ``False``
 
-        -   If ``False``, dcnm_send is called. Real controller responses
-            are returned by RestSend()
-        -   If ``True``, dcnm_send is not called. Simulated controller
-            responses are returned by RestSend()
+        -   If ``False``, write operations, if any, are made on the controller.
+        -   If ``True``, write operations are not made on the controller.
+            Instead, controller responses for write operations are simulated
+            to be successful (200 response code) and these simulated responses
+            are returned by RestSend().  Read operations are not affected
+            and are sent to the controller and real responses are returned.
 
         ### Discussion
         We want to be able to read data from the controller for read-only
         operations (i.e. to set check_mode to False temporarily, even when
-        the user has set check_mode to True).  For example, SwitchIssuDetails
+        the user has set check_mode to True).  For example, SwitchDetails
         is a read-only operation, and we want to be able to read this data to
-        provide a real controller response to stage, validate, and upgrade
-        tasks.
+        provide a real controller response to the user.
         """
         return self.properties.get("check_mode")
 
@@ -536,6 +466,47 @@ class RestSend:
         self.properties["response"].append(value)
 
     @property
+    def response_handler(self):
+        """
+        ### Summary
+        A class that implements the response handler interface.  This
+        handles responses from the controller and returns results.
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   ``value`` is not an instance of ``ResponseHandler``
+
+        ### getter
+        Return a the ``response_handler`` instance.
+
+        ### setter
+        Set the ``response_handler`` instance.
+
+        ### NOTES
+        -   See module_utils/common/response_handler.py for details about
+            implementing a ``ResponseHandler`` class.
+        """
+        return self.properties.get("response_handler")
+
+    @response_handler.setter
+    def response_handler(self, value):
+        method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "ResponseHandler"
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f"Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self.properties["response_handler"] = value
+
+    @property
     def result(self):
         """
         ### Summary
@@ -544,7 +515,8 @@ class RestSend:
         ``commit()`` must be called first.
 
         ### Raises
-        -   setter: ``TypeError`` if value is not a ``dict``
+        -   setter: ``TypeError`` if:
+                -   value is not a ``dict``.
 
         ### getter
         Return a copy of ``result``
@@ -659,9 +631,6 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         _class_have = None
         _class_need = "Sender"
-        msg = f"ZZZ: {self.class_name}.{method_name}: "
-        msg += f"Entered with value: {value}."
-        self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"value must be an instance of {_class_need}. "
