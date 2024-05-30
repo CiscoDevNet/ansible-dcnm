@@ -84,7 +84,7 @@ def test_response_handler_00030(response_handler) -> None:
         - response.setter
 
     Summary
-    -   Verify ``ValueError`` is raised when response is not a dict.
+    -   Verify ``TypeError`` is raised when response is not a dict.
 
     """
     with does_not_raise():
@@ -92,7 +92,7 @@ def test_response_handler_00030(response_handler) -> None:
     match = r"ResponseHandler\.response:\s+"
     match += r"ResponseHandler\.response must be a dict\.\s+"
     match += r"Got INVALID\."
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(TypeError, match=match):
         instance.response = "INVALID"
 
 
@@ -415,7 +415,7 @@ def test_response_handler_00080(response_handler) -> None:
         - result.setter
 
     Summary
-    -   Verify ``ValueError`` is raised when result is not a dict.
+    -   Verify ``TypeError`` is raised when result is not a dict.
 
     """
     with does_not_raise():
@@ -423,5 +423,5 @@ def test_response_handler_00080(response_handler) -> None:
     match = r"ResponseHandler\.result:\s+"
     match += r"ResponseHandler\.result must be a dict\.\s+"
     match += r"Got INVALID\."
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(TypeError, match=match):
         instance.result = "INVALID"
