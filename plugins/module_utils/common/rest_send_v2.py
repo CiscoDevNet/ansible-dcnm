@@ -33,20 +33,36 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
 class RestSend:
     """
     ### Summary
-    Send REST requests to the controller with retries, and handle responses.
+    -   Send REST requests to the controller with retries.
+    -   Accepts a ``Sender()`` class that implements the sender interface.
+            -   The sender interface is defined in
+                ``module_utils/common/dcnm_sender.py``
+    -   Accepts a ``ResponseHandler()`` class that implements the response
+        handler interface.
+            -   The response handler interface is defined in
+                ``module_utils/common/response_handler.py``
 
-    ### Usage
-    Below we are using a Sender() class that requires an instance of
-    AnsibleModule, and uses dcnm_send() to send requests to the controller.
-    See dcnm_sender.py for details about implementing Sender() classes.
+    ### Usage discussion
+    -   A Sender() class is used in the usage example below that requires an
+        instance of ``AnsibleModule``, and uses ``dcnm_send()`` to send
+        requests to the controller.
+        -   See ``module_utils/common/dcnm_sender.py`` for details about
+            implementing ``Sender()`` classes.
+    -   A ResponseHandler() class is used in the usage example below that
+        abstracts controller response handling.  It accepts a controller
+        response dict and returns a result dict.
+        -   See ``module_utils/common/response_handler.py`` for details
+            about implementing ``ResponseHandler()`` classes.
 
+    ### Usage example
     ```python
     sender = Sender() # class that implements the sender interface
     sender.ansible_module = ansible_module
 
     rest_send = RestSend()
-    rest_send.unit_test = True # optional, use in unit tests for speed
     rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    rest_send.unit_test = True # optional, use in unit tests for speed
     rest_send.path = "/rest/top-down/fabrics"
     rest_send.verb = "GET"
     rest_send.payload = my_payload # optional
@@ -56,7 +72,6 @@ class RestSend:
     # Do things with rest_send...
     rest_send.commit()
     rest_send.restore_settings() # restore check_mode and timeout
-    rest_send.commit()
 
     # list of responses from the controller for this session
     response = rest_send.response
