@@ -128,6 +128,8 @@ import logging
 from os import environ
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.dcnm_sender import \
+    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import (
     MaintenanceMode, MaintenanceModeInfo)
@@ -141,11 +143,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 imp
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.dcnm_sender import Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
 
 
 def json_pretty(msg):
@@ -731,9 +728,6 @@ class Common:
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
-        self.switch_details = SwitchDetails()
-        self.switch_details.results = self.results
-
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -818,7 +812,6 @@ class Merged(Common):
             raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.fabric_details = FabricDetailsByName(self.params)
 
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
@@ -1109,7 +1102,6 @@ class Query(Common):
             raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.fabric_details = FabricDetailsByName(self.params)
 
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
