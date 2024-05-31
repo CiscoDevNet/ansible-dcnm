@@ -185,7 +185,7 @@ class MaintenanceMode:
                 self.verify_ip_address(item)
                 self.verify_mode(item)
                 self.verify_serial_number(item)
-            except ValueError as error:
+            except (TypeError, ValueError) as error:
                 raise ValueError(error) from error
 
     def verify_deploy(self, item) -> None:
@@ -196,17 +196,18 @@ class MaintenanceMode:
         ### Raises
         -   ``ValueError`` if:
                 -   ``deploy`` is not present.
+        -   ``TypeError`` if:
                 -   `deploy`` is not a boolean.
         """
         method_name = inspect.stack()[0][3]
         if item.get("deploy", None) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "deploy must be present in config."
+            msg += "config is missing mandatory key: deploy."
             raise ValueError(msg)
         if not isinstance(item.get("deploy", None), bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "deploy must be a boolean."
-            raise ValueError(msg)
+            raise TypeError(msg)
 
     def verify_fabric_name(self, item) -> None:
         """
@@ -221,7 +222,7 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         if item.get("fabric_name", None) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_name must be present in config."
+            msg += "config is missing mandatory key: fabric_name."
             raise ValueError(msg)
         try:
             self.conversion.validate_fabric_name(item.get("fabric_name", None))
@@ -240,7 +241,7 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         if item.get("ip_address", None) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "ip_address must be present in config."
+            msg += "config is missing mandatory key: ip_address."
             raise ValueError(msg)
 
     def verify_mode(self, item) -> None:
@@ -256,7 +257,7 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         if item.get("mode", None) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "mode is mandatory, but is missing from the config."
+            msg += "config is missing mandatory key: mode."
             raise ValueError(msg)
         if item.get("mode", None) not in self.valid_modes:
             msg = f"{self.class_name}.{method_name}: "
@@ -276,7 +277,7 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         if item.get("serial_number", None) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "serial_number must be present in config."
+            msg += "config is missing mandatory key: serial_number."
             raise ValueError(msg)
 
     def verify_commit_parameters(self) -> None:
@@ -324,7 +325,7 @@ class MaintenanceMode:
         """
         try:
             self.verify_commit_parameters()
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
         try:
@@ -578,7 +579,7 @@ class MaintenanceMode:
     def config(self, value):
         try:
             self.verify_config_parameters(value)
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             raise ValueError(error) from error
         self._properties["config"] = value
 

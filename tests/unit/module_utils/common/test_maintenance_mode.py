@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 
 import pytest
@@ -40,14 +41,15 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    maintenance_mode_fixture, params, responses_config_deploy,
-    responses_maintenance_mode)
+    MockSender, ResponseGenerator, does_not_raise, maintenance_mode_fixture,
+    params, responses_config_deploy, responses_maintenance_mode)
 
 FABRIC_NAME = "VXLAN_Fabric"
 CONFIG = [
@@ -128,6 +130,7 @@ def test_maintenance_mode_00030(maintenance_mode) -> None:
     Classes and Methods
     - MaintenanceMode()
         - __init__()
+        - verify_commit_parameters()
         - commit()
 
     Summary
@@ -148,7 +151,7 @@ def test_maintenance_mode_00030(maintenance_mode) -> None:
     """
     with does_not_raise():
         instance = maintenance_mode
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send = RestSend({})
         instance.results = Results()
 
     match = r"MaintenanceMode\.verify_commit_parameters: "
@@ -163,6 +166,7 @@ def test_maintenance_mode_00040(maintenance_mode) -> None:
     Classes and Methods
     - MaintenanceMode()
         - __init__()
+        - verify_commit_parameters()
         - commit()
 
     Summary
@@ -198,6 +202,7 @@ def test_maintenance_mode_00050(maintenance_mode) -> None:
     Classes and Methods
     - MaintenanceMode()
         - __init__()
+        - verify_commit_parameters()
         - commit()
 
     Summary
@@ -218,7 +223,7 @@ def test_maintenance_mode_00050(maintenance_mode) -> None:
     """
     with does_not_raise():
         instance = maintenance_mode
-        instance.rest_send = RestSend(MockAnsibleModule)
+        instance.rest_send = RestSend({})
         instance.config = CONFIG
 
     match = r"MaintenanceMode\.verify_commit_parameters: "
@@ -236,7 +241,7 @@ def test_maintenance_mode_00050(maintenance_mode) -> None:
         (ValueError, ValueError, "Bad value"),
     ],
 )
-def test_maintenance_mode_00100(
+def test_maintenance_mode_00200(
     monkeypatch, maintenance_mode, mock_exception, expected_exception, mock_message
 ) -> None:
     """
@@ -272,7 +277,7 @@ def test_maintenance_mode_00100(
     with does_not_raise():
         instance = maintenance_mode
         instance.config = CONFIG
-        instance.rest_send = RestSend(MockAnsibleModule)
+        instance.rest_send = RestSend({})
         instance.results = Results()
 
     monkeypatch.setattr(instance, "change_system_mode", mock_change_system_mode)
@@ -287,7 +292,7 @@ def test_maintenance_mode_00100(
         (ValueError, ValueError, "Bad value"),
     ],
 )
-def test_maintenance_mode_00110(
+def test_maintenance_mode_00210(
     monkeypatch, maintenance_mode, mock_exception, expected_exception, mock_message
 ) -> None:
     """
@@ -326,7 +331,7 @@ def test_maintenance_mode_00110(
     with does_not_raise():
         instance = maintenance_mode
         instance.config = CONFIG
-        instance.rest_send = RestSend(MockAnsibleModule)
+        instance.rest_send = RestSend({})
         instance.results = Results()
 
     monkeypatch.setattr(instance, "change_system_mode", mock_change_system_mode)
@@ -335,7 +340,7 @@ def test_maintenance_mode_00110(
         instance.commit()
 
 
-def test_maintenance_mode_00120(monkeypatch, maintenance_mode) -> None:
+def test_maintenance_mode_00220(maintenance_mode) -> None:
     """
     Classes and Methods
     - MaintenanceMode()
@@ -351,7 +356,7 @@ def test_maintenance_mode_00120(monkeypatch, maintenance_mode) -> None:
 
     Code Flow - Setup
     -   MaintenanceMode() is instantiated
-    -   dcnm_send() is patched to return the mocked controller responses
+    -   Sender() is mocked to return expected responses
     -   Required attributes are set
     -   MaintenanceMode().commit() is called
     -   responses_MaintenanceMode contains a dict with:
@@ -369,28 +374,26 @@ def test_maintenance_mode_00120(monkeypatch, maintenance_mode) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_maintenance_mode(key)
         yield responses_config_deploy(key)
 
-    gen = ResponseGenerator(responses())
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
+    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     with does_not_raise():
+        rest_send = RestSend({"state": "merged", "check_mode": False})
+        rest_send.sender = mock_sender
+        rest_send.response_handler = ResponseHandler()
         instance = maintenance_mode
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send = rest_send
         instance.rest_send.unit_test = True
         instance.rest_send.timeout = 1
         instance.results = Results()
         instance.config = CONFIG
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
         instance.commit()
@@ -432,3 +435,85 @@ def test_maintenance_mode_00120(monkeypatch, maintenance_mode) -> None:
 
     assert instance.results.result[1].get("changed", None) is True
     assert instance.results.result[1].get("success", None) is True
+
+
+def test_maintenance_mode_00300(maintenance_mode) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - verify_config_parameters()
+        - config.setter
+
+    Summary
+    -   Verify MaintenanceMode().verify_config_parameters() raises
+            -   ``TypeError`` if:
+                    - value is not a list
+    -   Verify MaintenanceMode().config.setter re-raises:
+            -   ``TypeError`` as ``ValueError``
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+    -   config is set to a non-list value
+
+    Code Flow - Test
+    -   MaintenanceMode().config.setter is accessed with non-list
+
+    Expected Result
+    -   verify_config_parameters() raises ``TypeError``.
+    -   config.setter re-raises as ``ValueError``.
+    -   Exception message matches expected.
+    """
+    with does_not_raise():
+        instance = maintenance_mode
+    match = r"MaintenanceMode\.verify_config_parameters:\s+"
+    match += r"MaintenanceMode\.config must be a list\.\s+"
+    match += r"Got type: str\."
+    with pytest.raises(ValueError, match=match):
+        instance.config = "NOT_A_LIST"
+
+
+@pytest.mark.parametrize(
+    "remove_param",
+    # ["deploy", "fabric_name", "ip_address", "mode", "serial_number"],
+    [("deploy"), ("fabric_name"), ("ip_address"), ("mode"), ("serial_number")],
+)
+def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - verify_config_parameters()
+        - config.setter
+
+    Summary
+    -   Verify MaintenanceMode().verify_config_parameters() raises
+            -   ``ValueError`` if:
+                    - deploy is missing from config
+                    - fabric_name is missing from config
+                    - ip_address is missing from config
+                    - mode is missing from config
+                    - serial_number is missing from config
+
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+
+    Code Flow - Test
+    -   MaintenanceMode().config is set to a dict with all of the above
+        keys present, except that each key, in turn, is removed.
+
+    Expected Result
+    -   ``ValueError`` is raised
+    -   Exception message matches expected
+    """
+
+    with does_not_raise():
+        instance = maintenance_mode
+
+    config = copy.deepcopy(CONFIG[0])
+    del config[remove_param]
+    match = rf"MaintenanceMode\.verify_{remove_param}:\s+"
+    match += rf"config is missing mandatory key: {remove_param}\."
+    with pytest.raises(ValueError, match=match):
+        instance.config = [config]
