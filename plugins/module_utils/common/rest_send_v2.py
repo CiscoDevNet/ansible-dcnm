@@ -261,7 +261,9 @@ class RestSend:
         Call dcnm_send() with retries until successful response or timeout is exceeded.
 
         ### Raises
-            -   AnsibleModule.fail_json() if the response is not a dict
+            -   ``ValueError`` if:
+                -   HandleResponse() raises ``ValueError``
+                -   Sender().commit() raises ``ValueError``
         ### Properties read
             -   ``send_interval``: interval between retries (set in ImageUpgradeCommon)
             -   ``timeout``: timeout in seconds (set in ImageUpgradeCommon)
@@ -276,7 +278,11 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
-        self._verify_commit_parameters()
+        try:
+            self._verify_commit_parameters()
+        except ValueError as error:
+            raise ValueError(error) from error
+
         try:
             timeout = self.timeout
         except AttributeError:
@@ -296,9 +302,12 @@ class RestSend:
             msg += f"caller: {caller}.  "
             msg += f"Calling sender.commit(): verb {self.verb}, path {self.path}"
 
-            self.sender.commit()
-            self.response_current = self.sender.response
+            try:
+                self.sender.commit()
+            except ValueError as error:
+                raise ValueError(error) from error
 
+            self.response_current = self.sender.response
             # Handle controller response and derive result
             try:
                 self.response_handler.response = self.response_current

@@ -34,15 +34,26 @@ class Sender:
     ``sender`` interface using dcnm_send.
 
     ### Raises
-    -   ``ValueError`` if ``ansible_module`` is not set.
+    -   ``ValueError`` if:
+            -   ``ansible_module`` is not set.
+            -   ``path`` is not set.
+            -   ``verb`` is not set.
+    -   ``TypeError`` if:
+            -   ``ansible_module`` is not an instance of AnsibleModule.
+            -   ``payload`` is not a ``dict``.
+            -   ``response`` is not a ``dict``.
+
     ### Usage
     ``ansible_module`` is an instance of ``AnsibleModule``.
 
     ```python
     sender = Sender()
-    sender.ansible_module = ansible_module
-    rest_send = RestSend()
-    rest_send.sender = sender
+    try:
+        sender.ansible_module = ansible_module
+        rest_send = RestSend()
+        rest_send.sender = sender
+    except (TypeError, ValueError) as error:
+        handle_error(error)
     # etc...
     # See rest_send_v2.py for RestSend() usage.
     ```
@@ -92,7 +103,11 @@ class Sender:
         Send the REST request to the controller
 
         ### Raises
-            -   AnsibleModule.fail_json() if the response is not a dict
+            -   ``ValueError`` if:
+                    -   ``ansible_module`` is not set.
+                    -   ``path`` is not set.
+                    -   ``verb`` is not set.
+
         ### Properties read
             -   ``verb``: HTTP verb e.g. GET, POST, PUT, DELETE
             -   ``path``: HTTP path e.g. http://controller_ip/path/to/endpoint
