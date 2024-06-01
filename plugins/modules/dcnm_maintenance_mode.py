@@ -125,12 +125,12 @@ import copy
 import inspect
 import json
 import logging
-from os import environ
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.dcnm_sender import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
+    Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import (
     MaintenanceMode, MaintenanceModeInfo)
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
@@ -1219,28 +1219,12 @@ def main():
     ansible_module = AnsibleModule(
         argument_spec=argument_spec, supports_check_mode=True
     )
-    log = Log(ansible_module)
-
-    # Create the base/parent logger for the dcnm collection.
-    # Set the following environment variable to enable logging:
-    #   - NDFC_LOGGING_CONFIG=<path to logging_config.json>
-    # logging_config.json must be must be conformant with logging.config.dictConfig
-    # and must not log to the console.
-    # For an example logging_config.json configuration, see:
-    # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
-    config_file = environ.get("NDFC_LOGGING_CONFIG", None)
-    if config_file is not None:
-        log.config = config_file
+    # Logging setup
     try:
+        log = Log()
         log.commit()
-    except json.decoder.JSONDecodeError as error:
-        msg = f"Invalid logging configuration file: {log.config}. "
-        msg += f"Error detail: {error}"
-        ansible_module.fail_json(msg)
     except ValueError as error:
-        msg = f"Invalid logging configuration file: {log.config}. "
-        msg += f"Error detail: {error}"
-        ansible_module.fail_json(msg)
+        ansible_module.fail_json(str(error))
 
     ansible_module.params["check_mode"] = ansible_module.check_mode
 
