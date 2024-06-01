@@ -206,7 +206,9 @@ class MaintenanceMode:
             raise ValueError(msg)
         if not isinstance(item.get("deploy", None), bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "deploy must be a boolean."
+            msg += "Expected boolean for deploy. "
+            msg += f"Got type {type(item).__name__}, "
+            msg += f"value {item.get('deploy', None)}."
             raise TypeError(msg)
 
     def verify_fabric_name(self, item) -> None:

@@ -340,7 +340,14 @@ def test_maintenance_mode_00210(
         instance.commit()
 
 
-def test_maintenance_mode_00220(maintenance_mode) -> None:
+@pytest.mark.parametrize(
+    "mode",
+    [
+        ("maintenance"),
+        ("normal"),
+    ],
+)
+def test_maintenance_mode_00220(maintenance_mode, mode) -> None:
     """
     Classes and Methods
     - MaintenanceMode()
@@ -381,8 +388,8 @@ def test_maintenance_mode_00220(maintenance_mode) -> None:
     mock_sender = MockSender()
     mock_sender.gen = ResponseGenerator(responses())
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    config = copy.deepcopy(CONFIG[0])
+    config["mode"] = mode
 
     with does_not_raise():
         rest_send = RestSend({"state": "merged", "check_mode": False})
@@ -393,7 +400,7 @@ def test_maintenance_mode_00220(maintenance_mode) -> None:
         instance.rest_send.unit_test = True
         instance.rest_send.timeout = 1
         instance.results = Results()
-        instance.config = CONFIG
+        instance.config = [config]
 
     with does_not_raise():
         instance.commit()
@@ -404,7 +411,7 @@ def test_maintenance_mode_00220(maintenance_mode) -> None:
     assert isinstance(instance.results.result, list)
     assert instance.results.diff[0].get("fabric_name", None) == FABRIC_NAME
     assert instance.results.diff[0].get("ip_address", None) == "192.168.1.2"
-    assert instance.results.diff[0].get("maintenance_mode", None) == "maintenance"
+    assert instance.results.diff[0].get("maintenance_mode", None) == mode
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("serial_number", None) == "FDO22180ASJ"
 
@@ -475,7 +482,6 @@ def test_maintenance_mode_00300(maintenance_mode) -> None:
 
 @pytest.mark.parametrize(
     "remove_param",
-    # ["deploy", "fabric_name", "ip_address", "mode", "serial_number"],
     [("deploy"), ("fabric_name"), ("ip_address"), ("mode"), ("serial_number")],
 )
 def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
@@ -517,3 +523,165 @@ def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
     match += rf"config is missing mandatory key: {remove_param}\."
     with pytest.raises(ValueError, match=match):
         instance.config = [config]
+
+
+@pytest.mark.parametrize(
+    "param, raises",
+    [
+        (False, None),
+        (True, None),
+        (10, ValueError),
+        ("FOO", ValueError),
+        (["FOO"], ValueError),
+        ({"FOO": "BAR"}, ValueError),
+    ],
+)
+def test_maintenance_mode_00400(maintenance_mode, param, raises) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - verify_config_parameters()
+        - config.setter
+
+    Summary
+    -   Verify MaintenanceMode().verify_config_parameters() re-raises
+            -   ``ValueError`` if:
+                    - ``deploy`` raises ``TypeError``
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+
+    Code Flow - Test
+    -   MaintenanceMode().config is set to a dict.
+    -   The dict is updated with deploy set to valid and invalid
+        values of ``deploy``
+
+    Expected Result
+    -   ``ValueError`` is raised when deploy is not a boolean
+    -   Exception message matches expected
+    -   Exception is not raised when deploy is a boolean
+    """
+
+    with does_not_raise():
+        instance = maintenance_mode
+
+    config = copy.deepcopy(CONFIG[0])
+    config["deploy"] = param
+    match = r"MaintenanceMode\.verify_deploy:\s+"
+    match += r"Expected boolean for deploy\.\s+"
+    match += r"Got type\s+"
+    if raises:
+        with pytest.raises(raises, match=match):
+            instance.config = [config]
+    else:
+        instance.config = [config]
+        assert instance.config[0]["deploy"] == param
+
+
+@pytest.mark.parametrize(
+    "param, raises",
+    [
+        ("MyFabric", None),
+        ("MyFabric_123", None),
+        ("10MyFabric", ValueError),
+        ("_MyFabric", ValueError),
+        ("MyFabric&BadFabric", ValueError),
+    ],
+)
+def test_maintenance_mode_00500(maintenance_mode, param, raises) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - verify_config_parameters()
+        - config.setter
+
+    Summary
+    -   Verify MaintenanceMode().verify_config_parameters() re-raises
+            -   ``ValueError`` if:
+                    - ``fabric_name`` raises ``ValueError`` due to being an
+                        invalid value.
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+
+    Code Flow - Test
+    -   MaintenanceMode().config is set to a dict.
+    -   The dict is updated with fabric_name set to valid and invalid
+        values of ``fabric_name``
+
+    Expected Result
+    -   ``ValueError`` is raised when fabric_name is not a valid value
+    -   Exception message matches expected
+    -   Exception is not raised when fabric_name is a valid value
+    """
+
+    with does_not_raise():
+        instance = maintenance_mode
+
+    config = copy.deepcopy(CONFIG[0])
+    config["fabric_name"] = param
+    match = r"ConversionUtils\.validate_fabric_name:\s+"
+    match += rf"Invalid fabric name: {param}\.\s+"
+    match += r"Fabric name must start with a letter A-Z or a-z and contain\s+"
+    match += r"only the characters in:"
+    if raises:
+        with pytest.raises(raises, match=match):
+            instance.config = [config]
+    else:
+        instance.config = [config]
+        assert instance.config[0]["fabric_name"] == param
+
+
+@pytest.mark.parametrize(
+    "param, raises",
+    [
+        ("maintenance", None),
+        ("normal", None),
+        (10, ValueError),
+        (["192.168.1.2"], ValueError),
+        ({"ip_address": "192.168.1.2"}, ValueError),
+    ],
+)
+def test_maintenance_mode_00600(maintenance_mode, param, raises) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - verify_config_parameters()
+        - config.setter
+
+    Summary
+    -   Verify MaintenanceMode().verify_config_parameters() re-raises
+            -   ``ValueError`` if:
+                    - ``mode`` raises ``ValueError`` due to being an
+                        invalid value.
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+
+    Code Flow - Test
+    -   MaintenanceMode().config is set to a dict.
+    -   The dict is updated with mode set to valid and invalid
+        values of ``mode``
+
+    Expected Result
+    -   ``ValueError`` is raised when mode is not a valid value
+    -   Exception message matches expected
+    -   Exception is not raised when mode is a valid value
+    """
+
+    with does_not_raise():
+        instance = maintenance_mode
+
+    config = copy.deepcopy(CONFIG[0])
+    config["mode"] = param
+    match = r"MaintenanceMode\.verify_mode:\s+"
+    match += r"mode must be one of\s+"
+    if raises:
+        with pytest.raises(raises, match=match):
+            instance.config = [config]
+    else:
+        instance.config = [config]
+        assert instance.config[0]["mode"] == param
