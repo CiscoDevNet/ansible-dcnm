@@ -685,3 +685,92 @@ def test_maintenance_mode_00600(maintenance_mode, param, raises) -> None:
     else:
         instance.config = [config]
         assert instance.config[0]["mode"] == param
+
+
+@pytest.mark.parametrize(
+    "endpoint_instance, mock_exception, expected_exception, mock_message",
+    [
+        ("ep_maintenance_mode_disable", TypeError, ValueError, "Bad type"),
+        ("ep_maintenance_mode_disable", ValueError, ValueError, "Bad value"),
+        ("ep_maintenance_mode_enable", TypeError, ValueError, "Bad type"),
+        ("ep_maintenance_mode_enable", ValueError, ValueError, "Bad value"),
+    ],
+)
+def test_maintenance_mode_00700(
+    monkeypatch,
+    maintenance_mode,
+    endpoint_instance,
+    mock_exception,
+    expected_exception,
+    mock_message,
+) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify MaintenanceMode().change_system_mode() raises ``ValueError``
+        when ``EpMaintenanceModeEnable`` or ``EpMaintenanceModeDisable`` raise
+        any of:
+            -   ``TypeError``
+            -   ``ValueError``
+
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+    -   Required attributes are set
+    -   EpMaintenanceModeEnable() is mocked to raise each of the above exceptions
+
+    Code Flow - Test
+    -   MaintenanceMode().commit() is called for each exception
+
+    Expected Result
+    -   ``ValueError`` is raised
+    -   Exception message matches expected
+    """
+
+    class MockEndpoint:
+        """
+        Mock Ep*() class
+        """
+
+        def __init__(self):
+            self._fabric_name = None
+            self._serial_number = None
+
+        @property
+        def fabric_name(self):
+            """
+            Mock fabric_name getter/setter
+            """
+            return self._fabric_name
+
+        @fabric_name.setter
+        def fabric_name(self, value):
+            raise mock_exception(mock_message)
+
+        @property
+        def serial_number(self):
+            """
+            Mock serial_number getter/setter
+            """
+            return self._serial_number
+
+        @serial_number.setter
+        def serial_number(self, value):
+            self._serial_number = value
+
+    with does_not_raise():
+        instance = maintenance_mode
+        config = copy.deepcopy(CONFIG[0])
+        if endpoint_instance == "ep_maintenance_mode_disable":
+            config["mode"] = "normal"
+        instance.config = [config]
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+
+    monkeypatch.setattr(instance, endpoint_instance, MockEndpoint())
+    with pytest.raises(expected_exception, match=mock_message):
+        instance.commit()
