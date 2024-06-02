@@ -873,13 +873,19 @@ class Merged(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        instance = MaintenanceModeInfo(self.params)
-        instance.rest_send = self.rest_send
-        instance.results = self.results
-        instance.config = [
-            item["ip_address"] for item in self.config.get("switches", {})
-        ]
-        instance.refresh()
+        try:
+            instance = MaintenanceModeInfo(self.params)
+            instance.rest_send = self.rest_send
+            instance.results = self.results
+            instance.config = [
+                item["ip_address"] for item in self.config.get("switches", {})
+            ]
+            instance.refresh()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while retrieving switch info. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
         self.have = instance.info
 
     def fabric_deployment_disabled(self) -> None:
@@ -1055,7 +1061,8 @@ class Merged(Common):
         Build and send the payload to modify maintenance mode.
 
         ### Raises
-        -   ``ValueError`` if MaintenanceMode() raises ``ValueError``
+        -   ``ValueError`` if MaintenanceMode() raises either
+            ``TypeError`` or ``ValueError``
 
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
@@ -1066,16 +1073,13 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
-        instance = MaintenanceMode(self.params)
-        instance.rest_send = self.rest_send
-        instance.results = self.results
         try:
+            instance = MaintenanceMode(self.params)
+            instance.rest_send = self.rest_send
+            instance.results = self.results
             instance.config = self.need
-        except ValueError as error:
-            raise ValueError(error) from error
-        try:
             instance.commit()
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
 
@@ -1160,13 +1164,19 @@ class Query(Common):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        instance = MaintenanceModeInfo(self.params)
-        instance.rest_send = self.rest_send
-        instance.results = self.results
-        instance.config = [
-            item["ip_address"] for item in self.config.get("switches", {})
-        ]
-        instance.refresh()
+        try:
+            instance = MaintenanceModeInfo(self.params)
+            instance.rest_send = self.rest_send
+            instance.results = self.results
+            instance.config = [
+                item["ip_address"] for item in self.config.get("switches", {})
+            ]
+            instance.refresh()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while retrieving switch info. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
         self.have = instance.info
 
     def commit(self) -> None:

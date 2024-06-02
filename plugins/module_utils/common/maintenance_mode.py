@@ -51,9 +51,8 @@ class MaintenanceMode:
             -   ``commit`` if config, rest_send, or results are not set.
             -   ``commit`` if ``EpMaintenanceModeEnable`` or
                 ``EpMaintenanceModeDisable`` raise ``ValueError``.
-
-    -   ``ControllerResponseError`` in the following methods:
-            -   ``commit`` if controller response != 200.
+            -   ``commit``  if either ``chance_system_mode()`` or
+                ``deploy_switches()`` raise ``ControllerResponseError``.
 
     -   ``TypeError`` in the following properties:
             -   ``rest_send`` if value is not an instance of RestSend.
