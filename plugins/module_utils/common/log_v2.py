@@ -18,6 +18,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import json
 import logging
 from logging.config import dictConfig
@@ -193,6 +194,7 @@ class Log:
     def _build_properties(self) -> None:
         self.properties = {}
         self.properties["config"] = environ.get("NDFC_LOGGING_CONFIG", None)
+        self.properties["develop"] = False
 
     def disable_logging(self):
         """
@@ -349,4 +351,10 @@ class Log:
 
     @develop.setter
     def develop(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: Expected boolean for develop. "
+            msg += f"Got: type {type(value).__name__} for value {value}."
+            raise TypeError(msg)
+        self.properties["develop"] = value
         logging.raiseExceptions = value
