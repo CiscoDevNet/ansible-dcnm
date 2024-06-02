@@ -444,6 +444,100 @@ def test_maintenance_mode_00220(maintenance_mode, mode) -> None:
     assert instance.results.result[1].get("success", None) is True
 
 
+@pytest.mark.parametrize(
+    "mode",
+    [
+        ("maintenance"),
+        ("normal"),
+    ],
+)
+def test_maintenance_mode_00230(maintenance_mode, mode) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - commit()
+        - change_system_mode()
+        - deploy_switches()
+
+    Summary
+    - Verify commit() unsuccessful case:
+        -   RETURN_CODE == 500.
+        -   commit raises ``ValueError`` when change_system_mode() raises
+            ``ControllerResponseError``.
+        -   Controller response contains expected structure and values.
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+    -   Sender() is mocked to return expected responses
+    -   Required attributes are set
+    -   MaintenanceMode().commit() is called
+    -   responses_MaintenanceMode contains a dict with:
+        - RETURN_CODE == 500
+        - DATA == {"status": "Failure"}
+
+    Code Flow - Test
+    -   ``MaintenanceMode().commit()`` is called
+    -   ``change_system_mode()`` raises ``ControllerResponseError``
+    -   ``commit()`` raises ``ValueError``
+
+    Expected Result
+    -   ``commit()`` raises ``ValueError``
+    -   instance.response_data returns expected data
+    -   MaintenanceMode()._properties are updated
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_maintenance_mode(key)
+        # yield responses_config_deploy(key)
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+
+    config = copy.deepcopy(CONFIG[0])
+    config["mode"] = mode
+
+    with does_not_raise():
+        rest_send = RestSend({"state": "merged", "check_mode": False})
+        rest_send.sender = mock_sender
+        rest_send.response_handler = ResponseHandler()
+        instance = maintenance_mode
+        instance.rest_send = rest_send
+        instance.rest_send.unit_test = True
+        instance.rest_send.timeout = 1
+        instance.results = Results()
+        instance.config = [config]
+
+    match = r"MaintenanceMode\.change_system_mode:\s+"
+    match += r"Unable to change system mode on switch:\s+"
+    match += rf"fabric_name {config['fabric_name']},\s+"
+    match += rf"ip_address {config['ip_address']},\s+"
+    match += rf"serial_number {config['serial_number']}\.\s+"
+    match += r"Got response\s+.*"
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+    assert isinstance(instance.results.diff, list)
+    assert isinstance(instance.results.metadata, list)
+    assert isinstance(instance.results.response, list)
+    assert isinstance(instance.results.result, list)
+    assert len(instance.results.diff[0]) == 1
+
+    assert instance.results.metadata[0].get("action", None) == "maintenance_mode"
+    assert instance.results.metadata[0].get("sequence_number", None) == 1
+    assert instance.results.metadata[0].get("state", None) == "merged"
+
+    assert instance.results.response[0].get("DATA", {}).get("status") == "Failure"
+    assert instance.results.response[0].get("MESSAGE", None) == "Internal Server Error"
+    assert instance.results.response[0].get("RETURN_CODE", None) == 500
+    assert instance.results.response[0].get("METHOD", None) == "POST"
+
+    assert instance.results.result[0].get("changed", None) is False
+    assert instance.results.result[0].get("success", None) is False
+
+
 def test_maintenance_mode_00300(maintenance_mode) -> None:
     """
     Classes and Methods
