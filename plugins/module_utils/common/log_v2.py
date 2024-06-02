@@ -27,11 +27,11 @@ from os import environ
 
 class Log:
     """
-     ### Summary
-     Create the base dcnm logging object.
+    ### Summary
+    Create the base dcnm logging object.
 
-     ### Raises
-     -   ``ValueError`` if:
+    ### Raises
+    -   ``ValueError`` if:
             -   An error is encountered reading the logging config file.
             -   An error is encountered parsing the logging config file.
             -   An invalid handler is found in the logging config file.
@@ -39,105 +39,107 @@ class Log:
                         which currently contains: "file".
             -   No formatters are found in the logging config file that
                 are associated with the configured handlers.
+    -   ``TypeError`` if:
+            -   ``develop`` is not a boolean.
 
-     ### Usage
+    ### Usage
 
-     By default, Log() does the following:
+    By default, Log() does the following:
 
-     1.  Reads the environment variable ``NDFC_LOGGING_CONFIG`` to determine
-         the path to the logging config file.  If the environment variable is
-         not set, then logging is disabled.
-     2.  Sets ``develop`` to False.  This disables exceptions raised by the
-         logging module itself.
+    1.  Reads the environment variable ``NDFC_LOGGING_CONFIG`` to determine
+        the path to the logging config file.  If the environment variable is
+        not set, then logging is disabled.
+    2.  Sets ``develop`` to False.  This disables exceptions raised by the
+        logging module itself.
 
-     Hence, the simplest usage for Log() is:
+    Hence, the simplest usage for Log() is:
 
-     -   Set the environment variable ``NDFC_LOGGING_CONFIG`` to the
-         path of the logging config file.  ``bash`` shell is used in the
-         example below.
+    -   Set the environment variable ``NDFC_LOGGING_CONFIG`` to the
+        path of the logging config file.  ``bash`` shell is used in the
+        example below.
 
-     ```bash
-     export NDFC_LOGGING_CONFIG="/path/to/logging_config.json"
-     ```
+    ```bash
+    export NDFC_LOGGING_CONFIG="/path/to/logging_config.json"
+    ```
 
-     -   Instantiate a Log() object instance and call ``commit()`` on the instance:
+    -   Instantiate a Log() object instance and call ``commit()`` on the instance:
 
-     ```python
-     from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
-     try:
-         log = Log()
-         log.commit()
-     except ValueError as error:
-         # handle error
-     ```
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
+    try:
+        log = Log()
+        log.commit()
+    except ValueError as error:
+        # handle error
+    ```
 
-     To later disable logging, unset the environment variable.
-     ``bash`` shell is used in the example below.
+    To later disable logging, unset the environment variable.
+    ``bash`` shell is used in the example below.
 
-     ```bash
-     unset NDFC_LOGGING_CONFIG
-     ```
+    ```bash
+    unset NDFC_LOGGING_CONFIG
+    ```
 
-     To enable exceptions from the logging module (not recommended, unless needed for
-     development), set ``develop`` to True:
+    To enable exceptions from the logging module (not recommended, unless needed for
+    development), set ``develop`` to True:
 
-     ```python
-     from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
-     try:
-         log = Log()
-         log.develop = True
-         log.commit()
-     except ValueError as error:
-         # handle error
-     ```
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
+    try:
+        log = Log()
+        log.develop = True
+        log.commit()
+    except ValueError as error:
+        # handle error
+    ```
 
-     To directly set the path to the logging config file, overriding the
-     ``NDFC_LOGGING_CONFIG`` environment variable, set the ``config``
-     property prior to calling ``commit()``:
+    To directly set the path to the logging config file, overriding the
+    ``NDFC_LOGGING_CONFIG`` environment variable, set the ``config``
+    property prior to calling ``commit()``:
 
-     ```python
-     from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
-     try:
-         log = Log()
-         log.config = "/path/to/logging_config.json"
-         log.commit()
-     except ValueError as error:
-         # handle error
-     ```
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
+    try:
+        log = Log()
+        log.config = "/path/to/logging_config.json"
+        log.commit()
+    except ValueError as error:
+        # handle error
+    ```
 
-     At this point, a base/parent logger is created for which all other
-     loggers throughout the dcnm collection will be children.
-     This allows for a single logging config to be used for all modules in the
-     collection, and allows for the logging config to be specified in a
-     single place external to the code.
+    At this point, a base/parent logger is created for which all other
+    loggers throughout the dcnm collection will be children.
+    This allows for a single logging config to be used for all modules in the
+    collection, and allows for the logging config to be specified in a
+    single place external to the code.
 
-     ### Example module code using the Log() object
+    ### Example module code using the Log() object
 
-     In the main() function of a module.
-     ```python
-     from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
+    In the main() function of a module.
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
 
-     def main():
-         try:
-             log = Log()
-             log.commit()
-         except ValueError as error:
-             ansible_module.fail_json(msg=str(error))
+    def main():
+        try:
+            log = Log()
+            log.commit()
+        except ValueError as error:
+            ansible_module.fail_json(msg=str(error))
 
-         task = AnsibleTask()
-     ```
+        task = AnsibleTask()
+    ```
 
-     In the AnsibleTask() class (or any other classes running in the
-     main() function's call stack i.e. classes instantiated in either
-     main() or in AnsibleTask()).
+    In the AnsibleTask() class (or any other classes running in the
+    main() function's call stack i.e. classes instantiated in either
+    main() or in AnsibleTask()).
 
-     ```python
-     class AnsibleTask:
-         def __init__(self):
-             self.class_name = self.__class__.__name__
-             self.log = logging.getLogger(f"dcnm.{self.class_name}")
-         def some_method(self):
-             self.log.debug("This is a debug message.")
+    ```python
+    class AnsibleTask:
+        def __init__(self):
+            self.class_name = self.__class__.__name__
+            self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        def some_method(self):
+            self.log.debug("This is a debug message.")
     ```
 
     ### Logging Config File
