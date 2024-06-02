@@ -43,7 +43,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 def logging_config(logging_config_file) -> dict:
     """
     ### Summary
-    Return a logging configuration conformant with dictConfig.
+    Return a logging configuration conformant with logging.config.dictConfig.
     """
     return {
         "version": 1,
@@ -269,9 +269,10 @@ def test_log_v2_00210(tmp_path) -> None:
     with does_not_raise():
         instance = Log()
 
-    match = r"logging\.config\.dictConfig:\s+"
-    match += rf"Unable to configure logging from {config_file}\.\s+"
-    match += "Error detail: dictionary doesn't specify a version"
+    match = r"logging.config.dictConfig:\s+"
+    match += r"No file handlers found\.\s+"
+    match += r"Add a file handler to the logging config file\s+"
+    match += rf"and try again: {config_file}"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -307,8 +308,8 @@ def test_log_v2_00230(tmp_path) -> None:
     -   Log().commit()
 
     ### Test
-    -   ``ValueError`` is raised if logging config file contains a
-        handler that emits to console.
+    -   ``ValueError`` is raised if logging config file contains
+        handler(s) that emit to non-file destinations.
     """
     log_dir = tmp_path / "log_dir"
     log_dir.mkdir()
@@ -329,11 +330,80 @@ def test_log_v2_00230(tmp_path) -> None:
     with does_not_raise():
         instance = Log()
 
-    match = rf"logging config file .*{config_file}\s+"
-    match += r"contains a handler that logs to console, stdout, or stderr\.\s+"
-    match += r"This will break Ansible module execution\.\s+"
+    match = r"logging.config.dictConfig:\s+"
+    match += r"handlers found that may interrupt Ansible module\s+"
+    match += r"execution\.\s+"
     match += r"Remove these handlers from the logging config file and\s+"
-    match += r"try again. Handler: console"
+    match += r"try again\.\s+"
+    match += r"Handlers:\s+.*\.\s+"
+    match += r"Logging config file:\s+.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_log_v2_00240(tmp_path) -> None:
+    """
+    ### Methods
+    -   Log().commit()
+
+    ### Test
+    -   ``ValueError`` is raised if logging config file does not
+        contain any handlers.
+
+    ### NOTES:
+    -   test_log_v2_00210, raises the same error message in the case where
+        the logging config file contains JSON that is not conformant with
+        dictConfig.
+    """
+    log_dir = tmp_path / "log_dir"
+    log_dir.mkdir()
+    config_file = log_dir / "logging_config.json"
+    log_file = log_dir / "dcnm.log"
+    config = logging_config(str(log_file))
+    del config["handlers"]
+    with open(config_file, "w", encoding="UTF-8") as fp:
+        json.dump(config, fp)
+
+    environ["NDFC_LOGGING_CONFIG"] = str(config_file)
+
+    with does_not_raise():
+        instance = Log()
+
+    match = r"logging.config.dictConfig:\s+"
+    match += r"No file handlers found\.\s+"
+    match += r"Add a file handler to the logging config file\s+"
+    match += rf"and try again: {config_file}"
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_log_v2_00250(tmp_path) -> None:
+    """
+    ### Methods
+    -   Log().commit()
+
+    ### Test
+    -   ``ValueError`` is raised if logging config file does not
+        contain any formatters or contains formatters that are not
+        associated with handlers.
+    """
+    log_dir = tmp_path / "log_dir"
+    log_dir.mkdir()
+    config_file = log_dir / "logging_config.json"
+    log_file = log_dir / "dcnm.log"
+    config = logging_config(str(log_file))
+    del config["formatters"]
+    with open(config_file, "w", encoding="UTF-8") as fp:
+        json.dump(config, fp)
+
+    environ["NDFC_LOGGING_CONFIG"] = str(config_file)
+
+    with does_not_raise():
+        instance = Log()
+
+    match = r"logging.config.dictConfig:\s+"
+    match += r"Unable to configure logging from\s+.*\.\s+"
+    match += r"Error detail: Unable to configure handler.*"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 

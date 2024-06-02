@@ -32,8 +32,13 @@ class Log:
 
      ### Raises
      -   ``ValueError`` if:
-             -   An error is encountered reading the logging config file.
-             -   An error is encountered parsing the logging config file.
+            -   An error is encountered reading the logging config file.
+            -   An error is encountered parsing the logging config file.
+            -   An invalid handler is found in the logging config file.
+                    -   Valid handlers are listed in self.valid_handlers,
+                        which currently contains: "file".
+            -   No formatters are found in the logging config file that
+                are associated with the configured handlers.
 
      ### Usage
 
@@ -189,6 +194,9 @@ class Log:
         # Set this to True during development to catch logging errors.
         logging.raiseExceptions = False
 
+        self.valid_handlers = set()
+        self.valid_handlers.add("file")
+
         self._build_properties()
 
     def _build_properties(self) -> None:
@@ -260,8 +268,10 @@ class Log:
 
         ### Raises
         -   ``ValueError`` if:
-                -   The logging config file contains a handler that logs to
-                    console, stdout, or stderr.
+                -   The logging config file contains no handlers.
+                -   The logging config file contains a handler other than
+                    the handlers listed in self.valid_handlers (see class
+                    docstring).
 
         ### Usage
         ```python
@@ -270,14 +280,25 @@ class Log:
         log.commit()
         ```
         """
+        if len(logging_config.get("handlers", {})) == 0:
+            msg = "logging.config.dictConfig: "
+            msg += "No file handlers found. "
+            msg += "Add a file handler to the logging config file "
+            msg += f"and try again: {self.config}"
+            raise ValueError(msg)
+        bad_handlers = []
         for handler in logging_config.get("handlers", {}):
-            if handler in ["console", "stderr", "stdout"]:
-                msg = f"logging config file {self.config} contains a handler "
-                msg += "that logs to console, stdout, or stderr. This will "
-                msg += "break Ansible module execution. Remove these handlers "
-                msg += "from the logging config file and try again. "
-                msg += f"Handler: {handler}"
-                raise ValueError(msg)
+            if handler not in self.valid_handlers:
+                msg = "logging.config.dictConfig: "
+                msg += "handlers found that may interrupt Ansible module "
+                msg += "execution. "
+                msg += "Remove these handlers from the logging config file "
+                msg += "and try again. "
+                bad_handlers.append(handler)
+        if len(bad_handlers) > 0:
+            msg += f"Handlers: {','.join(bad_handlers)}. "
+            msg += f"Logging config file: {self.config}."
+            raise ValueError(msg)
 
     def commit(self):
         """
