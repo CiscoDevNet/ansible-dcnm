@@ -62,7 +62,9 @@ class FabricDetails(FabricCommon):
         details.
         """
         self.results.response_current = self.rest_send.response_current
+        self.results.response = self.rest_send.response_current
         self.results.result_current = self.rest_send.result_current
+        self.results.result = self.rest_send.result_current
         if self.results.response_current.get("RETURN_CODE") == 200:
             self.results.failed = False
         else:
