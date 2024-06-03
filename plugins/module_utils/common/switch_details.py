@@ -121,9 +121,7 @@ class SwitchDetails:
         # Update and register results
         self.results.action = self.action
         self.results.response_current = self.rest_send.response_current
-        self.results.response = self.rest_send.response_current
         self.results.result_current = self.rest_send.result_current
-        self.results.result = self.rest_send.result_current
         # SwitchDetails never changes the controller state
         self.results.changed = False
 
