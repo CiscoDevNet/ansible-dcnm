@@ -218,16 +218,14 @@ class Results:
         """
         msg = f"{self.class_name}.did_anything_change(): ENTERED: "
         msg += f"self.action: {self.action}, "
+        msg += f"self.state: {self.state}, "
         msg += f"self.result_current: {self.result_current}, "
         msg += f"self.diff: {self.diff}"
         self.log.debug(msg)
 
         if self.check_mode is True:
             return False
-        if self.action == "query":
-            msg = f"{self.class_name}.did_anything_change(): "
-            msg += f"self.action: {self.action}"
-            self.log.debug(msg)
+        if self.action == "query" or self.state == "query":
             return False
         if self.result_current.get("changed", None) is True:
             return True
