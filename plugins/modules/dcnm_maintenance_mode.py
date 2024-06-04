@@ -1202,11 +1202,15 @@ class Query(Common):
         except ValueError as error:
             raise ValueError(error) from error
 
-        # If we got this far, the request was successful.
-        self.results.diff_current = self.have
+        # If we got this far, the requests were successful.
+        self.results.action = "maintenance_mode_info"
         self.results.changed = False
-        self.results.action = "query"
+        self.results.diff_current = self.have
         self.results.failed = False
+        self.results.response_current = {"MESSAGE": "MaintenanceModeInfo OK."}
+        self.results.response_current.update({"METHOD": "NA"})
+        self.results.response_current.update({"REQUEST_PATH": "NA"})
+        self.results.response_current.update({"RETURN_CODE": 200})
         self.results.result_current = {"changed": False, "success": True}
         self.results.register_task_result()
 

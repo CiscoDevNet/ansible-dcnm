@@ -42,6 +42,28 @@ class RestSend:
             -   The response handler interface is defined in
                 ``module_utils/common/response_handler.py``
 
+    ### Raises
+    -   ``ValueError`` if:
+            -   self._verify_commit_parameters() raises
+                ``ValueError``
+            -   ResponseHandler() raises ``TypeError`` or ``ValueError``
+            -   Sender().commit() raises ``ValueError``
+            -   ``verb`` is not a valid verb (GET, POST, PUT, DELETE)
+    -  ``TypeError`` if:
+            -   ``check_mode`` is not a ``bool``
+            -   ``path`` is not a ``str``
+            -   ``payload`` is not a ``dict``
+            -   ``response`` is not a ``dict``
+            -   ``response_current`` is not a ``dict``
+            -   ``response_handler`` is not an instance of
+                ``ResponseHandler()``
+            -   ``result`` is not a ``dict``
+            -   ``result_current`` is not a ``dict``
+            -   ``send_interval`` is not an ``int``
+            -   ``sender`` is not an instance of ``Sender()``
+            -   ``timeout`` is not an ``int``
+            -   ``unit_test`` is not a ``bool``
+
     ### Usage discussion
     -   A Sender() class is used in the usage example below that requires an
         instance of ``AnsibleModule``, and uses ``dcnm_send()`` to send
@@ -59,19 +81,22 @@ class RestSend:
     sender = Sender() # class that implements the sender interface
     sender.ansible_module = ansible_module
 
-    rest_send = RestSend()
-    rest_send.sender = sender
-    rest_send.response_handler = ResponseHandler()
-    rest_send.unit_test = True # optional, use in unit tests for speed
-    rest_send.path = "/rest/top-down/fabrics"
-    rest_send.verb = "GET"
-    rest_send.payload = my_payload # optional
-    rest_send.save_settings() # save current check_mode and timeout
-    rest_send.timeout = 300 # optional
-    rest_send.check_mode = True
-    # Do things with rest_send...
-    rest_send.commit()
-    rest_send.restore_settings() # restore check_mode and timeout
+    try:
+        rest_send = RestSend()
+        rest_send.sender = sender
+        rest_send.response_handler = ResponseHandler()
+        rest_send.unit_test = True # optional, use in unit tests for speed
+        rest_send.path = "/rest/top-down/fabrics"
+        rest_send.verb = "GET"
+        rest_send.payload = my_payload # optional
+        rest_send.save_settings() # save current check_mode and timeout
+        rest_send.timeout = 300 # optional
+        rest_send.check_mode = True
+        # Do things with rest_send...
+        rest_send.commit()
+        rest_send.restore_settings() # restore check_mode and timeout
+    except (TypeError, ValueError) as error:
+        # Handle error
 
     # list of responses from the controller for this session
     response = rest_send.response
@@ -200,7 +225,31 @@ class RestSend:
 
     def commit(self):
         """
+        ### Summary
         Send the REST request to the controller
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   RestSend()._verify_commit_parameters() raises
+                    ``ValueError``
+                -   ResponseHandler() raises ``TypeError`` or ``ValueError``
+                -   Sender().commit() raises ``ValueError``
+                -   ``verb`` is not a valid verb (GET, POST, PUT, DELETE)
+        -  ``TypeError`` if:
+                -   ``check_mode`` is not a ``bool``
+                -   ``path`` is not a ``str``
+                -   ``payload`` is not a ``dict``
+                -   ``response`` is not a ``dict``
+                -   ``response_current`` is not a ``dict``
+                -   ``response_handler`` is not an instance of
+                    ``ResponseHandler()``
+                -   ``result`` is not a ``dict``
+                -   ``result_current`` is not a ``dict``
+                -   ``send_interval`` is not an ``int``
+                -   ``sender`` is not an instance of ``Sender()``
+                -   ``timeout`` is not an ``int``
+                -   ``unit_test`` is not a ``bool``
+
         """
         msg = f"{self.class_name}.commit: "
         msg += f"check_mode: {self.check_mode}."
@@ -216,7 +265,13 @@ class RestSend:
         Simulate a controller request for check_mode.
 
         ### Raises
-        None
+        -   ``ValueError`` if:
+            -   ResponseHandler() raises ``TypeError`` or ``ValueError``
+            -   self.response_current raises ``TypeError``
+            -   self.result_current raises ``TypeError``
+            -   self.response raises ``TypeError``
+            -   self.result raises ``TypeError``
+
 
         ### Properties read:
             -   ``verb``: HTTP verb e.g. DELETE, GET, POST, PUT
@@ -244,17 +299,17 @@ class RestSend:
         response_current["MESSAGE"] = "OK"
         response_current["CHECK_MODE"] = True
         response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.response_current = response_current
 
         try:
+            self.response_current = response_current
             self.response_handler.response = self.response_current
             self.response_handler.verb = self.verb
             self.response_handler.commit()
             self.result_current = self.response_handler.result
+            self.response = copy.deepcopy(self.response_current)
+            self.result = copy.deepcopy(self.result_current)
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
-        self.response = copy.deepcopy(self.response_current)
-        self.result = copy.deepcopy(self.result_current)
 
     def commit_normal_mode(self):
         """
@@ -314,7 +369,7 @@ class RestSend:
                 self.response_handler.verb = self.verb
                 self.response_handler.commit()
                 self.result_current = self.response_handler.result
-            except ValueError as error:
+            except (TypeError, ValueError) as error:
                 raise ValueError(error) from error
 
             msg = f"{self.class_name}.{method_name}: "

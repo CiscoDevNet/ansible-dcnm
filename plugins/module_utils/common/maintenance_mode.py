@@ -29,7 +29,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetailsByName
 
 
@@ -346,6 +346,7 @@ class MaintenanceMode:
         -  ``ValueError`` if:
                 -   ``fabric_name`` is invalid.
                 -   endpoint cannot be resolved.
+                -   ``Results()`` raises an exception.
         -  ``TypeError`` if:
                 -   ``serial_number`` is not a string.
         """
@@ -390,14 +391,19 @@ class MaintenanceMode:
                 }
 
             # register result
-            self.results.action = self.action
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
+            try:
+                self.results.action = "change_sytem_mode"
+                self.results.check_mode = self.check_mode
+                self.results.state = self.state
+                self.results.response_current = copy.deepcopy(
+                    self.rest_send.response_current
+                )
+                self.results.result_current = copy.deepcopy(
+                    self.rest_send.result_current
+                )
+                self.results.register_task_result()
+            except (TypeError, ValueError) as error:
+                raise ValueError(error) from error
 
             if self.results.response_current["RETURN_CODE"] != 200:
                 msg = f"{self.class_name}.{method_name}: "
@@ -841,11 +847,14 @@ class MaintenanceModeInfo:
 
         self.verify_refresh_parameters()
 
-        self.switch_details.rest_send = self.rest_send
-        self.fabric_details.rest_send = self.rest_send
+        try:
+            self.switch_details.rest_send = self.rest_send
+            self.fabric_details.rest_send = self.rest_send
 
-        self.switch_details.results = self.results
-        self.fabric_details.results = self.results
+            self.switch_details.results = self.results
+            self.fabric_details.results = self.results
+        except TypeError as error:
+            raise ValueError(error) from error
 
         try:
             self.switch_details.refresh()

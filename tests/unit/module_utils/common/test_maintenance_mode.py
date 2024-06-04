@@ -418,7 +418,7 @@ def test_maintenance_mode_00220(maintenance_mode, mode) -> None:
     assert instance.results.diff[1].get("config_deploy", None) is True
     assert instance.results.diff[1].get("sequence_number", None) == 2
 
-    assert instance.results.metadata[0].get("action", None) == "maintenance_mode"
+    assert instance.results.metadata[0].get("action", None) == "change_sytem_mode"
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
 
@@ -525,7 +525,7 @@ def test_maintenance_mode_00230(maintenance_mode, mode) -> None:
     assert isinstance(instance.results.result, list)
     assert len(instance.results.diff[0]) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "maintenance_mode"
+    assert instance.results.metadata[0].get("action", None) == "change_sytem_mode"
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
 

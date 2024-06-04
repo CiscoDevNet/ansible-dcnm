@@ -34,20 +34,29 @@ class SwitchDetails:
     Retrieve switch details from the controller and provide property accessors
     for the switch attributes.
 
+    ### Raises
+    -   ``ControllerResponseError`` if:
+            -   The controller RETURN_CODE is not 200.
+    -   ``ValueError`` if:
+            -   Mandatory parameters are not set.
+            -   There was an error configuring RestSend() e.g. invalid
+                property values, etc.
+
     ### Usage
     ```python
-    instance = SwitchDetails()
-    instance.results = Results()
-    instance.rest_send = RestSend(ansible_module)
-    instance.refresh()
+    try:
+        instance = SwitchDetails()
+        instance.results = Results()
+        instance.rest_send = RestSend(ansible_module)
+        instance.refresh()
+    except (ControllerResponseError, ValueError) as error:
+        # Handle error
     instance.filter = "10.1.1.1"
     fabric_name = instance.fabric_name
     serial_number = instance.serial_number
     etc...
     ```
 
-    ### Endpoint
-    ``/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches``
     """
 
     def __init__(self):
@@ -70,8 +79,9 @@ class SwitchDetails:
         self.properties["info"] = {}
         self.properties["params"] = None
 
-    def validate_commit_parameters(self) -> None:
+    def validate_refresh_parameters(self) -> None:
         """
+        ### Summary
         Validate that mandatory parameters are set before calling refresh().
 
         ### Raises
@@ -96,18 +106,22 @@ class SwitchDetails:
         Send the request to the controller.
 
         ### Raises
-        None
+        -   ``ValueError`` if the RestSend object raises
+            ``TypeError`` or ``ValueError``.
         """
         # Send request
-        self.rest_send.save_settings()
-        self.rest_send.timeout = 1
-        # Regardless of ansible_module.check_mode, we need to get the
-        # switch details. So, set check_mode to False.
-        self.rest_send.check_mode = False
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.commit()
-        self.rest_send.restore_settings()
+        try:
+            self.rest_send.save_settings()
+            self.rest_send.timeout = 1
+            # Regardless of ansible_module.check_mode, we need to get the
+            # switch details. So, set check_mode to False.
+            self.rest_send.check_mode = False
+            self.rest_send.verb = self.verb
+            self.rest_send.path = self.path
+            self.rest_send.commit()
+            self.rest_send.restore_settings()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
 
     def update_results(self) -> None:
         """
@@ -115,22 +129,27 @@ class SwitchDetails:
         Update and register the results.
 
         ### Raises
-        -   ``ControllerResponseError`` if the controller response is not 200.
+        -   ``ControllerResponseError`` if:
+                - The controller RETURN_CODE is not 200.
+        -   ``ValueError`` if:
+                - ``Results()`` raises ``TypeError``.
         """
         method_name = inspect.stack()[0][3]
         # Update and register results
-        self.results.action = self.action
-        self.results.response_current = self.rest_send.response_current
-        self.results.result_current = self.rest_send.result_current
-        # SwitchDetails never changes the controller state
-        self.results.changed = False
+        try:
+            self.results.action = self.action
+            self.results.response_current = self.rest_send.response_current
+            self.results.result_current = self.rest_send.result_current
+            # SwitchDetails never changes the controller state
+            self.results.changed = False
 
-        if self.results.response_current["RETURN_CODE"] == 200:
-            self.results.failed = False
-        else:
-            self.results.failed = True
-
-        self.results.register_task_result()
+            if self.results.response_current["RETURN_CODE"] == 200:
+                self.results.failed = False
+            else:
+                self.results.failed = True
+            self.results.register_task_result()
+        except TypeError as error:
+            raise ValueError(error) from error
 
         if self.results.failed is True:
             msg = f"{self.class_name}.{method_name}: "
@@ -144,16 +163,29 @@ class SwitchDetails:
         the controller.
 
         ### Raises
-        -   ``ControllerResponseError`` if the controller response is not 200.
-        -   ``ValueError`` if mandatory parameters are not set.
+        -   ``ControllerResponseError`` if:
+                -   The controller RETURN_CODE is not 200.
+        -   ``ValueError`` if
+                -   Mandatory parameters are not set.
+                -   There was an error configuring RestSend() e.g.
+                    invalid property values, etc.
         """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.validate_refresh_parameters()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Mandatory parameters need review. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         try:
-            self.validate_commit_parameters()
+            self.send_request()
         except ValueError as error:
-            raise ValueError(error) from error
-
-        self.send_request()
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error sending request to the controller. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         try:
             self.update_results()
@@ -416,23 +448,69 @@ class SwitchDetails:
     @property
     def rest_send(self):
         """
-        An instance of the ``RestSend`` class.
+        ### Summary
+        An instance of the RestSend class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of RestSend.
+
+        ### getter
+        Return an instance of the RestSend class.
+
+        ### setter
+        Set an instance of the RestSend class.
         """
         return self.properties["rest_send"]
 
     @rest_send.setter
     def rest_send(self, value):
+        method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "RestSend"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f"Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
         self.properties["rest_send"] = value
 
     @property
     def results(self):
         """
-        An instance of the ``Results`` class.
+        ### Summary
+        An instance of the Results class.
+
+        ### Raises
+        -   setter: ``TypeError`` if the value is not an instance of Results.
+
+        ### getter
+        Return an instance of the Results class.
+
+        ### setter
+        Set an instance of the Results class.
         """
         return self.properties["results"]
 
     @results.setter
     def results(self, value):
+        method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "Results"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
         self.properties["results"] = value
 
     @property
