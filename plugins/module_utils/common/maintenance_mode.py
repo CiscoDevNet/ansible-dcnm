@@ -863,19 +863,19 @@ class MaintenanceModeInfo:
             msg += f"property {item}."
             raise ValueError(msg)
 
-        if self.filter not in self._properties["info"]:
+        if self.filter not in self._info:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Switch with ip_address {self.filter} does not exist on "
             msg += "the controller."
             raise ValueError(msg)
 
-        if item not in self._properties["info"][self.filter]:
+        if item not in self._info[self.filter]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not have a key named {item}."
             raise ValueError(msg)
 
         return self.conversions.make_boolean(
-            self.conversions.make_none(self._properties["info"][self.filter].get(item))
+            self.conversions.make_none(self._info[self.filter].get(item))
         )
 
     @property
@@ -896,11 +896,11 @@ class MaintenanceModeInfo:
 
         ``filter`` must be set before accessing this class's properties.
         """
-        return self._properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self._properties["filter"] = value
+        self._filter = value
 
     @property
     def config(self) -> list:
@@ -1086,7 +1086,7 @@ class MaintenanceModeInfo:
         ```
         """
         method_name = inspect.stack()[0][3]
-        if self._properties["info"] is None:
+        if self._info is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.refresh() must be called before "
             msg += f"accessing {self.class_name}.{method_name}."
