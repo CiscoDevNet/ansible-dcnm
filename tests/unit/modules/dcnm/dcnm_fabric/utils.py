@@ -37,6 +37,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import (
     FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetails as FabricDetailsV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
@@ -225,6 +227,14 @@ def fabric_details_fixture():
     instance = MockAnsibleModule()
     instance.state = "merged"
     return FabricDetails(instance.params)
+
+
+@pytest.fixture(name="fabric_details_v2")
+def fabric_details_v2_fixture():
+    """
+    mock FabricDetails() v2
+    """
+    return FabricDetailsV2(params)
 
 
 @pytest.fixture(name="fabric_details_by_name")
@@ -492,6 +502,16 @@ def responses_fabric_details(key: str) -> Dict[str, str]:
     Return responses for FabricDetails
     """
     data_file = "responses_FabricDetails"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_details_v2(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetails version 2
+    """
+    data_file = "responses_FabricDetails_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

@@ -46,18 +46,20 @@ class FabricDetails:
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
-
+        method_name = inspect.stack()[0][3]
         self.params = params
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "check_mode is required"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "check_mode is missing from params. "
+            msg += f"params: {params}."
             raise ValueError(msg)
 
         self.state = self.params.get("state", None)
         if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "state is required"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "state is missing from params. "
+            msg += f"params: {params}."
             raise ValueError(msg)
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
