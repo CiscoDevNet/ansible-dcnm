@@ -18,6 +18,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+# Required for class decorators
+# pylint: disable=no-member
+
 import inspect
 import logging
 
@@ -27,8 +30,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class SwitchDetails:
     """
     Retrieve switch details from the controller and provide property accessors
@@ -39,7 +46,7 @@ class SwitchDetails:
             -   The controller RETURN_CODE is not 200.
     -   ``ValueError`` if:
             -   Mandatory parameters are not set.
-            -   There was an error configuring RestSend() e.g. invalid
+            -   There was an error configuring ``RestSend()`` e.g. invalid
                 property values, etc.
 
     ### Usage
@@ -71,13 +78,10 @@ class SwitchDetails:
         self.path = self.ep_all_switches.path
         self.verb = self.ep_all_switches.verb
 
-        self._init_properties()
-
-    def _init_properties(self):
-        self.properties = {}
-        self.properties["filter"] = None
-        self.properties["info"] = {}
-        self.properties["params"] = None
+        self._filter = None
+        self._info = None
+        self._rest_send = None
+        self._results = None
 
     def validate_refresh_parameters(self) -> None:
         """
@@ -193,9 +197,9 @@ class SwitchDetails:
             raise ControllerResponseError(error) from error
 
         data = self.results.response_current.get("DATA")
-        self.properties["info"] = {}
+        self._info = {}
         for switch in data:
-            self.properties["info"][switch["ipAddress"]] = switch
+            self._info[switch["ipAddress"]] = switch
 
     def _get(self, item):
         """
@@ -214,19 +218,19 @@ class SwitchDetails:
             msg += f"property {item}."
             raise ValueError(msg)
 
-        if self.filter not in self.properties["info"]:
+        if self.filter not in self._info:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Switch with ip_address {self.filter} does not exist on "
             msg += "the controller."
             raise ValueError(msg)
 
-        if item not in self.properties["info"][self.filter]:
+        if item not in self._info[self.filter]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not have a key named {item}."
             raise ValueError(msg)
 
         return self.conversions.make_boolean(
-            self.conversions.make_none(self.properties["info"][self.filter].get(item))
+            self.conversions.make_none(self._info[self.filter].get(item))
         )
 
     @property
@@ -246,76 +250,113 @@ class SwitchDetails:
 
         ``filter`` must be set before accessing this class's properties.
         """
-        return self.properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._filter = value
 
     @property
     def fabric_name(self):
         """
-        -   Return the ``fabricName`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise.
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``fabricName`` of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``fabricName`` of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("fabricName")
 
     @property
     def freeze_mode(self):
         """
-        -   Return the ``freezeMode`` of the filtered switch's fabric,
-            if it exists.
-        -   Return ``None`` otherwise.
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``freezeMode`` of the filtered switch's fabric.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``freezeMode`` of the filtered switch's fabric,
+            if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("freezeMode")
 
     @property
     def hostname(self):
         """
-        -   Return the ``hostName`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise.
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``hostName`` of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
 
+        ### Returns
+        -   The ``hostName`` of the filtered switch, if it exists.
+        -   ``None`` otherwise.
+
         ### NOTES
-            -   ``hostname`` is None for NDFC version 12.1.2e
-            -   Better to use ``logical_name`` which is populated
-                in both NDFC versions 12.1.2e and 12.1.3b
+        -   ``hostname`` is None for NDFC version 12.1.2e
+        -   Better to use ``logical_name`` which is populated
+            in both NDFC versions 12.1.2e and 12.1.3b
         """
         return self._get("hostName")
 
     @property
     def info(self):
         """
-        -   Return parsed data from the GET request.
-        -   Return ``None`` otherwise
+        ### Summary
+        Parsed data from the GET request.
 
-        NOTE: Keyed on ip_address
+        ### Raises
+        None
+
+        ### Returns
+        -   Parsed data from the GET request, if it exists.
+        -   ``None`` otherwise
+
+        ### NOTES
+        -   Keyed on ip_address
         """
-        return self.properties["info"]
+        return self._info
 
     @property
     def is_non_nexus(self):
         """
-        -   Return the ``isNonNexus`` status of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Example: false, true
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``isNonNexus`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``isNonNexus`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("isNonNexus")
 
     @property
     def logical_name(self):
         """
-        -   Return the ``logicalName`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``logicalName`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``logicalName`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("logicalName")
 
@@ -371,24 +412,37 @@ class SwitchDetails:
     @property
     def managable(self):
         """
+        ### Summary
+        The ``managable`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
+            and ``_get`` method.
+
+        ### Returns
+        -   The ``managable`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
+        -   Example: false, true
+
+        ### NOTES
         -   Yes, managable is misspelled.  It is spelled this way in the
             controller response.
-        -   Return the ``managable`` status of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
-            and ``_get`` method.
-        -   Example: false, true
         """
         return self._get("managable")
 
     @property
     def mode(self):
         """
-        -   Return the ``mode`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``mode`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
-        -   ``mode`` is converted from Titlecase to lowercase.
+
+        ### Returns
+        -   The ``mode`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         -   Example: maintenance, migration, normal, inconsistent
         """
         mode = self._get("mode")
@@ -399,20 +453,32 @@ class SwitchDetails:
     @property
     def model(self):
         """
-        -   Return the ``model`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``model`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``model`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("model")
 
     @property
     def oper_status(self):
         """
-        -   Return the ``operStatus`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``operStatus`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``operStatus`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         -   Example: Minor
         """
         return self._get("operStatus")
@@ -420,10 +486,17 @@ class SwitchDetails:
     @property
     def platform(self):
         """
-        -   Return the ``platform`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``platform`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``platform`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
+        -   Example: N9K (derived from N9K-C93180YC-EX)
 
         ### NOTES
             -   ``platform`` is derived from ``model``.
@@ -437,178 +510,177 @@ class SwitchDetails:
     @property
     def release(self):
         """
-        -   Return the ``release`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``release`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``release`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         -   Example: 10.2(5)
         """
         return self._get("release")
 
     @property
-    def rest_send(self):
-        """
-        ### Summary
-        An instance of the RestSend class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of RestSend.
-
-        ### getter
-        Return an instance of the RestSend class.
-
-        ### setter
-        Set an instance of the RestSend class.
-        """
-        return self.properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "RestSend"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self.properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        ### Summary
-        An instance of the Results class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of Results.
-
-        ### getter
-        Return an instance of the Results class.
-
-        ### setter
-        Set an instance of the Results class.
-        """
-        return self.properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "Results"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self.properties["results"] = value
-
-    @property
     def role(self):
         """
-        -   Return the ``switchRole`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``switchRole`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``switchRole`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
+        -   Example: spine
         """
         return self._get("switchRole")
 
     @property
     def serial_number(self):
         """
-        -   Return the ``serialNumber`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``serialNumber`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``serialNumber`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("serialNumber")
 
     @property
     def source_interface(self):
         """
-        -   Return the ``sourceInterface`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``sourceInterface`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``sourceInterface`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("sourceInterface")
 
     @property
     def source_vrf(self):
         """
-        -   Return the ``sourceVrf`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``sourceVrf`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``sourceVrf`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("sourceVrf")
 
     @property
     def status(self):
         """
-        -   Return the ``status`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``status`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``status`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("status")
 
     @property
     def switch_db_id(self):
         """
-        -   Return the ``switchDbID`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``switchDbID`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``switchDbID`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("switchDbID")
 
     @property
     def switch_role(self):
         """
-        -   Return the ``switchRole`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``switchRole`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``switchRole`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("switchRole")
 
     @property
     def switch_uuid(self):
         """
-        -   Return the ``swUUID`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``swUUID`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``swUUID`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("swUUID")
 
     @property
     def switch_uuid_id(self):
         """
-        -   Return the ``swUUIDId`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``swUUIDId`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``swUUIDId`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("swUUIDId")
 
     @property
     def system_mode(self):
         """
-        -   Return the ``systemMode`` of the filtered switch, if it exists.
-        -   Return ``None`` otherwise
-        -   Raises ``ValueError`` (potentially).  See ``filter`` setter
+        ### Summary
+        The ``systemMode`` value of the filtered switch.
+
+        ### Raises
+        -   ``ValueError`` (potentially).  See ``filter`` setter
             and ``_get`` method.
+
+        ### Returns
+        -   The ``systemMode`` value of the filtered switch, if it exists.
+        -   ``None`` otherwise.
         """
         return self._get("systemMode")
