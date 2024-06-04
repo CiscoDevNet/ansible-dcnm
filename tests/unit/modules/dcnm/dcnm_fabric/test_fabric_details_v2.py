@@ -54,8 +54,6 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils im
 def test_fabric_details_v2_00000(fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon
-        - __init__()
     - FabricDetails
         - __init__()
 
@@ -74,8 +72,6 @@ def test_fabric_details_v2_00000(fabric_details_v2) -> None:
 def test_fabric_details_v2_00010() -> None:
     """
     ### Classes and Methods
-    - FabricCommon
-        - __init__()
     - FabricDetails
         - __init__()
 
@@ -91,8 +87,6 @@ def test_fabric_details_v2_00010() -> None:
 def test_fabric_details_v2_00020() -> None:
     """
     ### Classes and Methods
-    - FabricCommon
-        - __init__()
     - FabricDetails
         - __init__()
 
@@ -102,16 +96,14 @@ def test_fabric_details_v2_00020() -> None:
     match = r"FabricDetails\.__init__:\s+"
     match += r"state is missing from params\. params:.*\."
     with pytest.raises(ValueError, match=match):
-        instance = FabricDetails(
+        instance = FabricDetails(  # pylint: disable=unused-variable
             {"check_mode": False}
-        )  # pylint: disable=unused-variable
+        )
 
 
 def test_fabric_details_v2_00100(fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon()
-        - __init__()
     - FabricDetails()
         - __init__()
         - refresh_super()
@@ -182,8 +174,6 @@ def test_fabric_details_v2_00100(fabric_details_v2) -> None:
 def test_fabric_details_v2_00110(monkeypatch, fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon()
-        - __init__()
     - FabricDetails()
         - __init__()
         - refresh_super()
@@ -242,8 +232,6 @@ def test_fabric_details_v2_00110(monkeypatch, fabric_details_v2) -> None:
 def test_fabric_details_v2_00120(monkeypatch, fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon()
-        - __init__()
     - FabricDetails()
         - __init__()
         - refresh_super()
@@ -317,8 +305,6 @@ def test_fabric_details_v2_00120(monkeypatch, fabric_details_v2) -> None:
 def test_fabric_details_v2_00200(fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon()
-        - __init__()
     - FabricDetails()
         - __init__()
         - _get()
@@ -335,8 +321,6 @@ def test_fabric_details_v2_00200(fabric_details_v2) -> None:
 def test_fabric_details_v2_00300(fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon()
-        - __init__()
     - FabricDetails()
         - __init__()
         - _get_nv_pair()
@@ -353,8 +337,6 @@ def test_fabric_details_v2_00300(fabric_details_v2) -> None:
 def test_fabric_details_v2_00400(fabric_details_v2) -> None:
     """
     ### Classes and Methods
-    - FabricCommon()
-        - __init__()
     - FabricDetails()
         - __init__()
         - all_data()
@@ -366,3 +348,39 @@ def test_fabric_details_v2_00400(fabric_details_v2) -> None:
         instance = fabric_details_v2
         instance.data = {"foo": "bar"}
     assert instance.all_data == {"foo": "bar"}
+
+
+MATCH_00500 = r"FabricDetails\.rest_send:\s+"
+MATCH_00500 += r"value must be an instance of RestSend\.\s+"
+MATCH_00500 += r"Got value.*of type.*\.\s+"
+MATCH_00500 += r"Error detail:.*\."
+
+
+@pytest.mark.parametrize(
+    "param, does_raise, expected",
+    [
+        (None, True, pytest.raises(TypeError, match=MATCH_00500)),
+        (1, True, pytest.raises(TypeError, match=MATCH_00500)),
+        ("foo", True, pytest.raises(TypeError, match=MATCH_00500)),
+        ({"foo": "bar"}, True, pytest.raises(TypeError, match=MATCH_00500)),
+        (RestSend({"state": "merged", "check_mode": False}), False, does_not_raise()),
+    ],
+)
+def test_fabric_details_v2_00500(
+    fabric_details_v2, param, does_raise, expected
+) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetails()
+        - __init__()
+        - rest_send.setter
+
+    ### Summary
+    -   Verify FabricDetails().rest_send raises ``TypeError`` when
+        passed a value other than a RestSend() instance.
+    """
+    with expected:
+        instance = fabric_details_v2
+        instance.rest_send = param
+    if does_raise is False:
+        assert instance.rest_send == param

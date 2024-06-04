@@ -66,7 +66,7 @@ class Properties:
         try:
             _class_have = value.class_name
         except AttributeError as error:
-            msg += f"Error detail: {error}."
+            msg += f" Error detail: {error}."
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)

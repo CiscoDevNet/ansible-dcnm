@@ -26,8 +26,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabri
     EpFabrics
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class FabricDetails:
     """
     ### Summary
@@ -73,12 +77,6 @@ class FabricDetails:
         self.conversion = ConversionUtils()
         self.ep_fabrics = EpFabrics()
 
-        self._init_properties()
-
-    def _init_properties(self):
-        self.properties = {}
-        self.properties["rest_send"] = None
-        self.properties["results"] = None
 
     def register_result(self):
         """
@@ -327,74 +325,6 @@ class FabricDetails:
             return None
 
     @property
-    def rest_send(self):
-        """
-        ### Summary
-        An instance of the RestSend class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of RestSend.
-
-        ### getter
-        Return an instance of the RestSend class.
-
-        ### setter
-        Set an instance of the RestSend class.
-        """
-        return self.properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "RestSend"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self.properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        ### Summary
-        An instance of the Results class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of Results.
-
-        ### getter
-        Return an instance of the Results class.
-
-        ### setter
-        Set an instance of the Results class.
-        """
-        return self.properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "Results"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self.properties["results"] = value
-
-    @property
     def template_name(self):
         """
         Return the templateName of the fabric specified with filter,
@@ -423,7 +353,8 @@ class FabricDetailsByName(FabricDetails):
     Usage (where params is AnsibleModule.params):
 
     ```python
-    sender = Sender() # class that implements the sender interface
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender() # class implementing the sender interface
     sender.ansible_module = ansible_module
 
     rest_send = RestSend()
@@ -476,18 +407,7 @@ class FabricDetailsByName(FabricDetails):
         self.log.debug(msg)
 
         self.data_subclass = {}
-        self.build_properties()
-
-    def build_properties(self):
-        """
-        ### Summary
-        Build the properties dictionary for the class.
-        The dictionary has already been initialized in the parent class.
-
-        ### Raises
-        None
-        """
-        self.properties["filter"] = None
+        self._filter = None
 
     def refresh(self):
         """
@@ -596,31 +516,48 @@ class FabricDetailsByName(FabricDetails):
     @property
     def filter(self):
         """
+        ### Summary
         Set the fabric_name of the fabric to query.
 
-        This needs to be set before accessing this class's properties.
+        ### Raises
+        None
+
+        ### NOTES
+        ``filter`` must be set before accessing this class's properties.
         """
-        return self.properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._filter = value
 
 
 class FabricDetailsByNvPair(FabricDetails):
     """
-    Retrieve fabric details from the controller filtered
-    by nvPair key and value.  This sets the filtered_data
-    property to a dictionary of all fabrics on the controller
-    that match filter_key and filter_value.
+    ### Summary
+    Retrieve fabric details from the controller filtered by nvPair key
+    and value.  Calling ``refresh`` retrieves data for all fabrics.
+    After having called ``refresh`` data for a fabric accessed by setting
+    ``filter_key`` and ``filter_value`` which sets the ``filtered_data``
+    property to a dictionary containing fabrics on the controller
+    that match ``filter_key`` and ``filter_value``.
 
-    Usage (where params is AnsibleModule.params):
+    ### Usage
+    ```python
+    params = {"check_mode": False, "state": "query"}
+    sender = Sender() # class implementing the sender interface
+    sender.ansible_module = ansible_module
+
+    rest_send = RestSend()
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
 
     instance = FabricDetailsNvPair(params)
     instance.refresh()
     instance.filter_key = "DCI_SUBNET_RANGE"
     instance.filter_value = "10.33.0.0/16"
     fabrics = instance.filtered_data
+    ```
     """
 
     def __init__(self, params):
@@ -633,26 +570,19 @@ class FabricDetailsByNvPair(FabricDetails):
         self.log.debug(msg)
 
         self.data_subclass = {}
+        self._filter_key = None
+        self._filter_value = None
 
-        self.build_properties()
-
-    def build_properties(self):
-        """
-        ### Summary
-        Build the properties dictionary for the class.
-        The dictionary has already been initialized in the parent class.
-
-        ### Raises
-        None
-        """
-        self.properties["filter_key"] = None
-        self.properties["filter_value"] = None
 
     def refresh(self):
         """
+        ### Summary
         Refresh fabric_name current details from the controller.
 
-        - raise ValueError if self.filter_key has not been set.
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``filter_key`` has not been set.
+                -   ``filter_value`` has not been set.
         """
         method_name = inspect.stack()[0][3]
 
@@ -675,39 +605,54 @@ class FabricDetailsByNvPair(FabricDetails):
     @property
     def filtered_data(self):
         """
-        -   Return a ``dict`` of the fabric(s) matching ``self.filter_key``
-            and ``self.filter_value``.
-        -   Return an empty ``dict`` if the fabric does not exist on
-            the controller.
+        ### Summary
+        A dictionary of the fabric(s) matching ``filter_key`` and
+        ``filter_value``.
+
+        ### Raises
+        None
+
+        ### Returns
+        -   A ``dict`` of the fabric(s) matching ``filter_key`` and
+            ``filter_value``.
+        -   An empty ``dict`` if the fabric does not exist on the controller.
         """
         return self.data_subclass
 
     @property
     def filter_key(self):
         """
-        - getter: Return the nvPairs key to filter on.
-        - setter: Set the nvPairs key to filter on.
+        ### Summary
+        The nvPairs key on which to filter.
 
-        This should be an exact match for the key in the nvPairs
+        ### Raises
+        None
+
+        ### Notes
+        ``filter_key``should be an exact match for the key in the nvPairs
         dictionary for the fabric.
         """
-        return self.properties.get("filter_key")
+        return self._filter_key
 
     @filter_key.setter
     def filter_key(self, value):
-        self.properties["filter_key"] = value
+        self._filter_key = value
 
     @property
     def filter_value(self):
         """
-        - getter: Return the nvPairs value to filter on.
-        - setter: Set the nvPairs value to filter on.
+        ### Summary
+        The nvPairs value on which to filter.
 
-        This should be an exact match for the value in the nvPairs
+        ### Raises
+        None
+
+        ### Notes
+        ``filter_value`` should be an exact match for the value in the nvPairs
         dictionary for the fabric.
         """
-        return self.properties.get("filter_value")
+        return self._filter_value
 
     @filter_value.setter
     def filter_value(self, value):
-        self.properties["filter_value"] = value
+        self._filter_value = value
