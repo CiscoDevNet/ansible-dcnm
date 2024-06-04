@@ -378,8 +378,8 @@ MATCH_00060 = r"Results\.changed: instance\.changed must be a bool\."
     [
         (True, does_not_raise(), True),
         (False, does_not_raise(), True),
-        (None, pytest.raises(ValueError, match=MATCH_00060), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00060), False),
+        (None, pytest.raises(TypeError, match=MATCH_00060), False),
+        ("FOO", pytest.raises(TypeError, match=MATCH_00060), False),
     ],
 )
 def test_image_policy_common_00060(image_policy_common, arg, expected, flag) -> None:
@@ -422,8 +422,8 @@ MATCH_00070 = r"Results\.diff: instance\.diff must be a dict\."
             does_not_raise(),
             True,
         ),
-        (None, None, pytest.raises(ValueError, match=MATCH_00070), False),
-        ("FOO", None, pytest.raises(ValueError, match=MATCH_00070), False),
+        (None, None, pytest.raises(TypeError, match=MATCH_00070), False),
+        ("FOO", None, pytest.raises(TypeError, match=MATCH_00070), False),
     ],
 )
 def test_image_policy_common_00070(
@@ -463,8 +463,8 @@ MATCH_00080 = r"Results\.failed: instance\.failed must be a bool\."
     [
         (True, does_not_raise(), True),
         (False, does_not_raise(), True),
-        (None, pytest.raises(ValueError, match=MATCH_00080), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00080), False),
+        (None, pytest.raises(TypeError, match=MATCH_00080), False),
+        ("FOO", pytest.raises(TypeError, match=MATCH_00080), False),
     ],
 )
 def test_image_policy_common_00080(image_policy_common, arg, expected, flag) -> None:
@@ -524,8 +524,8 @@ MATCH_00100 = r"Results\.response_current: instance\.response_current must be a 
     [
         ({}, {"sequence_number": 0}, does_not_raise(), True),
         ({"foo": "bar"}, {"foo": "bar", "sequence_number": 0}, does_not_raise(), True),
-        (None, None, pytest.raises(ValueError, match=MATCH_00100), False),
-        ("FOO", None, pytest.raises(ValueError, match=MATCH_00100), False),
+        (None, None, pytest.raises(TypeError, match=MATCH_00100), False),
+        ("FOO", None, pytest.raises(TypeError, match=MATCH_00100), False),
     ],
 )
 def test_image_policy_common_00100(
@@ -539,12 +539,12 @@ def test_image_policy_common_00100(
 
     Summary
     Verify that instance.results.response_current returns expected values and
-    raises ValueError appropriately.
+    raises TypeError appropriately.
 
     Test
     - instance.results.response_current returns expected values
-    - ValueError is raised when unexpected values are passed
-    - ValueError is not raised when expected values are passed
+    - TypeError is raised when unexpected values are passed
+    - TypeError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
@@ -570,8 +570,8 @@ MATCH_00110 = r"Results\.response: instance\.response must be a dict\."
             does_not_raise(),
             True,
         ),
-        (None, None, pytest.raises(ValueError, match=MATCH_00110), False),
-        ("FOO", None, pytest.raises(ValueError, match=MATCH_00110), False),
+        (None, None, pytest.raises(TypeError, match=MATCH_00110), False),
+        ("FOO", None, pytest.raises(TypeError, match=MATCH_00110), False),
     ],
 )
 def test_image_policy_common_00110(
@@ -585,12 +585,12 @@ def test_image_policy_common_00110(
 
     Summary
     Verify that instance.results.response returns expected values and
-    raises ValueError appropriately.
+    raises TypeError appropriately.
 
     Test
     - instance.results.response returns expected value
-    - ValueError is raised when unexpected values are passed
-    - ValueError is not raised when expected values are passed
+    - TypeError is raised when unexpected values are passed
+    - TypeError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
@@ -652,8 +652,8 @@ MATCH_00130 = r"Results\.result: instance\.result must be a dict\."
             does_not_raise(),
             True,
         ),
-        (None, None, pytest.raises(ValueError, match=MATCH_00130), False),
-        ("FOO", None, pytest.raises(ValueError, match=MATCH_00130), False),
+        (None, None, pytest.raises(TypeError, match=MATCH_00130), False),
+        ("FOO", None, pytest.raises(TypeError, match=MATCH_00130), False),
     ],
 )
 def test_image_policy_common_00130(
@@ -667,12 +667,12 @@ def test_image_policy_common_00130(
 
     Summary
     Verify that instance.results.result returns expected values and
-    raises ValueError appropriately.
+    raises TypeError appropriately.
 
     Test
     - instance.results.result returns expected values
-    - ValueError is raised when unexpected values are passed
-    - ValueError is not raised when expected values are passed
+    - TypeError is raised when unexpected values are passed
+    - TypeError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common
@@ -693,8 +693,8 @@ MATCH_00140 = r"Results\.result_current: instance\.result_current must be a dict
     [
         ({}, {"sequence_number": 0}, does_not_raise(), True),
         ({"foo": "bar"}, {"foo": "bar", "sequence_number": 0}, does_not_raise(), True),
-        (None, None, pytest.raises(ValueError, match=MATCH_00140), False),
-        ("FOO", None, pytest.raises(ValueError, match=MATCH_00140), False),
+        (None, None, pytest.raises(TypeError, match=MATCH_00140), False),
+        ("FOO", None, pytest.raises(TypeError, match=MATCH_00140), False),
     ],
 )
 def test_image_policy_common_00140(
@@ -712,8 +712,8 @@ def test_image_policy_common_00140(
 
     Test
     - instance.results.result_current returns expected values
-    - ValueError is raised when unexpected values are passed
-    - ValueError is not raised when expected values are passed
+    - TypeError is raised when unexpected values are passed
+    - TypeError is not raised when expected values are passed
     """
     with does_not_raise():
         instance = image_policy_common

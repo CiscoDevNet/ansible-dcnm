@@ -27,42 +27,50 @@ from typing import Any, Dict
 
 class Results:
     """
+    ### Summary
     Collect results across tasks.
 
+    ### Raises
+    -   ``TypeError``: if properties are not of the correct type.
+
+    ### Description
     Provides a mechanism to collect results across tasks.  The task classes
     must support this Results class.  Specifically, they must implement the
     following:
 
-    1.  Accept an instantiation of Results
+    1.  Accept an instantiation of`` Results()``
         -   Typically a class property is used for this
-    2.  Populate the Results instance with the results of the task
-        -   Typically done by transferring RestSend's responses to the
-            Results instance
-    3. Register the results of the task with Results, using:
-        -   Results.register_task_result()
+    2.  Populate the ``Results`` instance with the results of the task
+        -   Typically done by transferring ``RestSend()``'s responses to the
+            ``Results`` instance
+    3. Register the results of the task with ``Results``, using:
+        -   ``Results.register_task_result()``
         -   Typically done after the task is complete
 
-    Results should be instantiated in the main Ansible Task class and passed
-    to all other task classes.  The task classes should populate the Results
-    instance with the results of the task and then register the results with
-    Results.register_task_result().  This may be done within a separate class
-    (as in the example below, where FabricDelete() class is called from the
-    TaskDelete() class.  The Results instance can then be used to build the
-    final result, by calling Results.build_final_result().
+    ``Results`` should be instantiated in the main Ansible Task class and
+    passed to all other task classes.  The task classes should populate the
+    ``Results`` instance with the results of the task and then register the
+    results with ``Results.register_task_result()``.
 
-    Example Usage:
+    This may be done within a separate class (as in the example below, where
+    the ``FabricDelete()`` class is called from the ``TaskDelete()`` class.
+    The ``Results`` instance can then be used to build the final result, by
+    calling ``Results.build_final_result()``.
 
+    ### Example Usage
     We assume an Ansible module structure as follows:
 
-    TaskCommon() : Common methods used by the various ansible state classes.
-    TaskDelete(TaskCommon) : Implements the delete state
-    TaskMerge(TaskCommon)  : Implements the merge state
-    TaskQuery(TaskCommon)  : Implements the query state
-    etc...
+    -   ``TaskCommon()`` : Common methods used by the various ansible
+        state classes.
+    -   ``TaskDelete(TaskCommon)`` : Implements the delete state
+    -   ``TaskMerge(TaskCommon)``  : Implements the merge state
+    -   ``TaskQuery(TaskCommon)``  : Implements the query state
+    -   etc...
 
-    In TaskCommon, Results is instantiated and, hence, is inherited by all
+    In TaskCommon, ``Results`` is instantiated and, hence, is inherited by all
     state classes.:
 
+    ```python
     class TaskCommon:
         def __init__(self):
             self.results = Results()
@@ -77,12 +85,13 @@ class Results:
         @results.setter
         def results(self, value):
             self.properties["results"] = value
-
+    ```
 
     In each of the state classes (TaskDelete, TaskMerge, TaskQuery, etc...)
     a class is instantiated (in the example below, FabricDelete) that
     supports collecting results for the Results instance:
 
+    ```python
     class TaskDelete(TaskCommon):
         def __init__(self, ansible_module):
             super().__init__(ansible_module)
@@ -98,18 +107,19 @@ class Results:
             # results.register_task_result() is called within the
             # commit() method of the FabricDelete class.
             self.fabric_delete.commit()
-
+    ```
 
     Finally, within the main() method of the Ansible module, the final result
     is built by calling Results.build_final_result():
 
+    ```python
     if ansible_module.params["state"] == "deleted":
         task = TaskDelete(ansible_module)
         task.commit()
     elif ansible_module.params["state"] == "merged":
         task = TaskDelete(ansible_module)
         task.commit()
-    etc...
+    # etc, for other states...
 
     # Build the final result
     task.results.build_final_result()
@@ -118,49 +128,56 @@ class Results:
     if True in task.results.failed:
         ansible_module.fail_json(**task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+    ```
 
+    results.final_result will be a dict with the following structure
 
-    # results.final_result will be a dict with the following structure
-
+    ```json
     {
         "changed": True, # or False
         "failed": True,  # or False
         "diff": {
-            [<list of dict containing changes>],
+            [{"diff1": "diff"}, {"diff2": "diff"}, {"etc...": "diff"}],
         }
         "response": {
-            [<list of dict containing controller responses>],
+            [{"response1": "response"}, {"response2": "response"}, {"etc...": "response"}],
         }
         "result": {
-            [<list of dict containing results (from handle_response() functions)>],
+            [{"result1": "result"}, {"result2": "result"}, {"etc...": "result"}],
         }
         "metadata": {
-            [<list of dict containing metadata>],
+            [{"metadata1": "metadata"}, {"metadata2": "metadata"}, {"etc...": "metadata"}],
         }
     }
+    ```
 
     diff, response, and result dicts are per the Ansible DCNM Collection standard output.
 
     An example of a result dict would be (sequence_number is added by Results):
 
+    ```json
     {
         "found": true,
-        "sequence_number": 0,
+        "sequence_number": 1,
         "success": true
     }
+    ```
 
     An example of a metadata dict would be (sequence_number is added by Results):
 
+
+    ```json
     {
         "action": "merge",
         "check_mode": false,
         "state": "merged",
-        "sequence_number": 0
+        "sequence_number": 1
     }
+    ```
 
-    sequence_number indicates the order in which the task was registered with Results.
-    It provides a way to correlate the diff, response, result, and metadata across all
-    tasks.
+    ``sequence_number`` indicates the order in which the task was registered
+    with ``Results``.  It provides a way to correlate the diff, response,
+    result, and metadata across all tasks.
     """
 
     def __init__(self):
@@ -241,8 +258,10 @@ class Results:
 
     def register_task_result(self):
         """
+        ### Summary
         Register a task's result.
 
+        ### Description
         1.  Append result_current, response_current, diff_current and
             metadata_current their respective lists (result, response, diff,
             and metadata)
@@ -299,7 +318,11 @@ class Results:
 
     def build_final_result(self):
         """
-        Build the final result.  This consists of the following:
+        ### Summary
+        Build the final result.
+
+        ### Description
+        The final result consists of the following:
         ```json
         {
             "changed": True, # or False
@@ -365,7 +388,11 @@ class Results:
     @property
     def action(self):
         """
+        ### Summary
         Added to results to indicate the action that was taken
+
+        ### Raises
+        -   ``TypeError``: if value is not a string
         """
         return self.properties["action"]
 
@@ -376,7 +403,7 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.{method_name} must be a string. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         msg = f"{self.class_name}.{method_name}: "
         msg += f"value: {value}"
         self.log.debug(msg)
@@ -385,9 +412,17 @@ class Results:
     @property
     def changed(self) -> set:
         """
-        bool = whether we changed anything
+        ### Summary
+        - A ``set()`` containing boolean values indicating whether
+        anything changed.
+        - The setter adds a boolean value to the set.
+        - The getter returns the set.
 
-        raise ValueError if value is not a bool
+        ### Raises
+        -   setter: ``TypeError``: if value is not a bool
+
+        ### Returns
+        -   A set() of Boolean values indicating whether any tasks changed
         """
         return self.properties["changed"]
 
@@ -397,13 +432,18 @@ class Results:
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.changed must be a bool. Got {value}"
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["changed"].add(value)
 
     @property
     def check_mode(self):
         """
-        check_mode
+        ### Summary
+        - A boolean indicating whether Ansible check_mode is enabled.
+        - ``True`` if check_mode is enabled, ``False`` otherwise.
+
+        ### Raises
+        -   ``TypeError``: if value is not a bool
         """
         return self.properties["check_mode"]
 
@@ -414,15 +454,19 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.{method_name} must be a bool. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["check_mode"] = value
 
     @property
     def diff(self):
         """
-        List of dicts representing the changes made
+        ### Summary
+        - A list of dicts representing the changes made.
+        - The setter appends a dict to the list.
+        - The getter returns the list.
 
-        raise ValueError if value is not a dict
+        ### Raises
+        -   setter: ``TypeError``: if value is not a dict
         """
         return self.properties["diff"]
 
@@ -432,16 +476,19 @@ class Results:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.diff must be a dict. Got {value}"
-            raise ValueError(msg)
+            raise TypeError(msg)
         value["sequence_number"] = self.task_sequence_number
         self.properties["diff"].append(copy.deepcopy(value))
 
     @property
     def diff_current(self):
         """
+        ### Summary
         -   getter: Return the current diff
         -   setter: Set the current diff
-        -   setter: raise ``ValueError`` if value is not a dict
+
+        ### Raises
+        -   setter: ``TypeError`` if value is not a dict.
         """
         value = self.properties.get("diff_current")
         value["sequence_number"] = self.task_sequence_number
@@ -454,18 +501,19 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.diff_current must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["diff_current"] = value
 
     @property
     def failed(self) -> set:
         """
-        A set() of Boolean values indicating whether any tasks failed
+        ### Summary
+        - A set() of Boolean values indicating whether any tasks failed
+        - If the set contains True, at least one task failed.
+        - If the set contains only False all tasks succeeded.
 
-        If the set contains True, at least one task failed
-        If the set contains only False all tasks succeeded
-
-        raise ValueError if value is not a bool
+        ### Raises
+        - ``TypeError`` if value is not a bool.
         """
         return self.properties["failed"]
 
@@ -478,18 +526,19 @@ class Results:
             self.properties["failed"].add(True)
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.failed must be a bool. Got {value}"
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["failed"].add(value)
 
     @property
     def metadata(self):
         """
-        List of dicts representing the metadata (if any)
-        for each diff.
+        ### Summary
+        - List of dicts representing the metadata (if any) for each diff.
+        -   getter: Return the metadata.
+        -   setter: Append value to the metadata list.
 
-        -   getter: Return the metadata
-        -   setter: Append value to the metadata list
-        -   setter: raise ``ValueError`` if value is not a dict
+        ### Raises
+        -   setter: ``TypeError`` if value is not a dict.
         """
         return self.properties["metadata"]
 
@@ -499,15 +548,19 @@ class Results:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.metadata must be a dict. Got {value}"
-            raise ValueError(msg)
+            raise TypeError(msg)
         value["sequence_number"] = self.task_sequence_number
         self.properties["metadata"].append(copy.deepcopy(value))
 
     @property
     def metadata_current(self):
         """
+        ### Summary
         -   getter: Return the current metadata which is comprised of the
             properties action, check_mode, and state.
+
+        ### Raises
+        None
         """
         value = {}
         value["action"] = self.action
@@ -519,14 +572,14 @@ class Results:
     @property
     def response_current(self):
         """
-        Return the current POST response from the controller
-        instance.commit() must be called first.
+        ### Summary
+        - Return a ``dict`` containing the current response from the controller.
+        ``instance.commit()`` must be called first.
+        -   getter: Return the current response.
+        -   setter: Set the current response.
 
-        This is a dict of the current response from the controller.
-
-        -   getter: Return the current response
-        -   setter: Set the current response
-        -   setter: raise ``ValueError`` if value is not a dict
+        ### Raises
+        -   setter: ``TypeError`` if value is not a dict.
         """
         value = self.properties.get("response_current")
         value["sequence_number"] = self.task_sequence_number
@@ -539,20 +592,20 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.response_current must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["response_current"] = value
 
     @property
     def response(self):
         """
-        Return the aggregated POST response from the controller
-        instance.commit() must be called first.
+        ### Summary
+        -   A ``list`` of ``dict``, where each ``dict`` contains a response
+            from the controller.
+        -   getter: Return the response list.
+        -   setter: Append ``dict`` to the response list.
 
-        This is a list of responses from the controller.
-
-        -   getter: Return the response list
-        -   setter: Append value to the response list
-        -   setter: raise ``ValueError`` if value is not a dict
+        ### Raises
+        - setter: ``TypeError``: if value is not a dict.
         """
         return self.properties.get("response")
 
@@ -563,18 +616,22 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.response must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         value["sequence_number"] = self.task_sequence_number
         self.properties["response"].append(copy.deepcopy(value))
 
     @property
     def response_data(self):
         """
+        ### Summary
         -   getter: Return the contents of the DATA key within
             ``current_response``.
         -   setter: set ``response_data`` to the value passed in
             which should be the contents of the DATA key within
             ``current_response``.
+
+        ### Raises
+        None
         """
         return self.properties.get("response_data")
 
@@ -585,14 +642,13 @@ class Results:
     @property
     def result(self):
         """
-        Return the aggregated result from the controller
-        instance.commit() must be called first.
+        ### Summary
+        -   A ``list`` of ``dict``, where each ``dict`` contains a result.
+        -   getter: Return the result list.
+        -   setter: Append ``dict`` to the result list.
 
-        This is a list of results from the controller.
-
-        -   getter: Return the result list
-        -   setter: Append value to the result list
-        -   setter: raise ``ValueError`` if value is not a dict
+        ### Raises
+        -   setter: ``TypeError`` if value is not a dict
         """
         return self.properties.get("result")
 
@@ -603,21 +659,20 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.result must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         value["sequence_number"] = self.task_sequence_number
         self.properties["result"].append(copy.deepcopy(value))
 
     @property
     def result_current(self):
         """
-        Return the current result from the controller
-        instance.commit() must be called first.
+        ### Summary
+        -   The current result.
+        -   getter: Return the current result.
+        -   setter: Set the current result.
 
-        This is a dict containing the current result.
-
-        -   getter: Return the current result
-        -   setter: Set the current result
-        -   setter: raise ``ValueError`` if value is not a dict
+        ### Raises
+        -   setter: ``TypeError`` if value is not a dict
         """
         value = self.properties.get("result_current")
         value["sequence_number"] = self.task_sequence_number
@@ -630,17 +685,19 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.result_current must be a dict. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["result_current"] = value
 
     @property
     def state(self):
         """
-        The Ansible state
+        ### Summary
+        -   The Ansible state
+        -   getter: Return the state.
+        -   setter: Set the state.
 
-        -   getter: Return the state
-        -   setter: Set the state
-        -   setter: raise ``ValueError`` if value is not a string
+        ### Raises
+        -   setter: ``TypeError`` if value is not a string
         """
         return self.properties["state"]
 
@@ -651,5 +708,5 @@ class Results:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.{method_name} must be a string. "
             msg += f"Got {value}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self.properties["state"] = value
