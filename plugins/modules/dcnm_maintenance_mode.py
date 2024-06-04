@@ -141,6 +141,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
@@ -698,6 +700,7 @@ class Want:
         self._properties["validator"] = value
 
 
+@Properties.add_rest_send
 class Common:
     """
     Common methods, properties, and resources for all states.
@@ -706,53 +709,49 @@ class Common:
     def __init__(self, params):
         """
         ### Raises
-        -   ``ValueError`` if params does not contain ``check_mode``
-        -   ``ValueError`` if params does not contain ``state``
+        -   ``ValueError`` if:
+                -   ``params`` does not contain ``check_mode``
+                -   ``params`` does not contain ``state``
         """
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+
         self.params = params
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "check_mode is required"
             raise ValueError(msg)
 
         self.state = self.params.get("state", None)
         if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "state is required"
             raise ValueError(msg)
 
-        self._init_properties()
+        self.config = self.params.get("config")
+        if not isinstance(self.config, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg = "expected dict type for self.config. "
+            msg += f"got {type(self.config).__name__}"
+            raise ValueError(msg)
 
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
+        self.have = {}
+        # populated in self.validate_input()
+        self.payloads = {}
+        self.query = []
+        self.want = []
+
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
-
-        # populated in self.validate_input()
-        self.payloads = {}
-
-        self.config = self.params.get("config")
-        if not isinstance(self.config, dict):
-            msg = "expected dict type for self.config. "
-            msg += f"got {type(self.config).__name__}"
-            raise ValueError(msg)
-
-        self.have = {}
-        self.query = []
-        self.want = []
-
-    def _init_properties(self):
-        self._properties = {}
-        self._properties["ansible_module"] = None
 
     def get_want(self) -> None:
         """
@@ -773,24 +772,6 @@ class Common:
             self.want = instance.want
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
-
-    @property
-    def rest_send(self):
-        """
-        getter: return an instance of RestSend
-        setter: set an instance of RestSend
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        if not isinstance(value, RestSend):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "expected RestSend instance. "
-            msg += f"got {type(value).__name__}."
-            raise ValueError(msg)
-        self._properties["rest_send"] = value
 
 
 class Merged(Common):
@@ -1027,19 +1008,25 @@ class Merged(Common):
 
         ### Raises
         -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
                 -   ``get_want()`` raises ``ValueError``
                 -   ``get_have()`` raises ``ValueError``
                 -   ``send_need()`` raises ``ValueError``
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit."
+            raise ValueError(msg)
 
         try:
             self.get_want()
         except ValueError as error:
             raise ValueError(error) from error
-        # Return if there's nothing to do
+
         if len(self.want) == 0:
             return
 
@@ -1188,14 +1175,25 @@ class Query(Common):
         and update ``self.results`` with the query results.
 
         ### Raises
-        -   ``ValueError`` if get_want() raises ``ValueError``
-        -   ``ValueError`` if get_have() raises ``ValueError``
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``get_want()`` raises ``ValueError``
+                -   ``get_have()`` raises ``ValueError``
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit."
+            raise ValueError(msg)
+
         try:
             self.get_want()
         except ValueError as error:
             raise ValueError(error) from error
-        # Return if there's nothing to do
+
         if len(self.want) == 0:
             return
 
@@ -1235,6 +1233,9 @@ def main():
     ansible_module = AnsibleModule(
         argument_spec=argument_spec, supports_check_mode=True
     )
+    params = copy.deepcopy(ansible_module.params)
+    params["check_mode"] = ansible_module.check_mode
+
     # Logging setup
     try:
         log = Log()
@@ -1242,26 +1243,24 @@ def main():
     except ValueError as error:
         ansible_module.fail_json(str(error))
 
-    ansible_module.params["check_mode"] = ansible_module.check_mode
-
     sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(ansible_module.params)
+    rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
-    if ansible_module.params["state"] == "merged":
+    if params["state"] == "merged":
         try:
-            task = Merged(ansible_module.params)
-            task.rest_send = rest_send
+            task = Merged(params)
+            task.rest_send = rest_send  # pylint: disable=attribute-defined-outside-init
             task.commit()
         except ValueError as error:
             ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
-    elif ansible_module.params["state"] == "query":
+    elif params["state"] == "query":
         try:
-            task = Query(ansible_module.params)
-            task.rest_send = rest_send
+            task = Query(params)
+            task.rest_send = rest_send  # pylint: disable=attribute-defined-outside-init
             task.commit()
         except ValueError as error:
             ansible_module.fail_json(f"{error}", **task.results.failed_result)
