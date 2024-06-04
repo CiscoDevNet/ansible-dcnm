@@ -131,8 +131,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.dcnm_sender impo
     Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import (
-    MaintenanceMode, MaintenanceModeInfo)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
+    MaintenanceMode
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode_info import \
+    MaintenanceModeInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
