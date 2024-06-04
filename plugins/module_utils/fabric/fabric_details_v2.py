@@ -18,6 +18,9 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+# Required for class decorators
+# pylint: disable=no-member
+
 import copy
 import inspect
 import logging
@@ -76,7 +79,6 @@ class FabricDetails:
         self.data = {}
         self.conversion = ConversionUtils()
         self.ep_fabrics = EpFabrics()
-
 
     def register_result(self):
         """
@@ -572,7 +574,6 @@ class FabricDetailsByNvPair(FabricDetails):
         self.data_subclass = {}
         self._filter_key = None
         self._filter_value = None
-
 
     def refresh(self):
         """
