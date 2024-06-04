@@ -11,11 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 __author__ = "Allen Robel"
+
+# Required for class decorators
+# pylint: disable=no-member
 
 import copy
 import inspect
@@ -27,12 +29,16 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetailsByName
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class MaintenanceMode:
     """
     ### Summary
@@ -46,8 +52,6 @@ class MaintenanceMode:
 
     -   ``ValueError`` in the following properties:
             -   ``config`` if config contains invalid content.
-            -   ``rest_send`` if value is not an instance of RestSend.
-            -   ``results`` if value is not an instance of Results.
             -   ``commit`` if config, rest_send, or results are not set.
             -   ``commit`` if ``EpMaintenanceModeEnable`` or
                 ``EpMaintenanceModeDisable`` raise ``ValueError``.
@@ -136,22 +140,19 @@ class MaintenanceMode:
         self.serial_number_to_ip_address = {}
 
         self.valid_modes = ["maintenance", "normal"]
-        self._init_properties()
 
         self.conversion = ConversionUtils()
         self.ep_maintenance_mode_enable = EpMaintenanceModeEnable()
         self.ep_maintenance_mode_disable = EpMaintenanceModeDisable()
 
+        self._config = None
+        self._rest_send = None
+        self._results = None
+
         msg = "ENTERED MaintenanceMode(): "
         msg += f"check_mode: {self.check_mode}, "
         msg += f"state: {self.state}"
         self.log.debug(msg)
-
-    def _init_properties(self):
-        self._properties = {}
-        self._properties["config"] = None
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
 
     def verify_config_parameters(self, value) -> None:
         """
@@ -580,7 +581,7 @@ class MaintenanceMode:
         ]
         ```
         """
-        return self._properties["config"]
+        return self._config
 
     @config.setter
     def config(self, value):
@@ -588,77 +589,11 @@ class MaintenanceMode:
             self.verify_config_parameters(value)
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
-        self._properties["config"] = value
-
-    @property
-    def rest_send(self):
-        """
-        ### Summary
-        An instance of the RestSend class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of RestSend.
-
-        ### getter
-        Return an instance of the RestSend class.
-
-        ### setter
-        Set an instance of the RestSend class.
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "RestSend"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self._properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        ### Summary
-        An instance of the Results class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of Results.
-
-        ### getter
-        Return an instance of the Results class.
-
-        ### setter
-        Set an instance of the Results class.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "Results"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self._properties["results"] = value
+        self._config = value
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class MaintenanceModeInfo:
     """
     ### Summary
@@ -755,17 +690,13 @@ class MaintenanceModeInfo:
         self.fabric_details = FabricDetailsByName(self.params)
         self.switch_details = SwitchDetails()
 
-        self._init_properties()
+        self._config = None
+        self._info = None
+        self._rest_send = None
+        self._results = None
 
         msg = "ENTERED MaintenanceModeInfo(): "
         self.log.debug(msg)
-
-    def _init_properties(self):
-        self._properties = {}
-        self._properties["config"] = None
-        self._properties["info"] = None
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
 
     def verify_refresh_parameters(self) -> None:
         """
@@ -997,7 +928,7 @@ class MaintenanceModeInfo:
         ["172.22.150.2", "172.22.150.3"]
         ```
         """
-        return self._properties["config"]
+        return self._config
 
     @config.setter
     def config(self, value):
@@ -1015,7 +946,7 @@ class MaintenanceModeInfo:
                 msg += "containing ip addresses. "
                 msg += f"Got type: {type(item).__name__}."
                 raise TypeError(msg)
-        self._properties["config"] = value
+        self._config = value
 
     @property
     def fabric_deployment_disabled(self):
@@ -1160,7 +1091,7 @@ class MaintenanceModeInfo:
             msg += f"{self.class_name}.refresh() must be called before "
             msg += f"accessing {self.class_name}.{method_name}."
             raise ValueError(msg)
-        return copy.deepcopy(self._properties["info"])
+        return copy.deepcopy(self._info)
 
     @info.setter
     def info(self, value: dict):
@@ -1169,7 +1100,7 @@ class MaintenanceModeInfo:
             msg += "value must be a dict. "
             msg += f"Got value {value} of type {type(value).__name__}."
             raise TypeError(msg)
-        self._properties["info"] = value
+        self._info = value
 
     @property
     def mode(self):
@@ -1184,74 +1115,6 @@ class MaintenanceModeInfo:
                 -   ``mode`` is not in the filtered switch dict.
         """
         return self._get("mode")
-
-    @property
-    def rest_send(self):
-        """
-        ### Summary
-        An instance of the RestSend class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of RestSend.
-
-        ### getter
-        Return an instance of the RestSend class.
-
-        ### setter
-        Set an instance of the RestSend class.
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "RestSend"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self._properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        ### Summary
-        An instance of the Results class.
-
-        ### Raises
-        -   setter: ``TypeError`` if the value is not an instance of Results.
-
-        ### getter
-        Return an instance of the Results class.
-
-        ### setter
-        Set an instance of the Results class.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "Results"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        try:
-            _class_have = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_have != _class_need:
-            raise TypeError(msg)
-        self._properties["results"] = value
 
     @property
     def role(self):
