@@ -400,8 +400,14 @@ class FabricDetailsByName(FabricDetails):
     """
 
     def __init__(self, params):
-        super().__init__(params)
         self.class_name = self.__class__.__name__
+        try:
+            super().__init__(params)
+        except ValueError as error:
+            msg = "FabricDetailsByName.__init__: "
+            msg += "Failed in super().__init__(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED FabricDetailsByName() "
@@ -563,8 +569,14 @@ class FabricDetailsByNvPair(FabricDetails):
     """
 
     def __init__(self, params):
-        super().__init__(params)
         self.class_name = self.__class__.__name__
+        try:
+            super().__init__(params)
+        except ValueError as error:
+            msg = "FabricDetailsByNvPair.__init__: "
+            msg += "Failed in super().__init__(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
