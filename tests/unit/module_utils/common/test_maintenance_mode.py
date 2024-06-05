@@ -815,18 +815,20 @@ def test_maintenance_mode_00700(
             -   ``TypeError``
             -   ``ValueError``
 
-
     Code Flow - Setup
     -   MaintenanceMode() is instantiated
     -   Required attributes are set
-    -   EpMaintenanceModeEnable() is mocked to raise each of the above exceptions
+    -   EpMaintenanceModeEnable() is mocked to raise each
+        of the above exceptions
+    -   EpMaintenanceModeDisable() is mocked to raise each
+        of the above exceptions
 
     Code Flow - Test
     -   MaintenanceMode().commit() is called for each exception
 
     Expected Result
-    -   ``ValueError`` is raised
-    -   Exception message matches expected
+    -   ``ValueError`` is raised.
+    -   Exception message matches expected.
     """
 
     class MockEndpoint:
@@ -875,13 +877,110 @@ def test_maintenance_mode_00700(
 
 
 @pytest.mark.parametrize(
+    "endpoint_instance, mock_exception, expected_exception, mock_message",
+    [
+        ("ep_fabric_config_deploy", TypeError, ValueError, "Bad type"),
+        ("ep_fabric_config_deploy", ValueError, ValueError, "Bad value"),
+    ],
+)
+def test_maintenance_mode_00800(
+    monkeypatch,
+    maintenance_mode,
+    endpoint_instance,
+    mock_exception,
+    expected_exception,
+    mock_message,
+) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify MaintenanceMode().deploy_switches() raises ``ValueError``
+        when ``EpFabricConfigDeploy`` raises any of:
+            -   ``TypeError``
+            -   ``ValueError``
+
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+    -   Required attributes are set
+    -   EpFabricConfigDeploy() is mocked to raise each of the above exceptions
+
+    Code Flow - Test
+    -   MaintenanceMode().commit() is called for each exception
+
+    Expected Result
+    -   ``TypeError`` and ``ValueError`` are raised.
+    -   Exception message matches expected.
+    """
+
+    class MockEndpoint:
+        """
+        Mock EpFabricConfigDeploy() class
+        """
+
+        def __init__(self):
+            self._fabric_name = None
+            self._switch_id = None
+
+        @property
+        def fabric_name(self):
+            """
+            Mock fabric_name getter/setter
+            """
+            return self._fabric_name
+
+        @fabric_name.setter
+        def fabric_name(self, value):
+            raise mock_exception(mock_message)
+
+        @property
+        def switch_id(self):
+            """
+            Mock switch_id getter/setter
+            """
+            return self._switch_id
+
+        @switch_id.setter
+        def switch_id(self, value):
+            self._switch_id = value
+
+    def responses():
+        yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {"status": "Success"}}
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "merged", "check_mode": False})
+    rest_send.sender = mock_sender
+    rest_send.response_handler = ResponseHandler()
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    config = copy.deepcopy(CONFIG[0])
+    config["deploy"] = True
+
+    with does_not_raise():
+        instance = maintenance_mode
+        instance.config = [config]
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    monkeypatch.setattr(instance, endpoint_instance, MockEndpoint())
+    with pytest.raises(expected_exception, match=mock_message):
+        instance.commit()
+
+
+@pytest.mark.parametrize(
     "mock_exception, expected_exception, mock_message",
     [
         (TypeError, ValueError, r"Converted TypeError to ValueError"),
         (ValueError, ValueError, r"Converted ValueError to ValueError"),
     ],
 )
-def test_maintenance_mode_00800(
+def test_maintenance_mode_00900(
     maintenance_mode, mock_exception, expected_exception, mock_message
 ) -> None:
     """
@@ -911,10 +1010,12 @@ def test_maintenance_mode_00800(
     -   ``ValueError`` is raised
     -   Exception message matches expected
     """
+
     class MockResults:
         """
         Mock the Results class
         """
+
         class_name = "Results"
 
         def register_task_result(self, *args):
@@ -951,4 +1052,65 @@ def test_maintenance_mode_00800(
         instance.results = MockResults()
 
     with pytest.raises(expected_exception, match=mock_message):
+        instance.commit()
+
+
+def test_maintenance_mode_01000(monkeypatch, maintenance_mode) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - commit()
+
+    Summary
+    -   Verify MaintenanceMode().commit() raises ``ValueError`` when
+        ``MaintenanceMode().deploy_switches()`` raises
+        ``ControllerResponseError`` when the RETURN_CODE in the
+        response is not 200.
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+    -   Required attributes are set
+
+    Code Flow - Test
+    -   MaintenanceMode().commit() is called with simulated responses:
+            -   200 response for ``change_system_mode()``
+            -   500 response ``deploy_switches()``
+
+    Expected Result
+    -   ``ValueError``is raised.
+    -   Exception message matches expected.
+    """
+
+    def responses():
+        yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {"status": "Success"}}
+        yield {
+            "MESSAGE": "Internal server error",
+            "RETURN_CODE": 500,
+            "DATA": {"status": "Success"},
+        }
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "merged", "check_mode": False})
+    rest_send.sender = mock_sender
+    rest_send.response_handler = ResponseHandler()
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    config = copy.deepcopy(CONFIG[0])
+    config["deploy"] = True
+
+    with does_not_raise():
+        instance = maintenance_mode
+        instance.config = [config]
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"MaintenanceMode\.deploy_switches:\s+"
+    match += r"Unable to deploy switches:\s+"
+    match += r"fabric_name VXLAN_Fabric,\s+"
+    match += r"serial_numbers FDO22180ASJ\.\s+"
+    match += r"Got response.*\."
+    with pytest.raises(ValueError, match=match):
         instance.commit()

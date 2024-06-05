@@ -140,6 +140,7 @@ class MaintenanceMode:
         self.conversion = ConversionUtils()
         self.ep_maintenance_mode_enable = EpMaintenanceModeEnable()
         self.ep_maintenance_mode_disable = EpMaintenanceModeDisable()
+        self.ep_fabric_config_deploy = EpFabricConfigDeploy()
 
         self._config = None
         self._rest_send = None
@@ -481,7 +482,7 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
         self.build_serial_number_to_ip_address()
-        endpoint = EpFabricConfigDeploy()
+        endpoint = self.ep_fabric_config_deploy
         for fabric_name, serial_numbers in self.deploy_dict.items():
             # Build endpoint
             try:
@@ -527,7 +528,7 @@ class MaintenanceMode:
                 msg += f"fabric_name {fabric_name}, "
                 msg += "serial_numbers "
                 msg += f"{','.join(serial_numbers)}. "
-                msg += f"Got response {self.results.response_current}"
+                msg += f"Got response {self.results.response_current}."
                 raise ControllerResponseError(msg)
 
     @property
