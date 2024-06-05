@@ -30,6 +30,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_versi
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode_info import \
+    MaintenanceModeInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
@@ -234,6 +236,14 @@ def maintenance_mode_fixture():
     return MaintenanceMode(params)
 
 
+@pytest.fixture(name="maintenance_mode_info")
+def maintenance_mode_info_fixture():
+    """
+    return MaintenanceModeInfo
+    """
+    return MaintenanceModeInfo(params)
+
+
 @pytest.fixture(name="merge_dicts")
 def merge_dicts_fixture():
     """
@@ -330,4 +340,24 @@ def responses_maintenance_mode(key: str) -> Dict[str, str]:
     response_file = "responses_MaintenanceMode"
     response = load_fixture(response_file).get(key)
     print(f"responses_maintenance_mode: {key} : {response}")
+    return response
+
+
+def responses_maintenance_mode_info(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_MaintenanceModeInfo.json
+    """
+    response_file = "responses_MaintenanceModeInfo"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_maintenance_mode_info: {key} : {response}")
+    return response
+
+
+def responses_switch_details(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_SwitchDetails.json
+    """
+    response_file = "responses_SwitchDetails"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_switch_details: {key} : {response}")
     return response

@@ -129,7 +129,7 @@ class MaintenanceModeInfo:
         self.action = "maintenance_mode_info"
 
         self.params = params
-        self.conversions = ConversionUtils()
+        self.conversion = ConversionUtils()
         self.fabric_details = FabricDetailsByName(self.params)
         self.switch_details = SwitchDetails()
 
@@ -222,10 +222,14 @@ class MaintenanceModeInfo:
         self.verify_refresh_parameters()
 
         try:
+            self.log.debug("ZZZ: set self.switch_details.rest_send")
             self.switch_details.rest_send = self.rest_send
+            self.log.debug("ZZZ: set self.fabric_details.rest_send")
             self.fabric_details.rest_send = self.rest_send
 
+            self.log.debug("ZZZ: set self.switch_details.results")
             self.switch_details.results = self.results
+            self.log.debug("ZZZ: set self.fabric_details.results")
             self.fabric_details.results = self.results
         except TypeError as error:
             raise ValueError(error) from error
@@ -317,8 +321,8 @@ class MaintenanceModeInfo:
             msg += f"{self.filter} does not have a key named {item}."
             raise ValueError(msg)
 
-        return self.conversions.make_boolean(
-            self.conversions.make_none(self._info[self.filter].get(item))
+        return self.conversion.make_boolean(
+            self.conversion.make_none(self._info[self.filter].get(item))
         )
 
     @property

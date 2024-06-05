@@ -73,7 +73,7 @@ class SwitchDetails:
         self.log.debug("ENTERED common.SwitchDetails()")
 
         self.action = "switch_details"
-        self.conversions = ConversionUtils()
+        self.conversion = ConversionUtils()
         self.ep_all_switches = EpAllSwitches()
         self.path = self.ep_all_switches.path
         self.verb = self.ep_all_switches.verb
@@ -229,8 +229,8 @@ class SwitchDetails:
             msg += f"{self.filter} does not have a key named {item}."
             raise ValueError(msg)
 
-        return self.conversions.make_boolean(
-            self.conversions.make_none(self._info[self.filter].get(item))
+        return self.conversion.make_boolean(
+            self.conversion.make_none(self._info[self.filter].get(item))
         )
 
     @property

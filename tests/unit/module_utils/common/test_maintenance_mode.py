@@ -75,20 +75,22 @@ def test_maintenance_mode_00000(maintenance_mode) -> None:
     """
     with does_not_raise():
         instance = maintenance_mode
+
+    assert instance._config is None
     assert instance._rest_send is None
     assert instance._results is None
-    assert instance._config is None
+
     assert instance.action == "maintenance_mode"
+    assert instance.check_mode is False
     assert instance.class_name == "MaintenanceMode"
     assert instance.config is None
-    assert instance.check_mode is False
     assert instance.deploy_dict == {}
-    assert instance.serial_number_to_ip_address == {}
-    assert instance.valid_modes == ["maintenance", "normal"]
-    assert instance.state == "merged"
-    assert instance.config is None
     assert instance.rest_send is None
     assert instance.results is None
+    assert instance.serial_number_to_ip_address == {}
+    assert instance.state == "merged"
+    assert instance.valid_modes == ["maintenance", "normal"]
+
     assert isinstance(instance.conversion, ConversionUtils)
     assert isinstance(instance.ep_maintenance_mode_disable, EpMaintenanceModeDisable)
     assert isinstance(instance.ep_maintenance_mode_enable, EpMaintenanceModeEnable)
