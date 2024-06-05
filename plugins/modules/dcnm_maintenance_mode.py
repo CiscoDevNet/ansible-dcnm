@@ -1268,7 +1268,7 @@ def main():
     else:
         # We should never get here since the state parameter has
         # already been validated.
-        msg = f"Unknown state {ansible_module.params['state']}"
+        msg = f"Unknown state {params['state']}"
         ansible_module.fail_json(msg)
 
     task.results.build_final_result()

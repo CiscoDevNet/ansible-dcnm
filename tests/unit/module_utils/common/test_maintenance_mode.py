@@ -342,13 +342,15 @@ def test_maintenance_mode_00210(
 
 
 @pytest.mark.parametrize(
-    "mode",
+    "mode, deploy",
     [
-        ("maintenance"),
-        ("normal"),
+        ("maintenance", True),
+        ("maintenance", False),
+        ("normal", True),
+        ("normal", False),
     ],
 )
-def test_maintenance_mode_00220(maintenance_mode, mode) -> None:
+def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
     """
     Classes and Methods
     - MaintenanceMode()
@@ -391,6 +393,7 @@ def test_maintenance_mode_00220(maintenance_mode, mode) -> None:
 
     config = copy.deepcopy(CONFIG[0])
     config["mode"] = mode
+    config["deploy"] = deploy
 
     with does_not_raise():
         rest_send = RestSend({"state": "merged", "check_mode": False})
@@ -867,5 +870,85 @@ def test_maintenance_mode_00700(
         instance.results = Results()
 
     monkeypatch.setattr(instance, endpoint_instance, MockEndpoint())
+    with pytest.raises(expected_exception, match=mock_message):
+        instance.commit()
+
+
+@pytest.mark.parametrize(
+    "mock_exception, expected_exception, mock_message",
+    [
+        (TypeError, ValueError, r"Converted TypeError to ValueError"),
+        (ValueError, ValueError, r"Converted ValueError to ValueError"),
+    ],
+)
+def test_maintenance_mode_00800(
+    maintenance_mode, mock_exception, expected_exception, mock_message
+) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - change_system_mode()
+
+
+    Summary
+    -   Verify MaintenanceMode().change_system_mode() raises ``ValueError``
+        when ``MaintenanceMode().results()`` raises any of:
+            -   ``TypeError``
+            -   ``ValueError``
+
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+    -   Required attributes are set
+    -   Results().response_current.setter is mocked to raise each of the above
+        exceptions
+
+    Code Flow - Test
+    -   MaintenanceMode().commit() is called for each exception
+
+    Expected Result
+    -   ``ValueError`` is raised
+    -   Exception message matches expected
+    """
+    class MockResults:
+        """
+        Mock the Results class
+        """
+        class_name = "Results"
+
+        def register_task_result(self, *args):
+            """
+            do nothing
+            """
+
+        @property
+        def response_current(self):
+            """
+            mock response_current getter
+            """
+            return {"success": True}
+
+        @response_current.setter
+        def response_current(self, *args):
+            raise mock_exception(mock_message)
+
+    def responses():
+        yield {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {"status": "Success"}}
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+
+    with does_not_raise():
+        rest_send = RestSend({"state": "merged", "check_mode": False})
+        rest_send.sender = mock_sender
+        rest_send.response_handler = ResponseHandler()
+        instance = maintenance_mode
+        instance.rest_send = rest_send
+        instance.rest_send.unit_test = True
+        instance.rest_send.timeout = 1
+        instance.config = CONFIG
+        instance.results = MockResults()
+
     with pytest.raises(expected_exception, match=mock_message):
         instance.commit()
