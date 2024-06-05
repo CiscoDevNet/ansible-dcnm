@@ -113,7 +113,7 @@ class MockSwitchDetails:
     @rest_send.setter
     def rest_send(self, value):
         if self.mock_class == self.class_name and self.mock_property == "rest_send":
-            raise self.mock_exception(self.mock_message)  # pylint: disable=not-callable
+            raise self.mock_exception(self.mock_message)
         self._rest_send = value
 
     @property
