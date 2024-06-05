@@ -12,16 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# See the following regarding *_fixture imports
-# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
-# Due to the above, we also need to disable unused-import
-# Also, fixtures need to use *args to match the signature of the function they are mocking
-# pylint: disable=unused-import
-# pylint: disable=redefined-outer-name
-# pylint: disable=protected-access
-# pylint: disable=unused-argument
-# pylint: disable=invalid-name
-
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
