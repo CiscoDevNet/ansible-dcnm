@@ -425,7 +425,13 @@ class FabricDetailsByName(FabricDetails):
         -   ``ValueError`` if:
                 -   Mandatory properties are not set.
         """
-        self.refresh_super()
+        try:
+            self.refresh_super()
+        except ValueError as error:
+            msg = "Failed to refresh fabric details: "
+            msg += f"Error detail: {error}."
+            raise ValueError(msg) from error
+
         self.data_subclass = copy.deepcopy(self.data)
 
     def _get(self, item):
@@ -610,7 +616,13 @@ class FabricDetailsByNvPair(FabricDetails):
             msg += f"before calling {self.class_name}.refresh()."
             raise ValueError(msg)
 
-        self.refresh_super()
+        try:
+            self.refresh_super()
+        except ValueError as error:
+            msg = "Failed to refresh fabric details: "
+            msg += f"Error detail: {error}."
+            raise ValueError(msg) from error
+
         for item, value in self.data.items():
             if value.get("nvPairs", {}).get(self.filter_key) == self.filter_value:
                 self.data_subclass[item] = value
