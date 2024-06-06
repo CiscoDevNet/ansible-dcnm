@@ -325,7 +325,7 @@ class MaintenanceModeInfo:
     def filter(self):
         """
         ### Summary
-        Set the query filter.
+        Set the query filter (switch IP address)
 
         ### Raises
         None. However, if ``filter`` is not set, or ``filter`` is set to

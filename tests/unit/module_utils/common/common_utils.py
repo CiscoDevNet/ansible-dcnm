@@ -333,6 +333,16 @@ def responses_controller_version(key: str) -> Dict[str, str]:
     return response
 
 
+def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_FabricDetailsByName.json
+    """
+    response_file = "responses_FabricDetailsByName"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_fabric_details_by_name: {key} : {response}")
+    return response
+
+
 def responses_maintenance_mode(key: str) -> Dict[str, str]:
     """
     Return data in responses_MaintenanceMode.json

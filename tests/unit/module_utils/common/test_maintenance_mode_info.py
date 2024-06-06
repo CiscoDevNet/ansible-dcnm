@@ -50,7 +50,8 @@ from ansible_collections.cisco.dcnm.tests.unit.mocks.mock_switch_details import 
     MockSwitchDetails
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
     MockSender, ResponseGenerator, does_not_raise,
-    maintenance_mode_info_fixture, responses_switch_details)
+    maintenance_mode_info_fixture, responses_fabric_details_by_name,
+    responses_switch_details)
 
 FABRIC_NAME = "VXLAN_Fabric"
 CONFIG = ["192.168.1.2"]
@@ -368,10 +369,6 @@ def test_maintenance_mode_info_00210(
         instance = MaintenanceModeInfo(PARAMS)
 
     mock_fabric_details = MockFabricDetailsByName()
-    mock_fabric_details.mock_class = mock_class
-    mock_fabric_details.mock_exception = mock_exception
-    mock_fabric_details.mock_message = mock_message
-    mock_fabric_details.mock_property = mock_property
 
     mock_switch_details = MockSwitchDetails()
     mock_switch_details.mock_class = mock_class
@@ -535,6 +532,211 @@ def test_maintenance_mode_info_00400(
 
     with pytest.raises(expected_exception, match=mock_message):
         instance.refresh()
+
+
+def test_maintenance_mode_info_00500(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify happy path with freezeMode == False
+
+    ### Code Flow - Setup
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``FabricDetails()`` is mocked not to raise any exceptions.
+    -   ``SwitchDetails()`` is mocked not to raise any exceptions.
+    -   ``responses_SwitchDetails.json`` contains a 200 response that
+        contains the switch ip address in CONFIG (192.168.1.2)
+    -   ``responses_FabricDetailsByName.json`` contains a 200 response that
+        contains FABRIC_NAME.
+
+    ### Code Flow - Test
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   Exception is not raised.
+    -   ``MaintenanceModeInfo().results`` contains expected data.
+
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name(key)
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = mock_sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    mock_fabric_details = MockFabricDetailsByName()
+    mock_switch_details = MockSwitchDetails()
+    mock_switch_details.filter = CONFIG[0]
+    mock_switch_details.mock_response_key = key
+
+    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+    with does_not_raise():
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = CONFIG[0]
+    assert instance.fabric_name == FABRIC_NAME
+    assert instance.fabric_freeze_mode is False
+    assert instance.fabric_read_only is False
+    assert instance.fabric_deployment_disabled is False
+    assert instance.mode == "normal"
+    assert instance.role == "leaf"
+
+
+def test_maintenance_mode_info_00510(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify happy path with:
+            -   switch_details: freezeMode is True
+            -   fabric_details: IS_READ_ONLY not present
+
+    ### Code Flow - Setup
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``FabricDetails()`` is mocked not to raise any exceptions.
+    -   ``SwitchDetails()`` is mocked not to raise any exceptions.
+    -   ``responses_SwitchDetails.json`` contains a 200 response that
+        contains the switch ip address in CONFIG (192.168.1.2)
+    -   ``responses_FabricDetailsByName.json`` contains a 200 response that
+        contains FABRIC_NAME.
+
+    ### Code Flow - Test
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   Exception is not raised.
+    -   ``MaintenanceModeInfo().results`` contains expected data.
+
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        pass
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = mock_sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    mock_fabric_details = MockFabricDetailsByName()
+    mock_switch_details = MockSwitchDetails()
+    mock_switch_details.filter = CONFIG[0]
+    mock_switch_details.mock_response_key = key
+
+    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+    with does_not_raise():
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = CONFIG[0]
+    assert instance.fabric_name == FABRIC_NAME
+    assert instance.fabric_freeze_mode is True
+    assert instance.fabric_read_only is True
+    assert instance.fabric_deployment_disabled is True
+    assert instance.mode == "normal"
+    assert instance.role == "leaf"
+
+
+def test_maintenance_mode_info_00520(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify happy path with:
+            -   switch_details: freezeMode is True
+            -   switch_details: mode is Normal
+            -   fabric_details: IS_READ_ONLY present and True
+            -   fabric_details: DEPLOYMENT_FREEZE present and True
+
+    ### Code Flow - Setup
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``FabricDetails()`` is mocked not to raise any exceptions.
+    -   ``SwitchDetails()`` is mocked not to raise any exceptions.
+    -   ``responses_SwitchDetails.json`` contains a 200 response that
+        contains the switch ip address in CONFIG (192.168.1.2)
+    -   ``responses_FabricDetailsByName.json`` contains a 200 response that
+        contains FABRIC_NAME.
+
+    ### Code Flow - Test
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   Exception is not raised.
+    -   ``MaintenanceModeInfo().results`` contains expected data.
+    -   mode is "inconsistent" due to mode differing from freezeMode.
+
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        pass
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = mock_sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    mock_fabric_details = MockFabricDetailsByName()
+    mock_fabric_details.mock_response_key = key
+    mock_fabric_details.filter = "VXLAN_Fabric"
+
+    mock_switch_details = MockSwitchDetails()
+    mock_switch_details.mock_response_key = key
+    mock_switch_details.filter = CONFIG[0]
+
+    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+    with does_not_raise():
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = CONFIG[0]
+    assert instance.fabric_name == FABRIC_NAME
+    assert instance.fabric_freeze_mode is True
+    assert instance.fabric_read_only is True
+    assert instance.fabric_deployment_disabled is True
+    assert instance.mode == "inconsistent"
+    assert instance.role == "leaf"
 
 
 # @pytest.mark.parametrize(
