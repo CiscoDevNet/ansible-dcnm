@@ -222,14 +222,10 @@ class MaintenanceModeInfo:
         self.verify_refresh_parameters()
 
         try:
-            self.log.debug("ZZZ: set self.switch_details.rest_send")
             self.switch_details.rest_send = self.rest_send
-            self.log.debug("ZZZ: set self.fabric_details.rest_send")
             self.fabric_details.rest_send = self.rest_send
 
-            self.log.debug("ZZZ: set self.switch_details.results")
             self.switch_details.results = self.results
-            self.log.debug("ZZZ: set self.fabric_details.results")
             self.fabric_details.results = self.results
         except TypeError as error:
             raise ValueError(error) from error

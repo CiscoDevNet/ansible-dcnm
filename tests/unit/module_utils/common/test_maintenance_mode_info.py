@@ -193,31 +193,45 @@ def test_maintenance_mode_info_00120(maintenance_mode_info) -> None:
     [
         (
             "FabricDetailsByName",
-            "results",
-            TypeError,
+            "refresh",
+            ControllerResponseError,
             ValueError,
-            "Bad type: fabric_details.results",
+            "Bad controller response: fabric_details.refresh",
         ),
         (
             "FabricDetailsByName",
-            "rest_send",
+            "results.setter",
             TypeError,
             ValueError,
-            "Bad type: fabric_details.rest_send",
+            "Bad type: fabric_details.results.setter",
+        ),
+        (
+            "FabricDetailsByName",
+            "rest_send.setter",
+            TypeError,
+            ValueError,
+            "Bad type: fabric_details.rest_send.setter",
         ),
         (
             "SwitchDetails",
-            "results",
-            TypeError,
+            "refresh",
+            ControllerResponseError,
             ValueError,
-            "Bad type: switch_details.results",
+            "Bad controller response: switch_details.refresh",
         ),
         (
             "SwitchDetails",
-            "rest_send",
+            "results.setter",
             TypeError,
             ValueError,
-            "Bad type: switch_details.rest_send",
+            "Bad type: switch_details.results.setter",
+        ),
+        (
+            "SwitchDetails",
+            "rest_send.setter",
+            TypeError,
+            ValueError,
+            "Bad type: switch_details.rest_send.setter",
         ),
     ],
 )
@@ -249,7 +263,7 @@ def test_maintenance_mode_info_00200(
     -   ``SwitchDetails()`` is mocked to conditionally raise ``TypeError``.
 
     ### Code Flow - Test
-    -   MaintenanceModeInfo().refresh() is called for each condition.
+    -   ``refresh()`` is called.
 
     ### Expected Result
     -   ``ValueError`` is raised.
@@ -281,6 +295,235 @@ def test_maintenance_mode_info_00200(
     mock_switch_details.mock_exception = mock_exception
     mock_switch_details.mock_message = mock_message
     mock_switch_details.mock_property = mock_property
+
+    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+    with does_not_raise():
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    with pytest.raises(expected_exception, match=mock_message):
+        instance.refresh()
+
+
+@pytest.mark.parametrize(
+    "mock_class, mock_property, mock_exception, expected_exception, mock_message",
+    [
+        (
+            "SwitchDetails",
+            "serial_number.getter",
+            ValueError,
+            ValueError,
+            "serial_number.getter: ValueError",
+        )
+    ],
+)
+def test_maintenance_mode_info_00210(
+    monkeypatch,
+    mock_class,
+    mock_property,
+    mock_exception,
+    expected_exception,
+    mock_message,
+) -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify ``refresh()`` raises ``ValueError`` when:
+            -   ``switch_details.serial_number`` raises ``ValueError``.
+
+    ### Code Flow - Setup
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``FabricDetails()`` is mocked not to raise any exceptions.
+    -   ``SwitchDetails()`` is mocked to conditionally raise ``ValueError``.
+        in the ``serial_number.getter`` property.
+
+    ### Code Flow - Test
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Exception message matches expected.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = mock_sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    mock_fabric_details = MockFabricDetailsByName()
+    mock_fabric_details.mock_class = mock_class
+    mock_fabric_details.mock_exception = mock_exception
+    mock_fabric_details.mock_message = mock_message
+    mock_fabric_details.mock_property = mock_property
+
+    mock_switch_details = MockSwitchDetails()
+    mock_switch_details.mock_class = mock_class
+    mock_switch_details.mock_exception = mock_exception
+    mock_switch_details.mock_message = mock_message
+    mock_switch_details.mock_property = mock_property
+
+    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+    with does_not_raise():
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    with pytest.raises(expected_exception, match=mock_message):
+        instance.refresh()
+
+
+def test_maintenance_mode_info_00300(
+    monkeypatch,
+) -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify ``refresh()`` raises ``ValueError`` when:
+        ``switch_details.serial_number`` is ``None``.  This happens
+        when the switch does not exist on the controller.
+
+    ### Code Flow - Setup
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``FabricDetails()`` is mocked not to raise any exceptions.
+    -   ``SwitchDetails()`` is mocked not to raise any exceptions.
+    -   ``responses_SwitchDetails.json`` contains a 200 response that
+        does not contain the switch ip address in CONFIG (192.168.1.2)
+
+    ### Code Flow - Test
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Exception message matches expected.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        pass
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = mock_sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    mock_fabric_details = MockFabricDetailsByName()
+    mock_switch_details = MockSwitchDetails()
+    mock_switch_details.filter = CONFIG[0]
+    mock_switch_details.mock_response_key = key
+
+    monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+    monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+    with does_not_raise():
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"MaintenanceModeInfo\.refresh:\s+"
+    match += r"Switch with ip_address 192\.168\.1\.2\s+"
+    match += r"does not exist on the controller\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+@pytest.mark.parametrize(
+    "mock_class, mock_property, mock_exception, expected_exception, mock_message",
+    [
+        (
+            "FabricDetailsByName",
+            "filter.setter",
+            ValueError,
+            ValueError,
+            "fabric_details.filter.setter: ValueError",
+        )
+    ],
+)
+def test_maintenance_mode_info_00400(
+    monkeypatch,
+    mock_class,
+    mock_property,
+    mock_exception,
+    expected_exception,
+    mock_message,
+) -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify ``refresh()`` raises ``ValueError`` when:
+            -   ``fabric_details.filter`` raises ``ValueError``.
+
+    ### Code Flow - Setup
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``FabricDetails().filter`` is mocked to conditionally raise ``ValueError``.
+    -   ``SwitchDetails()`` is mocked not to raise any exceptions.
+    -   ``responses_SwitchDetails.json`` contains a 200 response that
+        contains the switch ip address in CONFIG (192.168.1.2)
+
+    ### Code Flow - Test
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Exception message matches expected.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        pass
+
+    mock_sender = MockSender()
+    mock_sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = mock_sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    mock_fabric_details = MockFabricDetailsByName()
+    mock_fabric_details.mock_class = mock_class
+    mock_fabric_details.mock_exception = mock_exception
+    mock_fabric_details.mock_message = mock_message
+    mock_fabric_details.mock_property = mock_property
+
+    mock_switch_details = MockSwitchDetails()
+    mock_switch_details.filter = CONFIG[0]
+    mock_switch_details.mock_response_key = key
 
     monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
     monkeypatch.setattr(instance, "switch_details", mock_switch_details)

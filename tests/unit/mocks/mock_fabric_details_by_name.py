@@ -44,6 +44,8 @@ class MockFabricDetailsByName:
         """
         Mocked refresh method
         """
+        if self.mock_class == self.class_name and self.mock_property == "refresh":
+            raise self.mock_exception(self.mock_message)
 
     @property
     def mock_class(self):
@@ -90,15 +92,38 @@ class MockFabricDetailsByName:
         self._mock_property = value
 
     @property
+    def filter(self):
+        """
+        Mocked filter property
+        """
+        if self.mock_class == self.class_name and self.mock_property == "filter.getter":
+            raise self.mock_exception(self.mock_message)
+        return self._filter
+
+    @filter.setter
+    def filter(self, value):
+        if self.mock_class == self.class_name and self.mock_property == "filter.setter":
+            raise self.mock_exception(self.mock_message)
+        self._filter = value
+
+    @property
     def rest_send(self):
         """
         Mocked rest_send property
         """
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "rest_send.getter"
+        ):
+            raise self.mock_exception(self.mock_message)
         return self._rest_send
 
     @rest_send.setter
     def rest_send(self, value):
-        if self.mock_class == self.class_name and self.mock_property == "rest_send":
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "rest_send.setter"
+        ):
             raise self.mock_exception(self.mock_message)
         self._rest_send = value
 
@@ -107,11 +132,19 @@ class MockFabricDetailsByName:
         """
         Mocked results property
         """
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "results.getter"
+        ):
+            raise self.mock_exception(self.mock_message)
         return self._results
 
     @results.setter
     def results(self, value):
-        if self.mock_class == self.class_name and self.mock_property == "results":
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "results.setter"
+        ):
             raise self.mock_exception(self.mock_message)
         self._results = value
 
