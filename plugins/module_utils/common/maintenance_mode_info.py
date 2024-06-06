@@ -92,7 +92,7 @@ class MaintenanceModeInfo:
             -   ``params`` is ``AnsibleModule.params``
             -   ``config`` is per the above example.
             -   ``sender`` is an instance of a Sender() class.
-                See ``dcnm_sender.py`` for usage.
+                See ``sender_dcnm.py`` for usage.
 
     ```python
     ansible_module = AnsibleModule()

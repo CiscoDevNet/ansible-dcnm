@@ -127,7 +127,7 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.dcnm_sender import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
     Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log

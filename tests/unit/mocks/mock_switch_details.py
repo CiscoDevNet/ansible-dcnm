@@ -19,13 +19,106 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    responses_switch_details
-
 
 class MockSwitchDetails:
     """
-    Mock the SwitchDetails class
+    ### Summary
+    Mock the exceptions raised by the methods and properties
+    in the ``SwitchDetails`` class.
+
+    ### NOTES
+    -   This class is used to test the exceptions raised by ``SwitchDetails``
+    -   This class does NOT simulate the behavior of ``SwitchDetails`` with
+        respect its interaction with the controller.  For that, see the
+        ``Sender`` class within ``module_utils/common/sender_file.py``,
+        and the ``RestSend`` class within ``module_utils/common/rest_send.py``.
+    -   Example usage for the ``Sender`` class can be found in
+        ``test_maintenance_mode_info_00500`` within
+        ``tests/unit/module_utils/common/test_maintenance_mode_info.py``.
+
+    ### Example usage
+    ```python
+    @pytest.mark.parametrize(
+        "mock_class, mock_property, mock_exception, expected_exception, mock_message",
+        [
+            (
+                "FabricDetailsByName",
+                "refresh",
+                ControllerResponseError,
+                ValueError,
+                "Bad controller response: fabric_details.refresh",
+            ),
+            (
+                "FabricDetailsByName",
+                "results.setter",
+                TypeError,
+                ValueError,
+                "Bad type: fabric_details.results.setter",
+            ),
+            (
+                "FabricDetailsByName",
+                "rest_send.setter",
+                TypeError,
+                ValueError,
+                "Bad type: fabric_details.rest_send.setter",
+            ),
+            (
+                "SwitchDetails",
+                "refresh",
+                ControllerResponseError,
+                ValueError,
+                "Bad controller response: switch_details.refresh",
+            ),
+            (
+                "SwitchDetails",
+                "results.setter",
+                TypeError,
+                ValueError,
+                "Bad type: switch_details.results.setter",
+            ),
+            (
+                "SwitchDetails",
+                "rest_send.setter",
+                TypeError,
+                ValueError,
+                "Bad type: switch_details.rest_send.setter",
+            ),
+        ],
+    )
+    def test_maintenance_mode_info_00200(
+        monkeypatch,
+        mock_class,
+        mock_property,
+        mock_exception,
+        expected_exception,
+        mock_message,
+    ) -> None:
+        with does_not_raise():
+            instance = MaintenanceModeInfo(PARAMS)
+
+        mock_fabric_details = MockFabricDetailsByName()
+        mock_fabric_details.mock_class = mock_class
+        mock_fabric_details.mock_exception = mock_exception
+        mock_fabric_details.mock_message = mock_message
+        mock_fabric_details.mock_property = mock_property
+
+        mock_switch_details = MockSwitchDetails()
+        mock_switch_details.mock_class = mock_class
+        mock_switch_details.mock_exception = mock_exception
+        mock_switch_details.mock_message = mock_message
+        mock_switch_details.mock_property = mock_property
+
+        monkeypatch.setattr(instance, "fabric_details", mock_fabric_details)
+        monkeypatch.setattr(instance, "switch_details", mock_switch_details)
+
+        with does_not_raise():
+            instance.config = CONFIG
+            instance.rest_send = RestSend({"state": "query", "check_mode": False})
+            instance.results = Results()
+
+        with pytest.raises(expected_exception, match=mock_message):
+            instance.refresh()
+        ```
     """
 
     def __init__(self) -> None:
@@ -38,10 +131,6 @@ class MockSwitchDetails:
         self._mock_exception = null_mock_exception
         self._mock_message = None
         self._mock_property = None
-        self._mock_response_key = None
-
-        self.response = None
-        self.response_data = None
 
         self._filter = None
         self._info = {}
@@ -61,25 +150,6 @@ class MockSwitchDetails:
         """
         if self.mock_class == self.class_name and self.mock_property == "refresh":
             raise self.mock_exception(self.mock_message)
-        if self.mock_response_key is None:
-            return
-        self.populate_info()
-
-    def populate_info(self):
-        """
-        Populate the info dict.
-        """
-        self._info = {}
-        self.response = responses_switch_details(self.mock_response_key)
-        self.response_data = self.response.get("DATA", [])
-        for switch in self.response_data:
-            self._info[switch["ipAddress"]] = switch
-
-    def _get(self, key):
-        """
-        Get the value of the key from the info dict.
-        """
-        return self._info.get(self.filter, {}).get(key, None)
 
     @property
     def mock_class(self):
@@ -128,7 +198,7 @@ class MockSwitchDetails:
     @property
     def filter(self):
         """
-        IP Address of the switch with which to filter self._info()
+        Mocked filter
         """
         if self.mock_class == self.class_name and self.mock_property == "filter.getter":
             raise self.mock_exception(self.mock_message)
@@ -139,21 +209,6 @@ class MockSwitchDetails:
         if self.mock_class == self.class_name and self.mock_property == "filter.setter":
             raise self.mock_exception(self.mock_message)
         self._filter = value
-
-    @property
-    def mock_response_key(self):
-        """
-        The key used to extract controller response from the mocked response
-        in ``responses_SwitchDetails.json``.
-
-        When setter is accessed, call ``populate_properties()`` to set the
-        mocked property values from the contents of the mocked response.
-        """
-        return self._mock_response_key
-
-    @mock_response_key.setter
-    def mock_response_key(self, value):
-        self._mock_response_key = value
 
     @property
     def rest_send(self):
@@ -202,10 +257,20 @@ class MockSwitchDetails:
         """
         Mocked fabric_name property
         """
-        return self._get("fabricName")
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "fabric_name.getter"
+        ):
+            raise self.mock_exception(self.mock_message)
+        return self._fabric_name
 
     @fabric_name.setter
     def fabric_name(self, value):
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "fabric_name.setter"
+        ):
+            raise self.mock_exception(self.mock_message)
         self._fabric_name = value
 
     @property
@@ -213,10 +278,20 @@ class MockSwitchDetails:
         """
         Mocked freeze_mode property
         """
-        return self._get("freezeMode")
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "freeze_mode.getter"
+        ):
+            raise self.mock_exception(self.mock_message)
+        return self._freeze_mode
 
     @freeze_mode.setter
     def freeze_mode(self, value):
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "freeze_mode.setter"
+        ):
+            raise self.mock_exception(self.mock_message)
         self._freeze_mode = value
 
     @property
@@ -229,14 +304,7 @@ class MockSwitchDetails:
             and self.mock_property == "maintenance_mode.getter"
         ):
             raise self.mock_exception(self.mock_message)
-
-        mode = str(self._get("mode")).lower()
-        system_mode = str(self._get("systemMode")).lower()
-        if mode == "migration":
-            return "migration"
-        if mode != system_mode:
-            return "inconsistent"
-        return mode
+        return self._maintenance_mode
 
     @maintenance_mode.setter
     def maintenance_mode(self, value):
@@ -254,7 +322,7 @@ class MockSwitchDetails:
         """
         if self.mock_class == self.class_name and self.mock_property == "mode.getter":
             raise self.mock_exception(self.mock_message)
-        return self._get("mode")
+        return self._mode
 
     @mode.setter
     def mode(self, value):
@@ -272,7 +340,7 @@ class MockSwitchDetails:
             and self.mock_property == "serial_number.getter"
         ):
             raise self.mock_exception(self.mock_message)
-        return self._get("serialNumber")
+        return self.serial_number
 
     @serial_number.setter
     def serial_number(self, value):
@@ -293,7 +361,7 @@ class MockSwitchDetails:
             and self.mock_property == "switch_role.getter"
         ):
             raise self.mock_exception(self.mock_message)
-        return self._get("switchRole")
+        return self.switch_role
 
     @switch_role.setter
     def switch_role(self, value):
@@ -314,7 +382,7 @@ class MockSwitchDetails:
             and self.mock_property == "system_mode.getter"
         ):
             raise self.mock_exception(self.mock_message)
-        return self._get("systemMode")
+        return self.system_mode
 
     @system_mode.setter
     def system_mode(self, value):

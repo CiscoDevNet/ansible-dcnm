@@ -31,7 +31,7 @@ class Sender:
     """
     ### Summary
     An injected dependency for ``RestSend`` which implements the
-    ``sender`` interface using dcnm_send.
+    ``sender`` interface.  Responses are retrieved using dcnm_send.
 
     ### Raises
     -   ``ValueError`` if:

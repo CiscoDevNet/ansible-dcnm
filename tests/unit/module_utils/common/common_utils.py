@@ -353,16 +353,6 @@ def responses_maintenance_mode(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_maintenance_mode_info(key: str) -> Dict[str, str]:
-    """
-    Return data in responses_MaintenanceModeInfo.json
-    """
-    response_file = "responses_MaintenanceModeInfo"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_maintenance_mode_info: {key} : {response}")
-    return response
-
-
 def responses_switch_details(key: str) -> Dict[str, str]:
     """
     Return data in responses_SwitchDetails.json

@@ -36,7 +36,7 @@ class RestSend:
     -   Send REST requests to the controller with retries.
     -   Accepts a ``Sender()`` class that implements the sender interface.
             -   The sender interface is defined in
-                ``module_utils/common/dcnm_sender.py``
+                ``module_utils/common/sender_dcnm.py``
     -   Accepts a ``ResponseHandler()`` class that implements the response
         handler interface.
             -   The response handler interface is defined in
@@ -68,7 +68,7 @@ class RestSend:
     -   A Sender() class is used in the usage example below that requires an
         instance of ``AnsibleModule``, and uses ``dcnm_send()`` to send
         requests to the controller.
-        -   See ``module_utils/common/dcnm_sender.py`` for details about
+        -   See ``module_utils/common/sender_dcnm.py`` for details about
             implementing ``Sender()`` classes.
     -   A ResponseHandler() class is used in the usage example below that
         abstracts controller response handling.  It accepts a controller
