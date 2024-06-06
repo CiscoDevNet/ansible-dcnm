@@ -47,9 +47,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 imp
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    MockSender, ResponseGenerator, does_not_raise, maintenance_mode_fixture,
-    params, responses_config_deploy, responses_maintenance_mode)
+    ResponseGenerator, does_not_raise, maintenance_mode_fixture, params,
+    responses_config_deploy, responses_maintenance_mode)
 
 FABRIC_NAME = "VXLAN_Fabric"
 CONFIG = [
@@ -390,25 +392,23 @@ def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
         yield responses_maintenance_mode(key)
         yield responses_config_deploy(key)
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
 
     config = copy.deepcopy(CONFIG[0])
     config["mode"] = mode
     config["deploy"] = deploy
 
     with does_not_raise():
-        rest_send = RestSend({"state": "merged", "check_mode": False})
-        rest_send.sender = mock_sender
-        rest_send.response_handler = ResponseHandler()
         instance = maintenance_mode
         instance.rest_send = rest_send
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
         instance.results = Results()
         instance.config = [config]
-
-    with does_not_raise():
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -497,22 +497,21 @@ def test_maintenance_mode_00230(maintenance_mode, mode) -> None:
 
     def responses():
         yield responses_maintenance_mode(key)
-        # yield responses_config_deploy(key)
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
 
     config = copy.deepcopy(CONFIG[0])
     config["mode"] = mode
 
     with does_not_raise():
-        rest_send = RestSend({"state": "merged", "check_mode": False})
-        rest_send.sender = mock_sender
-        rest_send.response_handler = ResponseHandler()
         instance = maintenance_mode
         instance.rest_send = rest_send
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
         instance.results = Results()
         instance.config = [config]
 
@@ -931,12 +930,13 @@ def test_maintenance_mode_00800(
         @property
         def fabric_name(self):
             """
-            Mock fabric_name getter/setter
+            Mock fabric_name getter/setter to raise an exception
+            in the setter.
             """
             return self._fabric_name
 
         @fabric_name.setter
-        def fabric_name(self, value):
+        def fabric_name(self, *args):
             raise mock_exception(mock_message)
 
         @property
@@ -953,11 +953,11 @@ def test_maintenance_mode_00800(
     def responses():
         yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {"status": "Success"}}
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
-    rest_send = RestSend({"state": "merged", "check_mode": False})
-    rest_send.sender = mock_sender
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
     rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
     rest_send.unit_test = True
     rest_send.timeout = 1
 
@@ -1028,9 +1028,8 @@ def test_maintenance_mode_00900(
         @property
         def response_current(self):
             """
-            mock response_current getter
+            mock response_current to raise an exception in the setter.
             """
-            return {"success": True}
 
         @response_current.setter
         def response_current(self, *args):
@@ -1039,17 +1038,17 @@ def test_maintenance_mode_00900(
     def responses():
         yield {"RETURN_CODE": 200, "MESSAGE": "OK", "DATA": {"status": "Success"}}
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
 
     with does_not_raise():
-        rest_send = RestSend({"state": "merged", "check_mode": False})
-        rest_send.sender = mock_sender
-        rest_send.response_handler = ResponseHandler()
         instance = maintenance_mode
         instance.rest_send = rest_send
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
         instance.config = CONFIG
         instance.results = MockResults()
 
@@ -1092,11 +1091,11 @@ def test_maintenance_mode_01000(monkeypatch, maintenance_mode) -> None:
             "DATA": {"status": "Success"},
         }
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
-    rest_send = RestSend({"state": "merged", "check_mode": False})
-    rest_send.sender = mock_sender
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
     rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
     rest_send.unit_test = True
     rest_send.timeout = 1
 

@@ -52,8 +52,8 @@ params = {
 
 class ResponseGenerator:
     """
-    Given a generator, return the items in the generator with
-    each call to the next property
+    Given a coroutine which yields dictionaries, return the yielded items
+    with each call to the next property
 
     For usage in the context of dcnm_image_policy unit tests, see:
         test: test_image_policy_create_bulk_00037
@@ -85,91 +85,6 @@ class ResponseGenerator:
         """
         Add one public method to appease pylint
         """
-
-
-class MockSender:
-    """
-    Mock the Sender class
-
-    ### Usage
-    Typically, ``def responses()`` would yield a file reader with a
-    key into a json file.
-
-    For example
-    ```
-    def responses():
-        yield responses_maintenance_mode(key)
-        yield responses_config_deploy(key)
-    ```
-
-    Below we are yielding dictionaries directly for simplicity.
-
-    ```python
-    def responses():
-        yield {"key1": "value1"}
-        yield {"key2": "value2"}
-
-    sender = MockSender()
-    sender.gen = ResponseGenerator(responses())
-
-    rest_send = RestSend()
-    rest_send.sender = sender
-    # rest of test case...
-    """
-
-    def __init__(self):
-        self.class_name = "Sender"
-        self.properties = {}
-        self.properties["gen"] = None
-
-    def commit(self):
-        """
-        do nothing
-        """
-
-    @property
-    def gen(self):
-        """
-        -   getter: Return the ``ResponseGenerator()`` instance.
-        -   setter: Set the ``ResponseGenerator()`` instance that provides
-            simulated responses.
-        """
-        return self.properties["gen"]
-
-    @gen.setter
-    def gen(self, value):
-        self.properties["gen"] = value
-
-    @property
-    def response(self):
-        """
-        return the simulated response
-        """
-        return self.gen.next
-
-    @response.setter
-    def response(self, *args, **kwargs):
-        pass
-
-    @property
-    def path(self):
-        """
-        do nothing
-        """
-
-    @path.setter
-    def path(self, *args, **kwargs):
-        pass
-
-    @property
-    def verb(self):
-        """
-        do nothing
-        """
-
-    @verb.setter
-    def verb(self, *args, **kwargs):
-        pass
 
 
 class MockAnsibleModule:

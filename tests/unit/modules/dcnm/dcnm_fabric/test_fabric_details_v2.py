@@ -42,10 +42,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 imp
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetails
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    MockSender
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     ResponseGenerator, does_not_raise, fabric_details_v2_fixture,
     responses_fabric_details_v2)
@@ -136,14 +136,15 @@ def test_fabric_details_v2_00100(fabric_details_v2) -> None:
     def responses():
         yield responses_fabric_details_v2(key)
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
 
     with does_not_raise():
-        rest_send = RestSend({"state": "merged", "check_mode": False})
-        rest_send.response_handler = ResponseHandler()
-        rest_send.sender = mock_sender
-        rest_send.unit_test = True
         instance = fabric_details_v2
         instance.rest_send = rest_send
         instance.results = Results()
@@ -171,7 +172,7 @@ def test_fabric_details_v2_00100(fabric_details_v2) -> None:
     assert True not in instance.results.changed
 
 
-def test_fabric_details_v2_00110(monkeypatch, fabric_details_v2) -> None:
+def test_fabric_details_v2_00110(fabric_details_v2) -> None:
     """
     ### Classes and Methods
     - FabricDetails()
@@ -205,14 +206,15 @@ def test_fabric_details_v2_00110(monkeypatch, fabric_details_v2) -> None:
     def responses():
         yield responses_fabric_details_v2(key)
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
 
     with does_not_raise():
-        rest_send = RestSend({"state": "merged", "check_mode": False})
-        rest_send.response_handler = ResponseHandler()
-        rest_send.sender = mock_sender
-        rest_send.unit_test = True
         instance = fabric_details_v2
         instance.rest_send = rest_send
         instance.results = Results()
@@ -229,7 +231,7 @@ def test_fabric_details_v2_00110(monkeypatch, fabric_details_v2) -> None:
     assert len(instance.results.response) == 0
 
 
-def test_fabric_details_v2_00120(monkeypatch, fabric_details_v2) -> None:
+def test_fabric_details_v2_00120(fabric_details_v2) -> None:
     """
     ### Classes and Methods
     - FabricDetails()
@@ -264,14 +266,15 @@ def test_fabric_details_v2_00120(monkeypatch, fabric_details_v2) -> None:
     def responses():
         yield responses_fabric_details_v2(key)
 
-    mock_sender = MockSender()
-    mock_sender.gen = ResponseGenerator(responses())
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
 
     with does_not_raise():
-        rest_send = RestSend({"state": "merged", "check_mode": False})
-        rest_send.response_handler = ResponseHandler()
-        rest_send.sender = mock_sender
-        rest_send.unit_test = True
         instance = fabric_details_v2
         instance.rest_send = rest_send
         instance.results = Results()
