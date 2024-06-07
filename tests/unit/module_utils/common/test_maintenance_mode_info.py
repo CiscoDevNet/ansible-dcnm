@@ -755,7 +755,7 @@ def test_maintenance_mode_info_00510() -> None:
         instance.filter = CONFIG[0]
     assert instance.fabric_name == FABRIC_NAME
     assert instance.fabric_freeze_mode is True
-    assert instance.fabric_read_only is True
+    assert instance.fabric_read_only is False
     assert instance.fabric_deployment_disabled is True
     assert instance.mode == "normal"
     assert instance.role == "leaf"
@@ -823,6 +823,77 @@ def test_maintenance_mode_info_00520() -> None:
     assert instance.mode == "inconsistent"
     assert instance.results.response[0]["DATA"][0]["mode"] == "Normal"
     assert instance.results.response[0]["DATA"][0]["systemMode"] == "Maintenance"
+    assert instance.results.result[0]["success"] is True
+    assert instance.results.result[1]["success"] is True
+    assert instance.results.result[0]["found"] is True
+    assert instance.results.result[1]["found"] is True
+
+
+def test_maintenance_mode_info_00600() -> None:
+    """
+    ### Classes and Methods
+    -   MaintenanceModeInfo()
+            -   __init__()
+            -   refresh()
+    -   FabricDetailsByName()
+            -   refresh()
+
+    ### Summary
+    -   Verify:
+            -   ``fabric_read_only`` is set to True when ``IS_READ_ONLY``
+                is true in the controller response (FabricDetailsByName).
+
+    ### Setup - Data
+    -   ``responses_SwitchDetails.json``:
+            -   DATA[0].fabricName: LAN_Classic
+            -   DATA[0].freezeMode: null
+            -   DATA[0].ipAddress: 192.168.1.2
+            -   DATA[0].mode: Normal
+            -   DATA[0].serialNumber: FDO211218FV
+            -   DATA[0].switchRole: leaf
+            -   DATA[0].systemMode: Normal
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+    -   ``responses_FabricDetailsByName.json``:
+            -   DATA[0].nvPairs.FABRIC_NAME: LAN_Classic
+            -   DATA[0].nvPairs.IS_READ_ONLY: true
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    -   Exception is not raised.
+    -   ``MaintenanceModeInfo().results`` contains expected data.
+
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+        yield responses_fabric_details_by_name(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = CONFIG[0]
+    assert instance.fabric_read_only is True
     assert instance.results.result[0]["success"] is True
     assert instance.results.result[1]["success"] is True
     assert instance.results.result[0]["found"] is True

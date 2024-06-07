@@ -266,6 +266,7 @@ class MaintenanceModeInfo:
                 self.fabric_details.filter = fabric_name
             except ValueError as error:
                 raise ValueError(error) from error
+
             fabric_read_only = self.fabric_details.is_read_only
 
             info[ip_address] = {}
@@ -468,7 +469,7 @@ class MaintenanceModeInfo:
         -   ``False``: The fabric is in a state where configuration changes
             can be made.
         """
-        return self._get("fabric_freeze_mode")
+        return self._get("fabric_read_only")
 
     @property
     def info(self) -> dict:
