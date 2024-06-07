@@ -78,11 +78,12 @@ class RestSend:
 
     ### Usage example
     ```python
+    params = {"check_mode": False, "state": "merged"}
     sender = Sender() # class that implements the sender interface
     sender.ansible_module = ansible_module
 
     try:
-        rest_send = RestSend()
+        rest_send = RestSend(params)
         rest_send.sender = sender
         rest_send.response_handler = ResponseHandler()
         rest_send.unit_test = True # optional, use in unit tests for speed

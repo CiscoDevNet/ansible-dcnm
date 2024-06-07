@@ -87,18 +87,22 @@ class FabricDetails:
         details and register the result.
 
         ### Raises
-
+        -   ``ValueError``if:
+                -    ``Results()`` raises ``TypeError``
         """
-        self.results.action = "fabric_details"
-        self.results.response_current = self.rest_send.response_current
-        self.results.result_current = self.rest_send.result_current
-        if self.results.response_current.get("RETURN_CODE") == 200:
-            self.results.failed = False
-        else:
-            self.results.failed = True
-        # FabricDetails never changes the controller state
-        self.results.changed = False
-        self.results.register_task_result()
+        try:
+            self.results.action = "fabric_details"
+            self.results.response_current = self.rest_send.response_current
+            self.results.result_current = self.rest_send.result_current
+            if self.results.response_current.get("RETURN_CODE") == 200:
+                self.results.failed = False
+            else:
+                self.results.failed = True
+            # FabricDetails never changes the controller state
+            self.results.changed = False
+            self.results.register_task_result()
+        except TypeError as error:
+            raise ValueError(error) from error
 
     def validate_refresh_parameters(self) -> None:
         """
@@ -106,8 +110,9 @@ class FabricDetails:
         Validate that mandatory parameters are set before calling refresh().
 
         ### Raises
-        -   ``ValueError`` if instance.rest_send is not set.
-        -   ``ValueError`` if instance.results is not set.
+        -   ``ValueError``if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
         """
         method_name = inspect.stack()[0][3]
         if self.rest_send is None:
@@ -128,8 +133,10 @@ class FabricDetails:
         populate self.data with the results.
 
         ### Raises
-        -   ``ValueError`` if the RestSend object raises
-            ``TypeError`` or ``ValueError``.
+        -   ``ValueError`` if:
+                -   ``validate_refresh_parameters()`` raises ``ValueError``.
+                -   ``RestSend`` raises ``TypeError`` or ``ValueError``.
+                -   ``register_result()`` raises ``ValueError``.
 
         ### Notes
         -   ``self.data`` is a dictionary of fabric details, keyed on
@@ -170,37 +177,54 @@ class FabricDetails:
                 return
             self.data[fabric_name] = item
 
-        self.register_result()
+        try:
+            self.register_result()
+        except ValueError as error:
+            raise ValueError(error) from error
 
         msg = f"{self.class_name}.{method_name}: calling self.rest_send.commit() DONE"
         self.log.debug(msg)
 
     def _get(self, item):
         """
+        ### Summary
         overridden in subclasses
         """
 
     def _get_nv_pair(self, item):
         """
+        ### Summary
         overridden in subclasses
         """
 
     @property
     def all_data(self):
         """
+        ### Summary
         Return all fabric details from the controller (i.e. self.data)
+
+        ``refresh`` must be called before accessing this property.
+
+        ### Raises
+        None
         """
         return self.data
 
     @property
     def asn(self):
         """
+        ### Summary
         Return the BGP asn of the fabric specified with filter, if it exists.
         Return None otherwise
 
-        Type: string
-        Possible values:
-            - e.g. 65000
+        ### Raises
+        None
+
+        ### Type
+        string
+
+        ### Returns
+            - e.g. "65000"
             - None
         """
         try:
@@ -213,14 +237,19 @@ class FabricDetails:
     @property
     def deployment_freeze(self):
         """
-        Return the nvPairs.DEPLOYMENT_FREEZE of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The nvPairs.DEPLOYMENT_FREEZE of the fabric specified with filter.
 
-        Type: string
-        Possible values:
-            - true
-            - false
+        ### Raises
+        None
+
+        ### Type
+        boolean
+
+        ### Returns
+        - False
+        - True
+        - None
         """
         try:
             return self._get_nv_pair("DEPLOYMENT_FREEZE")
@@ -232,15 +261,19 @@ class FabricDetails:
     @property
     def enable_pbr(self):
         """
-        Return the PBR enable state of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The PBR enable state of the fabric specified with filter.
 
-        Type: boolean
-        Possible values:
-            - True
-            - False
-            - None
+        ### Raises
+        None
+
+        ### Type
+        boolean
+
+        ### Returns
+        - False
+        - True
+        - None
         """
         try:
             return self._get_nv_pair("ENABLE_PBR")
@@ -252,14 +285,18 @@ class FabricDetails:
     @property
     def fabric_id(self):
         """
-        Return the fabricId of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The ``fabricId`` value of the fabric specified with filter.
 
-        Type: string
-        Possible values:
-            - e.g. FABRIC-5
-            - None
+        ### Raises
+        None
+
+        ### Type
+        string
+
+        ### Returns
+        - e.g. FABRIC-5
+        - None
         """
         try:
             return self._get("fabricId")
@@ -271,14 +308,18 @@ class FabricDetails:
     @property
     def fabric_type(self):
         """
-        Return the nvPairs.FABRIC_TYPE of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The ``nvPairs.FABRIC_TYPE`` value of the fabric specified with filter.
 
-        Type: string
-        Possible values:
-            - Switch_Fabric
-            - None
+        ### Raises
+        None
+
+        ### Type
+        string
+
+        ### Returns
+        - e.g. Switch_Fabric
+        - None
         """
         try:
             return self._get_nv_pair("FABRIC_TYPE")
@@ -290,14 +331,19 @@ class FabricDetails:
     @property
     def is_read_only(self):
         """
-        Return the nvPairs.IS_READ_ONLY of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The ``nvPairs.IS_READ_ONLY`` value of the fabric specified with filter.
 
-        Type: string
-        Possible values:
-            - true
-            - false
+        ### Raises
+        None
+
+        ### Type
+        boolean
+
+        ### Returns
+        - True
+        - False
+        - None
         """
         try:
             return self._get_nv_pair("IS_READ_ONLY")
@@ -309,15 +355,20 @@ class FabricDetails:
     @property
     def replication_mode(self):
         """
-        Return the nvPairs.REPLICATION_MODE of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The ``nvPairs.REPLICATION_MODE`` value of the fabric specified
+        with filter.
 
-        Type: string
-        Possible values:
-            - Ingress
-            - Multicast
-            - None
+        ### Raises
+        None
+
+        ### Type
+        boolean
+
+        ### Returns
+        - Ingress
+        - Multicast
+        - None
         """
         try:
             return self._get_nv_pair("REPLICATION_MODE")
@@ -329,15 +380,19 @@ class FabricDetails:
     @property
     def template_name(self):
         """
-        Return the templateName of the fabric specified with filter,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        The ``templateName`` value of the fabric specified
+        with filter.
 
-        Type: string
-        Possible values:
-            - Easy_Fabric
-            - TODO - add other values
-            - None
+        ### Raises
+        None
+
+        ### Type
+        string
+
+        ### Returns
+        - e.g. Easy_Fabric
+        - None
         """
         try:
             return self._get("templateName")
@@ -349,17 +404,32 @@ class FabricDetails:
 
 class FabricDetailsByName(FabricDetails):
     """
+    ### Summary
     Retrieve fabric details from the controller and provide
     property accessors for the fabric attributes.
 
-    Usage (where params is AnsibleModule.params):
+    ### Raises
+    -   ``ValueError`` if:
+            -   ``super.__init__()`` raises ``ValueError``.
+            -   ``refresh_super()`` raises ``ValueError``.
+            -   ``refresh()`` raises ``ValueError``.
+            -   ``filter`` is not set before accessing properties.
+            -   ``fabric_name`` does not exist on the controller.
+            -   An attempt is made to access a key that does not exist
+                for the filtered fabric.
+
+    ### Usage
 
     ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
+
     params = {"check_mode": False, "state": "merged"}
-    sender = Sender() # class implementing the sender interface
+    sender = Sender()
     sender.ansible_module = ansible_module
 
-    rest_send = RestSend()
+    rest_send = RestSend(params)
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
@@ -381,10 +451,15 @@ class FabricDetailsByName(FabricDetails):
     Or:
 
     ```python
-    sender = Sender() # class that implements the sender interface
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
+
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
     sender.ansible_module = ansible_module
 
-    rest_send = RestSend()
+    rest_send = RestSend(params)
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
@@ -395,8 +470,8 @@ class FabricDetailsByName(FabricDetails):
     all_fabrics = instance.all_data
     ```
 
-    - Where ``all_fabrics`` will be a dictionary of all fabrics
-    on the controller, keyed on fabric name.
+    Where ``all_fabrics`` will be a dictionary of all fabrics on the
+    controller, keyed on fabric name.
     """
 
     def __init__(self, params):
@@ -474,13 +549,17 @@ class FabricDetailsByName(FabricDetails):
 
     def _get_nv_pair(self, item):
         """
-        # Retrieve the value of the nvPair item for fabric_name.
+        ### Summary
+        Retrieve the value of the nvPair item for fabric_name.
 
-        - raise ``ValueError`` if ``self.filter`` has not been set.
-        - raise ``ValueError`` if ``self.filter`` (fabric_name) does not exist on the controller.
-        - raise ``ValueError`` if item is not a valid property name for the fabric.
+        ### Raises
+        - ``ValueError`` if:
+                -   ``self.filter`` has not been set.
+                -   ``self.filter`` (fabric_name) does not exist on the controller.
+                -   ``item`` is not a valid property name for the fabric.
 
-        See also: ``self._get()``
+        ### See also
+        ``self._get()``
         """
         method_name = inspect.stack()[0][3]
 
@@ -515,9 +594,16 @@ class FabricDetailsByName(FabricDetails):
     @property
     def filtered_data(self):
         """
-        - Return a dictionary of the fabric matching self.filter.
-        - Return None if the fabric does not exist on the controller.
-        - raise ``ValueError`` if self.filter has not been set.
+        ### Summary
+        The DATA portion of the dictionary for the fabric specified with filter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``self.filter`` has not been set.
+
+        ### Returns
+        - A dictionary of the fabric matching self.filter.
+        - ``None``, if the fabric does not exist on the controller.
         """
         method_name = inspect.stack()[0][3]
         if self.filter is None:
@@ -556,13 +642,25 @@ class FabricDetailsByNvPair(FabricDetails):
     property to a dictionary containing fabrics on the controller
     that match ``filter_key`` and ``filter_value``.
 
+    ### Raises
+    -   ``ValueError`` if:
+            -   ``super.__init__()`` raises ``ValueError``.
+            -   ``refresh_super()`` raises ``ValueError``.
+            -   ``refresh()`` raises ``ValueError``.
+            -   ``filter_key`` is not set before calling ``refresh()``.
+            -   ``filter_value`` is not set before calling ``refresh()``.
+
     ### Usage
     ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
+
     params = {"check_mode": False, "state": "query"}
-    sender = Sender() # class implementing the sender interface
+    sender = Sender()
     sender.ansible_module = ansible_module
 
-    rest_send = RestSend()
+    rest_send = RestSend(params)
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
@@ -648,13 +746,13 @@ class FabricDetailsByNvPair(FabricDetails):
     def filter_key(self):
         """
         ### Summary
-        The nvPairs key on which to filter.
+        The ``nvPairs`` key on which to filter.
 
         ### Raises
         None
 
         ### Notes
-        ``filter_key``should be an exact match for the key in the nvPairs
+        ``filter_key``should be an exact match for the key in the ``nvPairs``
         dictionary for the fabric.
         """
         return self._filter_key
@@ -667,13 +765,13 @@ class FabricDetailsByNvPair(FabricDetails):
     def filter_value(self):
         """
         ### Summary
-        The nvPairs value on which to filter.
+        The ``nvPairs`` value on which to filter.
 
         ### Raises
         None
 
         ### Notes
-        ``filter_value`` should be an exact match for the value in the nvPairs
+        ``filter_value`` should be an exact match for the value in the ``nvPairs``
         dictionary for the fabric.
         """
         return self._filter_value
