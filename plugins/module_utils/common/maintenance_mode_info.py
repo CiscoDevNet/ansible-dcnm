@@ -393,9 +393,11 @@ class MaintenanceModeInfo:
         for item in value:
             if not isinstance(item, str):
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"{self.class_name}.config must be a list of strings "
+                msg += "config must be a list of strings "
                 msg += "containing ip addresses. "
-                msg += f"Got type: {type(item).__name__}."
+                msg += "value contains element of type "
+                msg += f"{type(item).__name__}. "
+                msg += f"value: {value}."
                 raise TypeError(msg)
         self._config = value
 

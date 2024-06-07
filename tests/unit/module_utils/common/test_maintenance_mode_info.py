@@ -1153,3 +1153,72 @@ def test_maintenance_mode_info_00820() -> None:
     match += r"have a key named freezeMode\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
+
+
+def test_maintenance_mode_info_00900() -> None:
+    """
+    ### Classes and Methods
+    -   ``MaintenanceModeInfo()``
+            -   ``config.setter``
+
+    ### Summary
+    -   Verify:
+            -   ``config`` raises ``TypeError`` when set to an invalid type.
+
+    ### Setup - Data
+    None
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``config`` is set to a value that is not a ``list``.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    match = r"MaintenanceModeInfo\.config:\s+"
+    match += r"MaintenanceModeInfo\.config must be a list\.\s+"
+    match += r"Got type: str\."
+    with pytest.raises(TypeError, match=match):
+        instance.config = "NOT_A_LIST"
+
+
+def test_maintenance_mode_info_00910() -> None:
+    """
+    ### Classes and Methods
+    -   ``MaintenanceModeInfo()``
+            -   ``config.setter``
+
+    ### Summary
+    -   Verify:
+            -   ``config`` raises ``TypeError`` when an element in the list is
+                not a ``str``.
+
+    ### Setup - Data
+    None
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``config`` is set to a value that is not a ``list``.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    match = r"MaintenanceModeInfo\.config:\s+"
+    match += r"config must be a list\s+"
+    match += r"of strings containing ip addresses\.\s+"
+    match += r"value contains element of type int.\s+"
+    match += r"value:.*\."
+    with pytest.raises(TypeError, match=match):
+        instance.config = ["192.168.1.1", 10, "192.168.1.2"]
