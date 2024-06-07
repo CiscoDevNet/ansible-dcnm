@@ -1008,3 +1008,148 @@ def test_maintenance_mode_info_00800() -> None:
     match += r"property role*\."
     with pytest.raises(ValueError, match=match):
         instance.role  # pylint: disable=pointless-statement
+
+
+def test_maintenance_mode_info_00810() -> None:
+    """
+    ### Classes and Methods
+    -   MaintenanceModeInfo()
+            -   refresh()
+    -   SwitchDetails()
+            -   refresh()
+    -   FabricDetailsByName()
+            -   refresh()
+
+    ### Summary
+    -   Verify:
+            -   ``_get()`` raises ``ValueError`` if ``filter`` (switch IP)
+                is not found in the controller response when the user accesses
+                a property.
+
+    ### Setup - Data
+    -   ``CONFIG``: ["192.168.1.2"]
+    -   ``responses_SwitchDetails.json``:
+            -   DATA[0].fabricName: LAN_Classic
+            -   DATA[0].freezeMode: null
+            -   DATA[0].ipAddress: 192.168.1.2
+            -   DATA[0].mode: Normal
+            -   DATA[0].serialNumber: FDO211218FV
+            -   DATA[0].switchRole: null
+            -   DATA[0].systemMode: Normal
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+    -   ``responses_FabricDetailsByName.json``:
+            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+    -   ``refresh()`` is called.
+    -   ``filter`` is set to 1.2.3.4
+
+
+    ### Trigger
+    -   ``serial_number`` is accessed
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+        yield responses_fabric_details_by_name(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "1.2.3.4"
+
+    match = r"MaintenanceModeInfo\._get:\s+"
+    with pytest.raises(ValueError, match=match):
+        instance.serial_number  # pylint: disable=pointless-statement
+
+
+def test_maintenance_mode_info_00820() -> None:
+    """
+    ### Classes and Methods
+    -   MaintenanceModeInfo()
+            -   refresh()
+    -   SwitchDetails()
+            -   refresh()
+    -   FabricDetailsByName()
+            -   refresh()
+
+    ### Summary
+    -   Verify:
+            -   ``refresh`` re-raises ``ValueError`` raised by
+                ``SwitchDetails()._get()`` when ``item`` is not found in the
+                controller response. In this, case ``item`` is ``freezeMode``.
+
+    ### Setup - Data
+    -   ``CONFIG``: ["192.168.1.2"]
+    -   ``responses_SwitchDetails.json`` is missing the key ``freezeMode``.
+    -   ``responses_SwitchDetails.json``:
+            -   DATA[0].fabricName: LAN_Classic
+            -   DATA[0].ipAddress: 192.168.1.2
+            -   DATA[0].mode: Normal
+            -   DATA[0].serialNumber: FDO211218FV
+            -   DATA[0].switchRole: null
+            -   DATA[0].systemMode: Normal
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+    -   ``responses_FabricDetailsByName.json``:
+            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+            -   DATA[0].nvPairs.IS_READ_ONLY: false
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+
+    ### Trigger
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+        yield responses_fabric_details_by_name(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"MaintenanceModeInfo\.refresh:\s+"
+    match += r"Error setting properties for switch with ip_address\s+"
+    match += r"192\.168\.1\.2\.\s+"
+    match += r"Error details: SwitchDetails\._get: 192\.168\.1\.2 does not\s+"
+    match += r"have a key named freezeMode\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()

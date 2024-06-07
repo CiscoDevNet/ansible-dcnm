@@ -258,10 +258,17 @@ class MaintenanceModeInfo:
                 msg += "serialNumber key."
                 raise ValueError(msg)
 
-            fabric_name = self.switch_details.fabric_name
-            freeze_mode = self.switch_details.freeze_mode
-            mode = self.switch_details.maintenance_mode
-            role = self.switch_details.switch_role
+            try:
+                fabric_name = self.switch_details.fabric_name
+                freeze_mode = self.switch_details.freeze_mode
+                mode = self.switch_details.maintenance_mode
+                role = self.switch_details.switch_role
+            except ValueError as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error setting properties for switch with ip_address "
+                msg += f"{ip_address}. "
+                msg += f"Error details: {error}"
+                raise ValueError(msg) from error
 
             try:
                 self.fabric_details.filter = fabric_name
@@ -297,9 +304,12 @@ class MaintenanceModeInfo:
         Return the value of the item from the filtered switch.
 
         ### Raises
-        -   ``ValueError`` if ``filter`` is not set.
-        -   ``ValueError`` if ``filter`` is not in the controller response.
-        -   ``ValueError`` if item is not in the filtered switch dict.
+        -   ``ValueError`` if:
+                -   ``filter`` is not set.
+                -   ``filter`` is not in the controller response.
+        ### NOTES
+        -   We do not need to check that ``item`` exists in the filtered
+            switch dict, since ``refresh()`` has already done so.
         """
         method_name = inspect.stack()[0][3]
 
@@ -313,11 +323,6 @@ class MaintenanceModeInfo:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Switch with ip_address {self.filter} does not exist on "
             msg += "the controller."
-            raise ValueError(msg)
-
-        if item not in self._info[self.filter]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.filter} does not have a key named {item}."
             raise ValueError(msg)
 
         return self.conversion.make_boolean(
