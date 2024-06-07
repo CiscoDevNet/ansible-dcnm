@@ -324,6 +324,17 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
         "RETURN_CODE": 200
     },
+    "test_maintenance_mode_info_00310a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
     "test_maintenance_mode_info_00500a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",

@@ -418,10 +418,9 @@ def test_maintenance_mode_info_00300() -> None:
 
     ### Summary
     Verify ``refresh()`` raises ``ValueError`` when
-    ``switch_details.serial_number`` is ``None``.
+    ``switch_details._get()`` raises ``ValueError``.
 
-    This happens when the switch does not exist on the controller and causes
-    SwitchDetails()._get() to raise a ``ValueError``.
+    This happens when the switch is not found in the response from the controller.
 
     ### Setup - Data
     -   ``ipAddress`` is set to something other than 192.168.1.2
@@ -472,6 +471,75 @@ def test_maintenance_mode_info_00300() -> None:
     match = r"SwitchDetails\._get:\s+"
     match += r"Switch with ip_address 192\.168\.1\.2\s+"
     match += r"does not exist on the controller\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_maintenance_mode_info_00310() -> None:
+    """
+    ### Classes and Methods
+    - MaintenanceModeInfo()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    Verify ``refresh()`` raises ``ValueError`` when
+    ``switch_details.serial_number`` is ``None``.
+
+    This happens when the switch exists on the controller but its
+    serial_number is null.  This is a negative test case since we
+    expect the serial_number to be set.
+
+    ### Setup - Data
+    -   ``ipAddress`` is set to something other than 192.168.1.2
+    -   ``responses_SwitchDetails.json``:
+            -   "DATA[0].fabricName: VXLAN_Fabric",
+            -   "DATA[0].freezeMode: null",
+            -   "DATA[0].ipAddress: 192.168.1.2",
+            -   "DATA[0].mode: Normal",
+            -   "DATA[0].serialNumber: null",
+            -   "DATA[0].switchRole: leaf",
+            -   "DATA[0].systemMode: Normal"
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+    -   ``responses_FabricDetailsByName.json``:
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Exception message matches expectations.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+        yield responses_fabric_details_by_name(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"MaintenanceModeInfo\.refresh:\s+"
+    match += r"Switch with ip_address 192\.168\.1\.2\s+"
+    match += r"does not exist on the controller, or is\s+"
+    match += r"missing its serialNumber key\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 

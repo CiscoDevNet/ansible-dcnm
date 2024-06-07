@@ -253,7 +253,8 @@ class MaintenanceModeInfo:
             if serial_number is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Switch with ip_address {ip_address} "
-                msg += "does not exist on the controller."
+                msg += "does not exist on the controller, or is missing its "
+                msg += "serialNumber key."
                 raise ValueError(msg)
 
             fabric_name = self.switch_details.fabric_name
