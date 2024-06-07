@@ -833,7 +833,6 @@ def test_maintenance_mode_info_00600() -> None:
     """
     ### Classes and Methods
     -   MaintenanceModeInfo()
-            -   __init__()
             -   refresh()
     -   FabricDetailsByName()
             -   refresh()
@@ -898,3 +897,114 @@ def test_maintenance_mode_info_00600() -> None:
     assert instance.results.result[1]["success"] is True
     assert instance.results.result[0]["found"] is True
     assert instance.results.result[1]["found"] is True
+
+
+def test_maintenance_mode_info_00700() -> None:
+    """
+    ### Classes and Methods
+    -   MaintenanceModeInfo()
+            -   refresh()
+    -   SwitchDetails()
+            -   refresh()
+    -   FabricDetailsByName()
+            -   refresh()
+
+    ### Summary
+    -   Verify:
+            -   ``role`` is set to "na" when ``switchRole`` is null in the
+                controller response.
+
+    ### Setup - Data
+    -   ``responses_SwitchDetails.json``:
+            -   DATA[0].fabricName: LAN_Classic
+            -   DATA[0].freezeMode: null
+            -   DATA[0].ipAddress: 192.168.1.2
+            -   DATA[0].mode: Normal
+            -   DATA[0].serialNumber: FDO211218FV
+            -   DATA[0].switchRole: null
+            -   DATA[0].systemMode: Normal
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+    -   ``responses_FabricDetailsByName.json``:
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``refresh()`` is called.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    -   Exception is not raised.
+    -   ``MaintenanceModeInfo().results`` contains expected data.
+
+    ### NOTES
+    -   ``SwitchDetails().role`` is an alias of ``SwitchDetails().switch_role``.
+    -   ``MaintenanceModeInfo().role`` is set based on the value of
+        ``SwitchDetails().role``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+        yield responses_fabric_details_by_name(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = CONFIG[0]
+    assert instance.role == "na"
+    assert instance.results.result[0]["success"] is True
+    assert instance.results.result[1]["success"] is True
+    assert instance.results.result[0]["found"] is True
+    assert instance.results.result[1]["found"] is True
+
+
+def test_maintenance_mode_info_00800() -> None:
+    """
+    ### Classes and Methods
+    -   MaintenanceModeInfo()
+            -   refresh()
+    -   SwitchDetails()
+            -   refresh()
+    -   FabricDetailsByName()
+            -   refresh()
+
+    ### Summary
+    -   Verify:
+            -   _get() raises ``ValueError`` if ``filter`` is not set.
+
+    ### Setup - Data
+    None
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+
+    ### Trigger
+    -   ``MaintenanceModeInfo().role`` is accessed without setting
+        ``filter``.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    match = r"MaintenanceModeInfo\._get:\s+"
+    match += r"set instance\.filter before accessing\s+"
+    match += r"property role*\."
+    with pytest.raises(ValueError, match=match):
+        instance.role  # pylint: disable=pointless-statement

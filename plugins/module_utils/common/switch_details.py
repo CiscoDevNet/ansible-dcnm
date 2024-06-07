@@ -538,6 +538,9 @@ class SwitchDetails:
         -   The ``switchRole`` value of the filtered switch, if it exists.
         -   ``None`` otherwise.
         -   Example: spine
+
+        ### NOTES
+        -   ``role`` is an alias of ``switch_role``.
         """
         return self._get("switchRole")
 

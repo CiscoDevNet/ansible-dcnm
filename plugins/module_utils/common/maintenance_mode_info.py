@@ -134,6 +134,7 @@ class MaintenanceModeInfo:
         self.switch_details = SwitchDetails()
 
         self._config = None
+        self._filter = None
         self._info = None
         self._rest_send = None
         self._results = None
