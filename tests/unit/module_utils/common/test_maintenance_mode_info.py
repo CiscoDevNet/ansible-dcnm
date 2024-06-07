@@ -1222,3 +1222,137 @@ def test_maintenance_mode_info_00910() -> None:
     match += r"value:.*\."
     with pytest.raises(TypeError, match=match):
         instance.config = ["192.168.1.1", 10, "192.168.1.2"]
+
+
+def test_maintenance_mode_info_01000() -> None:
+    """
+    ### Classes and Methods
+    -   ``MaintenanceModeInfo()``
+            -   ``info.getter``
+
+    ### Summary
+    -   Verify:
+            -   ``info`` raises ``ValueError`` when accessed before
+                ``refresh()`` is called.
+
+    ### Setup - Data
+    None
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``info`` is accessed without having first called ``refresh()``.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    match = r"MaintenanceModeInfo\.info:\s+"
+    match += r"MaintenanceModeInfo\.refresh\(\) must be called before\s+"
+    match += r"accessing MaintenanceModeInfo\.info\."
+    with pytest.raises(ValueError, match=match):
+        info = instance.info  # pylint: disable=unused-variable
+
+
+def test_maintenance_mode_info_01010() -> None:
+    """
+    ### Classes and Methods
+    -   ``MaintenanceModeInfo()``
+            -   ``info.getter``
+
+    ### Summary
+    -   Verify:
+            -   ``info`` returns expected information in the happy path.
+
+    ### Setup - Data
+    -   ``CONFIG``: ["192.168.1.2"]
+    -   ``responses_SwitchDetails.json``:
+            -   DATA[0].fabricName: VXLAN_Fabric
+            -   DATA[0].freezeMode: null
+            -   DATA[0].ipAddress: 192.168.1.2
+            -   DATA[0].mode: Normal
+            -   DATA[0].serialNumber: FDO211218FV
+            -   DATA[0].switchRole: leaf
+            -   DATA[0].systemMode: Maintenance
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+    -   ``responses_FabricDetailsByName.json``:
+            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+            -   DATA[0].nvPairs.IS_READ_ONLY: false
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``info`` is accessed without having first called ``refresh()``.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+        yield responses_fabric_details_by_name(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+        instance.config = CONFIG
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+    assert instance.info[CONFIG[0]]["fabric_name"] == FABRIC_NAME
+    assert instance.info[CONFIG[0]]["fabric_freeze_mode"] is False
+    assert instance.info[CONFIG[0]]["fabric_read_only"] is False
+    assert instance.info[CONFIG[0]]["fabric_deployment_disabled"] is False
+    assert instance.info[CONFIG[0]]["ip_address"] == "192.168.1.2"
+    assert instance.info[CONFIG[0]]["mode"] == "inconsistent"
+    assert instance.info[CONFIG[0]]["role"] == "leaf"
+    assert instance.info[CONFIG[0]]["serial_number"] == "FDO123456FV"
+
+
+def test_maintenance_mode_info_01020() -> None:
+    """
+    ### Classes and Methods
+    -   ``MaintenanceModeInfo()``
+            -   ``info.setter``
+
+    ### Summary
+    -   Verify:
+            -   ``info`` raises ``TypeError`` when set to an invalid type.
+
+    ### Setup - Data
+    None
+
+    ### Setup - Code
+    -   ``MaintenanceModeInfo()`` is instantiated
+    -   Required attributes are set
+
+    ### Trigger
+    -   ``info`` is set to a value that is not a ``dict``.
+
+    ### Expected Result
+    -   Conditions in Summary are confirmed.
+    """
+    with does_not_raise():
+        instance = MaintenanceModeInfo(PARAMS)
+
+    match = r"MaintenanceModeInfo\.info\.setter:\s+"
+    match += r"value must be a dict\.\s+"
+    match += r"Got value NOT_A_DICT of type str\."
+    with pytest.raises(TypeError, match=match):
+        instance.info = "NOT_A_DICT"

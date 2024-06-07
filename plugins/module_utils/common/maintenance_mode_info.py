@@ -279,24 +279,31 @@ class MaintenanceModeInfo:
 
             info[ip_address] = {}
             info[ip_address].update({"fabric_name": fabric_name})
+            info[ip_address].update({"ip_address": ip_address})
+
             if freeze_mode is True:
                 info[ip_address].update({"fabric_freeze_mode": True})
             else:
                 info[ip_address].update({"fabric_freeze_mode": False})
+
             if fabric_read_only is True:
                 info[ip_address].update({"fabric_read_only": True})
             else:
                 info[ip_address].update({"fabric_read_only": False})
+
             if freeze_mode is True or fabric_read_only is True:
                 info[ip_address].update({"fabric_deployment_disabled": True})
             else:
                 info[ip_address].update({"fabric_deployment_disabled": False})
+
             info[ip_address].update({"mode": mode})
+
             if role is not None:
                 info[ip_address].update({"role": role})
             else:
                 info[ip_address].update({"role": "na"})
             info[ip_address].update({"serial_number": serial_number})
+
         self.info = copy.deepcopy(info)
 
     def _get(self, item):
