@@ -19,13 +19,24 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    responses_fabric_details_by_name
-
 
 class MockFabricDetailsByName:
     """
-    Mock the FabricDetailsByName class
+    ### Summary
+    Mock the exceptions raised by the methods and properties
+    in the ``MockFabricDetailsByName`` class.
+
+    ### NOTES
+    -   This class is used to test the exceptions raised by
+        ``MockFabricDetailsByName``
+    -   This class does NOT simulate the behavior of
+        ``MockFabricDetailsByName`` with respect its interaction with the
+        controller.  For that, see the ``Sender`` class within
+        ``module_utils/common/sender_file.py``,
+        and the ``RestSend`` class within ``module_utils/common/rest_send.py``.
+    -   Example usage for the ``Sender`` class can be found in
+        ``test_maintenance_mode_info_00500`` within
+        ``tests/unit/module_utils/common/test_maintenance_mode_info.py``.
     """
 
     def __init__(self) -> None:
@@ -38,7 +49,6 @@ class MockFabricDetailsByName:
         self._mock_exception = null_mock_exception
         self._mock_message = None
         self._mock_property = None
-        self._mock_response_key = None
 
         self._filter = None
         self._info = {}
@@ -49,35 +59,12 @@ class MockFabricDetailsByName:
         self._results = None
         self._is_read_only = None
 
-    def _get(self, key):
-        """
-        Get the value of the key from the info dict.
-        """
-        return self.data_subclass.get(self.filter, {}).get(key, None)
-
     def refresh(self):
         """
         Mocked refresh method
         """
         if self.mock_class == self.class_name and self.mock_property == "refresh":
             raise self.mock_exception(self.mock_message)
-        if self.mock_response_key is None:
-            return
-        self.populate_info()
-
-    def populate_info(self):
-        """
-        Populate the info dict.
-        """
-        self._info = {}
-        self.data_subclass = {}
-        self.response = responses_fabric_details_by_name(self.mock_response_key)
-        self.response_data = self.response.get("DATA", [])
-        for fabric in self.response_data:
-            nv_pairs = fabric.get("nvPairs", {})
-            fabric_name = nv_pairs.get("FABRIC_NAME", None)
-            self._info[fabric_name] = nv_pairs
-            self.data_subclass[fabric_name] = nv_pairs
 
     @property
     def mock_class(self):
@@ -122,18 +109,6 @@ class MockFabricDetailsByName:
     @mock_property.setter
     def mock_property(self, value):
         self._mock_property = value
-
-    @property
-    def mock_response_key(self):
-        """
-        The key used to extract controller response from the mocked response
-        in ``responses_FabricDetails.json``.
-        """
-        return self._mock_response_key
-
-    @mock_response_key.setter
-    def mock_response_key(self, value):
-        self._mock_response_key = value
 
     @property
     def filter(self):
@@ -197,4 +172,18 @@ class MockFabricDetailsByName:
         """
         Mocked is_read_only property
         """
-        return self._get("IS_READ_ONLY")
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "system_mode.setter"
+        ):
+            raise self.mock_exception(self.mock_message)
+        return self._is_read_only
+
+    @is_read_only.setter
+    def is_read_only(self, value):
+        if (
+            self.mock_class == self.class_name
+            and self.mock_property == "is_read_only.setter"
+        ):
+            raise self.mock_exception(self.mock_message)
+        self._is_read_only = value
