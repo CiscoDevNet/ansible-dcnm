@@ -305,6 +305,143 @@ def test_fabric_details_v2_00120(fabric_details_v2) -> None:
     assert instance.all_data.get("f1", {}).get("nvPairs", {}).get("FABRIC_NAME") == "f1"
 
 
+def test_fabric_details_v2_00130(fabric_details_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetails()
+        - register_result()
+        - refresh_super()
+
+    ### Summary
+    - Verify refresh_super() behavior when:
+        -   RETURN_CODE is 500.
+
+    ### Setup Data
+    -   ``responses_FabricDetails_V2.json``:
+            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+            -   RETURN_CODE: 500
+            -   MESSAGE: Internal server error
+
+    ### Setup Code
+    -   FabricDetails() is instantiated
+    -   FabricDetails().RestSend() is instantiated
+    -   FabricDetails().Results() is instantiated
+    -   FabricDetails().refresh_super() is called
+
+    ### Trigger
+    -   FabricDetails().refresh_super() is called
+
+    ### Expected Result
+    -   Exception is not raised
+    -   Results() are updated to expected values
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = fabric_details_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    with does_not_raise():
+        instance.refresh_super()
+
+    assert isinstance(instance.results.diff, list)
+    assert isinstance(instance.results.result, list)
+    assert isinstance(instance.results.response, list)
+
+    assert len(instance.results.diff) == 1
+    assert len(instance.results.result) == 1
+    assert len(instance.results.response) == 1
+
+    assert instance.results.diff[0].get("sequence_number", None) == 1
+
+    assert instance.results.response[0].get("RETURN_CODE", None) == 500
+    assert instance.results.result[0].get("found", None) is False
+    assert instance.results.result[0].get("success", None) is False
+
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
+    assert False in instance.results.changed
+    assert True not in instance.results.changed
+    assert (
+        instance.all_data.get("VXLAN_Fabric", {}).get("nvPairs", {}).get("FABRIC_NAME")
+        == "VXLAN_Fabric"
+    )
+
+
+def test_fabric_details_v2_00140(fabric_details_v2, monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetails()
+        - register_result()
+        - refresh_super()
+
+    ### Summary
+    - Verify refresh_super() raises ``ValueError when:
+        -   ``register_result()`` raises ``ValueError``.
+
+    ### Setup Data
+    -   ``responses_FabricDetails_V2.json``:
+            -   DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric
+            -   RETURN_CODE: 200
+            -   MESSAGE: OK
+
+    ### Setup Code
+    -   FabricDetails() is instantiated
+    -   FabricDetails().action is monkey-patched to int 10.
+    -   FabricDetails().RestSend() is instantiated
+    -   FabricDetails().Results() is instantiated
+    -   FabricDetails().refresh_super() is called
+
+    ###Code Flow - Test
+    -   FabricDetails().refresh_super() is called
+
+    ### Expected Result
+    -   Exception is not raised
+    -   instance.all_data returns expected fabric data
+    -   Results() are updated
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend({"state": "query", "check_mode": False})
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = fabric_details_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    monkeypatch.setattr(instance, "action", 10)
+
+    match = r"FabricDetails\.register_result:\s+"
+    match += r"Failed to register result\.\s+"
+    match += r"Error detail:\s+"
+    match += r"Results\.action: instance\.action must be a string\. Got 10\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh_super()
+
+
 def test_fabric_details_v2_00200(fabric_details_v2) -> None:
     """
     ### Classes and Methods

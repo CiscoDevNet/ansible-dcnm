@@ -69,6 +69,7 @@ class FabricDetails:
             msg += f"params: {params}."
             raise ValueError(msg)
 
+        self.action = "fabric_details"
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED FabricDetails() (v2)"
@@ -90,8 +91,9 @@ class FabricDetails:
         -   ``ValueError``if:
                 -    ``Results()`` raises ``TypeError``
         """
+        method_name = inspect.stack()[0][3]
         try:
-            self.results.action = "fabric_details"
+            self.results.action = self.action
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
             if self.results.response_current.get("RETURN_CODE") == 200:
@@ -102,7 +104,10 @@ class FabricDetails:
             self.results.changed = False
             self.results.register_task_result()
         except TypeError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Failed to register result. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def validate_refresh_parameters(self) -> None:
         """

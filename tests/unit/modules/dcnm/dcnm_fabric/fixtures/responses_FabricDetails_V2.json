@@ -340,5 +340,41 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
         "RETURN_CODE": 200
+    },
+    "test_fabric_details_v2_00130a": {
+        "TEST_NOTES": [
+            "DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric",
+            "RETURN_CODE is 500",
+            "MESSAGE: Internal server error"
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "VXLAN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "Internal server error",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 500
+    },
+    "test_fabric_details_v2_00140a": {
+        "TEST_NOTES": [
+            "DATA[0].nvPairs.FABRIC_NAME: VXLAN_Fabric",
+            "RETURN_CODE is 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "VXLAN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
     }
 }
