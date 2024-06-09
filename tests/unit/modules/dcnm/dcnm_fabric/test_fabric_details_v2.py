@@ -442,6 +442,117 @@ def test_fabric_details_v2_00140(fabric_details_v2, monkeypatch) -> None:
         instance.refresh_super()
 
 
+def test_fabric_details_v2_00150(fabric_details_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+
+    ### Summary
+    - Verify refresh_super() behavior when:
+        -   ``rest_send`` is not set.
+
+    ### Setup - Code
+    -   FabricDetails() is instantiated
+    -   FabricDetails().Results() is instantiated
+
+    ### Trigger
+    -   FabricDetails().refresh_super() is called
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Error message matches expected.
+    """
+    with does_not_raise():
+        instance = fabric_details_v2
+        instance.results = Results()
+
+    match = r"FabricDetails\.validate_refresh_parameters:\s+"
+    match += r"FabricDetails\.rest_send must be set before calling\s+"
+    match += r"FabricDetails\.refresh\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh_super()
+
+
+def test_fabric_details_v2_00160(fabric_details_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+
+    ### Summary
+    - Verify refresh_super() behavior when:
+        -   ``results`` is not set.
+
+    ### Setup - Code
+    -   FabricDetails() is instantiated
+    -   FabricDetails().RestSend() is instantiated
+
+    ### Trigger
+    -   FabricDetails().refresh_super() is called
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Error message matches expected.
+    """
+    with does_not_raise():
+        instance = fabric_details_v2
+        instance.rest_send = RestSend({"state": "merged", "check_mode": False})
+
+    match = r"FabricDetails\.validate_refresh_parameters:\s+"
+    match += r"FabricDetails\.results must be set before calling\s+"
+    match += r"FabricDetails\.refresh\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh_super()
+
+
+def test_fabric_details_v2_00170(fabric_details_v2, monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetails()
+        - __init__()
+        - refresh_super()
+
+    ### Summary
+    -   Verify refresh_super() raises ``ValueError`` when
+        ``rest_send`` raises ``TypeError``.
+
+    ### Setup - Code
+    -   FabricDetails() is instantiated.
+    -   FabricDetails().results is set.
+    -   FabricDetails().rest_send is set.
+    -   EpFabrics().verb is mocked to raise ``TypeError``
+
+    ### Trigger
+    -   FabricDetails().refresh_super() is called
+
+    ### Expected Result
+    -   ``ValueError`` is raised.
+    -   Error message matches expected.
+    """
+
+    class MockEpFabrics:
+        @property
+        def verb(self):
+            raise TypeError("MockEpFabrics.bad_verb")
+
+        @property
+        def path(self):
+            return "/path"
+
+    with does_not_raise():
+        instance = fabric_details_v2
+        instance.rest_send = RestSend({"state": "merged", "check_mode": False})
+        instance.results = Results()
+
+    monkeypatch.setattr(instance, "ep_fabrics", MockEpFabrics())
+    match = r"MockEpFabrics\.bad_verb"
+    with pytest.raises(ValueError, match=match):
+        instance.refresh_super()
+
+
 def test_fabric_details_v2_00200(fabric_details_v2) -> None:
     """
     ### Classes and Methods

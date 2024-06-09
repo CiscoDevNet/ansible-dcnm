@@ -81,6 +81,9 @@ class FabricDetails:
         self.conversion = ConversionUtils()
         self.ep_fabrics = EpFabrics()
 
+        self._rest_send = None
+        self._results = None
+
     def register_result(self):
         """
         ### Summary
