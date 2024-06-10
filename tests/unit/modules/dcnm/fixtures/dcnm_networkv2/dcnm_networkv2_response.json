@@ -2680,5 +2680,42 @@
       "METHOD": "DELETE",
       "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
       "RETURN_CODE": 400
-    }
+    },
+
+    "get_response_00005":
+    {
+            "MESSAGE": "OK",
+            "METHOD": "POST",
+            "REQUEST_PATH": "https:/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+            "RETURN_CODE": 200
+    },
+
+    "networkv2_net_objects_00003":
+    {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks",
+        "MESSAGE": "OK",
+        "DATA": []
+    },
+
+    "networkv2_net_attach_objects_00002":
+    {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/fabrics/test_netv2/networks/attachments?network-names=net1",
+        "MESSAGE": "OK",
+        "DATA": []
+    },
+
+    "networkv2_net_attach_deploy_00001":
+    {
+      "DATA": {
+          "status": "Deployment of network(s) has been initiated successfully"
+      },
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/v2/networks/deploy",
+      "RETURN_CODE": 200
+  }
 }

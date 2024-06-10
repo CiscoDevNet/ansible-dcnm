@@ -1055,3 +1055,628 @@ def test_dcnm_networkv2_00019(
             assert "Deletion of Networks net1 has failed" in str(e)
         else:
             assert "ERROR" in str(e)
+
+
+@pytest.mark.parametrize(
+    "tc_id, want_deploy, have_deploy, diff_deploy",
+    [(1, "networkv2_want_deploy_00001", "networkv2_have_deploy_00001", "networkv2_diff_deploy_00001"),
+     (2, "networkv2_want_deploy_00001", "networkv2_have_deploy_00001", "networkv2_diff_deploy_00001"),
+     (3, "networkv2_want_deploy_00001", "networkv2_have_deploy_00001", "networkv2_diff_deploy_00001"),
+     (4, "networkv2_want_deploy_00001", "networkv2_have_deploy_00001", "networkv2_diff_deploy_00001"),
+     (5, "networkv2_want_deploy_00001", "networkv2_have_deploy_00001", "networkv2_diff_deploy_00001")],
+)
+def test_dcnm_networkv2_00020(
+    tc_id,
+    monkeypatch,
+    dcnm_networkv2_fixture,
+    want_deploy,
+    have_deploy,
+    diff_deploy
+):
+
+    # Testing Function get_deploy_diff()
+
+    networkv2 = dcnm_networkv2_fixture
+
+    data = load_data("dcnm_networkv2_data")
+    want = copy.deepcopy(data.get(want_deploy))
+    have = copy.deepcopy(data.get(have_deploy))
+    if tc_id == 2 or tc_id == 4:
+        diff = {}
+        if tc_id == 4:
+            have["9SFRKD0M6AS"] = ["net2"]
+    elif tc_id == 5:
+        diff = {}
+        have = {}
+    else:
+        diff = copy.deepcopy(data.get(diff_deploy))
+        if tc_id == 3:
+            diff["9SFRKD0M6AS"] = ["net2"]
+
+    networkv2.fabric = "test_netv2"
+    networkv2.paths = DcnmNetworkv2.dcnm_network_paths[12]
+    networkv2.have_deploy = have
+    networkv2.want_deploy = want
+
+    networkv2.get_deploy_diff(diff)
+
+    if tc_id == 2:
+        assert len(diff) == 0
+    else:
+        assert len(diff) == 1
+
+
+# Following test cases are for black box testing.
+# These test cases are written to test the complete flow of the module.
+class TestDcnmNetworkv2Module(TestDcnmModule):
+
+    module = dcnm_networkv2
+
+    fd = None
+
+    def setUp(self):
+        super(TestDcnmNetworkv2Module, self).setUp()
+        self.monkeypatch = MonkeyPatch()
+
+    def test_dcnm_networkv2_merged_new(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00003"))
+        dcnm_send_side_effect_1.append(resp.get("get_response_00005"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        config = data.get("networkv2_cfg_00001")
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_netv2",
+                config=playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        assert result.get("changed") is True
+        self.assertEqual(len(result["diff"]), 1)
+        self.assertEqual(result["diff"][0]["net_name"], "net1")
+        self.assertEqual(result["diff"][0]["vrf_name"], "Tenant-1")
+
+    def test_dcnm_networkv2_merged_existing(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+        dcnm_get_url_side_effect = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00001"))
+        dcnm_get_url_side_effect.append(resp.get("networkv2_net_attach_objects_00002"))
+        dcnm_send_side_effect_1.append(resp.get("get_response_00001"))
+        dcnm_send_side_effect_1.append(resp.get("attach_response_00001"))
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_attach_deploy_00001"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        mock_dcnm_get_url = Mock(side_effect=dcnm_get_url_side_effect)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_get_url", mock_dcnm_get_url
+        )
+
+        config = data.get("networkv2_cfg_00002")
+        config["network_template_config"]["mtu"] = 9000
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_netv2",
+                config=playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        assert result.get("changed") is True
+        self.assertEqual(len(result["diff"]), 1)
+        self.assertEqual(result["diff"][0]["net_name"], "net1")
+        self.assertEqual(result["diff"][0]["vrf_name"], "Tenant-1")
+        self.assertEqual(result["diff"][0]["networkTemplateConfig"]["mtu"], 9000)
+        self.assertEqual(result["diff"][0]["attach"][0]["attached"], True)
+
+    def test_dcnm_networkv2_merged_checkmode(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00003"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        config = data.get("networkv2_cfg_00001")
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_netv2",
+                config=playbook_config,
+                _ansible_check_mode=True,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=False)
+
+        assert result.get("changed") is False
+        self.assertEqual(len(result["diff"]), 1)
+        self.assertEqual(result["diff"][0]["net_name"], "net1")
+        self.assertEqual(result["diff"][0]["vrf_name"], "Tenant-1")
+
+    def test_dcnm_networkv2_query(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+        dcnm_get_url_side_effect = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00001"))
+        dcnm_get_url_side_effect.append(resp.get("networkv2_net_attach_objects_00001"))
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00002"))
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_attach_objects_00001"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        mock_dcnm_get_url = Mock(side_effect=dcnm_get_url_side_effect)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_get_url", mock_dcnm_get_url
+        )
+
+        config = data.get("networkv2_cfg_00001")
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="query",
+                fabric="test_netv2",
+                config=playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=False, failed=False)
+
+        assert result.get("changed") is False
+        self.assertEqual(len(result["response"]), 1)
+        self.assertEqual(result["response"][0]["Network"]["networkName"], "net1")
+        self.assertEqual(result["response"][0]["Network"]["vrf"], "Tenant-1")
+
+    def test_dcnm_networkv2_replaced(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00003"))
+        dcnm_send_side_effect_1.append(resp.get("get_response_00005"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        config = data.get("networkv2_cfg_00001")
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="replaced",
+                fabric="test_netv2",
+                config=playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        assert result.get("changed") is True
+        self.assertEqual(len(result["diff"]), 1)
+        self.assertEqual(result["diff"][0]["net_name"], "net1")
+        self.assertEqual(result["diff"][0]["vrf_name"], "Tenant-1")
+
+    def test_dcnm_networkv2_override(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00003"))
+        dcnm_send_side_effect_1.append(resp.get("get_response_00005"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        config = data.get("networkv2_cfg_00001")
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_netv2",
+                config=playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        assert result.get("changed") is True
+        self.assertEqual(len(result["diff"]), 1)
+        self.assertEqual(result["diff"][0]["net_name"], "net1")
+        self.assertEqual(result["diff"][0]["vrf_name"], "Tenant-1")
+
+    def test_dcnm_networkv2_delete(self):
+
+        data = load_data("dcnm_networkv2_data")
+        resp = load_data("dcnm_networkv2_response")
+
+        dcnm_version_supported_side_effect = []
+        get_fabric_inventory_details_side_effect = []
+        get_fabric_details_side_effect = []
+        dcnm_send_side_effect = []
+        dcnm_send_side_effect_1 = []
+        dcnm_get_url_side_effect = []
+
+        dcnm_version_supported_side_effect.append(12)
+        get_fabric_inventory_details_side_effect.append(
+            resp.get("networkv2_inv_details")
+        )
+        get_fabric_details_side_effect.append(resp.get("networkv2_fab_details"))
+
+        mock_dcnm_version_supported = Mock(
+            side_effect=dcnm_version_supported_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_version_supported", mock_dcnm_version_supported
+        )
+
+        mock_get_fabric_inventory_details = Mock(
+            side_effect=get_fabric_inventory_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2,
+            "get_fabric_inventory_details",
+            mock_get_fabric_inventory_details,
+        )
+
+        mock_get_fabric_details = Mock(
+            side_effect=get_fabric_details_side_effect
+        )
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "get_fabric_details", mock_get_fabric_details
+        )
+
+        # dcnm_send invoked from module_utils/dcnm.py
+        dcnm_send_side_effect.append(resp.get("resp_net_template"))
+        dcnm_send_side_effect.append(resp.get("resp_net_ext_template"))
+
+        # dcnm_send invoked from modules/dcnm_networkv2.py
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_objects_00001"))
+        dcnm_get_url_side_effect.append(resp.get("networkv2_net_attach_objects_00001"))
+        dcnm_send_side_effect_1.append(resp.get("attach_response_00001"))
+        dcnm_send_side_effect_1.append(resp.get("networkv2_net_attach_deploy_00001"))
+
+        att_resp = copy.deepcopy(resp.get("networkv2_net_attach_objects_00001"))
+        att_resp["DATA"][0]["lanAttachList"][0]["lanAttachState"] = "NA"
+        dcnm_send_side_effect_1.append(att_resp)
+        dcnm_send_side_effect_1.append(resp.get("get_response_00003"))
+
+        mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
+        self.monkeypatch.setattr(
+            dcnm, "dcnm_send", mock_dcnm_send
+        )
+
+        mock_dcnm_send_1 = Mock(side_effect=dcnm_send_side_effect_1)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_send", mock_dcnm_send_1
+        )
+
+        mock_dcnm_get_url = Mock(side_effect=dcnm_get_url_side_effect)
+        self.monkeypatch.setattr(
+            dcnm_networkv2, "dcnm_get_url", mock_dcnm_get_url
+        )
+
+        config = data.get("networkv2_cfg_00001")
+        playbook_config = [config]
+
+        set_module_args(
+            dict(
+                state="deleted",
+                fabric="test_netv2",
+                config=playbook_config,
+            )
+        )
+
+        result = self.execute_module(changed=True, failed=False)
+
+        assert result.get("changed") is True
+        self.assertEqual(len(result["response"]), 3)

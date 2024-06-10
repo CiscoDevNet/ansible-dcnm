@@ -246,6 +246,20 @@
         ]
     },
 
+    "networkv2_want_deploy_00001":
+    {
+        "9SFRKD0M6AS": [
+            "net1"
+        ]
+    },
+
+    "networkv2_have_deploy_00001":
+    {
+        "9SFRKD0M6AS": [
+            "net1"
+        ]
+    },
+
     "networkv2_diff_create_update_00001": [],
 
     "networkv2_diff_undeploy_00001": [],
