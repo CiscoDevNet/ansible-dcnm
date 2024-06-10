@@ -39,6 +39,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetails as FabricDetailsV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetailsByName as FabricDetailsByNameV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
@@ -245,6 +247,17 @@ def fabric_details_by_name_fixture():
     instance = MockAnsibleModule()
     instance.state = "merged"
     return FabricDetailsByName(instance.params)
+
+
+@pytest.fixture(name="fabric_details_by_name_v2")
+def fabric_details_by_name_v2_fixture():
+    """
+    mock FabricDetailsByName version 2
+    """
+    instance = MockAnsibleModule()
+    instance.state = "query"
+    instance.check_mode = False
+    return FabricDetailsByNameV2(instance.params)
 
 
 @pytest.fixture(name="fabric_details_by_nv_pair")
@@ -522,6 +535,16 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     Return responses for FabricDetailsByName
     """
     data_file = "responses_FabricDetailsByName"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_details_by_name_v2(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetailsByName
+    """
+    data_file = "responses_FabricDetailsByName_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

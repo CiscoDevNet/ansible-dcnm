@@ -223,6 +223,32 @@ class FabricDetails:
         """
         ### Summary
         Return the BGP asn of the fabric specified with filter, if it exists.
+        Return None otherwise.
+
+        This is an alias of BGP_AS.
+
+        ### Raises
+        None
+
+        ### Type
+        string
+
+        ### Returns
+            - e.g. "65000"
+            - None
+        """
+        try:
+            return self._get_nv_pair("BGP_AS")
+        except ValueError as error:
+            msg = f"Failed to retrieve asn: Error detail: {error}"
+            self.log.debug(msg)
+            return None
+
+    @property
+    def bgp_as(self):
+        """
+        ### Summary
+        Return ``nvPairs.BGP_AS`` of the fabric specified with filter, if it exists.
         Return None otherwise
 
         ### Raises
@@ -236,9 +262,9 @@ class FabricDetails:
             - None
         """
         try:
-            return self._get("asn")
+            return self._get_nv_pair("BGP_AS")
         except ValueError as error:
-            msg = f"Failed to retrieve asn: Error detail: {error}"
+            msg = f"Failed to retrieve bgp_as: Error detail: {error}"
             self.log.debug(msg)
             return None
 
