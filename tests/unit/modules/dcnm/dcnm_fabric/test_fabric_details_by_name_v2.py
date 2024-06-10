@@ -29,6 +29,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 
 import pytest
@@ -51,6 +52,56 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils im
     responses_fabric_details_by_name_v2)
 
 PARAMS = {"state": "query", "check_mode": False}
+
+
+def test_fabric_details_by_name_v2_00000(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+
+    ### Summary
+    -   Verify that refresh() raises ``ValueError`` if ``refresh_super()``
+        raises ``ValueError``
+
+    ### Setup - Code
+    -   FabricDetails().refresh_supper() is mocked to raise ``ValueError``.
+    -   FabricDetailsByName() is instantiated
+    -   FabricDetailsByName().RestSend() is instantiated
+    -   FabricDetailsByName().Results() is instantiated
+
+    ### Setup - Data
+    -   None
+
+    ### Trigger
+    -   FabricDetailsByName().refresh() is called
+
+    ### Expected Result
+    -   FabricDetailsByName().refresh() raises ``ValueError``.
+    -   Error message matches expectation.
+    """
+    # method_name = inspect.stack()[0][3]
+    # key = f"{method_name}a"
+
+    # def responses():
+    #     yield {}
+
+    # sender = Sender()
+    # sender.gen = ResponseGenerator(responses())
+    # rest_send = RestSend(PARAMS)
+    # rest_send.response_handler = ResponseHandler()
+    # rest_send.sender = sender
+    # rest_send.unit_test = True
+    # rest_send.timeout = 1
+
+    match = r"FabricDetailsByName\.__init__:\s+"
+    match += r"Failed in super\(\)\.__init__\(\)\.\s+"
+    match += r"Error detail: FabricDetailsByName\.__init__:\s+"
+    match += r"check_mode is missing from params\. params:.*"
+    params = copy.copy(PARAMS)
+    params.pop("check_mode", None)
+    with pytest.raises(ValueError, match=match):
+        FabricDetailsByName(params)  # pytest: disable=pointless-statement
 
 
 def test_fabric_details_by_name_v2_00200(fabric_details_by_name_v2) -> None:
