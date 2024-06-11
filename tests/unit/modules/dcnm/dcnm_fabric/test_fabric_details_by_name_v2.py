@@ -471,3 +471,106 @@ def test_fabric_details_by_name_v2_00610(fabric_details_by_name_v2) -> None:
         data = instance.filtered_data
     assert data.get("nvPairs", {}).get("BGP_AS") == "65001"
     assert data.get("nvPairs", {}).get("ENABLE_NETFLOW") == "false"
+
+
+def test_fabric_details_by_name_v2_00700(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+        - _get()
+        - template_name.getter
+
+    ### Summary
+    -   Verify that property getters for top-level items return ``None``
+        when ``_get()`` raises ``ValueError`` because ``filter``
+        is not set prior to accessing a property.
+
+    ### Setup - Code
+    -   Sender() is instantiated and configured.
+    -   RestSend() is instantiated and configured.
+    -   Results() is instantiated.
+    -   FabricDetailsByName() is instantiated and configured.
+    -   FabricDetailsByName().refresh() is called.
+
+    ### Setup - Data
+    -   responses() yields a 200 response.
+
+    ### Trigger
+    ``template_name`` is accessed before setting ``filter``.
+
+    ### Expected Result
+    -   ``_get()`` raises ``ValueError``.
+    -   ``template_name.getter`` catches ``ValueError`` and returns ``None``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        template_name = instance.template_name
+    assert template_name is None
+
+
+def test_fabric_details_by_name_v2_00710(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+        - _get()
+        - template_name.getter
+
+    ### Summary
+    -   Verify that property getters for top-level items return ``None``
+        when ``_get()`` raises ``ValueError`` because fabric
+        does not exist.
+
+    ### Setup - Code
+    -   Sender() is instantiated and configured.
+    -   RestSend() is instantiated and configured.
+    -   Results() is instantiated.
+    -   FabricDetailsByName() is instantiated and configured.
+    -   FabricDetailsByName().refresh() is called.
+
+    ### Setup - Data
+    -   responses() yields a 200 response that does not contain any fabrics.
+
+    ### Trigger
+    ``template_name.getter`` is accessed.
+
+    ### Expected Result
+    -   ``_get()`` raises ``ValueError``.
+    -   ``template_name.getter`` catches ``ValueError`` and returns ``None``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "FABRIC_DOES_NOT_EXIST"
+        template_name = instance.template_name
+    assert template_name is None

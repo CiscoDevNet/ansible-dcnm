@@ -410,5 +410,39 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
         "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_name_v2_00700a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "f1"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_name_v2_00710a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "WRONG_FABRIC"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
     }
 }
