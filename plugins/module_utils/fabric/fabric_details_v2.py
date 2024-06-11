@@ -752,9 +752,16 @@ class FabricDetailsByNvPair(FabricDetails):
             self.refresh_super()
         except ValueError as error:
             msg = "Failed to refresh fabric details: "
-            msg += f"Error detail: {error}."
+            msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
+        if len(self.data) == 0:
+            self.results.diff = {}
+            self.results.response = self.rest_send.response_current
+            self.results.result = self.rest_send.result_current
+            self.results.failed = True
+            self.results.changed = False
+            return
         for item, value in self.data.items():
             if value.get("nvPairs", {}).get(self.filter_key) == self.filter_value:
                 self.data_subclass[item] = value
