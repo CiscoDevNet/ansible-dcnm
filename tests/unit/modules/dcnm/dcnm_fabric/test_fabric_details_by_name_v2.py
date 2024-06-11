@@ -279,8 +279,9 @@ def test_fabric_details_by_name_v2_00500(fabric_details_by_name_v2) -> None:
         - bgp_as.getter
 
     ### Summary
-    -   Verify ``_get_nv_pair()`` raises ``ValueError`` if ``filter`` is not
-        set prior to accessing a property.
+    -   Verify that property getters for ``nvPairs`` items return ``None``
+        when ``_get_nv_pair()`` raises ``ValueError`` because ``filter``
+        is not set prior to accessing a property.
 
     ### Setup - Code
     -   Sender() is instantiated and configured.
@@ -317,3 +318,156 @@ def test_fabric_details_by_name_v2_00500(fabric_details_by_name_v2) -> None:
         instance.refresh()
         bgp_as = instance.bgp_as
     assert bgp_as is None
+
+
+def test_fabric_details_by_name_v2_00510(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+        - _get_nv_pair()
+        - bgp_as.getter
+
+    ### Summary
+    -   Verify that property getters for ``nvPairs`` items return ``None``
+        when ``_get_nv_pair()`` raises ``ValueError`` because fabric
+        does not exist.
+
+    ### Setup - Code
+    -   Sender() is instantiated and configured.
+    -   RestSend() is instantiated and configured.
+    -   Results() is instantiated.
+    -   FabricDetailsByName() is instantiated and configured.
+    -   FabricDetailsByName().refresh() is called.
+
+    ### Setup - Data
+    -   responses() yields a 200 response that does not contain any fabrics.
+
+    ### Trigger
+    ``bgp_as`` is accessed.
+
+    ### Expected Result
+    -   ``_get_nv_pair()`` raises ``ValueError``.
+    -   ``bgp_as.getter`` catches ``ValueError`` and returns ``None``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "FABRIC_DOES_NOT_EXIST"
+        bgp_as = instance.bgp_as
+    assert bgp_as is None
+
+
+def test_fabric_details_by_name_v2_00600(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+        - filtered_data.getter
+
+    ### Summary
+    -   Verify that ``filtered_data`` property getter raises ``ValueError``
+        when ``filter`` is not set.
+
+    ### Setup - Code
+    -   Sender() is instantiated and configured.
+    -   RestSend() is instantiated and configured.
+    -   Results() is instantiated.
+    -   FabricDetailsByName() is instantiated and configured.
+    -   FabricDetailsByName().refresh() is called.
+
+    ### Setup - Data
+    -   responses() yields a 200 response.
+
+    ### Trigger
+    ``filtered_data.getter`` is accessed.
+
+    ### Expected Result
+    -   ``filtered_data.getter`` raises ``ValueError``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+    match = r"FabricDetailsByName\.filtered_data:\s+"
+    match += r"FabricDetailsByName\.filter must be set\s+"
+    match += r"before accessing FabricDetailsByName\.filtered_data\."
+    with pytest.raises(ValueError, match=match):
+        instance.filtered_data  # pylint: disable=pointless-statement
+
+
+def test_fabric_details_by_name_v2_00610(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+        - filtered_data.getter
+
+    ### Summary
+    -   Verify that ``filtered_data`` property returns expected values
+        when ``filter`` is set and matches a fabric on the controller.
+
+    ### Setup - Code
+    -   Sender() is instantiated and configured.
+    -   RestSend() is instantiated and configured.
+    -   Results() is instantiated.
+    -   FabricDetailsByName() is instantiated and configured.
+    -   FabricDetailsByName().refresh() is called.
+
+    ### Setup - Data
+    -   responses() yields a 200 response with a matching fabric.
+
+    ### Trigger
+    ``filtered_data.getter`` is accessed.
+
+    ### Expected Result
+    -   ``filtered_data.getter`` returns expected value.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "MATCHING_FABRIC"
+        data = instance.filtered_data
+    assert data.get("nvPairs", {}).get("BGP_AS") == "65001"
+    assert data.get("nvPairs", {}).get("ENABLE_NETFLOW") == "false"

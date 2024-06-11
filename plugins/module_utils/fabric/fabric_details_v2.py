@@ -642,8 +642,8 @@ class FabricDetailsByName(FabricDetails):
         method_name = inspect.stack()[0][3]
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.class_name}.filter must be set before calling "
-            msg += f"{self.class_name}.filtered_data"
+            msg += f"{self.class_name}.filter must be set before accessing "
+            msg += f"{self.class_name}.filtered_data."
             raise ValueError(msg)
         return self.data_subclass.get(self.filter, None)
 
