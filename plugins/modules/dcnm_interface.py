@@ -66,6 +66,7 @@ options:
     - A dictionary of interface operations
     type: list
     elements: dict
+    default: []
     suboptions:
       name:
         description:
