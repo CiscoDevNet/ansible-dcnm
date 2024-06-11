@@ -33,10 +33,6 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabrics
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
@@ -80,20 +76,6 @@ def test_fabric_details_by_name_v2_00000(monkeypatch) -> None:
     -   FabricDetailsByName().refresh() raises ``ValueError``.
     -   Error message matches expectation.
     """
-    # method_name = inspect.stack()[0][3]
-    # key = f"{method_name}a"
-
-    # def responses():
-    #     yield {}
-
-    # sender = Sender()
-    # sender.gen = ResponseGenerator(responses())
-    # rest_send = RestSend(PARAMS)
-    # rest_send.response_handler = ResponseHandler()
-    # rest_send.sender = sender
-    # rest_send.unit_test = True
-    # rest_send.timeout = 1
-
     match = r"FabricDetailsByName\.__init__:\s+"
     match += r"Failed in super\(\)\.__init__\(\)\.\s+"
     match += r"Error detail: FabricDetailsByName\.__init__:\s+"
@@ -107,7 +89,7 @@ def test_fabric_details_by_name_v2_00000(monkeypatch) -> None:
 def test_fabric_details_by_name_v2_00200(fabric_details_by_name_v2) -> None:
     """
     ### Classes and Methods
-    - FabricDetails()
+    - FabricDetailsByName()
         - __init__()
         - refresh_super()
 
@@ -125,7 +107,7 @@ def test_fabric_details_by_name_v2_00200(fabric_details_by_name_v2) -> None:
         - RETURN_CODE == 200
         - DATA == [<fabric_info from controller>]
 
-    ###Code Flow - Test
+    ### Code Flow - Test
     -   FabricDetails().refresh_super() is called.
     -   All properties are accessed and verified.
 
@@ -192,7 +174,7 @@ def test_fabric_details_by_name_v2_00200(fabric_details_by_name_v2) -> None:
 def test_fabric_details_by_name_v2_00300(fabric_details_by_name_v2) -> None:
     """
     ### Classes and Methods
-    - FabricDetails()
+    - FabricDetailsByName()
         - __init__()
         - refresh()
 
@@ -248,3 +230,42 @@ def test_fabric_details_by_name_v2_00300(fabric_details_by_name_v2) -> None:
     assert instance.is_read_only is None
     assert instance.replication_mode is None
     assert instance.template_name is None
+
+
+def test_fabric_details_by_name_v2_00400(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+
+    ### Summary
+    -   Verify refresh() raises ``ValueError`` if
+        ``FabricDetails().refresh_super()`` raises ``ValueError``.
+        -   RETURN_CODE is 200.
+        -   Controller response contains one fabric (f1).
+
+    ### Setup - Code
+    -   FabricDetailsByName() is instantiated
+    -   FabricDetailsByName().RestSend() is instantiated
+    -   FabricDetailsByName().Results() is NOT instantiated.
+
+    ### Setup - Data
+    -   None
+
+    ### Expected Result
+    -   ``ValueException`` is raised by ``refresh_super()`` and caught by
+        ``refresh()``.
+    """
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = RestSend(PARAMS)
+        instance.filter = "f1"
+
+    match = r"Failed to refresh fabric details:\s+"
+    match += r"Error detail:\s+"
+    match += r"FabricDetailsByName\.validate_refresh_parameters:\s+"
+    match += r"FabricDetailsByName\.results must be set before calling\s+"
+    match += r"FabricDetailsByName\.refresh\(\)\..*"
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
