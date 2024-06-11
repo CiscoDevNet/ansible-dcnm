@@ -57,23 +57,22 @@ def test_fabric_details_by_name_v2_00000(monkeypatch) -> None:
         - __init__()
 
     ### Summary
-    -   Verify that refresh() raises ``ValueError`` if ``refresh_super()``
+    -   Verify that __init__ raises ``ValueError`` if ``super().__init__``
         raises ``ValueError``
 
     ### Setup - Code
-    -   FabricDetails().refresh_supper() is mocked to raise ``ValueError``.
-    -   FabricDetailsByName() is instantiated
-    -   FabricDetailsByName().RestSend() is instantiated
-    -   FabricDetailsByName().Results() is instantiated
-
-    ### Setup - Data
     -   None
 
+    ### Setup - Data
+    -   params is modified to remove ``check_mode``.
+
     ### Trigger
-    -   FabricDetailsByName().refresh() is called
+    -   FabricDetailsByName() is instantiated.
 
     ### Expected Result
-    -   FabricDetailsByName().refresh() raises ``ValueError``.
+    -   FabricDetailsByName().__init__() raises ``ValueError`` because
+        FabricDetails().__init__() raises ``ValueError`` because params
+        is missing mandatory key ``check_mode``.
     -   Error message matches expectation.
     """
     match = r"FabricDetailsByName\.__init__:\s+"
@@ -179,10 +178,7 @@ def test_fabric_details_by_name_v2_00300(fabric_details_by_name_v2) -> None:
         - refresh()
 
     ### Summary
-    -   Verify properties return None if property is missing in the
-        controller response.
-        -   RETURN_CODE is 200.
-        -   Controller response contains one fabric (f1).
+    -   Verify properties missing in the controller response return ``None``.
 
     ### Setup - Code
     -   FabricDetailsByName() is instantiated
@@ -196,9 +192,11 @@ def test_fabric_details_by_name_v2_00300(fabric_details_by_name_v2) -> None:
         - DATA[0].nvPairs.FABRIC_NAME == "f1"
         - DATA[0].nvPairs <all other properties are missing>
 
+    ### Trigger
+    -   All supported properties are accessed and verified.
+
     ### Expected Result
-    -   ``ValueError`` is raised for each property.
-    -   Results() are updated.
+    -   All supported properties return ``None``.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -269,3 +267,53 @@ def test_fabric_details_by_name_v2_00400(fabric_details_by_name_v2) -> None:
     match += r"FabricDetailsByName\.refresh\(\)\..*"
     with pytest.raises(ValueError, match=match):
         instance.refresh()
+
+
+def test_fabric_details_by_name_v2_00500(fabric_details_by_name_v2) -> None:
+    """
+    ### Classes and Methods
+    - FabricDetailsByName()
+        - __init__()
+        - refresh()
+        - _get_nv_pair()
+        - bgp_as.getter
+
+    ### Summary
+    -   Verify ``_get_nv_pair()`` raises ``ValueError`` if ``filter`` is not
+        set prior to accessing a property.
+
+    ### Setup - Code
+    -   Sender() is instantiated and configured.
+    -   RestSend() is instantiated and configured.
+    -   Results() is instantiated.
+    -   FabricDetailsByName() is instantiated and configured.
+    -   FabricDetailsByName().refresh() is called.
+
+    ### Setup - Data
+    -   responses() yields a 200 response.
+
+    ### Trigger
+    ``bgp_as`` is accessed before setting ``filter``.
+
+    ### Expected Result
+    -   ``_get_nv_pair()`` raises ``ValueError``.
+    -   ``bgp_as.getter`` catches ``ValueError`` and returns ``None``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_fabric_details_by_name_v2(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        bgp_as = instance.bgp_as
+    assert bgp_as is None
