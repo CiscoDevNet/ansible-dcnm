@@ -41,6 +41,7 @@ options:
     - A dictionary of images and other related information that is required to download the same.
     type: list
     elements: dict
+    default: []
     suboptions:
       path:
         description:
@@ -176,12 +177,10 @@ import os
 import json
 import copy
 
-from ansible.module_utils.connection import Connection
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
-    dcnm_reset_connection,
     dcnm_version_supported,
     dcnm_get_protocol_and_address,
     dcnm_get_auth_token,
