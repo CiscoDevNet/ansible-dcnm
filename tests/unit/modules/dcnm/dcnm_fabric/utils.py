@@ -41,6 +41,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v
     FabricDetails as FabricDetailsV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetailsByName as FabricDetailsByNameV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetailsByNvPair as FabricDetailsByNvPairV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
@@ -268,6 +270,16 @@ def fabric_details_by_nv_pair_fixture():
     instance = MockAnsibleModule()
     instance.state = "merged"
     return FabricDetailsByNvPair(instance.params)
+
+
+@pytest.fixture(name="fabric_details_by_nv_pair_v2")
+def fabric_details_by_nv_pair_v2_fixture():
+    """
+    mock FabricDetailsByNvPair version 2
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricDetailsByNvPairV2(instance.params)
 
 
 @pytest.fixture(name="fabric_query")
@@ -542,7 +554,7 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
 
 def responses_fabric_details_by_name_v2(key: str) -> Dict[str, str]:
     """
-    Return responses for FabricDetailsByName
+    Return responses for FabricDetailsByName version 2
     """
     data_file = "responses_FabricDetailsByName_V2"
     data = load_fixture(data_file).get(key)
@@ -555,6 +567,16 @@ def responses_fabric_details_by_nv_pair(key: str) -> Dict[str, str]:
     Return responses for FabricDetailsByNvPair
     """
     data_file = "responses_FabricDetailsByNvPair"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_details_by_nv_pair_v2(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetailsByNvPair version 2
+    """
+    data_file = "responses_FabricDetailsByNvPair_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

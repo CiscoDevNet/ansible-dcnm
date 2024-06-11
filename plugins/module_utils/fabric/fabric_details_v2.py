@@ -699,9 +699,9 @@ class FabricDetailsByNvPair(FabricDetails):
     rest_send.response_handler = ResponseHandler()
 
     instance = FabricDetailsNvPair(params)
-    instance.refresh()
     instance.filter_key = "DCI_SUBNET_RANGE"
     instance.filter_value = "10.33.0.0/16"
+    instance.refresh()
     fabrics = instance.filtered_data
     ```
     """
