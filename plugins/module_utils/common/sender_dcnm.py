@@ -66,6 +66,7 @@ class Sender:
 
         self.params = None
         self._ansible_module = None
+        self._dcnm_send = dcnm_send
         self._path = None
         self._payload = None
         self._response = None
@@ -131,12 +132,12 @@ class Sender:
         msg += f"Calling dcnm_send: verb {self.verb}, path {self.path}"
         if self.payload is None:
             self.log.debug(msg)
-            response = dcnm_send(self.ansible_module, self.verb, self.path)
+            response = self._dcnm_send(self.ansible_module, self.verb, self.path)
         else:
             msg += ", payload: "
             msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            response = dcnm_send(
+            response = self._dcnm_send(
                 self.ansible_module,
                 self.verb,
                 self.path,
@@ -161,7 +162,7 @@ class Sender:
             self.params = value.params
         except AttributeError as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "ansible_module must be an instance of AnsibleModule. "
+            msg += f"{method_name} must be an instance of AnsibleModule. "
             msg += f"Got type {type(value).__name__}, value {value}. "
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
@@ -199,7 +200,7 @@ class Sender:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got type {type(value).__name__}, "
             msg += f"value {value}."
             raise TypeError(msg)
@@ -224,7 +225,7 @@ class Sender:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got type {type(value).__name__}, "
             msg += f"value {value}."
             raise TypeError(msg)
