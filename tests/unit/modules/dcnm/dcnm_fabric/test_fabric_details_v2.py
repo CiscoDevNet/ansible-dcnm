@@ -46,9 +46,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
     Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetails
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    ResponseGenerator, does_not_raise, fabric_details_v2_fixture,
-    responses_fabric_details_v2)
+    does_not_raise, fabric_details_v2_fixture, responses_fabric_details_v2)
 
 
 def test_fabric_details_v2_00000(fabric_details_v2) -> None:

@@ -67,43 +67,6 @@ params = {
 }
 
 
-class ResponseGenerator:
-    """
-    Given a generator, return the items in the generator with
-    each call to the next property
-
-    For usage in the context of dcnm_image_policy unit tests, see:
-        test: test_image_policy_create_bulk_00037
-        file: tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py
-
-    Simplified usage example below.
-
-    def responses():
-        yield {"key1": "value1"}
-        yield {"key2": "value2"}
-
-    gen = ResponseGenerator(responses())
-
-    print(gen.next) # {"key1": "value1"}
-    print(gen.next) # {"key2": "value2"}
-    """
-
-    def __init__(self, gen):
-        self.gen = gen
-
-    @property
-    def next(self):
-        """
-        Return the next item in the generator
-        """
-        return next(self.gen)
-
-    def public_method_for_pylint(self) -> Any:
-        """
-        Add one public method to appease pylint
-        """
-
-
 class MockAnsibleModule:
     """
     Mock the AnsibleModule class

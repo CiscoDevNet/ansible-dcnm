@@ -40,9 +40,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_details_fixture, responses_fabric_details)
+    MockAnsibleModule, does_not_raise, fabric_details_fixture,
+    responses_fabric_details)
 
 
 def test_fabric_details_00010(fabric_details) -> None:
