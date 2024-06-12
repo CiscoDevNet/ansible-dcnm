@@ -26,6 +26,7 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
@@ -96,10 +97,10 @@ def test_rest_send_v2_00100() -> None:
     None
 
     ### Trigger
-    -   Sender().commit() is called.
+    -   RestSend().commit() is called.
 
     ### Expected Result
-    -   RestSend().commit() re-raises ``ValueError``.
+    -   RestSend()._verify_commit_parameters() raises ``ValueError``.
     """
     with does_not_raise():
         instance = RestSend(PARAMS)
@@ -136,10 +137,10 @@ def test_rest_send_v2_00110() -> None:
     None
 
     ### Trigger
-    -   Sender().commit() is called.
+    -   RestSend().commit() is called.
 
     ### Expected Result
-    -   RestSend().commit() re-raises ``ValueError``.
+    -   RestSend()._verify_commit_parameters() raises ``ValueError``.
     """
     with does_not_raise():
         instance = RestSend(PARAMS)
@@ -176,10 +177,10 @@ def test_rest_send_v2_00120() -> None:
     None
 
     ### Trigger
-    -   Sender().commit() is called.
+    -   RestSend().commit() is called.
 
     ### Expected Result
-    -   RestSend().commit() re-raises ``ValueError``.
+    -   RestSend()._verify_commit_parameters() raises ``ValueError``.
     """
     with does_not_raise():
         instance = RestSend(PARAMS)
@@ -216,10 +217,10 @@ def test_rest_send_v2_00130() -> None:
     None
 
     ### Trigger
-    -   Sender().commit() is called.
+    -   RestSend().commit() is called.
 
     ### Expected Result
-    -   RestSend().commit() re-raises ``ValueError``.
+    -   RestSend()._verify_commit_parameters() raises ``ValueError``.
     """
     with does_not_raise():
         instance = RestSend(PARAMS)
@@ -231,3 +232,54 @@ def test_rest_send_v2_00130() -> None:
     match += r"verb must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
+
+
+def test_rest_send_v2_00200() -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   commit_check_mode()
+            -   commit()
+
+    ### Summary
+    Verify ``commit_check_mode()`` happy path.
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to True
+    -   RestSend() is initialized.
+    -   RestSend().path is set.
+    -   RestSend().response_handler is set.
+    -   RestSend().sender is set.
+    -   RestSend().verb is set.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().commit() is called.
+
+    ### Expected Result
+    -   RestSend().commit() re-raises ``ValueError``.
+    """
+    params = copy.copy(PARAMS)
+    params["check_mode"] = True
+
+    with does_not_raise():
+        instance = RestSend(params)
+        instance.path = "/foo/path"
+        instance.response_handler = ResponseHandler()
+        instance.sender = Sender()
+        instance.verb = "GET"
+        instance.commit()
+    assert instance.response_current["CHECK_MODE"] == instance.check_mode
+    assert (
+        instance.response_current["DATA"] == "[simulated-check-mode-response:Success]"
+    )
+    assert instance.response_current["MESSAGE"] == "OK"
+    assert instance.response_current["METHOD"] == instance.verb
+    assert instance.response_current["REQUEST_PATH"] == instance.path
+    assert instance.response_current["RETURN_CODE"] == 200
+    assert instance.result_current["success"] is True
+    assert instance.result_current["found"] is True
+    assert instance.response == [instance.response_current]
+    assert instance.result == [instance.result_current]
