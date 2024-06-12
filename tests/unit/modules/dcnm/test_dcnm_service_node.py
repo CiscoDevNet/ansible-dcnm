@@ -22,7 +22,6 @@ from unittest.mock import patch
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_service_node
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
-import json
 import copy
 
 __copyright__ = "Copyright (c) 2021 Cisco and/or its affiliates."

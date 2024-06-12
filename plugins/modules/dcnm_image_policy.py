@@ -45,6 +45,7 @@ options:
             - List of dictionaries containing image policy parameters
         type: list
         elements: dict
+        default: []
         suboptions:
             name:
                 description:

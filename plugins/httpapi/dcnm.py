@@ -40,7 +40,13 @@ options:
 """
 
 import json
-import requests
+
+# Any third party modules should be imported as below, if not sanity tests will fail
+try:
+    import requests
+    HAS_REQUESTS = True
+except ImportError:
+    HAS_REQUESTS = False
 
 from ansible.module_utils._text import to_text
 from ansible.module_utils.connection import ConnectionError

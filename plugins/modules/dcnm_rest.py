@@ -89,7 +89,6 @@ response:
 """
 
 import json
-from json.decoder import JSONDecodeError
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,

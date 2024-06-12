@@ -23,8 +23,6 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
-    ControllerVersion
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \

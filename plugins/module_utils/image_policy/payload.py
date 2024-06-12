@@ -20,7 +20,6 @@ __author__ = "Allen Robel"
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
     ImagePolicyCommon

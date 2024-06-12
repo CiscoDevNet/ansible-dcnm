@@ -26,8 +26,6 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
     AnsibleFailJson,
 )
 
-import json
-import copy
 import pytest
 
 
