@@ -40,6 +40,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate 
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate as ParamsValidateV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
+    Sender as SenderDcnm
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender as SenderFile
 
 from .fixture import load_fixture
 
@@ -133,6 +137,30 @@ def controller_version_fixture():
     return ControllerVersion with mocked AnsibleModule
     """
     return ControllerVersion(MockAnsibleModule)
+
+
+@pytest.fixture(name="sender_dcnm")
+def sender_dcnm_fixture():
+    """
+    return Send() imported from sender_dcnm.py
+    """
+    instance = SenderDcnm()
+    instance.ansible_module = MockAnsibleModule
+    return instance
+
+
+@pytest.fixture(name="sender_file")
+def sender_file_fixture():
+    """
+    return Send() imported from sender_file.py
+    """
+
+    def responses():
+        yield {}
+
+    instance = SenderFile()
+    instance.gen = ResponseGenerator(responses())
+    return instance
 
 
 @pytest.fixture(name="log")
@@ -265,6 +293,26 @@ def responses_maintenance_mode(key: str) -> Dict[str, str]:
     response_file = "responses_MaintenanceMode"
     response = load_fixture(response_file).get(key)
     print(f"responses_maintenance_mode: {key} : {response}")
+    return response
+
+
+def responses_sender_dcnm(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_SenderDcnm.json
+    """
+    response_file = "responses_SenderDcnm"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_sender_dcnm: {key} : {response}")
+    return response
+
+
+def responses_sender_file(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_SenderFile.json
+    """
+    response_file = "responses_SenderFile"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_sender_file: {key} : {response}")
     return response
 
 

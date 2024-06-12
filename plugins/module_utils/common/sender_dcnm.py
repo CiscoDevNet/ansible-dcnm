@@ -65,12 +65,12 @@ class Sender:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.params = None
-        self.properties = {}
-        self.properties["ansible_module"] = None
-        self.properties["path"] = None
-        self.properties["payload"] = None
-        self.properties["response"] = None
-        self.properties["verb"] = None
+        self._ansible_module = None
+        self._path = None
+        self._payload = None
+        self._response = None
+        self._verb = None
+
         self._valid_verbs = {"GET", "POST", "PUT", "DELETE"}
 
         msg = "ENTERED Sender(): "
@@ -119,7 +119,13 @@ class Sender:
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
-        self._verify_commit_parameters()
+        try:
+            self._verify_commit_parameters()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Not all mandatory parameters are set. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
         msg += f"Calling dcnm_send: verb {self.verb}, path {self.path}"
@@ -146,7 +152,7 @@ class Sender:
         ### Raises
         -   ``TypeError`` if value is not an instance of AnsibleModule.
         """
-        return self.properties["ansible_module"]
+        return self._ansible_module
 
     @ansible_module.setter
     def ansible_module(self, value):
@@ -155,11 +161,11 @@ class Sender:
             self.params = value.params
         except AttributeError as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.ansible_module must be an instance of AnsibleModule. "
+            msg += "ansible_module must be an instance of AnsibleModule. "
             msg += f"Got type {type(value).__name__}, value {value}. "
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
-        self.properties["ansible_module"] = value
+        self._ansible_module = value
 
     @property
     def path(self):
@@ -172,11 +178,11 @@ class Sender:
         ### Example
         ``/appcenter/cisco/ndfc/api/v1/...etc...``
         """
-        return self.properties.get("path")
+        return self._path
 
     @path.setter
     def path(self, value):
-        self.properties["path"] = value
+        self._path = value
 
     @property
     def payload(self):
@@ -186,7 +192,7 @@ class Sender:
         ### Raises
         -   ``TypeError`` if value is not a ``dict``.
         """
-        return self.properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
@@ -197,7 +203,7 @@ class Sender:
             msg += f"Got type {type(value).__name__}, "
             msg += f"value {value}."
             raise TypeError(msg)
-        self.properties["payload"] = value
+        self._payload = value
 
     @property
     def response(self):
@@ -211,7 +217,7 @@ class Sender:
         -   getter: Return a copy of ``response``
         -   setter: Set ``response``
         """
-        return copy.deepcopy(self.properties.get("response"))
+        return copy.deepcopy(self._response)
 
     @response.setter
     def response(self, value):
@@ -222,7 +228,7 @@ class Sender:
             msg += f"Got type {type(value).__name__}, "
             msg += f"value {value}."
             raise TypeError(msg)
-        self.properties["response"] = value
+        self._response = value
 
     @property
     def verb(self):
@@ -235,7 +241,7 @@ class Sender:
         ### Valid verbs
         ``GET``, ``POST``, ``PUT``, ``DELETE``
         """
-        return self.properties.get("verb")
+        return self._verb
 
     @verb.setter
     def verb(self, value):
@@ -245,4 +251,4 @@ class Sender:
             msg += f"{method_name} must be one of {sorted(self._valid_verbs)}. "
             msg += f"Got {value}."
             raise ValueError(msg)
-        self.properties["verb"] = value
+        self._verb = value
