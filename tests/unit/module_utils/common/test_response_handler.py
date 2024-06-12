@@ -50,8 +50,8 @@ def test_response_handler_00010(response_handler) -> None:
     """
     with does_not_raise():
         instance = response_handler
-    assert instance._properties["response"] is None
-    assert instance._properties["result"] is None
+    assert instance._response is None
+    assert instance._result is None
     assert instance.return_codes_success == {200, 404}
     assert instance.valid_verbs == {"DELETE", "GET", "POST", "PUT"}
 

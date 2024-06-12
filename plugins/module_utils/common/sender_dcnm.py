@@ -86,16 +86,17 @@ class Sender:
         -   ``ValueError`` if ``verb`` is not set
         -   ``ValueError`` if ``path`` is not set
         """
+        method_name = inspect.stack()[0][3]
         if self.ansible_module is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "ansible_module must be set before calling commit()."
             raise ValueError(msg)
         if self.path is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "path must be set before calling commit()."
             raise ValueError(msg)
         if self.verb is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "verb must be set before calling commit()."
             raise ValueError(msg)
 

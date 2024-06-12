@@ -85,6 +85,16 @@ class ResponseGenerator:
         """
         return next(self.gen)
 
+    @property
+    def implements(self):
+        """
+        ### Summary
+        Used by Sender() classes to verify Sender().gen is a
+        response generator which implements the response_generator
+        interfacee.
+        """
+        return "response_generator"
+
     def public_method_for_pylint(self) -> Any:
         """
         Add one public method to appease pylint

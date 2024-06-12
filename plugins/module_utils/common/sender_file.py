@@ -81,8 +81,9 @@ class Sender:
         -   ``ValueError`` if ``verb`` is not set
         -   ``ValueError`` if ``path`` is not set
         """
+        method_name = inspect.stack()[0][3]
         if self.gen is None:
-            msg = f"{self.class_name}._verify_commit_parameters: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "gen must be set before calling commit()."
             raise ValueError(msg)
 
@@ -94,7 +95,14 @@ class Sender:
         ### Raises
         -   ```ValueError`` if ``gen`` is not set.
         """
-        self._verify_commit_parameters()
+        method_name = inspect.stack()[0][3]
+        try:
+            self._verify_commit_parameters()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Not all mandatory parameters are set. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -117,14 +125,30 @@ class Sender:
     @property
     def gen(self):
         """
+        ### Summary
         -   getter: Return the ``ResponseGenerator()`` instance.
         -   setter: Set the ``ResponseGenerator()`` instance that provides
             simulated responses.
+
+        ### Raises
+        ``TypeError`` if value is not a class implementing the
+        response_generator interface.
         """
         return self._gen
 
     @gen.setter
     def gen(self, value):
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Expected a class implementing the "
+        msg += "response_generator interface. "
+        msg += f"Got {value}."
+        try:
+            implements = value.implements
+        except AttributeError as error:
+            raise TypeError(msg) from error
+        if implements != "response_generator":
+            raise TypeError(msg)
         self._gen = value
 
     @property
@@ -167,16 +191,12 @@ class Sender:
         The simulated response from a file.
 
         ### Raises
-        -   ``TypeError`` if value is not a ``dict``.
+        None
 
         -   getter: Return a copy of ``response``
         -   setter: Set ``response``
         """
         return self.gen.next
-
-    @response.setter
-    def response(self, value):
-        self._response = value
 
     @property
     def verb(self):

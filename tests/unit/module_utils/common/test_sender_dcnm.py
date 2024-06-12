@@ -53,7 +53,7 @@ def test_sender_dcnm_00000() -> None:
     assert instance.params is None
     assert instance._ansible_module is None
     assert instance._path is None
-    assert instance.payload is None
+    assert instance._payload is None
     assert instance._response is None
     assert instance._valid_verbs == {"GET", "POST", "PUT", "DELETE"}
     assert instance._verb is None

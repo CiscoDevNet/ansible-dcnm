@@ -96,9 +96,9 @@ class ResponseHandler:
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._properties = {}
-        self._properties["response"] = None
-        self._properties["result"] = None
+        self._response = None
+        self._result = None
+        self._verb = None
 
         self.return_codes_success = {200, 404}
         self.valid_verbs = {"DELETE", "GET", "POST", "PUT"}
@@ -233,7 +233,7 @@ class ResponseHandler:
         Set response.  External interface to set the response from the
         controller.
         """
-        return self._properties.get("response", None)
+        return self._response
 
     @response.setter
     def response(self, value):
@@ -253,7 +253,7 @@ class ResponseHandler:
             msg += "response must have a RETURN_CODE key. "
             msg += f"Got: {value}."
             raise ValueError(msg)
-        self._properties["response"] = value
+        self._response = value
 
     @property
     def result(self):
@@ -262,7 +262,7 @@ class ResponseHandler:
         -   setter: Set result.
         -   setter: Raise ``TypeError`` if result is not a dict.
         """
-        return self._properties.get("result", None)
+        return self._result
 
     @result.setter
     def result(self, value):
@@ -272,7 +272,7 @@ class ResponseHandler:
             msg += f"{self.class_name}.{method_name} must be a dict. "
             msg += f"Got {value}."
             raise TypeError(msg)
-        self._properties["result"] = value
+        self._result = value
 
     @property
     def verb(self):
@@ -291,7 +291,7 @@ class ResponseHandler:
         ### setter
         External interface to set the request verb.
         """
-        return self._properties.get("verb", None)
+        return self._verb
 
     @verb.setter
     def verb(self, value):
@@ -302,4 +302,4 @@ class ResponseHandler:
             msg += f"{', '.join(sorted(self.valid_verbs))}. "
             msg += f"Got {value}."
             raise ValueError(msg)
-        self._properties["verb"] = value
+        self._verb = value
