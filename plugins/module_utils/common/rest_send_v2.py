@@ -122,20 +122,19 @@ class RestSend:
         msg += f"params: {self.params}"
         self.log.debug(msg)
 
-        self.properties = {}
-        self.properties["check_mode"] = False
-        self.properties["path"] = None
-        self.properties["payload"] = None
-        self.properties["response"] = []
-        self.properties["response_current"] = {}
-        self.properties["response_handler"] = None
-        self.properties["result"] = []
-        self.properties["result_current"] = {}
-        self.properties["send_interval"] = 5
-        self.properties["sender"] = None
-        self.properties["timeout"] = 300
-        self.properties["unit_test"] = False
-        self.properties["verb"] = None
+        self._check_mode = False
+        self._path = None
+        self._payload = None
+        self._response = []
+        self._response_current = {}
+        self._response_handler = None
+        self._result = []
+        self._result_current = {}
+        self._send_interval = 5
+        self._sender = None
+        self._timeout = 300
+        self._unit_test = False
+        self._verb = None
 
         # See save_settings() and restore_settings()
         self.saved_timeout = None
@@ -450,7 +449,7 @@ class RestSend:
         is a read-only operation, and we want to be able to read this data to
         provide a real controller response to the user.
         """
-        return self.properties.get("check_mode")
+        return self._check_mode
 
     @check_mode.setter
     def check_mode(self, value):
@@ -459,7 +458,7 @@ class RestSend:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a boolean. Got {value}."
             raise TypeError(msg)
-        self.properties["check_mode"] = value
+        self._check_mode = value
 
     @property
     def failed_result(self):
@@ -490,11 +489,11 @@ class RestSend:
         ### Example
         ``/appcenter/cisco/ndfc/api/v1/...etc...``
         """
-        return self.properties.get("path")
+        return self._path
 
     @path.setter
     def path(self, value):
-        self.properties["path"] = value
+        self._path = value
 
     @property
     def payload(self):
@@ -504,11 +503,11 @@ class RestSend:
         ### Raises
         None
         """
-        return self.properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
-        self.properties["payload"] = value
+        self._payload = value
 
     @property
     def response_current(self):
@@ -526,7 +525,7 @@ class RestSend:
         ### setter
         Set ``response_current``
         """
-        return copy.deepcopy(self.properties.get("response_current"))
+        return copy.deepcopy(self._response_current)
 
     @response_current.setter
     def response_current(self, value):
@@ -537,7 +536,7 @@ class RestSend:
             msg += f"Got type {type(value).__name__}, "
             msg += f"Value: {value}."
             raise TypeError(msg)
-        self.properties["response_current"] = value
+        self._response_current = value
 
     @property
     def response(self):
@@ -556,7 +555,7 @@ class RestSend:
         ### setter
         Append value to ``response``
         """
-        return copy.deepcopy(self.properties.get("response"))
+        return copy.deepcopy(self._response)
 
     @response.setter
     def response(self, value):
@@ -567,7 +566,7 @@ class RestSend:
             msg += f"Got type {type(value).__name__}, "
             msg += f"Value: {value}."
             raise TypeError(msg)
-        self.properties["response"].append(value)
+        self._response.append(value)
 
     @property
     def response_handler(self):
@@ -590,7 +589,7 @@ class RestSend:
         -   See module_utils/common/response_handler.py for details about
             implementing a ``ResponseHandler`` class.
         """
-        return self.properties.get("response_handler")
+        return self._response_handler
 
     @response_handler.setter
     def response_handler(self, value):
@@ -608,7 +607,7 @@ class RestSend:
             raise TypeError(msg) from error
         if _implements_have != _implements_need:
             raise TypeError(msg)
-        self.properties["response_handler"] = value
+        self._response_handler = value
 
     @property
     def result(self):
@@ -628,7 +627,7 @@ class RestSend:
         ### setter
         Append value to ``result``
         """
-        return copy.deepcopy(self.properties.get("result"))
+        return copy.deepcopy(self._result)
 
     @result.setter
     def result(self, value):
@@ -639,7 +638,7 @@ class RestSend:
             msg += f"Got type {type(value).__name__}, "
             msg += f"Value: {value}."
             raise TypeError(msg)
-        self.properties["result"].append(value)
+        self._result.append(value)
 
     @property
     def result_current(self):
@@ -660,7 +659,7 @@ class RestSend:
         ### setter
         Set ``current_result``
         """
-        return copy.deepcopy(self.properties.get("result_current"))
+        return copy.deepcopy(self._result_current)
 
     @result_current.setter
     def result_current(self, value):
@@ -670,7 +669,7 @@ class RestSend:
             msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
             raise TypeError(msg)
-        self.properties["result_current"] = value
+        self._result_current = value
 
     @property
     def send_interval(self):
@@ -692,7 +691,7 @@ class RestSend:
         ### setter
         Sets ``send_interval``
         """
-        return self.properties.get("send_interval")
+        return self._send_interval
 
     @send_interval.setter
     def send_interval(self, value):
@@ -705,7 +704,7 @@ class RestSend:
             raise TypeError(msg)
         if not isinstance(value, int):
             raise TypeError(msg)
-        self.properties["send_interval"] = value
+        self._send_interval = value
 
     @property
     def sender(self):
@@ -733,7 +732,7 @@ class RestSend:
         ### Raises
         -   ``TypeError`` if value is not an instance of ``Sender``
         """
-        return self.properties.get("sender")
+        return self._sender
 
     @sender.setter
     def sender(self, value):
@@ -751,7 +750,7 @@ class RestSend:
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
-        self.properties["sender"] = value
+        self._sender = value
 
     @property
     def timeout(self):
@@ -774,7 +773,7 @@ class RestSend:
         ### setter
         Sets ``timeout``
         """
-        return self.properties.get("timeout")
+        return self._timeout
 
     @timeout.setter
     def timeout(self, value):
@@ -783,7 +782,7 @@ class RestSend:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be an int(). Got {value}."
             raise TypeError(msg)
-        self.properties["timeout"] = value
+        self._timeout = value
 
     @property
     def unit_test(self):
@@ -804,7 +803,7 @@ class RestSend:
         ### setter
         Sets ``unit_test``
         """
-        return self.properties.get("unit_test")
+        return self._unit_test
 
     @unit_test.setter
     def unit_test(self, value):
@@ -813,7 +812,7 @@ class RestSend:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{method_name} must be a bool(). Got {value}."
             raise TypeError(msg)
-        self.properties["unit_test"] = value
+        self._unit_test = value
 
     @property
     def verb(self):
@@ -826,7 +825,7 @@ class RestSend:
         ### Valid verbs
         ``GET``, ``POST``, ``PUT``, ``DELETE``
         """
-        return self.properties.get("verb")
+        return self._verb
 
     @verb.setter
     def verb(self, value):
@@ -836,4 +835,4 @@ class RestSend:
             msg += f"{method_name} must be one of {sorted(self._valid_verbs)}. "
             msg += f"Got {value}."
             raise ValueError(msg)
-        self.properties["verb"] = value
+        self._verb = value

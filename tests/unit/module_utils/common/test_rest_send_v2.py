@@ -60,22 +60,23 @@ def test_rest_send_v2_00000() -> None:
     ### Summary
     -   Verify class properties are initialized to expected values
     """
+    #  pylint: disable=use-implicit-booleaness-not-comparison
     with does_not_raise():
         instance = RestSend(PARAMS)
     assert instance.params == PARAMS
-    assert instance.properties["check_mode"] is False
-    assert instance.properties["path"] is None
-    assert instance.properties["payload"] is None
-    assert instance.properties["response"] == []
-    assert instance.properties["response_current"] == {}
-    assert instance.properties["response_handler"] is None
-    assert instance.properties["result"] == []
-    assert instance.properties["result_current"] == {}
-    assert instance.properties["send_interval"] == 5
-    assert instance.properties["sender"] is None
-    assert instance.properties["timeout"] == 300
-    assert instance.properties["unit_test"] is False
-    assert instance.properties["verb"] is None
+    assert instance._check_mode is False
+    assert instance._path is None
+    assert instance._payload is None
+    assert instance._response == []
+    assert instance._response_current == {}
+    assert instance._response_handler is None
+    assert instance._result == []
+    assert instance._result_current == {}
+    assert instance._send_interval == 5
+    assert instance._sender is None
+    assert instance._timeout == 300
+    assert instance._unit_test is False
+    assert instance._verb is None
 
     assert instance.saved_check_mode is None
     assert instance.saved_timeout is None
