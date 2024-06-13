@@ -69,6 +69,9 @@ class Sender:
         self._response = None
         self._verb = None
 
+        self._raise_method = None
+        self._raise_exception = None
+
         msg = "ENTERED Sender(): "
         self.log.debug(msg)
 
@@ -93,9 +96,17 @@ class Sender:
         Dummy commit
 
         ### Raises
-        -   ```ValueError`` if ``gen`` is not set.
+        -   ``ValueError`` if ``gen`` is not set.
+        -   ``self.raise_exception`` if set and
+            ``self.raise_method`` == "commit"
         """
         method_name = inspect.stack()[0][3]
+
+        if self.raise_method == method_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Simulated {self.raise_exception.__name__}."
+            raise self.raise_exception(msg)  # pylint: disable=not-callable
+
         try:
             self._verify_commit_parameters()
         except ValueError as error:
@@ -183,6 +194,51 @@ class Sender:
     @payload.setter
     def payload(self, value):
         self._payload = value
+
+    @property
+    def raise_exception(self):
+        """
+        ### Summary
+        The exception to raise.
+
+        ### Raises
+        -   ``TypeError`` if value is not a subclass of
+            ``BaseException``.
+
+        ### Usage
+        ```python
+        instance = Sender()
+        instance.raise_method = "commit"
+        instance.raise_exception = ValueError
+        instance.commit() # will raise a simulated ValueError
+        ```
+
+        ### NOTES
+        -   No error checking is done on the input to this property.
+        """
+        return self._raise_exception
+
+    @raise_exception.setter
+    def raise_exception(self, value):
+        self._raise_exception = value
+
+    @property
+    def raise_method(self):
+        """
+        ### Summary
+        The method in which to raise ``raise_exception``.
+
+        ### Raises
+        None
+
+        ### Usage
+        See ``raise_exception``.
+        """
+        return self._raise_method
+
+    @raise_method.setter
+    def raise_method(self, value):
+        self._raise_method = value
 
     @property
     def response(self):
