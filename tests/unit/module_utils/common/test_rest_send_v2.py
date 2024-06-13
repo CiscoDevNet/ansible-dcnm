@@ -27,6 +27,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
+import inspect
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
@@ -446,6 +447,139 @@ def test_rest_send_v2_00220(monkeypatch) -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details: Error in ResponseHandler\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_rest_send_v2_00300() -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   commit_normal_mode()
+            -   commit()
+
+    ### Summary
+    Verify ``commit_normal_mode()`` happy path when
+    ``verb`` is "POST" and ``payload`` is set.
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to False
+    -   RestSend() is initialized.
+    -   RestSend().path is set.
+    -   RestSend().response_handler is set.
+    -   RestSend().sender is set.
+    -   RestSend().verb is set.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().commit() is called.
+
+    ### Expected Result
+    -   The following are updated to expected values:
+            -   ``response``
+            -   ``response_current``
+            -   ``result``
+            -   ``result_current``
+    -   result_current["changed"] is True
+    """
+    params = copy.copy(PARAMS)
+    params["check_mode"] = False
+
+    def responses_00300():
+        yield {
+            "METHOD": "POST",
+            "MESSAGE": "OK",
+            "REQUEST_PATH": "/foo/path",
+            "RETURN_CODE": 200,
+            "DATA": "simulated_data",
+            "CHECK_MODE": False,
+        }
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses_00300())
+    with does_not_raise():
+        instance = RestSend(params)
+        instance.path = "/foo/path"
+        instance.response_handler = ResponseHandler()
+        instance.sender = sender
+        instance.verb = "POST"
+        instance.payload = {}
+        instance.commit()
+    assert instance.response_current["CHECK_MODE"] == instance.check_mode
+    assert instance.response_current["DATA"] == "simulated_data"
+    assert instance.response_current["MESSAGE"] == "OK"
+    assert instance.response_current["METHOD"] == instance.verb
+    assert instance.response_current["REQUEST_PATH"] == instance.path
+    assert instance.response_current["RETURN_CODE"] == 200
+    assert instance.result_current["success"] is True
+    assert instance.result_current["changed"] is True
+    assert instance.response == [instance.response_current]
+    assert instance.result == [instance.result_current]
+
+
+def test_rest_send_v2_00310() -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   commit_normal_mode()
+            -   commit()
+
+    ### Summary
+    Verify ``commit_normal_mode()`` sad path when
+    ``Sender().commit()`` raises ``ValueError``.
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to False
+    -   RestSend() is initialized.
+    -   RestSend().path is set.
+    -   RestSend().response_handler is set.
+    -   Sender().raise_method is set to "commit".
+    -   Sender().raise_exception is set to ValueError.
+    -   RestSend().sender is set.
+    -   RestSend().verb is set.
+
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().commit() is called.
+
+    ### Expected Result
+    -   Sender().commit() raises ``ValueError``
+    -   commit_normal_mode() re-raises ``ValueError``
+    -   commit() re-raises ``ValueError``
+    """
+    params = copy.copy(PARAMS)
+    params["check_mode"] = False
+
+    def responses_00300():
+        yield {
+            "METHOD": "POST",
+            "MESSAGE": "OK",
+            "REQUEST_PATH": "/foo/path",
+            "RETURN_CODE": 200,
+            "DATA": "simulated_data",
+            "CHECK_MODE": False,
+        }
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses_00300())
+    sender.raise_method = "commit"
+    sender.raise_exception = ValueError
+
+    with does_not_raise():
+        instance = RestSend(params)
+        instance.path = "/foo/path"
+        instance.response_handler = ResponseHandler()
+        instance.sender = sender
+        instance.verb = "POST"
+        instance.payload = {}
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details: Sender\.commit: Simulated ValueError\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
