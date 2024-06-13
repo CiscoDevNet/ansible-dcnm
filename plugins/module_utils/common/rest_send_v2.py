@@ -351,10 +351,7 @@ class RestSend:
         except ValueError as error:
             raise ValueError(error) from error
 
-        try:
-            timeout = self.timeout
-        except AttributeError:
-            timeout = 300
+        timeout = copy.copy(self.timeout)
 
         success = False
         msg = f"{caller}: Entering commit loop. "
