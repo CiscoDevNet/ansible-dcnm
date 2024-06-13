@@ -517,7 +517,7 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response_current must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got type {type(value).__name__}, "
             msg += f"Value: {value}."
             raise TypeError(msg)
