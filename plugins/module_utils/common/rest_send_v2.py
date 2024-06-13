@@ -452,7 +452,7 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be a bool(). Got {value}."
+            msg += f"{method_name} must be a boolean. Got {value}."
             raise TypeError(msg)
         self.properties["check_mode"] = value
 

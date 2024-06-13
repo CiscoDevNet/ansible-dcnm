@@ -254,7 +254,8 @@ def test_rest_send_v2_00200() -> None:
             -   commit()
 
     ### Summary
-    Verify ``commit_check_mode()`` happy path.
+    Verify ``commit_check_mode()`` happy path when
+    ``verb`` is "GET".
 
     ### Setup - Code
     -   PARAMS["check_mode"] is set to True
@@ -271,7 +272,12 @@ def test_rest_send_v2_00200() -> None:
     -   RestSend().commit() is called.
 
     ### Expected Result
-    -   RestSend().commit() re-raises ``ValueError``.
+    -   The following are updated to expected values:
+            -   ``response``
+            -   ``response_current``
+            -   ``result``
+            -   ``result_current``
+    -   result_current["found"] is True
     """
     params = copy.copy(PARAMS)
     params["check_mode"] = True
@@ -295,3 +301,111 @@ def test_rest_send_v2_00200() -> None:
     assert instance.result_current["found"] is True
     assert instance.response == [instance.response_current]
     assert instance.result == [instance.result_current]
+
+
+def test_rest_send_v2_00210() -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   commit_check_mode()
+            -   commit()
+
+    ### Summary
+    Verify ``commit_check_mode()`` happy path when
+    ``verb`` is "POST".
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to True
+    -   RestSend() is initialized.
+    -   RestSend().path is set.
+    -   RestSend().response_handler is set.
+    -   RestSend().sender is set.
+    -   RestSend().verb is set.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().commit() is called.
+
+    ### Expected Result
+    -   The following are updated to expected values:
+            -   ``response``
+            -   ``response_current``
+            -   ``result``
+            -   ``result_current``
+    -   result_current["changed"] is True
+    """
+    params = copy.copy(PARAMS)
+    params["check_mode"] = True
+
+    with does_not_raise():
+        instance = RestSend(params)
+        instance.path = "/foo/path"
+        instance.response_handler = ResponseHandler()
+        instance.sender = Sender()
+        instance.verb = "POST"
+        instance.commit()
+    assert instance.response_current["CHECK_MODE"] == instance.check_mode
+    assert (
+        instance.response_current["DATA"] == "[simulated-check-mode-response:Success]"
+    )
+    assert instance.response_current["MESSAGE"] == "OK"
+    assert instance.response_current["METHOD"] == instance.verb
+    assert instance.response_current["REQUEST_PATH"] == instance.path
+    assert instance.response_current["RETURN_CODE"] == 200
+    assert instance.result_current["success"] is True
+    assert instance.result_current["changed"] is True
+    assert instance.response == [instance.response_current]
+    assert instance.result == [instance.result_current]
+
+
+MATCH_00500 = r"RestSend\.check_mode:\s+"
+MATCH_00500 += r"check_mode must be a boolean\.\s+"
+MATCH_00500 += r"Got.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (10, True, pytest.raises(TypeError, match=MATCH_00500)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_00500)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_00500)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_00500)),
+        (None, True, pytest.raises(TypeError, match=MATCH_00500)),
+        (False, False, does_not_raise()),
+        (True, False, does_not_raise()),
+    ],
+)
+def test_rest_send_v2_00500(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   check_mode.setter
+
+    ### Summary
+    Verify ``check_mode.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to boolean.
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to True
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().check_mode is reset using various types.
+
+    ### Expected Result
+    -   ``check_mode`` raises TypeError for non-boolean inputs.
+    -   ``check_mode`` accepts boolean values.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.check_mode = value
+    if does_raise is False:
+        assert instance.check_mode == value
