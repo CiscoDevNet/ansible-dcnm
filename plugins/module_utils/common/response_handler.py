@@ -93,6 +93,7 @@ class ResponseHandler:
     def __init__(self):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+        self._implements = "response_handler_v1"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -212,9 +213,13 @@ class ResponseHandler:
     @property
     def implements(self):
         """
-        Return the interface this class implements.
+        ### Summary
+        The interface implemented by this class.
+
+        ### Raises
+        None
         """
-        return "response_handler_v1"
+        return self._implements
 
     @property
     def response(self):

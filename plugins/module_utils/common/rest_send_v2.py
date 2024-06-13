@@ -113,6 +113,8 @@ class RestSend:
     def __init__(self, params):
         self.class_name = self.__class__.__name__
 
+        self._implements = "rest_send_v2"
+
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.params = params
@@ -465,6 +467,17 @@ class RestSend:
         Return a result for a failed task with no changes
         """
         return Results().failed_result
+
+    @property
+    def implements(self):
+        """
+        ### Summary
+        The interface implemented by this class.
+
+        ### Raises
+        None
+        """
+        return self._implements
 
     @property
     def path(self):

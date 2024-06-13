@@ -61,6 +61,7 @@ class Sender:
 
     def __init__(self):
         self.class_name = self.__class__.__name__
+        self._implements = "sender_v1"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -168,6 +169,17 @@ class Sender:
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
         self._ansible_module = value
+
+    @property
+    def implements(self):
+        """
+        ### Summary
+        The interface implemented by this class.
+
+        ### Raises
+        None
+        """
+        return self._implements
 
     @property
     def path(self):

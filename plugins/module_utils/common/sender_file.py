@@ -64,6 +64,7 @@ class Sender:
 
         self._ansible_module = None
         self._gen = None
+        self._implements = "sender_v1"
         self._path = None
         self._payload = None
         self._response = None
@@ -161,6 +162,17 @@ class Sender:
         if implements != "response_generator":
             raise TypeError(msg)
         self._gen = value
+
+    @property
+    def implements(self):
+        """
+        ### Summary
+        The interface implemented by this class.
+
+        ### Raises
+        None
+        """
+        return self._implements
 
     @property
     def path(self):
