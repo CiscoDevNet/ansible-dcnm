@@ -447,7 +447,9 @@ def test_rest_send_v2_00220(monkeypatch) -> None:
     monkeypatch.setattr(instance, "response_handler", MockResponseHandler())
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
-    match += r"Error details: Error in ResponseHandler\."
+    match += r"Error details:\s+"
+    match += r"RestSend\.commit_check_mode:\s+"
+    match += r"Error building response\/result\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -581,6 +583,90 @@ def test_rest_send_v2_00310() -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details: Sender\.commit: Simulated ValueError\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_rest_send_v2_00320(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   commit_normal_mode()
+            -   commit()
+
+    ### Summary
+    Verify ``commit_normal_mode()`` sad path when
+    ``response_handler.commit()`` raises ``ValueError``.
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to False
+    -   RestSend() is initialized.
+    -   RestSend().path is set.
+    -   RestSend().response_handler is set.
+    -   RestSend().sender is set.
+    -   RestSend().verb is set.
+    -   ResponseHandler().commit() is patched to raise ``ValueError``.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().commit() is called.
+
+    ### Expected Result
+    -   response_handler.commit() raises ``ValueError``
+    -   commit_normal_mode() re-raises ``ValueError``
+    -   commit() re-raises ``ValueError``
+    """
+    params = copy.copy(PARAMS)
+    params["check_mode"] = False
+
+    class MockResponseHandler:
+        """
+        Mock ``ResponseHandler().commit()`` to raise ``ValueError``.
+        """
+
+        def __init__(self):
+            self._verb = "GET"
+
+        def commit(self):
+            """
+            Raise ``ValueError``.
+            """
+            raise ValueError("Error in ResponseHandler.")
+
+        @property
+        def implements(self):
+            """
+            Return expected interface string.
+            """
+            return "response_handler_v1"
+
+        @property
+        def verb(self):
+            """
+            get/set verb.
+            """
+            return self._verb
+
+        @verb.setter
+        def verb(self, value):
+            self._verb = value
+
+    with does_not_raise():
+        instance = RestSend(params)
+        instance.path = "/foo/path"
+        instance.response_handler = ResponseHandler()
+        instance.sender = Sender()
+        instance.sender.gen = ResponseGenerator(responses())
+        instance.verb = "POST"
+
+    monkeypatch.setattr(instance, "response_handler", MockResponseHandler())
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details:\s+"
+    match += r"RestSend\.commit_normal_mode:\s+"
+    match += r"Error building response\/result\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -957,3 +1043,66 @@ def test_rest_send_v2_01100(value, does_raise, expected) -> None:
     if does_raise is False:
         assert isinstance(instance.send_interval, int)
         assert instance.send_interval == value
+
+
+def test_rest_send_v2_01200() -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   failed_result.getter
+
+    ### Summary
+    Verify ``failed_result.getter`` returns dictionary with
+    expected key/values.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().failed_result accessed.
+
+    ### Expected Result
+    -   ``failed_result`` returns dictionary with expected key/values.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+        failed_result = instance.failed_result
+
+    assert isinstance(failed_result, dict)
+    assert failed_result == {
+        "changed": False,
+        "failed": True,
+        "diff": [{}],
+        "response": [{}],
+        "result": [{}],
+    }
+
+
+def test_rest_send_v2_01300() -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   implements.getter
+
+    ### Summary
+    Verify ``implements.getter`` returns expected string.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().implements accessed.
+
+    ### Expected Result
+    -   ``implements`` returns string with expected value.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+        implements = instance.implements
+    assert implements == "rest_send_v2"

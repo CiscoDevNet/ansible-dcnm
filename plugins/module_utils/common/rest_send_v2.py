@@ -322,7 +322,7 @@ class RestSend:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error building response/result. "
             msg += f"Error detail: {error}"
-            raise ValueError(error) from error
+            raise ValueError(msg) from error
 
     def commit_normal_mode(self):
         """
@@ -380,7 +380,10 @@ class RestSend:
                 self.response_handler.commit()
                 self.result_current = self.response_handler.result
             except (TypeError, ValueError) as error:
-                raise ValueError(error) from error
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error building response/result. "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
 
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}.  "
