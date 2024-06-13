@@ -108,7 +108,10 @@ def test_rest_send_v2_00100() -> None:
         instance.response_handler = ResponseHandler()
         instance.verb = "GET"
 
-    match = r"RestSend\._verify_commit_parameters:\s+"
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details:\s+"
+    match += r"RestSend\._verify_commit_parameters:\s+"
     match += r"path must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -148,7 +151,10 @@ def test_rest_send_v2_00110() -> None:
         instance.sender = Sender()
         instance.verb = "GET"
 
-    match = r"RestSend\._verify_commit_parameters:\s+"
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details:\s+"
+    match += r"RestSend\._verify_commit_parameters:\s+"
     match += r"response_handler must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -188,7 +194,10 @@ def test_rest_send_v2_00120() -> None:
         instance.response_handler = ResponseHandler()
         instance.verb = "GET"
 
-    match = r"RestSend\._verify_commit_parameters:\s+"
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details:\s+"
+    match += r"RestSend\._verify_commit_parameters:\s+"
     match += r"sender must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -228,8 +237,11 @@ def test_rest_send_v2_00130() -> None:
         instance.response_handler = ResponseHandler()
         instance.sender = Sender()
 
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details:\s+"
     match = r"RestSend\._verify_commit_parameters:\s+"
-    match += r"verb must be set before calling commit\(\)."
+    match += r"verb must be set before calling commit\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 

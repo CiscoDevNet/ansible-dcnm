@@ -252,13 +252,21 @@ class RestSend:
                 -   ``unit_test`` is not a ``bool``
 
         """
-        msg = f"{self.class_name}.commit: "
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"check_mode: {self.check_mode}."
         self.log.debug(msg)
-        if self.check_mode is True:
-            self.commit_check_mode()
-        else:
-            self.commit_normal_mode()
+
+        try:
+            if self.check_mode is True:
+                self.commit_check_mode()
+            else:
+                self.commit_normal_mode()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during commit. "
+            msg += f"Error details: {error}"
+            raise ValueError(msg) from error
 
     def commit_check_mode(self):
         """
