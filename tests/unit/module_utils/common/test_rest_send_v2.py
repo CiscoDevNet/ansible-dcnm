@@ -369,6 +369,87 @@ def test_rest_send_v2_00210() -> None:
     assert instance.result == [instance.result_current]
 
 
+def test_rest_send_v2_00220(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   commit_check_mode()
+            -   commit()
+
+    ### Summary
+    Verify ``commit_check_mode()`` sad path when
+    ``response_handler.commit()`` raises ``ValueError``.
+
+    ### Setup - Code
+    -   PARAMS["check_mode"] is set to True
+    -   RestSend() is initialized.
+    -   RestSend().path is set.
+    -   RestSend().response_handler is set.
+    -   RestSend().sender is set.
+    -   RestSend().verb is set.
+    -   ResponseHandler().commit() is patched to raise ``ValueError``.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().commit() is called.
+
+    ### Expected Result
+    -   response_handler.commit() raises ``ValueError``
+    -   commit_check_mode() re-raises ``ValueError``
+    -   commit() re-raises ``ValueError``
+    """
+    params = copy.copy(PARAMS)
+    params["check_mode"] = True
+
+    class MockResponseHandler:
+        """
+        Mock ``ResponseHandler().commit()`` to raise ``ValueError``.
+        """
+
+        def __init__(self):
+            self._verb = "GET"
+
+        def commit(self):
+            """
+            Raise ``ValueError``.
+            """
+            raise ValueError("Error in ResponseHandler.")
+
+        @property
+        def implements(self):
+            """
+            Return expected interface string.
+            """
+            return "response_handler_v1"
+
+        @property
+        def verb(self):
+            """
+            get/set verb.
+            """
+            return self._verb
+
+        @verb.setter
+        def verb(self, value):
+            self._verb = value
+
+    with does_not_raise():
+        instance = RestSend(params)
+        instance.path = "/foo/path"
+        instance.response_handler = ResponseHandler()
+        instance.sender = Sender()
+        instance.verb = "POST"
+
+    monkeypatch.setattr(instance, "response_handler", MockResponseHandler())
+    match = r"RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details: Error in ResponseHandler\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
 MATCH_00500 = r"RestSend\.check_mode:\s+"
 MATCH_00500 += r"check_mode must be a boolean\.\s+"
 MATCH_00500 += r"Got.*\."
