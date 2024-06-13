@@ -22,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-import re
 from time import sleep
 
 # Using only for its failed_result property
@@ -395,9 +394,6 @@ class RestSend:
                 sleep(self.send_interval)
             timeout -= self.send_interval
 
-            self.response_current = self._strip_invalid_json_from_response_data(
-                self.response_current
-            )
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}.  "
             msg += "response_current: "
@@ -406,22 +402,6 @@ class RestSend:
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
-
-    @staticmethod
-    def _strip_invalid_json_from_response_data(response: dict) -> dict:
-        """
-        ### Summary
-        Strip "Invalid JSON response:" from response["DATA"] if present
-
-        This string in the response clutters up the output and is not
-        useful to the user.
-        """
-        if "DATA" not in response:
-            return response
-        if not isinstance(response["DATA"], str):
-            return response
-        response["DATA"] = re.sub(r"Invalid JSON response:\s*", "", response["DATA"])
-        return response
 
     @property
     def check_mode(self):

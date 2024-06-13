@@ -27,7 +27,6 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
-import inspect
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
