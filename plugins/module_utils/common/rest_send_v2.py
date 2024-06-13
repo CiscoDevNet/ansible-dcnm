@@ -684,9 +684,13 @@ class RestSend:
     @send_interval.setter
     def send_interval(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"{method_name} must be an integer. "
+        msg += f"Got type {type(value).__name__}, "
+        msg += f"value {value}\."
+        if isinstance(value, bool):
+            raise TypeError(msg)
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be an int(). Got {value}."
             raise TypeError(msg)
         self.properties["send_interval"] = value
 
