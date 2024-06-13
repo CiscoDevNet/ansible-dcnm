@@ -547,7 +547,7 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.response must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got type {type(value).__name__}, "
             msg += f"Value: {value}."
             raise TypeError(msg)
@@ -619,8 +619,9 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result must be a dict. "
-            msg += f"Got {value}."
+            msg += f"{method_name} must be a dict. "
+            msg += f"Got type {type(value).__name__}, "
+            msg += f"Value: {value}."
             raise TypeError(msg)
         self.properties["result"].append(value)
 
@@ -650,7 +651,7 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.result_current must be a dict. "
+            msg += f"{method_name} must be a dict. "
             msg += f"Got {value}."
             raise TypeError(msg)
         self.properties["result_current"] = value

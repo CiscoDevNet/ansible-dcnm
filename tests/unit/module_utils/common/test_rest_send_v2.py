@@ -460,3 +460,160 @@ def test_rest_send_v2_00600(value, does_raise, expected) -> None:
         instance.response_current = value
     if does_raise is False:
         assert instance.response_current == value
+
+
+MATCH_00700 = r"RestSend\.response:\s+"
+MATCH_00700 += r"response must be a dict\.\s+"
+MATCH_00700 += r"Got type.*,\s+"
+MATCH_00700 += r"Value:\s+.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (10, True, pytest.raises(TypeError, match=MATCH_00700)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_00700)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_00700)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_00700)),
+        (None, True, pytest.raises(TypeError, match=MATCH_00700)),
+        (False, True, pytest.raises(TypeError, match=MATCH_00700)),
+        (True, True, pytest.raises(TypeError, match=MATCH_00700)),
+        ({"RESULT_CODE": 200}, False, does_not_raise()),
+    ],
+)
+def test_rest_send_v2_00700(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   response.setter
+
+    ### Summary
+    Verify ``response.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to dict.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().response is reset using various types.
+
+    ### Expected Result
+    -   ``response`` raises TypeError for non-dict inputs.
+    -   ``response`` accepts dict values.
+    -   ``response`` returns a list of dict in the happy path.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.response = value
+    if does_raise is False:
+        assert instance.response == [value]
+
+
+MATCH_00800 = r"RestSend\.result_current:\s+"
+MATCH_00800 += r"result_current must be a dict\.\s+"
+MATCH_00800 += r"Got.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (10, True, pytest.raises(TypeError, match=MATCH_00800)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_00800)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_00800)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_00800)),
+        (None, True, pytest.raises(TypeError, match=MATCH_00800)),
+        (False, True, pytest.raises(TypeError, match=MATCH_00800)),
+        (True, True, pytest.raises(TypeError, match=MATCH_00800)),
+        ({"failed": False}, False, does_not_raise()),
+    ],
+)
+def test_rest_send_v2_00800(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   result_current.setter
+
+    ### Summary
+    Verify ``result_current.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to dict.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().result_current is reset using various types.
+
+    ### Expected Result
+    -   ``result_current`` raises TypeError for non-dict inputs.
+    -   ``result_current`` accepts dict values.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.result_current = value
+    if does_raise is False:
+        assert instance.result_current == value
+
+
+MATCH_00900 = r"RestSend\.result:\s+"
+MATCH_00900 += r"result must be a dict\.\s+"
+MATCH_00900 += r"Got type.*,\s+"
+MATCH_00900 += r"Value:\s+.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (10, True, pytest.raises(TypeError, match=MATCH_00900)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_00900)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_00900)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_00900)),
+        (None, True, pytest.raises(TypeError, match=MATCH_00900)),
+        (False, True, pytest.raises(TypeError, match=MATCH_00900)),
+        (True, True, pytest.raises(TypeError, match=MATCH_00900)),
+        ({"RESULT_CODE": 200}, False, does_not_raise()),
+    ],
+)
+def test_rest_send_v2_00900(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   result.setter
+
+    ### Summary
+    Verify ``result.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to dict.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().result is reset using various types.
+
+    ### Expected Result
+    -   ``result`` raises TypeError for non-dict inputs.
+    -   ``result`` accepts dict values.
+    -   ``result`` returns a list of dict in the happy path.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.result = value
+    if does_raise is False:
+        assert instance.result == [value]
