@@ -903,3 +903,56 @@ def test_rest_send_v2_01000(value, does_raise, expected) -> None:
         instance.result = value
     if does_raise is False:
         assert instance.result == [value]
+
+
+MATCH_01100 = r"RestSend\.send_interval:\s+"
+MATCH_01100 += r"send_interval must be an integer\.\s+"
+MATCH_01100 += r"Got type.*,\s+"
+MATCH_01100 += r"value\s+.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (200, False, does_not_raise()),
+        ([10], True, pytest.raises(TypeError, match=MATCH_01100)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_01100)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_01100)),
+        (None, True, pytest.raises(TypeError, match=MATCH_01100)),
+        (False, True, pytest.raises(TypeError, match=MATCH_01100)),
+        (True, True, pytest.raises(TypeError, match=MATCH_01100)),
+    ],
+)
+def test_rest_send_v2_01100(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   send_interval.setter
+
+    ### Summary
+    Verify ``send_interval.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to integer.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().send_interval is reset using various types.
+
+    ### Expected Result
+    -   ``send_interval`` raises TypeError for non-integer inputs.
+    -   ``send_interval`` accepts integer inputs.
+    -   ``send_interval`` returns an integer in the happy path.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.send_interval = value
+    if does_raise is False:
+        assert isinstance(instance.send_interval, int)
+        assert instance.send_interval == value
