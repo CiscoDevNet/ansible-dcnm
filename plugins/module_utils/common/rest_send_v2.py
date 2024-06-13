@@ -687,7 +687,7 @@ class RestSend:
         msg = f"{self.class_name}.{method_name}: "
         msg += f"{method_name} must be an integer. "
         msg += f"Got type {type(value).__name__}, "
-        msg += f"value {value}\."
+        msg += f"value {value}."
         if isinstance(value, bool):
             raise TypeError(msg)
         if not isinstance(value, int):
