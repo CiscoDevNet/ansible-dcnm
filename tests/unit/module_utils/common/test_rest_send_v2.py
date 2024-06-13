@@ -41,6 +41,15 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 PARAMS = {"state": "merged", "check_mode": False}
 
 
+def responses():
+    """
+    Dummy coroutine for ResponseGenerator()
+
+    See e.g. test_rest_send_v2_00800
+    """
+    yield {}
+
+
 def test_rest_send_v2_00000() -> None:
     """
     ### Classes and Methods
@@ -170,7 +179,7 @@ def test_rest_send_v2_00120() -> None:
 
     ### Summary
     Verify ``_verify_commit_parameters()`` raises ``ValueError``
-    due to ``response_handler`` not being set.
+    due to ``sender`` not being set.
 
     ### Setup - Code
     -   RestSend() is initialized.
@@ -213,7 +222,7 @@ def test_rest_send_v2_00130() -> None:
 
     ### Summary
     Verify ``_verify_commit_parameters()`` raises ``ValueError``
-    due to ``response_handler`` not being set.
+    due to ``verb`` not being set.
 
     ### Setup - Code
     -   RestSend() is initialized.
@@ -515,25 +524,87 @@ def test_rest_send_v2_00700(value, does_raise, expected) -> None:
         assert instance.response == [value]
 
 
-MATCH_00800 = r"RestSend\.result_current:\s+"
-MATCH_00800 += r"result_current must be a dict\.\s+"
-MATCH_00800 += r"Got.*\."
+MATCH_00800 = r"RestSend\.response_handler:\s+"
+MATCH_00800 += r"response_handler must implement response_handler_v1\.\s+"
+MATCH_00800 += r"Got type\s+.*,\s+"
+MATCH_00800 += r"implementing\s+.*\."
+MATCH_00800_A = rf"{MATCH_00800} Error detail:\s+.*"
+MATCH_00800_B = MATCH_00800
 
 
 @pytest.mark.parametrize(
     "value, does_raise, expected",
     [
-        (10, True, pytest.raises(TypeError, match=MATCH_00800)),
-        ([10], True, pytest.raises(TypeError, match=MATCH_00800)),
-        ({10}, True, pytest.raises(TypeError, match=MATCH_00800)),
-        ("FOO", True, pytest.raises(TypeError, match=MATCH_00800)),
-        (None, True, pytest.raises(TypeError, match=MATCH_00800)),
-        (False, True, pytest.raises(TypeError, match=MATCH_00800)),
-        (True, True, pytest.raises(TypeError, match=MATCH_00800)),
-        ({"failed": False}, False, does_not_raise()),
+        (10, True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        (None, True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        (False, True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        (True, True, pytest.raises(TypeError, match=MATCH_00800_A)),
+        (
+            ResponseGenerator(responses()),
+            True,
+            pytest.raises(TypeError, match=MATCH_00800_B),
+        ),
+        (ResponseHandler(), False, does_not_raise()),
     ],
 )
 def test_rest_send_v2_00800(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   response_handler.setter
+
+    ### Summary
+    Verify ``response_handler.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to a class that implements the response_handler_v1
+    interface.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().response_handler is reset using various types.
+
+    ### Expected Result
+    -   ``response_handler`` raises TypeError for inappropriate inputs.
+    -   ``response_handler`` accepts appropriate inputs.
+    -   ``response_handler`` happy path returns a class that implements the
+        response_handler_v1 interface.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.response_handler = value
+    if does_raise is False:
+        assert isinstance(instance.response_handler, ResponseHandler)
+
+
+MATCH_00900 = r"RestSend\.result_current:\s+"
+MATCH_00900 += r"result_current must be a dict\.\s+"
+MATCH_00900 += r"Got.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (10, True, pytest.raises(TypeError, match=MATCH_00900)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_00900)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_00900)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_00900)),
+        (None, True, pytest.raises(TypeError, match=MATCH_00900)),
+        (False, True, pytest.raises(TypeError, match=MATCH_00900)),
+        (True, True, pytest.raises(TypeError, match=MATCH_00900)),
+        ({"failed": False}, False, does_not_raise()),
+    ],
+)
+def test_rest_send_v2_00900(value, does_raise, expected) -> None:
     """
     ### Classes and Methods
     -   RestSend()
@@ -566,26 +637,26 @@ def test_rest_send_v2_00800(value, does_raise, expected) -> None:
         assert instance.result_current == value
 
 
-MATCH_00900 = r"RestSend\.result:\s+"
-MATCH_00900 += r"result must be a dict\.\s+"
-MATCH_00900 += r"Got type.*,\s+"
-MATCH_00900 += r"Value:\s+.*\."
+MATCH_01000 = r"RestSend\.result:\s+"
+MATCH_01000 += r"result must be a dict\.\s+"
+MATCH_01000 += r"Got type.*,\s+"
+MATCH_01000 += r"Value:\s+.*\."
 
 
 @pytest.mark.parametrize(
     "value, does_raise, expected",
     [
-        (10, True, pytest.raises(TypeError, match=MATCH_00900)),
-        ([10], True, pytest.raises(TypeError, match=MATCH_00900)),
-        ({10}, True, pytest.raises(TypeError, match=MATCH_00900)),
-        ("FOO", True, pytest.raises(TypeError, match=MATCH_00900)),
-        (None, True, pytest.raises(TypeError, match=MATCH_00900)),
-        (False, True, pytest.raises(TypeError, match=MATCH_00900)),
-        (True, True, pytest.raises(TypeError, match=MATCH_00900)),
+        (10, True, pytest.raises(TypeError, match=MATCH_01000)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_01000)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_01000)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_01000)),
+        (None, True, pytest.raises(TypeError, match=MATCH_01000)),
+        (False, True, pytest.raises(TypeError, match=MATCH_01000)),
+        (True, True, pytest.raises(TypeError, match=MATCH_01000)),
         ({"RESULT_CODE": 200}, False, does_not_raise()),
     ],
 )
-def test_rest_send_v2_00900(value, does_raise, expected) -> None:
+def test_rest_send_v2_01000(value, does_raise, expected) -> None:
     """
     ### Classes and Methods
     -   RestSend()

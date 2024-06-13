@@ -318,6 +318,9 @@ class RestSend:
             self.response = copy.deepcopy(self.response_current)
             self.result = copy.deepcopy(self.result_current)
         except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error building response/result. "
+            msg += f"Error detail: {error}"
             raise ValueError(error) from error
 
     def commit_normal_mode(self):
@@ -579,18 +582,18 @@ class RestSend:
     @response_handler.setter
     def response_handler(self, value):
         method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "ResponseHandler"
-
+        _implements_need = "response_handler_v1"
+        _implements_have = None
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
+        msg += f"{method_name} must implement {_implements_need}. "
+        msg += f"Got type {type(value).__name__}, "
+        msg += f"implementing {_implements_have}. "
         try:
-            _class_have = value.class_name
+            _implements_have = value.implements
         except AttributeError as error:
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
-        if _class_have != _class_need:
+        if _implements_have != _implements_need:
             raise TypeError(msg)
         self.properties["response_handler"] = value
 

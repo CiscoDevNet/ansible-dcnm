@@ -210,6 +210,13 @@ class ResponseHandler:
         self._handle_response()
 
     @property
+    def implements(self):
+        """
+        Return the interface this class implements.
+        """
+        return "response_handler_v1"
+
+    @property
     def response(self):
         """
         ### Summary
