@@ -443,5 +443,71 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
         "RETURN_CODE": 200
+    },
+    "test_switch_details_00200a": {
+        "TEST_NOTES": [
+            "DATA contains two switches",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "hostName": null,
+                "ipAddress": "192.168.1.2",
+                "isNonNexus": false,
+                "logicalName": "cvd-1314-leaf",
+                "model": "N9K-C93180YC-EX",
+                "operStatus": "Minor",
+                "managable": true,
+                "mode": "Normal",
+                "release": "10.2(5)",
+                "serialNumber": "FDO123456FV",
+                "sourceInterface": "mgmt0",
+                "sourceVrf": "management",
+                "status": "ok",
+                "switchDbID": 123456,
+                "switchRole": "leaf",
+                "swUUID":"DCNM-UUID-7654321",
+                "swUUIDId": 7654321,
+                "systemMode": "Maintenance"
+            },
+            {
+                "fabricName": "LAN_Classic_Fabric",
+                "hostName": null,
+                "ipAddress": "192.168.2.2",
+                "isNonNexus": false,
+                "logicalName": "cvd-2314-spine",
+                "model": "N9K-C93180YC-FX",
+                "operStatus": "Major",
+                "managable": false,
+                "mode": "Normal",
+                "release": "10.2(4)",
+                "serialNumber": "FD6543210FV",
+                "sourceInterface": "Ethernet1/1",
+                "sourceVrf": "default",
+                "status": "ok",
+                "switchDbID": 654321,
+                "switchRole": "spine",
+                "swUUID":"DCNM-UUID-1234567",
+                "swUUIDId": 1234567,
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00300a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 500",
+            "MESSAGE: Internal server error"
+        ],
+        "DATA": [{}],
+        "MESSAGE": "Internal server error",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 500
     }
 }

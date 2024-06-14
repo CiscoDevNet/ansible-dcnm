@@ -27,6 +27,7 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
+import inspect
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.inventory.inventory import \
@@ -44,18 +45,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    ResponseGenerator, does_not_raise)
+    ResponseGenerator, does_not_raise, responses_switch_details)
 
 PARAMS = {"state": "merged", "check_mode": False}
-
-
-def responses():
-    """
-    Dummy coroutine for ResponseGenerator()
-
-    See e.g. test_switch_details_00800
-    """
-    yield {}
 
 
 def test_switch_details_00000() -> None:
@@ -86,7 +78,7 @@ def test_switch_details_00100() -> None:
     ### Classes and Methods
     -   SwitchDetails()
             -   validate_refresh_parameters()
-            -   commit()
+            -   refresh()
 
     ### Summary
     Verify ``validate_refresh_parameters()`` raises ``ValueError``
@@ -126,7 +118,7 @@ def test_switch_details_00110() -> None:
     ### Classes and Methods
     -   SwitchDetails()
             -   validate_refresh_parameters()
-            -   commit()
+            -   refresh()
 
     ### Summary
     Verify ``validate_refresh_parameters()`` raises ``ValueError``
@@ -159,3 +151,163 @@ def test_switch_details_00110() -> None:
     match += r"SwitchDetails\.refresh\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
+
+
+def test_switch_details_00200() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+
+    ### Summary
+    Verify ``refresh()`` happy path.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with two switches.
+
+    ### Trigger
+    -   SwitchDetails().refresh() is called.
+
+    ### Expected Result
+    -   Results() contains the expected data.
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+    #  pylint: disable=unsupported-membership-test
+    assert False in instance.results.changed
+    assert False in instance.results.failed
+    #  pylint: enable=unsupported-membership-test
+    assert instance.results.action == "switch_details"
+    assert instance.results.response_current["MESSAGE"] == "OK"
+    assert instance.results.response_current["RETURN_CODE"] == 200
+    assert instance.results.response_current["DATA"][0]["ipAddress"] == "192.168.1.2"
+    assert instance.results.response_current["DATA"][1]["ipAddress"] == "192.168.2.2"
+    assert "192.168.1.2" in instance.info
+    assert "192.168.2.2" in instance.info
+    instance.filter = "192.168.1.2"
+    assert instance.fabric_name == "VXLAN_Fabric"
+    assert instance.hostname is None
+    assert instance.is_non_nexus is False
+    assert instance.logical_name == "cvd-1314-leaf"
+    assert instance.managable is True
+    assert instance.mode == "normal"
+    assert instance.model == "N9K-C93180YC-EX"
+    assert instance.oper_status == "Minor"
+    assert instance.platform == "N9K"
+    assert instance.release == "10.2(5)"
+    assert instance.role == "leaf"
+    assert instance.serial_number == "FDO123456FV"
+    assert instance.source_interface == "mgmt0"
+    assert instance.source_vrf == "management"
+    assert instance.status == "ok"
+    assert instance.switch_db_id == 123456
+    assert instance.switch_role == "leaf"
+    assert instance.switch_uuid == "DCNM-UUID-7654321"
+    assert instance.switch_uuid_id == 7654321
+    assert instance.system_mode == "Maintenance"
+    instance.filter = "192.168.2.2"
+    assert instance.fabric_name == "LAN_Classic_Fabric"
+    assert instance.hostname is None
+    assert instance.is_non_nexus is False
+    assert instance.logical_name == "cvd-2314-spine"
+    assert instance.managable is False
+    assert instance.mode == "normal"
+    assert instance.model == "N9K-C93180YC-FX"
+    assert instance.oper_status == "Major"
+    assert instance.platform == "N9K"
+    assert instance.release == "10.2(4)"
+    assert instance.role == "spine"
+    assert instance.serial_number == "FD6543210FV"
+    assert instance.source_interface == "Ethernet1/1"
+    assert instance.source_vrf == "default"
+    assert instance.status == "ok"
+    assert instance.switch_db_id == 654321
+    assert instance.switch_role == "spine"
+    assert instance.switch_uuid == "DCNM-UUID-1234567"
+    assert instance.switch_uuid_id == 1234567
+    assert instance.system_mode == "Normal"
+
+
+def test_switch_details_00300() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+
+    ### Summary
+    Verify ``refresh()`` sad path where 500 response is returned.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with:
+    -   RETURN_CODE: 500
+    -   MESSAGE: "Internal Server Error".
+
+    ### Trigger
+    -   SwitchDetails().refresh() is called.
+
+    ### Expected Result
+    -   Results() contains the expected data.
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+    #  pylint: disable=unsupported-membership-test
+    assert False in instance.results.changed
+    assert True in instance.results.failed
+    #  pylint: enable=unsupported-membership-test
+    assert instance.results.result_current["sequence_number"] == 1
+    assert instance.results.result_current["found"] is False
+    assert instance.results.result_current["success"] is False
+    assert instance.results.diff_current["sequence_number"] == 1
+    assert instance.results.response_current["MESSAGE"] == "Internal server error"
+    assert instance.results.response_current["RETURN_CODE"] == 500
+    assert instance.results.response == [instance.results.response_current]
+    assert instance.results.result == [instance.results.result_current]
+    assert instance.results.diff == [instance.results.diff_current]
