@@ -163,7 +163,7 @@ class SwitchDetails:
         except TypeError as error:
             raise ValueError(error) from error
 
-        if self.results.failed is True:
+        if True in self.results.failed:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Unable to retrieve switch information from the controller. "
             msg += f"Got response {self.results.response_current}"
@@ -175,12 +175,12 @@ class SwitchDetails:
         the controller.
 
         ### Raises
-        -   ``ControllerResponseError`` if:
-                -   The controller RETURN_CODE is not 200.
         -   ``ValueError`` if
                 -   Mandatory parameters are not set.
                 -   There was an error configuring RestSend() e.g.
                     invalid property values, etc.
+                -   There is an error sending the request to the controller.
+                -   There is an error updatingcontroller results.
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -202,7 +202,10 @@ class SwitchDetails:
         try:
             self.update_results()
         except ControllerResponseError as error:
-            raise ControllerResponseError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error updating results. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         data = self.results.response_current.get("DATA")
         self._info = {}

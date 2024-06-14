@@ -34,6 +34,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabri
     EpAllSwitches
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
@@ -297,6 +299,12 @@ def test_switch_details_00300() -> None:
         instance = SwitchDetails()
         instance.rest_send = rest_send
         instance.results = Results()
+    match = r"SwitchDetails\.refresh:\s+"
+    match += r"Error updating results\.\s+"
+    match += r"Error detail: SwitchDetails\.update_results:\s+"
+    match += r"Unable to retrieve switch information from the controller\.\s+"
+    match += r"Got response.*"
+    with pytest.raises(ValueError, match=match):
         instance.refresh()
     #  pylint: disable=unsupported-membership-test
     assert False in instance.results.changed
@@ -311,3 +319,63 @@ def test_switch_details_00300() -> None:
     assert instance.results.response == [instance.results.response_current]
     assert instance.results.result == [instance.results.result_current]
     assert instance.results.diff == [instance.results.diff_current]
+
+
+def test_switch_details_00400() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   send_request()
+            -   refresh()
+
+    ### Summary
+    Verify ``refresh()`` catches ``ValueError`` raised by
+    ``send_request()`` when ``Sender()`` is configured to raise
+    ``ValueError``.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured to raise ``ValueError``.
+        in ``commit()``.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with:
+    -   RETURN_CODE: 500
+    -   MESSAGE: "Internal Server Error".
+
+    ### Trigger
+    -   SwitchDetails().refresh() is called.
+
+    ### Expected Result
+    -   ``refresh`` re-raises ``ValueError``.
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    sender.raise_exception = ValueError
+    sender.raise_method = "commit"
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+    match = r"SwitchDetails\.refresh:\s+"
+    match += r"Error sending request to the controller\.\s+"
+    match += r"Error detail: RestSend\.commit:\s+"
+    match += r"Error during commit\.\s+"
+    match += r"Error details: Sender\.commit:\s+"
+    match += r"Simulated ValueError\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
