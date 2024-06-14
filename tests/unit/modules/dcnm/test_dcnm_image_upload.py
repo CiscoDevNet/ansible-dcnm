@@ -22,9 +22,6 @@ from unittest.mock import patch
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_image_upload
 from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
-import json
-import copy
-
 
 class TestDcnmImageUploadModule(TestDcnmModule):
 

@@ -58,6 +58,7 @@ options:
       - A list of dictionaries containing Links information.
     type: list
     elements: dict
+    default: []
     suboptions:
       dst_fabric:
         description:
