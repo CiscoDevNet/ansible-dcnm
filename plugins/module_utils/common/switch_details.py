@@ -50,11 +50,19 @@ class SwitchDetails:
                 property values, etc.
 
     ### Usage
+    - Where ``ansible_module`` is an instance of ``AnsibleModule``
+
     ```python
+    # params could also be set to ansible_module.params
+    params = {"state": "merged", "check_mode": False}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.sender = sender
     try:
         instance = SwitchDetails()
         instance.results = Results()
-        instance.rest_send = RestSend(ansible_module)
+        instance.rest_send = rest_send
         instance.refresh()
     except (ControllerResponseError, ValueError) as error:
         # Handle error
@@ -199,6 +207,8 @@ class SwitchDetails:
         data = self.results.response_current.get("DATA")
         self._info = {}
         for switch in data:
+            if switch.get("ipAddress", None) is None:
+                continue
             self._info[switch["ipAddress"]] = switch
 
     def _get(self, item):
