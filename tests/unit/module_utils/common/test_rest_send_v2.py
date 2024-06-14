@@ -1157,3 +1157,168 @@ def test_rest_send_v2_01400(value, does_raise, expected) -> None:
         instance.sender = value
     if not does_raise:
         assert instance.sender.implements == "sender_v1"
+
+
+MATCH_01500 = r"RestSend\.timeout:\s+"
+MATCH_01500 += r"timeout must be an integer\.\s+"
+MATCH_01500 += r"Got type.*,\s+"
+MATCH_01500 += r"value\s+.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (200, False, does_not_raise()),
+        ([10], True, pytest.raises(TypeError, match=MATCH_01500)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_01500)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_01500)),
+        (None, True, pytest.raises(TypeError, match=MATCH_01500)),
+        (False, True, pytest.raises(TypeError, match=MATCH_01500)),
+        (True, True, pytest.raises(TypeError, match=MATCH_01500)),
+    ],
+)
+def test_rest_send_v2_01500(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   timeout.setter
+
+    ### Summary
+    Verify ``timeout.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to integer.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().timeout is reset using various types.
+
+    ### Expected Result
+    -   ``timeout`` raises TypeError for non-integer inputs.
+    -   ``timeout`` accepts integer inputs.
+    -   ``timeout`` returns an integer in the happy path.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.timeout = value
+    if does_raise is False:
+        assert isinstance(instance.timeout, int)
+        assert instance.timeout == value
+
+
+MATCH_01600 = r"RestSend\.unit_test:\s+"
+MATCH_01600 += r"unit_test must be a boolean\.\s+"
+MATCH_01600 += r"Got type.*,\s+"
+MATCH_01600 += r"value\s+.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (False, False, does_not_raise()),
+        (True, False, does_not_raise()),
+        (200, True, pytest.raises(TypeError, match=MATCH_01600)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_01600)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_01600)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_01600)),
+        (None, True, pytest.raises(TypeError, match=MATCH_01600)),
+    ],
+)
+def test_rest_send_v2_01600(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   unit_test.setter
+
+    ### Summary
+    Verify ``unit_test.setter`` raises ``TypeError``
+    when set to inappropriate types, and does not raise
+    when set to boolean.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().unit_test is reset using various types.
+
+    ### Expected Result
+    -   ``unit_test`` raises TypeError for non-boolean inputs.
+    -   ``unit_test`` accepts boolean inputs.
+    -   ``unit_test`` returns a boolean in the happy path.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.unit_test = value
+    if does_raise is False:
+        assert isinstance(instance.unit_test, bool)
+        assert instance.unit_test == value
+
+
+MATCH_01700 = r"RestSend\.verb:\s+"
+MATCH_01700 += r"verb must be one of\s+"
+MATCH_01700 += r"\['DELETE', 'GET', 'POST', 'PUT'\]\.\s+"
+MATCH_01700 += r"Got.*\."
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        ("DELETE", False, does_not_raise()),
+        ("GET", False, does_not_raise()),
+        ("POST", False, does_not_raise()),
+        ("PUT", False, does_not_raise()),
+        ("FOO", True, pytest.raises(ValueError, match=MATCH_01700)),
+        (200, True, pytest.raises(TypeError, match=MATCH_01700)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_01700)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_01700)),
+        (None, True, pytest.raises(TypeError, match=MATCH_01700)),
+    ],
+)
+def test_rest_send_v2_01700(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   verb.setter
+
+    ### Summary
+    -   Verify ``verb.setter`` raises ``TypeError``
+        when set to non-string types.
+    -   Verify ``verb.setter`` raises ``ValueError``
+        when set to inappropriate values.
+    -   Verify that ``verb.setter`` does not raise
+        when set to one of "DELETE", "GET", "POST", or "PUT".
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().verb is reset using various values.
+
+    ### Expected Result
+    -   ``verb`` raises TypeError for invalid types.
+    -   ``verb`` raises ValueError for invalid values.
+    -   ``verb`` accepts valid inputs.
+    -   ``verb`` returns valid input in the happy path.
+    """
+    with does_not_raise():
+        instance = RestSend(PARAMS)
+
+    with expected:
+        instance.verb = value
+    if does_raise is False:
+        assert isinstance(instance.verb, str)
+        assert instance.verb == value

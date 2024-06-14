@@ -759,9 +759,13 @@ class RestSend:
     @timeout.setter
     def timeout(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"{method_name} must be an integer. "
+        msg += f"Got type {type(value).__name__}, "
+        msg += f"value {value}."
+        if isinstance(value, bool):
+            raise TypeError(msg)
         if not isinstance(value, int):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be an int(). Got {value}."
             raise TypeError(msg)
         self._timeout = value
 
@@ -791,7 +795,9 @@ class RestSend:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be a bool(). Got {value}."
+            msg += f"{method_name} must be a boolean. "
+            msg += f"Got type {type(value).__name__}, "
+            msg += f"value {value}."
             raise TypeError(msg)
         self._unit_test = value
 
@@ -801,6 +807,7 @@ class RestSend:
         Verb for the REST request.
 
         ### Raises
+        -   setter: ``TypeError`` if value is not a string.
         -   setter: ``ValueError`` if value is not a valid verb.
 
         ### Valid verbs
@@ -811,9 +818,11 @@ class RestSend:
     @verb.setter
     def verb(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"{method_name} must be one of {sorted(self._valid_verbs)}. "
+        msg += f"Got {value}."
+        if not isinstance(value, str):
+            raise TypeError(msg)
         if value not in self._valid_verbs:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{method_name} must be one of {sorted(self._valid_verbs)}. "
-            msg += f"Got {value}."
             raise ValueError(msg)
         self._verb = value
