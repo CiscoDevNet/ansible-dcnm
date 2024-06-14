@@ -717,18 +717,19 @@ class RestSend:
     @sender.setter
     def sender(self, value):
         method_name = inspect.stack()[0][3]
-        _class_have = None
-        _class_need = "Sender"
+        _implements_have = None
+        _implements_need = "sender_v1"
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
+        msg += f"value must be a class that implements {_implements_need}. "
+        msg += f"Got type {type(value).__name__}, "
+        msg += f"value {value}. "
         try:
-            _class_have = value.class_name
+            _implements_have = value.implements
         except AttributeError as error:
             msg += f"Error detail: {error}."
             raise TypeError(msg) from error
-        if _class_have != _class_need:
+        if _implements_have != _implements_need:
             raise TypeError(msg)
         self._sender = value
 

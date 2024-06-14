@@ -1105,3 +1105,55 @@ def test_rest_send_v2_01300() -> None:
         instance = RestSend(PARAMS)
         implements = instance.implements
     assert implements == "rest_send_v2"
+
+
+MATCH_01400 = r"RestSend.sender:\s+"
+MATCH_01400 += r"value must be a class that implements sender_v1\.\s+"
+MATCH_01400 += r"Got type .*, value .*\.\s+"
+MATCH_01400_A = rf"{MATCH_01400}Error detail:.*"
+MATCH_01400_B = MATCH_01400
+
+
+@pytest.mark.parametrize(
+    "value, does_raise, expected",
+    [
+        (10, True, pytest.raises(TypeError, match=MATCH_01400_A)),
+        (True, True, pytest.raises(TypeError, match=MATCH_01400_A)),
+        (False, True, pytest.raises(TypeError, match=MATCH_01400_A)),
+        ([10], True, pytest.raises(TypeError, match=MATCH_01400_A)),
+        ({10}, True, pytest.raises(TypeError, match=MATCH_01400_A)),
+        ("FOO", True, pytest.raises(TypeError, match=MATCH_01400_A)),
+        (ResponseHandler(), True, pytest.raises(TypeError, match=MATCH_01400_B)),
+        (Sender(), False, does_not_raise()),
+    ],
+)
+def test_rest_send_v2_01400(value, does_raise, expected) -> None:
+    """
+    ### Classes and Methods
+    -   RestSend()
+            -   sender
+
+    ### Summary
+    -   Verify ``sender.setter`` raises ``TypeError`` when set to
+        anything other than a class that implements sender_v1.
+    -   Verify that ``sender.getter`` returns Sender() class when
+        properly set.
+
+    ### Setup - Code
+    -   RestSend() is initialized.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   RestSend().sender is set to various values.
+
+    ### Expected Result
+    -   ``sender.setter`` raises ``TypeError`` when expected.
+    -   ``sender.getter`` returns Sender() class if set properly.
+    """
+    with expected:
+        instance = RestSend(PARAMS)
+        instance.sender = value
+    if not does_raise:
+        assert instance.sender.implements == "sender_v1"
