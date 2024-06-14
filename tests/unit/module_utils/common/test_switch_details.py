@@ -379,3 +379,35 @@ def test_switch_details_00400() -> None:
     match += r"Simulated ValueError\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
+
+
+def test_switch_details_00500() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   _get()
+            -   logical_name.getter
+
+    ### Summary
+    Verify ``_get()`` raises ``ValueError`` if ``filter`` is not
+    set before accessing properties that use ``_get()``.
+
+    ### Setup - Code
+    -   SwitchDetails() is instantiated.
+    -   SwitchDetails().filter is NOT set.
+
+    ### Setup - Data
+    None
+
+    ### Trigger
+    -   SwitchDetails().logical_name is accessed.
+
+    ### Expected Result
+    -   ``_get()`` raises ``ValueError``.
+    """
+    with does_not_raise():
+        instance = SwitchDetails()
+    match = r"SwitchDetails\._get:\s+"
+    match += r"set instance\.filter before accessing property logicalName\."
+    with pytest.raises(ValueError, match=match):
+        instance.logical_name
