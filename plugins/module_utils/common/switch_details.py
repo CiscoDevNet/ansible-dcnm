@@ -411,12 +411,12 @@ class SwitchDetails:
         method_name = inspect.stack()[0][3]
         if self.mode is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "mode is not set.  Either ``filter`` has not been "
+            msg += "mode is not set. Either 'filter' has not been "
             msg += "set, or the controller response is invalid."
             raise ValueError(msg)
         if self.system_mode is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "system_mode is not set.  Either ``filter`` has not been "
+            msg += "system_mode is not set. Either 'filter' has not been "
             msg += "set, or the controller response is invalid."
             raise ValueError(msg)
         if self.mode.lower() == "migration":

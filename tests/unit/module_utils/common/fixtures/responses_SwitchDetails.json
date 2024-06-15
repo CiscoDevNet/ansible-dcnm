@@ -531,5 +531,150 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
         "RETURN_CODE": 200
+    },
+    "test_switch_details_00700a": {
+        "TEST_NOTES": [
+            "DATA[0].mode is null",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": null,
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00710a": {
+        "TEST_NOTES": [
+            "DATA[0].system_mode is null",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "systemMode": null
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00720a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Migration",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Migration",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00730a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Maintenance",
+            "DATA[0].system_mode == Normal",
+            "mode != system_mode",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Maintenance",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00740a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Maintenance",
+            "DATA[0].system_mode == Maintenence",
+            "mode != system_mode",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Maintenance",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00750a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Normal",
+            "DATA[0].system_mode == Normal",
+            "mode != system_mode",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00800a": {
+        "TEST_NOTES": [
+            "DATA[0].model == null",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "model": null,
+                "serialNumber": "FDO123456FV"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
     }
 }

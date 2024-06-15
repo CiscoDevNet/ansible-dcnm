@@ -493,3 +493,413 @@ def test_switch_details_00600() -> None:
     match += r"set instance\.filter before accessing property logicalName\."
     with pytest.raises(ValueError, match=match):
         instance.logical_name  # pylint: disable=pointless-statement
+
+
+def test_switch_details_00700() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   maintenance_mode
+
+    ### Summary
+    Verify ``maintenance_mode`` raises ``ValueError`` if
+    ``mode`` is ``null`` in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with one switch
+    for which the ``mode`` key is set to ``null``.
+
+    ### Trigger
+    ``maintenance_mode.getter`` is accessed.
+
+    ### Expected Result
+    -   ``maintenance_mode.getter`` raises ``ValueError``
+        because ``_get()`` returns None for ``mode``.
+    -
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+
+    match = r"SwitchDetails\.maintenance_mode:\s+"
+    match += r"mode is not set\. Either 'filter' has not been set,\s+"
+    match += r"or the controller response is invalid\."
+    with pytest.raises(ValueError, match=match):
+        instance.maintenance_mode  # pylint: disable=pointless-statement
+
+
+def test_switch_details_00710() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   maintenance_mode
+
+    ### Summary
+    Verify ``maintenance_mode`` raises ``ValueError`` if
+    system_mode is ``null`` in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with one switch
+    for which the ``system_mode`` key is set to ``null``.
+
+    ### Trigger
+    ``maintenance_mode.getter`` is accessed.
+
+    ### Expected Result
+    -   ``maintenance_mode.getter`` raises ``ValueError``
+        because ``_get()`` returns None for ``system_mode``.
+    -
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+
+    match = r"SwitchDetails\.maintenance_mode:\s+"
+    match += r"system_mode is not set\. Either 'filter' has not been set,\s+"
+    match += r"or the controller response is invalid\."
+    with pytest.raises(ValueError, match=match):
+        instance.maintenance_mode  # pylint: disable=pointless-statement
+
+
+def test_switch_details_00720() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   maintenance_mode
+
+    ### Summary
+    Verify ``maintenance_mode`` returns "migration" if
+    mode == "Migration" in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response containing:
+    -   1x` switch
+    -   ``mode`` == Migration
+
+    ### Trigger
+    ``maintenance_mode.getter`` is accessed.
+
+    ### Expected Result
+    -   ``maintenance_mode.getter`` returns "migration"
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+    assert instance.maintenance_mode == "migration"
+
+
+def test_switch_details_00730() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   maintenance_mode
+
+    ### Summary
+    Verify ``maintenance_mode`` returns "inconsistent" if
+    mode != system_mode in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response containing:
+    -   1x switch
+    -   ``mode`` == Normal
+    -   ``system_mode`` == Maintenance
+    -   i.e. ``mode`` != ``system_mode``
+
+    ### Trigger
+    ``maintenance_mode.getter`` is accessed.
+
+    ### Expected Result
+    -   ``maintenance_mode.getter`` returns "inconsistent"
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+    assert instance.maintenance_mode == "inconsistent"
+
+
+def test_switch_details_00740() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   maintenance_mode
+
+    ### Summary
+    Verify ``maintenance_mode`` returns "maintenance" if
+    ``mode == "Maintenance" and ``system_mode`` == "Maintenance"
+    in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response containing:
+    -   1x switch
+    -   ``mode`` == Maintenance
+    -   ``system_mode`` == Maintenance
+
+    ### Trigger
+    ``maintenance_mode.getter`` is accessed.
+
+    ### Expected Result
+    -   ``maintenance_mode.getter`` returns "maintenance"
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+    assert instance.maintenance_mode == "maintenance"
+
+
+def test_switch_details_00750() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   maintenance_mode
+
+    ### Summary
+    Verify ``maintenance_mode`` returns "normal" if
+    mode == "Normal" and system_mode == "Normal"
+    in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response containing:
+    -   1x switch
+    -   ``mode`` == Normal
+    -   ``system_mode`` == Normal
+
+    ### Trigger
+    ``maintenance_mode.getter`` is accessed.
+
+    ### Expected Result
+    -   ``maintenance_mode.getter`` returns "normal"
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+    assert instance.maintenance_mode == "normal"
+
+
+def test_switch_details_00800() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   validate_refresh_parameters()
+            -   refresh()
+            -   filter.setter
+            -   platform.getter
+
+    ### Summary
+    Verify ``platform`` returns ``None`` if model == ``null``
+    in the controller response.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   SwitchDetails().refresh() is called.
+    -   SwitchDetails().filter is set to the switch
+        ip_address in the response.
+
+    ### Setup - Data
+    responses_switch_details() returns a response containing:
+    -   1x switch
+    -   ``model`` == null
+
+    ### Trigger
+    ``platform.getter`` is accessed.
+
+    ### Expected Result
+    -   ``platform.getter`` returns ``None``
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+        instance.filter = "192.168.1.2"
+    assert instance.platform is None
