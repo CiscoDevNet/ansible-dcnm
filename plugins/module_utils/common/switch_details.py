@@ -161,7 +161,10 @@ class SwitchDetails:
                 self.results.failed = True
             self.results.register_task_result()
         except TypeError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error updating results. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         if True in self.results.failed:
             msg = f"{self.class_name}.{method_name}: "
@@ -201,7 +204,7 @@ class SwitchDetails:
 
         try:
             self.update_results()
-        except ControllerResponseError as error:
+        except (ControllerResponseError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error updating results. "
             msg += f"Error detail: {error}"

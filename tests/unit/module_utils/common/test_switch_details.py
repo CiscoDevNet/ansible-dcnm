@@ -381,7 +381,89 @@ def test_switch_details_00400() -> None:
         instance.refresh()
 
 
-def test_switch_details_00500() -> None:
+def test_switch_details_00500(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   update_results()
+            -   refresh()
+
+    ### Summary
+    Verify ``refresh()`` catches and re-raises ``ValueError``
+    raised by ``update_results()``.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+    -   Results() is mocked to raise ``TypeError`` in
+        ``action.setter``.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with:
+    -   RETURN_CODE: 200
+    -   MESSAGE: "OK".
+
+    ### Trigger
+    -   SwitchDetails().refresh() is called.
+
+    ### Expected Result
+    -   ``update_results`` re-raises ``TypeError``
+        as ``ValueError``.
+    -   ``refresh`` re-raises ``ValueError``.
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    # pylint: disable=too-few-public-methods
+    class MockResults:
+        """
+        mock
+        """
+
+        def __init__(self):
+            self.class_name = "Results"
+            self._action = None
+
+        @property
+        def action(self):
+            """
+            mock
+            """
+            return self._action
+
+        @action.setter
+        def action(self, value):
+            self._action = value
+            raise TypeError("Results().action: simulated TypeError.")
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    monkeypatch.setattr(instance, "results", MockResults())
+    match = r"SwitchDetails\.update_results:\s+"
+    match += r"Error updating results\.\s+"
+    match += r"Error detail: Results\(\)\.action:\s+"
+    match += r"simulated TypeError\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_switch_details_00600() -> None:
     """
     ### Classes and Methods
     -   SwitchDetails()
@@ -410,4 +492,4 @@ def test_switch_details_00500() -> None:
     match = r"SwitchDetails\._get:\s+"
     match += r"set instance\.filter before accessing property logicalName\."
     with pytest.raises(ValueError, match=match):
-        instance.logical_name
+        instance.logical_name  # pylint: disable=pointless-statement

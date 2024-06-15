@@ -29,14 +29,19 @@ __author__ = "Allen Robel"
 import copy
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import (
+    ResponseHandler,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import (
+    RestSend,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import (
+    Sender,
+)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    ResponseGenerator, does_not_raise)
+    ResponseGenerator,
+    does_not_raise,
+)
 
 PARAMS = {"state": "merged", "check_mode": False}
 
