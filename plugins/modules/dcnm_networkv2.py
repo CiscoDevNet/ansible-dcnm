@@ -418,7 +418,6 @@ class DcnmNetworkv2:
 
         self.result = dict(changed=False, diff=[], response=[], warnings=[])
 
-        self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
     def log(self, msg):
@@ -1411,13 +1410,12 @@ class DcnmNetworkv2:
             for node in list_elem["lanAttachList"]:
                 node["fabric"] = self.sn_fab[node["serialNumber"]]
 
-    def push_to_remote_update(self, path, is_rollback=False):
+    def push_to_remote_update(self, path):
         """
         Pushes the Network updates to the NDFC.
 
         Args:
             path (str): RestAPI URL.
-            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
 
         Returns:
             None
@@ -1434,18 +1432,14 @@ class DcnmNetworkv2:
             self.result["response"].append(resp)
             fail, self.result["changed"] = self.handle_response(resp, "create", self.result["changed"])
             if fail:
-                if is_rollback:
-                    self.failed_to_rollback = True
-                    return
                 self.failure(resp)
 
-    def push_to_remote_detach(self, path, is_rollback=False):
+    def push_to_remote_detach(self, path):
         """
         Pushes the detach configuration to NDFC.
 
         Args:
             path (str): RestAPI URL.
-            is_rollback (bool, optional): Indicates whether the detach operation is a rollback. Defaults to False.
         """
 
         method = "POST"
@@ -1466,20 +1460,16 @@ class DcnmNetworkv2:
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "attach", self.result["changed"])
         if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
             self.failure(resp)
 
         time.sleep(10)
 
-    def push_to_remote_undeploy(self, is_rollback=False):
+    def push_to_remote_undeploy(self):
         """
         Pushes the undeploy NDFC network.
 
         Args:
-            is_rollback (bool, optional): Indicates whether the undeploy action is part of a rollback process.
-                                          Defaults to False.
+            None
 
         Returns:
             None
@@ -1510,18 +1500,14 @@ class DcnmNetworkv2:
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "deploy", self.result["changed"])
         if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
             self.failure(resp)
 
-    def push_to_remote_delete(self, path, is_rollback=False):
+    def push_to_remote_delete(self, path):
         """
         Deletes networks in NDFC.
 
         Args:
             path (str): RestAPI URL.
-            is_rollback (bool, optional): Indicates whether the deletion is part of a rollback operation. Defaults to False.
 
         Returns:
             None
@@ -1545,25 +1531,18 @@ class DcnmNetworkv2:
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "delete", self.result["changed"])
                 if fail:
-                    if is_rollback:
-                        self.failed_to_rollback = True
-                        return
                     self.failure(resp)
 
         if del_failure:
             fail_msg = "Deletion of Networks {0} has failed.".format(del_failure[:-1])
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
             self.failure(fail_msg)
 
-    def push_to_remote_create(self, path, is_rollback=False):
+    def push_to_remote_create(self, path):
         """
         Pushes the created network templates to the NDFC.
 
         Args:
             path (str): RestAPI URL.
-            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
 
         Returns:
             None
@@ -1578,18 +1557,14 @@ class DcnmNetworkv2:
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "create", self.result["changed"])
         if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
             self.failure(resp)
 
-    def push_to_remote_attach(self, path, is_rollback=False):
+    def push_to_remote_attach(self, path):
         """
         Pushes the attachments to the NDFC.
 
         Args:
             path (str): RestAPI URL.
-            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
 
         Returns:
             None
@@ -1634,19 +1609,16 @@ class DcnmNetworkv2:
         # not all of the attachments were successful which represents a
         # failure condition.
         if fail or update_in_progress:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
             self.failure(resp)
 
         time.sleep(10)
 
-    def push_to_remote_deploy(self, is_rollback=False):
+    def push_to_remote_deploy(self):
         """
         Pushes the changes to the remote deployment.
 
         Args:
-            is_rollback (bool, optional): Indicates whether the deployment is a rollback. Defaults to False.
+            None
 
         Returns:
             None
@@ -1666,45 +1638,42 @@ class DcnmNetworkv2:
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "deploy", self.result["changed"])
         if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
             self.failure(resp)
 
-    def push_to_remote(self, is_rollback=False):
+    def push_to_remote(self):
         """
         Pushes the changes to the remote device.
 
         Args:
-            is_rollback (bool, optional): Indicates whether the operation is a rollback. Defaults to False.
+            None
         """
 
         path = self.paths["GET_NET"].format(self.fabric)
 
         if self.diff_create_update:
-            self.push_to_remote_update(path, is_rollback)
+            self.push_to_remote_update(path)
 
         # The detach and un-deploy operations are executed before the create, attach, and deploy to particularly
         # address cases where a VLAN of a network being deleted is re-used on a new network being created. This is
         # needed especially for state: overridden.
 
         if self.diff_detach:
-            self.push_to_remote_detach(path, is_rollback)
+            self.push_to_remote_detach(path)
 
         if self.diff_undeploy:
-            self.push_to_remote_undeploy(is_rollback)
+            self.push_to_remote_undeploy()
 
         if self.diff_delete:
-            self.push_to_remote_delete(path, is_rollback)
+            self.push_to_remote_delete(path)
 
         if self.diff_create:
-            self.push_to_remote_create(path, is_rollback)
+            self.push_to_remote_create(path)
 
         if self.diff_attach:
-            self.push_to_remote_attach(path, is_rollback)
+            self.push_to_remote_attach(path)
 
         if self.diff_deploy:
-            self.push_to_remote_deploy(is_rollback)
+            self.push_to_remote_deploy()
 
     def get_arg_spec(self, net):
         """
@@ -1975,49 +1944,6 @@ class DcnmNetworkv2:
         return fail, changed
 
     def failure(self, resp):
-
-        # # Donot Rollback for Multi-site fabrics
-        # if self.is_ms_fabric:
-        #     self.failed_to_rollback = True
-        #     self.module.fail_json(msg=resp)
-        #     return
-
-        # # Implementing a per task rollback logic here so that we rollback NDFC to the have state
-        # # whenever there is a failure in any of the APIs.
-        # # The idea would be to run overridden state with want=have and have=dcnm_state
-        # self.want_create = self.have_create
-        # self.want_attach = self.have_attach
-        # self.want_deploy = self.have_deploy
-
-        # self.have_create = []
-        # self.have_attach = []
-        # self.have_deploy = {}
-        # self.get_have()
-        # self.get_diff_override()
-
-        # self.push_to_remote(True)
-
-        # if self.failed_to_rollback:
-        #     msg1 = "FAILED - Attempted rollback of the task has failed, may need manual intervention"
-        # else:
-        #     msg1 = "SUCCESS - Attempted rollback of the task has succeeded"
-
-        # res = copy.deepcopy(resp)
-        # if isinstance(res, str):
-        #     self.module.fail_json(msg=res)
-
-        # res.update({"ROLLBACK_RESULT": msg1})
-
-        # if not resp.get("DATA"):
-        #     data = copy.deepcopy(resp.get("DATA"))
-        #     if data.get("stackTrace"):
-        #         data.update(
-        #             {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
-        #         )
-        #         res.update({"DATA": data})
-
-        # if self.module._verbosity >= 5:
-        #     self.module.fail_json(msg=res)
 
         self.module.fail_json(msg=resp)
 

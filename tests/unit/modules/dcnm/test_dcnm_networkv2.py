@@ -773,10 +773,7 @@ def test_dcnm_networkv2_00013(
     networkv2.paths = DcnmNetworkv2.dcnm_network_paths[12]
 
     try:
-        if tc_id == 3:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         assert "ERROR" in str(e)
 
@@ -816,10 +813,7 @@ def test_dcnm_networkv2_00014(
     networkv2.is_ms_fabric = False
 
     try:
-        if tc_id == 3:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         assert "ERROR" in str(e)
 
@@ -857,10 +851,7 @@ def test_dcnm_networkv2_00015(
     monkeypatch.setattr(dcnm_networkv2, "dcnm_send", mock_dcnm_send)
 
     try:
-        if tc_id == 3:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         assert "ERROR" in str(e)
 
@@ -899,10 +890,7 @@ def test_dcnm_networkv2_00016(
     networkv2.paths = DcnmNetworkv2.dcnm_network_paths[12]
 
     try:
-        if tc_id == 3:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         assert "ERROR" in str(e)
 
@@ -942,10 +930,7 @@ def test_dcnm_networkv2_00017(
     networkv2.is_ms_fabric = False
 
     try:
-        if tc_id == 3:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         assert "ERROR" in str(e)
 
@@ -983,10 +968,7 @@ def test_dcnm_networkv2_00018(
     monkeypatch.setattr(dcnm_networkv2, "dcnm_send", mock_dcnm_send)
 
     try:
-        if tc_id == 3:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         assert "ERROR" in str(e)
 
@@ -1046,10 +1028,7 @@ def test_dcnm_networkv2_00019(
     monkeypatch.setattr(dcnm_networkv2, "dcnm_send", mock_dcnm_send)
 
     try:
-        if tc_id == 6 or tc_id == 7:
-            networkv2.push_to_remote(True)
-        else:
-            networkv2.push_to_remote()
+        networkv2.push_to_remote()
     except Exception as e:
         if tc_id == 4 or tc_id == 7:
             assert "Deletion of Networks net1 has failed" in str(e)
