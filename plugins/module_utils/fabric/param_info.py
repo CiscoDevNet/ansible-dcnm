@@ -320,7 +320,7 @@ class ParamInfo:
         self.info = {}
         for parameter in self.template.get("parameters", []):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"parameter: {json.dumps(parameter,  indent=4, sort_keys=True)}"
+            msg += f"parameter: {json.dumps(parameter, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             param_name = self._get_param_name(parameter)
             if param_name not in self.info:
