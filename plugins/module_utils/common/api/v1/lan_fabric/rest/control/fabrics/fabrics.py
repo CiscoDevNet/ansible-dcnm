@@ -854,7 +854,7 @@ class EpMaintenanceModeDeploy(Fabrics):
         """
         - getter: Return the wait_for_mode_change value.
         - setter: Set the wait_for_mode_change value.
-        - setter: Raise ``ValueError`` if wait_for_mode_change is not a boolean.
+        - setter: Raise ``TypeError`` if wait_for_mode_change is not a boolean.
         - Type: boolean
         - Default: False
         - Optional
@@ -868,7 +868,7 @@ class EpMaintenanceModeDeploy(Fabrics):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Expected boolean for {method_name}. "
             msg += f"Got {value} with type {type(value).__name__}."
-            raise ValueError(msg)
+            raise TypeError(msg)
         self._wait_for_mode_change = value
 
 

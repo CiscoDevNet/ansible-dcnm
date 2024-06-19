@@ -119,6 +119,7 @@ class MaintenanceMode:
 
         self.params = params
         self.action = "maintenance_mode"
+        self.endpoints = []
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
@@ -470,6 +471,35 @@ class MaintenanceMode:
             ip_address = item.get("ip_address")
             self.serial_number_to_ip_address[serial_number] = ip_address
 
+    def build_endpoints(self) -> None:
+        """
+        ### Summary
+        Build ``endpoints`` dict used in ``self.deploy_switches``.
+
+        ### Raises
+        ``ValueError`` if endpoint configuration fails.
+        """
+        method_name = inspect.stack()[0][3]
+        endpoints = []
+        for fabric_name, serial_numbers in self.deploy_dict.items():
+            for serial_number in serial_numbers:
+                endpoint = {}
+                try:
+                    self.ep_maintenance_mode_deploy.fabric_name = fabric_name
+                    self.ep_maintenance_mode_deploy.serial_number = serial_number
+                    self.ep_maintenance_mode_deploy.wait_for_mode_change = True
+                except (TypeError, ValueError) as error:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += "Error resolving endpoint: "
+                    msg += f"Error details: {error}."
+                    raise ValueError(msg) from error
+                endpoint["path"] = self.ep_maintenance_mode_deploy.path
+                endpoint["verb"] = self.ep_maintenance_mode_deploy.verb
+                endpoint["serial_number"] = serial_number
+                endpoint["fabric_name"] = fabric_name
+                endpoints.append(copy.copy(endpoint))
+        self.endpoints = copy.copy(endpoints)
+
     def deploy_switches(self) -> None:
         """
         ### Summary
@@ -484,37 +514,31 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
         self.build_serial_number_to_ip_address()
-        endpoint = self.ep_maintenance_mode_deploy
+        try:
+            self.build_endpoints()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error building endpoints. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
-        for fabric_name, serial_numbers in self.deploy_dict.items():
-            # Build endpoint
-            try:
-                endpoint.fabric_name = fabric_name
-                endpoint.serial_number = ",".join(serial_numbers)
-                endpoint.wait_for_mode_change = True
-            except (TypeError, ValueError) as error:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Error resolving endpoint: "
-                msg += f"Error details: {error}."
-                raise ValueError(msg) from error
-
+        for endpoint in self.endpoints:
             # Send request
-            self.rest_send.path = endpoint.path
-            self.rest_send.verb = endpoint.verb
+            self.rest_send.path = endpoint["path"]
+            self.rest_send.verb = endpoint["verb"]
             self.rest_send.payload = None
             self.rest_send.commit()
 
             # Register the result
-            action = "config_deploy"
+            action = "deploy_maintenance_mode"
             result = self.rest_send.result_current["success"]
             if result is False:
                 self.results.diff_current = {}
             else:
                 diff = {}
                 diff.update({f"{action}": result})
-                for serial_number in serial_numbers:
-                    ip_address = self.serial_number_to_ip_address[serial_number]
-                    diff.update({ip_address: serial_number})
+                ip_address = self.serial_number_to_ip_address[endpoint["serial_number"]]
+                diff.update({ip_address: ip_address})
                 self.results.diff_current = diff
 
             self.results.action = action
@@ -528,10 +552,10 @@ class MaintenanceMode:
 
             if self.results.response_current["RETURN_CODE"] != 200:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += "Unable to deploy switches: "
-                msg += f"fabric_name {fabric_name}, "
-                msg += "serial_numbers "
-                msg += f"{','.join(serial_numbers)}. "
+                msg += "Unable to deploy switch: "
+                msg += f"fabric_name {endpoint['fabric_name']}, "
+                msg += "serial_number "
+                msg += f"{endpoint['serial_number']}. "
                 msg += f"Got response {self.results.response_current}."
                 raise ControllerResponseError(msg)
 

@@ -257,13 +257,13 @@ def merge_dicts_v2_data(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_config_deploy(key: str) -> Dict[str, str]:
+def responses_deploy_maintenance_mode(key: str) -> Dict[str, str]:
     """
-    Return data in responses_ConfigDeploy.json
+    Return data in responses_DeployMaintenanceMode.json
     """
-    response_file = "responses_ConfigDeploy"
+    response_file = "responses_DeployMaintenanceMode"
     response = load_fixture(response_file).get(key)
-    print(f"responses_config_deploy: {key} : {response}")
+    print(f"responses_deploy_maintenance_mode: {key} : {response}")
     return response
 
 

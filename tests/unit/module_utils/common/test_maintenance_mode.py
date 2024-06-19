@@ -51,7 +51,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
     Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
     ResponseGenerator, does_not_raise, maintenance_mode_fixture, params,
-    responses_config_deploy, responses_maintenance_mode)
+    responses_deploy_maintenance_mode, responses_maintenance_mode)
 
 FABRIC_NAME = "VXLAN_Fabric"
 CONFIG = [
@@ -390,7 +390,7 @@ def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
 
     def responses():
         yield responses_maintenance_mode(key)
-        yield responses_config_deploy(key)
+        yield responses_deploy_maintenance_mode(key)
 
     sender = Sender()
     sender.gen = ResponseGenerator(responses())
@@ -421,33 +421,37 @@ def test_maintenance_mode_00220(maintenance_mode, mode, deploy) -> None:
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("serial_number", None) == "FDO22180ASJ"
 
-    assert instance.results.diff[1].get("config_deploy", None) is True
-    assert instance.results.diff[1].get("sequence_number", None) == 2
-
     assert instance.results.metadata[0].get("action", None) == "change_sytem_mode"
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
-
-    assert instance.results.metadata[1].get("action", None) == "config_deploy"
-    assert instance.results.metadata[1].get("sequence_number", None) == 2
-    assert instance.results.metadata[1].get("state", None) == "merged"
 
     assert instance.results.response[0].get("DATA", {}).get("status") == "Success"
     assert instance.results.response[0].get("MESSAGE", None) == "OK"
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
     assert instance.results.response[0].get("METHOD", None) == "POST"
 
-    value = "Configuration deployment completed."
-    assert instance.results.response[1].get("DATA", {}).get("status") == value
-    assert instance.results.response[1].get("MESSAGE", None) == "OK"
-    assert instance.results.response[1].get("RETURN_CODE", None) == 200
-    assert instance.results.response[1].get("METHOD", None) == "POST"
-
     assert instance.results.result[0].get("changed", None) is True
     assert instance.results.result[0].get("success", None) is True
 
-    assert instance.results.result[1].get("changed", None) is True
-    assert instance.results.result[1].get("success", None) is True
+    if deploy:
+        assert instance.results.diff[1].get("deploy_maintenance_mode", None) is True
+        assert instance.results.diff[1].get("sequence_number", None) == 2
+
+        assert (
+            instance.results.metadata[1].get("action", None)
+            == "deploy_maintenance_mode"
+        )
+        assert instance.results.metadata[1].get("sequence_number", None) == 2
+        assert instance.results.metadata[1].get("state", None) == "merged"
+
+        value = "Success"
+        assert instance.results.response[1].get("DATA", {}).get("status") == value
+        assert instance.results.response[1].get("MESSAGE", None) == "OK"
+        assert instance.results.response[1].get("RETURN_CODE", None) == 200
+        assert instance.results.response[1].get("METHOD", None) == "POST"
+
+        assert instance.results.result[1].get("changed", None) is True
+        assert instance.results.result[1].get("success", None) is True
 
 
 @pytest.mark.parametrize(
@@ -900,7 +904,7 @@ def test_maintenance_mode_00800(
 
     Summary
     -   Verify MaintenanceMode().deploy_switches() raises ``ValueError``
-        when ``EpFabricConfigDeploy`` raises any of:
+        when ``EpMaintenanceModeDeploy`` raises any of:
             -   ``TypeError``
             -   ``ValueError``
 
@@ -924,8 +928,10 @@ def test_maintenance_mode_00800(
         """
 
         def __init__(self):
+            self.class_name = "MockEpMaintenanceModeDeploy"
             self._fabric_name = None
             self._serial_number = None
+            self._wait_for_mode_change = False
 
         @property
         def fabric_name(self):
@@ -950,7 +956,19 @@ def test_maintenance_mode_00800(
         def serial_number(self, value):
             self._serial_number = value
 
+        @property
+        def wait_for_mode_change(self):
+            """
+            Mock wait_for_mode_change getter/setter
+            """
+            return self._wait_for_mode_change
+
+        @wait_for_mode_change.setter
+        def wait_for_mode_change(self, value):
+            self._wait_for_mode_change = value
+
     def responses():
+        yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {"status": "Success"}}
         yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {"status": "Success"}}
 
     sender = Sender()
@@ -1109,9 +1127,9 @@ def test_maintenance_mode_01000(monkeypatch, maintenance_mode) -> None:
         instance.results = Results()
 
     match = r"MaintenanceMode\.deploy_switches:\s+"
-    match += r"Unable to deploy switches:\s+"
+    match += r"Unable to deploy switch:\s+"
     match += r"fabric_name VXLAN_Fabric,\s+"
-    match += r"serial_numbers FDO22180ASJ\.\s+"
+    match += r"serial_number FDO22180ASJ\.\s+"
     match += r"Got response.*\."
     with pytest.raises(ValueError, match=match):
         instance.commit()

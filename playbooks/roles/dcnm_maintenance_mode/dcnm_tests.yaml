@@ -2,9 +2,9 @@
 # This playbook can be used to execute integration tests for
 # the role located in:
 #
-# tests/integration/targets/dcnm_fabric
+# tests/integration/targets/dcnm_maintenance_mode
 #
-# Modify the vars section with details for testing setup.
+# Modify the vars section with details for your testing setup.
 #
 # NOTES:
 # 1. For the IPFM test cases (dcnm_*_ipfm), ensure that the controller
@@ -20,17 +20,11 @@
 
   vars:
     # See the following location for available test cases:
-    # tests/integration/targets/dcnm_fabric/tests
-    # testcase: dcnm_fabric_deleted_basic
-    # testcase: dcnm_fabric_deleted_basic_ipfm
-    # testcase: dcnm_fabric_merged_basic
-    # testcase: dcnm_fabric_merged_basic_ipfm
-    # testcase: dcnm_fabric_merged_save_deploy
-    # testcase: dcnm_fabric_merged_save_deploy_ipfm
-    # testcase: dcnm_fabric_replaced_basic
-    # testcase: dcnm_fabric_replaced_basic_ipfm
-    # testcase: dcnm_fabric_replaced_save_deploy
-    # testcase: dcnm_fabric_replaced_save_deploy_ipfm
+    # tests/integration/targets/dcnm_maintenance_mode/tests
+    # testcase: 00_setup_fabrics_1x_rw
+    # testcase: 00_setup_fabrics_2x_rw
+    # testcase: 01_merged_maintenance_mode_deploy
+    # testcase: 01_merged_maintenance_mode_no_deploy
     fabric_name_1: VXLAN_EVPN_Fabric
     fabric_type_1: VXLAN_EVPN
     fabric_name_2: VXLAN_EVPN_MSD_Fabric
@@ -45,4 +39,4 @@
     nxos_password: myNxosPassword
 
   roles:
-    - dcnm_fabric
+    - dcnm_maintenance_mode

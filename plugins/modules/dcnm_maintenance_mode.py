@@ -127,8 +127,6 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
@@ -149,6 +147,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 imp
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
+    Sender
 
 
 def json_pretty(msg):
@@ -901,16 +901,6 @@ class Merged(Common):
             additional_info += "fabric_read_only: "
             additional_info += f"{fabric_read_only}, "
             additional_info += f"maintenance_mode: {mode}. "
-            if mode == "inconsistent":
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Switch maintenance mode state differs from the "
-                msg += "controller's maintenance mode state for switch "
-                msg += f"with ip_address {ip_address}, "
-                msg += f"serial_number {serial_number}. "
-                msg += "This is typically resolved by initiating a switch "
-                msg += "Deploy Config on the controller. "
-                msg += additional_info
-                raise ValueError(msg)
 
             if mode == "migration":
                 msg = f"{self.class_name}.{method_name}: "
