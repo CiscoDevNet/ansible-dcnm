@@ -3,9 +3,9 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-#  05:51.85
+#  21:55.81
 ################################################################################
-# DESCRIPTION - merged_normal_to_maintenance
+# DESCRIPTION - Normal mode to maintenance mode with config-deploy
 #
 # State: merged
 # Test: Change normal mode switches to maintenance mode with config-deploy.
@@ -17,9 +17,20 @@
 # 0. Run 00_setup_fabrics_rw.yaml to create read-write fabrics and add switches.
 # 1. MERGED - SETUP - ensure switches are in normal mode
 # TEST
-# 3. Place leaf_1 and leaf_2 in maintenance mode using global config and verify.
+# GLOBAL CONFIG
+# 2. Normal to Maintenance mode (global config).
+# 3. Verify switches changed to maintenance mode.
+# 4. Pause for 5 minutes.
+# 5. Maintenance to Normal mode (global config).
+# 6. Verify switches changed to normal mode.
+# SWITCH CONFIG
+# 7. Normal to Maintenance mode (switch config).
+# 8. Verify switches changed to maintenance mode.
+# 9. Pause for 5 minutes.
+# 10. Maintenance to Normal mode (switch config).
+# 11. Verify switches changed to normal mode.
 # CLEANUP
-# 4. Place leaf_1 and leaf_2 in normal mode using global config and verify.
+# No cleanup needed.
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -75,7 +86,7 @@
 #                 "sequence_number": 3
 #             }
 #         ],
-- name: MERGED - SETUP - Verify switches are in normal mode
+- name: MERGED - SETUP - ensure switches are in normal mode
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
         config:
@@ -90,7 +101,7 @@
         - result.diff[2][leaf_2].mode == "normal"
 
 ################################################################################
-# MERGED - TEST - change switches to maintenance mode (global config)
+# 2. MERGED - TEST - Normal to maintenance mode (global config)
 ################################################################################
 - name: MERGED - TEST - change switches to maintenance mode (global config)
   cisco.dcnm.dcnm_maintenance_mode:
@@ -106,7 +117,7 @@
         var: result_maintenance_mode
 
 ################################################################################
-# 1. MERGED - TEST - verify switches changed to maintenance mode
+# 3. MERGED - TEST - Verify switches changed to maintenance mode (global config)
 ################################################################################
 # Expected result
 # ok: [172.22.150.244] => {
@@ -157,12 +168,9 @@
         - result.diff[2][leaf_1].mode == "maintenance"
         - result.diff[2][leaf_2].mode == "maintenance"
 
-# Pause is needed here or NDFC claims config-deploy succeeded, but it
-# actually doesn't succeed, and one switch remains in maintenance mode.
-- name: pause 1 minutes
-  pause:
-        minutes: 1
-
+################################################################################
+# 5. MERGED - TEST - Maintenance to Normal mode (global config).
+################################################################################
 - name: MERGED - TEST - change switches to normal mode (global config)
   cisco.dcnm.dcnm_maintenance_mode:
         state: merged
@@ -176,7 +184,9 @@
 - debug:
         var: result_normal_mode
 
-
+################################################################################
+# 6. MERGED - TEST - Verify switches changed to normal mode.
+################################################################################
 - name: MERGED - TEST - Verify switches changed to normal mode
   cisco.dcnm.dcnm_maintenance_mode:
         state: query
@@ -206,10 +216,8 @@
               - result_maintenance_mode.response[3].METHOD == "POST"
               - result_maintenance_mode.response[2].RETURN_CODE == 200
               - result_maintenance_mode.response[3].RETURN_CODE == 200
-              - result_maintenance_mode.response[4].DATA.status is match 'Configuration
-                  deployment completed.'
-              - result_maintenance_mode.response[5].DATA.status is match 'Configuration
-                  deployment completed.'
+              - result_maintenance_mode.response[4].DATA.status is match 'Success'
+              - result_maintenance_mode.response[5].DATA.status is match 'Success'
               - result_normal_mode.failed == false
               - result_normal_mode.metadata[2].action == "change_sytem_mode"
               - result_normal_mode.metadata[3].action == "change_sytem_mode"
@@ -223,7 +231,142 @@
               - result_normal_mode.response[3].METHOD == "DELETE"
               - result_normal_mode.response[2].RETURN_CODE == 200
               - result_normal_mode.response[3].RETURN_CODE == 200
-              - result_normal_mode.response[4].DATA.status is match 'Configuration
-                  deployment completed.'
-              - result_normal_mode.response[5].DATA.status is match 'Configuration
-                  deployment completed.'
+              - result_normal_mode.response[4].DATA.status is match 'Success'
+              - result_normal_mode.response[5].DATA.status is match 'Success'
+
+################################################################################
+# 7. MERGED - TEST - Normal to maintenance mode (switch config)
+################################################################################
+- name: MERGED - TEST - change switches to maintenance mode (switch config)
+  cisco.dcnm.dcnm_maintenance_mode:
+        state: merged
+        config:
+              deploy: true
+              switches:
+                    - ip_address: "{{ leaf_1 }}"
+                      mode: maintenance
+                    - ip_address: "{{ leaf_2 }}"
+                      mode: maintenance
+  register: result_maintenance_mode
+- debug:
+        var: result_maintenance_mode
+
+################################################################################
+# 8. MERGED - TEST - Verify switches changed to maintenance mode (switch config)
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "172.22.150.103": {
+#                     "fabric_deployment_disabled": false,
+#                     "fabric_freeze_mode": false,
+#                     "fabric_name": "VXLAN_EVPN_Fabric",
+#                     "fabric_read_only": false,
+#                     "ip_address": "172.22.150.103",
+#                     "mode": "maintenance",
+#                     "role": "leaf",
+#                     "serial_number": "FDO211218GC"
+#                 },
+#                 "172.22.150.104": {
+#                     "fabric_deployment_disabled": false,
+#                     "fabric_freeze_mode": false,
+#                     "fabric_name": "LAN_CLASSIC_Fabric",
+#                     "fabric_read_only": false,
+#                     "ip_address": "172.22.150.104",
+#                     "mode": "maintenance",
+#                     "role": "leaf",
+#                     "serial_number": "FDO211218HH"
+#                 },
+#                 "sequence_number": 3
+#             }
+#         ],
+- name: MERGED - TEST - Verify switches changed to maintenance mode (switch config)
+  cisco.dcnm.dcnm_maintenance_mode:
+        state: query
+        config:
+              switches:
+                    - ip_address: "{{ leaf_1 }}"
+                    - ip_address: "{{ leaf_2 }}"
+  register: result
+  retries: 40
+  delay: 10
+  until:
+        - result.diff[2][leaf_1].mode == "maintenance"
+        - result.diff[2][leaf_2].mode == "maintenance"
+
+################################################################################
+# 10. MERGED - TEST - Maintenance to Normal mode (switch config).
+################################################################################
+- name: MERGED - TEST - Maintenance to Normal mode (switch config)
+  cisco.dcnm.dcnm_maintenance_mode:
+        state: merged
+        config:
+              deploy: true
+              mode: normal
+              switches:
+                    - ip_address: "{{ leaf_1 }}"
+                      mode: normal
+                    - ip_address: "{{ leaf_2 }}"
+                      mode: normal
+  register: result_normal_mode
+- debug:
+        var: result_normal_mode
+
+################################################################################
+# 11. MERGED - TEST - Verify switches changed to normal mode.
+################################################################################
+- name: MERGED - TEST - Verify switches changed to normal mode
+  cisco.dcnm.dcnm_maintenance_mode:
+        state: query
+        config:
+              switches:
+                    - ip_address: "{{ leaf_1 }}"
+                    - ip_address: "{{ leaf_2 }}"
+  register: result
+  retries: 40
+  delay: 10
+  until:
+        - result.diff[2][leaf_1].mode == "normal"
+        - result.diff[2][leaf_2].mode == "normal"
+
+- assert:
+        that:
+              - result_maintenance_mode.failed == false
+              - result_maintenance_mode.metadata[2].action == "change_sytem_mode"
+              - result_maintenance_mode.metadata[3].action == "change_sytem_mode"
+              - result_maintenance_mode.metadata[2].check_mode == False
+              - result_maintenance_mode.metadata[3].check_mode == False
+              - result_maintenance_mode.metadata[2].state == "merged"
+              - result_maintenance_mode.metadata[3].state == "merged"
+              - result_maintenance_mode.response[2].DATA.status == "Success"
+              - result_maintenance_mode.response[3].DATA.status == "Success"
+              - result_maintenance_mode.response[2].METHOD == "POST"
+              - result_maintenance_mode.response[3].METHOD == "POST"
+              - result_maintenance_mode.response[2].RETURN_CODE == 200
+              - result_maintenance_mode.response[3].RETURN_CODE == 200
+              - result_maintenance_mode.response[4].DATA.status is match 'Success'
+              - result_maintenance_mode.response[5].DATA.status is match 'Success'
+              - result_normal_mode.failed == false
+              - result_normal_mode.metadata[2].action == "change_sytem_mode"
+              - result_normal_mode.metadata[3].action == "change_sytem_mode"
+              - result_normal_mode.metadata[2].check_mode == False
+              - result_normal_mode.metadata[3].check_mode == False
+              - result_normal_mode.metadata[2].state == "merged"
+              - result_normal_mode.metadata[3].state == "merged"
+              - result_normal_mode.response[2].DATA.status == "Success"
+              - result_normal_mode.response[3].DATA.status == "Success"
+              - result_normal_mode.response[2].METHOD == "DELETE"
+              - result_normal_mode.response[3].METHOD == "DELETE"
+              - result_normal_mode.response[2].RETURN_CODE == 200
+              - result_normal_mode.response[3].RETURN_CODE == 200
+              - result_normal_mode.response[4].DATA.status is match 'Success'
+              - result_normal_mode.response[5].DATA.status is match 'Success'

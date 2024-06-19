@@ -880,8 +880,8 @@ def test_maintenance_mode_00700(
 @pytest.mark.parametrize(
     "endpoint_instance, mock_exception, expected_exception, mock_message",
     [
-        ("ep_fabric_config_deploy", TypeError, ValueError, "Bad type"),
-        ("ep_fabric_config_deploy", ValueError, ValueError, "Bad value"),
+        ("ep_maintenance_mode_deploy", TypeError, ValueError, "Bad type"),
+        ("ep_maintenance_mode_deploy", ValueError, ValueError, "Bad value"),
     ],
 )
 def test_maintenance_mode_00800(
@@ -908,7 +908,7 @@ def test_maintenance_mode_00800(
     Code Flow - Setup
     -   MaintenanceMode() is instantiated
     -   Required attributes are set
-    -   EpFabricConfigDeploy() is mocked to raise each of the above exceptions
+    -   EpMaintenanceModeDeploy() is mocked to raise each of the above exceptions
 
     Code Flow - Test
     -   MaintenanceMode().commit() is called for each exception
@@ -920,12 +920,12 @@ def test_maintenance_mode_00800(
 
     class MockEndpoint:
         """
-        Mock EpFabricConfigDeploy() class
+        Mock EpMaintenanceModeDeploy() class
         """
 
         def __init__(self):
             self._fabric_name = None
-            self._switch_id = None
+            self._serial_number = None
 
         @property
         def fabric_name(self):
@@ -940,15 +940,15 @@ def test_maintenance_mode_00800(
             raise mock_exception(mock_message)
 
         @property
-        def switch_id(self):
+        def serial_number(self):
             """
-            Mock switch_id getter/setter
+            Mock serial_number getter/setter
             """
-            return self._switch_id
+            return self._serial_number
 
-        @switch_id.setter
-        def switch_id(self, value):
-            self._switch_id = value
+        @serial_number.setter
+        def serial_number(self, value):
+            self._serial_number = value
 
     def responses():
         yield {"MESSAGE": "OK", "RETURN_CODE": 200, "DATA": {"status": "Success"}}

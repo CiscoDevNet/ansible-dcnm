@@ -772,6 +772,106 @@ class EpFabrics(Fabrics):
         return self.fabrics
 
 
+class EpMaintenanceModeDeploy(Fabrics):
+    """
+    ## V1 API - Fabrics().EpMaintenanceModeDeploy()
+
+    ### Description
+    Return endpoint to deploy maintenance mode on a switch.
+
+    ### Raises
+    -  ``ValueError``: If ``fabric_name`` is not set.
+    -  ``ValueError``: If ``fabric_name`` is invalid.
+    -  ``ValueError``: If ``serial_number`` is not set.
+    -  ``ValueError``: If ``ticket_id`` is not a string.
+
+    ### Path
+    -  ``/fabrics/{fabric_name}/switches/{serial_number}/deploy-maintenance-mode``
+
+    ### Verb
+    -   POST
+
+    ### Parameters
+    - fabric_name: string
+        -   set the ``fabric_name`` to be used in the path
+        -   required
+    - serial_number: string
+        -   set the switch ``serial_number`` to be used in the path
+        -   required
+    - wait_for_mode_change: boolean
+        -   instruct the API to wait for the mode change to complete
+            before continuing.
+        -   optional
+        -   default: False
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpMaintenanceModeDeploy()
+    instance.fabric_name = "MyFabric"
+    instance.serial_number = "CHM1234567"
+    instance.wait_for_mode_change = True
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self.required_properties.add("serial_number")
+        self._wait_for_mode_change = False
+        msg = "ENTERED api.v1.lan_fabric.rest.control.fabrics."
+        msg += f"Fabrics.{self.class_name}"
+        self.log.debug(msg)
+
+    @property
+    def path(self):
+        """
+        - Path for deploy-maintenance-mode
+        - Raise ``ValueError`` if fabric_name is not set.
+        - Raise ``ValueError`` if serial_number is not set.
+        """
+        _path = self.path_fabric_name_serial_number
+        _path += "/deploy-maintenance-mode"
+        if self.wait_for_mode_change:
+            _path += "?waitForModeChange=true"
+        return _path
+
+    @property
+    def verb(self):
+        """
+        - Return the verb for the endpoint.
+        - verb: POST
+        """
+        return "POST"
+
+    @property
+    def wait_for_mode_change(self):
+        """
+        - getter: Return the wait_for_mode_change value.
+        - setter: Set the wait_for_mode_change value.
+        - setter: Raise ``ValueError`` if wait_for_mode_change is not a boolean.
+        - Type: boolean
+        - Default: False
+        - Optional
+        """
+        return self._wait_for_mode_change
+
+    @wait_for_mode_change.setter
+    def wait_for_mode_change(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Expected boolean for {method_name}. "
+            msg += f"Got {value} with type {type(value).__name__}."
+            raise ValueError(msg)
+        self._wait_for_mode_change = value
+
+
 class EpMaintenanceModeEnable(Fabrics):
     """
     ## V1 API - Fabrics().EpMaintenanceModeEnable()

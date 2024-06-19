@@ -24,7 +24,8 @@ import inspect
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import (
-    EpFabricConfigDeploy, EpMaintenanceModeDisable, EpMaintenanceModeEnable)
+    EpFabricConfigDeploy, EpMaintenanceModeDeploy, EpMaintenanceModeDisable,
+    EpMaintenanceModeEnable)
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
@@ -138,8 +139,9 @@ class MaintenanceMode:
         self.valid_modes = ["maintenance", "normal"]
 
         self.conversion = ConversionUtils()
-        self.ep_maintenance_mode_enable = EpMaintenanceModeEnable()
+        self.ep_maintenance_mode_deploy = EpMaintenanceModeDeploy()
         self.ep_maintenance_mode_disable = EpMaintenanceModeDisable()
+        self.ep_maintenance_mode_enable = EpMaintenanceModeEnable()
         self.ep_fabric_config_deploy = EpFabricConfigDeploy()
 
         self._config = None
@@ -482,12 +484,14 @@ class MaintenanceMode:
         method_name = inspect.stack()[0][3]
         self.build_deploy_dict()
         self.build_serial_number_to_ip_address()
-        endpoint = self.ep_fabric_config_deploy
+        endpoint = self.ep_maintenance_mode_deploy
+
         for fabric_name, serial_numbers in self.deploy_dict.items():
             # Build endpoint
             try:
                 endpoint.fabric_name = fabric_name
-                endpoint.switch_id = serial_numbers
+                endpoint.serial_number = ",".join(serial_numbers)
+                endpoint.wait_for_mode_change = True
             except (TypeError, ValueError) as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error resolving endpoint: "
