@@ -49,8 +49,7 @@ options:
                 type: bool
             wait_for_mode_change:
                 description:
-                - If deploy is enabled, whether to wait for NDFC to push the change to the switch.
-                - Note: This option is ignored if deploy is not enabled.
+                - If deploy is enabled, whether to wait for NDFC to push the change to the switch.  Ignored if deploy is not enabled.
                 default: False
                 required: false
                 type: bool
