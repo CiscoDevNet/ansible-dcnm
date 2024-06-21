@@ -42,19 +42,22 @@ options:
         required: true
         suboptions:
             deploy:
+                default: false
                 description:
                 - Whether to deploy the switch configurations.
-                default: False
                 required: false
                 type: bool
             wait_for_mode_change:
+                default: false
                 description:
                 - If deploy is enabled, whether to wait for NDFC to push the change to the switch.  Ignored if deploy is not enabled.
-                default: False
                 required: false
                 type: bool
             mode:
-                default: maintenance
+                choices:
+                - maintenance
+                - normal
+                default: normal
                 description:
                 - Enable maintenance or normal mode on all switches.
                 required: false
@@ -63,7 +66,7 @@ options:
                 description:
                 - A list of target switches.
                 - Per-switch options override the global options.
-                required: false
+                required: true
                 type: list
                 elements: dict
                 suboptions:
@@ -73,20 +76,24 @@ options:
                         required: true
                         type: str
                     mode:
+                        choices:
+                        - maintenance
+                        - normal
+                        default: normal
                         description:
                         - Enable maintenance or normal mode for the switch.
-                        required: true
+                        required: false
                         type: str
                     deploy:
-                        default: False
+                        default: false
                         description:
                         - Whether to deploy the switch configuration.
                         required: false
                         type: bool
                     wait_for_mode_change:
+                        default: false
                         description:
                         - If deploy is enabled, whether to wait for NDFC to push the change to the switch. Ignored if deploy is not enabled.
-                        default: False
                         required: false
                         type: bool
 """
@@ -249,18 +256,20 @@ class ParamsSpec:
         self._params_spec["ip_address"]["type"] = "ipv4"
 
         self._params_spec["mode"] = {}
+        self._params_spec["mode"]["choices"] = ["normal", "maintenance"]
+        self._params_spec["mode"]["default"] = "normal"
         self._params_spec["mode"]["required"] = False
         self._params_spec["mode"]["type"] = "str"
 
         self._params_spec["deploy"] = {}
+        self._params_spec["deploy"]["default"] = False
         self._params_spec["deploy"]["required"] = False
         self._params_spec["deploy"]["type"] = "bool"
-        self._params_spec["deploy"]["default"] = False
 
         self._params_spec["wait_for_mode_change"] = {}
+        self._params_spec["wait_for_mode_change"]["default"] = False
         self._params_spec["wait_for_mode_change"]["required"] = False
         self._params_spec["wait_for_mode_change"]["type"] = "bool"
-        self._params_spec["wait_for_mode_change"]["default"] = False
 
     def _build_params_spec_for_query_state(self) -> None:
         """
@@ -733,6 +742,9 @@ class Common:
         -   ``ValueError`` if:
                 -   ``params`` does not contain ``check_mode``
                 -   ``params`` does not contain ``state``
+                -   ``params`` does not contain ``config``
+        -   ``TypeError`` if:
+                -   ``config`` is not a dict
         """
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
@@ -752,12 +764,16 @@ class Common:
             msg += "state is required"
             raise ValueError(msg)
 
-        self.config = self.params.get("config")
+        self.config = self.params.get("config", None)
+        if self.config is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "config is required"
+            raise ValueError(msg)
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
-            msg = "expected dict type for self.config. "
-            msg += f"got {type(self.config).__name__}"
-            raise ValueError(msg)
+            msg += "Expected dict type for self.config. "
+            msg += f"Got {type(self.config).__name__}"
+            raise TypeError(msg)
 
         self.results = Results()
         self.results.state = self.state
@@ -812,7 +828,7 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]
         try:
             super().__init__(params)
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Error: {error}"
             raise ValueError(msg) from error
@@ -1104,7 +1120,7 @@ class Query(Common):
         method_name = inspect.stack()[0][3]
         try:
             super().__init__(params)
-        except ValueError as error:
+        except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Error: {error}"
             raise ValueError(msg) from error

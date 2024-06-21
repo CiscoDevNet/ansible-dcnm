@@ -267,9 +267,9 @@ class ParamsValidate:
                         spec[param], parameters, param
                     )
                 else:
-                    parameters[param] = self._verify_type(
-                        spec[param]["type"], parameters, param
-                    )
+                    value = self._verify_type(spec[param]["type"], parameters, param)
+                    if value is not None:
+                        parameters[param] = value
 
                 self._verify_choices(
                     spec[param].get("choices", None), parameters[param], param
@@ -358,6 +358,7 @@ class ParamsValidate:
 
         ### Raises
         -   ``ValueError`` if expected_type is not in self.valid_expected_types.
+        -   ``ValueError`` if a parameter is missing.
         -   ``TypeError`` if value's type does not match the expected type.
         """
         try:
@@ -365,7 +366,11 @@ class ParamsValidate:
         except ValueError as error:
             raise ValueError(error) from error
 
-        value = params[param]
+        value = params.get(param, None)
+        # param is not a mandatory parameter and user has omitted it.
+        # We don't need to validate it.
+        if value is None:
+            return None
         if expected_type in self._ipaddress_types:
             try:
                 self._ipaddress_guard(expected_type, value, param)
