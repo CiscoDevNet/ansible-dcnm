@@ -24,6 +24,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetailsByName as FabricDetailsByNameV2
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
     Common
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.fixture import \
