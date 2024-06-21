@@ -399,3 +399,32 @@ def test_dcnm_maintenance_mode_common_00170() -> None:
     match += r"Error detail: The value 'foo' is not a valid boolean\."
     with pytest.raises(ValueError, match=match):
         instance.get_want()
+
+
+def test_dcnm_maintenance_mode_common_00180() -> None:
+    """
+    ### Classes and Methods
+    - Common
+        - get_want()
+
+    ### Summary
+    -   Verify ``ValueError`` is raised.
+    -   params contains invalid value for ``state`` 
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def configs():
+        yield configs_common(key)
+
+    gen = ResponseGenerator(configs())
+
+    params_test = copy.deepcopy(params)
+    params_test.update({"config": gen.next})
+    params_test.update({"state": "foo"})
+    with does_not_raise():
+        instance = Common(params_test)
+    match = r"ParamsSpec.commit:\s+"
+    match += r"Invalid state foo\. Expected one of merged, query\."
+    with pytest.raises(ValueError, match=match):
+        instance.get_want()

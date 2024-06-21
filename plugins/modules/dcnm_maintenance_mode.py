@@ -219,8 +219,7 @@ class ParamsSpec:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ParamsSpec()")
 
-        self._properties = {}
-        self._properties["params"] = None
+        self._params = None
         self._params_spec: dict = {}
 
         self.valid_states = ["merged", "query"]
@@ -297,7 +296,7 @@ class ParamsSpec:
         -   setter: set the params
         -   setter: raise ``ValueError`` if value is not a dict
         """
-        return self._properties["params"]
+        return self._params
 
     @params.setter
     def params(self, value: dict) -> None:
@@ -309,7 +308,7 @@ class ParamsSpec:
             msg += "expected dict type for value. "
             msg += f"got {type(value).__name__}."
             raise ValueError(msg)
-        self._properties["params"] = value
+        self._params = value
 
 
 class Want:
@@ -336,7 +335,6 @@ class Want:
         instance = Want()
         instance.params = ansible_module.params
         instance.params_spec = ParamsSpec()
-        instance.results = Results()
         instance.items_key = "switches"
         instance.validator = ParamsValidate()
         instance.commit()
@@ -370,14 +368,12 @@ class Want:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED Want()")
 
-        self._properties = {}
-        self._properties["config"] = None
-        self._properties["items_key"] = None
-        self._properties["params"] = None
-        self._properties["params_spec"] = None
-        self._properties["results"] = None
-        self._properties["validator"] = None
-        self._properties["want"] = []
+        self._config = None
+        self._items_key = None
+        self._params = None
+        self._params_spec = None
+        self._validator = None
+        self._want = []
 
         self.merged_configs = []
         self.item_configs = []
@@ -581,7 +577,7 @@ class Want:
         -   setter: set config
         -   setter: raise ``ValueError`` if value is not a dict
         """
-        return self._properties["config"]
+        return self._config
 
     @config.setter
     def config(self, value) -> None:
@@ -590,7 +586,7 @@ class Want:
             msg += "expected dict for value. "
             msg += f"got {type(value).__name__}."
             raise TypeError(msg)
-        self._properties["config"] = value
+        self._config = value
 
     @property
     def items_key(self) -> str:
@@ -602,7 +598,7 @@ class Want:
         -   setter: set the items_key
         -   setter: raise ``ValueError`` if value is not a string
         """
-        return self._properties["items_key"]
+        return self._items_key
 
     @items_key.setter
     def items_key(self, value: str) -> None:
@@ -614,7 +610,7 @@ class Want:
             msg += "expected string type for value. "
             msg += f"got {type(value).__name__}."
             raise TypeError(msg)
-        self._properties["items_key"] = value
+        self._items_key = value
 
     @property
     def want(self) -> list:
@@ -622,7 +618,7 @@ class Want:
         ### Summary
         Return the want list.  See class docstring for structure details.
         """
-        return self._properties["want"]
+        return self._want
 
     @property
     def params(self) -> dict:
@@ -641,7 +637,7 @@ class Want:
         ### setter
         Set params
         """
-        return self._properties["params"]
+        return self._params
 
     @params.setter
     def params(self, value: dict) -> None:
@@ -653,7 +649,7 @@ class Want:
             msg += "expected dict type for value. "
             msg += f"got {type(value).__name__}."
             raise TypeError(msg)
-        self._properties["params"] = value
+        self._params = value
 
     @property
     def params_spec(self):
@@ -675,7 +671,7 @@ class Want:
         ### setter
         Set params_spec
         """
-        return self._properties["params_spec"]
+        return self._params_spec
 
     @params_spec.setter
     def params_spec(self, value) -> None:
@@ -692,7 +688,7 @@ class Want:
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
-        self._properties["params_spec"] = value
+        self._params_spec = value
 
     @property
     def validator(self):
@@ -710,7 +706,7 @@ class Want:
         ### setter
         Set validator
         """
-        return self._properties["validator"]
+        return self._validator
 
     @validator.setter
     def validator(self, value) -> None:
@@ -727,7 +723,7 @@ class Want:
             raise TypeError(msg) from error
         if _class_have != _class_need:
             raise TypeError(msg)
-        self._properties["validator"] = value
+        self._validator = value
 
 
 @Properties.add_rest_send
