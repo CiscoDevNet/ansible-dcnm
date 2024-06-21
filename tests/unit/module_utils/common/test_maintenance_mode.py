@@ -586,7 +586,14 @@ def test_maintenance_mode_00300(maintenance_mode) -> None:
 
 @pytest.mark.parametrize(
     "remove_param",
-    [("deploy"), ("fabric_name"), ("ip_address"), ("mode"), ("serial_number")],
+    [
+        ("deploy"),
+        ("fabric_name"),
+        ("ip_address"),
+        ("mode"),
+        ("serial_number"),
+        ("wait_for_mode_change"),
+    ],
 )
 def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
     """
@@ -604,6 +611,7 @@ def test_maintenance_mode_00310(maintenance_mode, remove_param) -> None:
                     - ip_address is missing from config
                     - mode is missing from config
                     - serial_number is missing from config
+                    - wait_for_mode_change is missing from config
 
 
     Code Flow - Setup
@@ -792,6 +800,60 @@ def test_maintenance_mode_00600(maintenance_mode, param, raises) -> None:
 
 
 @pytest.mark.parametrize(
+    "param, raises",
+    [
+        (False, None),
+        (True, None),
+        (10, ValueError),
+        ("FOO", ValueError),
+        (["FOO"], ValueError),
+        ({"FOO": "BAR"}, ValueError),
+    ],
+)
+def test_maintenance_mode_00700(maintenance_mode, param, raises) -> None:
+    """
+    Classes and Methods
+    - MaintenanceMode()
+        - __init__()
+        - verify_config_parameters()
+        - config.setter
+
+    Summary
+    -   Verify MaintenanceMode().verify_config_parameters() re-raises
+            -   ``ValueError`` if:
+                    - ``wait_for_mode_change`` raises ``TypeError``
+
+    Code Flow - Setup
+    -   MaintenanceMode() is instantiated
+
+    Code Flow - Test
+    -   MaintenanceMode().config is set to a dict.
+    -   The dict is updated with wait_for_mode_change set to valid and invalid
+        values of ``wait_for_mode_change``
+
+    Expected Result
+    -   ``ValueError`` is raised when wait_for_mode_change is not a boolean
+    -   Exception message matches expected
+    -   Exception is not raised when wait_for_mode_change is a boolean
+    """
+
+    with does_not_raise():
+        instance = maintenance_mode
+
+    config = copy.deepcopy(CONFIG[0])
+    config["wait_for_mode_change"] = param
+    match = r"MaintenanceMode\.verify_wait_for_mode_change:\s+"
+    match += r"Expected boolean for wait_for_mode_change\.\s+"
+    match += r"Got type\s+"
+    if raises:
+        with pytest.raises(raises, match=match):
+            instance.config = [config]
+    else:
+        instance.config = [config]
+        assert instance.config[0]["wait_for_mode_change"] == param
+
+
+@pytest.mark.parametrize(
     "endpoint_instance, mock_exception, expected_exception, mock_message",
     [
         ("ep_maintenance_mode_disable", TypeError, ValueError, "Bad type"),
@@ -800,7 +862,7 @@ def test_maintenance_mode_00600(maintenance_mode, param, raises) -> None:
         ("ep_maintenance_mode_enable", ValueError, ValueError, "Bad value"),
     ],
 )
-def test_maintenance_mode_00700(
+def test_maintenance_mode_00800(
     monkeypatch,
     maintenance_mode,
     endpoint_instance,
@@ -889,7 +951,7 @@ def test_maintenance_mode_00700(
         ("ep_maintenance_mode_deploy", ValueError, ValueError, "Bad value"),
     ],
 )
-def test_maintenance_mode_00800(
+def test_maintenance_mode_00900(
     monkeypatch,
     maintenance_mode,
     endpoint_instance,
@@ -1001,7 +1063,7 @@ def test_maintenance_mode_00800(
         (ValueError, ValueError, r"Converted ValueError to ValueError"),
     ],
 )
-def test_maintenance_mode_00900(
+def test_maintenance_mode_01000(
     maintenance_mode, mock_exception, expected_exception, mock_message
 ) -> None:
     """
@@ -1075,7 +1137,7 @@ def test_maintenance_mode_00900(
         instance.commit()
 
 
-def test_maintenance_mode_01000(monkeypatch, maintenance_mode) -> None:
+def test_maintenance_mode_01100(monkeypatch, maintenance_mode) -> None:
     """
     Classes and Methods
     - MaintenanceMode()
