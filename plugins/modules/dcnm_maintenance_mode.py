@@ -980,6 +980,7 @@ class Merged(Common):
                 "ip_address": "172.22.150.2",
                 "mode": "maintenance",
                 "serial_number": "FCI1234567"
+                "wait_for_mode_change": true
             },
             {
                 "deploy": true,
@@ -987,6 +988,7 @@ class Merged(Common):
                 "ip_address": "172.22.150.3",
                 "mode": "normal",
                 "serial_number": "HMD2345678"
+                "wait_for_mode_change": true
             }
         ]
         """
