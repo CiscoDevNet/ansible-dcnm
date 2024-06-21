@@ -60,6 +60,7 @@ CONFIG = [
         "fabric_name": f"{FABRIC_NAME}",
         "ip_address": "192.168.1.2",
         "mode": "maintenance",
+        "wait_for_mode_change": False,
         "serial_number": "FDO22180ASJ",
     }
 ]

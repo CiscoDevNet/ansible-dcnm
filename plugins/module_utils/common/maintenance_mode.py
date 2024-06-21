@@ -185,6 +185,7 @@ class MaintenanceMode:
                 self.verify_ip_address(item)
                 self.verify_mode(item)
                 self.verify_serial_number(item)
+                self.verify_wait_for_mode_change(item)
             except (TypeError, ValueError) as error:
                 raise ValueError(error) from error
 
@@ -281,6 +282,29 @@ class MaintenanceMode:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config is missing mandatory key: serial_number."
             raise ValueError(msg)
+
+    def verify_wait_for_mode_change(self, item) -> None:
+        """
+        ### Summary
+        Verify the ``wait_for_mode_change`` parameter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``wait_for_mode_change`` is not present.
+        -   ``TypeError`` if:
+                -   `wait_for_mode_change`` is not a boolean.
+        """
+        method_name = inspect.stack()[0][3]
+        if item.get("wait_for_mode_change", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "config is missing mandatory key: wait_for_mode_change."
+            raise ValueError(msg)
+        if not isinstance(item.get("wait_for_mode_change", None), bool):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Expected boolean for wait_for_mode_change. "
+            msg += f"Got type {type(item).__name__}, "
+            msg += f"value {item.get('deploy', None)}."
+            raise TypeError(msg)
 
     def verify_commit_parameters(self) -> None:
         """
@@ -425,13 +449,32 @@ class MaintenanceMode:
 
         ### Structure
         -   key: fabric_name
-        -   value: list of serial_numbers to deploy for each fabric
+        -   value: list of dict
+        -   each dict contains ``serial_number`` and ``wait_for_mode_change keys``
 
         ### Example
         ```json
         {
-            "MyFabric": ["CDM4593459", "CDM4593460"],
-            "YourFabric": ["CDM4593461", "CDM4593462"]
+            "MyFabric": [
+                {
+                    "serial_number": "CDM4593459",
+                    "wait_for_mode_change": True
+                },
+                {
+                    "serial_number": "CDM4593460",
+                    "wait_for_mode_change": False
+                }
+            ],
+            "YourFabric": [
+                {
+                    "serial_number": "DDM0455882",
+                    "wait_for_mode_change": True
+                },
+                {
+                    "serial_number": "DDM5598759",
+                    "wait_for_mode_change": True
+                }
+            ]
         }
         """
         self.deploy_dict = {}
@@ -439,10 +482,14 @@ class MaintenanceMode:
             fabric_name = item.get("fabric_name")
             serial_number = item.get("serial_number")
             deploy = item.get("deploy")
+            wait_for_mode_change = item.get("wait_for_mode_change")
             if fabric_name not in self.deploy_dict:
                 self.deploy_dict[fabric_name] = []
+            item_dict = {}
             if deploy is True:
-                self.deploy_dict[fabric_name].append(serial_number)
+                item_dict["serial_number"] = serial_number
+                item_dict["wait_for_mode_change"] = wait_for_mode_change
+                self.deploy_dict[fabric_name].append(item_dict)
 
     def build_serial_number_to_ip_address(self) -> None:
         """
@@ -481,21 +528,21 @@ class MaintenanceMode:
         """
         method_name = inspect.stack()[0][3]
         endpoints = []
-        for fabric_name, serial_numbers in self.deploy_dict.items():
-            for serial_number in serial_numbers:
+        for fabric_name, switches in self.deploy_dict.items():
+            for item in switches:
                 endpoint = {}
                 try:
                     self.ep_maintenance_mode_deploy.fabric_name = fabric_name
-                    self.ep_maintenance_mode_deploy.serial_number = serial_number
-                    self.ep_maintenance_mode_deploy.wait_for_mode_change = True
-                except (TypeError, ValueError) as error:
+                    self.ep_maintenance_mode_deploy.serial_number = item["serial_number"]
+                    self.ep_maintenance_mode_deploy.wait_for_mode_change = item["wait_for_mode_change"]
+                except (KeyError, TypeError, ValueError) as error:
                     msg = f"{self.class_name}.{method_name}: "
                     msg += "Error resolving endpoint: "
                     msg += f"Error details: {error}."
                     raise ValueError(msg) from error
                 endpoint["path"] = self.ep_maintenance_mode_deploy.path
                 endpoint["verb"] = self.ep_maintenance_mode_deploy.verb
-                endpoint["serial_number"] = serial_number
+                endpoint["serial_number"] = self.ep_maintenance_mode_deploy.serial_number
                 endpoint["fabric_name"] = fabric_name
                 endpoints.append(copy.copy(endpoint))
         self.endpoints = copy.copy(endpoints)

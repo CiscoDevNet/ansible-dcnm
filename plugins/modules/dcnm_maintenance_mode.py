@@ -47,6 +47,13 @@ options:
                 default: False
                 required: false
                 type: bool
+            wait_for_mode_change:
+                description:
+                - If deploy is enabled, whether to wait for NDFC to push the change to the switch.
+                - Note: This option is ignored if deploy is not enabled.
+                default: False
+                required: false
+                type: bool
             mode:
                 default: maintenance
                 description:
@@ -77,6 +84,13 @@ options:
                         - Whether to deploy the switch configuration.
                         required: false
                         type: bool
+                    wait_for_mode_change:
+                        description:
+                        - If deploy is enabled, whether to wait for NDFC to push the change to the switch.
+                        - Note: This option is ignored if deploy is not enabled.
+                        default: False
+                        required: false
+                        type: bool
 """
 
 EXAMPLES = """
@@ -88,7 +102,8 @@ EXAMPLES = """
   cisco.dcnm.dcnm_maintenance_mode:
     state: merged
     config:
-        deploy: false
+        deploy: true
+        wait_for_mode_change: true
         mode: maintenance
         switches:
             -   ip_address: 192.168.1.2
@@ -113,6 +128,7 @@ EXAMPLES = """
                 mode: normal
             -   ip_address: 192.160.1.3
                 deploy: true
+                wait_for_mode_change: true
             -   ip_address: 192.160.1.4
   register: result
 - debug:
@@ -243,6 +259,11 @@ class ParamsSpec:
         self._params_spec["deploy"]["type"] = "bool"
         self._params_spec["deploy"]["default"] = False
 
+        self._params_spec["wait_for_mode_change"] = {}
+        self._params_spec["wait_for_mode_change"]["required"] = False
+        self._params_spec["wait_for_mode_change"]["type"] = "bool"
+        self._params_spec["wait_for_mode_change"]["default"] = False
+
     def _build_params_spec_for_query_state(self) -> None:
         """
         Build the parameter specifications for ``query`` state.
@@ -324,11 +345,13 @@ class Want:
             "ip_address": "192.168.1.2",
             "mode": "maintenance",
             "deploy": false
+            "wait_for_mode_change": false
         },
         {
             "ip_address": "192.168.1.3",
             "mode": "normal",
             "deploy": true
+            "wait_for_mode_change": true
         }
     ]
     ```
@@ -875,7 +898,6 @@ class Merged(Common):
         """
         ### Summary
         Handle the following cases:
-        -   switch migration mode is ``inconsistent``
         -   switch migration mode is ``migration``
         -   fabric is in read-only mode (IS_READ_ONLY is True)
         -   fabric is in freeze mode (Deployment Disable)
@@ -989,6 +1011,7 @@ class Merged(Common):
                 need.update({"ip_address": ip_address})
                 need.update({"mode": want.get("mode")})
                 need.update({"serial_number": serial_number})
+                need.update({"wait_for_mode_change": want.get("wait_for_mode_change")})
                 self.need.append(copy.copy(need))
 
     def commit(self):
