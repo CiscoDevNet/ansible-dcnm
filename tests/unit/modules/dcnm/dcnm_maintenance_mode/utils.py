@@ -135,6 +135,16 @@ def configs_common(key: str) -> dict:
     return data
 
 
+def configs_want(key: str) -> dict:
+    """
+    Return playbook configs for Want
+    """
+    data_file = "configs_Want"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def payloads_merge(key: str) -> dict:
     """
     Return payloads for Merge

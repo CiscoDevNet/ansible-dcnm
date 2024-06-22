@@ -17,10 +17,6 @@
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-import
-# pylint: disable=redefined-outer-name
-# pylint: disable=protected-access
-# pylint: disable=unused-argument
-# pylint: disable=invalid-name
 
 from __future__ import absolute_import, division, print_function
 
@@ -33,14 +29,12 @@ import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
     Common
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
-    common_fixture, configs_common, does_not_raise, params, responses_common)
+    common_fixture, configs_common, does_not_raise, params)
 
 
 def test_dcnm_maintenance_mode_common_00000(common) -> None:

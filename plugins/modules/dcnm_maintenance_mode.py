@@ -333,6 +333,7 @@ class Want:
     ```python
     try:
         instance = Want()
+        instance.config = playbook_config
         instance.params = ansible_module.params
         instance.params_spec = ParamsSpec()
         instance.items_key = "switches"
@@ -375,6 +376,7 @@ class Want:
         self._validator = None
         self._want = []
 
+        self.merge_dicts = MergeDicts()
         self.merged_configs = []
         self.item_configs = []
 
@@ -390,11 +392,11 @@ class Want:
         # Generate the params_spec used to validate the configs
         if self.params is None:
             msg = f"{self.class_name}.generate_params_spec(): "
-            msg += "self.params is required"
+            msg += "params is not set, and is required."
             raise ValueError(msg)
         if self.params_spec is None:
             msg = f"{self.class_name}.generate_params_spec(): "
-            msg += "self.params_spec is required"
+            msg += "params_spec is not set, and is required."
             raise ValueError(msg)
 
         try:
@@ -474,25 +476,34 @@ class Want:
 
         if self.validator is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"self.validator must be set before calling {method_name}"
+            msg += f"self.validator must be set before calling {method_name}."
             raise ValueError(msg)
 
         try:
             self.generate_params_spec()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error generating params_spec. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         try:
             self._merge_global_and_item_configs()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error merging global and item configs. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         self.build_merged_configs()
 
         try:
             self.validate_configs()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error validating playbook configs against params spec. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def _merge_global_and_item_configs(self) -> None:
         """
@@ -518,15 +529,15 @@ class Want:
 
         if self.config is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "self.config is required"
+            msg += "config is not set, and is required."
             raise ValueError(msg)
         if self.items_key is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "self.items_key is required"
+            msg += "items_key is not set, and is required."
             raise ValueError(msg)
         if not self.config.get(self.items_key):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"playbook is missing list of {self.items_key}"
+            msg += f"playbook is missing list of {self.items_key}."
             raise ValueError(msg)
 
         self.item_configs = []
@@ -547,14 +558,16 @@ class Want:
             msg += f"{json.dumps(item, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            merge_dicts = MergeDicts()
             try:
-                merge_dicts.dict1 = global_config
-                merge_dicts.dict2 = item
-                merge_dicts.commit()
-                item_config = merge_dicts.dict_merged
+                self.merge_dicts.dict1 = global_config
+                self.merge_dicts.dict2 = item
+                self.merge_dicts.commit()
+                item_config = self.merge_dicts.dict_merged
             except (TypeError, ValueError) as error:
-                raise ValueError(error) from error
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error in MergeDicts(). "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
 
             msg = f"{self.class_name}.{method_name}: "
             msg += "switch POST_MERGE: "
