@@ -409,7 +409,7 @@ def test_dcnm_maintenance_mode_common_00180() -> None:
 
     ### Summary
     -   Verify ``ValueError`` is raised.
-    -   params contains invalid value for ``state`` 
+    -   params contains invalid value for ``state``
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
