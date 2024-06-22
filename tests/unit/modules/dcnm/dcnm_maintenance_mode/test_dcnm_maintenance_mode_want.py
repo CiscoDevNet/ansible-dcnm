@@ -348,6 +348,7 @@ def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
     params_test.update({"config": gen.next})
 
     class MockMergeDicts:
+        @staticmethod
         def commit():
             raise ValueError("MergeDicts().commit(). ValueError.")
 
