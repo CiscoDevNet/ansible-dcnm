@@ -31,6 +31,13 @@ from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.fixture import \
     load_fixture
 
+params_query = {
+    "state": "query",
+    "config": {"switches": [{"ip_address": "192.168.1.2"}]},
+    "check_mode": False,
+}
+
+
 params = {
     "state": "merged",
     "config": {"switches": [{"ip_address": "192.168.1.2"}]},
@@ -146,6 +153,16 @@ def configs_want(key: str) -> dict:
     Return playbook configs for Want
     """
     data_file = "configs_Want"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def configs_query(key: str) -> dict:
+    """
+    Return playbook configs for Query
+    """
+    data_file = "configs_Query"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

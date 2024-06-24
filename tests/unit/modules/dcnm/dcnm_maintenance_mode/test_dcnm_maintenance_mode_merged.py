@@ -641,7 +641,6 @@ def test_dcnm_maintenance_mode_merged_00200() -> None:
     """
     ### Classes and Methods
     - Merged()
-        - fabric_deployment_disabled()
         - commit()
 
     ### Summary
@@ -696,7 +695,7 @@ def test_dcnm_maintenance_mode_merged_00300(monkeypatch) -> None:
     rest_send.sender = sender
 
     with does_not_raise():
-        instance = Merged(params)
+        instance = Merged(params_test)
         instance.rest_send = rest_send
         instance.config = params_test.get("config")
 
@@ -763,7 +762,6 @@ def test_dcnm_maintenance_mode_merged_00500() -> None:
     params_test = copy.deepcopy(params)
     params_test.update({"config": {}})
     params_test.pop("check_mode", None)
-    # params_test.pop("state", None)
 
     print(f"params_test: {params_test}")
     match = r"Merged\.__init__:\s+"

@@ -1139,7 +1139,8 @@ class Query(Common):
             super().__init__(params)
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Error: {error}"
+            msg += "Error during super().__init__(). "
+            msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -1238,7 +1239,10 @@ class Query(Common):
         try:
             self.get_want()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while retrieving playbook config. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         if len(self.want) == 0:
             return
@@ -1246,7 +1250,11 @@ class Query(Common):
         try:
             self.get_have()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while retrieving switch information "
+            msg += "from the controller. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         # If we got this far, the requests were successful.
         self.results.action = "maintenance_mode_info"
