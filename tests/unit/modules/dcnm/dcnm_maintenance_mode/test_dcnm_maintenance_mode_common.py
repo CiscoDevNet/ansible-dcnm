@@ -418,7 +418,11 @@ def test_dcnm_maintenance_mode_common_00180() -> None:
     params_test.update({"state": "foo"})
     with does_not_raise():
         instance = Common(params_test)
-    match = r"ParamsSpec.commit:\s+"
-    match += r"Invalid state foo\. Expected one of merged, query\."
+    match = r"Want.commit:\s+"
+    match += r"Error generating params_spec\.\s+"
+    match += r"Error detail:\s+"
+    match += r"ParamsSpec\.params\.setter:\s+"
+    match += r"params\.state is invalid: foo\.\s+"
+    match += r"Expected one of merged, query\."
     with pytest.raises(ValueError, match=match):
         instance.get_want()

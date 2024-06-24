@@ -133,7 +133,7 @@ def test_dcnm_maintenance_mode_want_00110() -> None:
         instance.config = params_test.get("config")
         instance.params = params_test
         instance.params_spec = ParamsSpec()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"self\.validator must be set before calling commit\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -167,7 +167,7 @@ def test_dcnm_maintenance_mode_want_00120() -> None:
         instance.config = params_test.get("config")
         instance.params_spec = ParamsSpec()
         instance.validator = ParamsValidate()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"Error generating params_spec\.\s+"
     match += r"Error detail:\s+"
     match += r"Want\.generate_params_spec\(\):\s+"
@@ -204,7 +204,7 @@ def test_dcnm_maintenance_mode_want_00121() -> None:
         instance.config = params_test.get("config")
         instance.params = params_test
         instance.validator = ParamsValidate()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"Error generating params_spec\.\s+"
     match += r"Error detail:\s+"
     match += r"Want\.generate_params_spec\(\):\s+"
@@ -222,7 +222,7 @@ def test_dcnm_maintenance_mode_want_00130() -> None:
     ### Summary
     -   Verify Want().commit() catches and re-raises ``ValueError``.
     -   Want()._merge_global_and_item_configs() raises ``ValueError``
-        because ``config`` is not set, and is required.
+        because ``config`` is not set.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -241,7 +241,7 @@ def test_dcnm_maintenance_mode_want_00130() -> None:
         instance.params = params_test
         instance.params_spec = ParamsSpec()
         instance.validator = ParamsValidate()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"Error merging global and item configs\.\s+"
     match += r"Error detail:\s+"
     match += r"Want\._merge_global_and_item_configs:\s+"
@@ -259,7 +259,7 @@ def test_dcnm_maintenance_mode_want_00131() -> None:
     ### Summary
     -   Verify Want().commit() catches and re-raises ``ValueError``.
     -   Want()._merge_global_and_item_configs() raises ``ValueError``
-        because ``config`` is not set, and is required.
+        because ``items_key`` is not set.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -278,7 +278,7 @@ def test_dcnm_maintenance_mode_want_00131() -> None:
         instance.params = params_test
         instance.params_spec = ParamsSpec()
         instance.validator = ParamsValidate()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"Error merging global and item configs\.\s+"
     match += r"Error detail:\s+"
     match += r"Want\._merge_global_and_item_configs:\s+"
@@ -316,7 +316,7 @@ def test_dcnm_maintenance_mode_want_00132() -> None:
         instance.params = params_test
         instance.params_spec = ParamsSpec()
         instance.validator = ParamsValidate()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"Error merging global and item configs\.\s+"
     match += r"Error detail:\s+"
     match += r"Want\._merge_global_and_item_configs:\s+"
@@ -348,8 +348,19 @@ def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
     params_test.update({"config": gen.next})
 
     class MockMergeDicts:  # pylint: disable=too-few-public-methods
+        """
+        Mock class for MergeDicts().
+        """
+
         @staticmethod
         def commit():
+            """
+            ### Summary
+            Mock method for MergeDicts().commit().
+
+            ### Raises
+            ValueError: Always
+            """
             raise ValueError("MergeDicts().commit(). ValueError.")
 
     with does_not_raise():
@@ -360,7 +371,7 @@ def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
         instance.params = params_test
         instance.params_spec = ParamsSpec()
         instance.validator = ParamsValidate()
-    match = r"Want.commit: Error merging global and item configs\.\s+"
+    match = r"Want\.commit: Error merging global and item configs\.\s+"
     match += r"Error detail:\s+"
     match += r"Want\._merge_global_and_item_configs:\s+"
     match += r"Error in MergeDicts\(\)\.\s+"
@@ -376,8 +387,9 @@ def test_dcnm_maintenance_mode_want_00140(monkeypatch) -> None:
         - commit()
 
     ### Summary
-    -   Verify Want().commit() catches and re-raises ``ValueError``.
-    -   Want().validate_configs() raises ``ValueError``.
+    -   Verify Want().commit() catches and re-raises ``ValueError``
+        when Want().validate_configs() raises ``ValueError``.
+    -   Want().validate_configs() is mocked to raise ``ValueError``.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -401,8 +413,189 @@ def test_dcnm_maintenance_mode_want_00140(monkeypatch) -> None:
         instance.params_spec = ParamsSpec()
         instance.items_key = "switches"
         instance.validator = ParamsValidate()
-    match = r"Want.commit:\s+"
+    match = r"Want\.commit:\s+"
     match += r"Error validating playbook configs against params spec\.\s+"
     match += r"Error detail: validate_configs ValueError\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
+
+
+def test_dcnm_maintenance_mode_want_00200() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - config.setter
+
+    ### Summary
+    -   Verify Want().config raises ``TypeError`` when config is not a dict.
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.config\.setter:\s+"
+    match += r"expected dict but got str, value NOT_A_DICT\."
+    with pytest.raises(TypeError, match=match):
+        instance.config = "NOT_A_DICT"
+
+
+def test_dcnm_maintenance_mode_want_00300() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - items_key.setter
+
+    ### Summary
+    -   Verify Want().items_key raises ``TypeError`` when items_key is not
+        a string.
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.items_key\.setter:\s+"
+    match += r"expected string but got set, value {'NOT_A_STRING'}\."
+    with pytest.raises(TypeError, match=match):
+        instance.items_key = {"NOT_A_STRING"}
+
+
+def test_dcnm_maintenance_mode_want_00400() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - params.setter
+
+    ### Summary
+    Verify Want().params happy path.
+    """
+    with does_not_raise():
+        instance = Want()
+        instance.params = {"state": "merged"}
+
+
+def test_dcnm_maintenance_mode_want_00410() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - params.setter
+
+    ### Summary
+    -   Verify Want().params raises ``TypeError`` when params is not a dict.
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.params\.setter:\s+"
+    match += r"expected dict but got str, value NOT_A_DICT\."
+    with pytest.raises(TypeError, match=match):
+        instance.params = "NOT_A_DICT"
+
+
+def test_dcnm_maintenance_mode_want_00500() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - params_spec.setter
+
+    ### Summary
+    Verify Want().params_spec happy path.
+    """
+    with does_not_raise():
+        instance = Want()
+        instance.params_spec = ParamsSpec()
+
+
+def test_dcnm_maintenance_mode_want_00510() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - params_spec.setter
+
+    ### Summary
+    -   Verify Want().params_spec raises ``TypeError`` when params_spec
+        is not an instance of ParamsSpec().
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.params_spec:\s+"
+    match += r"value must be an instance of ParamsSpec\.\s+"
+    match += r"Got type str, value NOT_AN_INSTANCE_OF_PARAMS_SPEC\.\s+"
+    match += r"Error detail: 'str' object has no attribute 'class_name'\."
+    with pytest.raises(TypeError, match=match):
+        instance.params_spec = "NOT_AN_INSTANCE_OF_PARAMS_SPEC"
+
+
+def test_dcnm_maintenance_mode_want_00520() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - params_spec.setter
+
+    ### Summary
+    Verify Want().params_spec raises ``TypeError`` when params_spec
+    is not an instance of ParamsSpec(), but IS an instance of another
+    class.
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.params_spec:\s+"
+    match += r"value must be an instance of ParamsSpec\.\s+"
+    match += r"Got type ParamsValidate, value .* object at 0x.*\."
+    with pytest.raises(TypeError, match=match):
+        instance.params_spec = ParamsValidate()
+
+
+def test_dcnm_maintenance_mode_want_00600() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - validator.setter
+
+    ### Summary
+    Verify Want().validator happy path.
+    """
+    with does_not_raise():
+        instance = Want()
+        instance.validator = ParamsValidate()
+
+
+def test_dcnm_maintenance_mode_want_00610() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - validator.setter
+
+    ### Summary
+    -   Verify Want().validator raises ``TypeError`` when validator
+        is not an instance of ParamsValidate().
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.validator:\s+"
+    match += r"value must be an instance of ParamsValidate\.\s+"
+    match += r"Got type str, value NOT_AN_INSTANCE_OF_PARAMS_VALIDATE\.\s+"
+    match += r"Error detail: 'str' object has no attribute 'class_name'\."
+    with pytest.raises(TypeError, match=match):
+        instance.validator = "NOT_AN_INSTANCE_OF_PARAMS_VALIDATE"
+
+
+def test_dcnm_maintenance_mode_want_00620() -> None:
+    """
+    ### Classes and Methods
+    - Want()
+        - validator.setter
+
+    ### Summary
+    Verify Want().validator raises ``TypeError`` when validator
+    is not an instance of ParamsValidate(), but IS an instance of
+    another class.
+    """
+    with does_not_raise():
+        instance = Want()
+
+    match = r"Want\.validator:\s+"
+    match += r"value must be an instance of ParamsValidate\.\s+"
+    match += r"Got type ParamsSpec, value .* object at 0x.*\."
+    with pytest.raises(TypeError, match=match):
+        instance.validator = ParamsSpec()

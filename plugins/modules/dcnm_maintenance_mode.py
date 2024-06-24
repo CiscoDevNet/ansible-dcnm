@@ -229,15 +229,11 @@ class ParamsSpec:
         Build the parameter specification based on the state
 
         ## Raises
-        -   ValueError if params.state is not a valid state for
-            the dcnm_maintenance_mode module
+        -   ``ValueError`` if params is not set
         """
-        method_name = inspect.stack()[0][3]
-
-        if self.params["state"] not in self.valid_states:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid state {self.params['state']}. "
-            msg += f"Expected one of {', '.join(self.valid_states)}."
+        if self._params is None:
+            msg = f"{self.class_name}.commit: "
+            msg += "params must be set before calling commit()."
             raise ValueError(msg)
 
         if self.params["state"] == "merged":
@@ -289,12 +285,19 @@ class ParamsSpec:
     @property
     def params(self) -> dict:
         """
-        Expects value to be the return value of
-        ``AnsibleModule.params`` property.
+        ### Summary
+        Expects value to be a dictionary containing, at mimimum,
+        the key "state" with value of either "merged" or "query".
 
+        ### Raises
+        -   setter: raise ``ValueError`` if value is not a dict
+        -   setter: raise ``ValueError`` if value["state"] is missing
+        -   setter: raise ``ValueError`` if value["state"] is not a valid state
+
+        ### Details
+        -   Valid params: {"state": "merged"} or {"state": "query"}
         -   getter: return the params
         -   setter: set the params
-        -   setter: raise ``ValueError`` if value is not a dict
         """
         return self._params
 
@@ -303,11 +306,25 @@ class ParamsSpec:
         """
         -   setter: set the params
         """
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
-            msg = f"{self.class_name}.params.setter: "
-            msg += "expected dict type for value. "
-            msg += f"got {type(value).__name__}."
+            msg = f"{self.class_name}.{method_name}.setter: "
+            msg += "Invalid type. Expected dict but "
+            msg += f"got type {type(value).__name__}, "
+            msg += f"value {value}."
+            raise TypeError(msg)
+
+        if value.get("state", None) is None:
+            msg = f"{self.class_name}.{method_name}.setter: "
+            msg += "params.state is required but missing."
             raise ValueError(msg)
+
+        if value["state"] not in self.valid_states:
+            msg = f"{self.class_name}.{method_name}.setter: "
+            msg += f"params.state is invalid: {value['state']}. "
+            msg += f"Expected one of {', '.join(self.valid_states)}."
+            raise ValueError(msg)
+
         self._params = value
 
 
@@ -404,10 +421,7 @@ class Want:
         except ValueError as error:
             raise ValueError(error) from error
 
-        try:
-            self.params_spec.commit()
-        except ValueError as error:
-            raise ValueError(error) from error
+        self.params_spec.commit()
 
     def validate_configs(self) -> None:
         """
@@ -416,14 +430,11 @@ class Want:
         and populate self.want with the validated configs.
 
         ### Raises
-        -   ``ValueError`` if self.validator is not set
+        None
 
+        ### Notes
+        -   validator is already verified in commit()s
         """
-        if self.validator is None:
-            msg = f"{self.class_name}.validate_configs(): "
-            msg += "self.validator is required"
-            raise ValueError(msg)
-
         self.validator.params_spec = self.params_spec.params_spec
         for config in self.merged_configs:
             self.validator.parameters = config
@@ -436,6 +447,9 @@ class Want:
         If a parameter is missing from the config, and the parameter
         has a default value, merge the default value for the parameter
         into the config.
+
+        ### Raises
+        None
         """
         self.merged_configs = []
         merge_defaults = ParamsMergeDefaults()
@@ -596,8 +610,8 @@ class Want:
     def config(self, value) -> None:
         if not isinstance(value, dict):
             msg = f"{self.class_name}.config.setter: "
-            msg += "expected dict for value. "
-            msg += f"got {type(value).__name__}."
+            msg += "expected dict but got "
+            msg += f"{type(value).__name__}, value {value}."
             raise TypeError(msg)
         self._config = value
 
@@ -620,8 +634,8 @@ class Want:
         """
         if not isinstance(value, str):
             msg = f"{self.class_name}.items_key.setter: "
-            msg += "expected string type for value. "
-            msg += f"got {type(value).__name__}."
+            msg += "expected string but got "
+            msg += f"{type(value).__name__}, value {value}."
             raise TypeError(msg)
         self._items_key = value
 
@@ -659,8 +673,8 @@ class Want:
         """
         if not isinstance(value, dict):
             msg = f"{self.class_name}.params.setter: "
-            msg += "expected dict type for value. "
-            msg += f"got {type(value).__name__}."
+            msg += "expected dict but got "
+            msg += f"{type(value).__name__}, value {value}."
             raise TypeError(msg)
         self._params = value
 
@@ -693,7 +707,8 @@ class Want:
         _class_need = "ParamsSpec"
         msg = f"{self.class_name}.{method_name}: "
         msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
+        msg += f"Got type {type(value).__name__}, "
+        msg += f"value {value}. "
         try:
             _class_have = value.class_name
         except AttributeError as error:
@@ -728,7 +743,8 @@ class Want:
         _class_need = "ParamsValidate"
         msg = f"{self.class_name}.{method_name}: "
         msg += f"value must be an instance of {_class_need}. "
-        msg += f"Got value {value} of type {type(value).__name__}."
+        msg += f"Got type {type(value).__name__}, "
+        msg += f"value {value}. "
         try:
             _class_have = value.class_name
         except AttributeError as error:
