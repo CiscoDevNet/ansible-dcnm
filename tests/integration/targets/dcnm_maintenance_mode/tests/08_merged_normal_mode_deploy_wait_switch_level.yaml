@@ -3,12 +3,12 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-#  03:29.21
+#  06:00.68
 ################################################################################
 # DESCRIPTION
 # Maintenance mode to Normal mode using deploy-maintenance-mode endpoint.
 # deploy is set to true.
-# wait_for_mode_change is set to false.
+# wait_for_mode_change is set to true.
 #
 #
 # State: merged
@@ -41,7 +41,7 @@
 #
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
-#   testcase: 02_merged_normal_mode_deploy_no_wait_switch_level
+#   testcase: 08_merged_normal_mode_deploy_wait_switch_level
 #   fabric_name_1: VXLAN_EVPN_Fabric
 #   fabric_type_1: VXLAN_EVPN
 #   fabric_name_3: LAN_CLASSIC_Fabric
@@ -101,15 +101,16 @@
         config:
               deploy: false
               mode: maintenance
+              wait_for_mode_change: false
               switches:
                     - ip_address: "{{ leaf_1 }}"
                       deploy: true
                       mode: normal
-                      wait_for_mode_change: false
+                      wait_for_mode_change: true
                     - ip_address: "{{ leaf_2 }}"
                       deploy: true
                       mode: normal
-                      wait_for_mode_change: false
+                      wait_for_mode_change: true
   register: result_normal_mode
 - debug:
         var: result_normal_mode
