@@ -847,6 +847,8 @@ class Merged(Common):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.maintenance_mode = MaintenanceMode(params)
+
         msg = f"ENTERED Merged.{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -1109,11 +1111,10 @@ class Merged(Common):
             return
 
         try:
-            instance = MaintenanceMode(self.params)
-            instance.rest_send = self.rest_send
-            instance.results = self.results
-            instance.config = self.need
-            instance.commit()
+            self.maintenance_mode.rest_send = self.rest_send
+            self.maintenance_mode.results = self.results
+            self.maintenance_mode.config = self.need
+            self.maintenance_mode.commit()
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 

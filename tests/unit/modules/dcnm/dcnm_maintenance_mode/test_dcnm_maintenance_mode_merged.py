@@ -36,8 +36,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 imp
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import (
-    Merged)
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_maintenance_mode import \
+    Merged
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import (
@@ -80,6 +80,10 @@ def test_dcnm_maintenance_mode_merged_00000() -> None:
     assert instance.payloads == {}
     assert instance.query == []
     assert instance.want == []
+
+    assert instance.maintenance_mode.class_name == "MaintenanceMode"
+    assert instance.maintenance_mode.state == "merged"
+    assert instance.maintenance_mode.check_mode is False
 
     assert instance.results.class_name == "Results"
     assert instance.results.state == "merged"
@@ -819,6 +823,88 @@ def test_dcnm_maintenance_mode_merged_00600(monkeypatch) -> None:
     match += r"Error detail: send_need\(\): Mocked ValueError\."
     with pytest.raises(ValueError, match=match):
         monkeypatch.setattr(instance, "send_need", mock_send_need)
+        instance.commit()
+
+    assert len(instance.results.diff) == 2
+
+    assert instance.results.metadata[0]["action"] == "switch_details"
+    assert instance.results.metadata[1]["action"] == "fabric_details"
+
+    assert instance.results.metadata[0]["state"] == "merged"
+    assert instance.results.metadata[1]["state"] == "merged"
+
+    assert instance.results.metadata[0]["check_mode"] is False
+    assert instance.results.metadata[1]["check_mode"] is False
+
+    assert instance.results.result[0]["found"] is True
+    assert instance.results.result[1]["found"] is True
+
+    assert instance.results.result[0]["success"] is True
+    assert instance.results.result[1]["success"] is True
+
+
+def test_dcnm_maintenance_mode_merged_00700(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - Merged()
+        - send_need()
+        - commit()
+
+    ### Summary
+    -   Verify ``send_need()`` re-raises ``ValueError`` when
+        MaintenanceMode.commit() raises ``ValueError``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_merged(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+        yield responses_ep_fabrics(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    params_test = copy.deepcopy(params)
+    params_test.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = Merged(params)
+        instance.rest_send = rest_send
+        instance.config = params_test.get("config")
+
+    class MockMaintenanceMode:  # pylint: disable=too-few-public-methods
+        """
+        Mocked MaintenanceMode class.
+        """
+
+        def __init__(self, *args):
+            pass
+
+        def commit(self):
+            """
+            Mocked commit method.
+            """
+            raise ValueError("MockMaintenanceModeInfo.refresh: Mocked ValueError.")
+
+    match = r"Merged\.commit:\s+"
+    match += r"Error while sending maintenance mode request\.\s+"
+    match += r"Error detail:\s+"
+    match += r"MockMaintenanceModeInfo\.refresh: Mocked ValueError\."
+    with pytest.raises(ValueError, match=match):
+        monkeypatch.setattr(
+            instance, "maintenance_mode", MockMaintenanceMode(params_test)
+        )
         instance.commit()
 
     assert len(instance.results.diff) == 2
