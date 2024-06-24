@@ -15,9 +15,13 @@
         ]
     },
     "test_dcnm_maintenance_mode_query_00300a": {
-        "deploy": true,
-        "mode": "maintenance",
-        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_query_00600a": {
         "switches": [
             {
                 "ip_address": "192.168.1.2"

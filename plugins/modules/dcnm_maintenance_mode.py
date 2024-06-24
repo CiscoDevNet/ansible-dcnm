@@ -1145,6 +1145,8 @@ class Query(Common):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.maintenance_mode_info = MaintenanceModeInfo(self.params)
+
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -1201,19 +1203,18 @@ class Query(Common):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         try:
-            instance = MaintenanceModeInfo(self.params)
-            instance.rest_send = self.rest_send
-            instance.results = self.results
-            instance.config = [
+            self.maintenance_mode_info.rest_send = self.rest_send
+            self.maintenance_mode_info.results = self.results
+            self.maintenance_mode_info.config = [
                 item["ip_address"] for item in self.config.get("switches", {})
             ]
-            instance.refresh()
+            self.maintenance_mode_info.refresh()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error while retrieving switch info. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
-        self.have = instance.info
+        self.have = self.maintenance_mode_info.info
 
     def commit(self) -> None:
         """

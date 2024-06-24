@@ -306,3 +306,68 @@ def test_dcnm_maintenance_mode_query_00500() -> None:
     match += r"Error detail: Query\.__init__: check_mode is required\."
     with pytest.raises(ValueError, match=match):
         instance = Query(params_test)  # pylint: disable=unused-variable
+
+
+def test_dcnm_maintenance_mode_query_00600(monkeypatch) -> None:
+    """
+    ### Classes and Methods
+    - Query()
+        - commit()
+
+    ### Summary
+    -   Verify ``commit`` re-raises ``ValueError`` when ``get_have()``
+        raises ``ValueError``.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_query(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield
+
+    gen_responses = ResponseGenerator(responses())
+
+    params_test = copy.deepcopy(params_query)
+    params_test.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_query)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = Query(params_test)
+        instance.rest_send = RestSend(params_test)
+        instance.config = params_test.get("config")
+
+    class MockMaintenanceModeInfo:  # pylint: disable=too-few-public-methods
+        """
+        Mocked MaintenanceModeInfo class.
+        """
+        def __init__(self, *args):
+            pass
+
+        def refresh(self):
+            """
+            Mocked refresh method.
+            """
+            raise ValueError("MockMaintenanceModeInfo.refresh: Mocked ValueError.")
+
+    match = r"Query\.commit:\s+"
+    match += r"Error while retrieving switch information from the\s+"
+    match += r"controller\.\s+"
+    match += r"Error detail:\s+"
+    match += r"Query\.get_have: Error while retrieving switch info\.\s+"
+    match += r"Error detail: MockMaintenanceModeInfo\.refresh:\s+"
+    match += r"Mocked ValueError\."
+    with pytest.raises(ValueError, match=match):
+        monkeypatch.setattr(
+            instance, "maintenance_mode_info", MockMaintenanceModeInfo()
+        )
+        instance.commit()
