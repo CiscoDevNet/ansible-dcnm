@@ -764,25 +764,27 @@ class Common:
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "check_mode is required"
+            msg += "check_mode is required."
             raise ValueError(msg)
 
         self.state = self.params.get("state", None)
         if self.state is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "state is required"
+            msg += "state is required."
             raise ValueError(msg)
 
         self.config = self.params.get("config", None)
         if self.config is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "config is required"
+            msg += "config is required."
             raise ValueError(msg)
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Expected dict type for self.config. "
             msg += f"Got {type(self.config).__name__}"
             raise TypeError(msg)
+
+        self._rest_send = None
 
         self.results = Results()
         self.results.state = self.state
@@ -839,7 +841,8 @@ class Merged(Common):
             super().__init__(params)
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Error: {error}"
+            msg += "Error during super().__init__(). "
+            msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -1023,8 +1026,7 @@ class Merged(Common):
             ip_address = want.get("ip_address", None)
             if ip_address not in self.have:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"Switch {ip_address} in fabric {fabric_name} "
-                msg += "not found on the controller."
+                msg += f"Switch {ip_address} not found on the controller."
                 raise ValueError(msg)
 
             serial_number = self.have[ip_address]["serial_number"]
@@ -1063,7 +1065,10 @@ class Merged(Common):
         try:
             self.get_want()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while retrieving playbook config. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         if len(self.want) == 0:
             return
@@ -1080,7 +1085,10 @@ class Merged(Common):
         try:
             self.send_need()
         except ValueError as error:
-            raise ValueError(error) from error
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while sending maintenance mode request. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def send_need(self) -> None:
         """

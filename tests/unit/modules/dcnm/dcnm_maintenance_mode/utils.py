@@ -33,7 +33,7 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mod
 
 params = {
     "state": "merged",
-    "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+    "config": {"switches": [{"ip_address": "192.168.1.2"}]},
     "check_mode": False,
 }
 
@@ -45,11 +45,7 @@ class MockAnsibleModule:
 
     check_mode = False
 
-    params = {
-        "state": "merged",
-        "config": {"switches": [{"ip_address": "172.22.150.105"}]},
-        "check_mode": False,
-    }
+    params = params
     argument_spec = {
         "config": {"required": True, "type": "dict"},
         "state": {
@@ -135,6 +131,16 @@ def configs_common(key: str) -> dict:
     return data
 
 
+def configs_merged(key: str) -> dict:
+    """
+    Return playbook configs for Merged
+    """
+    data_file = "configs_Merged"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def configs_want(key: str) -> dict:
     """
     Return playbook configs for Want
@@ -175,11 +181,51 @@ def responses_common(key: str) -> dict:
     return data
 
 
-def responses_merge(key: str) -> dict:
+def responses_ep_all_switches(key: str) -> dict:
     """
-    Return responses for Merge
+    Return EpAllSwitches() responses.
     """
-    data_file = "responses_Merge"
+    data_file = "responses_EpAllSwitches"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_maintenance_mode_deploy(key: str) -> dict:
+    """
+    Return responses for endpoint EpMaintenanceModeDeploy.
+    """
+    data_file = "responses_EpMaintenanceModeDeploy"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_maintenance_mode_disable(key: str) -> dict:
+    """
+    Return responses for EpMaintenanceModeDisable().
+    """
+    data_file = "responses_EpMaintenanceModeDisable"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_maintenance_mode_enable(key: str) -> dict:
+    """
+    Return responses for EpMaintenanceModeEnable().
+    """
+    data_file = "responses_EpMaintenanceModeEnable"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_fabrics(key: str) -> dict:
+    """
+    Return responses for EpFabrics().
+    """
+    data_file = "responses_EpFabrics"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

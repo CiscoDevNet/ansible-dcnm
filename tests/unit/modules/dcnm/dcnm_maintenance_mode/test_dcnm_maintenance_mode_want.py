@@ -347,7 +347,7 @@ def test_dcnm_maintenance_mode_want_00133(monkeypatch) -> None:
     params_test = copy.deepcopy(params)
     params_test.update({"config": gen.next})
 
-    class MockMergeDicts:
+    class MockMergeDicts:  # pylint: disable=too-few-public-methods
         @staticmethod
         def commit():
             raise ValueError("MergeDicts().commit(). ValueError.")
