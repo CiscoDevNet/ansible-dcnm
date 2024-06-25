@@ -2415,7 +2415,6 @@ class Replaced(Common):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-
     def get_need(self):
         """
         Caller: commit()
