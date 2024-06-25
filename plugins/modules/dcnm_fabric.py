@@ -2465,7 +2465,6 @@ class Replaced(Common):
         if len(self.need_create) != 0:
             self.merged = Merged(self.params)
             self.merged.ansible_module = self.ansible_module
-            self.merged.ansible_module = self.ansible_module
             self.merged.rest_send = self.rest_send
             self.merged.fabric_details.rest_send = self.rest_send
             self.merged.fabric_summary.rest_send = self.rest_send
