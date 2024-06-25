@@ -2404,16 +2404,17 @@ class Replaced(Common):
         self.fabric_replaced = FabricReplacedBulk(self.params)
         self.fabric_summary = FabricSummary(self.params)
         self.fabric_types = FabricTypes()
+        self.merged = None
+        self.need_create = []
+        self.need_replaced = []
         self.template = TemplateGet()
+        self._implemented_states.add("replaced")
 
         msg = f"ENTERED Replaced.{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self.need_replaced = []
-
-        self._implemented_states.add("replaced")
 
     def get_need(self):
         """
@@ -2423,8 +2424,11 @@ class Replaced(Common):
         """
         self.payloads = {}
         for want in self.want:
-            # Skip fabrics that do not exist on the controller
+            # If fabrics do not exist on the controller, add them to
+            # need_create.  These will be created by Merged() in
+            # Replaced.send_need_replaced()
             if want["FABRIC_NAME"] not in self.have.all_data:
+                self.need_create.append(want)
                 continue
             self.need_replaced.append(want)
 
@@ -2458,6 +2462,17 @@ class Replaced(Common):
         msg += "self.need_replaced: "
         msg += f"{json_pretty(self.need_replaced)}"
         self.log.debug(msg)
+
+        if len(self.need_create) != 0:
+            self.merged = Merged(self.params)
+            self.merged.ansible_module = self.ansible_module
+            self.merged.ansible_module = self.ansible_module
+            self.merged.rest_send = self.rest_send
+            self.merged.fabric_details.rest_send = self.rest_send
+            self.merged.fabric_summary.rest_send = self.rest_send
+            self.merged.results = self.results
+            self.merged.need_create = self.need_create
+            self.merged.send_need_create()
 
         if len(self.need_replaced) == 0:
             msg = f"{self.class_name}.{method_name}: "
