@@ -250,6 +250,8 @@ class EpFabricConfigDeploy(Fabrics):
     instance.switch_id = ["CHM1234567", "CHM7654321"]
     # or instance.switch_id = "CHM1234567"
     # or instance.switch_id = "CHM7654321,CHM1234567"
+    instance.force_show_run = True
+    instance.include_all_msd_switches = True
     path = instance.path
     verb = instance.verb
     ```
