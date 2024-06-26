@@ -2856,15 +2856,16 @@ class Replaced(Common):
         method_name = inspect.stack()[0][3]
         self.payloads = {}
         for want in self.want:
-            # If fabrics do not exist on the controller, add them to
-            # need_create.  These will be created by Merged() in
-            # Replaced.send_need_replaced()
-            if want["FABRIC_NAME"] not in self.have.all_data:
-                self.need_create.append(want)
-                continue
 
             fabric_name = want.get("FABRIC_NAME", None)
             fabric_type = want.get("FABRIC_TYPE", None)
+
+            # If fabrics do not exist on the controller, add them to
+            # need_create.  These will be created by Merged() in
+            # Replaced.send_need_replaced()
+            if fabric_name not in self.have.all_data:
+                self.need_create.append(want)
+                continue
 
             if self.features[fabric_type] is False:
                 msg = f"{self.class_name}.{method_name}: "
