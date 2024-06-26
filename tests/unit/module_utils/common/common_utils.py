@@ -23,6 +23,8 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
+    ControllerFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
@@ -33,18 +35,62 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate 
 
 from .fixture import load_fixture
 
+params = {
+    "state": "merged",
+    "config": {"switches": [{"ip_address": "172.22.150.105"}]},
+    "check_mode": False,
+}
+
+
+class ResponseGenerator:
+    """
+    Given a generator, return the items in the generator with
+    each call to the next property
+
+    For usage in the context of dcnm_image_policy unit tests, see:
+        test: test_image_policy_create_bulk_00037
+        file: tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py
+
+    Simplified usage example below.
+
+    def responses():
+        yield {"key1": "value1"}
+        yield {"key2": "value2"}
+
+    gen = ResponseGenerator(responses())
+
+    print(gen.next) # {"key1": "value1"}
+    print(gen.next) # {"key2": "value2"}
+    """
+
+    def __init__(self, gen):
+        self.gen = gen
+
+    @property
+    def next(self):
+        """
+        Return the next item in the generator
+        """
+        return next(self.gen)
+
+    def public_method_for_pylint(self) -> Any:
+        """
+        Add one public method to appease pylint
+        """
+
 
 class MockAnsibleModule:
     """
     Mock the AnsibleModule class
     """
+
     check_mode = False
 
     params = {"config": {"switches": [{"ip_address": "172.22.150.105"}]}}
     argument_spec = {
         "config": {"required": True, "type": "dict"},
         "state": {"default": "merged", "choices": ["merged", "deleted", "query"]},
-        "check_mode": False
+        "check_mode": False,
     }
     supports_check_mode = True
 
@@ -63,6 +109,14 @@ class MockAnsibleModule:
 
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
+
+
+@pytest.fixture(name="controller_features")
+def controller_features_fixture():
+    """
+    return ControllerFeatures
+    """
+    return ControllerFeatures(params)
 
 
 @pytest.fixture(name="controller_version")
@@ -113,6 +167,15 @@ def merge_dicts_data(key: str) -> Dict[str, str]:
     data = load_fixture(data_file).get(key)
     print(f"merge_dicts_data: {key} : {data}")
     return data
+
+
+def responses_controller_features(key: str) -> Dict[str, str]:
+    """
+    Return ControllerFeatures controller responses
+    """
+    response_file = "responses_ControllerFeatures"
+    response = load_fixture(response_file).get(key)
+    return response
 
 
 def responses_controller_version(key: str) -> Dict[str, str]:

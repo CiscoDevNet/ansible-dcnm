@@ -47,7 +47,7 @@ def test_fabric_types_00010(fabric_types) -> None:
     assert instance.class_name == "FabricTypes"
     assert instance._properties["fabric_type"] is None
     assert instance._properties["template_name"] is None
-    for fabric_type in ["LAN_CLASSIC", "VXLAN_EVPN", "VXLAN_EVPN_MSD"]:
+    for fabric_type in ["IPFM", "LAN_CLASSIC", "VXLAN_EVPN", "VXLAN_EVPN_MSD"]:
         assert fabric_type in instance.valid_fabric_types
     for mandatory_parameter in ["FABRIC_NAME", "FABRIC_TYPE"]:
         assert mandatory_parameter in instance._mandatory_parameters_all_fabrics
@@ -58,12 +58,13 @@ def test_fabric_types_00010(fabric_types) -> None:
 
 MATCH_00020 = r"FabricTypes\.fabric_type.setter:\s+"
 MATCH_00020 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
-MATCH_00020 += r"Expected one of: LAN_CLASSIC, VXLAN_EVPN, VXLAN_EVPN_MSD\."
+MATCH_00020 += r"Expected one of:\s+.*\."
 
 
 @pytest.mark.parametrize(
     "fabric_type, template_name, does_raise, expected",
     [
+        ("IPFM", "Easy_Fabric_IPFM", False, does_not_raise()),
         ("LAN_CLASSIC", "LAN_Classic", False, does_not_raise()),
         ("VXLAN_EVPN", "Easy_Fabric", False, does_not_raise()),
         ("VXLAN_EVPN_MSD", "MSD_Fabric", False, does_not_raise()),
@@ -119,8 +120,9 @@ def test_fabric_types_00030(fabric_types) -> None:
         instance.template_name  # pylint: disable=pointless-statement
 
 
-VXLAN_EVPN_PARAMETERS = ["BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"]
+IPFM_PARAMETERS = ["FABRIC_NAME", "FABRIC_TYPE"]
 LAN_CLASSIC_PARAMETERS = ["FABRIC_NAME", "FABRIC_TYPE"]
+VXLAN_EVPN_PARAMETERS = ["BGP_AS", "FABRIC_NAME", "FABRIC_TYPE"]
 VXLAN_EVPN_MSD_PARAMETERS = ["FABRIC_NAME", "FABRIC_TYPE"]
 MATCH_00040 = r"FabricTypes\.fabric_type.setter:\s+"
 MATCH_00040 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
@@ -129,6 +131,7 @@ MATCH_00040 += r"Invalid fabric type: INVALID_FABRIC_TYPE.\s+"
 @pytest.mark.parametrize(
     "fabric_type, parameters, does_raise, expected",
     [
+        ("IPFM", IPFM_PARAMETERS, False, does_not_raise()),
         ("LAN_CLASSIC", LAN_CLASSIC_PARAMETERS, False, does_not_raise()),
         ("VXLAN_EVPN", VXLAN_EVPN_PARAMETERS, False, does_not_raise()),
         ("VXLAN_EVPN_MSD", VXLAN_EVPN_MSD_PARAMETERS, False, does_not_raise()),

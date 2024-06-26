@@ -22,14 +22,14 @@ import copy
 import inspect
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabrics
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class FabricDetails(FabricCommon):
@@ -52,9 +52,9 @@ class FabricDetails(FabricCommon):
         self.log.debug(msg)
 
         self.data = {}
-        self.endpoints = ApiEndpoints()
         self.results = Results()
         self.conversion = ConversionUtils()
+        self.ep_fabrics = EpFabrics()
 
     def _update_results(self):
         """
@@ -82,10 +82,8 @@ class FabricDetails(FabricCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        endpoint = self.endpoints.fabrics
-
-        self.rest_send.path = endpoint.get("path")
-        self.rest_send.verb = endpoint.get("verb")
+        self.rest_send.path = self.ep_fabrics.path
+        self.rest_send.verb = self.ep_fabrics.verb
 
         # We always want to get the controller's current fabric state,
         # regardless of the current value of check_mode.

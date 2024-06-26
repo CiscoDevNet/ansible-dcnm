@@ -20,6 +20,8 @@ import copy
 import inspect
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 # Import Results() only for the case where the user has not set Results()
@@ -30,8 +32,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class FabricDelete(FabricCommon):
@@ -78,7 +78,7 @@ class FabricDelete(FabricCommon):
 
         self._fabrics_to_delete = []
         self._build_properties()
-        self._endpoints = ApiEndpoints()
+        self.ep_fabric_delete = EpFabricDelete()
 
         self._cannot_delete_fabric_reason = None
 
@@ -145,17 +145,12 @@ class FabricDelete(FabricCommon):
         - Raise ``ValueError`` if the endpoint assignment fails
         """
         try:
-            self._endpoints.fabric_name = fabric_name
+            self.ep_fabric_delete.fabric_name = fabric_name
         except (ValueError, TypeError) as error:
             raise ValueError(error) from error
 
-        try:
-            endpoint = self._endpoints.fabric_delete
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        self.path = endpoint.get("path")
-        self.verb = endpoint.get("verb")
+        self.path = self.ep_fabric_delete.path
+        self.verb = self.ep_fabric_delete.verb
 
     def _validate_commit_parameters(self):
         """
@@ -289,7 +284,7 @@ class FabricDelete(FabricCommon):
             return
 
         if self.rest_send.result_current.get("success", None) is True:
-            self.results.diff_current = {"fabric_name": fabric_name}
+            self.results.diff_current = {"FABRIC_NAME": fabric_name}
             # need this to match the else clause below since we
             # pass response_current (altered or not) to the results object
             response_current = copy.deepcopy(self.rest_send.response_current)

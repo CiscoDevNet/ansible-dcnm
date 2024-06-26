@@ -32,6 +32,8 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
@@ -40,12 +42,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
     FabricConfigDeploy
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     fabric_config_deploy_fixture, fabric_details_by_name_fixture,
@@ -76,7 +72,7 @@ def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
     assert instance.verb is None
     assert instance.state == "merged"
     assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_config_deploy, EpFabricConfigDeploy)
 
 
 def test_fabric_config_deploy_00011() -> None:
@@ -178,7 +174,7 @@ def test_fabric_config_deploy_00020(
 
 
 MATCH_00030 = r"FabricConfigDeploy\.rest_send: "
-MATCH_00030 += r"rest_send must be an instance of RestSend\."
+MATCH_00030 += r"value must be an instance of RestSend\."
 
 
 @pytest.mark.parametrize(
@@ -218,7 +214,7 @@ def test_fabric_config_deploy_00030(
 
 
 MATCH_00040 = r"FabricConfigDeploy\.results: "
-MATCH_00040 += r"results must be an instance of Results\."
+MATCH_00040 += r"value must be an instance of Results\."
 
 
 @pytest.mark.parametrize(
@@ -420,49 +416,26 @@ def test_fabric_config_deploy_00200(
 
     Summary
     -   Verify that FabricConfigDeploy().commit()
-        re-raises ``ValueError`` when ApiEndpoints() raises
+        re-raises ``ValueError`` when EpFabricConfigDeploy() raises
         ``ValueError``.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpFabricConfigDeploy:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.fabric_config_deploy getter property
+        Mock the EpFabricConfigDeploy.path getter property
         to raise ``ValueError``.
         """
 
-        def validate_fabric_name(self, value="MyFabric"):
-            """
-            Mocked method required for test, but not relevant to test result.
-            """
-
         @property
-        def fabric_config_deploy(self):
+        def path(self):
             """
             -   Mocked property getter.
             -   Raise ``ValueError``.
             """
-            msg = "mocked ApiEndpoints().fabric_config_deploy getter exception"
+            msg = "mocked EpFabricConfigDeploy().path getter exception"
             raise ValueError(msg)
-
-        @property
-        def fabric_name(self):
-            """
-            -   Mocked fabric_config_deploy property getter
-            """
-            return self._fabric_name
-
-        @fabric_name.setter
-        def fabric_name(self, value):
-            """
-            -   Mocked fabric_name property setter
-            """
-            self._fabric_name = value
-
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints."
-    PATCH_API_ENDPOINTS += "fabric_config_deploy"
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
@@ -470,15 +443,12 @@ def test_fabric_config_deploy_00200(
     def responses():
         yield responses_fabric_summary(key)
         yield responses_fabric_details_by_name(key)
-        # yield responses_fabric_config_deploy(key)
 
     gen = ResponseGenerator(responses())
 
     def mock_dcnm_send(*args, **kwargs):
         item = gen.next
         return item
-
-    match = r"mocked ApiEndpoints\(\)\.fabric_config_deploy getter exception"
 
     monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
@@ -491,7 +461,7 @@ def test_fabric_config_deploy_00200(
 
     with does_not_raise():
         instance = fabric_config_deploy
-        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
+        monkeypatch.setattr(instance, "ep_config_deploy", MockEpFabricConfigDeploy())
         instance.fabric_details = fabric_details_by_name
         instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
         instance.payload = payload
@@ -499,6 +469,8 @@ def test_fabric_config_deploy_00200(
         instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
         instance.rest_send = RestSend(MockAnsibleModule())
         instance.results = Results()
+
+    match = r"mocked EpFabricConfigDeploy\(\)\.path getter exception"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -531,9 +503,9 @@ def test_fabric_config_deploy_00210(
     -   FabricConfigDeploy() properties are set
     -   FabricConfigDeploy.fabric_name is set "f1"
     -   FabricConfigDeploy().commit() is called.
-    -   FabricConfigDeploy().commit() sets ApiEndpoints().fabric_name
+    -   FabricConfigDeploy().commit() sets EpFabricConfigDeploy().fabric_name
     -   FabricConfigDeploy().commit() accesses
-        ApiEndpoints().fabric_config_deploy to set verb and path
+        EpFabricConfigDeploy().path/verb to set path and verb
     -   FabricConfigDeploy().commit() calls
         FabricConfigDeploy()_can_fabric_be_deployed()
     -   FabricConfigDeploy()._can_fabric_be_deployed() calls
@@ -654,9 +626,9 @@ def test_fabric_config_deploy_00220(
         -   unit_test == True
     -   FabricConfigDeploy().results is set to Results() class.
     -   FabricConfigDeploy().commit() is called.
-    -   FabricConfigDeploy().commit() sets ApiEndpoints().fabric_name
+    -   FabricConfigDeploy().commit() sets EpFabricConfigDeploy().fabric_name
     -   FabricConfigDeploy().commit() accesses
-        ApiEndpoints().fabric_config_deploy to set verb and path
+        EpFabricConfigDeploy().path/verb to set path and verb
     -   FabricConfigDeploy() calls RestSend().commit() which sets
         RestSend().response_current to a dict with keys:
         -   DATA == {"status": "Configuration deployment failed."}

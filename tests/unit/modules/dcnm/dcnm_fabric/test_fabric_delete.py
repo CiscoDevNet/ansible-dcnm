@@ -32,12 +32,12 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
@@ -73,7 +73,7 @@ def test_fabric_delete_00010(fabric_delete) -> None:
     assert instance.path is None
     assert instance.state == "deleted"
     assert instance.verb is None
-    assert isinstance(instance._endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_fabric_delete, EpFabricDelete)
     assert isinstance(instance.fabric_details, FabricDetailsByName)
 
 
@@ -95,7 +95,9 @@ def test_fabric_delete_00020(fabric_delete) -> None:
         instance = fabric_delete
         instance.results = Results()
         instance._set_fabric_delete_endpoint("MyFabric")
-    assert instance.path == "/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/MyFabric"
+    path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics"
+    path += "/MyFabric"
+    assert instance.path == path
     assert instance.verb == "DELETE"
 
 
@@ -350,7 +352,7 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
     assert len(instance.results.result) == 1
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
-    assert instance.results.diff[0].get("fabric_name", None) == "f1"
+    assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
 
     assert instance.results.metadata[0].get("action", None) == "delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
@@ -389,11 +391,13 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
         - commit()
 
     Summary
-    -   Verify unsuccessful fabric delete code path (attempt to set
-        ``fabric_delete`` endpoint raises ``ValueError``).
+    -   Verify FabricDelete().commit() re-raises ``ValueError`` when
+        ``EpFabricDelete()._send_requests() re-raises ``ValueError`` when
+        ``EpFabricDelete()._send_request() re-raises ``ValueError`` when
+        ``FabricDelete()._set_fabric_delete_endpoint()`` raises ``ValueError``.
     -   The user attempts to delete a fabric and the fabric exists on the
         controller, and the fabric is empty, but _set_fabric_delete_endpoint()
-        raises ``ValueError``.
+        re-raises ``ValueError``.
 
     Code Flow
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
@@ -412,32 +416,30 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     -   FabricDelete._send_requests() calls FabricDelete._send_request() for
         each fabric in the FabricDelete()._fabrics_to_delete list.
     -   FabricDelete._send_request() calls FabricDelete._set_fabric_delete_endpoint()
-        which is mocked to raise ``ValueError``.
+        which calls EpFabricDelete().fabric_name setter, which is mocked to raise
+        ``ValueError``.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpFabricDelete:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.fabric_delete property to raise ``ValueError``.
+        Mock the EpFabricDelete.path property to raise ``ValueError``.
         """
 
         @property
-        def fabric_delete(self):
+        def fabric_name(self):
             """
             Mocked property getter
             """
-            raise ValueError("mocked ApiEndpoints().fabric_delete getter exception")
 
-        @fabric_delete.setter
-        def fabric_delete(self, value):
+        @fabric_name.setter
+        def fabric_name(self, value):
             """
             Mocked property setter
             """
-            raise ValueError("mocked ApiEndpoints().fabric_delete setter exception")
-
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.fabric_delete"
+            msg = "mocked MockEpFabricDelete().fabric_name setter exception."
+            raise ValueError(msg)
 
     PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
@@ -456,7 +458,7 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
 
     with does_not_raise():
         instance = fabric_delete
-        monkeypatch.setattr(instance, "_endpoints", MockApiEndpoints())
+        monkeypatch.setattr(instance, "ep_fabric_delete", MockEpFabricDelete())
         instance.fabric_names = ["f1"]
 
         instance.fabric_details = FabricDetailsByName(params)
@@ -472,7 +474,7 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
 
         instance.results = Results()
 
-    match = r"mocked ApiEndpoints\(\)\.fabric_delete getter exception"
+    match = r"mocked MockEpFabricDelete\(\)\.fabric_name setter exception\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 

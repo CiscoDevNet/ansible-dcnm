@@ -41,7 +41,7 @@
 # REQUIREMENTS
 ################################################################################
 # Example vars for dcnm_image_policy integration tests
-# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml
 #
 # vars:
 #   # This testcase field can run any test in the tests directory for the role

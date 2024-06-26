@@ -1,6 +1,3 @@
-"""
-Class to retrieve and return information about an NDFC controller
-"""
 #
 # Copyright (c) 2024 Cisco and/or its affiliates.
 #
@@ -24,8 +21,8 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import \
+    EpVersion
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
     ImageUpgradeCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
@@ -36,24 +33,21 @@ class ControllerVersion(ImageUpgradeCommon):
     """
     Return image version information from the Controller
 
-    NOTES:
-    1.  considered using dcnm_version_supported() but it does not return
-        minor release info, which is needed due to key changes between
-        12.1.2e and 12.1.3b.  For example, see ImageStage().commit()
+    ### Endpoint
+        ``/appcenter/cisco/ndfc/api/v1/fm/about/version``
 
-    Endpoint:
-        /appcenter/cisco/ndfc/api/v1/fm/about/version
-
-    Usage (where module is an instance of AnsibleModule):
-
+    ### Usage (where module is an instance of AnsibleModule):
+    ```python
     instance = ControllerVersion(module)
     instance.refresh()
     if instance.version == "12.1.2e":
-        do 12.1.2e stuff
+        # do 12.1.2e stuff
     else:
-        do other stuff
+        # do other stuff
+    ```
 
-    Response:
+    ### Response
+    ```json
         {
             "version": "12.1.2e",
             "mode": "LAN",
@@ -64,6 +58,7 @@ class ControllerVersion(ImageUpgradeCommon):
             "uuid": "f49e6088-ad4f-4406-bef6-2419de914ff1",
             "is_upgrade_inprogress": false
         }
+    ```
     """
 
     def __init__(self, ansible_module):
@@ -73,7 +68,7 @@ class ControllerVersion(ImageUpgradeCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ControllerVersion()")
 
-        self.endpoints = ApiEndpoints()
+        self.ep_version = EpVersion()
         self._init_properties()
 
     def _init_properties(self):
@@ -86,8 +81,8 @@ class ControllerVersion(ImageUpgradeCommon):
         """
         Refresh self.response_data with current version info from the Controller
         """
-        path = self.endpoints.controller_version.get("path")
-        verb = self.endpoints.controller_version.get("verb")
+        path = self.ep_version.path
+        verb = self.ep_version.verb
         self.properties["response"] = dcnm_send(self.ansible_module, verb, path)
         self.properties["result"] = self._handle_response(self.response, verb)
 

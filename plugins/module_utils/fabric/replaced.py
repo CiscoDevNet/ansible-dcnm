@@ -23,12 +23,12 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabricUpdate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
     FabricTypes
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
@@ -54,7 +54,7 @@ class FabricReplacedCommon(FabricCommon):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.endpoints = ApiEndpoints()
+        self.ep_fabric_update = EpFabricUpdate()
         self.fabric_types = FabricTypes()
         self.param_info = ParamInfo()
         self.ruleset = RuleSet()
@@ -135,7 +135,6 @@ class FabricReplacedCommon(FabricCommon):
         -   None if the parameter does not need to be updated.
         -   A dict with the parameter and playbook value if the parameter
             needs to be updated.
-        -   raise ``ValueError`` for any unhandled case(s).
 
         Usage:
         ```python
@@ -149,32 +148,17 @@ class FabricReplacedCommon(FabricCommon):
             payload_to_send_to_controller.update(result)
         ```
         """
-        raise_value_error = False
         if playbook is None:
             if default is None:
                 return None
-            if controller != default and controller is not None and controller != "":
-                return {parameter: default}
-            if controller != default and (controller is None or controller == ""):
-                return None
             if controller == default:
                 return None
-            raise_value_error = True
-            msg = "UNHANDLED case when playbook value is None. "
-        if playbook is not None:
-            if playbook == controller:
+            if controller is None or controller == "":
                 return None
-            if playbook != controller:
-                return {parameter: playbook}
-            raise_value_error = True
-            msg = "UNHANDLED case when playbook value is not None. "
-        if raise_value_error is False:
-            msg = "UNHANDLED case "
-        msg += f"parameter {parameter}, "
-        msg += f"playbook: {playbook}, "
-        msg += f"controller: {controller}, "
-        msg += f"default: {default}"
-        raise ValueError(msg)
+            return {parameter: default}
+        if playbook == controller:
+            return None
+        return {parameter: playbook}
 
     def _verify_value_types_for_comparison(
         self, fabric_name, parameter, user_value, controller_value, default_value
@@ -484,7 +468,11 @@ class FabricReplacedCommon(FabricCommon):
         - Set the endpoint for the fabric update API call.
         - raise ``ValueError`` if the enpoint assignment fails
         """
-        self.endpoints.fabric_name = payload.get("FABRIC_NAME")
+        try:
+            self.ep_fabric_update.fabric_name = payload.get("FABRIC_NAME")
+        except ValueError as error:
+            raise ValueError(error) from error
+
         self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
         try:
             self.fabric_types.fabric_type = self.fabric_type
@@ -492,18 +480,13 @@ class FabricReplacedCommon(FabricCommon):
             raise ValueError(error) from error
 
         try:
-            self.endpoints.template_name = self.fabric_types.template_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            endpoint = self.endpoints.fabric_update
+            self.ep_fabric_update.template_name = self.fabric_types.template_name
         except ValueError as error:
             raise ValueError(error) from error
 
         payload.pop("FABRIC_TYPE", None)
-        self.path = endpoint["path"]
-        self.verb = endpoint["verb"]
+        self.path = self.ep_fabric_update.path
+        self.verb = self.ep_fabric_update.verb
 
     def _send_payload(self, payload):
         """

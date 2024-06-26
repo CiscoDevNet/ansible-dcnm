@@ -29,5 +29,32 @@
         "DEPLOY": true,
         "FABRIC_NAME": "f1",
         "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_common_00033a": {
+        "TEST_NOTES": [
+            "Valid payload."
+        ],
+        "BGP_AS": 65000,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_common_00040a": {
+        "TEST_NOTES": [
+            "Valid payload."
+        ],
+        "BGP_AS": 65000,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
+    },
+    "test_fabric_create_common_00050a": {
+        "TEST_NOTES": [
+            "Valid payload."
+        ],
+        "BGP_AS": 65000,
+        "DEPLOY": true,
+        "FABRIC_NAME": "f1",
+        "FABRIC_TYPE": "VXLAN_EVPN"
     }
 }
