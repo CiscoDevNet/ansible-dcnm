@@ -23,12 +23,12 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabricUpdate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
     FabricTypes
 
@@ -47,7 +47,7 @@ class FabricUpdateCommon(FabricCommon):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.endpoints = ApiEndpoints()
+        self.ep_fabric_update = EpFabricUpdate()
         self.fabric_types = FabricTypes()
 
         msg = "ENTERED FabricUpdateCommon(): "
@@ -253,7 +253,12 @@ class FabricUpdateCommon(FabricCommon):
         - Set the endpoint for the fabric create API call.
         - raise ``ValueError`` if the enpoint assignment fails
         """
-        self.endpoints.fabric_name = payload.get("FABRIC_NAME")
+        try:
+            self.ep_fabric_update.fabric_name = payload.get("FABRIC_NAME")
+        except ValueError as error:
+            raise ValueError(error) from error
+
+        # Used to convert fabric type to template name
         self.fabric_type = copy.copy(payload.get("FABRIC_TYPE"))
         try:
             self.fabric_types.fabric_type = self.fabric_type
@@ -261,18 +266,13 @@ class FabricUpdateCommon(FabricCommon):
             raise ValueError(error) from error
 
         try:
-            self.endpoints.template_name = self.fabric_types.template_name
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            endpoint = self.endpoints.fabric_update
+            self.ep_fabric_update.template_name = self.fabric_types.template_name
         except ValueError as error:
             raise ValueError(error) from error
 
         payload.pop("FABRIC_TYPE", None)
-        self.path = endpoint["path"]
-        self.verb = endpoint["verb"]
+        self.path = self.ep_fabric_update.path
+        self.verb = self.ep_fabric_update.verb
 
     def _send_payload(self, payload):
         """

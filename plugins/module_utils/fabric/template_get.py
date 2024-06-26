@@ -23,16 +23,10 @@ import inspect
 import logging
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
+    EpTemplate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
-# Used only to verify RestSend instance in rest_send property setter
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-# Used only to verify RestSend instance in rest_send property setter
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class TemplateGet:
@@ -63,9 +57,7 @@ class TemplateGet:
         msg = "ENTERED TemplateGet(): "
         self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
-        self.path = None
-        self.verb = None
+        self.ep_template = EpTemplate()
 
         self.response = []
         self.response_current = {}
@@ -95,14 +87,10 @@ class TemplateGet:
             self.log.error(msg)
             raise ValueError(msg)
 
-        self.endpoints.template_name = self.template_name
         try:
-            endpoint = self.endpoints.template
-        except ValueError as error:
+            self.ep_template.template_name = self.template_name
+        except TypeError as error:
             raise ValueError(error) from error
-
-        self.path = endpoint.get("path")
-        self.verb = endpoint.get("verb")
 
     def refresh(self):
         """
@@ -124,8 +112,8 @@ class TemplateGet:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
+        self.rest_send.path = self.ep_template.path
+        self.rest_send.verb = self.ep_template.verb
         self.rest_send.check_mode = False
         self.rest_send.timeout = 2
         self.rest_send.commit()
@@ -163,9 +151,17 @@ class TemplateGet:
     @rest_send.setter
     def rest_send(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, RestSend):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be an instance of RestSend."
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "value must be an instance of RestSend. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        _class_name = None
+        try:
+            _class_name = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            self.log.debug(msg)
+            raise TypeError(msg) from error
+        if _class_name != "RestSend":
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["rest_send"] = value
@@ -183,9 +179,17 @@ class TemplateGet:
     @results.setter
     def results(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, Results):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be an instance of Results."
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "value must be an instance of Results. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        _class_name = None
+        try:
+            _class_name = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            self.log.debug(msg)
+            raise TypeError(msg) from error
+        if _class_name != "Results":
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["results"] = value

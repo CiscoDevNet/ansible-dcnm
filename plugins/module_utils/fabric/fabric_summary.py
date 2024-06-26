@@ -23,6 +23,8 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.switches.switches import \
+    EpFabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
@@ -31,8 +33,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class FabricSummary(FabricCommon):
@@ -96,7 +96,7 @@ class FabricSummary(FabricCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.data = None
-        self.endpoints = ApiEndpoints()
+        self.ep_fabric_summary = EpFabricSummary()
         self.conversion = ConversionUtils()
 
         # set to True in refresh() after a successful request to the controller
@@ -154,9 +154,9 @@ class FabricSummary(FabricCommon):
         -   Raise ``ValueError`` if unable to retrieve the endpoint.
         """
         try:
-            self.endpoints.fabric_name = self.fabric_name
-            self.rest_send.path = self.endpoints.fabric_summary.get("path")
-            self.rest_send.verb = self.endpoints.fabric_summary.get("verb")
+            self.ep_fabric_summary.fabric_name = self.fabric_name
+            self.rest_send.path = self.ep_fabric_summary.path
+            self.rest_send.verb = self.ep_fabric_summary.verb
         except ValueError as error:
             msg = "Error retrieving fabric_summary endpoint. "
             msg += f"Detail: {error}"

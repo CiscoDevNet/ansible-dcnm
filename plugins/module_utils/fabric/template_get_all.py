@@ -23,16 +23,10 @@ import inspect
 import logging
 from typing import Any, Dict
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
+    EpTemplates
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
-# Used only to verify RestSend instance in rest_send property setter
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-# Used only to verify RestSend instance in rest_send property setter
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 
 
 class TemplateGetAll:
@@ -62,9 +56,7 @@ class TemplateGetAll:
         msg = "ENTERED TemplateGetAll(): "
         self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
-        self.path = None
-        self.verb = None
+        self.ep_templates = EpTemplates()
 
         self.response = []
         self.response_current = {}
@@ -79,22 +71,6 @@ class TemplateGetAll:
         self._properties["results"] = None
         self._properties["templates"] = None
 
-    def _set_templates_endpoint(self) -> None:
-        """
-        -   Set the endpoint for the template to be retrieved from
-            the controller.
-        -   Raise ``ValueError`` if the endpoint assignment fails.
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        try:
-            endpoint = self.endpoints.templates
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        self.path = endpoint.get("path")
-        self.verb = endpoint.get("verb")
-
     def refresh(self):
         """
         - Retrieve the templates from the controller.
@@ -104,11 +80,6 @@ class TemplateGetAll:
         """
         method_name = inspect.stack()[0][3]
 
-        try:
-            self._set_templates_endpoint()
-        except ValueError as error:
-            raise ValueError(error) from error
-
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Set instance.rest_send property before "
@@ -116,8 +87,8 @@ class TemplateGetAll:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
+        self.rest_send.path = self.ep_templates.path
+        self.rest_send.verb = self.ep_templates.verb
         self.rest_send.check_mode = False
         self.rest_send.commit()
 
@@ -156,9 +127,17 @@ class TemplateGetAll:
     @rest_send.setter
     def rest_send(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, RestSend):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be an instance of RestSend."
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "value must be an instance of RestSend. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        _class_name = None
+        try:
+            _class_name = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            self.log.debug(msg)
+            raise TypeError(msg) from error
+        if _class_name != "RestSend":
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["rest_send"] = value
@@ -176,9 +155,17 @@ class TemplateGetAll:
     @results.setter
     def results(self, value):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, Results):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be an instance of Results."
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "value must be an instance of Results. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        _class_name = None
+        try:
+            _class_name = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            self.log.debug(msg)
+            raise TypeError(msg) from error
+        if _class_name != "Results":
             self.log.debug(msg)
             raise TypeError(msg)
         self._properties["results"] = value
