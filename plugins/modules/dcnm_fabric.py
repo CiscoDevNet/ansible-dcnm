@@ -2863,6 +2863,9 @@ class Replaced(Common):
                 self.need_create.append(want)
                 continue
 
+            fabric_name = want.get("FABRIC_NAME", None)
+            fabric_type = want.get("FABRIC_TYPE", None)
+
             if self.features[fabric_type] is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
