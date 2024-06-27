@@ -1,5 +1,5 @@
 {
-  "eth_payloads" :  
+  "eth_payloads" :
   {
     "MESSAGE": "OK",
       "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8",
@@ -1085,7 +1085,7 @@
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
         "isPhysical": "True",
-        "deletable": "False",
+        "deletable": "True",
         "markDeleted": "False",
         "alias": "",
         "deleteReason": null,
@@ -1109,7 +1109,7 @@
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
         "isPhysical": "True",
-        "deletable": "False",
+        "deletable": "True",
         "markDeleted": "False",
         "alias": "",
         "deleteReason": null,
@@ -1181,7 +1181,7 @@
         "fabricName": "test_fabric",
         "ifType": "INTERFACE_ETHERNET",
         "isPhysical": "True",
-        "deletable": "False",
+        "deletable": "True",
         "markDeleted": "False",
         "alias": "",
         "deleteReason": null,
@@ -1201,6 +1201,99 @@
       ],
       "RETURN_CODE": 200,
       "METHOD": "GET"
-    }
+    },
 
+
+		"eth_1_1_access_payload" :
+		{
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/1",
+			"DATA": [
+			{
+				"policy": "int_access_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_ETHERNET",
+					"nvPairs": {
+						"ACCESS_VLAN": "31",
+						"CONF": "no shutdown",
+						"MTU": "default",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"ADMIN_STATE": "False",
+						"INTF_NAME": "Ethernet1/1",
+						"BPDUGUARD_ENABLED": "True",
+						"SPEED": "auto",
+						"DESC": "eth interface acting as access"
+					},
+					"ifName": "Ethernet1/1",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+				"METHOD": "GET"
+		},
+
+		"eth_1_2_access_payload" :
+		{
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/2",
+			"DATA": [
+			{
+				"policy": "int_access_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_ETHERNET",
+					"nvPairs": {
+						"ACCESS_VLAN": "31",
+						"CONF": "no shutdown",
+						"MTU": "default",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"ADMIN_STATE": "False",
+						"INTF_NAME": "Ethernet1/2",
+						"BPDUGUARD_ENABLED": "True",
+						"SPEED": "auto",
+						"DESC": "eth interface acting as access"
+					},
+					"ifName": "Ethernet1/2",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+				"METHOD": "GET"
+		},
+
+		"eth_3_2_access_payload" :
+		{
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet3/2",
+			"DATA": [
+			{
+				"policy": "int_access_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_ETHERNET",
+					"nvPairs": {
+						"ACCESS_VLAN": "31",
+						"CONF": "no shutdown",
+						"MTU": "default",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"ADMIN_STATE": "False",
+						"INTF_NAME": "Ethernet3/2",
+						"BPDUGUARD_ENABLED": "True",
+						"SPEED": "auto",
+						"DESC": "eth interface acting as access"
+					},
+					"ifName": "Ethernet3/2",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+				"METHOD": "GET"
+		}
 }
