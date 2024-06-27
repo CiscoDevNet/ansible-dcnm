@@ -149,13 +149,12 @@ class FabricReplacedCommon(FabricCommon):
         ```
         """
         if playbook is None:
-            if default is None:
-                return None
-            if controller == default:
-                return None
-            if controller is None or controller == "":
-                return None
-            return {parameter: default}
+            if controller != default:
+                if default is None:
+                    # The controller prefers empty string over null.
+                    return {parameter: ""}
+                return {parameter: default}
+            return None
         if playbook == controller:
             return None
         return {parameter: playbook}
