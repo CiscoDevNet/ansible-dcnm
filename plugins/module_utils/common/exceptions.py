@@ -19,4 +19,8 @@ __author__ = "Allen Robel"
 
 
 class ControllerResponseError(Exception):
+    """
+    Used to raise an exception when the controller returns a non-200 response.
+    """
+
     pass

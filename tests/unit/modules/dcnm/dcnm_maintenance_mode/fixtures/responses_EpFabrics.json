@@ -1,0 +1,165 @@
+{
+    "TEST_NOTES": [
+        "Mocked EpFabrics responses.",
+        "tests/unit/modules/dcnm/dcnm_maintenance_mode/test_dcnm_maintenance_mode_merged.py"
+    ],
+    "test_dcnm_maintenance_mode_merged_00100a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00110a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00115a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00120a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00130a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00140a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "LAN_Classic_Fabric",
+                    "IS_READ_ONLY": "true"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00150a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "true",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00300a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00600a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_merged_00700a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_dcnm_maintenance_mode_query_00100a": {
+        "DATA": [
+            {
+                "nvPairs": {
+                    "DEPLOYMENT_FREEZE": "false",
+                    "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    }
+}

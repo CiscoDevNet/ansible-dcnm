@@ -1,0 +1,186 @@
+{
+    "test_notes": [
+        "Mocked responses for FabricDetails() class"
+    ],
+    "test_fabric_details_by_nv_pair_v2_00200a": {
+        "TEST_NOTES": [
+            "Verify matching fabrics are returned.",
+            "DATA contains 3x fabric dict.",
+            "2x fabrics match on filter_key/value FEATURE_PTP.",
+            "1x fabrics do not match on filter_key/value FEATURE_PTP.",
+            "RETURN_CODE == 200."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "BGP_AS": "65001",
+                    "FABRIC_NAME": "f1",
+                    "FEATURE_PTP": "false"
+                }
+            },
+            {
+                "nvPairs": {
+                    "BGP_AS": "65002",
+                    "FABRIC_NAME": "f2",
+                    "FEATURE_PTP": "false"
+                }
+            },
+            {
+                "nvPairs": {
+                    "BGP_AS": "65003",
+                    "FABRIC_NAME": "f3",
+                    "FEATURE_PTP": "true"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00210a": {
+        "TEST_NOTES": [
+            "Negative test case.",
+            "Verify behavior when FABRIC_NAME is missing from nvPairs.",
+            "DATA[0] contains one fabric dict.",
+            "DATA[0].nvPairs.FABRIC_NAME is missing",
+            "RETURN_CODE == 200."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME_MISSING": "NOT_A_FABRIC_NAME"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00300a": {
+        "TEST_NOTES": [
+            "Verify properties missing in the controller response return None.",
+            "DATA contains one fabric dict.",
+            "DATA[0].nvPairs.FABRIC_NAME == f1",
+            "DATA[0].nvPairs contains no other items.",
+            "RETURN_CODE == 200."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "f1"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00500a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "f1"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00510a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "WRONG_FABRIC"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00600a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "SOME_FABRIC"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00610a": {
+        "TEST_NOTES": [
+            "FABRIC_NAME matches filter.",
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "BGP_AS": "65001",
+                    "FABRIC_NAME": "MATCHING_FABRIC",
+                    "ENABLE_NETFLOW": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00700a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "f1"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_fabric_details_by_nv_pair_v2_00710a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200.",
+            "MESSAGE == OK."
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "WRONG_FABRIC"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics",
+        "RETURN_CODE": 200
+    }
+}

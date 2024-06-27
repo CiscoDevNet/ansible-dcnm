@@ -1,0 +1,22 @@
+{
+    "test_maintenance_mode_00220a": {
+        "DATA": {
+            "status": "Success"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_Fabric/switches/FDO22180ASJ/maintenance-mode",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_maintenance_mode_00230a": {
+        "DATA": {
+            "status": "Failure"
+        },
+        "MESSAGE": "Internal Server Error",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_Fabric/switches/FDO22180ASJ/maintenance-mode",
+        "RETURN_CODE": 500,
+        "sequence_number": 1
+    }
+}

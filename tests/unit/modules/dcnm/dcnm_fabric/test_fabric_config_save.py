@@ -42,9 +42,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
     FabricConfigSave
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_config_save_fixture, params, responses_fabric_config_save)
+    MockAnsibleModule, does_not_raise, fabric_config_save_fixture, params,
+    responses_fabric_config_save)
 
 
 def test_fabric_config_save_00010(fabric_config_save) -> None:

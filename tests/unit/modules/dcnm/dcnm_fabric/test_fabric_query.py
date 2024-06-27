@@ -38,9 +38,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise, fabric_query_fixture,
-    params, responses_fabric_query)
+    MockAnsibleModule, does_not_raise, fabric_query_fixture, params,
+    responses_fabric_query)
 
 
 def test_fabric_query_00010(fabric_query) -> None:

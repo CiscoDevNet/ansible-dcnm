@@ -1,0 +1,42 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_maintenance_mode
+#
+# Modify the vars section with details for your testing setup.
+#
+# NOTES:
+# 1. For the IPFM test cases (dcnm_*_ipfm), ensure that the controller
+#    is running in IPFM mode.  i.e. Ensure that 
+#    Fabric Controller -> Admin -> System Settings -> Feature Management
+#    "IP Fabric for Media" is checked.
+# 2. For all other test cases, ensure that
+#    Fabric Controller -> Admin -> System Settings -> Feature Management
+#    "Fabric Builder" is checked.
+- hosts: dcnm
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # See the following location for available test cases:
+    # tests/integration/targets/dcnm_maintenance_mode/tests
+    # testcase: 00_setup_fabrics_1x_rw
+    # testcase: 00_setup_fabrics_2x_rw
+    # testcase: 01_merged_maintenance_mode_deploy
+    # testcase: 01_merged_maintenance_mode_no_deploy
+    fabric_name_1: VXLAN_EVPN_Fabric
+    fabric_type_1: VXLAN_EVPN
+    fabric_name_2: VXLAN_EVPN_MSD_Fabric
+    fabric_type_2: VXLAN_EVPN_MSD
+    fabric_name_3: LAN_CLASSIC_Fabric
+    fabric_type_3: LAN_CLASSIC
+    fabric_name_4: IPFM_Fabric
+    fabric_type_4: IPFM
+    leaf_1: 172.22.150.103
+    leaf_2: 172.22.150.104
+    nxos_username: admin
+    nxos_password: myNxosPassword
+
+  roles:
+    - dcnm_maintenance_mode

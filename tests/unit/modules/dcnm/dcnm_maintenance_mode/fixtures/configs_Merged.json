@@ -1,0 +1,119 @@
+{
+    "TEST_NOTES": [
+        "Mocked playbook configurations for Common unit tests.",
+        "tests/unit/modules/dcnm/dcnm_maintenance_mode/test_dcnm_maintenance_mode_common.py",
+        "00070a - top-level config is inherited by all switches"
+    ],
+    "test_dcnm_maintenance_mode_merged_00100a": {
+        "deploy": true,
+        "mode": "normal",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00110a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00115a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00120a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.4"
+            },
+            {
+                "ip_address": "192.168.1.3"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00130a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00140a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00150a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00300a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00600a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_merged_00700a": {
+        "deploy": true,
+        "mode": "maintenance",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            }
+        ]
+    }
+}
