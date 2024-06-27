@@ -899,8 +899,7 @@ class DcnmLinks:
             "ext_multisite_underlay_setup": "ext_multisite_underlay_setup_11_1",
             "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup",
             "ext_vxlan_mpls_overlay_setup": "ext_vxlan_mpls_overlay_setup",
-            "ext_vxlan_mpls_underlay_setup": "ext_vxlan_mpls_underlay_setup"
-
+            "ext_vxlan_mpls_underlay_setup": "ext_vxlan_mpls_underlay_setup",
         },
         12: {
             "int_intra_fabric_ipv6_link_local": "int_intra_fabric_ipv6_link_local",
@@ -913,7 +912,7 @@ class DcnmLinks:
             "ext_multisite_underlay_setup": "ext_multisite_underlay_setup",
             "ext_evpn_multisite_overlay_setup": "ext_evpn_multisite_overlay_setup",
             "ext_vxlan_mpls_overlay_setup": "ext_vxlan_mpls_overlay_setup",
-            "ext_vxlan_mpls_underlay_setup": "ext_vxlan_mpls_underlay_setup"
+            "ext_vxlan_mpls_underlay_setup": "ext_vxlan_mpls_underlay_setup",
         },
     }
 
@@ -929,7 +928,7 @@ class DcnmLinks:
             "ext_multisite_underlay_setup_11_1",
             "ext_evpn_multisite_overlay_setup",
             "ext_vxlan_mpls_overlay_setup",
-            "ext_vxlan_mpls_underlay_setup"
+            "ext_vxlan_mpls_underlay_setup",
         ],
         12: [
             "int_intra_fabric_ipv6_link_local",
@@ -942,7 +941,7 @@ class DcnmLinks:
             "ext_multisite_underlay_setup",
             "ext_evpn_multisite_overlay_setup",
             "ext_vxlan_mpls_overlay_setup",
-            "ext_vxlan_mpls_underlay_setup"
+            "ext_vxlan_mpls_underlay_setup",
         ],
     }
 
@@ -1229,7 +1228,9 @@ class DcnmLinks:
             )
         ):
             if (
-                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                self.src_fabric_info["nvPairs"]
+                .get("UNDERLAY_IS_V6", "false")
+                .lower()
                 == "false"
             ):
                 link_spec["profile"]["peer1_ipv4_addr"] = dict(
@@ -1325,12 +1326,18 @@ class DcnmLinks:
             self.module.fail_json(msg="Required parameter not found: template")
 
         if (
-            cfg[0].get("template", "")
-            == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            cfg[0].get("template", "") == self.templates["ext_fabric_setup"]
-        ) or (
-            cfg[0].get("template", "") == self.templates["ext_vxlan_mpls_underlay_setup"]
+            (
+                cfg[0].get("template", "")
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (
+                cfg[0].get("template", "")
+                == self.templates["ext_fabric_setup"]
+            )
+            or (
+                cfg[0].get("template", "")
+                == self.templates["ext_vxlan_mpls_underlay_setup"]
+            )
         ):
             link_spec["profile"]["ipv4_subnet"] = dict(
                 required=True, type="ipv4_subnet"
@@ -1344,7 +1351,10 @@ class DcnmLinks:
             )
             link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
             link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
-        elif cfg[0].get("template") != self.templates["ext_vxlan_mpls_overlay_setup"]:
+        elif (
+            cfg[0].get("template")
+            != self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
             link_spec["profile"]["ipv4_addr"] = dict(
                 required=True, type="ipv4"
             )
@@ -1352,12 +1362,18 @@ class DcnmLinks:
         link_spec["profile"]["neighbor_ip"] = dict(required=True, type="ipv4")
         # src_asn and dst_asn are not common parameters
         if (
-            cfg[0].get("template", "")
-            == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            cfg[0].get("template", "") == self.templates["ext_fabric_setup"]
-        ) or (
-            cfg[0].get("template", "") == self.templates["ext_vxlan_mpls_overlay_setup"]
+            (
+                cfg[0].get("template", "")
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (
+                cfg[0].get("template", "")
+                == self.templates["ext_fabric_setup"]
+            )
+            or (
+                cfg[0].get("template", "")
+                == self.templates["ext_vxlan_mpls_overlay_setup"]
+            )
         ):
             link_spec["profile"]["src_asn"] = dict(required=True, type="int")
             link_spec["profile"]["dst_asn"] = dict(required=True, type="int")
@@ -1610,10 +1626,16 @@ class DcnmLinks:
         """
         link_payload["nvPairs"] = {}
         if (
-            link["template"] == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            link["template"] == self.templates["ext_fabric_setup"]
-        ) or (link["template"] == self.templates["ext_vxlan_mpls_underlay_setup"]):
+            (
+                link["template"]
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (link["template"] == self.templates["ext_fabric_setup"])
+            or (
+                link["template"]
+                == self.templates["ext_vxlan_mpls_underlay_setup"]
+            )
+        ):
             ip_prefix = link["profile"]["ipv4_subnet"].split("/")
 
             link_payload["nvPairs"]["IP_MASK"] = (
@@ -1640,7 +1662,9 @@ class DcnmLinks:
                 link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(
                     link["profile"].get("peer2_cmds")
                 )
-        elif link["template"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
+        elif (
+            link["template"] != self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
             link_payload["nvPairs"]["SOURCE_IP"] = str(
                 ipaddress.ip_address(link["profile"]["ipv4_addr"])
             )
@@ -1649,12 +1673,20 @@ class DcnmLinks:
             ipaddress.ip_address(link["profile"]["neighbor_ip"])
         )
         if (
-            link["template"] == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            link["template"] == self.templates["ext_fabric_setup"]
-        ) or (link["template"] == self.templates["ext_vxlan_mpls_overlay_setup"]):
+            (
+                link["template"]
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (link["template"] == self.templates["ext_fabric_setup"])
+            or (
+                link["template"]
+                == self.templates["ext_vxlan_mpls_overlay_setup"]
+            )
+        ):
             link_payload["nvPairs"]["asn"] = link["profile"]["src_asn"]
-            link_payload["nvPairs"]["NEIGHBOR_ASN"] = link["profile"]["dst_asn"]
+            link_payload["nvPairs"]["NEIGHBOR_ASN"] = link["profile"][
+                "dst_asn"
+            ]
 
         if link["template"] == self.templates["ext_fabric_setup"]:
             link_payload["nvPairs"]["AUTO_VRF_LITE_FLAG"] = link["profile"][
@@ -1707,13 +1739,27 @@ class DcnmLinks:
                         "profile"
                     ]["ebgp_auth_key_type"]
         if link["template"] == self.templates["ext_vxlan_mpls_underlay_setup"]:
-            link_payload["nvPairs"]["MPLS_FABRIC"] = link["profile"]["mpls_fabric"]
-            link_payload["nvPairs"]["DCI_ROUTING_PROTO"] = link["profile"]["dci_routing_proto"]
-            link_payload["nvPairs"]["DCI_ROUTING_TAG"] = link["profile"]["dci_routing_tag"]
-            link_payload["nvPairs"]["PEER1_SR_MPLS_INDEX"] = link["profile"]["peer1_sr_mpls_index"]
-            link_payload["nvPairs"]["PEER2_SR_MPLS_INDEX"] = link["profile"]["peer2_sr_mpls_index"]
-            link_payload["nvPairs"]["GB_BLOCK_RANGE"] = link["profile"]["global_block_range"]
-            link_payload["nvPairs"]["OSPF_AREA_ID"] = link["profile"]["ospf_area_id"]
+            link_payload["nvPairs"]["MPLS_FABRIC"] = link["profile"][
+                "mpls_fabric"
+            ]
+            link_payload["nvPairs"]["DCI_ROUTING_PROTO"] = link["profile"][
+                "dci_routing_proto"
+            ]
+            link_payload["nvPairs"]["DCI_ROUTING_TAG"] = link["profile"][
+                "dci_routing_tag"
+            ]
+            link_payload["nvPairs"]["PEER1_SR_MPLS_INDEX"] = link["profile"][
+                "peer1_sr_mpls_index"
+            ]
+            link_payload["nvPairs"]["PEER2_SR_MPLS_INDEX"] = link["profile"][
+                "peer2_sr_mpls_index"
+            ]
+            link_payload["nvPairs"]["GB_BLOCK_RANGE"] = link["profile"][
+                "global_block_range"
+            ]
+            link_payload["nvPairs"]["OSPF_AREA_ID"] = link["profile"][
+                "ospf_area_id"
+            ]
 
     def dcnm_links_get_intra_fabric_links_payload(self, link, link_payload):
 
@@ -1771,7 +1817,9 @@ class DcnmLinks:
             )
         ):
             if (
-                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                self.src_fabric_info["nvPairs"]
+                .get("UNDERLAY_IS_V6", "false")
+                .lower()
                 == "false"
             ):
                 link_payload["nvPairs"]["PEER1_IP"] = str(
@@ -1869,12 +1917,15 @@ class DcnmLinks:
             return
 
         if (
-            wlink["templateName"]
-            == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            wlink["templateName"] == self.templates["ext_fabric_setup"]
-        ) or (
-            wlink["templateName"] == self.templates["ext_vxlan_mpls_underlay_setup"]
+            (
+                wlink["templateName"]
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (wlink["templateName"] == self.templates["ext_fabric_setup"])
+            or (
+                wlink["templateName"]
+                == self.templates["ext_vxlan_mpls_underlay_setup"]
+            )
         ):
             if cfg["profile"].get("ipv4_subnet", None) is None:
                 wlink["nvPairs"]["IP_MASK"] = hlink["nvPairs"]["IP_MASK"]
@@ -1895,7 +1946,10 @@ class DcnmLinks:
             if cfg["profile"].get("peer2_cmds", None) is None:
                 wlink["nvPairs"]["PEER2_CONF"] = hlink["nvPairs"]["PEER2_CONF"]
                 wlink["peer2_conf_defaulted"] = True
-        elif wlink["templateName"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
+        elif (
+            wlink["templateName"]
+            != self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
             if cfg["profile"].get("ipv4_addr", None) is None:
                 wlink["nvPairs"]["SOURCE_IP"] = hlink["nvPairs"]["SOURCE_IP"]
 
@@ -1908,16 +1962,22 @@ class DcnmLinks:
             wlink["nvPairs"]["NEIGHBOR_IP"] = hlink["nvPairs"]["NEIGHBOR_IP"]
 
         if (
-            wlink["templateName"] == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            wlink["templateName"] == self.templates["ext_fabric_setup"]
-        ) or (
-            wlink["templateName"] == self.templates["ext_vxlan_mpls_overlay_setup"]
+            (
+                wlink["templateName"]
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (wlink["templateName"] == self.templates["ext_fabric_setup"])
+            or (
+                wlink["templateName"]
+                == self.templates["ext_vxlan_mpls_overlay_setup"]
+            )
         ):
             if cfg["profile"].get("src_asn", None) is None:
                 wlink["nvPairs"]["asn"] = hlink["nvPairs"]["asn"]
             if cfg["profile"].get("dst_asn", None) is None:
-                wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"]["NEIGHBOR_ASN"]
+                wlink["nvPairs"]["NEIGHBOR_ASN"] = hlink["nvPairs"][
+                    "NEIGHBOR_ASN"
+                ]
 
         if wlink["templateName"] == self.templates["ext_fabric_setup"]:
             if cfg["profile"].get("auto_deploy", None) is None:
@@ -2026,7 +2086,9 @@ class DcnmLinks:
             )
         ):
             if (
-                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                self.src_fabric_info["nvPairs"]
+                .get("UNDERLAY_IS_V6", "false")
+                .lower()
                 == "false"
             ):
                 if cfg["profile"].get("peer1_ipv4_addr", None) is None:
@@ -2112,11 +2174,12 @@ class DcnmLinks:
                         == want["destinationFabric"]
                     )
                     and (
-                        have["sw1-info"]["if-name"] == want["sourceInterface"]
+                        have["sw1-info"]["if-name"].lower()
+                        == want["sourceInterface"].lower()
                     )
                     and (
-                        have["sw2-info"]["if-name"]
-                        == want["destinationInterface"]
+                        have["sw2-info"]["if-name"].lower()
+                        == want["destinationInterface"].lower()
                     )
                     and (
                         have["sw1-info"]["sw-serial-number"]
@@ -2280,12 +2343,12 @@ class DcnmLinks:
                         )
                     )
                     and (
-                        link["sourceInterface"]
-                        == link_elem["sw1-info"]["if-name"]
+                        link["sourceInterface"].lower()
+                        == link_elem["sw1-info"]["if-name"].lower()
                     )
                     and (
-                        link["destinationInterface"]
-                        == link_elem["sw2-info"]["if-name"]
+                        link["destinationInterface"].lower()
+                        == link_elem["sw2-info"]["if-name"].lower()
                     )
                 )
             ]
@@ -2354,11 +2417,16 @@ class DcnmLinks:
             return "DCNM_LINK_EXIST", [], []
 
         if (
-            wlink["templateName"]
-            == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            wlink["templateName"] == self.templates["ext_fabric_setup"]
-        ) or (wlink["templateName"] == self.templates["ext_vxlan_mpls_underlay_setup"]):
+            (
+                wlink["templateName"]
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (wlink["templateName"] == self.templates["ext_fabric_setup"])
+            or (
+                wlink["templateName"]
+                == self.templates["ext_vxlan_mpls_underlay_setup"]
+            )
+        ):
             if (
                 self.dcnm_links_compare_ip_addresses(
                     wlink["nvPairs"]["IP_MASK"], hlink["nvPairs"]["IP_MASK"]
@@ -2434,7 +2502,10 @@ class DcnmLinks:
                         ]
                     }
                 )
-        elif wlink["templateName"] != self.templates["ext_vxlan_mpls_overlay_setup"]:
+        elif (
+            wlink["templateName"]
+            != self.templates["ext_vxlan_mpls_overlay_setup"]
+        ):
             if (
                 self.dcnm_links_compare_ip_addresses(
                     wlink["nvPairs"]["SOURCE_IP"],
@@ -2467,11 +2538,16 @@ class DcnmLinks:
                 }
             )
         if (
-            wlink["templateName"]
-            == self.templates["ext_multisite_underlay_setup"]
-        ) or (
-            wlink["templateName"] == self.templates["ext_fabric_setup"]
-        ) or (wlink["templateName"] == self.templates["ext_vxlan_mpls_overlay_setup"]):
+            (
+                wlink["templateName"]
+                == self.templates["ext_multisite_underlay_setup"]
+            )
+            or (wlink["templateName"] == self.templates["ext_fabric_setup"])
+            or (
+                wlink["templateName"]
+                == self.templates["ext_vxlan_mpls_overlay_setup"]
+            )
+        ):
             if (
                 str(wlink["nvPairs"]["asn"]).lower()
                 != str(hlink["nvPairs"]["asn"]).lower()
@@ -2699,7 +2775,8 @@ class DcnmLinks:
                 "PEER1_SR_MPLS_INDEX",
                 "PEER2_SR_MPLS_INDEX",
                 "GB_BLOCK_RANGE",
-                "OSPF_AREA_ID"]
+                "OSPF_AREA_ID",
+            ]
             for nv_pair in mpls_underlay_spec_nvpairs:
                 if (
                     str(wlink["nvPairs"][nv_pair]).lower()
@@ -2708,12 +2785,8 @@ class DcnmLinks:
                     mismatch_reasons.append(
                         {
                             f"{nv_pair}_MISMATCH": [
-                                str(
-                                    wlink["nvPairs"][nv_pair]
-                                ).lower(),
-                                str(
-                                    hlink["nvPairs"][nv_pair]
-                                ).lower(),
+                                str(wlink["nvPairs"][nv_pair]).lower(),
+                                str(hlink["nvPairs"][nv_pair]).lower(),
                             ]
                         }
                     )
@@ -2835,7 +2908,9 @@ class DcnmLinks:
             )
         ):
             if (
-                self.src_fabric_info["nvPairs"]["UNDERLAY_IS_V6"].lower()
+                self.src_fabric_info["nvPairs"]
+                .get("UNDERLAY_IS_V6", "false")
+                .lower()
                 == "false"
             ):
                 if (
@@ -3041,15 +3116,21 @@ class DcnmLinks:
             have
             for have in self.have
             if (
-                (have.get("templateName") is not None)  # if templateName is empty, link is autodicovered, consider link is new
+                (
+                    have.get("templateName") is not None
+                )  # if templateName is empty, link is autodicovered, consider link is new
                 and (have["sw1-info"]["fabric-name"] == want["sourceFabric"])
                 and (
                     have["sw2-info"]["fabric-name"]
                     == want["destinationFabric"]
                 )
-                and (have["sw1-info"]["if-name"] == want["sourceInterface"])
                 and (
-                    have["sw2-info"]["if-name"] == want["destinationInterface"]
+                    have["sw1-info"]["if-name"].lower()
+                    == want["sourceInterface"].lower()
+                )
+                and (
+                    have["sw2-info"]["if-name"].lower()
+                    == want["destinationInterface"].lower()
                 )
                 and (
                     have["sw1-info"]["sw-serial-number"]
@@ -3057,9 +3138,11 @@ class DcnmLinks:
                 )
                 and (
                     have["sw2-info"]["sw-serial-number"]
-                    == want["destinationDevice"] or
-                    have["sw2-info"]["sw-serial-number"]
-                    == want["destinationSwitchName"] + "-" + want["destinationFabric"]
+                    == want["destinationDevice"]
+                    or have["sw2-info"]["sw-serial-number"]
+                    == want["destinationSwitchName"]
+                    + "-"
+                    + want["destinationFabric"]
                 )
             )
         ]
@@ -3238,8 +3321,14 @@ class DcnmLinks:
                 if (
                     (have["sw1-info"]["fabric-name"] == self.fabric)
                     and (have["sw2-info"]["fabric-name"] == link["dst_fabric"])
-                    and (have["sw1-info"]["if-name"] == link["src_interface"])
-                    and (have["sw2-info"]["if-name"] == link["dst_interface"])
+                    and (
+                        have["sw1-info"]["if-name"].lower()
+                        == link["src_interface"].lower()
+                    )
+                    and (
+                        have["sw2-info"]["if-name"].lower()
+                        == link["dst_interface"].lower()
+                    )
                     and (
                         link["src_device"] in self.ip_sn
                         and have["sw1-info"]["sw-serial-number"]
@@ -3343,15 +3432,15 @@ class DcnmLinks:
                         and (
                             (link["src_interface"] == "")
                             or (
-                                rlink["sw1-info"]["if-name"]
-                                == link["src_interface"]
+                                rlink["sw1-info"]["if-name"].lower()
+                                == link["src_interface"].lower()
                             )
                         )
                         and (
                             (link["dst_interface"] == "")
                             or (
-                                rlink["sw2-info"]["if-name"]
-                                == link["dst_interface"]
+                                rlink["sw2-info"]["if-name"].lower()
+                                == link["dst_interface"].lower()
                             )
                         )
                         and (
