@@ -297,6 +297,36 @@
       "deploy": "True"
     }],
 
+    "pc_merged_vlan_range_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "20,30,40,50-60,70,90-100",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    }],
+
     "pc_deleted_config_deploy" : [
     {
       "switch": [
