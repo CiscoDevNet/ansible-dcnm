@@ -37,6 +37,34 @@ class Properties:
     -   ``rest_send``: Set and return nn instance of the ``RestSend`` class.
     -   ``results``: Set and return an instance of the ``Results`` class.
     """
+    @property
+    def params(self):
+        """
+        ### Summary
+        A dictionary containing the following parameters:
+        -   ``state``: The state of the module.
+        -   ``check_mode``: A boolean indicating whether the module is in check mode.
+        """
+        return self._params
+
+    @params.setter
+    def params(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params must be a dictionary. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            raise TypeError(msg)
+        if value.get("state", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params.state is required but missing."
+            raise ValueError(msg)
+        if value.get("check_mode", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params.check_mode is required but missing."
+            raise ValueError(msg)
+        self._params = value
 
     @property
     def rest_send(self):
@@ -105,6 +133,14 @@ class Properties:
         if _class_have != _class_need:
             raise TypeError(msg)
         self._results = value
+
+    def add_params(self):
+        """
+        ### Summary
+        Class decorator method to set the ``params`` property.
+        """
+        self.params = Properties.params
+        return self
 
     def add_rest_send(self):
         """

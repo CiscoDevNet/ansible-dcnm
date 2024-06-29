@@ -43,17 +43,15 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.ut
 
 def test_image_policy_delete_00010(image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyDelete
         - __init__()
 
-    Summary
+    ### Summary
     Verify that the class attributes are initialized to expected values
     and that fail_json is not called.
 
-    Test
+    ### Test
     - Class attributes are initialized to expected values
     - fail_json is not called
     """
@@ -73,21 +71,19 @@ def test_image_policy_delete_00010(image_policy_delete) -> None:
 
 def test_image_policy_delete_00020(image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyDelete
         - __init__()
         - policy_names setter
 
-    Summary
+    ### Summary
     policy_names is set correctly to a list of strings.
     Verify that instance.policy_names is set to the expected value
     and that fail_json is not called.
 
-    Test
-    - policy_names is set to expected value
-    - fail_json is not called
+    ### Test
+    - policy_names is set to expected value.
+    - No exceptions are raised.
     """
     policy_names = ["FOO", "BAR"]
     with does_not_raise():
@@ -98,18 +94,16 @@ def test_image_policy_delete_00020(image_policy_delete) -> None:
 
 def test_image_policy_delete_00021(image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyDelete
         - __init__()
         - policy_names setter
 
-    Summary
+    ### Summary
     policy_names should be a list of strings, but it set to a string.
     Verify that fail_json is called with appropriate message.
 
-    Test
+    ### Test
     - fail_json is called because policy_names is not a list
     - instance.policy_names is not modified, hence it retains its initial value of None
     """
@@ -125,18 +119,16 @@ def test_image_policy_delete_00021(image_policy_delete) -> None:
 
 def test_image_policy_delete_00022(image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyDelete
         - __init__()
         - policy_names setter
 
-    Summary
+    ### Summary
     policy_names is set to a list of non-strings.
     Verify that fail_json is called with appropriate message.
 
-    Test
+    ### Test
     - fail_json is called because policy_names is a list with a non-string element
     - instance.policy_names is not modified, hence it retains its initial value of None
     """
@@ -152,26 +144,24 @@ def test_image_policy_delete_00022(image_policy_delete) -> None:
 
 def test_image_policy_delete_00030(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
-        - _verify_image_policy_ref_count()
+    ### Classes and Methods
     - ImagePolicyDelete
         - __init__()
+        - _verify_image_policy_ref_count()
         - policy_names setter
         - _get_policies_to_delete()
 
-    Summary
+    ### Summary
     The requested policy to delete does not exist on the controller.
     Verify that instance._policies_to_delete is an empty list.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies, is mocked to indicate that two image policies
         (KR5M, NR3F) exist on the controller.
     -   ImagePolicyDelete.policy_names is set to contain one policy_name (FOO)
         that does not exist on the controller.
 
-    Test
+    ### Test
     -   instance._policies_to_delete will an empty list because all of the
         policy_names in instance.policy_names do not exist on the controller
         and, hence, nothing needs to be deleted.
@@ -187,23 +177,23 @@ def test_image_policy_delete_00030(monkeypatch, image_policy_delete) -> None:
 
 def test_image_policy_delete_00031(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyDelete
         - __init__()
         - policy_names setter
         - _get_policies_to_delete()
 
-    Summary
+    ### Summary
     One policy (KR5M) is requested to be deleted and it exists on the controller.
     Verify that instance._policies_to_delete contains the policy name KR5M.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies is mocked to indicate that two image policies
         (KR5M, NR3F) exist on the controller.
     -   ImagePolicyDelete.policy_names is set to contain one policy_name (KR5M)
         that exists on the controller.
 
-    Test
+    ### Test
     -   instance._policies_to_delete will contain one policy name (KR5M)
     """
     key = "test_image_policy_delete_00031a"
@@ -217,17 +207,17 @@ def test_image_policy_delete_00031(monkeypatch, image_policy_delete) -> None:
 
 def test_image_policy_delete_00032(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyDelete
         - policy_names setter
         - _get_policies_to_delete()
 
-    Summary
+    ### Summary
     Of two policies being requested to delete, one policy exists on the controller
     and one policy does not exist on the controller.  Verify that only the policy
     that exists on the controller is added to instance._policies_to_delete.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies, is mocked to indicate that two image policies
         (KR5M, NR3F) exist on the controller.
     -   ImagePolicyDelete().policy_names is set to contain one image policy name (FOO)
@@ -248,18 +238,18 @@ def test_image_policy_delete_00032(monkeypatch, image_policy_delete) -> None:
 
 def test_image_policy_delete_00033(image_policy_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyDelete
         - commit()
         - fail_json
 
-    Summary
+    ### Summary
     commit() is called without first setting policy_names.
 
-    Setup
+    ### Setup
     -   ImagePolicyDelete().policy_names is not set
 
-    Test
+    ### Test
     -   fail_json is called because policy_names is None
     """
     with does_not_raise():
@@ -274,21 +264,21 @@ def test_image_policy_delete_00033(image_policy_delete) -> None:
 
 def test_image_policy_delete_00034(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyDelete
         - policy_names setter
         - commit()
 
-    Summary
+    ### Summary
     commit() is called with policy_names set to an empty list.
 
-    Setup
+    ### Setup
     -   ImagePolicyDelete().policy_names is set to an empty list
     -   ImagePolicies.all_policies is mocked to indicate that no policies
         exist on the controller.
     -   RestSend.dcnm_send is mocked to return a successful (200) response.
 
-    Test
+    ### Test
     -   ImagePolicyDelete().commit returns without doing anything
     -   fail_json is not called
     -   instance.results.changed set() contains False
@@ -318,20 +308,20 @@ def test_image_policy_delete_00034(monkeypatch, image_policy_delete) -> None:
 
 def test_image_policy_delete_00036(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyDelete
         - policy_names setter
         - _get_policies_to_delete()
         - commit()
 
-    Summary
+    ### Summary
     commit() is called with policy_names set to a policy_name that does not exist on the controller.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies is mocked to indicate that no policies exist on the controller.
     -   ImagePolicyDelete().policy_names is set a policy_name that is not on the controller.
 
-    Test
+    ### Test
     -   ImagePolicyDelete()._get_policies_to_delete return an empty list
     -   ImagePolicyDelete().commit returns without doing anything
     -   instance.results.changed set() contains False
@@ -353,26 +343,23 @@ def test_image_policy_delete_00036(monkeypatch, image_policy_delete) -> None:
 
 def test_image_policy_delete_00037(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon:
-        - __init__()
-        - _handle_response()
+    ### Classes and Methods
     - ImagePolicyDelete
         - _get_policies_to_delete()
         - policy_names setter
         - commit()
 
-    Summary
+    ### Summary
     commit() is called with policy_names set to a policy_name that exists on
     the controller, and the controller returns a success (200) response.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies is mocked to indicate policy (KR5M) exists
         on the controller.
     -   ImagePolicyDelete().policy_names is set to contain policy_name KR5M.
     -   dcnm_send is mocked to return a successful (200) response.
 
-    Test
+    ### Test
     -   fail_json is not called
     -   commit calls _get_policies_to_delete which returns a list containing policy_name (KR5M)
     -   commit calls the mocked dcnm_send, which populates instance.response_current
@@ -409,26 +396,23 @@ def test_image_policy_delete_00037(monkeypatch, image_policy_delete) -> None:
 
 def test_image_policy_delete_00038(monkeypatch, image_policy_delete) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon:
-        - __init__()
-        - _handle_response()
+    ### Classes and Methods
     - ImagePolicyDelete
         - _get_policies_to_delete()
         - policy_names setter
         - commit()
 
-    Summary
+    ### Summary
     commit() is called with policy_names set to a policy_name that exists on
     the controller, and the controller returns a failure (500) response.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies is mocked to indicate policy (KR5M) exists on
         the controller.
     -   ImagePolicyDelete().policy_names is set to contain one payload (KR5M).
     -   dcnm_send is mocked to return a failure (500) response.
 
-    Test
+    ### Test
     -   fail_json is called
     -   commit calls _get_policies_to_delete which returns a list containing
         policy_name (KR5M)

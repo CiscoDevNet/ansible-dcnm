@@ -22,40 +22,38 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
-    ImagePolicyCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+    EpPolicyCreate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
+    ImagePolicies
 
 
-class ImagePolicyCreateCommon(ImagePolicyCommon):
+@Properties.add_rest_send
+@Properties.add_results
+@Properties.add_params
+class ImagePolicyCreateCommon:
     """
     Common methods and properties for:
     - ImagePolicyCreate
     - ImagePolicyCreateBulk
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
         self.action = "create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._image_policies = ImagePolicies(self.ansible_module)
+        self._image_policies = ImagePolicies()
         self._image_policies.results = Results()
 
-        self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
-
-        self.path = self.endpoints.policy_create.get("path")
-        self.verb = self.endpoints.policy_create.get("verb")
+        self.endpoint = EpPolicyCreate()
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
 
         self._payloads_to_commit = []
 
@@ -64,10 +62,14 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         self._mandatory_payload_keys.add("policyName")
         self._mandatory_payload_keys.add("policyType")
 
+        self._params = None
+        self._payload = None
+        self._payloads = None
+        self._rest_send = None
+        self._results = None
+
         msg = "ENTERED ImagePolicyCreateCommon(): "
         msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
         self.log.debug(msg)
 
     def _verify_payload(self, payload):
@@ -80,7 +82,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             msg += "payload must be a dict. "
             msg += f"Got type {type(payload).__name__}, "
             msg += f"value {payload}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise TypeError(msg)
 
         missing_keys = []
         for key in self._mandatory_payload_keys:
@@ -92,7 +94,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         msg = f"{self.class_name}.{method_name}: "
         msg += "payload is missing mandatory keys: "
         msg += f"{sorted(missing_keys)}"
-        self.ansible_module.fail_json(msg, **self.results.failed_result)
+        raise ValueError(msg)
 
     def _build_payloads_to_commit(self):
         """
@@ -105,6 +107,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
+        self._image_policies.rest_send = self.rest_send
         self._image_policies.refresh()
 
         self._payloads_to_commit = []
@@ -122,7 +125,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
 
         In both cases, update results
         """
-        self.rest_send.check_mode = self.check_mode
+        self.rest_send.check_mode = self.params.get("check_mode")
 
         for payload in self._payloads_to_commit:
 
@@ -145,9 +148,11 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
                 self.results.diff_current = copy.deepcopy(payload)
 
             self.results.action = self.action
-            self.results.state = self.state
-            self.results.check_mode = self.check_mode
-            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.state = self.params.get("state")
+            self.results.check_mode = self.params.get("check_mode")
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
 
@@ -159,7 +164,7 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
         Payloads must be a list of dict. Each dict is a
         payload for the image policy create API endpoint.
         """
-        return self.properties["payloads"]
+        return self._payloads
 
     @payloads.setter
     def payloads(self, value):
@@ -169,10 +174,10 @@ class ImagePolicyCreateCommon(ImagePolicyCommon):
             msg += "payloads must be a list of dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise TypeError(msg)
         for item in value:
             self._verify_payload(item)
-        self.properties["payloads"] = value
+        self._payloads = value
 
 
 class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
@@ -213,23 +218,14 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     ]
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED ImagePolicyCreateBulk():"
         self.log.debug(msg)
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties dict is already initialized in the parent class
-        self.properties["payloads"] = None
 
     def commit(self):
         """
@@ -238,10 +234,25 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        if self.params is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.payloads is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set prior to calling commit."
+            raise ValueError(msg)
+
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set prior to calling commit."
+            raise ValueError(msg)
 
         self._build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
@@ -283,8 +294,8 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
 
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -293,16 +304,6 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         self.log.debug(msg)
 
         self.data = {}
-        self.rest_send = RestSend(self.ansible_module)
-
-        self._init_properties()
-
-    def _init_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties is already initialized in the parent class
-        self.properties["payload"] = None
 
     @property
     def payload(self):
@@ -310,13 +311,13 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         This class expects a properly-defined image policy payload.
         See class docstring for the payload structure.
         """
-        return self.properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
         self._verify_payload(value)
-        self.properties["payloads"] = [value]
-        self.properties["payload"] = value
+        self._payloads = [value]
+        self._payload = value
 
     def commit(self):
         """
@@ -327,7 +328,7 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
         self._build_payloads_to_commit()
 

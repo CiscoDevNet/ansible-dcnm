@@ -40,6 +40,18 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update imp
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
+params = {
+    "state": "merged",
+    "check_mode": False,
+    "config": [
+        {
+            "name": "NR1F",
+            "agnostic": False,
+            "description": "NR1F",
+            "platform": "N9K",
+            "type": "PLATFORM"}
+    ]
+}
 
 class GenerateResponses:
     """
@@ -212,15 +224,6 @@ class MockImagePolicies:
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
 
-@pytest.fixture(name="image_policy_common")
-def image_policy_common_fixture():
-    """
-    mock ImagePolicyCommon
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyCommon(instance)
-
 
 @pytest.fixture(name="image_policy_create")
 def image_policy_create_fixture():
@@ -237,9 +240,9 @@ def image_policy_create_bulk_fixture():
     """
     mock ImagePolicyCreateBulk
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyCreateBulk(instance)
+    instance = ImagePolicyCreateBulk()
+    instance.params = params
+    return instance
 
 
 @pytest.fixture(name="image_policy_delete")
@@ -382,22 +385,32 @@ def payloads_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_ep_policies(key: str) -> Dict[str, str]:
+    """
+    Return responses for EpPolicies() endpoint
+    """
+    data_file = "responses_EpPolicies"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_policy_create(key: str) -> Dict[str, str]:
+    """
+    Return responses for EpPolicyCreate() endpoint
+    """
+    data_file = "responses_EpPolicyCreate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_image_policies(key: str) -> Dict[str, str]:
     """
     Return responses for ImagePolicies
     Used in MockImagePolicies
     """
     data_file = "responses_ImagePolicies"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def responses_image_policy_common(key: str) -> Dict[str, str]:
-    """
-    Return responses for ImagePolicyCommon
-    """
-    data_file = "responses_ImagePolicyCommon"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -469,16 +482,6 @@ def results_image_policies(key: str) -> Dict[str, str]:
     Used in MockImagePolicies
     """
     data_file = "results_ImagePolicies"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def results_image_policy_common(key: str) -> Dict[str, str]:
-    """
-    Return results for ImagePolicyCommon
-    """
-    data_file = "results_ImagePolicyCommon"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

@@ -44,13 +44,11 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.ut
 
 def test_image_policy_query_00010(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
 
-    Test
+    ### Test
     - Class attributes are initialized to expected values
     - fail_json is not called
     """
@@ -66,14 +64,12 @@ def test_image_policy_query_00010(image_policy_query) -> None:
 
 def test_image_policy_query_00020(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
         - policy_names setter
 
-    Test
+    ### Test
     - policy_names is set to expected value
     - fail_json is not called
     """
@@ -86,14 +82,12 @@ def test_image_policy_query_00020(image_policy_query) -> None:
 
 def test_image_policy_query_00021(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
         - policy_names setter
 
-    Test
+    ### Test
     - fail_json is called because policy_names is not a list
     - instance.policy_names is not modified, hence it retains its initial value of None
     """
@@ -109,14 +103,12 @@ def test_image_policy_query_00021(image_policy_query) -> None:
 
 def test_image_policy_query_00022(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
         - policy_names setter
 
-    Test
+    ### Test
     - fail_json is called because policy_names is a list with a non-string element
     - instance.policy_names is not modified, hence it retains its initial value of None
     """
@@ -132,17 +124,15 @@ def test_image_policy_query_00022(image_policy_query) -> None:
 
 def test_image_policy_query_00023(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
         - policy_names setter
 
-    Summary
+    ### Summary
     Verify behavior when policy_names is not set prior to calling commit
 
-    Test
+    ### Test
     - fail_json is called because policy_names is not set prior to calling commit
     - instance.policy_names is not modified, hence it retains its initial value of None
     """
@@ -159,17 +149,17 @@ def test_image_policy_query_00023(image_policy_query) -> None:
 
 def test_image_policy_query_00024(image_policy_query) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyQuery
         - policy_names setter
 
-    Summary
+    ### Summary
     Verify behavior when policy_names is set to an empty list
 
-    Setup
+    ### Setup
     -   ImagePolicyQuery().policy_names is set to an empty list
 
-    Test
+    ### Test
     -   fail_json is called from policy_names setter
     """
     match = "ImagePolicyQuery.policy_names: policy_names must be a list of "
@@ -181,26 +171,24 @@ def test_image_policy_query_00024(image_policy_query) -> None:
 
 def test_image_policy_query_00030(monkeypatch, image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
-        - _verify_image_policy_ref_count()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
+        - _verify_image_policy_ref_count()
         - policy_names setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
+    ### Summary
     Verify behavior when user queries a policy that does not exist on the controller
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies, is mocked to indicate that one image policy
         (KR5M) exist on the controller.
     -   ImagePolicyQuery.policy_names is set to contain one policy_name (FOO)
         that does not exist on the controller.
 
-    Test
+    ### Test
     -   ImagePolicyQuery.commit() calls _get_policies_to_query() which sets
         instance._policies_to_query to an empty list.
     -   instance.results.changed set() contains False
@@ -246,25 +234,23 @@ def test_image_policy_query_00030(monkeypatch, image_policy_query) -> None:
 
 def test_image_policy_query_00031(monkeypatch, image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
         - policy_names setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
+    ### Summary
     Verify behavior when user queries a policy that exists on the controller
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies is mocked to indicate that one image policy
         (KR5M) exists on the controller.
     -   ImagePolicyQuery.policy_names is set to contain one policy_name (KR5M)
         that exists on the controller.
 
-    Test
+    ### Test
     -   instance.diff is a list containing one dict with keys action == "query"
         and policyName == "KR5M"
     -   instance.response is a list with one element
@@ -310,24 +296,24 @@ def test_image_policy_query_00031(monkeypatch, image_policy_query) -> None:
 
 def test_image_policy_query_00032(monkeypatch, image_policy_query) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyQuery
         - policy_names setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
+    ### Summary
     Verify behavior when user queries multiple policies, some of which exist
     on the controller and some of which do not exist on the controller.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies, is mocked to indicate that two image policies
         (KR5M, NR3F) exist on the controller.
     -   ImagePolicyQuery().policy_names is set to contain one image policy name (FOO)
         that does not exist on the controller and two image policy names (KR5M, NR3F)
         that do exist on the controller.
 
-    Test
+    ### Test
     -   instance.diff is a list containing two elements
     -   instance.diff[0] contains keys action == "query" and policyName == "KR5M"
     -   instance.diff[1] contains keys action == "query" and policyName == "NR3F"
@@ -376,26 +362,24 @@ def test_image_policy_query_00032(monkeypatch, image_policy_query) -> None:
 
 def test_image_policy_query_00033(monkeypatch, image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
         - policy_names setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
+    ### Summary
     Verify behavior when no image policies exist on the controller and the user
     queries for an image policy that, of course, does not exist.
 
-    Setup
+    ### Setup
     -   ImagePolicies().all_policies, is mocked to indicate that no image policies
         exist on the controller.
     -   ImagePolicyQuery.policy_names is set to contain one policy_name (FOO)
         that does not exist on the controller.
 
-    Test
+    ### Test
     -   commit() calls _get_policies_to_query() which sets instance._policies_to_query
         to an empty list.
     -   commit() sets instance.changed to False
