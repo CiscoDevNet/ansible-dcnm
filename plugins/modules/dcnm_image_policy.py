@@ -261,12 +261,6 @@ from typing import Dict, List
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
-#     MergeDicts
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
-#     ParamsMergeDefaults
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
-#     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
@@ -362,6 +356,7 @@ class Common:
 
         self._rest_send = None
 
+        self.have = None
         self.validated = []
         self.want = []
 
@@ -390,7 +385,7 @@ class Common:
         self.log.debug(msg)
         self.have = ImagePolicies()
         self.have.results = self.results
-        self.have.rest_send = self.rest_send
+        self.have.rest_send = self.rest_send  # pylint: disable=no-member
         self.have.refresh()
 
     def get_want(self) -> None:
@@ -444,6 +439,7 @@ class Replaced(Common):
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -451,7 +447,6 @@ class Replaced(Common):
             msg += "Error during super().__init__(). "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.replace = ImagePolicyReplaceBulk()
@@ -485,6 +480,7 @@ class Deleted(Common):
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -492,7 +488,6 @@ class Deleted(Common):
             msg += "Error during super().__init__(). "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -605,6 +600,7 @@ class Overridden(Common):
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -612,11 +608,11 @@ class Overridden(Common):
             msg += "Error during super().__init__(). "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.delete = ImagePolicyDelete()
+        self.merged = Merged(params)
 
         msg = "ENTERED Overridden(): "
         msg += f"state: {self.state}, "
@@ -629,7 +625,7 @@ class Overridden(Common):
         -   Delete all policies on the controller that are not in self.want
         -   Instantiate`` Merged()`` and call ``Merged().commit()``
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
 
         self.results.state = self.state
         self.results.check_mode = self.check_mode
@@ -646,17 +642,20 @@ class Overridden(Common):
         self.log.debug(msg)
 
         self._delete_policies_not_in_want()
-        task = Merged(self.params)
-        task.rest_send = self.rest_send
-        task.results = self.results
-        task.commit()
+        #task = Merged(self.params)
+        # pylint: disable=attribute-defined-outside-init
+        self.merged.rest_send = (
+            self.rest_send
+        )
+        self.merged.results = self.results
+        self.merged.commit()
 
     def _delete_policies_not_in_want(self) -> None:
         """
         ### Summary
         Delete all policies on the controller that are not in self.want
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
         want_policy_names = set()
         for want in self.want:
             want_policy_names.add(want["policyName"])
@@ -698,6 +697,7 @@ class Merged(Common):
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
         try:
             super().__init__(params)
         except (TypeError, ValueError) as error:
@@ -705,7 +705,6 @@ class Merged(Common):
             msg += "Error during super().__init__(). "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -791,19 +790,10 @@ class Merged(Common):
         for key in ["imageName", "ref_count", "platformPolicies"]:
             have.pop(key, None)
 
-        # Change "N9K/N3K" to "N9K" in have to match the request payload.
+        # Change "N9K/N3K" to "N9K" in "have" to match the request payload.
         if have.get("platform", None) == "N9K/N3K":
             have["platform"] = "N9K"
 
-        # If keys are not set in both have and want, remove them.
-        for key in ["agnostic", "epldImgName", "packageName", "rpmimages"]:
-            if have.get(key, None) is None and want.get(key, None) is None:
-                have.pop(key, None)
-                want.pop(key, None)
-
-            if have.get(key, None) == "" and want.get(key, None) == "":
-                have.pop(key, None)
-                want.pop(key, None)
         return (have, want)
 
     def _merge_policies(self, have: dict, want: dict) -> dict:
@@ -823,7 +813,7 @@ class Merged(Common):
             merge.commit()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Error during MergeDicts(). "
+            msg += "Error during MergeDicts(). "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
         merged = copy.deepcopy(merge.dict_merged)
