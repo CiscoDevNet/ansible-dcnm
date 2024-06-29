@@ -22,14 +22,14 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+    EpPolicyEdit
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
 
@@ -53,10 +53,9 @@ class ImagePolicyUpdateCommon:
         self._image_policies = ImagePolicies()
         self._image_policies.results = Results()
 
-        self.endpoints = ApiEndpoints()
-
-        self.path = self.endpoints.policy_edit.get("path")
-        self.verb = self.endpoints.policy_edit.get("verb")
+        self.endpoint = EpPolicyEdit()
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
 
         self._payloads_to_commit = []
 
@@ -75,7 +74,7 @@ class ImagePolicyUpdateCommon:
         msg += f"action: {self.action}, "
         self.log.debug(msg)
 
-    def _verify_payload(self, payload):
+    def verify_payload(self, payload):
         """
         Verify that the payload is a dict and contains all mandatory keys
         """
@@ -99,7 +98,7 @@ class ImagePolicyUpdateCommon:
         msg += f"{sorted(missing_keys)}"
         raise ValueError(msg)
 
-    def _build_payloads_to_commit(self):
+    def build_payloads_to_commit(self):
         """
         Build a list of payloads to commit.  Skip any payloads that
         do not exist on the controller.
@@ -138,7 +137,7 @@ class ImagePolicyUpdateCommon:
                 merge.commit()
                 updated_payload = copy.deepcopy(merge.dict_merged)
             except (TypeError, ValueError) as error:
-                msg = f"{self.class_name}._build_payloads_to_commit: "
+                msg = f"{self.class_name}.build_payloads_to_commit: "
                 msg += "Error merging payload and policy. "
                 msg += f"Error detail: {error}."
                 raise ValueError(msg) from error
@@ -191,7 +190,7 @@ class ImagePolicyUpdateCommon:
             msg += f"ref_count: {ref_count}. "
         raise ValueError(msg)
 
-    def _send_payloads(self):
+    def send_payloads(self):
         """
         If check_mode is False, send the payloads to the controller
         If check_mode is True, do not send the payloads to the controller
@@ -203,10 +202,10 @@ class ImagePolicyUpdateCommon:
         )
 
         for payload in self._payloads_to_commit:
-            self._send_payload(payload)
+            self.send_payload(payload)
 
     # pylint: disable=no-member
-    def _send_payload(self, payload):
+    def send_payload(self, payload):
         """
         ### Summary
         Send one image policy update payload
@@ -268,7 +267,7 @@ class ImagePolicyUpdateCommon:
             msg += f"value {value}"
             raise TypeError(msg)
         for item in value:
-            self._verify_payload(item)
+            self.verify_payload(item)
         self._payloads = value
 
 
@@ -366,10 +365,10 @@ class ImagePolicyUpdateBulk(ImagePolicyUpdateCommon):
             msg += f"rest_send must be set prior to calling {method_name}."
             raise ValueError(msg)
 
-        self._build_payloads_to_commit()
+        self.build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
             return
-        self._send_payloads()
+        self.send_payloads()
 
 
 class ImagePolicyUpdate(ImagePolicyUpdateCommon):
@@ -428,7 +427,7 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
 
     @payload.setter
     def payload(self, value):
-        self._verify_payload(value)
+        self.verify_payload(value)
         self._payload = value
         # ImagePolicyUpdateCommon expects a list of payloads
         self._payloads = [value]
@@ -452,8 +451,8 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
             msg += f"rest_send must be set prior to calling {method_name}."
             raise ValueError(msg)
 
-        self._build_payloads_to_commit()
+        self.build_payloads_to_commit()
 
         if len(self._payloads_to_commit) == 0:
             return
-        self._send_payloads()
+        self.send_payloads()
