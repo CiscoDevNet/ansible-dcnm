@@ -23,8 +23,6 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
-    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
     ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
@@ -228,17 +226,17 @@ class MockImagePolicies:
 @pytest.fixture(name="image_policy_create")
 def image_policy_create_fixture():
     """
-    mock ImagePolicyCreate
+    Return ImagePolicyCreate with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyCreate(instance)
+    instance = ImagePolicyCreate()
+    instance.params = params
+    return instance
 
 
 @pytest.fixture(name="image_policy_create_bulk")
 def image_policy_create_bulk_fixture():
     """
-    mock ImagePolicyCreateBulk
+    Return ImagePolicyCreateBulk with params set.
     """
     instance = ImagePolicyCreateBulk()
     instance.params = params

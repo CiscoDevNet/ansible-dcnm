@@ -3,6 +3,34 @@
         "Mocked responses for endpoint EpPolicies class used in the following unit tests.",
         "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py"
     ],
+    "test_image_policy_create_00035a": {
+        "TEST_NOTES": [
+            "No image policies exist on the controller."
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [],
+            "message": ""
+        }
+    },
+    "test_image_policy_create_00036a": {
+        "TEST_NOTES": [
+            "No image policies exist on the controller."
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [],
+            "message": ""
+        }
+    },
     "test_image_policy_create_bulk_00035a": {
         "TEST_NOTES": [
             "No image policies exist on the controller."

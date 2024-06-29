@@ -72,16 +72,21 @@ class ImagePolicyCreateCommon:
         msg += f"action: {self.action}, "
         self.log.debug(msg)
 
-    def _verify_payload(self, payload):
+    def verify_payload(self, payload):
         """
-        Verify that the payload is a dict and contains all mandatory keys
+        ### Summary
+        Verify that the payload is a dict and contains all mandatory keys.
+
+        ### Raises
+        -   ``TypeError`` if payload is not a dict.
+        -   ``ValueError`` if payload is missing mandatory keys.
         """
         method_name = inspect.stack()[0][3]
         if not isinstance(payload, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be a dict. "
             msg += f"Got type {type(payload).__name__}, "
-            msg += f"value {payload}"
+            msg += f"value {payload}."
             raise TypeError(msg)
 
         missing_keys = []
@@ -96,34 +101,47 @@ class ImagePolicyCreateCommon:
         msg += f"{sorted(missing_keys)}"
         raise ValueError(msg)
 
-    def _build_payloads_to_commit(self):
+    def build_payloads_to_commit(self):
         """
+        ### Summary
         Build a list of payloads to commit.  Skip any payloads that
         already exist on the controller.
 
+        ### Raises
+        None
+
+        ### Notes
         Expects self.payloads to be a list of dict, with each dict
         being a payload for the image policy create API endpoint.
 
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
-        self._image_policies.rest_send = self.rest_send
+        method_name = inspect.stack()[0][3]
+
+        self._image_policies.rest_send = self.rest_send  # pylint: disable=no-member
         self._image_policies.refresh()
 
         self._payloads_to_commit = []
         for payload in self.payloads:
-            if payload.get("policyName", None) in self._image_policies.all_policies:
+            if payload.get("policyName") in self._image_policies.all_policies:
                 continue
             self._payloads_to_commit.append(copy.deepcopy(payload))
-        msg = f"self._payloads_to_commit: {json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "self._payloads_to_commit: "
+        msg += f"{json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def _send_payloads(self):
+    # pylint: disable=no-member
+    def send_payloads(self):
         """
-        If check_mode is False, send the payloads to the controller
-        If check_mode is True, do not send the payloads to the controller
+        ### Summary
+        -   If check_mode is False, send the payloads to the controller.
+        -   If check_mode is True, do not send the payloads to the controller.
+        -   In both cases, update results.
 
-        In both cases, update results
+        ### Raises
+        None
         """
         self.rest_send.check_mode = self.params.get("check_mode")
 
@@ -176,7 +194,7 @@ class ImagePolicyCreateCommon:
             msg += f"value {value}"
             raise TypeError(msg)
         for item in value:
-            self._verify_payload(item)
+            self.verify_payload(item)
         self._payloads = value
 
 
@@ -234,7 +252,7 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        if self.params is None:
+        if self.params is None:  # pylint: disable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += "params must be set prior to calling commit."
             raise ValueError(msg)
@@ -244,20 +262,20 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
-        if self.rest_send is None:
+        if self.rest_send is None:  # pylint: disable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
-        if self.results is None:
+        if self.results is None:  # pylint: disable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += "results must be set prior to calling commit."
             raise ValueError(msg)
 
-        self._build_payloads_to_commit()
+        self.build_payloads_to_commit()
         if len(self._payloads_to_commit) == 0:
             return
-        self._send_payloads()
+        self.send_payloads()
 
 
 class ImagePolicyCreate(ImagePolicyCreateCommon):
@@ -308,21 +326,24 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     @property
     def payload(self):
         """
-        This class expects a properly-defined image policy payload.
-        See class docstring for the payload structure.
+        ### Summary
+        An image policy payload. See class docstring for the payload structure.
         """
         return self._payload
 
     @payload.setter
     def payload(self, value):
-        self._verify_payload(value)
+        self.verify_payload(value)
         self._payloads = [value]
         self._payload = value
 
     def commit(self):
         """
-        Create policy.
-        If policy already exists on the controller, do nothing.
+        ### Summary
+        Create policy. If policy already exists on the controller, do nothing.
+
+        ### Raises
+        -   ``ValueError`` if payload is not set prior to calling commit().
         """
         method_name = inspect.stack()[0][3]
         if self.payload is None:
@@ -330,8 +351,8 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
             msg += "payload must be set prior to calling commit."
             raise ValueError(msg)
 
-        self._build_payloads_to_commit()
+        self.build_payloads_to_commit()
 
         if len(self._payloads_to_commit) == 0:
             return
-        self._send_payloads()
+        self.send_payloads()

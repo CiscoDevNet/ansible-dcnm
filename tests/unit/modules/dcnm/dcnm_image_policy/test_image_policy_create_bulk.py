@@ -62,7 +62,7 @@ def test_image_policy_create_bulk_00000(image_policy_create_bulk) -> None:
 
     Test
     - Class attributes are initialized to expected values
-    - fail_json is not called
+    - Exceptions are not raised.
     """
     with does_not_raise():
         instance = image_policy_create_bulk
@@ -96,7 +96,7 @@ def test_image_policy_create_bulk_00010(image_policy_create_bulk) -> None:
 
     ### Test
     - payloads is set to expected value
-    - fail_json is not called
+    - Exceptions are not raised.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -156,8 +156,8 @@ def test_image_policy_create_bulk_00022(image_policy_create_bulk, key, match) ->
         - __init__()
 
     ### Summary
-    Verify that the payloads setter calls fail_json when a payload in the payloads list
-    is missing a mandatory key.
+    Verify that the payloads setter raises ``ValueError`` when a payload in
+    the payloads list is missing a mandatory key.
 
     ### Test
     -   ``ValueError`` is raised because a payload in the payloads list is
@@ -179,7 +179,7 @@ def test_image_policy_create_bulk_00030(monkeypatch, image_policy_create_bulk) -
     - ImagePolicyCreateCommon
         - __init__()
         - payloads setter
-        - _build_payloads_to_commit()
+        - build_payloads_to_commit()
     - ImagePolicyCreateBulk
         - __init__()
 
@@ -188,7 +188,7 @@ def test_image_policy_create_bulk_00030(monkeypatch, image_policy_create_bulk) -
     image policy that already exists on the controller.
 
     ### Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
+    -   ImagePolicies().all_policies, called from instance.build_payloads_to_commit(),
         is mocked to indicate that two image policies (KR5M, NR3F) exist on the
         controller.
     -   ImagePolicyCreateCommon().payloads is set to contain one payload (KR5M)
@@ -205,7 +205,7 @@ def test_image_policy_create_bulk_00030(monkeypatch, image_policy_create_bulk) -
     instance.results = Results()
     instance.payloads = payloads_image_policy_create_bulk(key)
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-    instance._build_payloads_to_commit()
+    instance.build_payloads_to_commit()
     assert instance._payloads_to_commit == []
     assert len(instance.results.failed) == 0
     assert len(instance.results.changed) == 0
@@ -217,17 +217,17 @@ def test_image_policy_create_bulk_00031(monkeypatch, image_policy_create_bulk) -
     - ImagePolicyCreateCommon
         - __init__()
         - payloads setter
-        - _build_payloads_to_commit()
+        - build_payloads_to_commit()
     - ImagePolicyCreateBulk
         - __init__()
 
     ### Summary
-    Verify that instance._build_payloads_to_commit() adds a payload to the
+    Verify that instance.build_payloads_to_commit() adds a payload to the
     payloads_to_commit list when a request is made to create an image policy
     that does not exist on the controller.
 
     ### Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
+    -   ImagePolicies().all_policies, called from instance.build_payloads_to_commit(),
         is mocked to indicate that two image policies (KR5M, NR3F) exist on the
         controller.
     -   ImagePolicyCreateCommon().payloads is set to contain one payload containing
@@ -245,7 +245,7 @@ def test_image_policy_create_bulk_00031(monkeypatch, image_policy_create_bulk) -
         instance.results = Results()
         instance.payloads = payloads_image_policy_create_bulk(key)
         monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-        instance._build_payloads_to_commit()
+        instance.build_payloads_to_commit()
     assert len(instance._payloads_to_commit) == 1
     assert instance._payloads_to_commit == payloads_image_policy_create_bulk(key)
 
@@ -255,12 +255,12 @@ def test_image_policy_create_bulk_00032(monkeypatch, image_policy_create_bulk) -
     ### Classes and Methods
     - ImagePolicyCreateCommon
         - payloads setter
-        - _build_payloads_to_commit()
+        - build_payloads_to_commit()
     - ImagePolicyCreateBulk
         - __init__()
 
     ### Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
+    -   ImagePolicies().all_policies, called from instance.build_payloads_to_commit(),
         is mocked to indicate that two image policies (KR5M, NR3F) exist on the
         controller.
     -   ImagePolicyCreateCommon().payloads is set to contain one payload containing
@@ -278,7 +278,7 @@ def test_image_policy_create_bulk_00032(monkeypatch, image_policy_create_bulk) -
     instance = image_policy_create_bulk
     instance.payloads = payloads_image_policy_create_bulk(key)
     monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-    instance._build_payloads_to_commit()
+    instance.build_payloads_to_commit()
     assert len(instance._payloads_to_commit) == 1
     assert instance._payloads_to_commit[0]["policyName"] == "FOO"
 
@@ -288,26 +288,24 @@ def test_image_policy_create_bulk_00033(image_policy_create_bulk) -> None:
     ### Classes and Methods
     - ImagePolicyCreateBulk
         - commit()
-        - fail_json
 
     ### Summary
     Verify that ImagePolicyCreateBulk.commit() raises ``ValueError`` when
     payloads is None.
 
     ### Setup
-    -   ImagePolicyCreateCommon().payloads is not set
+    -   ImagePolicyCreateCommon().payloads is not set.
 
     ### Test
-    -   ValueError is called because payloads is None
+    -   ValueError is called because payloads is None.
     """
     with does_not_raise():
         results = Results()
         instance = image_policy_create_bulk
         instance.results = results
 
-    match = (
-        "ImagePolicyCreateBulk.commit: payloads must be set prior to calling commit."
-    )
+    match = r"ImagePolicyCreateBulk\.commit:\s+"
+    match += r"payloads must be set prior to calling commit\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -350,8 +348,8 @@ def test_image_policy_create_bulk_00035(image_policy_create_bulk) -> None:
     """
     ### Classes and Methods
     - ImagePolicyCreateCommon
-        - _build_payloads_to_commit()
-        - _send_payloads()
+        - build_payloads_to_commit()
+        - send_payloads()
     - ImagePolicyCreateBulk
         - payloads setter
         - commit()
@@ -368,8 +366,8 @@ def test_image_policy_create_bulk_00035(image_policy_create_bulk) -> None:
     -   EpPolicyCreate endpoint response contains a 200 response.
 
     ### Test
-    -   commit calls _build_payloads_to_commit which returns one payload.
-    -   commit calls _send_payloads, which calls rest_send, which populates
+    -   commit calls build_payloads_to_commit which returns one payload.
+    -   commit calls send_payloads, which calls rest_send, which populates
         diff_current with the payload due to result_current indicating
         success.
     -   results.result_current is set to the expected value
@@ -384,11 +382,16 @@ def test_image_policy_create_bulk_00035(image_policy_create_bulk) -> None:
         yield responses_ep_policies(key)
         yield responses_ep_policy_create(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
+
+    def payloads():
+        yield payloads_image_policy_create_bulk(key)
+
+    gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
-    sender.gen = gen
+    sender.gen = gen_responses
     rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
@@ -400,7 +403,7 @@ def test_image_policy_create_bulk_00035(image_policy_create_bulk) -> None:
         instance.params = params
 
     with does_not_raise():
-        instance.payloads = payloads_image_policy_create_bulk(key)
+        instance.payloads = gen_payloads.next
         instance.commit()
 
     response_current = responses_ep_policy_create(key)
@@ -427,13 +430,13 @@ def test_image_policy_create_bulk_00035(image_policy_create_bulk) -> None:
     assert instance.results.metadata[0]["sequence_number"] == 1
 
 
-def test_image_policy_create_bulk_00036(monkeypatch, image_policy_create_bulk) -> None:
+def test_image_policy_create_bulk_00036(image_policy_create_bulk) -> None:
     """
     ### Classes and Methods
     - ImagePolicyCreateCommon
         - payloads setter
-        - _build_payloads_to_commit()
-        - _send_payloads()
+        - build_payloads_to_commit()
+        - send_payloads()
     - ImagePolicyCreateBulk
         - commit()
 
@@ -466,11 +469,16 @@ def test_image_policy_create_bulk_00036(monkeypatch, image_policy_create_bulk) -
         yield responses_ep_policies(key)
         yield responses_ep_policy_create(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
+
+    def payloads():
+        yield payloads_image_policy_create_bulk(key)
+
+    gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
-    sender.gen = gen
+    sender.gen = gen_responses
     rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
@@ -481,7 +489,7 @@ def test_image_policy_create_bulk_00036(monkeypatch, image_policy_create_bulk) -
         instance.results = Results()
         instance.rest_send = rest_send
         instance.params = params
-        instance.payloads = payloads_image_policy_create_bulk(key)
+        instance.payloads = gen_payloads.next
         instance.commit()
 
     response_current = responses_ep_policy_create(key)
@@ -500,7 +508,7 @@ def test_image_policy_create_bulk_00036(monkeypatch, image_policy_create_bulk) -
     assert instance.results.metadata[0]["sequence_number"] == 1
 
 
-def test_image_policy_create_bulk_00037(monkeypatch, image_policy_create_bulk) -> None:
+def test_image_policy_create_bulk_00037(image_policy_create_bulk) -> None:
     """
     ### Classes and Methods
     - ImagePolicyCreateCommon
@@ -534,11 +542,16 @@ def test_image_policy_create_bulk_00037(monkeypatch, image_policy_create_bulk) -
         yield responses_ep_policy_create(key_ok)
         yield responses_ep_policy_create(key_nok)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
+
+    def payloads():
+        yield payloads_image_policy_create_bulk(key_payloads)
+
+    gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
-    sender.gen = gen
+    sender.gen = gen_responses
     rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
@@ -548,7 +561,7 @@ def test_image_policy_create_bulk_00037(monkeypatch, image_policy_create_bulk) -
         instance = image_policy_create_bulk
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.payloads = payloads_image_policy_create_bulk(key_payloads)
+        instance.payloads = gen_payloads.next
         instance.commit()
 
     assert len(instance.results.diff) == 2
