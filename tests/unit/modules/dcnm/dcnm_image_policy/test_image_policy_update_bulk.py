@@ -44,9 +44,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    GenerateResponses, MockAnsibleModule, does_not_raise,
-    image_policy_update_bulk_fixture, params,
-    payloads_image_policy_update_bulk, responses_ep_policies,
+    MockAnsibleModule, does_not_raise, image_policy_update_bulk_fixture,
+    params, payloads_image_policy_update_bulk, responses_ep_policies,
     responses_ep_policy_edit, responses_image_policy_update_bulk,
     rest_send_result_current)
 
