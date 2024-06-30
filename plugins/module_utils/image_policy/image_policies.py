@@ -100,12 +100,12 @@ class ImagePolicies:
                 -   ``rest_send`` is not set.
                 -   ``results`` is not set.
                 -   The controller response cannot be parsed.
-        
+
         ### Notes
         -   pylint: disable=no-member is needed because the rest_send, results,
             and params properties are dynamically created by the
             @Properties class decorators.
-            """
+        """
         method_name = inspect.stack()[0][3]
 
         if self.rest_send is None:
@@ -134,7 +134,7 @@ class ImagePolicies:
         data = self.rest_send.response_current.get("DATA", {}).get("lastOperDataObject")
 
         if data is None:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Bad response when retrieving image policy "
             msg += "information from the controller."
             raise ControllerResponseError(msg)
@@ -150,15 +150,13 @@ class ImagePolicies:
         for policy in data:
             policy_name = policy.get("policyName")
             if policy_name is None:
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "Cannot parse policy information from the controller."
                 raise ValueError(msg)
             self.data[policy_name] = policy
             self._response_data[policy_name] = policy
 
-        self._all_policies = copy.deepcopy(
-            self._response_data
-        )
+        self._all_policies = copy.deepcopy(self._response_data)
 
         self.results.response_current = self.rest_send.response_current
         self.results.result_current = self.rest_send.result_current
@@ -191,9 +189,7 @@ class ImagePolicies:
             raise ValueError(msg)
 
         return self.conversion.make_boolean(
-            self.conversion.make_none(
-                self._response_data[self.policy_name][item]
-            )
+            self.conversion.make_none(self._response_data[self.policy_name][item])
         )
 
     @property

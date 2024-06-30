@@ -276,21 +276,22 @@ def image_policy_replace_bulk_fixture():
 @pytest.fixture(name="image_policy_update")
 def image_policy_update_fixture():
     """
-    mock ImagePolicyUpdate
+    Return ImagePolicyUpdate with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyUpdate(instance)
+    instance = ImagePolicyUpdate()
+    instance.params = params
+    return instance
 
 
 @pytest.fixture(name="image_policy_update_bulk")
 def image_policy_update_bulk_fixture():
     """
-    mock ImagePolicyUpdateBulk
+    Return ImagePolicyUpdateBulk with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyUpdateBulk(instance)
+    instance = ImagePolicyUpdateBulk()
+    instance.params = params
+    return instance
+
 
 
 @pytest.fixture(name="config2payload")
@@ -398,6 +399,16 @@ def responses_ep_policy_create(key: str) -> Dict[str, str]:
     Return responses for EpPolicyCreate() endpoint
     """
     data_file = "responses_EpPolicyCreate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_policy_edit(key: str) -> Dict[str, str]:
+    """
+    Return responses for EpPolicyEdit() endpoint
+    """
+    data_file = "responses_EpPolicyEdit"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

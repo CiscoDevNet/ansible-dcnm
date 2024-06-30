@@ -184,7 +184,7 @@ class ImagePolicyUpdateCommon:
         msg = f"{self.class_name}.{method_name}: "
         msg += "One or more policies have devices attached. "
         msg += "Detach these policies from all devices first using "
-        msg += "the dcnm_image_upgrade module, with state == deleted. "
+        msg += "the dcnm_image_upgrade module with state == deleted."
         for policy_name, ref_count in _non_zero_ref_counts.items():
             msg += f"policy_name: {policy_name}, "
             msg += f"ref_count: {ref_count}. "

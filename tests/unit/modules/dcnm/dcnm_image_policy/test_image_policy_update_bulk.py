@@ -577,31 +577,6 @@ def test_image_policy_update_bulk_00037(monkeypatch, image_policy_update_bulk) -
     assert True in instance.results.failed
 
 
-def test_image_policy_update_bulk_00040(image_policy_update_bulk) -> None:
-    """
-    Classes and Methods
-    - ImagePolicyUpdateBulk
-        - __init__
-        - _default_policy
-
-    Summary
-    Verify that instance._default_policy setter calls fail_json when
-    passed a policy_name that is not a string.
-
-    Test
-    - fail_json is called because policy_name is a list
-    """
-    match = "ImagePolicyUpdateBulk._default_policy: "
-    match += "policy_name must be a string. "
-    match += r"Got type list for value \[\]"
-
-    with does_not_raise():
-        instance = image_policy_update_bulk
-        instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance._default_policy([])
-
-
 def test_image_policy_update_bulk_00050(monkeypatch, image_policy_update_bulk) -> None:
     """
     Classes and Methods

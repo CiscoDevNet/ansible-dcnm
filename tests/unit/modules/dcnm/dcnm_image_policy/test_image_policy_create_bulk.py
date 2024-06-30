@@ -259,18 +259,24 @@ def test_image_policy_create_bulk_00032(monkeypatch, image_policy_create_bulk) -
     - ImagePolicyCreateBulk
         - __init__()
 
+    ### Summary
+    Verify that instance.build_payloads_to_commit() adds a payload to the
+    payloads_to_commit list when the image policy in the payload does not
+    on the controller.
+
     ### Setup
-    -   ImagePolicies().all_policies, called from instance.build_payloads_to_commit(),
-        is mocked to indicate that two image policies (KR5M, NR3F) exist on the
-        controller.
-    -   ImagePolicyCreateCommon().payloads is set to contain one payload containing
-        an image policy (FOO) that is not present in all_policies and one payload
-        containing an image policy (KR5M) that does exist on the controller.
+    -   ImagePolicies().all_policies, called from
+        instance.build_payloads_to_commit(), is mocked to indicate that two
+        image policies (KR5M, NR3F) exist on the controller.
+    -   ImagePolicyCreateCommon().payloads is set to contain one payload
+        containing an image policy (FOO) that is not present in all_policies
+        and one payload containing an image policy (KR5M) that does exist on
+        the controller.
 
     ### Test
     -   _payloads_to_commit will contain one payload
-    -   The policyName for this payload will be "FOO", which is the image policy that
-        does not exist on the controller
+    -   The policyName for this payload will be "FOO", which is the image
+        policy that does not exist on the controller
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
