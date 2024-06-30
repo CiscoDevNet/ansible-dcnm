@@ -38,6 +38,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update imp
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
+def get_state(action):
+    if action in ["create", "update"]:
+        state = "merged"
+    elif action == "delete":
+        state = "deleted"
+    elif action == "query":
+        state = "query"
+    elif action == "replace":
+        state = "replaced"
+    else:
+        state = "merged"
+    return state
+
 params = {
     "state": "merged",
     "check_mode": False,
@@ -230,6 +243,7 @@ def image_policy_create_fixture():
     """
     instance = ImagePolicyCreate()
     instance.params = params
+    params.update({"state": get_state(instance.action)})
     return instance
 
 
@@ -240,37 +254,41 @@ def image_policy_create_bulk_fixture():
     """
     instance = ImagePolicyCreateBulk()
     instance.params = params
+    params.update({"state": get_state(instance.action)})
     return instance
 
 
 @pytest.fixture(name="image_policy_delete")
 def image_policy_delete_fixture():
     """
-    mock ImagePolicyDelete
+    Return ImagePolicyDelete with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "deleted"
-    return ImagePolicyDelete(instance)
+    instance = ImagePolicyDelete()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_query")
 def image_policy_query_fixture():
     """
-    mock ImagePolicyQuery
+    Return ImagePolicyQuery with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "query"
-    return ImagePolicyQuery(instance)
+    instance = ImagePolicyQuery()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_replace_bulk")
 def image_policy_replace_bulk_fixture():
     """
-    mock ImagePolicyReplaceBulk
+    Return ImagePolicyReplaceBulk with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "replaced"
-    return ImagePolicyReplaceBulk(instance)
+    instance = ImagePolicyReplaceBulk()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_update")
@@ -280,6 +298,7 @@ def image_policy_update_fixture():
     """
     instance = ImagePolicyUpdate()
     instance.params = params
+    params.update({"state": get_state(instance.action)})
     return instance
 
 
@@ -290,8 +309,8 @@ def image_policy_update_bulk_fixture():
     """
     instance = ImagePolicyUpdateBulk()
     instance.params = params
+    params.update({"state": get_state(instance.action)})
     return instance
-
 
 
 @pytest.fixture(name="config2payload")

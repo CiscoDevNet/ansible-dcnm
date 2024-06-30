@@ -119,8 +119,8 @@ def test_image_policy_update_00021(image_policy_update) -> None:
     - payload is set to a list
 
     ### Test
-    - TypeError is raised because payloads is not a dict
-    - instance.payload is not modified, hence it retains its initial value of None
+    -   ``TypeError`` is raised because payload is not a dict.
+    -   ``instance.payload`` is not modified.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -153,12 +153,12 @@ def test_image_policy_update_00022(image_policy_update, key, match) -> None:
         - payload setter
 
     ### Summary
-    Verify that the payload setter calls fail_json when a payload is missing
-    a mandatory key
+    Verify that ``payload.setter`` raises ``ValueError when a payload is
+    missing a mandatory key
 
     ### Test
-    - ``ValueError`` is raised because payload is missing a mandatory key.
-    - instance.payload is not modified, hence it retains its initial value of None
+    -   ``ValueError`` is raised because payload is missing a mandatory key.
+    -   ``instance.payload`` is not modified.
     """
     with does_not_raise():
         instance = image_policy_update
@@ -220,7 +220,6 @@ def test_image_policy_update_00030(image_policy_update) -> None:
         instance = image_policy_update
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
         instance.payload = gen_payloads.next
         instance.commit()
 
@@ -248,9 +247,13 @@ def test_image_policy_update_00031(image_policy_update) -> None:
         - payload setter
 
     ### Summary
-    Verify that instance.build_payloads_to_commit() does not add a payload
-    to the payloads_to_commit list when a request is made to update an
-    image policy that does not exist on the controller.
+    Verify behavior when a request is sent to update a policy that does
+    not exist on the controller
+
+    ### Expected behavior
+    ``instance.build_payloads_to_commit()`` does not add a payload
+    to the ``payloads_to_commit`` list if the associated policy
+    does not exist on the controller.
 
     ### Setup
     -   EpPolicies() endpoint response is mocked to indicate that two image
@@ -287,7 +290,6 @@ def test_image_policy_update_00031(image_policy_update) -> None:
         instance = image_policy_update
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
         instance.payload = gen_payloads.next
         instance.commit()
     assert instance._payloads_to_commit == []
@@ -369,9 +371,6 @@ def test_image_policy_update_00034(image_policy_update) -> None:
         instance = image_policy_update
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
-
-    with does_not_raise():
         instance.payload = gen_payloads.next
         instance.commit()
     assert instance._payloads_to_commit == []
@@ -389,8 +388,8 @@ def test_image_policy_update_00035(image_policy_update) -> None:
         - commit()
 
     ### Summary
-    Verify ImagePolicyUpdate.commit() happy path.  Controller responds
-    to an image create update with a 200 response.
+    Verify ImagePolicyUpdate.commit() happy path.  Controller returns
+    a 200 response to an image policy update request.
 
     ### Setup
     -   EpPolicies() endpoint response is mocked to indicate that two policies
@@ -435,9 +434,6 @@ def test_image_policy_update_00035(image_policy_update) -> None:
         instance = image_policy_update
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
-
-    with does_not_raise():
         instance.payload = gen_payloads.next
         instance.commit()
 
@@ -530,9 +526,6 @@ def test_image_policy_update_00036(image_policy_update) -> None:
         instance = image_policy_update
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
-
-    with does_not_raise():
         instance.payload = gen_payloads.next
         instance.commit()
 
@@ -588,7 +581,6 @@ def test_image_policy_update_00050(image_policy_update) -> None:
 
     def responses():
         yield responses_ep_policies(key)
-        yield responses_ep_policy_edit(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -608,7 +600,6 @@ def test_image_policy_update_00050(image_policy_update) -> None:
         instance = image_policy_update
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
         instance.payload = gen_payloads.next
 
     match = r"ImagePolicyUpdate\._verify_image_policy_ref_count:\s+"

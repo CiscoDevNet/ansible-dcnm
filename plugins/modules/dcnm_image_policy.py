@@ -642,11 +642,9 @@ class Overridden(Common):
         self.log.debug(msg)
 
         self._delete_policies_not_in_want()
-        #task = Merged(self.params)
         # pylint: disable=attribute-defined-outside-init
-        self.merged.rest_send = (
-            self.rest_send
-        )
+        self.merged.rest_send = self.rest_send
+        # pylint: enable=attribute-defined-outside-init
         self.merged.results = self.results
         self.merged.commit()
 
