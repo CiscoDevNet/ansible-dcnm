@@ -281,8 +281,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create imp
     ImagePolicyCreateBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
     ImagePolicyDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec_v2 import \
@@ -314,9 +312,6 @@ class Common:
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
         self.params = params
-
-        self.endpoints = ApiEndpoints()
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
