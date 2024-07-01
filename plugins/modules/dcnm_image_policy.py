@@ -283,7 +283,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete imp
     ImagePolicyDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec_v2 import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
     ParamsSpec
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
     Config2Payload

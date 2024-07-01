@@ -133,18 +133,7 @@ class Config2Payload(Payload):
             msg += "config is empty"
             raise ValueError(msg)
 
-
         config = copy.deepcopy(self.config)
-
-        msg = f"ZZZZ: {self.class_name}.{method_name}: "
-        msg += f"state: {self.params['state']}"
-        self.log.debug(msg)
-        msg = f"ZZZZ: {self.class_name}.{method_name}: "
-        msg += f"config: {json.dumps(config, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        msg = f"ZZZZ: {self.class_name}.{method_name}: "
-        msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
         if self.params["state"] in ["deleted", "query"]:
             self.payload["policyName"] = config["name"]
