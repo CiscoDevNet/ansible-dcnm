@@ -133,8 +133,6 @@ class EpPoliciesAllAttached(PolicyMgnt):
         return "GET"
 
 
-
-
 class EpPolicyAttach(PolicyMgnt):
     """
     ## V1 API - PolicyMgnt().EpPolicyAttach()
@@ -251,6 +249,7 @@ class EpPolicyDelete(PolicyMgnt):
         }
     ```
     """
+
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
