@@ -69,11 +69,11 @@ class ImagePolicyQuery:
     def __init__(self):
         self.class_name = self.__class__.__name__
 
-        self._policies_to_query = []
-
         self.action = "query"
-
+        self._policies_to_query = []
+        self._policy_names = None
         self._results = None
+
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED ImagePolicyQuery(): "
         msg += f"action {self.action}, "
