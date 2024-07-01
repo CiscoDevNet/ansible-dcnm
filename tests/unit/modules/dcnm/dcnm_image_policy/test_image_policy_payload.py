@@ -33,15 +33,14 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import (
     Config2Payload, Payload2Config)
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
-    load_fixture
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    AnsibleFailJson, MockAnsibleModule, config2payload_fixture, does_not_raise,
-    payload2config_fixture)
+    config2payload_fixture, configs_config2payload, configs_payload2config,
+    does_not_raise, payload2config_fixture, payloads_config2payload,
+    payloads_payload2config)
 
 
 def test_image_policy_payload_00100() -> None:
@@ -56,8 +55,8 @@ def test_image_policy_payload_00100() -> None:
     Verify Config2Payload is initialized properly
 
     ### Test
-    - Class attributes initialized to expected values
-    - fail_json is not called
+    -   Class attributes initialized to expected values
+    -   Exceptions are not raised.
     """
     with does_not_raise():
         instance = Config2Payload()
@@ -85,15 +84,21 @@ def test_image_policy_payload_00120(config2payload) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    config = data.get(key, {}).get("config")
-    payload = data.get(key, {}).get("payload")
+    def configs():
+        yield configs_config2payload(key)
+    gen_configs = ResponseGenerator(configs())
 
+    def payloads():
+        yield payloads_config2payload(key)
+    gen_payloads = ResponseGenerator(payloads())
+
+    config = gen_configs.next
+    payload = gen_payloads.next
     with does_not_raise():
         instance = config2payload
+        instance.params = {"state": "merged", "check_mode": False}
         instance.config = config
         instance.commit()
-    assert payload is not None
     assert instance.payload == payload
 
 
@@ -106,24 +111,32 @@ def test_image_policy_payload_00121(config2payload) -> None:
     - commit
 
     ### Summary
-    Verify Config2Payload coverts a configuration to a proper payload when
+    Verify ``Config2Payload`` coverts a configuration to a proper payload when
     the packages.install and packages.uninstall keys are empty lists.
 
     ### Test
-    - config packages.install is an empty list
-    - config packages.ininstall is an empty list
-    - commit converts config to a proper payload
+    -   config packages.install is an empty list.
+    -   config packages.ininstall is an empty list.
+    -   commit converts config to a proper payload.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    config = data.get(key, {}).get("config")
-    payload = data.get(key, {}).get("payload")
+    def configs():
+        yield configs_config2payload(key)
+    gen_configs = ResponseGenerator(configs())
+
+    def payloads():
+        yield payloads_config2payload(key)
+    gen_payloads = ResponseGenerator(payloads())
+
+    config = gen_configs.next
+    payload = gen_payloads.next
 
     with does_not_raise():
         instance = config2payload
         instance.config = config
+        instance.params = {"state": "merged", "check_mode": False}
         instance.commit()
     assert payload is not None
     assert instance.payload == payload
@@ -138,20 +151,25 @@ def test_image_policy_payload_00122(config2payload) -> None:
     - commit
 
     ### Summary
-    Verify Config2Payload.commit() calls fail_json when config is an empty dict
+    Verify ``Config2Payload.commit()`` raises ``ValueError`` when config
+    is an empty dict.
 
     ### Test
-    - config is set to an empty dict
-    - commit calls fail_json
+    -   ``config`` is set to an empty dict.
+    -   ``commit`` raises ``ValueError``.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    config = data.get(key, {}).get("config")
+    def configs():
+        yield configs_config2payload(key)
+    gen_configs = ResponseGenerator(configs())
+
+    config = gen_configs.next
 
     with does_not_raise():
-        instance = config2payload
+        instance = Config2Payload()
+        instance.params = {"state": "deleted", "check_mode": False}
         instance.config = config
     match = r"Config2Payload\.commit: config is empty"
     with pytest.raises(ValueError, match=match):
@@ -174,25 +192,23 @@ def test_image_policy_payload_00123(config2payload, state) -> None:
     ### Test
     - payload contains only the policyName key
     - The value of the policyName key == value of the name key in instance.config
-    - fail_json is not called
+    - Exceptions are not raised.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    config = data.get(key, {}).get("config")
+    def configs():
+        yield configs_config2payload(key)
+    gen_configs = ResponseGenerator(configs())
+
+    config = gen_configs.next
 
     with does_not_raise():
         instance = config2payload
         instance.config = config
+        instance.params = {"state": state, "check_mode": False}
         instance.commit()
-    assert instance.payload["agnostic"] == config["agnostic"]
-    assert instance.payload["policyDescr"] == config["description"]
     assert instance.payload["policyName"] == config["name"]
-    assert instance.payload["epldImgName"] == config["epld_image"]
-    assert instance.payload["nxosVersion"] == config["release"]
-    assert instance.payload["platform"] == config["platform"]
-    assert instance.payload["policyType"] == "PLATFORM"
 
 
 MATCH_00130 = r"Config2Payload\.payload:\s+"
@@ -318,9 +334,16 @@ def test_image_policy_payload_00220(payload2config) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    config = data.get(key, {}).get("config")
-    payload = data.get(key, {}).get("payload")
+    def configs():
+        yield configs_payload2config(key)
+    gen_configs = ResponseGenerator(configs())
+
+    def payloads():
+        yield payloads_payload2config(key)
+    gen_payloads = ResponseGenerator(payloads())
+
+    config = gen_configs.next
+    payload = gen_payloads.next
     with does_not_raise():
         instance = payload2config
         instance.payload = payload
@@ -349,9 +372,16 @@ def test_image_policy_payload_00221(payload2config) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    config = data.get(key, {}).get("config")
-    payload = data.get(key, {}).get("payload")
+    def configs():
+        yield configs_payload2config(key)
+    gen_configs = ResponseGenerator(configs())
+
+    def payloads():
+        yield payloads_payload2config(key)
+    gen_payloads = ResponseGenerator(payloads())
+
+    config = gen_configs.next
+    payload = gen_payloads.next
 
     with does_not_raise():
         instance = payload2config
@@ -380,8 +410,11 @@ def test_image_policy_payload_00222(payload2config) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    data = load_fixture("data_payload")
-    payload = data.get(key, {}).get("payload")
+    def payloads():
+        yield payloads_payload2config(key)
+    gen_payloads = ResponseGenerator(payloads())
+
+    payload = gen_payloads.next
 
     with does_not_raise():
         instance = payload2config
@@ -461,8 +494,8 @@ def test_image_policy_payload_00240(payload2config, value, expected) -> None:
     Verify config setter error handling
 
     ### Test
-    - config accepts a dictionary
-    - config calls fail_json for non-dictionary values
+    - `config accepts a dictionary.
+    - `config raises ``TypeError`` for non-dictionary values.
     """
     with does_not_raise():
         instance = payload2config

@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import json
 import logging
@@ -54,7 +55,7 @@ class Payload:
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             raise TypeError(msg)
-        self._config = value
+        self._config = copy.deepcopy(value)
 
     @property
     def params(self):
@@ -72,7 +73,7 @@ class Payload:
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             raise TypeError(msg)
-        self._params = value
+        self._params = copy.deepcopy(value)
 
     @property
     def payload(self):
@@ -90,7 +91,7 @@ class Payload:
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             raise TypeError(msg)
-        self._payload = value
+        self._payload = copy.deepcopy(value)
 
 
 class Config2Payload(Payload):
@@ -132,25 +133,34 @@ class Config2Payload(Payload):
             msg += "config is empty"
             raise ValueError(msg)
 
-        msg = f"{self.class_name}.{method_name}: "
+
+        config = copy.deepcopy(self.config)
+
+        msg = f"ZZZZ: {self.class_name}.{method_name}: "
         msg += f"state: {self.params['state']}"
+        self.log.debug(msg)
+        msg = f"ZZZZ: {self.class_name}.{method_name}: "
+        msg += f"config: {json.dumps(config, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"ZZZZ: {self.class_name}.{method_name}: "
+        msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if self.params["state"] in ["deleted", "query"]:
-            self.payload["policyName"] = self.config["name"]
+            self.payload["policyName"] = config["name"]
             return
-        self.payload["agnostic"] = self.config["agnostic"]
-        self.payload["epldImgName"] = self.config["epld_image"]
-        self.payload["nxosVersion"] = self.config["release"]
-        self.payload["platform"] = self.config["platform"]
-        self.payload["policyDescr"] = self.config["description"]
-        self.payload["policyName"] = self.config["name"]
-        self.payload["policyType"] = self.config.get("type", "PLATFORM")
+        self.payload["agnostic"] = config["agnostic"]
+        self.payload["epldImgName"] = config["epld_image"]
+        self.payload["nxosVersion"] = config["release"]
+        self.payload["platform"] = config["platform"]
+        self.payload["policyDescr"] = config["description"]
+        self.payload["policyName"] = config["name"]
+        self.payload["policyType"] = config.get("type", "PLATFORM")
 
-        if len(self.config.get("packages", {}).get("install", [])) != 0:
-            self.payload["packageName"] = ",".join(self.config["packages"]["install"])
-        if len(self.config.get("packages", {}).get("uninstall", [])) != 0:
-            self.payload["rpmimages"] = ",".join(self.config["packages"]["uninstall"])
+        if len(config.get("packages", {}).get("install", [])) != 0:
+            self.payload["packageName"] = ",".join(config["packages"]["install"])
+        if len(config.get("packages", {}).get("uninstall", [])) != 0:
+            self.payload["rpmimages"] = ",".join(config["packages"]["uninstall"])
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.payload {json.dumps(self.payload, indent=4, sort_keys=True)}"
@@ -185,20 +195,21 @@ class Payload2Config(Payload):
             msg += "payload is empty"
             raise ValueError(msg)
 
-        self.config["agnostic"] = self.payload["agnostic"]
-        self.config["epld_image"] = self.payload["epldImgName"]
-        self.config["release"] = self.payload["nxosVersion"]
-        self.config["platform"] = self.payload["platform"]
-        self.config["description"] = self.payload["policyDescr"]
-        self.config["name"] = self.payload["policyName"]
-        self.config["type"] = self.payload["policyType"]
+        payload = copy.deepcopy(self.payload)
+        self.config["agnostic"] = payload["agnostic"]
+        self.config["epld_image"] = payload["epldImgName"]
+        self.config["release"] = payload["nxosVersion"]
+        self.config["platform"] = payload["platform"]
+        self.config["description"] = payload["policyDescr"]
+        self.config["name"] = payload["policyName"]
+        self.config["type"] = payload["policyType"]
 
         self.config["packages"] = {}
-        if self.payload.get("packageName", "") != "":
-            self.config["packages"]["install"] = self.payload["packageName"].split(",")
+        if payload.get("packageName", "") != "":
+            self.config["packages"]["install"] = payload["packageName"].split(",")
         else:
             self.config["packages"]["install"] = []
-        if self.payload.get("rpmimages", "") != "":
-            self.config["packages"]["uninstall"] = self.payload["rpmimages"].split(",")
+        if payload.get("rpmimages", "") != "":
+            self.config["packages"]["uninstall"] = payload["rpmimages"].split(",")
         else:
             self.config["packages"]["uninstall"] = []

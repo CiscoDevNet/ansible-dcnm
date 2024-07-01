@@ -357,6 +357,46 @@ def data_payload(key: str) -> Dict[str, str]:
     return data
 
 
+def configs_config2payload(key: str) -> Dict[str, str]:
+    """
+    Return configs for Config2Payload
+    """
+    data_file = "configs_Config2Payload"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def configs_payload2config(key: str) -> Dict[str, str]:
+    """
+    Return configs for Payload2Config
+    """
+    data_file = "configs_Payload2Config"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_config2payload(key: str) -> Dict[str, str]:
+    """
+    Return payloads for Config2Payload
+    """
+    data_file = "payloads_Config2Payload"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_payload2config(key: str) -> Dict[str, str]:
+    """
+    Return payloads for Payload2Config
+    """
+    data_file = "payloads_Payload2Config"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def payloads_image_policy_create(key: str) -> Dict[str, str]:
     """
     Return payloads for ImagePolicyCreate
