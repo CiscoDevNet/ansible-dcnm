@@ -228,12 +228,10 @@ def test_image_policy_replace_bulk_00030(image_policy_replace_bulk) -> None:
     def responses():
         yield responses_ep_policies(key)
         yield responses_ep_policy_edit(key)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
@@ -289,12 +287,10 @@ def test_image_policy_replace_bulk_00031(image_policy_replace_bulk) -> None:
 
     def responses():
         yield responses_ep_policies(key)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
@@ -351,12 +347,10 @@ def test_image_policy_replace_bulk_00032(image_policy_replace_bulk) -> None:
     def responses():
         yield responses_ep_policies(key)
         yield responses_ep_policy_edit(key)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
@@ -429,12 +423,10 @@ def test_image_policy_replace_bulk_00034(image_policy_replace_bulk) -> None:
 
     def responses():
         yield responses_ep_policies(key)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
@@ -489,12 +481,10 @@ def test_image_policy_replace_bulk_00035(image_policy_replace_bulk) -> None:
         yield responses_ep_policies(key)
         yield responses_ep_policy_edit(key)
         yield responses_ep_policy_edit(key)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
@@ -584,12 +574,10 @@ def test_image_policy_replace_bulk_00036(image_policy_replace_bulk) -> None:
     def responses():
         yield responses_ep_policies(key)
         yield responses_ep_policy_edit(key)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
@@ -661,12 +649,10 @@ def test_image_policy_replace_bulk_00037(image_policy_replace_bulk) -> None:
         yield responses_ep_policies(key_policies)
         yield responses_ep_policy_edit(key_ok)
         yield responses_ep_policy_edit(key_nok)
-
     gen_responses = ResponseGenerator(responses())
 
     def payloads():
         yield payloads_image_policy_replace_bulk(key_payloads)
-
     gen_payloads = ResponseGenerator(payloads())
 
     sender = Sender()
