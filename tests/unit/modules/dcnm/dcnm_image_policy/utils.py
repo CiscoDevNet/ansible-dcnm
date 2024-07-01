@@ -156,88 +156,6 @@ class MockAnsibleModule:
         """
 
 
-class MockImagePolicies:
-    """
-    Mock the ImagePolicies class to return various values for all_policies
-    """
-
-    def __init__(self, key: str) -> None:
-        self.key = key
-        self.properties = {}
-        self.properties["policy_name"] = None
-        self.properties["results"] = None
-
-    def refresh(self) -> None:
-        """
-        bypass dcnm_send
-        """
-
-    @property
-    def all_policies(self):
-        """
-        Mock the return value of all_policies
-        all_policies contains all image policies that exist on the controller
-        """
-        return image_policies_all_policies(self.key)
-
-    @property
-    def name(self):
-        """
-        Return the name of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
-        """
-        try:
-            return (
-                image_policies_all_policies(self.key)
-                .get(self.policy_name, None)
-                .get("policyName")
-            )
-        except AttributeError:
-            return None
-
-    @property
-    def policy_name(self):
-        """
-        Set the name of the policy to query.
-
-        This must be set prior to accessing any other properties
-        """
-        return self.properties.get("policy_name")
-
-    @policy_name.setter
-    def policy_name(self, value):
-        self.properties["policy_name"] = value
-
-    @property
-    def ref_count(self):
-        """
-        Return the reference count of the policy matching self.policy_name,
-        if it exists.  The reference count is the number of switches using
-        this policy.
-        Return None otherwise
-        """
-        try:
-            return (
-                image_policies_all_policies(self.key)
-                .get(self.policy_name, None)
-                .get("ref_count")
-            )
-        except AttributeError:
-            return None
-
-    @property
-    def results(self):
-        """
-        An instance of the Results class.
-        """
-        return self.properties["results"]
-
-    @results.setter
-    def results(self, value):
-        self.properties["results"] = value
-
-
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
@@ -487,17 +405,6 @@ def responses_ep_policy_edit(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return responses for ImagePolicies
-    Used in MockImagePolicies
-    """
-    data_file = "responses_ImagePolicies"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
 def responses_image_policy_create(key: str) -> Dict[str, str]:
     """
     Return responses for ImagePolicyCreate
@@ -553,17 +460,6 @@ def responses_image_policy_update_bulk(key: str) -> Dict[str, str]:
     Return responses for ImagePolicyUpdateBulk
     """
     data_file = "responses_ImagePolicyUpdateBulk"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def results_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return results for ImagePolicies
-    Used in MockImagePolicies
-    """
-    data_file = "results_ImagePolicies"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
