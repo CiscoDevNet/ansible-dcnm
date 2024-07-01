@@ -19,12 +19,12 @@
     # testcase: dcnm_image_policy_replaced
     switch_username: admin
     switch_password: "foobar"
-    spine1: 172.22.150.114
-    spine2: 172.22.150.115
-    leaf1: 172.22.150.103
-    leaf2: 172.22.150.104
-    leaf3: 172.22.150.108
-    leaf4: 172.22.150.109
+    spine1: 192.168.1.2
+    spine2: 192.168.1.3
+    leaf1: 192.168.1.4
+    leaf2: 192.168.1.5
+    leaf3: 192.168.1.6
+    leaf4: 192.168.1.7
     image_policy_1: "KR5M"
     image_policy_2: "NR3F"
     epld_image_1: n9000-epld.10.2.5.M.img
