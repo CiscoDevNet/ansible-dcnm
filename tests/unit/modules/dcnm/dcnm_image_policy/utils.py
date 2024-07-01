@@ -38,6 +38,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update imp
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
 
+
 def get_state(action):
     if action in ["create", "update"]:
         state = "merged"
@@ -51,6 +52,7 @@ def get_state(action):
         state = "merged"
     return state
 
+
 params = {
     "state": "merged",
     "check_mode": False,
@@ -60,9 +62,11 @@ params = {
             "agnostic": False,
             "description": "NR1F",
             "platform": "N9K",
-            "type": "PLATFORM"}
-    ]
+            "type": "PLATFORM",
+        }
+    ],
 }
+
 
 class GenerateResponses:
     """
@@ -233,7 +237,6 @@ class MockImagePolicies:
 
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
-
 
 
 @pytest.fixture(name="image_policy_create")

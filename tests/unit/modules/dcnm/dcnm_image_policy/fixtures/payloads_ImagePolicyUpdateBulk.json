@@ -3,7 +3,7 @@
         "Mocked payloads for ImagePolicyUpdate unit tests.",
         "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_update_bulk.py"
     ],
-    "test_image_policy_update_bulk_00010a": [
+    "test_image_policy_update_bulk_00020a": [
         {
             "agnostic": false,
             "epldImgName": "n9000-epld.10.3.2.F.img",
@@ -165,7 +165,7 @@
             "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
         }
     ],
-    "test_image_policy_update_bulk_00037d": [
+    "test_image_policy_update_bulk_00037a": [
         {
             "agnostic": false,
             "epldImgName": "n9000-epld.10.3.2.F.img",

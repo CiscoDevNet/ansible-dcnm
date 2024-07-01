@@ -3,7 +3,7 @@
         "Mocked payloads for ImagePolicyUpdateBulk unit tests.",
         "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_update.py"
     ],
-    "test_image_policy_update_00010a":{
+    "test_image_policy_update_00020a":{
             "agnostic": false,
             "epldImgName": "n9000-epld.10.3.2.F.img",
             "nxosVersion": "10.3.1_nxos64-cs_64bit",

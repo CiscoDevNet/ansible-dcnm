@@ -60,8 +60,8 @@ def test_image_policy_update_bulk_00000(image_policy_update_bulk) -> None:
     Verify that __init__() sets class attributes to the expected values.
 
     ### Test
-    - Class attributes initialized to expected values
-    - fail_json is not called
+    - Class attributes initialized to expected values.
+    - Exceptions are not raised.
     """
     with does_not_raise():
         instance = image_policy_update_bulk
@@ -78,9 +78,11 @@ def test_image_policy_update_bulk_00000(image_policy_update_bulk) -> None:
     }
     assert instance.payloads is None
     assert instance._payloads_to_commit == []
+    assert instance._image_policies.class_name == "ImagePolicies"
+    assert instance._image_policies.results.class_name == "Results"
 
 
-def test_image_policy_update_bulk_00010(image_policy_update_bulk) -> None:
+def test_image_policy_update_bulk_00020(image_policy_update_bulk) -> None:
     """
     ### Classes and Methods
     - ImagePolicyUpdateCommon
@@ -94,8 +96,8 @@ def test_image_policy_update_bulk_00010(image_policy_update_bulk) -> None:
     to the expected value.
 
     ### Test
-    - payloads is set to expected value
-    - fail_json is not called
+    - payloads is set to expected value.
+    - Exceptions are not raised.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -120,8 +122,8 @@ def test_image_policy_update_bulk_00021(image_policy_update_bulk) -> None:
     a list of dict.
 
     ### Test
-    -   ``TypeError`` is raised because payloads is not a list
-    -   instance.payloads is not modified, hence it retains its initial value of None
+    -   ``TypeError`` is raised because payloads is not a list.
+    -  ``instance.payloads`` is not modified.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -224,8 +226,8 @@ def test_image_policy_update_bulk_00030(image_policy_update_bulk) -> None:
         that is present on the controller.
 
     ### Test
-    -   payloads_to_commit will contain payload for KR5M since it exists on the controller
-        and the caller has requested to update it.
+    -   payloads_to_commit will contain payload for KR5M since it exists on
+        the controller and the caller has requested to update it.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -280,8 +282,8 @@ def test_image_policy_update_bulk_00031(image_policy_update_bulk) -> None:
         - payloads setter
 
     ### Summary
-    Verify behavior when a request is sent to update a policy that does
-    not exist on the controller
+    Verify behavior when a request is sent to update an image policy that does
+    not exist on the controller.
 
     ### Expected behavior
     ``instance.build_payloads_to_commit()`` does not add a payload
@@ -296,7 +298,7 @@ def test_image_policy_update_bulk_00031(image_policy_update_bulk) -> None:
 
     ### Test
     -   Exceptions are not raised.
-    -   _payloads_to_commit will be an empty list since policy FOO does not
+    -   _payloads_to_commit is an empty list since policy FOO does not
         exist on the controller.
     """
     method_name = inspect.stack()[0][3]
@@ -304,7 +306,6 @@ def test_image_policy_update_bulk_00031(image_policy_update_bulk) -> None:
 
     def responses():
         yield responses_ep_policies(key)
-        yield responses_ep_policy_edit(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -355,8 +356,11 @@ def test_image_policy_update_bulk_00032(image_policy_update_bulk) -> None:
 
     ### Test
     -   _payloads_to_commit will contain one payload
-    -   The policyName for this payload will be "KR5M", which is the image policy that
-        exists on the controllers.
+    -   The policyName for this payload is "KR5M", which is the image policy
+        that exists on the controller.
+    -   The policyDesc for this payload is "KR5M updated", which is the new
+        image policy description sent to the controller for the merged state
+        update.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -396,14 +400,12 @@ def test_image_policy_update_bulk_00033(image_policy_update_bulk) -> None:
     ### Classes and Methods
     - ImagePolicyUpdateBulk
         - commit()
-        - build_payloads_to_commit
 
     ### Summary
-    Verify that build_payloads_to_commit() raises ``ValueError`` when
-    payloads is not set.
+    Verify that commit() raises ``ValueError`` when payloads is not set.
 
     ### Setup
-    -   ImagePolicyUpdateBulk().payloads is not set
+    -   ImagePolicyUpdateBulk().payloads is not set.
 
     ### Test
     -   ``ValueError`` is raised because payloads is None.
@@ -437,7 +439,7 @@ def test_image_policy_update_bulk_00034(image_policy_update_bulk) -> None:
         exist on the controller
 
     ### Test
-    -   ImagePolicyUpdateBulk().commit returns without doing anything
+    -   ImagePolicyUpdateBulk().commit returns without doing anything.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -475,7 +477,7 @@ def test_image_policy_update_bulk_00035(image_policy_update_bulk) -> None:
     ### Classes and Methods
     - ImagePolicyUpdateBulk
         - build_payloads_to_commit()
-        - _send_payloads()
+        - send_payloads()
         - payloads setter
         - commit()
 
@@ -493,8 +495,8 @@ def test_image_policy_update_bulk_00035(image_policy_update_bulk) -> None:
 
     ### Test
     -   commit calls build_payloads_to_commit which returns two payloads.
-    -   commit calls _send_payloads, which calls results.register_task_result()
-        to update the results.
+    -   commit calls ``send_payloads``, which calls
+        results.register_task_result() to update the results.
     -  results.* are set to the expected values.
     """
     method_name = inspect.stack()[0][3]
@@ -575,12 +577,12 @@ def test_image_policy_update_bulk_00036(image_policy_update_bulk) -> None:
     - ImagePolicyUpdateCommon
         - payloads setter
         - build_payloads_to_commit()
-        - _send_payloads()
+        - send_payloads()
     - ImagePolicyUpdateBulk
         - commit()
 
     ### Summary
-    Verify ImagePolicyUpdateBulk.commit() happy path.  Controller returns
+    Verify ImagePolicyUpdateBulk.commit() sad path.  Controller returns
     a 500 response to an image policy update request.
 
     ### Setup
@@ -681,7 +683,7 @@ def test_image_policy_update_bulk_00037(image_policy_update_bulk) -> None:
     request.
 
     ### Setup
-    -   instance.payloads is set to contain two payloads
+    -   instance.payloads is set to contain two payloads.
 
     ### Test
     - Both successful and bad responses are recorded with separate sequence_numbers.
@@ -694,7 +696,7 @@ def test_image_policy_update_bulk_00037(image_policy_update_bulk) -> None:
     key_policies = "test_image_policy_update_bulk_00037a"
     key_ok = "test_image_policy_update_bulk_00037a"
     key_nok = "test_image_policy_update_bulk_00037b"
-    key_payloads = "test_image_policy_update_bulk_00037d"
+    key_payloads = "test_image_policy_update_bulk_00037a"
 
     def responses():
         yield responses_ep_policies(key_policies)

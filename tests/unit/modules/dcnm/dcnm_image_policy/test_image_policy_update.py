@@ -78,9 +78,11 @@ def test_image_policy_update_00000(image_policy_update) -> None:
     }
     assert instance.payload is None
     assert instance._payloads_to_commit == []
+    assert instance._image_policies.class_name == "ImagePolicies"
+    assert instance._image_policies.results.class_name == "Results"
 
 
-def test_image_policy_update_00010(image_policy_update) -> None:
+def test_image_policy_update_00020(image_policy_update) -> None:
     """
     ### Classes and Methods
     - ImagePolicyUpdate

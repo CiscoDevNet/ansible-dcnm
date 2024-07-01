@@ -100,8 +100,9 @@ class ImagePolicyUpdateCommon:
 
     def build_payloads_to_commit(self):
         """
-        Build a list of payloads to commit.  Skip any payloads that
-        do not exist on the controller.
+        ### Summary
+        Build a list of payloads to commit.  Skip any payloads that do not
+        exist on the controller.
 
         Expects self.payloads to be a list of dict, with each dict
         being a payload for the image policy edit API endpoint.
@@ -110,6 +111,11 @@ class ImagePolicyUpdateCommon:
         to commit.
         """
         method_name = inspect.stack()[0][3]
+        if self.payloads is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "payloads must be set prior to calling commit."
+            raise ValueError(msg)
+
         self._image_policies.rest_send = self.rest_send  # pylint: disable=no-member
         self._image_policies.refresh()
 
@@ -366,6 +372,7 @@ class ImagePolicyUpdateBulk(ImagePolicyUpdateCommon):
             raise ValueError(msg)
 
         self.build_payloads_to_commit()
+
         if len(self._payloads_to_commit) == 0:
             return
         self.send_payloads()
@@ -451,7 +458,13 @@ class ImagePolicyUpdate(ImagePolicyUpdateCommon):
             msg += f"rest_send must be set prior to calling {method_name}."
             raise ValueError(msg)
 
-        self.build_payloads_to_commit()
+        try:
+            self.build_payloads_to_commit()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error building payloads to commit. "
+            msg += f"Error detail: {error}."
+            raise ValueError(msg) from error
 
         if len(self._payloads_to_commit) == 0:
             return

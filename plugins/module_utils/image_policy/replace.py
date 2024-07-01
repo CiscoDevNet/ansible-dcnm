@@ -22,14 +22,14 @@ import inspect
 import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+    EpPolicyEdit
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
 
@@ -101,14 +101,14 @@ class ImagePolicyReplaceBulk:
         msg += f"action: {self.action}, "
         self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
         self._image_policies = ImagePolicies()
         self._image_policies.results = Results()
 
-        self._payloads_to_commit = []
+        self.endpoint = EpPolicyEdit()
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
 
-        self.path = self.endpoints.policy_edit.get("path")
-        self.verb = self.endpoints.policy_edit.get("verb")
+        self._payloads_to_commit = []
 
         self._mandatory_payload_keys = set()
         self._mandatory_payload_keys.add("nxosVersion")
@@ -120,7 +120,7 @@ class ImagePolicyReplaceBulk:
         self._rest_send = None
         self._results = None
 
-    def _verify_payload(self, payload):
+    def verify_payload(self, payload):
         """
         ### Summary
         Verify that the payload is a dict and contains all mandatory keys.
@@ -186,7 +186,7 @@ class ImagePolicyReplaceBulk:
             msg += f"ref_count: {ref_count}. "
         raise ValueError(msg)
 
-    def _default_policy(self, policy_name):
+    def default_policy(self, policy_name):
         """
         ### Summary
         Return a default policy payload for policy name.
@@ -216,7 +216,7 @@ class ImagePolicyReplaceBulk:
         }
         return policy
 
-    def _build_payloads_to_commit(self):
+    def build_payloads_to_commit(self):
         """
         ### Summary
         Build the payloads to commit to the controller.
@@ -228,16 +228,16 @@ class ImagePolicyReplaceBulk:
                 -   ref_count for any policy is not 0.
         """
         method_name = inspect.stack()[0][3]
-        if self.payloads is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payloads must be set prior to calling commit."
-            raise ValueError(msg)
 
-        self._image_policies.rest_send = self.rest_send  # pylint: disable=no-member
+        # pylint: disable=no-member
+        self._image_policies.rest_send = self.rest_send
+        # pylint: enable=no-member
         self._image_policies.refresh()
 
-        msg = f"self.payloads: {json.dumps(self.payloads, indent=4, sort_keys=True)}"
+        msg = "self.payloads: "
+        msg += f"{json.dumps(self.payloads, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
         # Populate a list of policies on the contoller that match our payloads
         controller_policies = []
         policy_names = []
@@ -247,11 +247,12 @@ class ImagePolicyReplaceBulk:
             controller_policies.append(payload)
             policy_names.append(payload["policyName"])
 
-        msg = f"controller_policies: {json.dumps(controller_policies, indent=4, sort_keys=True)}"
+        msg = "controller_policies: "
+        msg += f"{json.dumps(controller_policies, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        # raise ValueError if the ref_count for any policy is not 0 (i.e. the policy is
-        # in use and cannot be replaced)
+        # raise ValueError if the ref_count for any policy is not 0 (i.e. the
+        # policy is in use and cannot be replaced)
         try:
             self._verify_image_policy_ref_count(self._image_policies, policy_names)
         except ValueError as error:
@@ -266,7 +267,7 @@ class ImagePolicyReplaceBulk:
         self._payloads_to_commit = []
         for payload in controller_policies:
             merge = MergeDicts()
-            merge.dict1 = copy.deepcopy(self._default_policy(payload["policyName"]))
+            merge.dict1 = copy.deepcopy(self.default_policy(payload["policyName"]))
             merge.dict2 = payload
             msg = f"merge.dict1: {json.dumps(merge.dict1, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -278,7 +279,7 @@ class ImagePolicyReplaceBulk:
         msg += f"{json.dumps(self._payloads_to_commit, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def _send_payloads(self):
+    def send_payloads(self):
         """
         ### Summary
         Send the payloads in self._payloads_to_commit to the controller
@@ -293,7 +294,7 @@ class ImagePolicyReplaceBulk:
 
         for payload in self._payloads_to_commit:
             try:
-                self._send_payload(payload)
+                self.send_payload(payload)
             except ValueError as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error while sending payloads. "
@@ -301,7 +302,7 @@ class ImagePolicyReplaceBulk:
                 raise ValueError(msg) from error
 
     # pylint: disable=no-member
-    def _send_payload(self, payload):
+    def send_payload(self, payload):
         """
         ### Summary
         Send one payload to the controller
@@ -349,7 +350,6 @@ class ImagePolicyReplaceBulk:
         else:
             self.results.diff_current = copy.deepcopy(payload)
 
-        # self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
         self.results.action = self.action
         self.results.check_mode = self.params.get("check_mode")
         self.results.state = self.params.get("state")
@@ -359,15 +359,37 @@ class ImagePolicyReplaceBulk:
 
     def commit(self):
         """
-        Commit the payloads to the controller
+        ### Summary
+        Commit the payloads to the controller.
+        ### Raises
+        -   ``ValueError`` if payloads, results, or rest_send are not set prior
+            to calling commit.
         """
-        self._build_payloads_to_commit()
-        self._send_payloads()
+        method_name = inspect.stack()[0][3]
+        if self.payloads is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"payloads must be set prior to calling {method_name}."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"results must be set prior to calling {method_name}."
+            raise ValueError(msg)
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"rest_send must be set prior to calling {method_name}."
+            raise ValueError(msg)
+
+        self.build_payloads_to_commit()
+        self.send_payloads()
 
     @property
     def payloads(self):
         """
-        return the policy payloads
+        ### Summary
+        Return the policy payloads
+
+        ### Raises
+        -   ``TypeError`` if payloads is not a list.
         """
         return self._payloads
 
@@ -381,5 +403,5 @@ class ImagePolicyReplaceBulk:
             msg += f"value {value}"
             raise TypeError(msg)
         for item in value:
-            self._verify_payload(item)
+            self.verify_payload(item)
         self._payloads = value
