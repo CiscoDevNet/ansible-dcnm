@@ -1,0 +1,36 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for ImagePolicyDelete unit tests.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_delete.py"
+    ],
+    "test_image_policy_delete_00031a": {
+        "MESSAGE": "OK",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_delete_00032a": {
+        "MESSAGE": "OK",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_delete_00034a": {
+        "MESSAGE": "OK",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_delete_00037a": {
+            "MESSAGE": "OK",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+            "RETURN_CODE": 200
+        },
+    "test_image_policy_delete_00038a": {
+            "MESSAGE": "NOK",
+            "METHOD": "DELETE",
+            "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+            "RETURN_CODE": 500
+    }
+}

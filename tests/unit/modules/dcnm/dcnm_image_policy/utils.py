@@ -40,6 +40,9 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fi
 
 
 def get_state(action):
+    """
+    Return the state based on the action.
+    """
     if action in ["create", "update"]:
         state = "merged"
     elif action == "delete":
@@ -319,23 +322,21 @@ def image_policy_update_bulk_fixture():
 @pytest.fixture(name="config2payload")
 def config2payload_fixture():
     """
-    mock Config2Payload
-    Used in test_image_policy_payload.py
+    Return Config2Payload with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return Config2Payload(instance)
+    instance = Config2Payload()
+    instance.params = params
+    return instance
 
 
 @pytest.fixture(name="payload2config")
 def payload2config_fixture():
     """
-    mock Payload2Config
-    Used in test_image_policy_payload.py
+    Return Payload2Config with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return Payload2Config(instance)
+    instance = Payload2Config()
+    instance.params = params
+    return instance
 
 
 @contextmanager
@@ -421,6 +422,16 @@ def responses_ep_policy_create(key: str) -> Dict[str, str]:
     Return responses for EpPolicyCreate() endpoint
     """
     data_file = "responses_EpPolicyCreate"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_policy_delete(key: str) -> Dict[str, str]:
+    """
+    Return responses for EpPolicyDelete() endpoint
+    """
+    data_file = "responses_EpPolicyDelete"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

@@ -133,7 +133,7 @@ class Config2Payload(Payload):
             raise ValueError(msg)
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"HERE 1 STATE: {self.params['state']}"
+        msg += f"state: {self.params['state']}"
         self.log.debug(msg)
 
         if self.params["state"] in ["deleted", "query"]:
