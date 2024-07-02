@@ -24,7 +24,11 @@ from typing import Any, Dict
 
 class ParamsSpec:
     """
+    ### Summary
     Parameter specifications for the dcnm_image_policy module.
+
+    ### Raises
+    -   ``ValueError`` if params is not set before calling ``commit()``
     """
 
     def __init__(self):
@@ -43,10 +47,11 @@ class ParamsSpec:
 
     def commit(self):
         """
+        ### Summary
         Build the parameter specification based on the state
 
         ## Raises
-        -   ``ValueError`` if params is not set
+        -   ``ValueError`` if ``params`` is not set.
 
         """
         method_name = inspect.stack()[0][3]
@@ -69,11 +74,12 @@ class ParamsSpec:
 
     def _build_params_spec_for_merged_state(self) -> None:
         """
-        Build the specs for the parameters expected when state == merged.
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``merged``.
 
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
+        ### Raises
+        None
         """
         self._params_spec: dict = {}
 
@@ -126,18 +132,35 @@ class ParamsSpec:
         self._params_spec["type"]["type"] = "str"
 
     def _build_params_spec_for_overridden_state(self) -> None:
+        """
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``overridden``.
+
+        ### Raises
+        None
+        """
         self._build_params_spec_for_merged_state()
 
     def _build_params_spec_for_replaced_state(self) -> None:
+        """
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``replaced``.
+
+        ### Raises
+        None
+        """
         self._build_params_spec_for_merged_state()
 
     def _build_params_spec_for_deleted_state(self) -> None:
         """
-        Build the specs for the parameters expected when state == deleted.
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``deleted``.
 
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
+        ### Raises
+        None
         """
         self._params_spec: dict = {}
 
@@ -147,11 +170,12 @@ class ParamsSpec:
 
     def _build_params_spec_for_query_state(self) -> None:
         """
-        Build the specs for the parameters expected when state == query.
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``query``.
 
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
+        ### Raises
+        None
         """
         self._params_spec: dict = {}
 
@@ -167,7 +191,7 @@ class ParamsSpec:
         """
         ### Summary
         Expects value to be a dictionary containing, at mimimum,
-        the key "state" with value of one of:
+        the key ``state`` with value of one of:
         - deleted
         - merged
         - overridden
@@ -193,9 +217,6 @@ class ParamsSpec:
 
     @params.setter
     def params(self, value: dict) -> None:
-        """
-        -   setter: set the params
-        """
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}.setter: "
@@ -220,6 +241,7 @@ class ParamsSpec:
     @property
     def params_spec(self) -> Dict[str, Any]:
         """
-        return the parameter specification
+        ### Summary
+        Return the parameter specification
         """
         return self._params_spec
