@@ -86,7 +86,7 @@ def test_image_policy_create_bulk_00010(image_policy_create_bulk) -> None:
     ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__()
-        - payloads setter
+        - payloads.setter
     - ImagePolicyCreateBulk
         - __init__()
 
@@ -151,7 +151,7 @@ def test_image_policy_create_bulk_00022(image_policy_create_bulk, key, match) ->
     ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__()
-        - payloads setter
+        - payloads.setter
     - ImagePolicyCreateBulk
         - __init__()
 
@@ -178,10 +178,11 @@ def test_image_policy_create_bulk_00030(image_policy_create_bulk) -> None:
     ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__()
-        - payloads setter
+        - payloads.setter
         - build_payloads_to_commit()
     - ImagePolicyCreateBulk
         - __init__()
+        - commit()
 
     ### Summary
     Verify behavior when the user sends an image create payload for an
@@ -238,10 +239,11 @@ def test_image_policy_create_bulk_00031(image_policy_create_bulk) -> None:
     ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__()
-        - payloads setter
+        - payloads.setter
         - build_payloads_to_commit()
     - ImagePolicyCreateBulk
         - __init__()
+        - commit()
 
     ### Summary
     Verify that instance.build_payloads_to_commit() adds a payload to the
@@ -311,10 +313,11 @@ def test_image_policy_create_bulk_00032(image_policy_create_bulk) -> None:
     """
     ### Classes and Methods
     - ImagePolicyCreateCommon
-        - payloads setter
+        - payloads.setter
         - build_payloads_to_commit()
     - ImagePolicyCreateBulk
         - __init__()
+        - commit()
 
     ### Summary
     Verify that instance.build_payloads_to_commit() adds a payload to the
@@ -386,14 +389,13 @@ def test_image_policy_create_bulk_00033(image_policy_create_bulk) -> None:
         - commit()
 
     ### Summary
-    Verify that ImagePolicyCreateBulk.commit() raises ``ValueError`` when
-    payloads is None.
+    Verify that ``commit()`` raises ``ValueError`` when payloads is not set.
 
     ### Setup
-    -   ImagePolicyCreateCommon().payloads is not set.
+    -   ``payloads`` is not set.
 
     ### Test
-    -   ValueError is called because payloads is None.
+    -   ``ValueError`` is raised because payloads is not set.
     """
     with does_not_raise():
         results = Results()
@@ -417,8 +419,8 @@ def test_image_policy_create_bulk_00035(image_policy_create_bulk) -> None:
         - commit()
 
     ### Summary
-    Verify ImagePolicyCreateBulk.commit() happy path.  Controller responds
-    to an image create request with a 200 response.
+    Verify ``commit()`` happy path.  Controller returns a 200 response
+    to an image policy create request.
 
     ### Setup responses
     -   EpPolicies endpoint response is mocked to indicate no image policies
@@ -503,26 +505,28 @@ def test_image_policy_create_bulk_00036(image_policy_create_bulk) -> None:
         - commit()
 
     ### Summary
-    Verify ImagePolicyCreateBulk.commit() sad path. Controller returns a 500
-    response to an image policy create request.
+    Verify ``commit()`` sad path. Controller returns a 500 response
+    to an image policy create request.
 
     ### Setup
-    -   EpPolicies endpoint response contains DATA indicating no image policies
-        exist on the controller.
-    -   ImagePolicyCreateBulk().payloads is set to contain one payload that
-        contains an image policy (FOO) which does not exist on the controller.
-    -   EpPolicyCreate endpoint response contains a 500 response.
+    -   ``EpPolicies`` endpoint response is mocked to indicate no image
+        policies exist on the controller.
+    -   ``payloads`` is set to contain one payload that contains an
+        image policy (FOO) which does not exist on the controller.
+    -   ``EpPolicyCreate`` endpoint response contains a 500 response.
 
     ### Test
-    -   A sequence_number key is added to instance.results.response_current
-    -   instance.results.diff_current is set to a dict with only
-        the key "sequence_number", since no changes were made
-    -   instance.results.failed set() contains True and does not contain False
-    -   instance.results.changed set() contains False and does not contain True
-    -   instance.results.metadata contains one dict
-    -   The value of instance.results.metadata "action" is "create"
-    -   The value of instance.results.metadata "state" is "merged"
-    -   The value of instance.results.metadata "sequence_number" is 1
+    -   A sequence_number key is added to results.response_current.
+    -   results.diff_current is set to a dict with only the key
+        ``sequence_number``, since no changes were made.
+    -   results.failed set() contains True.
+    -   results.failed set() does not contain False.
+    -   results.changed set() contains False.
+    -   results.changed set() does not contain True.
+    -   results.metadata contains one dict.
+    -   The value of results.metadata "action" is "create".
+    -   The value of results.metadata "state" is "merged".
+    -   The value of results.metadata "sequence_number" is 1.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -577,21 +581,25 @@ def test_image_policy_create_bulk_00037(image_policy_create_bulk) -> None:
         - _process_responses()
     - ImagePolicyCreateBulk
         - __init__()
+        - commit()
 
     ### Summary
     Simulate a succussful response from the controller, followed by a bad response
     from the controller during policy create.
 
     ### Setup
-    -   instance.payloads is set to contain two payloads
+    -   ``payloads`` is set to contain two payloads.
 
     ### Test
-    - Both successful and bad responses are recorded with separate sequence_numbers.
-    - instance.results.failed will be a set() containing both True and False
-    - instance.results.changed will be a set() containing both True and False
-    - instance.results.response contains two responses
-    - instance.results.result contains two results
-    - instance.results.diff contains two diffs
+    -   Both successful and bad responses are recorded with separate
+        sequence_numbers.
+    -   results.failed set() contains True.
+    -   results.failed set() contains False.
+    -   results.changed set() contains True.
+    -   results.changed set() contains False.
+    -   results.response contains two responses.
+    -   results.result contains two results.
+    -   results.diff contains two diffs.
     """
 
     key_policies = "test_image_policy_create_bulk_00037a"

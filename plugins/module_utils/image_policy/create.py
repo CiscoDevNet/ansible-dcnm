@@ -37,9 +37,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_poli
 @Properties.add_params
 class ImagePolicyCreateCommon:
     """
+    ### Summary
     Common methods and properties for:
     - ImagePolicyCreate
     - ImagePolicyCreateBulk
+
+    See respective class docstrings for more information.
     """
 
     def __init__(self):
@@ -112,9 +115,9 @@ class ImagePolicyCreateCommon:
 
         ### Notes
         Expects self.payloads to be a list of dict, with each dict
-        being a payload for the image policy create API endpoint.
+        being a payload for endpoint ``EpPolicyCreate()``.
 
-        Populates self._payloads_to_commit with a list of payloads
+        Populate ``self._payloads_to_commit`` with a list of payloads
         to commit.
         """
         method_name = inspect.stack()[0][3]
@@ -157,7 +160,10 @@ class ImagePolicyCreateCommon:
             self.rest_send.payload = payload
             self.rest_send.commit()
 
-            msg = f"rest_send.result_current: {json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
+            msg = "rest_send.result_current: "
+            msg += (
+                f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
+            )
             self.log.debug(msg)
 
             if self.rest_send.result_current["success"] is False:
@@ -177,33 +183,60 @@ class ImagePolicyCreateCommon:
     @property
     def payloads(self):
         """
-        Return the image policy payloads
+        ### Summary
+        Return the image policy payloads.
 
-        Payloads must be a list of dict. Each dict is a
-        payload for the image policy create API endpoint.
+        Payloads must be a list of dict. Each dict is a payload for endpoint
+        ``EpPolicyCreate()``.
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   ``payloads`` is not a list.
+                -   Any element within ``payloads`` is not a dict.
+                -   Any element within ``payloads`` is missing mandatory keys.
         """
         return self._payloads
 
     @payloads.setter
     def payloads(self, value):
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
         if not isinstance(value, list):
-            msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be a list of dict. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             raise TypeError(msg)
+        msg += "Error verifying payload: "
         for item in value:
-            self.verify_payload(item)
+            try:
+                self.verify_payload(item)
+            except ValueError as error:
+                msg += f"{error}"
+                raise ValueError(msg) from error
+            except TypeError as error:
+                msg += f"{error}"
+                raise TypeError(msg) from error
         self._payloads = value
 
 
 class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     """
+    ### Summary
     Given a properly-constructed list of payloads, bulk-create the
     image policies therein.  The payload format is given below.
 
-    Payload format:
+    ### Raises
+    -   ``ValueError`` if
+            -   ``payloads`` is not set prior to calling ``commit``.
+            -   ``rest_send`` is not set prior to calling ``commit``.
+            -   ``results`` is not set prior to calling ``commit``.
+            -   ``params`` is not set prior to calling ``commit``.
+    -   ``TypeError`` if
+            -   ``payloads`` is not a list.
+            -   ``payload`` is not a dict.
+
+    ### Payload format
+    ```
     agnostic        bool(), optional. true or false
     epldImgName     str(), optional. name of an EPLD image to install.
     nxosVersion     str(), required. NX-OS version as version_type_arch
@@ -213,9 +246,10 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
     policyName:     str(), required.  Name of the image policy.
     policyType      str(), required. PLATFORM or UMBRELLA
     rpmimages:      str(), optional. A comma-separated list of packages to uninstall
+    ```
 
-    Example list of payloads:
-
+    ### Example list of payloads:
+    ```json
     [
         {
             "agnostic": False,
@@ -234,6 +268,7 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
             "policyType": "PLATFORM"
         }
     ]
+    ```
     """
 
     def __init__(self):
@@ -247,8 +282,15 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
 
     def commit(self):
         """
-        create policies.  Skip any policies that already exist
-        on the controller,
+        ### Summary
+        Create policies.  Skip policies that exist on the controller.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``params`` is not set prior to calling ``commit``.
+                -   ``payloads`` is not set prior to calling ``commit``.
+                -   ``rest_send`` is not set prior to calling ``commit``.
+                -   ``results`` is not set prior to calling ``commit``.
         """
         method_name = inspect.stack()[0][3]
 
@@ -280,12 +322,23 @@ class ImagePolicyCreateBulk(ImagePolicyCreateCommon):
 
 class ImagePolicyCreate(ImagePolicyCreateCommon):
     """
-    NOTE: This class is not being used currently.
+    ### Summary
+    This class is not used by dcnm_image_policy.
 
-    Given a properly-constructed image policy payload (python dict),
-    send an image policy create request to the controller.  The payload
-    format is given below.
+    Given an image policy payload, send an image policy create request
+    to controller endpoint ``EpPolicyCreate()``.
 
+    ### Raises
+    -   ``ValueError`` if:
+            -   ``payload`` is not set prior to calling ``commit``.
+            -   ``rest_send`` is not set prior to calling ``commit``.
+            -   ``results`` is not set prior to calling ``commit``.
+            -   ``params`` is not set prior to calling ``commit``.
+    -   ``TypeError`` if:
+            -   ``payload`` is not a dict.
+
+    ### Payload format
+    ```
     agnostic        bool(), optional. true or false
     epldImgName     str(), optional. name of an EPLD image to install.
     nxosVersion     str(), required. NX-OS version as version_type_arch
@@ -295,9 +348,10 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
     policyName:     str(), required.  Name of the image policy.
     policyType      str(), required. PLATFORM or UMBRELLA
     rpmimages:      str(), optional. A comma-separated list of packages to uninstall
+    ```
 
-    Example:
-
+    ### Example payload
+    ```json
     {
         "agnostic": false,
         "epldImgName": "n9000-epld.10.3.2.F.img",
@@ -309,7 +363,7 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         "policyType": "PLATFORM",
         "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
     }
-
+    ```
     """
 
     def __init__(self):
@@ -328,6 +382,9 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         """
         ### Summary
         An image policy payload. See class docstring for the payload structure.
+
+        ### Raises
+        -   ``TypeError`` if payload is not a dict.
         """
         return self._payload
 
@@ -343,12 +400,31 @@ class ImagePolicyCreate(ImagePolicyCreateCommon):
         Create policy. If policy already exists on the controller, do nothing.
 
         ### Raises
-        -   ``ValueError`` if payload is not set prior to calling commit().
+        -   ``ValueError`` if:
+                -   ``params`` is not set prior to calling ``commit``.
+                -   ``payload`` is not set prior to calling ``commit``.
+                -   ``rest_send`` is not set prior to calling ``commit``.
+                -   ``results`` is not set prior to calling ``commit``.
         """
         method_name = inspect.stack()[0][3]
+        if self.params is None:  # pylint: disable=no-member
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload must be set prior to calling commit."
+            raise ValueError(msg)
+
+        if self.rest_send is None:  # pylint: disable=no-member
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set prior to calling commit."
+            raise ValueError(msg)
+
+        if self.results is None:  # pylint: disable=no-member
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set prior to calling commit."
             raise ValueError(msg)
 
         self.build_payloads_to_commit()
