@@ -43,9 +43,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    MockAnsibleModule, does_not_raise,
-    image_policy_delete_fixture, params, responses_ep_policies,
-    responses_ep_policy_delete, results_image_policy_delete)
+    MockAnsibleModule, does_not_raise, image_policy_delete_fixture, params,
+    responses_ep_policies, responses_ep_policy_delete,
+    results_image_policy_delete)
 
 
 def test_image_policy_delete_00000(image_policy_delete) -> None:
@@ -212,7 +212,7 @@ def test_image_policy_delete_00030(image_policy_delete) -> None:
     assert instance.results.metadata[0]["state"] == "deleted"
 
     assert instance.results.response[0]["RETURN_CODE"] == 200
-    assert instance.results.response[0]["MESSAGE"] == "No image policies to delete"
+    assert instance.results.response[0]["MESSAGE"] == "No image policies to delete."
     assert instance.results.response[0]["sequence_number"] == 1
 
     assert instance.results.result[0]["changed"] is False

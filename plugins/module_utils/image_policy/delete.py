@@ -125,12 +125,25 @@ class ImagePolicyDelete:
 
     def _get_policies_to_delete(self) -> None:
         """
+        ### Summary
         Retrieve policies from the controller and return the list of
         controller policies that are in our policy_names list.
+
+        ### Raises
+        -   ``ValueError`` if any policy in policy_names has a ref_count
+            greater than 0 (i.e. devices are using the policy).
         """
-        self._image_policies.rest_send = self.rest_send  # pylint: disable=no-member
+        method_name = inspect.stack()[0][3]
+        # pylint: disable=no-member
+        self._image_policies.rest_send = self.rest_send
+        # pylint: enable=no-member
         self._image_policies.refresh()
-        self._verify_image_policy_ref_count(self._image_policies, self.policy_names)
+        try:
+            self._verify_image_policy_ref_count(self._image_policies, self.policy_names)
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{error}"
+            raise ValueError(msg) from error
 
         self._policies_to_delete = []
         for policy_name in self.policy_names:
@@ -143,7 +156,15 @@ class ImagePolicyDelete:
     # pylint: disable=no-member
     def _validate_commit_parameters(self):
         """
-        validate the parameters for commit
+        ### Summary
+        Validate the parameters for commit.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``params`` is not set prior to calling commit.
+                -   ``policy_names`` is not set prior to calling commit.
+                -   ``rest_send`` is not set prior to calling commit.
+                -   ``results`` is not set prior to calling commit.
         """
         method_name = inspect.stack()[0][3]
         if self.params is None:
@@ -168,10 +189,23 @@ class ImagePolicyDelete:
 
     def commit(self):
         """
-        delete each of the image policies in self.policy_names
+        ### Summary
+        delete each of the image policies in self.policy_names.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``params`` is not set.
+                -   ``policy_names`` is not set.
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
         """
         method_name = inspect.stack()[0][3]
-        self._validate_commit_parameters()
+        try:
+            self._validate_commit_parameters()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{error}"
+            raise ValueError(msg) from error
 
         self.check_mode = self.params.get("check_mode")
         self.state = self.params.get("state")
@@ -185,32 +219,33 @@ class ImagePolicyDelete:
         if len(self._policies_to_delete) != 0:
             self._send_requests()
         else:
+            msg = "No image policies to delete."
+            self.log.debug(msg)
             self.results.action = self.action
             self.results.check_mode = self.check_mode
             self.results.state = self.state
             self.results.diff_current = {}
             self.results.result_current = {"success": True, "changed": False}
-            msg = "No image policies to delete"
             self.results.changed = False
             self.results.failed = False
             self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
-            self.log.debug(msg)
             self.results.register_task_result()
 
     def _send_requests(self):
         """
         ### Summary
-        -   If check_mode is False, send the requests to the controller
-        -   If check_mode is True, do not send the requests to the controller
+        -   If check_mode is False, send the requests to the controller.
+        -   If check_mode is True, do not send the requests to the controller.
+        -   In both cases, populate the following lists.
 
-        In both cases, populate the following lists:
-
+        ```text
         - self.response_ok  : list of controller responses associated with success result
         - self.result_ok    : list of results where success is True
         - self.diff_ok      : list of payloads for which the request succeeded
         - self.response_nok : list of controller responses associated with failed result
         - self.result_nok   : list of results where success is False
         - self.diff_nok     : list of payloads for which the request failed
+        ```
         """
         method_name = inspect.stack()[0][3]
         self.rest_send.save_settings()
