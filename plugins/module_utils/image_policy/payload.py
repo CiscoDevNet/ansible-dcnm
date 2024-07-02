@@ -25,6 +25,7 @@ import logging
 
 class Payload:
     """
+    ### Summary
     Base class for Config2Payload and Payload2Config
     """
 
@@ -42,7 +43,11 @@ class Payload:
     @property
     def config(self):
         """
-        return the playbook configuration
+        ### Summary
+        Return the playbook configuration.
+
+        ### Raises
+        -   ``TypeError`` if config is not a dictionary.
         """
         return self._config
 
@@ -60,7 +65,11 @@ class Payload:
     @property
     def params(self):
         """
-        return the params dict
+        ### Summary
+        Return the params dictionary.
+
+        ### Raises
+        -   ``TypeError`` if params is not a dictionary.
         """
         return self._params
 
@@ -78,7 +87,11 @@ class Payload:
     @property
     def payload(self):
         """
-        return the payload
+        ### Summary
+        Return the payload.
+
+        ### Raises
+        -   ``TypeError`` if payload is not a dictionary.
         """
         return self._payload
 
@@ -102,8 +115,8 @@ class Config2Payload(Payload):
 
     ### Raises
     -   ``ValueError`` if:
-            -   self.config is empty
-            -   self.params is is not set prior to calling commit()
+            -   ``config`` is empty.
+            -   ``params`` is is not set prior to calling ``commit``.
     """
 
     def __init__(self):
@@ -115,7 +128,13 @@ class Config2Payload(Payload):
 
     def commit(self):
         """
-        Convert self_payload into a playbook configuration
+        ### Summary
+        Convert ``payload`` into a playbook configuration.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``params`` is not set.
+            -   ``config`` is empty.
         """
         method_name = inspect.stack()[0][3]
 
@@ -125,12 +144,13 @@ class Config2Payload(Payload):
             raise ValueError(msg)
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.config {json.dumps(self.config, indent=4, sort_keys=True)}"
+        msg += "config: "
+        msg += f"{json.dumps(self.config, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if self.config == {}:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "config is empty"
+            msg += "config is empty."
             raise ValueError(msg)
 
         config = copy.deepcopy(self.config)
@@ -158,8 +178,11 @@ class Config2Payload(Payload):
 
 class Payload2Config(Payload):
     """
-    Convert an image-policy endpoint payload into a playbook
-    configuration.
+    ### Summary
+    Convert an image-policy endpoint payload into a playbook configuration.
+
+    ### Raises
+    -   ``ValueError`` if payload is empty.
     """
 
     def __init__(self):
@@ -175,13 +198,13 @@ class Payload2Config(Payload):
         build the config from the payload
 
         ### Raises
-        -   ``ValueError`` if payload is empty
+        -   ``ValueError`` if payload is empty.
         """
         method_name = inspect.stack()[0][3]
 
         if self.payload == {}:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "payload is empty"
+            msg += "payload is empty."
             raise ValueError(msg)
 
         payload = copy.deepcopy(self.payload)

@@ -86,10 +86,12 @@ def test_image_policy_payload_00120(config2payload) -> None:
 
     def configs():
         yield configs_config2payload(key)
+
     gen_configs = ResponseGenerator(configs())
 
     def payloads():
         yield payloads_config2payload(key)
+
     gen_payloads = ResponseGenerator(payloads())
 
     config = gen_configs.next
@@ -124,10 +126,12 @@ def test_image_policy_payload_00121(config2payload) -> None:
 
     def configs():
         yield configs_config2payload(key)
+
     gen_configs = ResponseGenerator(configs())
 
     def payloads():
         yield payloads_config2payload(key)
+
     gen_payloads = ResponseGenerator(payloads())
 
     config = gen_configs.next
@@ -163,6 +167,7 @@ def test_image_policy_payload_00122(config2payload) -> None:
 
     def configs():
         yield configs_config2payload(key)
+
     gen_configs = ResponseGenerator(configs())
 
     config = gen_configs.next
@@ -171,7 +176,7 @@ def test_image_policy_payload_00122(config2payload) -> None:
         instance = Config2Payload()
         instance.params = {"state": "deleted", "check_mode": False}
         instance.config = config
-    match = r"Config2Payload\.commit: config is empty"
+    match = r"Config2Payload\.commit: config is empty\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -199,6 +204,7 @@ def test_image_policy_payload_00123(config2payload, state) -> None:
 
     def configs():
         yield configs_config2payload(key)
+
     gen_configs = ResponseGenerator(configs())
 
     config = gen_configs.next
@@ -336,10 +342,12 @@ def test_image_policy_payload_00220(payload2config) -> None:
 
     def configs():
         yield configs_payload2config(key)
+
     gen_configs = ResponseGenerator(configs())
 
     def payloads():
         yield payloads_payload2config(key)
+
     gen_payloads = ResponseGenerator(payloads())
 
     config = gen_configs.next
@@ -374,10 +382,12 @@ def test_image_policy_payload_00221(payload2config) -> None:
 
     def configs():
         yield configs_payload2config(key)
+
     gen_configs = ResponseGenerator(configs())
 
     def payloads():
         yield payloads_payload2config(key)
+
     gen_payloads = ResponseGenerator(payloads())
 
     config = gen_configs.next
@@ -412,6 +422,7 @@ def test_image_policy_payload_00222(payload2config) -> None:
 
     def payloads():
         yield payloads_payload2config(key)
+
     gen_payloads = ResponseGenerator(payloads())
 
     payload = gen_payloads.next
@@ -419,7 +430,7 @@ def test_image_policy_payload_00222(payload2config) -> None:
     with does_not_raise():
         instance = payload2config
         instance.payload = payload
-    match = r"Payload2Config\.commit: payload is empty"
+    match = r"Payload2Config\.commit: payload is empty\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.config == {}
