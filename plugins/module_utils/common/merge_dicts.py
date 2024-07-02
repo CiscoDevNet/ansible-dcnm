@@ -27,6 +27,10 @@ from typing import Any, Dict
 
 class MergeDicts:
     """
+    ## DEPRECATED
+    Use ``MergeDicts`` from ``merge_dicts_v2.py`` for
+    all new development.
+
     Merge two dictionaries.
 
     Given two dictionaries, dict1 and dict2, merge them into a

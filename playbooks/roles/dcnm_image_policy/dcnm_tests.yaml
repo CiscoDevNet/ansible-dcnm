@@ -1,0 +1,38 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_image_policy
+#
+# Modify the hosts and vars sections with details for your testing
+# setup and uncomment the testcase you want to run.
+#
+- hosts: dcnm
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # testcase: dcnm_image_policy_deleted
+    # testcase: dcnm_image_policy_merged
+    # testcase: dcnm_image_policy_overridden
+    # testcase: dcnm_image_policy_query
+    # testcase: dcnm_image_policy_replaced
+    switch_username: admin
+    switch_password: "foobar"
+    spine1: 192.168.1.2
+    spine2: 192.168.1.3
+    leaf1: 192.168.1.4
+    leaf2: 192.168.1.5
+    leaf3: 192.168.1.6
+    leaf4: 192.168.1.7
+    image_policy_1: "KR5M"
+    image_policy_2: "NR3F"
+    epld_image_1: n9000-epld.10.2.5.M.img
+    epld_image_2: n9000-epld.10.3.1.F.img
+    nxos_image_1: n9000-dk9.10.2.5.M.bin
+    nxos_image_2: n9000-dk9.10.3.1.F.bin
+    nxos_release_1: 10.2.5_nxos64-cs_64bit
+    nxos_release_2: 10.3.1_nxos64-cs_64bit
+
+  roles:
+    - dcnm_image_policy

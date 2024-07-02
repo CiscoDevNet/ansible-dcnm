@@ -36,7 +36,7 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    does_not_raise, log_fixture, MockAnsibleModule)
+    MockAnsibleModule, does_not_raise, log_fixture)
 
 
 def test_log_00010(tmp_path, log) -> None:

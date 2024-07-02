@@ -29,207 +29,235 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
+
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
     ImagePolicies
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    GenerateResponses, MockImagePolicies, does_not_raise,
-    image_policies_all_policies, image_policy_query_fixture,
-    rest_send_response_current)
+    MockAnsibleModule, does_not_raise, image_policies_all_policies,
+    image_policy_query_fixture, params, rest_send_response_current)
+
+
+def test_image_policy_query_00000(image_policy_query) -> None:
+    """
+    ### Classes and Methods
+    - ImagePolicyQuery
+        - __init__()
+
+    ### Test
+    - Class attributes are initialized to expected values
+    - Exceptions are not raised.
+    """
+    with does_not_raise():
+        instance = image_policy_query
+
+    assert instance.class_name == "ImagePolicyQuery"
+    assert instance.action == "query"
+    assert instance._results is None
+    assert instance._policies_to_query == []
+    assert instance._policy_names is None
 
 
 def test_image_policy_query_00010(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
+        - policy_names.setter
 
-    Test
-    - Class attributes are initialized to expected values
-    - fail_json is not called
-    """
-    with does_not_raise():
-        instance = image_policy_query
-    assert instance.class_name == "ImagePolicyQuery"
-    assert instance.action == "query"
-    assert instance.state == "query"
-    assert isinstance(instance._image_policies, ImagePolicies)
-    assert instance.policy_names is None
-    assert instance._policies_to_query == []
-
-
-def test_image_policy_query_00020(image_policy_query) -> None:
-    """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
-    - ImagePolicyQuery
-        - __init__()
-        - policy_names setter
-
-    Test
-    - policy_names is set to expected value
-    - fail_json is not called
+    ### Test
+    -   ``policy_names`` is set to expected value.
+    -   Exceptions are not raised.
     """
     policy_names = ["FOO", "BAR"]
     with does_not_raise():
         instance = image_policy_query
         instance.policy_names = policy_names
+
     assert instance.policy_names == policy_names
 
 
-def test_image_policy_query_00021(image_policy_query) -> None:
+def test_image_policy_query_00011(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
-        - policy_names setter
+        - policy_names.setter
 
-    Test
-    - fail_json is called because policy_names is not a list
-    - instance.policy_names is not modified, hence it retains its initial value of None
+    ### Summary
+    Verify that ``policy_names.setter`` raises ``TypeError`` when
+    ``policy_names`` is not a list.
+
+    ### Test
+    -   ``TypeError`` is raised because policy_names is not a list.
+    -   ``instance.policy_names`` is not modified.
     """
-    match = "ImagePolicyQuery.policy_names: "
-    match += "policy_names must be a list."
-
     with does_not_raise():
         instance = image_policy_query
-    with pytest.raises(AnsibleFailJson, match=match):
+
+    match = r"ImagePolicyQuery.policy_names:\s+"
+    match += r"policy_names must be a list\.\s+"
+    match += r"got str for value NOT_A_LIST"
+    with pytest.raises(TypeError, match=match):
         instance.policy_names = "NOT_A_LIST"
     assert instance.policy_names is None
 
 
-def test_image_policy_query_00022(image_policy_query) -> None:
+def test_image_policy_query_00012(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
-        - policy_names setter
+        - policy_names.setter
 
-    Test
-    - fail_json is called because policy_names is a list with a non-string element
-    - instance.policy_names is not modified, hence it retains its initial value of None
+    ### Summary
+    Verify that ``policy_names.setter`` raises ``ValueError`` when
+    ``policy_names`` is set to a list containing non-string elements.
+
+    ### Test
+    -   ``policy_names.setter`` raises ``TypeError``.
+    -   Error message matches expected value.
+    -   ``instance.policy_names`` is not modified.
     """
-    match = "ImagePolicyQuery.policy_names: "
-    match += "policy_names must be a list of strings."
-
     with does_not_raise():
         instance = image_policy_query
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.policy_names = [1, 2, 3]
+
+    match = r"ImagePolicyQuery\.policy_names:\s+"
+    match += r"policy_names must be a list of strings\.\s+"
+    match += r"got int for value 3"
+    with pytest.raises(TypeError, match=match):
+        instance.policy_names = ["1", "2", 3]
+
     assert instance.policy_names is None
 
 
-def test_image_policy_query_00023(image_policy_query) -> None:
+def test_image_policy_query_00013(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
-        - __init__()
-        - policy_names setter
+        - policy_names.setter
 
-    Summary
-    Verify behavior when policy_names is not set prior to calling commit
+    ### Summary
+    Verify that ``policy_names.setter`` raises ``ValueError`` when
+    ``policy_names`` is set to an empty list.
 
-    Test
-    - fail_json is called because policy_names is not set prior to calling commit
-    - instance.policy_names is not modified, hence it retains its initial value of None
+    ### Setup
+    -   ``policy_names`` is set to an empty list.
+
+    ### Test
+    -   ``policy_names.setter`` raises ``ValueError``.
+    -   Error message matches expected value.
     """
-    match = "ImagePolicyQuery.commit: "
-    match += "policy_names must be set prior to calling commit."
-
-    with does_not_raise():
-        instance = image_policy_query
-        instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.commit()
-    assert instance.policy_names is None
-
-
-def test_image_policy_query_00024(image_policy_query) -> None:
-    """
-    Classes and Methods
-    - ImagePolicyQuery
-        - policy_names setter
-
-    Summary
-    Verify behavior when policy_names is set to an empty list
-
-    Setup
-    -   ImagePolicyQuery().policy_names is set to an empty list
-
-    Test
-    -   fail_json is called from policy_names setter
-    """
-    match = "ImagePolicyQuery.policy_names: policy_names must be a list of "
-    match += "at least one string."
-    with pytest.raises(AnsibleFailJson, match=match):
+    match = r"ImagePolicyQuery\.policy_names:\s+"
+    match += r"policy_names must be a list of at least one string\."
+    with pytest.raises(ValueError, match=match):
         instance = image_policy_query
         instance.policy_names = []
 
 
-def test_image_policy_query_00030(monkeypatch, image_policy_query) -> None:
+def test_image_policy_query_00020(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
-        - _verify_image_policy_ref_count()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
-        - policy_names setter
+        - commit()
+
+    ### Summary
+    Verify ``commit`` raises ``ValueError`` when ``policy_names`` is not.
+
+    ### Test
+    -   ``commit`` raises ``ValueError``.
+    -   Error message matches expected value.
+    -   ``instance.policy_names`` is not modified.
+    """
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    image_policies = ImagePolicies()
+    image_policies.rest_send = rest_send
+    image_policies.results = Results()
+
+    with does_not_raise():
+        instance = image_policy_query
+        instance._image_policies = image_policies
+
+    match = r"ImagePolicyQuery\.commit:\s+"
+    match += r"policy_names must be set prior to calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+    assert instance.policy_names is None
+
+
+def test_image_policy_query_00030(image_policy_query) -> None:
+    """
+    ### Classes and Methods
+    - ImagePolicyQuery
+        - __init__()
+        - _verify_image_policy_ref_count()
+        - policy_names.setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
-    Verify behavior when user queries a policy that does not exist on the controller
+    ### Summary
+    Verify behavior when user queries a policy that does not exist on the
+    controller.
 
-    Setup
-    -   ImagePolicies().all_policies, is mocked to indicate that one image policy
-        (KR5M) exist on the controller.
+    ### Setup
+    -   ImagePolicies().all_policies, is mocked to indicate that one image
+        policy (KR5M) exists on the controller.
     -   ImagePolicyQuery.policy_names is set to contain one policy_name (FOO)
         that does not exist on the controller.
 
-    Test
+    ### Test
     -   ImagePolicyQuery.commit() calls _get_policies_to_query() which sets
         instance._policies_to_query to an empty list.
     -   instance.results.changed set() contains False
     -   instance.results.failed set() contains False
     -   commit() returns without doing anything else
-    -   fail_json is not called
+    -   Exceptions are not raised.
     """
-    key = "test_image_policy_query_00030a"
-
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     def responses():
         yield rest_send_response_current(key)
 
-    gen = GenerateResponses(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    image_policies = ImagePolicies()
+    image_policies.rest_send = rest_send
+    image_policies.results = Results()
 
     with does_not_raise():
         instance = image_policy_query
-        instance.results = Results()
+        instance._image_policies = image_policies
         instance.policy_names = ["FOO"]
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._image_policies.results = Results()
-    with does_not_raise():
+        instance.results = Results()
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
@@ -244,56 +272,59 @@ def test_image_policy_query_00030(monkeypatch, image_policy_query) -> None:
     assert True not in instance.results.changed
 
 
-def test_image_policy_query_00031(monkeypatch, image_policy_query) -> None:
+def test_image_policy_query_00031(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
-        - policy_names setter
+        - policy_names.setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
-    Verify behavior when user queries a policy that exists on the controller
+    ### Summary
+    Verify behavior when user queries a policy that exists on the controller.
 
-    Setup
-    -   ImagePolicies().all_policies is mocked to indicate that one image policy
-        (KR5M) exists on the controller.
+    ### Setup
+    -   ImagePolicies().all_policies is mocked to indicate that one image
+        policy (KR5M) exists on the controller.
     -   ImagePolicyQuery.policy_names is set to contain one policy_name (KR5M)
         that exists on the controller.
 
-    Test
+    ### Test
     -   instance.diff is a list containing one dict with keys action == "query"
         and policyName == "KR5M"
     -   instance.response is a list with one element
     -   instance.response_current is a dict with key RETURN_CODE == 200
     -   instance.result is a list with one element
     -   instance.result_current is a dict with key success == True
+    -   Exceptions are not raised.
     """
-    key = "test_image_policy_query_00031a"
-
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     def responses():
         yield rest_send_response_current(key)
 
-    gen = GenerateResponses(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    image_policies = ImagePolicies()
+    image_policies.rest_send = rest_send
+    image_policies.results = Results()
 
     with does_not_raise():
         instance = image_policy_query
-        instance.results = Results()
+        instance._image_policies = image_policies
         instance.policy_names = ["KR5M"]
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._image_policies.results = Results()
-    with does_not_raise():
+        instance.results = Results()
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
@@ -308,26 +339,26 @@ def test_image_policy_query_00031(monkeypatch, image_policy_query) -> None:
     assert True not in instance.results.changed
 
 
-def test_image_policy_query_00032(monkeypatch, image_policy_query) -> None:
+def test_image_policy_query_00032(image_policy_query) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyQuery
-        - policy_names setter
+        - policy_names.setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
+    ### Summary
     Verify behavior when user queries multiple policies, some of which exist
     on the controller and some of which do not exist on the controller.
 
-    Setup
-    -   ImagePolicies().all_policies, is mocked to indicate that two image policies
-        (KR5M, NR3F) exist on the controller.
-    -   ImagePolicyQuery().policy_names is set to contain one image policy name (FOO)
-        that does not exist on the controller and two image policy names (KR5M, NR3F)
-        that do exist on the controller.
+    ### Setup
+    -   ImagePolicies().all_policies, is mocked to indicate that two image
+        policies (KR5M, NR3F) exist on the controller.
+    -   ImagePolicyQuery().policy_names is set to contain one image policy
+        name (FOO) that does not exist on the controller and two image policy
+        names (KR5M, NR3F) that do exist on the controller.
 
-    Test
+    ### Test
     -   instance.diff is a list containing two elements
     -   instance.diff[0] contains keys action == "query" and policyName == "KR5M"
     -   instance.diff[1] contains keys action == "query" and policyName == "NR3F"
@@ -335,29 +366,34 @@ def test_image_policy_query_00032(monkeypatch, image_policy_query) -> None:
     -   instance.response_current is a dict with key RETURN_CODE == 200
     -   instance.result is a list with one element
     -   instance.result_current is a dict with key success == True
+    -   Exceptions are not raised.
     """
-    key = "test_image_policy_query_00032a"
-
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     def responses():
         yield rest_send_response_current(key)
 
-    gen = GenerateResponses(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    image_policies = ImagePolicies()
+    image_policies.rest_send = rest_send
+    image_policies.results = Results()
 
     with does_not_raise():
         instance = image_policy_query
-        instance.results = Results()
+        instance._image_policies = image_policies
         instance.policy_names = ["KR5M", "NR3F", "FOO"]
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._image_policies.results = Results()
-    with does_not_raise():
+        instance.results = Results()
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
@@ -374,57 +410,59 @@ def test_image_policy_query_00032(monkeypatch, image_policy_query) -> None:
     assert True not in instance.results.changed
 
 
-def test_image_policy_query_00033(monkeypatch, image_policy_query) -> None:
+def test_image_policy_query_00033(image_policy_query) -> None:
     """
-    Classes and Methods
-    - ImagePolicyCommon
-        - __init__()
+    ### Classes and Methods
     - ImagePolicyQuery
         - __init__()
-        - policy_names setter
+        - policy_names.setter
         - _get_policies_to_query()
         - commit()
 
-    Summary
+    ### Summary
     Verify behavior when no image policies exist on the controller and the user
     queries for an image policy that, of course, does not exist.
 
-    Setup
-    -   ImagePolicies().all_policies, is mocked to indicate that no image policies
-        exist on the controller.
-    -   ImagePolicyQuery.policy_names is set to contain one policy_name (FOO)
-        that does not exist on the controller.
+    ### Setup
+    -   ImagePolicies().all_policies, is mocked to indicate that no image
+        policies exist on the controller.
+    -   ImagePolicyQuery.policy_names is set to contain one policy_name
+        (FOO) that does not exist on the controller.
 
-    Test
-    -   commit() calls _get_policies_to_query() which sets instance._policies_to_query
-        to an empty list.
+    ### Test
+    -   commit() calls _get_policies_to_query() which sets
+        ``instance._policies_to_query`` to an empty list.
     -   commit() sets instance.changed to False
     -   commit() sets instance.failed to False
     -   commit() returns without doing anything else
-    -   fail_json is not called
+    -   Exceptions are not raised.
     """
-    key = "test_image_policy_query_00033a"
-
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     def responses():
         yield rest_send_response_current(key)
 
-    gen = GenerateResponses(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    image_policies = ImagePolicies()
+    image_policies.rest_send = rest_send
+    image_policies.results = Results()
 
     with does_not_raise():
         instance = image_policy_query
-        instance.results = Results()
+        instance._image_policies = image_policies
         instance.policy_names = ["FOO"]
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    instance._image_policies.results = Results()
-    with does_not_raise():
+        instance.results = Results()
         instance.commit()
+
     assert isinstance(instance.results.diff, list)
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)

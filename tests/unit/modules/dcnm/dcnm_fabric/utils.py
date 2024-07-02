@@ -37,6 +37,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import (
     FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetails as FabricDetailsV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetailsByName as FabricDetailsByNameV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
+    FabricDetailsByNvPair as FabricDetailsByNvPairV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
@@ -59,43 +65,6 @@ params = {
     "config": {"switches": [{"ip_address": "172.22.150.105"}]},
     "check_mode": False,
 }
-
-
-class ResponseGenerator:
-    """
-    Given a generator, return the items in the generator with
-    each call to the next property
-
-    For usage in the context of dcnm_image_policy unit tests, see:
-        test: test_image_policy_create_bulk_00037
-        file: tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py
-
-    Simplified usage example below.
-
-    def responses():
-        yield {"key1": "value1"}
-        yield {"key2": "value2"}
-
-    gen = ResponseGenerator(responses())
-
-    print(gen.next) # {"key1": "value1"}
-    print(gen.next) # {"key2": "value2"}
-    """
-
-    def __init__(self, gen):
-        self.gen = gen
-
-    @property
-    def next(self):
-        """
-        Return the next item in the generator
-        """
-        return next(self.gen)
-
-    def public_method_for_pylint(self) -> Any:
-        """
-        Add one public method to appease pylint
-        """
 
 
 class MockAnsibleModule:
@@ -227,6 +196,14 @@ def fabric_details_fixture():
     return FabricDetails(instance.params)
 
 
+@pytest.fixture(name="fabric_details_v2")
+def fabric_details_v2_fixture():
+    """
+    mock FabricDetails() v2
+    """
+    return FabricDetailsV2(params)
+
+
 @pytest.fixture(name="fabric_details_by_name")
 def fabric_details_by_name_fixture():
     """
@@ -237,6 +214,17 @@ def fabric_details_by_name_fixture():
     return FabricDetailsByName(instance.params)
 
 
+@pytest.fixture(name="fabric_details_by_name_v2")
+def fabric_details_by_name_v2_fixture():
+    """
+    mock FabricDetailsByName version 2
+    """
+    instance = MockAnsibleModule()
+    instance.state = "query"
+    instance.check_mode = False
+    return FabricDetailsByNameV2(instance.params)
+
+
 @pytest.fixture(name="fabric_details_by_nv_pair")
 def fabric_details_by_nv_pair_fixture():
     """
@@ -245,6 +233,16 @@ def fabric_details_by_nv_pair_fixture():
     instance = MockAnsibleModule()
     instance.state = "merged"
     return FabricDetailsByNvPair(instance.params)
+
+
+@pytest.fixture(name="fabric_details_by_nv_pair_v2")
+def fabric_details_by_nv_pair_v2_fixture():
+    """
+    mock FabricDetailsByNvPair version 2
+    """
+    instance = MockAnsibleModule()
+    instance.state = "merged"
+    return FabricDetailsByNvPairV2(instance.params)
 
 
 @pytest.fixture(name="fabric_query")
@@ -497,6 +495,16 @@ def responses_fabric_details(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_fabric_details_v2(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetails version 2
+    """
+    data_file = "responses_FabricDetails_V2"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     """
     Return responses for FabricDetailsByName
@@ -507,11 +515,31 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     return data
 
 
+def responses_fabric_details_by_name_v2(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetailsByName version 2
+    """
+    data_file = "responses_FabricDetailsByName_V2"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_fabric_details_by_nv_pair(key: str) -> Dict[str, str]:
     """
     Return responses for FabricDetailsByNvPair
     """
     data_file = "responses_FabricDetailsByNvPair"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_details_by_nv_pair_v2(key: str) -> Dict[str, str]:
+    """
+    Return responses for FabricDetailsByNvPair version 2
+    """
+    data_file = "responses_FabricDetailsByNvPair_V2"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

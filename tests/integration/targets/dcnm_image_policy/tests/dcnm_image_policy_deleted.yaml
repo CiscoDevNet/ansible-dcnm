@@ -3,8 +3,9 @@
 ################################################################################
 
 # Recent run times (MM:SS.ms):
-# 00:30.937
-# 00:24.057
+# 00:18.960
+# 00:19.240
+# 00:18.836
 ################################################################################
 # STEPS
 ################################################################################
@@ -46,7 +47,7 @@
 #
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_image_policy_deleted
 #   fabric_name: f1
 #   username: admin
 #   password: "foobar"
@@ -60,7 +61,7 @@
 #   leaf4: 172.22.150.109
 #   # for dcnm_image_policy role
 #   image_policy_1: "KR5M"
-#   image_policy_2: "NR3F"
+#   image_policy_2: "NR1F"
 #   epld_image_1: n9000-epld.10.2.5.M.img
 #   epld_image_2: n9000-epld.10.3.1.F.img
 #   nxos_image_1: n9000-dk9.10.2.5.M.bin
@@ -105,8 +106,8 @@
 #                 "epldImgName": "n9000-epld.10.3.1.F.img",
 #                 "nxosVersion": "10.3.1_nxos64-cs_64bit",
 #                 "platform": "N9K",
-#                 "policyDescr": "NR3F",
-#                 "policyName": "NR3F",
+#                 "policyDescr": "NR1F",
+#                 "policyName": "NR1F",
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
@@ -127,18 +128,6 @@
 #             }
 #         ],
 #         "response": [
-#             {
-#                 "DATA": {
-#                     "lastOperDataObject": [],
-#                     "message": "",
-#                     "status": "SUCCESS"
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "GET",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 0
-#             },
 #             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
@@ -206,20 +195,30 @@
     - result.diff[0].policyDescr == image_policy_1
     - result.diff[0].epldImgName == epld_image_1
     - result.diff[0].nxosVersion == nxos_release_1
+    - result.diff[0].sequence_number == 1
     - result.diff[1].policyName == image_policy_2
     - result.diff[1].policyDescr == image_policy_2
     - result.diff[1].epldImgName == epld_image_2
     - result.diff[1].nxosVersion == nxos_release_2
-    - (result.response | length) == 3
+    - result.diff[1].sequence_number == 2
+    - (result.metadata | length) == 2
+    - result.metadata[0].action == "create"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "merged"
+    - result.metadata[1].action == "create"
+    - result.metadata[1].check_mode == False
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "merged"
+    - (result.response | length) == 2
     - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
+    - result.response[0].METHOD == "POST"
     - result.response[0].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
     - result.response[1].MESSAGE == "OK"
     - result.response[1].METHOD == "POST"
     - result.response[1].RETURN_CODE == 200
-    - result.response[2].MESSAGE == "OK"
-    - result.response[2].METHOD == "POST"
-    - result.response[2].RETURN_CODE == 200
+    - result.response[1].sequence_number == 2
 
 ################################################################################
 # DELETED - TEST - Delete first image policy (image_policy_1) and verify
@@ -247,54 +246,6 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": {
-#                     "lastOperDataObject": [
-#                         {
-#                             "agnostic": false,
-#                             "epldImgName": "n9000-epld.10.2.5.M.img",
-#                             "fabricPolicyName": null,
-#                             "imageName": "nxos64-cs.10.2.5.M.bin",
-#                             "imagePresent": "Present",
-#                             "nxosVersion": "10.2.5_nxos64-cs_64bit",
-#                             "packageName": "",
-#                             "platform": "N9K/N3K",
-#                             "platformPolicies": "",
-#                             "policyDescr": "KR5M",
-#                             "policyName": "KR5M",
-#                             "policyType": "PLATFORM",
-#                             "ref_count": 0,
-#                             "role": null,
-#                             "rpmimages": null,
-#                             "unInstall": false
-#                         },
-#                         {
-#                             "agnostic": false,
-#                             "epldImgName": "n9000-epld.10.3.1.F.img",
-#                             "fabricPolicyName": null,
-#                             "imageName": "nxos64-cs.10.3.1.F.bin",
-#                             "imagePresent": "Present",
-#                             "nxosVersion": "10.3.1_nxos64-cs_64bit",
-#                             "packageName": "",
-#                             "platform": "N9K/N3K",
-#                             "platformPolicies": "",
-#                             "policyDescr": "NR3F",
-#                             "policyName": "NR3F",
-#                             "policyType": "PLATFORM",
-#                             "ref_count": 0,
-#                             "role": null,
-#                             "rpmimages": null,
-#                             "unInstall": false
-#                         }
-#                     ],
-#                     "message": "",
-#                     "status": "SUCCESS"
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "GET",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 0
-#             },
 #             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
@@ -305,11 +256,6 @@
 #             }
 #         ],
 #         "result": [
-#             {
-#                 "found": true,
-#                 "sequence_number": 0,
-#                 "success": true
-#             },
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -334,18 +280,19 @@
     - result.failed == false
     - (result.diff | length) == 1
     - image_policy_1 in result.diff[0].policyNames
-    - (result.response | length) == 2
+    - (result.response | length) == 1
     - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
+    - result.response[0].METHOD == "DELETE"
     - result.response[0].RETURN_CODE == 200
-    - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "DELETE"
-    - result.response[1].RETURN_CODE == 200
     - (result.metadata | length) == 1
     - result.metadata[0].action == "delete"
     - result.metadata[0].check_mode == False
     - result.metadata[0].sequence_number == 1
     - result.metadata[0].state == "deleted"
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true
 
 ################################################################################
 # DELETED - TEST - Delete remaining policy (image_policy_2) and verify
@@ -357,7 +304,7 @@
 #         "diff": [
 #             {
 #                 "policyNames": [
-#                     "NR3F"
+#                     "NR1F"
 #                 ],
 #                 "sequence_number": 1
 #             }
@@ -373,37 +320,6 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": {
-#                     "lastOperDataObject": [
-#                         {
-#                             "agnostic": false,
-#                             "epldImgName": "n9000-epld.10.3.1.F.img",
-#                             "fabricPolicyName": null,
-#                             "imageName": "nxos64-cs.10.3.1.F.bin",
-#                             "imagePresent": "Present",
-#                             "nxosVersion": "10.3.1_nxos64-cs_64bit",
-#                             "packageName": "",
-#                             "platform": "N9K/N3K",
-#                             "platformPolicies": "",
-#                             "policyDescr": "NR3F",
-#                             "policyName": "NR3F",
-#                             "policyType": "PLATFORM",
-#                             "ref_count": 0,
-#                             "role": null,
-#                             "rpmimages": null,
-#                             "unInstall": false
-#                         }
-#                     ],
-#                     "message": "",
-#                     "status": "SUCCESS"
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "GET",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 0
-#             },
-#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -413,11 +329,6 @@
 #             }
 #         ],
 #         "result": [
-#             {
-#                 "found": true,
-#                 "sequence_number": 0,
-#                 "success": true
-#             },
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -431,7 +342,7 @@
   cisco.dcnm.dcnm_image_policy:
       state: deleted
       config:
-      - name: NR3F
+      - name: "{{ image_policy_2 }}"
   register: result
 
 - debug:
@@ -443,15 +354,16 @@
     - result.failed == false
     - (result.diff | length) == 1
     - image_policy_2 in result.diff[0].policyNames
-    - (result.response | length) == 2
+    - (result.response | length) == 1
     - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
+    - result.response[0].METHOD == "DELETE"
     - result.response[0].RETURN_CODE == 200
-    - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "DELETE"
-    - result.response[1].RETURN_CODE == 200
     - (result.metadata | length) == 1
     - result.metadata[0].action == "delete"
     - result.metadata[0].check_mode == False
     - result.metadata[0].sequence_number == 1
     - result.metadata[0].state == "deleted"
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true

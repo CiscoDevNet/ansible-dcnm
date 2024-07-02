@@ -1,0 +1,143 @@
+{
+    "test_maintenance_mode_info_00300a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00310a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00500a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00510a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00520a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00600a": {
+        "TEST_NOTES": [
+            "nvPairs.FABRIC_NAME LAN_Classic",
+            "nvPairs.IS_READ_ONLY true",
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "LAN_Classic",
+                    "IS_READ_ONLY": "true"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00700a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00810a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "VXLAN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00820a": {
+        "TEST_NOTES": [
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "VXLAN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_01010a": {
+        "TEST_NOTES": [
+            "nvPairs.IS_READ_ONLY false",
+            "RETURN_CODE 200",
+            "MESSAGE OK"
+        ],
+        "DATA": [
+            {
+                "nvPairs": {
+                    "FABRIC_NAME": "VXLAN_Fabric",
+                    "IS_READ_ONLY": "false"
+                }
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+        "RETURN_CODE": 200
+    }
+}

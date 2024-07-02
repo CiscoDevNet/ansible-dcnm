@@ -29,23 +29,30 @@ from ansible.module_utils.common import validation
 
 class ParamsValidate:
     """
+    ## DEPRECATED
+    Use ``ParamsValidate`` from ``params_validate_v2.py`` for all new development.
+
+    ### Summary
     Validate playbook parameters.
 
-    This expects the following:
-        1.  parameters: fully-merged dictionary of parameters
-        2.  params_spec: Dictionary that describes each parameter
+    ### Mandatory Properties
+        -   ``parameters``: fully-merged dictionary of parameters
+        -   ``params_spec``: Dictionary that describes each parameter
             in parameters
 
-    Usage (where ansible_module is an instance of AnsibleModule):
+    ### Usage
+
+    -   Ansible_module is an instance of AnsibleModule):
 
     Assume the following params_spec describing parameters
-    ip_address and foo.
-    ip_address is a required parameter of type ipv4.
-    foo is an optional parameter of type dict.
-    foo contains a parameter named bar that is an optional
-    parameter of type str with a default value of bingo.
-    bar can be assigned one of three values: bingo, bango, or bongo.
+    ``ip_address`` and ``foo``  .
+    -   ``ip_address`` is a required parameter of type ipv4.
+    -   ``foo`` is an optional parameter of type dict.
+    -   ``foo`` contains a parameter named ``bar`` that is an optional
+        parameter of type str with a default value of bingo.
+    -   ``bar`` can be assigned one of three values: bingo, bango, or bongo.
 
+    ```python
     params_spec: Dict[str, Any] = {}
     params_spec["ip_address"] = {}
     params_spec["ip_address"]["required"] = False
@@ -62,18 +69,25 @@ class ParamsValidate:
     params_spec["foo"]["baz"]["type"] = int
     params_spec["foo"]["baz"]["range_min"] = 0
     params_spec["foo"]["baz"]["range_max"] = 10
+    ```
 
     Which describes the following YAML:
 
+    ```yaml
     ip_address: 1.2.3.4
     foo:
         bar: bingo
         baz: 10
+    ```
 
+    ### Invocation
+
+    ```python
     validator = ParamsValidate(ansible_module)
     validator.parameters = ansible_module.params
     validator.params_spec = params_spec
     validator.commit()
+    ```
     """
 
     def __init__(self, ansible_module):

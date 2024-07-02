@@ -3,7 +3,7 @@
         "Mocked payloads for ImagePolicyCreateBulk unit tests.",
         "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create_bulk.py"
     ],
-    "test_image_policy_create_bulk_00020a": [
+    "test_image_policy_create_bulk_00010a": [
         {
             "agnostic": false,
             "epldImgName": "n9000-epld.10.3.2.F.img",

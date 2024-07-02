@@ -223,6 +223,50 @@ class EpPolicyCreate(PolicyMgnt):
         return "POST"
 
 
+class EpPolicyDelete(PolicyMgnt):
+    """
+    ## V1 API - PolicyMgnt().EpPolicyDelete()
+
+    ### Description
+    Delete image policies.
+
+    ### Raises
+    -   None
+
+    ### Path
+    -   ``/rest/policymgnt/policy``
+
+    ### Verb
+    -   DELETE
+
+    ### Notes
+    Expects a JSON payload as shown below, where ``policyNames`` is a
+    comma-separated list of policy names.
+
+    ```json
+        {
+            "policyNames": "policyA,policyB,etc"
+        }
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
+
+    @property
+    def path(self):
+        return f"{self.policymgnt}/policy"
+
+    @property
+    def verb(self):
+        return "DELETE"
+
+
 class EpPolicyDetach(PolicyMgnt):
     """
     ## V1 API - PolicyMgnt().EpPolicyDetach()
@@ -266,6 +310,51 @@ class EpPolicyDetach(PolicyMgnt):
     @property
     def verb(self):
         return "DELETE"
+
+
+class EpPolicyEdit(PolicyMgnt):
+    """
+    ## V1 API - PolicyMgnt().EpPolicyEdit()
+
+    ### Description
+    Return endpoint information.
+
+    ### Raises
+    -   None
+
+    ### Path
+    -   ``/rest/policymgnt/edit-policy``
+
+    ### Verb
+    -   POST
+
+    ### Parameters
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpPolicyEdit()
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        msg = "ENTERED api.v1.imagemanagement.rest."
+        msg += f"policymgnt.{self.class_name}"
+        self.log.debug(msg)
+
+    @property
+    def path(self):
+        return f"{self.policymgnt}/edit-policy"
+
+    @property
+    def verb(self):
+        return "POST"
 
 
 class EpPolicyInfo(PolicyMgnt):

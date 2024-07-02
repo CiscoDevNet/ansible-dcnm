@@ -3,7 +3,7 @@
         "Mocked payloads for ImagePolicyCreate unit tests.",
         "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_create.py"
     ],
-    "test_image_policy_create_00020a": {
+    "test_image_policy_create_00010a": {
         "agnostic": false,
         "epldImgName": "n9000-epld.10.3.2.F.img",
         "nxosVersion": "10.3.1_nxos64-cs_64bit",
@@ -88,5 +88,16 @@
         "policyName": "FOO",
         "policyType": "PLATFORM",
         "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
-    }
+    },
+    "test_image_policy_create_00036a": {
+            "agnostic": false,
+            "epldImgName": "n9000-epld.10.3.2.F.img",
+            "nxosVersion": "10.3.1_nxos64-cs_64bit",
+            "packageName": "mtx-openconfig-all-2.0.0.0-10.4.1.src.rpm",
+            "platform": "N9K",
+            "policyDescr": "image policy of 10.3(3)F",
+            "policyName": "FOO",
+            "policyType": "PLATFORM",
+            "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000"
+        }
 }

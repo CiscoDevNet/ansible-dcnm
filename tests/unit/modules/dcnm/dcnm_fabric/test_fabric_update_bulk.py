@@ -40,12 +40,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_update_bulk_fixture, params, payloads_fabric_update_bulk,
-    responses_config_deploy, responses_config_save,
-    responses_fabric_details_by_name, responses_fabric_summary,
-    responses_fabric_update_bulk)
+    MockAnsibleModule, does_not_raise, fabric_update_bulk_fixture, params,
+    payloads_fabric_update_bulk, responses_config_deploy,
+    responses_config_save, responses_fabric_details_by_name,
+    responses_fabric_summary, responses_fabric_update_bulk)
 
 
 def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:

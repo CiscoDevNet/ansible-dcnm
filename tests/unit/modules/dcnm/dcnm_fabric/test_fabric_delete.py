@@ -42,11 +42,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_delete_fixture, params, responses_fabric_delete,
-    responses_fabric_details_by_name, responses_fabric_summary,
-    rest_send_response_current)
+    MockAnsibleModule, does_not_raise, fabric_delete_fixture, params,
+    responses_fabric_delete, responses_fabric_details_by_name,
+    responses_fabric_summary, rest_send_response_current)
 
 
 def test_fabric_delete_00010(fabric_delete) -> None:

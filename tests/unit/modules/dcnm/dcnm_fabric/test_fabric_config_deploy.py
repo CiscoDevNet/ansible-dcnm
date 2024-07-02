@@ -42,11 +42,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
     FabricConfigDeploy
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_config_deploy_fixture, fabric_details_by_name_fixture,
-    fabric_summary_fixture, params, responses_fabric_config_deploy,
-    responses_fabric_details_by_name, responses_fabric_summary)
+    MockAnsibleModule, does_not_raise, fabric_config_deploy_fixture,
+    fabric_details_by_name_fixture, fabric_summary_fixture, params,
+    responses_fabric_config_deploy, responses_fabric_details_by_name,
+    responses_fabric_summary)
 
 
 def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
