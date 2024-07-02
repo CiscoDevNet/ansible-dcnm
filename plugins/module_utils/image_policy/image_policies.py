@@ -35,6 +35,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties impor
 @Properties.add_results
 class ImagePolicies:
     """
+    ### Summary
     Retrieve image policy details from the controller and provide
     property accessors for the policy attributes.
 
@@ -58,12 +59,13 @@ class ImagePolicies:
     policy_name = instance.name
     platform = instance.platform
     epd_image_name = instance.epld_image_name
+    ```
     etc...
 
-    Policies can be refreshed by calling instance.refresh().
+    Policies can be refreshed by calling ``instance.refresh()``.
 
-    Endpoint:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
+    ### Endpoint:
+    ``/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies``
     """
 
     def __init__(self):
@@ -195,7 +197,8 @@ class ImagePolicies:
     @property
     def all_policies(self) -> dict:
         """
-        Return dict containing all policies, keyed on policy_name
+        ### Summary
+        Return dict containing all policies, keyed on policy_name.
         """
         if self._all_policies is None:
             return {}
@@ -204,33 +207,37 @@ class ImagePolicies:
     @property
     def description(self):
         """
-        Return the policyDescr of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``policyDescr`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("policyDescr")
 
     @property
     def epld_image_name(self):
         """
-        Return the epldImgName of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``epldImgName`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("epldImgName")
 
     @property
     def name(self):
         """
-        Return the name of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``name`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("policyName")
 
     @property
     def policy_name(self):
         """
+        ### Summary
         Set the name of the policy to query.
 
         This must be set prior to accessing any other properties
@@ -244,25 +251,30 @@ class ImagePolicies:
     @property
     def policy(self):
         """
-        Return the policy data of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the policy data of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("policy")
 
     @property
     def policy_type(self):
         """
-        Return the policyType of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``policyType`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("policyType")
 
     @property
     def response_data(self) -> dict:
         """
-        Return dict containing the DATA portion of a controller response, keyed on policy_name
+        ### Summary
+        -   Return dict containing the DATA portion of a controller response,
+            keyed on ``policy_name``.
+        -   Return an empty dict otherwise.
         """
         if self._response_data is None:
             return {}
@@ -271,72 +283,80 @@ class ImagePolicies:
     @property
     def nxos_version(self):
         """
-        Return the nxosVersion of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``nxosVersion`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("nxosVersion")
 
     @property
     def package_name(self):
         """
-        Return the packageName of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``packageName`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("packageName")
 
     @property
     def platform(self):
         """
-        Return the platform of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``platform`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("platform")
 
     @property
     def platform_policies(self):
         """
-        Return the platformPolicies of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``platformPolicies`` of the policy matching
+            ``policy_name``, if it exists.
+        -   Return None otherwise.
         """
         return self._get("platformPolicies")
 
     @property
     def ref_count(self):
         """
-        Return the reference count of the policy matching self.policy_name,
-        if it exists.  The reference count is the number of switches using
-        this policy.
-        Return None otherwise
+        ### Summary
+        -   Return the reference count of the policy matching ``policy_name``,
+            if it exists.  The reference count indicates the number of
+            switches using this policy.
+        -   Return None otherwise.
         """
         return self._get("ref_count")
 
     @property
     def rpm_images(self):
         """
-        Return the rpmimages of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``rpmimages`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("rpmimages")
 
     @property
     def image_name(self):
         """
-        Return the imageName of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``imageName`` of the policy matching ``policy_name``,
+            if it exists.
+        -   Return None otherwise.
         """
         return self._get("imageName")
 
     @property
     def agnostic(self):
         """
-        Return the value of agnostic for the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the value of agnostic for the policy matching
+            ``policy_name``, if it exists.
+        -   Return None otherwise.
         """
         return self._get("agnostic")
