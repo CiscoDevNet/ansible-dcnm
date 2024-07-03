@@ -109,6 +109,8 @@ class ImagePolicies:
             @Properties class decorators.
         """
         method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
 
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "

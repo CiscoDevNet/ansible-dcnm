@@ -256,7 +256,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
@@ -311,6 +310,9 @@ class Common:
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.params = params
 
         self.check_mode = self.params.get("check_mode", None)
@@ -365,7 +367,7 @@ class Common:
         self.need_query = []
         self.validated_configs = []
 
-        msg = "ENTERED Common(): "
+        msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
@@ -376,8 +378,10 @@ class Common:
 
         self.have consists of the current image policies on the controller
         """
-        msg = f"ENTERED {self.class_name}.get_have()"
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
+
         self.have = ImagePolicies()
         self.have.results = self.results
         self.have.rest_send = self.rest_send  # pylint: disable=no-member
@@ -391,8 +395,10 @@ class Common:
         2. Convert the validated configs to payloads
         3. Update self.want with this list of payloads
         """
-        msg = "ENTERED"
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
+
         # Generate the params_spec used to validate the configs
         params_spec = ParamsSpec()
         params_spec.params = self.params
@@ -443,10 +449,9 @@ class Replaced(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.replace = ImagePolicyReplaceBulk()
 
-        msg = "ENTERED Replaced(): "
+        msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
@@ -484,11 +489,9 @@ class Deleted(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
         self.delete = ImagePolicyDelete()
 
-        msg = "ENTERED Deleted(): "
+        msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
@@ -506,24 +509,22 @@ class Deleted(Common):
         self.delete.params = self.params
         self.delete.commit()
 
-    def get_policies_to_delete(self) -> List[str]:
+    def get_policies_to_delete(self) -> list[str]:
         """
         Return a list of policy names to delete
 
         -   In config is present, return list of image policy names
-            in self.want that exist on the controller
-        -   If config is not present, return list of all image policy
-            names on the controller
+            in self.want.
+        -   If config is not present, return ["delete_all_image_policies"],
+            which ``ImagePolicyDelete()`` interprets as "delete all image
+            policies on the controller".
         """
         if not self.config:
-            self.get_have()
-            return list(self.have.all_policies.keys())
+            return ["delete_all_image_policies"]
         self.get_want()
-        self.get_have()
         policy_names_to_delete = []
         for want in self.want:
-            if want["policyName"] in self.have.all_policies:
-                policy_names_to_delete.append(want["policyName"])
+            policy_names_to_delete.append(want["policyName"])
         return policy_names_to_delete
 
 
@@ -544,11 +545,10 @@ class Query(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.query = ImagePolicyQuery()
         self.image_policies = ImagePolicies()
 
-        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
@@ -558,11 +558,15 @@ class Query(Common):
         1.  query the fabrics in self.want that exist on the controller
         """
         method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
         self.get_want()
-        # self.get_have()
 
         if len(self.want) == 0:
             msg = f"{self.class_name}.{method_name}: "
@@ -604,12 +608,10 @@ class Overridden(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
         self.delete = ImagePolicyDelete()
         self.merged = Merged(params)
 
-        msg = "ENTERED Overridden(): "
+        msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
@@ -621,6 +623,10 @@ class Overridden(Common):
         -   Instantiate`` Merged()`` and call ``Merged().commit()``
         """
         method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
         self.results.state = self.state
         self.results.check_mode = self.check_mode
@@ -699,8 +705,6 @@ class Merged(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
         msg = f"params: {json_pretty(self.params)}"
         self.log.debug(msg)
         if not params.get("config"):
@@ -710,15 +714,15 @@ class Merged(Common):
         self.create = ImagePolicyCreateBulk()
         self.update = ImagePolicyUpdateBulk()
 
-        msg = f"ENTERED {self.class_name}.{method_name}: "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
-
         # new policies to be created
         self.need_create: list = []
         # existing policies to be updated
         self.need_update: list = []
+
+        msg = f"ENTERED {self.class_name}().{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
     def get_need(self):
         """
@@ -738,6 +742,12 @@ class Merged(Common):
                     are identical, do not append the policy to self.need_update
                     (i.e. do nothing).
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
         for want in self.want:
             self.have.policy_name = want.get("policyName")
 
@@ -759,6 +769,12 @@ class Merged(Common):
         """
         Commit the merged state requests
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
@@ -768,7 +784,7 @@ class Merged(Common):
         self.send_need_create()
         self.send_need_update()
 
-    def _prepare_for_merge(self, have: Dict, want: Dict):
+    def _prepare_for_merge(self, have: dict, want: dict):
         """
         ### Summary
         -   Remove fields in "have" that are not part of a request payload i.e.

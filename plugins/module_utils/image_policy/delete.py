@@ -53,10 +53,17 @@ class ImagePolicyDelete:
             -   ``policy_names`` is not a list.
             -   ``policy_names`` is not a list of strings.
 
-    ### Usage
+    ### Usage - Delete specific image policies
     ```python
     instance = ImagePolicyDelete()
     instance.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
+    instance.commit()
+    ```
+
+    ### Usage - Delete all image policies
+    ```python
+    instance = ImagePolicyDelete()
+    instance.policy_names = ["delete_all_image_policies"]
     instance.commit()
     ```
     """
@@ -126,8 +133,12 @@ class ImagePolicyDelete:
     def _get_policies_to_delete(self) -> None:
         """
         ### Summary
-        Retrieve policies from the controller and return the list of
-        controller policies that are in our policy_names list.
+        Retrieve image policies from the controller and return the
+        list of controller policies that are in our policy_names list.
+
+        If policy_names list contains a single element, and that element
+        is "delete_all_image_policies", then all policies on the controller
+        are returned.
 
         ### Raises
         -   ``ValueError`` if any policy in policy_names has a ref_count
@@ -138,6 +149,11 @@ class ImagePolicyDelete:
         self._image_policies.rest_send = self.rest_send
         # pylint: enable=no-member
         self._image_policies.refresh()
+        if (
+            "delete_all_image_policies" in self.policy_names
+            and len(self.policy_names) == 1
+        ):
+            self.policy_names = list(self._image_policies.all_policies.keys())
         try:
             self._verify_image_policy_ref_count(self._image_policies, self.policy_names)
         except ValueError as error:
@@ -200,6 +216,9 @@ class ImagePolicyDelete:
                 -   ``results`` is not set.
         """
         method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
         try:
             self._validate_commit_parameters()
         except ValueError as error:
@@ -248,6 +267,9 @@ class ImagePolicyDelete:
         ```
         """
         method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
         self.rest_send.save_settings()
         self.rest_send.check_mode = self.check_mode
 
@@ -292,7 +314,7 @@ class ImagePolicyDelete:
     def policy_names(self):
         """
         ### Summary
-        Return the policy names
+        A list of policy names to delete.
 
         ### Raises
         -   ``TypeError`` if:
