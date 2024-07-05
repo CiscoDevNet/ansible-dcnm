@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=wrong-import-position
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -404,7 +405,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict, List
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
@@ -524,7 +524,6 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         self.log.debug(msg)
 
         if len(self.want) == 0:
-            self.task_result.result["changed"] = False
             self.ansible_module.exit_json(**self.task_result.module_result)
 
     def _build_idempotent_want(self, want) -> None:
@@ -654,7 +653,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         our want list that are not in our have list.  These items will
         be sent to the controller.
         """
-        need: List[Dict] = []
+        need: list[dict] = []
 
         msg = "self.want: "
         msg += f"{json.dumps(self.want, indent=4, sort_keys=True)}"
@@ -725,7 +724,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             need.append(want)
         self.need = copy.copy(need)
 
-    def _build_params_spec(self) -> Dict[str, Any]:
+    def _build_params_spec(self) -> dict:
         method_name = inspect.stack()[0][3]
         if self.ansible_module.params["state"] == "merged":
             return self._build_params_spec_for_merged_state()
@@ -733,13 +732,13 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             return self._build_params_spec_for_merged_state()
         if self.ansible_module.params["state"] == "query":
             return self._build_params_spec_for_query_state()
-
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unsupported state: {self.ansible_module.params['state']}"
         self.ansible_module.fail_json(msg)
+        return None  # we never reach this, but it makes pylint happy.
 
     @staticmethod
-    def _build_params_spec_for_merged_state() -> Dict[str, Any]:
+    def _build_params_spec_for_merged_state() -> dict:
         """
         Build the specs for the parameters expected when state == merged.
 
@@ -747,7 +746,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Return: params_spec, a dictionary containing playbook
                 parameter specifications.
         """
-        params_spec: Dict[str, Any] = {}
+        params_spec: dict = {}
         params_spec["ip_address"] = {}
         params_spec["ip_address"]["required"] = True
         params_spec["ip_address"]["type"] = "ipv4"
@@ -870,7 +869,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         return copy.deepcopy(params_spec)
 
     @staticmethod
-    def _build_params_spec_for_query_state() -> Dict[str, Any]:
+    def _build_params_spec_for_query_state() -> dict:
         """
         Build the specs for the parameters expected when state == query.
 
@@ -878,7 +877,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Return: params_spec, a dictionary containing playbook
                 parameter specifications.
         """
-        params_spec: Dict[str, Any] = {}
+        params_spec: dict = {}
         params_spec["ip_address"] = {}
         params_spec["ip_address"]["required"] = True
         params_spec["ip_address"]["type"] = "ipv4"
@@ -981,7 +980,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         msg = f"ENTERED: action: {action}"
         self.log.debug(msg)
 
-        serial_numbers_to_update: Dict[str, Any] = {}
+        serial_numbers_to_update: dict = {}
         self.switch_details.refresh()
         self.image_policies.refresh()
 
@@ -1020,16 +1019,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 self.task_result.response_attach_policy = copy.deepcopy(
                     instance.response_current
                 )
-                self.task_result.response = copy.deepcopy(
-                    instance.response_current
-                )
+                self.task_result.response = copy.deepcopy(instance.response_current)
             if action == "detach":
                 self.task_result.response_detach_policy = copy.deepcopy(
                     instance.response_current
                 )
-                self.task_result.response = copy.deepcopy(
-                    instance.response_current
-                )
+                self.task_result.response = copy.deepcopy(instance.response_current)
 
         for diff in instance.diff:
             msg = (
@@ -1254,9 +1249,9 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         self._attach_or_detach_image_policy(action="attach")
 
-        stage_devices: List[str] = []
-        validate_devices: List[str] = []
-        upgrade_devices: List[Dict[str, Any]] = []
+        stage_devices: list[str] = []
+        validate_devices: list[str] = []
+        upgrade_devices: list[dict] = []
 
         self.switch_details.refresh()
 
