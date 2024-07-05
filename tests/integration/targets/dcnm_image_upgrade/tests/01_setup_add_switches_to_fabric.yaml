@@ -1,0 +1,58 @@
+################################################################################
+# TESTCASE:
+#
+# 01_add_switches_to_fabric
+#
+# Description:
+#
+# Add 1x Spine and 2x Leafs to Fabric.
+#
+################################################################################
+#
+################################################################################
+# RUNTIME
+################################################################################
+#
+# Recent run times (MM:SS.ms):
+# 02:20.4434
+#
+################################################################################
+# STEPS
+################################################################################
+#
+- name: SETUP - Add 1x Spine and 2x Leafs to Fabric.
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_1 }}"
+    state: merged
+    config:
+      - seed_ip: "{{ ansible_switch_1 }}"
+        auth_proto: MD5
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: True
+      - seed_ip: "{{ ansible_switch_2 }}"
+        auth_proto: MD5
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: True
+      - seed_ip: "{{ ansible_switch_3 }}"
+        auth_proto: MD5
+        user_name: "{{ switch_username }}"
+        password: "{{ switch_password }}"
+        max_hops: 0
+        role: spine
+        preserve_config: True
+  register: result
+
+- assert:
+    that:
+    - result.changed == true
+
+- assert:
+    that:
+    - item["RETURN_CODE"] == 200
+  loop: '{{ result.response }}'
