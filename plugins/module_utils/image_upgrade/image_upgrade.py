@@ -23,7 +23,6 @@ import inspect
 import json
 import logging
 from time import sleep
-from typing import Any, Dict, List, Set
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -146,7 +145,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.issu_detail = SwitchIssuDetailsByIpAddress(self.ansible_module)
         self.ipv4_done = set()
         self.ipv4_todo = set()
-        self.payload: Dict[str, Any] = {}
+        self.payload: dict = {}
         self.path = self.endpoints.image_upgrade.get("path")
         self.verb = self.endpoints.image_upgrade.get("verb")
 
@@ -163,7 +162,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
         #   self._wait_for_image_upgrade_to_complete()
-        self.ip_addresses: Set[str] = set()
+        self.ip_addresses: set = set()
         # self.properties is already initialized in the parent class
         self.properties["bios_force"] = False
         self.properties["check_interval"] = 10  # seconds
@@ -182,7 +181,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["reboot"] = False
         self.properties["write_erase"] = False
 
-        self.valid_nxos_mode: Set[str] = set()
+        self.valid_nxos_mode: set = set()
         self.valid_nxos_mode.add("disruptive")
         self.valid_nxos_mode.add("non_disruptive")
         self.valid_nxos_mode.add("force_non_disruptive")
@@ -247,14 +246,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.install_options.refresh()
 
         # devices_to_upgrade must currently be a single device
-        devices_to_upgrade: List[dict] = []
+        devices_to_upgrade: list = []
 
-        payload_device: Dict[str, Any] = {}
+        payload_device: dict = {}
         payload_device["serialNumber"] = self.issu_detail.serial_number
         payload_device["policyName"] = device.get("policy")
         devices_to_upgrade.append(payload_device)
 
-        self.payload: Dict[str, Any] = {}
+        self.payload: dict = {}
         self.payload["devices"] = devices_to_upgrade
 
         self._build_payload_issu_upgrade(device)
@@ -456,6 +455,12 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["pacakgeUnInstall"] = package_uninstall
 
     def commit(self) -> None:
+        """
+        ### Summary
+        Commit the image upgrade request to the controller.
+
+        ### Raises
+        """
         if self.check_mode is True:
             self.commit_check_mode()
         else:
@@ -502,7 +507,10 @@ class ImageUpgrade(ImageUpgradeCommon):
 
             self.response_data = self.response_current.get("DATA")
 
+            # pylint: disable=protected-access
             self.result_current = self.rest_send._handle_response(self.response_current)
+            # pylint: enable=protected-access
+
             self.result = copy.deepcopy(self.result_current)
 
             msg = "payload: "
@@ -751,7 +759,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.properties["config_reload"] = value
 
     @property
-    def devices(self) -> List[Dict]:
+    def devices(self) -> list:
         """
         Set the devices to upgrade.
 
@@ -766,7 +774,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         return self.properties.get("devices", [{}])
 
     @devices.setter
-    def devices(self, value: List[Dict]):
+    def devices(self, value: list):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "

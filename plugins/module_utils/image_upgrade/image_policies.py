@@ -21,7 +21,6 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
-from typing import Any, AnyStr, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
@@ -151,7 +150,7 @@ class ImagePolicies(ImageUpgradeCommon):
         )
 
     @property
-    def all_policies(self) -> Dict[AnyStr, Any]:
+    def all_policies(self) -> dict:
         """
         Return dict containing all policies, keyed on policy_name
         """

@@ -23,7 +23,6 @@ import inspect
 import json
 import logging
 from time import sleep
-from typing import List, Set
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
@@ -83,7 +82,7 @@ class ImageValidate(ImageUpgradeCommon):
         self.path = self.endpoints.image_validate.get("path")
         self.verb = self.endpoints.image_validate.get("verb")
         self.payload = {}
-        self.serial_numbers_done: Set[str] = set()
+        self.serial_numbers_done: set = set()
 
         self._init_properties()
         self.issu_detail = SwitchIssuDetailsBySerialNumber(self.ansible_module)
@@ -156,6 +155,12 @@ class ImageValidate(ImageUpgradeCommon):
         self.payload["nonDisruptive"] = self.non_disruptive
 
     def commit(self) -> None:
+        """
+        ### Summary
+        Commit the image validation request to the controller.
+
+        ### Raises
+        """
         if self.check_mode is True:
             self.commit_check_mode()
         else:
@@ -202,7 +207,9 @@ class ImageValidate(ImageUpgradeCommon):
 
         self.response_data = self.response_current.get("DATA")
 
+        # pylint: disable=protected-access
         self.result_current = self.rest_send._handle_response(self.response_current)
+        # pylint: enable=protected-access
         self.result = copy.deepcopy(self.result_current)
 
         msg = "self.payload: "
@@ -350,7 +357,7 @@ class ImageValidate(ImageUpgradeCommon):
         self.method_name = inspect.stack()[0][3]
 
         if self.unit_test is False:
-            self.serial_numbers_done: Set[str] = set()
+            self.serial_numbers_done: set = set()
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
         timeout = self.check_timeout
 
@@ -437,7 +444,7 @@ class ImageValidate(ImageUpgradeCommon):
             self.ansible_module.fail_json(msg, **self.failed_result)
 
     @property
-    def serial_numbers(self) -> List[str]:
+    def serial_numbers(self) -> list:
         """
         Set the serial numbers of the switches to stage.
 
@@ -446,7 +453,7 @@ class ImageValidate(ImageUpgradeCommon):
         return self.properties.get("serial_numbers", [])
 
     @serial_numbers.setter
-    def serial_numbers(self, value: List[str]):
+    def serial_numbers(self, value: list):
         self.method_name = inspect.stack()[0][3]
 
         if not isinstance(value, list):

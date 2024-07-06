@@ -23,7 +23,6 @@ import inspect
 import json
 import logging
 import time
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
@@ -152,7 +151,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.path = self.endpoints.install_options.get("path")
         self.verb = self.endpoints.install_options.get("verb")
 
-        self.payload: Dict[str, Any] = {}
+        self.payload: dict = {}
 
         self.compatibility_status = {}
 
@@ -277,7 +276,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
             "packageInstall": false
         }
         """
-        self.payload: Dict[str, Any] = {}
+        self.payload: dict = {}
         self.payload["devices"] = []
         devices = {}
         devices["serialNumber"] = self.serial_number
@@ -461,7 +460,7 @@ class ImageInstallOptions(ImageUpgradeCommon):
         return self.compatibility_status.get("ipAddress")
 
     @property
-    def response_data(self) -> Dict[str, Any]:
+    def response_data(self) -> dict:
         """
         Return the DATA portion of the controller response.
         Return empty dict otherwise
