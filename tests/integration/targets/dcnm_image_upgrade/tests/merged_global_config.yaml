@@ -11,36 +11,31 @@
 #
 # To minimize runtime, we use preserve_config: True during SETUP
 ################################################################################
-
+#
 ################################################################################
 # RUNTIME
 ################################################################################
-
+#
 # Recent run times (MM:SS.ms):
-# 29:49.15
-# 33:40.57
-# 28:58.18
-# 31:41.42
-# 31:28.12
-# 29:18.47
-# 28:57.34
-
+# 13:29.62
+#
 ################################################################################
 # STEPS
 ################################################################################
-
+#
 # SETUP (these should be run prior to running this playbook)
-# 1. Run 00_setup_create_fabric.yaml
-# 2. Run 01_setup_add_switches_to_fabric 
-# 3. Run 02_setup_replace_image_policies
+#  1. Run 00_setup_create_fabric.yaml
+#  2. Run 01_setup_add_switches_to_fabric 
+#  3. Run 02_setup_replace_image_policies
+# PRE_TEST (this playbook)
+#  4. MERGED - PRE_TEST - Upgrade all switches using global config.
+#  5. MERGED - PRE_TEST - Wait for controller response for all three switches.
 # TEST (this playbook)
-# 3. Upgrade switches using global config and verify
-# 4. Wait for all switches to complete ISSU
-# 5. Test idempotence
+#  6. MERGED - TEST - global_config - test idempotence.
 # CLEANUP
-# Run 03_cleanup_remove_devices_from_fabric.yaml
-# Run 04_cleanup_delete_image_policies.yaml
-# Run 05_cleanup_delete_fabric.yaml
+#  7. Run 03_cleanup_remove_devices_from_fabric.yaml
+#  8. Run 04_cleanup_delete_image_policies.yaml
+#  9. Run 05_cleanup_delete_fabric.yaml
 #
 ################################################################################
 # REQUIREMENTS
@@ -75,226 +70,14 @@
 #    ansible_switch_3: "{{ spine1 }}"
 #
 ################################################################################
-# MERGED - TEST - Upgrade all switches using global config
+# MERGED - PRE_TEST - Upgrade all switches using global config.
+# NOTES:
+#   1. Depending on whether the switches are already at the desired version, the
+#      upgrade may not be performed.  Hence, we do not check for the upgrade
+#      status in this test.
 ################################################################################
-# Expected result
-# ok: [dcnm] => {
-#     "result": {
-#         "changed": true,
-#         "diff": [
-#             {
-#                 "action": "attach",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "attach",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FDO211218AX"
-#             },
-#             {
-#                 "action": "attach",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
-#             },
-#             {
-#                 "action": "stage",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "stage",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
-#             },
-#             {
-#                 "action": "stage",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218AX"
-#             },
-#             {
-#                 "action": "validate",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "validate",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
-#             },
-#             {
-#                 "action": "validate",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218AX"
-#             },
-#             {
-#                 "devices": [
-#                     {
-#                         "policyName": "KR5M",
-#                         "serialNumber": "FDO211218HB"
-#                     }
-#                 ],
-#                 "epldOptions": {
-#                     "golden": false,
-#                     "moduleNumber": "ALL"
-#                 },
-#                 "epldUpgrade": false,
-#                 "issuUpgrade": true,
-#                 "issuUpgradeOptions1": {
-#                     "disruptive": true,
-#                     "forceNonDisruptive": false,
-#                     "nonDisruptive": false
-#                 },
-#                 "issuUpgradeOptions2": {
-#                     "biosForce": false
-#                 },
-#                 "pacakgeInstall": false,
-#                 "pacakgeUnInstall": false,
-#                 "reboot": false,
-#                 "rebootOptions": {
-#                     "configReload": false,
-#                     "writeErase": false
-#                 }
-#             },
-#             {
-#                 "devices": [
-#                     {
-#                         "policyName": "KR5M",
-#                         "serialNumber": "FDO211218AX"
-#                     }
-#                 ],
-#                 "epldOptions": {
-#                     "golden": false,
-#                     "moduleNumber": "ALL"
-#                 },
-#                 "epldUpgrade": false,
-#                 "issuUpgrade": true,
-#                 "issuUpgradeOptions1": {
-#                     "disruptive": true,
-#                     "forceNonDisruptive": false,
-#                     "nonDisruptive": false
-#                 },
-#                 "issuUpgradeOptions2": {
-#                     "biosForce": false
-#                 },
-#                 "pacakgeInstall": false,
-#                 "pacakgeUnInstall": false,
-#                 "reboot": false,
-#                 "rebootOptions": {
-#                     "configReload": false,
-#                     "writeErase": false
-#                 }
-#             },
-#             {
-#                 "devices": [
-#                     {
-#                         "policyName": "KR5M",
-#                         "serialNumber": "FOX2109PHDD"
-#                     }
-#                 ],
-#                 "epldOptions": {
-#                     "golden": false,
-#                     "moduleNumber": "ALL"
-#                 },
-#                 "epldUpgrade": false,
-#                 "issuUpgrade": true,
-#                 "issuUpgradeOptions1": {
-#                     "disruptive": true,
-#                     "forceNonDisruptive": false,
-#                     "nonDisruptive": false
-#                 },
-#                 "issuUpgradeOptions2": {
-#                     "biosForce": false
-#                 },
-#                 "pacakgeInstall": false,
-#                 "pacakgeUnInstall": false,
-#                 "reboot": false,
-#                 "rebootOptions": {
-#                     "configReload": false,
-#                     "writeErase": false
-#                 }
-#             }
-#         ],
-#         "failed": false,
-#         "response": [
-#             {
-#                 "DATA": "[cvd-2311-leaf:Success] [cvd-2312-leaf:Success] [cvd-2211-spine:Success] ",
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/attach-policy",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": [
-#                     {
-#                         "key": "FDO211218AX",
-#                         "value": "No files to stage"
-#                     },
-#                     {
-#                         "key": "FDO211218HB",
-#                         "value": "No files to stage"
-#                     },
-#                     {
-#                         "key": "FOX2109PHDD",
-#                         "value": "No files to stage"
-#                     }
-#                 ],
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": "[StageResponse [key=success, value=]]",
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": 63,
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": 64,
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": 65,
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-#                 "RETURN_CODE": 200
-#             }
-#         ]
-#     }
-# }
-################################################################################
-- name: MERGED - SETUP - Upgrade all switches using global config
+
+- name: MERGED - PRE_TEST - Upgrade all switches using global config.
   cisco.dcnm.dcnm_image_upgrade: &global_config
     state: merged
     config:
@@ -327,38 +110,11 @@
 - debug:
     var: result
 
-- assert:
-    that:
-    - result.changed == true
-    - result.failed == false
-    - result.diff[0].action == "attach"
-    - result.diff[1].action == "attach"
-    - result.diff[2].action == "attach"
-    - result.diff[0].policy_name == image_policy_1
-    - result.diff[1].policy_name == image_policy_1
-    - result.diff[2].policy_name == image_policy_1
-    - result.diff[3].action == "stage"
-    - result.diff[4].action == "stage"
-    - result.diff[5].action == "stage"
-    - result.diff[3].policy == image_policy_1
-    - result.diff[4].policy == image_policy_1
-    - result.diff[5].policy == image_policy_1
-    - result.diff[6].action == "validate"
-    - result.diff[7].action == "validate"
-    - result.diff[8].action == "validate"
-    - result.diff[6].policy == image_policy_1
-    - result.diff[7].policy == image_policy_1
-    - result.diff[8].policy == image_policy_1
-    - result.diff[9].devices[0].policyName == image_policy_1
-    - result.diff[10].devices[0].policyName == image_policy_1
-    - result.diff[11].devices[0].policyName == image_policy_1
-    - result.response[0].RETURN_CODE == 200
-    - result.response[1].RETURN_CODE == 200
-    - result.response[3].RETURN_CODE == 200
-    - result.response[4].RETURN_CODE == 200
-    - result.response[5].RETURN_CODE == 200
+################################################################################
+# MERGED - PRE_TEST - Wait for controller response for all three switches.
+################################################################################
 
-- name: MERGED - TEST - Wait for controller response for all three switches
+- name: MERGED - PRE_TEST - Wait for controller response for all three switches.
   cisco.dcnm.dcnm_image_upgrade:
     state: query
     config:
@@ -376,7 +132,7 @@
   ignore_errors: yes
 
 ################################################################################
-# MERGED - TEST - global_config - IDEMPOTENCE
+# MERGED - TEST - global_config - test idempotence.
 ################################################################################
 # Expected result
 # ok: [dcnm] => {
@@ -389,7 +145,7 @@
 # }
 ################################################################################
 
-- name: MERGED - TEST - global_config - IDEMPOTENCE
+- name: MERGED - TEST - global_config - test idempotence.
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
