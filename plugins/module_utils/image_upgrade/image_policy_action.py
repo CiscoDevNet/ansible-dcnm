@@ -22,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
@@ -102,7 +101,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            payload: Dict[str, Any] = {}
+            payload: dict = {}
             payload["policyName"] = self.policy_name
             payload["hostName"] = self.switch_issu_details.device_name
             payload["ipAddr"] = self.switch_issu_details.ip_address
@@ -214,7 +213,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.path = self.endpoints.policy_attach.get("path")
         self.verb = self.endpoints.policy_attach.get("verb")
 
-        payload: Dict[str, Any] = {}
+        payload: dict = {}
         payload["mappingList"] = self.payloads
 
         self.response_current = {}
@@ -226,7 +225,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.result_current = self._handle_response(self.response_current, self.verb)
 
         for payload in self.payloads:
-            diff: Dict[str, Any] = {}
+            diff: dict = {}
             diff["action"] = self.action
             diff["ip_address"] = payload["ipAddr"]
             diff["logical_name"] = payload["hostName"]
@@ -240,9 +239,9 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         This method creates a list of diffs, one result, and one response.
         These are accessable via:
-            self.diff = List[Dict[str, Any]]
-            self.result = result from the controller
-            self.response = response from the controller
+            self.diff : list of dict
+            self.result : result from the controller
+            self.response : response from the controller
         """
         method_name = inspect.stack()[0][3]
 
@@ -254,7 +253,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         self.path = self.endpoints.policy_attach.get("path")
         self.verb = self.endpoints.policy_attach.get("verb")
 
-        payload: Dict[str, Any] = {}
+        payload: dict = {}
         payload["mappingList"] = self.payloads
         self.dcnm_send_with_retry(self.verb, self.path, payload)
 
@@ -270,7 +269,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
             self.ansible_module.fail_json(msg, **self.failed_result)
 
         for payload in self.payloads:
-            diff: Dict[str, Any] = {}
+            diff: dict = {}
             diff["action"] = self.action
             diff["ip_address"] = payload["ipAddr"]
             diff["logical_name"] = payload["hostName"]
@@ -318,7 +317,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            diff: Dict[str, Any] = {}
+            diff: dict = {}
             diff["action"] = self.action
             diff["ip_address"] = self.switch_issu_details.ip_address
             diff["logical_name"] = self.switch_issu_details.device_name
@@ -355,7 +354,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
 
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            diff: Dict[str, Any] = {}
+            diff: dict = {}
             diff["action"] = self.action
             diff["ip_address"] = self.switch_issu_details.ip_address
             diff["logical_name"] = self.switch_issu_details.device_name
@@ -392,7 +391,7 @@ class ImagePolicyAction(ImageUpgradeCommon):
         """
         Convenience property to return a null diff when no action is taken.
         """
-        diff: Dict[str, Any] = {}
+        diff: dict = {}
         diff["action"] = None
         diff["ip_address"] = None
         diff["logical_name"] = None
