@@ -415,12 +415,22 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_def
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
+    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_action import \
-    ImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_attach import \
+    ImagePolicyAttach
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
@@ -439,7 +449,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_is
     SwitchIssuDetailsByIpAddress
 
 
-class ImageUpgradeTask(ImageUpgradeCommon):
+class Common:
     """
     Classes and methods for Ansible support of Nexus image upgrade.
 
@@ -450,17 +460,41 @@ class ImageUpgradeTask(ImageUpgradeCommon):
     query: return switch issu details for one or more devices
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImageUpgradeTask()")
 
-        self.endpoints = ApiEndpoints()
+        self.params = params
+
+        self.check_mode = self.params.get("check_mode", None)
+        if self.check_mode is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "check_mode is required."
+            raise ValueError(msg)
+
+        self._valid_states = ["deleted", "merged", "query"]
+
+        self.state = self.params.get("state", None)
+        if self.state is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params is missing state parameter."
+            raise ValueError(msg)
+        if self.state not in self._valid_states:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid state: {self.state}. "
+            msg += f"Expected one of: {','.join(self._valid_states)}."
+            raise ValueError(msg)
+
+        self.results = Results()
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+
+        self._rest_send = None
 
         self.have = None
+
         self.idempotent_want = None
         # populated in self._merge_global_and_switch_configs()
         self.switch_configs = []
@@ -487,6 +521,11 @@ class ImageUpgradeTask(ImageUpgradeCommon):
 
         self.switch_details = SwitchDetails(self.ansible_module)
         self.image_policies = ImagePolicies(self.ansible_module)
+
+        msg = f"ENTERED Common().{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
     def get_have(self) -> None:
         """
@@ -972,78 +1011,70 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             validator.parameters = switch
             validator.commit()
 
-    def _attach_or_detach_image_policy(self, action=None) -> None:
-        """
-        Attach or detach image policies to/from switches
-        action valid values: attach, detach
 
-        Caller:
-            - self.handle_merged_state
-            - self.handle_deleted_state
 
-        NOTES:
-        - Sanity checking for action is done in ImagePolicyAction
-        """
-        msg = f"ENTERED: action: {action}"
+
+
+
+class Merged(Common):
+    def __init__(self, params):
+        self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+        self.params = params
+
+        msg = f"ENTERED {self.class_name}().{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        serial_numbers_to_update: dict = {}
+        instance = ImagePolicyAttach()
+
+    def handle_merged_state(self) -> None:
+        """
+        Update the switch policy if it has changed.
+        Stage the image if requested.
+        Validate the image if requested.
+        Upgrade the image if requested.
+
+        Caller: main()
+        """
+        msg = "ENTERED"
+        self.log.debug(msg)
+
+        self.attach_image_policy()
+
+        stage_devices: list[str] = []
+        validate_devices: list[str] = []
+        upgrade_devices: list[dict] = []
+
         self.switch_details.refresh()
-        self.image_policies.refresh()
 
         for switch in self.need:
+            msg = f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
             self.switch_details.ip_address = switch.get("ip_address")
-            self.image_policies.policy_name = switch.get("policy")
-            # ImagePolicyAction wants a policy name and a list of serial_number
-            # Build dictionary, serial_numbers_to_udate, keyed on policy name
-            # whose value is the list of serial numbers to attach/detach.
-            if self.image_policies.name not in serial_numbers_to_update:
-                serial_numbers_to_update[self.image_policies.policy_name] = []
+            device = {}
+            device["serial_number"] = self.switch_details.serial_number
+            self.have.filter = self.switch_details.ip_address
+            device["policy_name"] = switch.get("policy")
+            device["ip_address"] = self.switch_details.ip_address
 
-            serial_numbers_to_update[self.image_policies.policy_name].append(
-                self.switch_details.serial_number
-            )
+            if switch.get("stage") is not False:
+                stage_devices.append(device["serial_number"])
+            if switch.get("validate") is not False:
+                validate_devices.append(device["serial_number"])
+            if (
+                switch.get("upgrade").get("nxos") is not False
+                or switch.get("upgrade").get("epld") is not False
+            ):
+                upgrade_devices.append(switch)
 
-        instance = ImagePolicyAction(self.ansible_module)
-        if len(serial_numbers_to_update) == 0:
-            msg = f"No policies to {action}"
-            self.log.debug(msg)
+        self._stage_images(stage_devices)
+        self._validate_images(validate_devices)
 
-            if action == "attach":
-                self.task_result.diff_attach_policy = instance.diff_null
-                self.task_result.diff = instance.diff_null
-            if action == "detach":
-                self.task_result.diff_detach_policy = instance.diff_null
-                self.task_result.diff = instance.diff_null
-            return
-
-        for key, value in serial_numbers_to_update.items():
-            instance.policy_name = key
-            instance.action = action
-            instance.serial_numbers = value
-            instance.commit()
-            if action == "attach":
-                self.task_result.response_attach_policy = copy.deepcopy(
-                    instance.response_current
-                )
-                self.task_result.response = copy.deepcopy(instance.response_current)
-            if action == "detach":
-                self.task_result.response_detach_policy = copy.deepcopy(
-                    instance.response_current
-                )
-                self.task_result.response = copy.deepcopy(instance.response_current)
-
-        for diff in instance.diff:
-            msg = (
-                f"{instance.action} diff: {json.dumps(diff, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
-            if action == "attach":
-                self.task_result.diff_attach_policy = copy.deepcopy(diff)
-                self.task_result.diff = copy.deepcopy(diff)
-            elif action == "detach":
-                self.task_result.diff_detach_policy = copy.deepcopy(diff)
-                self.task_result.diff = copy.deepcopy(diff)
+        self._verify_install_options(upgrade_devices)
+        self._upgrade_images(upgrade_devices)
 
     def _stage_images(self, serial_numbers) -> None:
         """
@@ -1097,6 +1128,62 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.log.debug(msg)
             self.task_result.response_validate = copy.deepcopy(response)
             self.task_result.response = copy.deepcopy(response)
+
+    def _upgrade_images(self, devices) -> None:
+        """
+        Upgrade the switch(es) to the specified image
+
+        Callers:
+        - handle_merged_state
+        """
+        upgrade = ImageUpgrade(self.ansible_module)
+        upgrade.devices = devices
+        upgrade.commit()
+        for diff in upgrade.diff:
+            msg = "adding diff to diff_upgrade: "
+            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.task_result.diff_upgrade = copy.deepcopy(diff)
+            self.task_result.diff = copy.deepcopy(diff)
+        for response in upgrade.response:
+            msg = "adding response to response_upgrade: "
+            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.task_result.response_upgrade = copy.deepcopy(response)
+            self.task_result.response = copy.deepcopy(response)
+
+    def needs_epld_upgrade(self, epld_modules) -> bool:
+        """
+        Determine if the switch needs an EPLD upgrade
+
+        For all modules, compare EPLD oldVersion and newVersion.
+        Returns:
+        - True if newVersion > oldVersion for any module
+        - False otherwise
+
+        Callers:
+        - self._build_idempotent_want
+        """
+        if epld_modules is None:
+            return False
+        if epld_modules.get("moduleList") is None:
+            return False
+        for module in epld_modules["moduleList"]:
+            new_version = module.get("newVersion", "0x0")
+            old_version = module.get("oldVersion", "0x0")
+            # int(str, 0) enables python to guess the base
+            # of the str when converting to int.  An
+            # error is thrown without this.
+            if int(new_version, 0) > int(old_version, 0):
+                msg = f"(device: {module.get('deviceName')}), "
+                msg += f"(IP: {module.get('ipAddress')}), "
+                msg += f"(module#: {module.get('module')}), "
+                msg += f"(module: {module.get('moduleType')}), "
+                msg += f"new_version {new_version} > old_version {old_version}, "
+                msg += "returning True"
+                self.log.debug(msg)
+                return True
+        return False
 
     def _verify_install_options(self, devices) -> None:
         """
@@ -1186,119 +1273,182 @@ class ImageUpgradeTask(ImageUpgradeCommon):
                 msg += "EPLD image."
                 self.ansible_module.fail_json(msg)
 
-    def needs_epld_upgrade(self, epld_modules) -> bool:
+    def attach_image_policy(self) -> None:
         """
-        Determine if the switch needs an EPLD upgrade
-
-        For all modules, compare EPLD oldVersion and newVersion.
-        Returns:
-        - True if newVersion > oldVersion for any module
-        - False otherwise
-
-        Callers:
-        - self._build_idempotent_want
+        ### Summary
+        Attach image policies to switches.
         """
-        if epld_modules is None:
-            return False
-        if epld_modules.get("moduleList") is None:
-            return False
-        for module in epld_modules["moduleList"]:
-            new_version = module.get("newVersion", "0x0")
-            old_version = module.get("oldVersion", "0x0")
-            # int(str, 0) enables python to guess the base
-            # of the str when converting to int.  An
-            # error is thrown without this.
-            if int(new_version, 0) > int(old_version, 0):
-                msg = f"(device: {module.get('deviceName')}), "
-                msg += f"(IP: {module.get('ipAddress')}), "
-                msg += f"(module#: {module.get('module')}), "
-                msg += f"(module: {module.get('moduleType')}), "
-                msg += f"new_version {new_version} > old_version {old_version}, "
-                msg += "returning True"
-                self.log.debug(msg)
-                return True
-        return False
-
-    def _upgrade_images(self, devices) -> None:
-        """
-        Upgrade the switch(es) to the specified image
-
-        Callers:
-        - handle_merged_state
-        """
-        upgrade = ImageUpgrade(self.ansible_module)
-        upgrade.devices = devices
-        upgrade.commit()
-        for diff in upgrade.diff:
-            msg = "adding diff to diff_upgrade: "
-            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.diff_upgrade = copy.deepcopy(diff)
-            self.task_result.diff = copy.deepcopy(diff)
-        for response in upgrade.response:
-            msg = "adding response to response_upgrade: "
-            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.response_upgrade = copy.deepcopy(response)
-            self.task_result.response = copy.deepcopy(response)
-
-    def handle_merged_state(self) -> None:
-        """
-        Update the switch policy if it has changed.
-        Stage the image if requested.
-        Validate the image if requested.
-        Upgrade the image if requested.
-
-        Caller: main()
-        """
-        msg = "ENTERED"
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
-        self._attach_or_detach_image_policy(action="attach")
-
-        stage_devices: list[str] = []
-        validate_devices: list[str] = []
-        upgrade_devices: list[dict] = []
-
+        serial_numbers_to_update: dict = {}
         self.switch_details.refresh()
+        self.image_policies.refresh()
 
         for switch in self.need:
-            msg = f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
+            self.switch_details.ip_address = switch.get("ip_address")
+            self.image_policies.policy_name = switch.get("policy")
+            # ImagePolicyAttach wants a policy name and a list of serial_number.
+            # Build dictionary, serial_numbers_to_update, keyed on policy name,
+            # whose value is the list of serial numbers to attach.
+            if self.image_policies.name not in serial_numbers_to_update:
+                serial_numbers_to_update[self.image_policies.policy_name] = []
+
+            serial_numbers_to_update[self.image_policies.policy_name].append(
+                self.switch_details.serial_number
+            )
+
+        if len(serial_numbers_to_update) == 0:
+            msg = f"No policies to {action}"
             self.log.debug(msg)
 
-            self.switch_details.ip_address = switch.get("ip_address")
-            device = {}
-            device["serial_number"] = self.switch_details.serial_number
-            self.have.filter = self.switch_details.ip_address
-            device["policy_name"] = switch.get("policy")
-            device["ip_address"] = self.switch_details.ip_address
+            if action == "attach":
+                self.task_result.diff_attach_policy = instance.diff_null
+                self.task_result.diff = instance.diff_null
+            if action == "detach":
+                self.task_result.diff_detach_policy = instance.diff_null
+                self.task_result.diff = instance.diff_null
+            return
 
-            if switch.get("stage") is not False:
-                stage_devices.append(device["serial_number"])
-            if switch.get("validate") is not False:
-                validate_devices.append(device["serial_number"])
-            if (
-                switch.get("upgrade").get("nxos") is not False
-                or switch.get("upgrade").get("epld") is not False
-            ):
-                upgrade_devices.append(switch)
+        for key, value in serial_numbers_to_update.items():
+            instance.policy_name = key
+            instance.action = action
+            instance.serial_numbers = value
+            instance.commit()
+            if action == "attach":
+                self.task_result.response_attach_policy = copy.deepcopy(
+                    instance.response_current
+                )
+                self.task_result.response = copy.deepcopy(instance.response_current)
+            if action == "detach":
+                self.task_result.response_detach_policy = copy.deepcopy(
+                    instance.response_current
+                )
+                self.task_result.response = copy.deepcopy(instance.response_current)
 
-        self._stage_images(stage_devices)
-        self._validate_images(validate_devices)
+        for diff in instance.diff:
+            msg = (
+                f"{instance.action} diff: {json.dumps(diff, indent=4, sort_keys=True)}"
+            )
+            self.log.debug(msg)
+            if action == "attach":
+                self.task_result.diff_attach_policy = copy.deepcopy(diff)
+                self.task_result.diff = copy.deepcopy(diff)
+            elif action == "detach":
+                self.task_result.diff_detach_policy = copy.deepcopy(diff)
+                self.task_result.diff = copy.deepcopy(diff)
 
-        self._verify_install_options(upgrade_devices)
-        self._upgrade_images(upgrade_devices)
+class Deleted(Common):
+    def __init__(self, params):
+        self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+        self.params = params
 
-    def handle_deleted_state(self) -> None:
-        """
-        Delete the image policy from the switch(es)
-
-        Caller: main()
-        """
-        msg = "ENTERED"
+        msg = f"ENTERED {self.class_name}().{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self._attach_or_detach_image_policy("detach")
+    def commit(self) -> None:
+        """
+        ### Summary
+        Detach image policies from switches.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+
+        instance = ImagePolicyDetach()
+
+        self.detach_image_policy("detach")
+
+    def detach_image_policy(self) -> None:
+        """
+        Detach image policies from switches
+
+        Caller:
+            - self.handle_deleted_state
+
+        NOTES:
+        - Sanity checking for action is done in ImagePolicyDetach
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        serial_numbers_to_update: dict = {}
+        self.switch_details.refresh()
+        self.image_policies.refresh()
+
+        for switch in self.need:
+            self.switch_details.ip_address = switch.get("ip_address")
+            self.image_policies.policy_name = switch.get("policy")
+            # ImagePolicyDetach wants a policy name and a list of serial_number
+            # Build dictionary, serial_numbers_to_udate, keyed on policy name
+            # whose value is the list of serial numbers to attach/detach.
+            if self.image_policies.name not in serial_numbers_to_update:
+                serial_numbers_to_update[self.image_policies.policy_name] = []
+
+            serial_numbers_to_update[self.image_policies.policy_name].append(
+                self.switch_details.serial_number
+            )
+
+        instance = ImagePolicyDetach(self.ansible_module)
+        if len(serial_numbers_to_update) == 0:
+            msg = f"No policies to delete."
+            self.log.debug(msg)
+
+            if action == "attach":
+                self.task_result.diff_attach_policy = instance.diff_null
+                self.task_result.diff = instance.diff_null
+            if action == "detach":
+                self.task_result.diff_detach_policy = instance.diff_null
+                self.task_result.diff = instance.diff_null
+            return
+
+        for key, value in serial_numbers_to_update.items():
+            instance.policy_name = key
+            instance.action = action
+            instance.serial_numbers = value
+            instance.commit()
+            if action == "attach":
+                self.task_result.response_attach_policy = copy.deepcopy(
+                    instance.response_current
+                )
+                self.task_result.response = copy.deepcopy(instance.response_current)
+            if action == "detach":
+                self.task_result.response_detach_policy = copy.deepcopy(
+                    instance.response_current
+                )
+                self.task_result.response = copy.deepcopy(instance.response_current)
+
+        for diff in instance.diff:
+            msg = (
+                f"{instance.action} diff: {json.dumps(diff, indent=4, sort_keys=True)}"
+            )
+            self.log.debug(msg)
+            if action == "attach":
+                self.task_result.diff_attach_policy = copy.deepcopy(diff)
+                self.task_result.diff = copy.deepcopy(diff)
+            elif action == "detach":
+                self.task_result.diff_detach_policy = copy.deepcopy(diff)
+                self.task_result.diff = copy.deepcopy(diff)
+
+
+class Query(Common):
+    def __init__(self, params):
+        self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+        self.params = params
+
+        msg = f"ENTERED {self.class_name}().{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
     def handle_query_state(self) -> None:
         """
@@ -1323,21 +1473,21 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             self.task_result.diff_issu_status = instance.filtered_data
             self.task_result.diff = instance.filtered_data
 
-    def _failure(self, resp) -> None:
-        """
-        Caller: self.attach_policies()
-        """
-        res = copy.deepcopy(resp)
+    # def _failure(self, resp) -> None:
+    #     """
+    #     Caller: self.attach_policies()
+    #     """
+    #     res = copy.deepcopy(resp)
 
-        if resp.get("DATA"):
-            data = copy.deepcopy(resp.get("DATA"))
-            if data.get("stackTrace"):
-                data.update(
-                    {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
-                )
-                res.update({"DATA": data})
+    #     if resp.get("DATA"):
+    #         data = copy.deepcopy(resp.get("DATA"))
+    #         if data.get("stackTrace"):
+    #             data.update(
+    #                 {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
+    #             )
+    #             res.update({"DATA": data})
 
-        self.ansible_module.fail_json(msg=res)
+    #     self.ansible_module.fail_json(msg=res)
 
 
 def main():
@@ -1350,12 +1500,21 @@ def main():
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
+    params = copy.deepcopy(ansible_module.params)
+    params["check_mode"] = ansible_module.check_mode
+
     # Logging setup
     try:
         log = Log()
         log.commit()
     except ValueError as error:
         ansible_module.fail_json(str(error))
+
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     task_module = ImageUpgradeTask(ansible_module)
 
