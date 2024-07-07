@@ -409,7 +409,7 @@ import logging
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
     ParamsMergeDefaults
@@ -923,11 +923,17 @@ class ImageUpgradeTask(ImageUpgradeCommon):
             msg = f"switch PRE_MERGE : {json.dumps(switch, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            merge_dicts = MergeDicts(self.ansible_module)
-            merge_dicts.dict1 = global_config
-            merge_dicts.dict2 = switch
-            merge_dicts.commit()
-            switch_config = merge_dicts.dict_merged
+            try:
+                merge = MergeDicts()
+                merge.dict1 = global_config
+                merge.dict2 = switch
+                merge.commit()
+            except (TypeError, ValueError) as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error during MergeDicts(). "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
+            switch_config = merge.dict_merged
 
             msg = f"switch POST_MERGE: {json.dumps(switch_config, indent=4, sort_keys=True)}"
             self.log.debug(msg)
