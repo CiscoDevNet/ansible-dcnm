@@ -413,7 +413,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 i
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
     ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
     ApiEndpoints
@@ -965,7 +965,7 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         Callers:
             - self.get_want
         """
-        validator = ParamsValidate(self.ansible_module)
+        validator = ParamsValidate()
         validator.params_spec = self._build_params_spec()
 
         for switch in self.switch_configs:
