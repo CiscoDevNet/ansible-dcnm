@@ -411,7 +411,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
     MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
     ParamsMergeDefaults
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
@@ -948,12 +948,12 @@ class ImageUpgradeTask(ImageUpgradeCommon):
         """
         configs_to_merge = copy.copy(self.switch_configs)
         merged_configs = []
-        merge = ParamsMergeDefaults(self.ansible_module)
-        merge.params_spec = self._build_params_spec()
+        merge_defaults = ParamsMergeDefaults()
+        merge_defaults.params_spec = self._build_params_spec()
         for switch_config in configs_to_merge:
-            merge.parameters = switch_config
-            merge.commit()
-            merged_configs.append(merge.merged_parameters)
+            merge_defaults.parameters = switch_config
+            merge_defaults.commit()
+            merged_configs.append(merge_defaults.merged_parameters)
         self.switch_configs = copy.copy(merged_configs)
 
     def _validate_switch_configs(self) -> None:
