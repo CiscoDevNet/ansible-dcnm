@@ -407,7 +407,8 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
+    Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults import \
@@ -1343,24 +1344,12 @@ def main():
 
     ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
-    # Create the base/parent logger for the dcnm collection.
-    # To enable logging, set enable_logging to True.
-    # log.config can be either a dictionary, or a path to a JSON file
-    # Both dictionary and JSON file formats must be conformant with
-    # logging.config.dictConfig and must not log to the console.
-    # For an example configuration, see:
-    # $ANSIBLE_COLLECTIONS_PATH/cisco/dcnm/plugins/module_utils/common/logging_config.json
-    enable_logging = False
-    log = Log(ansible_module)
-    if enable_logging is True:
-        collection_path = (
-            "/Users/arobel/repos/collections/ansible_collections/cisco/dcnm"
-        )
-        config_file = (
-            f"{collection_path}/plugins/module_utils/common/logging_config.json"
-        )
-        log.config = config_file
-    log.commit()
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except ValueError as error:
+        ansible_module.fail_json(str(error))
 
     task_module = ImageUpgradeTask(ansible_module)
 
