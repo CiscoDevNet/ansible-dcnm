@@ -20,23 +20,25 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 from time import sleep
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.stagingmanagement.stagingmanagement import \
+    EpImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 
-class ImageStage(ImageUpgradeCommon):
+@Properties.add_params
+@Properties.add_rest_send
+@Properties.add_results
+class ImageStage:
     """
     Endpoint:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
@@ -98,37 +100,34 @@ class ImageStage(ImageUpgradeCommon):
         ]
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+
+        self.action = "image_stage"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImageStage() "
-        msg += f"check_mode {self.check_mode}"
-        self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
-        self.path = self.endpoints.image_stage.get("path")
-        self.verb = self.endpoints.image_stage.get("verb")
+        self.endpoint = EpImageStage()
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
         self.payload = None
 
-        self.rest_send = RestSend(self.ansible_module)
-        self._init_properties()
         self.serial_numbers_done = set()
         self.controller_version = None
-        self.issu_detail = SwitchIssuDetailsBySerialNumber(self.ansible_module)
+        self.issu_detail = SwitchIssuDetailsBySerialNumber()
+        self._serial_numbers = None
+        self._check_interval = 10  # seconds
+        self._check_timeout = 1800  # seconds
 
-    def _init_properties(self):
-        # self.properties is already initialized in the parent class
-        self.properties["serial_numbers"] = None
-        self.properties["check_interval"] = 10  # seconds
-        self.properties["check_timeout"] = 1800  # seconds
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def _populate_controller_version(self):
         """
         Populate self.controller_version with the running controller version.
         """
-        instance = ControllerVersion(self.ansible_module)
+        instance = ControllerVersion()
         instance.refresh()
         self.controller_version = instance.version
 
@@ -146,8 +145,13 @@ class ImageStage(ImageUpgradeCommon):
 
     def validate_serial_numbers(self):
         """
+        ### Summary
         Fail if the image_staged state for any serial_number
         is Failed.
+
+        ### Raises
+        -   ``ControllerResponseError`` if:
+                -   image_staged is Failed for any serial_number.
         """
         method_name = inspect.stack()[0][3]
         self.issu_detail.refresh()
@@ -162,123 +166,11 @@ class ImageStage(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.serial_number}. "
                 msg += "Check the switch connectivity to the controller "
                 msg += "and try again."
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                raise ControllerResponseError(msg)
 
     def commit(self) -> None:
-        if self.check_mode is True:
-            self.commit_check_mode()
-        else:
-            self.commit_normal_mode()
-
-    def commit_check_mode(self) -> None:
         """
-        Simulate a commit of the image staging request to the
-        controller.
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"ENTERED {self.class_name}.{method_name}"
-        self.log.debug(msg)
-
-        msg = f"self.serial_numbers: {self.serial_numbers}"
-        self.log.debug(msg)
-
-        if self.serial_numbers is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "call instance.serial_numbers "
-            msg += "before calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        if len(self.serial_numbers) == 0:
-            msg = "No files to stage."
-            response_current = {"DATA": [{"key": "ALL", "value": msg}]}
-            self.response_current = response_current
-            self.response = response_current
-            self.response_data = response_current.get("DATA", "No Stage DATA")
-            self.result = {"changed": False, "success": True}
-            self.result_current = {"changed": False, "success": True}
-            return
-
-        self.prune_serial_numbers()
-        self.validate_serial_numbers()
-
-        self.payload = {}
-        self._populate_controller_version()
-
-        if self.controller_version == "12.1.2e":
-            # Yes, version 12.1.2e wants serialNum to be misspelled
-            self.payload["sereialNum"] = self.serial_numbers
-        else:
-            self.payload["serialNumbers"] = self.serial_numbers
-
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.payload = self.payload
-
-        self.rest_send.check_mode = True
-
-        self.rest_send.commit()
-
-        self.response_current = {}
-        self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.response_current["MESSAGE"] = "OK"
-        self.response_current["METHOD"] = self.verb
-        self.response_current["REQUEST_PATH"] = self.path
-        self.response_current["RETURN_CODE"] = 200
-        self.response = copy.deepcopy(self.response_current)
-
-        self.response_data = self.response_current.get("DATA")
-
-        self.result_current = self.rest_send._handle_response(self.response_current)
-        self.result = copy.deepcopy(self.result_current)
-
-        msg = "payload: "
-        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_data: "
-        msg += f"{self.response_data}"
-        self.log.debug(msg)
-
-        msg = "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if not self.result_current["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.response_current}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        for serial_number in self.serial_numbers:
-            self.issu_detail.filter = serial_number
-            diff = {}
-            diff["action"] = "stage"
-            diff["ip_address"] = self.issu_detail.ip_address
-            diff["logical_name"] = self.issu_detail.device_name
-            diff["policy"] = self.issu_detail.policy
-            diff["serial_number"] = serial_number
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(diff)
-
-        msg = "self.diff: "
-        msg += f"{json.dumps(self.diff, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-    def commit_normal_mode(self) -> None:
-        """
+        ### Summary
         Commit the image staging request to the controller and wait
         for the images to be staged.
         """
@@ -294,16 +186,18 @@ class ImageStage(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.serial_numbers "
             msg += "before calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if len(self.serial_numbers) == 0:
             msg = "No files to stage."
             response_current = {"DATA": [{"key": "ALL", "value": msg}]}
-            self.response_current = response_current
-            self.response = response_current
-            self.response_data = response_current.get("DATA", "No Stage DATA")
-            self.result = {"changed": False, "success": True}
-            self.result_current = {"changed": False, "success": True}
+            self.results.response_current = response_current
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.check_mode = self.params.get("check_mode")
+            self.results.state = self.params.get("state")
+            self.results.result_current = self.results.ok_result
+            self.results.register_task_result()
             return
 
         self.prune_serial_numbers()
@@ -319,50 +213,43 @@ class ImageStage(ImageUpgradeCommon):
         else:
             self.payload["serialNumbers"] = self.serial_numbers
 
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.payload = self.payload
-
-        self.rest_send.check_mode = False
-
-        self.rest_send.commit()
-
-        self.response = self.rest_send.response_current
-        self.response_current = self.rest_send.response_current
-        self.response_data = self.response_current.get("DATA", "No Stage DATA")
-
-        self.result = self.rest_send.result_current
-        self.result_current = self.rest_send.result_current
-
-        msg = "payload: "
-        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_data: "
-        msg += f"{self.response_data}"
-        self.log.debug(msg)
-
-        msg = "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if not self.result_current["success"]:
+        try:
+            self.rest_send.verb = self.verb
+            self.rest_send.path = self.path
+            self.rest_send.payload = self.payload
+            self.rest_send.commit()
+        except (TypeError, ValueError) as error:
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.check_mode = self.params.get("check_mode")
+            self.results.state = self.params.get("state")
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.response_current}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += "Error while sending request. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        if self.rest_send.result_current["success"] is False:
+            self.results.diff_current = {}
+        else:
+            self.results.diff_current = copy.deepcopy(self.payload)
+
+        self.results.action = self.action
+        self.results.check_mode = self.params.get("check_mode")
+        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.results.state = self.params.get("state")
+        self.results.register_task_result()
+
+        if not self.rest_send.result_current["success"]:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"failed: {self.rest_send.result_current}. "
+            msg += f"Controller response: {self.rest_send.response_current}"
+            raise ValueError(msg)
 
         self._wait_for_image_stage_to_complete()
 
@@ -374,12 +261,16 @@ class ImageStage(ImageUpgradeCommon):
             diff["logical_name"] = self.issu_detail.device_name
             diff["policy"] = self.issu_detail.policy
             diff["serial_number"] = serial_number
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(diff)
 
-        msg = "self.diff: "
-        msg += f"{json.dumps(self.diff, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+            self.results.action = self.action
+            self.results.check_mode = self.params.get("check_mode")
+            self.results.diff_current = copy.deepcopy(diff)
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.state = self.params.get("state")
+            self.results.register_task_result()
 
     def _wait_for_current_actions_to_complete(self):
         """
@@ -415,7 +306,7 @@ class ImageStage(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
     def _wait_for_image_stage_to_complete(self):
         """
@@ -448,7 +339,7 @@ class ImageStage(ImageUpgradeCommon):
                     msg += f"Seconds remaining {timeout}: stage image failed "
                     msg += f"for {device_name}, {serial_number}, {ip_address}. "
                     msg += f"image staged percent: {staged_percent}"
-                    self.ansible_module.fail_json(msg, **self.failed_result)
+                    raise ValueError(msg)
 
                 if staged_status == "Success":
                     self.serial_numbers_done.add(serial_number)
@@ -467,16 +358,21 @@ class ImageStage(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
     @property
     def serial_numbers(self):
         """
+        ### Summary
         Set the serial numbers of the switches to stage.
 
         This must be set before calling instance.commit()
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   value is not a list of switch serial numbers.
         """
-        return self.properties.get("serial_numbers")
+        return self._serial_numbers
 
     @serial_numbers.setter
     def serial_numbers(self, value):
@@ -484,15 +380,22 @@ class ImageStage(ImageUpgradeCommon):
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "must be a python list of switch serial numbers."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["serial_numbers"] = value
+            raise TypeError(msg)
+        self._serial_numbers = value
 
     @property
     def check_interval(self):
         """
-        Return the stage check interval in seconds
+        ### Summary
+        The stage check interval, in seconds.
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   value is not a positive integer.
+        -   ``ValueError`` if:
+                -   value is an integer less than zero.
         """
-        return self.properties.get("check_interval")
+        return self._check_interval
 
     @check_interval.setter
     def check_interval(self, value):
@@ -502,19 +405,24 @@ class ImageStage(ImageUpgradeCommon):
         msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if value < 0:
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_interval"] = value
+            raise ValueError(msg)
+        self._check_interval = value
 
     @property
     def check_timeout(self):
         """
-        Return the stage check timeout in seconds
+        ### Summary
+        The stage check timeout, in seconds.
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   value is not a positive integer.
         """
-        return self.properties.get("check_timeout")
+        return self._check_timeout
 
     @check_timeout.setter
     def check_timeout(self, value):
@@ -524,9 +432,9 @@ class ImageStage(ImageUpgradeCommon):
         msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if value < 0:
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_timeout"] = value
+            raise ValueError(msg)
+        self._check_timeout = value

@@ -24,17 +24,18 @@ import json
 import logging
 from time import sleep
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.stagingmanagement.stagingmanagement import \
+    EpImageValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 
-class ImageValidate(ImageUpgradeCommon):
+@Properties.add_params
+@Properties.add_rest_send
+@Properties.add_results
+class ImageValidate:
     """
     Endpoint:
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
@@ -67,36 +68,23 @@ class ImageValidate(ImageUpgradeCommon):
     SwitchIssuDetailsBySerialNumber.
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImageValidate() "
-        msg += f"check_mode {self.check_mode}"
-        self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
+        self.endpoint = EpImageValidate()
 
-        self.path = self.endpoints.image_validate.get("path")
-        self.verb = self.endpoints.image_validate.get("verb")
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
         self.payload = {}
         self.serial_numbers_done: set = set()
 
-        self._init_properties()
-        self.issu_detail = SwitchIssuDetailsBySerialNumber(self.ansible_module)
+        self.issu_detail = SwitchIssuDetailsBySerialNumber()
 
-    def _init_properties(self) -> None:
-        """
-        Initialize the properties dictionary
-        """
-
-        # self.properties is already initialized in the parent class
-        self.properties["check_interval"] = 10  # seconds
-        self.properties["check_timeout"] = 1800  # seconds
-        self.properties["non_disruptive"] = False
-        self.properties["serial_numbers"] = []
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def prune_serial_numbers(self) -> None:
         """
@@ -142,7 +130,7 @@ class ImageValidate(ImageUpgradeCommon):
                 msg += f"{self.issu_detail.serial_number}. "
                 msg += "If this persists, check the switch connectivity to "
                 msg += "the controller and try again."
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                raise ValueError(msg)
 
     def build_payload(self) -> None:
         """
@@ -157,110 +145,10 @@ class ImageValidate(ImageUpgradeCommon):
     def commit(self) -> None:
         """
         ### Summary
-        Commit the image validation request to the controller.
-
-        ### Raises
-        """
-        if self.check_mode is True:
-            self.commit_check_mode()
-        else:
-            self.commit_normal_mode()
-
-    def commit_check_mode(self) -> None:
-        """
-        Simulate a commit of the image validation request to the
-        controller.
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"ENTERED: self.serial_numbers: {self.serial_numbers}"
-        self.log.debug(msg)
-
-        if len(self.serial_numbers) == 0:
-            msg = "No serial numbers to validate."
-            self.response_current = {"response": msg}
-            self.result_current = {"success": True}
-            self.response_data = {"response": msg}
-            self.response = self.response_current
-            self.result = self.result_current
-            return
-
-        self.prune_serial_numbers()
-        self.validate_serial_numbers()
-
-        self.build_payload()
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.payload = self.payload
-
-        self.rest_send.check_mode = True
-
-        self.rest_send.commit()
-
-        self.response_current = {}
-        self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.response_current["MESSAGE"] = "OK"
-        self.response_current["METHOD"] = self.verb
-        self.response_current["REQUEST_PATH"] = self.path
-        self.response_current["RETURN_CODE"] = 200
-        self.response = copy.deepcopy(self.response_current)
-
-        self.response_data = self.response_current.get("DATA")
-
-        # pylint: disable=protected-access
-        self.result_current = self.rest_send._handle_response(self.response_current)
-        # pylint: enable=protected-access
-        self.result = copy.deepcopy(self.result_current)
-
-        msg = "self.payload: "
-        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_data: "
-        msg += f"{self.response_data}"
-        self.log.debug(msg)
-
-        msg = "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if not self.result_current["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.response_current}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        for serial_number in self.serial_numbers:
-            self.issu_detail.filter = serial_number
-            diff = {}
-            diff["action"] = "validate"
-            diff["ip_address"] = self.issu_detail.ip_address
-            diff["logical_name"] = self.issu_detail.device_name
-            diff["policy"] = self.issu_detail.policy
-            diff["serial_number"] = serial_number
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(diff)
-
-        msg = "self.diff: "
-        msg += f"{json.dumps(self.diff, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-    def commit_normal_mode(self) -> None:
-        """
         Commit the image validation request to the controller and wait
         for the images to be validated.
+
+        ### Raises
         """
         method_name = inspect.stack()[0][3]
 
@@ -330,7 +218,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"failed: {self.result_current}. "
             msg += f"Controller response: {self.response_current}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         self.properties["response_data"] = self.response
         self._wait_for_image_validate_to_complete()
@@ -383,7 +271,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
     def _wait_for_image_validate_to_complete(self) -> None:
         """
@@ -423,7 +311,7 @@ class ImageValidate(ImageUpgradeCommon):
                     msg += "check Operations > Image Management > "
                     msg += "Devices > View Details > Validate on the "
                     msg += "controller GUI for more details."
-                    self.ansible_module.fail_json(msg, **self.failed_result)
+                    raise ValueError(msg)
 
                 if validated_status == "Success":
                     self.serial_numbers_done.add(serial_number)
@@ -441,7 +329,7 @@ class ImageValidate(ImageUpgradeCommon):
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
             msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
     @property
     def serial_numbers(self) -> list:
@@ -450,7 +338,7 @@ class ImageValidate(ImageUpgradeCommon):
 
         This must be set before calling instance.commit()
         """
-        return self.properties.get("serial_numbers", [])
+        return self._serial_numbers
 
     @serial_numbers.setter
     def serial_numbers(self, value: list):
@@ -461,16 +349,15 @@ class ImageValidate(ImageUpgradeCommon):
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        self.properties["serial_numbers"] = value
+            raise TypeError(msg)
+        self._serial_numbers = value
 
     @property
     def non_disruptive(self):
         """
         Set the non_disruptive flag to True or False.
         """
-        return self.properties.get("non_disruptive")
+        return self._non_disruptive
 
     @non_disruptive.setter
     def non_disruptive(self, value):
@@ -481,16 +368,16 @@ class ImageValidate(ImageUpgradeCommon):
             msg = f"{self.class_name}.{self.method_name}: "
             msg += "instance.non_disruptive must be a boolean. "
             msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
-        self.properties["non_disruptive"] = value
+        self._non_disruptive = value
 
     @property
     def check_interval(self):
         """
         Return the validate check interval in seconds
         """
-        return self.properties.get("check_interval")
+        return self._check_interval
 
     @check_interval.setter
     def check_interval(self, value):
@@ -500,19 +387,19 @@ class ImageValidate(ImageUpgradeCommon):
         msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if value < 0:
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_interval"] = value
+            raise ValueError(msg)
+        self._check_interval = value
 
     @property
     def check_timeout(self):
         """
         Return the validate check timeout in seconds
         """
-        return self.properties.get("check_timeout")
+        return self._check_timeout
 
     @check_timeout.setter
     def check_timeout(self, value):
@@ -522,9 +409,9 @@ class ImageValidate(ImageUpgradeCommon):
         msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if value < 0:
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_timeout"] = value
+            raise ValueError(msg)
+        self._check_timeout = value

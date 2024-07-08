@@ -25,10 +25,10 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyAttach
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
+    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
-    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
@@ -36,7 +36,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_is
 @Properties.add_rest_send
 @Properties.add_results
 @Properties.add_params
-class ImagePolicyAttach():
+class ImagePolicyAttach:
     """
     ### Summary
     Attach image policies to one or more switches.
@@ -83,13 +83,14 @@ class ImagePolicyAttach():
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
-
+        self.action = "image_policy_attach"
         self.endpoint = EpPolicyAttach()
+        self.verb = self.endpoint.verb
+        self.path = self.endpoint.path
+
         self.image_policies = ImagePolicies()
-        self.path = None
         self.payloads = []
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber()
-        self.verb = None
 
         self._params = None
         self._rest_send = None
@@ -108,7 +109,7 @@ class ImagePolicyAttach():
         """
         method_name = inspect.stack()[0][3]
 
-        msg = "ENTERED"
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
         self.payloads = []
@@ -135,7 +136,7 @@ class ImagePolicyAttach():
                     msg += f"{self.switch_issu_details.device_name}. "
                     msg += "Please verify that the switch is managed by "
                     msg += "the controller."
-                    self.ansible_module.fail_json(msg, **self.failed_result)
+                    raise ValueError(msg)
             self.payloads.append(payload)
 
     def verify_commit_parameters(self):
@@ -160,9 +161,6 @@ class ImagePolicyAttach():
             msg += "instance.policy_name must be set before "
             msg += "calling commit()"
             raise ValueError(msg)
-
-        if self.action == "query":
-            return
 
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -221,52 +219,15 @@ class ImagePolicyAttach():
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self._attach_policy()
+        self.attach_policy()
 
-    def _attach_policy(self):
-        if self.check_mode is True:
-            self._attach_policy_check_mode()
-        else:
-            self._attach_policy_normal_mode()
-
-    def _attach_policy_check_mode(self):
+    def attach_policy(self):
         """
-        Simulate _attach_policy()
-        """
-        self.build_payload()
+        ### Summary
+        Attach policy_name to the switch(es) associated with serial_numbers.
 
-        self.path = self.endpoints.policy_attach.get("path")
-        self.verb = self.endpoints.policy_attach.get("verb")
-
-        payload: dict = {}
-        payload["mappingList"] = self.payloads
-
-        self.response_current = {}
-        self.response_current["RETURN_CODE"] = 200
-        self.response_current["METHOD"] = self.verb
-        self.response_current["REQUEST_PATH"] = self.path
-        self.response_current["MESSAGE"] = "OK"
-        self.response_current["DATA"] = "[simulated-check-mode-response:Success] "
-        self.result_current = self._handle_response(self.response_current, self.verb)
-
-        for payload in self.payloads:
-            diff: dict = {}
-            diff["action"] = self.action
-            diff["ip_address"] = payload["ipAddr"]
-            diff["logical_name"] = payload["hostName"]
-            diff["policy_name"] = payload["policyName"]
-            diff["serial_number"] = payload["serialNumber"]
-            self.diff = copy.deepcopy(diff)
-
-    def _attach_policy_normal_mode(self):
-        """
-        Attach policy_name to the switch(es) associated with serial_numbers
-
-        This method creates a list of diffs, one result, and one response.
-        These are accessable via:
-            self.diff : list of dict
-            self.result : result from the controller
-            self.response : response from the controller
+        ### Raises
+        -   ValueError: if the result of the POST request is not successful.
         """
         method_name = inspect.stack()[0][3]
 
@@ -275,23 +236,26 @@ class ImagePolicyAttach():
 
         self.build_payload()
 
-        self.path = self.endpoint.path
-        self.verb = self.endpoint.verb
-
         payload: dict = {}
         payload["mappingList"] = self.payloads
-        self.dcnm_send_with_retry(self.verb, self.path, payload)
+        self.rest_send.check_mode = self.params.check_mode
+        self.rest_send.payload = payload
+        self.rest_send.path = self.path
+        self.rest_send.verb = self.verb
+        self.rest_send.commit()
 
-        msg = f"result_current: {json.dumps(self.result_current, indent=4)}"
+        msg = f"result_current: {json.dumps(self.rest_send.result_current, indent=4)}"
         self.log.debug(msg)
-        msg = f"response_current: {json.dumps(self.response_current, indent=4)}"
+        msg = (
+            f"response_current: {json.dumps(self.rest_send.response_current, indent=4)}"
+        )
         self.log.debug(msg)
 
-        if not self.result_current["success"]:
+        if not self.rest_send.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when attaching policy {self.policy_name} "
             msg += f"to switch. Payload: {payload}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         for payload in self.payloads:
             diff: dict = {}
@@ -300,7 +264,7 @@ class ImagePolicyAttach():
             diff["logical_name"] = payload["hostName"]
             diff["policy_name"] = payload["policyName"]
             diff["serial_number"] = payload["serialNumber"]
-            self.diff = copy.deepcopy(diff)
+            self.results.diff = copy.deepcopy(diff)
 
     @property
     def policy_name(self):
@@ -338,10 +302,10 @@ class ImagePolicyAttach():
             msg += "instance.serial_numbers must be a "
             msg += "python list of switch serial numbers. "
             msg += f"Got {value}."
-            raise TypeError(msg, **self.failed_result)
+            raise TypeError(msg)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must contain at least one "
             msg += "switch serial number."
-            raise ValueError(msg, **self.failed_result)
+            raise ValueError(msg)
         self._serial_numbers = value
