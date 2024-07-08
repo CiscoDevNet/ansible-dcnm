@@ -407,6 +407,8 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
+    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
@@ -425,30 +427,30 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
-    ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_attach import \
     ImagePolicyAttach
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
-    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
-    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
 
+def json_pretty(msg):
+    """
+    Return a pretty-printed JSON string for logging messages
+    """
+    return json.dumps(msg, indent=4, sort_keys=True)
+
+
+@Properties.add_rest_send
 class Common:
     """
     Classes and methods for Ansible support of Nexus image upgrade.
@@ -487,6 +489,13 @@ class Common:
             msg += f"Expected one of: {','.join(self._valid_states)}."
             raise ValueError(msg)
 
+        self.config = self.params.get("config", None)
+        if not isinstance(self.config, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "expected dict type for self.config. "
+            msg += f"got {type(self.config).__name__}"
+            raise TypeError(msg)
+
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
@@ -502,13 +511,11 @@ class Common:
         self.path = None
         self.verb = None
 
-        self.config = ansible_module.params.get("config", {})
-
         if not isinstance(self.config, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "expected dict type for self.config. "
             msg += f"got {type(self.config).__name__}"
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
 
         self.check_mode = False
 
@@ -516,11 +523,8 @@ class Common:
         self.want = []
         self.need = []
 
-        self.task_result = ImageUpgradeTaskResult(self.ansible_module)
-        self.task_result.changed = False
-
-        self.switch_details = SwitchDetails(self.ansible_module)
-        self.image_policies = ImagePolicies(self.ansible_module)
+        self.switch_details = SwitchDetails()
+        self.image_policies = ImagePolicies()
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
@@ -535,7 +539,11 @@ class Common:
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        self.have = SwitchIssuDetailsByIpAddress(self.ansible_module)
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+        self.have = SwitchIssuDetailsByIpAddress()
+        self.have.rest_send = self.rest_send
+        self.have.results = self.results
         self.have.refresh()
 
     def get_want(self) -> None:
@@ -684,49 +692,6 @@ class Common:
         msg = "self.idempotent_want POST EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-
-    def get_need_merged(self) -> None:
-        """
-        Caller: main()
-
-        For merged state, populate self.need list() with items from
-        our want list that are not in our have list.  These items will
-        be sent to the controller.
-        """
-        need: list[dict] = []
-
-        msg = "self.want: "
-        msg += f"{json.dumps(self.want, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        for want in self.want:
-            self.have.filter = want["ip_address"]
-
-            msg = f"self.have.serial_number: {self.have.serial_number}"
-            self.log.debug(msg)
-
-            if self.have.serial_number is not None:
-                self._build_idempotent_want(want)
-
-                msg = "self.idempotent_want: "
-                msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-
-                test_idempotence = set()
-                test_idempotence.add(self.idempotent_want["policy_changed"])
-                test_idempotence.add(self.idempotent_want["stage"])
-                test_idempotence.add(self.idempotent_want["upgrade"]["nxos"])
-                test_idempotence.add(self.idempotent_want["upgrade"]["epld"])
-                test_idempotence.add(
-                    self.idempotent_want["options"]["package"]["install"]
-                )
-                # NOTE: InstallOptions doesn't seem to have a way to determine package uninstall.
-                # NOTE: For now, we'll comment this out so that it doesn't muck up idempotence.
-                # test_idempotence.add(self.idempotent_want["options"]["package"]["uninstall"])
-                if True not in test_idempotence:
-                    continue
-                need.append(self.idempotent_want)
-        self.need = copy.copy(need)
 
     def get_need_deleted(self) -> None:
         """
@@ -1012,41 +977,62 @@ class Common:
             validator.commit()
 
 
-
-
-
-
 class Merged(Common):
+    """
+    ### Summary
+    Handle merged state
+
+    ### Raises
+    -   ``ValueError`` if:
+        -   ``params`` is missing ``config`` key.
+        -   ``commit()`` is issued before setting mandatory properties
+    """
+
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-        self.params = params
+        try:
+            super().__init__(params)
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during super().__init__(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        msg = f"params: {json_pretty(self.params)}"
+        self.log.debug(msg)
+        if not params.get("config"):
+            msg = f"playbook config is required for {self.state}"
+            raise ValueError(msg)
+
+        self.image_policy_attach = ImagePolicyAttach()
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        instance = ImagePolicyAttach()
-
-    def handle_merged_state(self) -> None:
+    def commit(self) -> None:
         """
-        Update the switch policy if it has changed.
-        Stage the image if requested.
-        Validate the image if requested.
-        Upgrade the image if requested.
-
-        Caller: main()
+        ### Summary
+        -   Update the switch policy if it has changed.
+        -   Stage the image if requested.
+        -   Validate the image if requested.
+        -   Upgrade the image if requested.
         """
-        msg = "ENTERED"
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
+        self.get_have()
+        self.get_need()
         self.attach_image_policy()
 
         stage_devices: list[str] = []
         validate_devices: list[str] = []
         upgrade_devices: list[dict] = []
 
+        self.switch_details.rest_send = self.rest_send
         self.switch_details.refresh()
 
         for switch in self.need:
@@ -1076,6 +1062,48 @@ class Merged(Common):
         self._verify_install_options(upgrade_devices)
         self._upgrade_images(upgrade_devices)
 
+    def get_need(self) -> None:
+        """
+        ### Summary
+        For merged state, populate self.need list() with items from
+        our want list that are not in our have list.  These items will
+        be sent to the controller.
+        """
+        need: list[dict] = []
+
+        msg = "self.want: "
+        msg += f"{json.dumps(self.want, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        for want in self.want:
+            self.have.filter = want["ip_address"]
+
+            msg = f"self.have.serial_number: {self.have.serial_number}"
+            self.log.debug(msg)
+
+            if self.have.serial_number is not None:
+                self._build_idempotent_want(want)
+
+                msg = "self.idempotent_want: "
+                msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                test_idempotence = set()
+                test_idempotence.add(self.idempotent_want["policy_changed"])
+                test_idempotence.add(self.idempotent_want["stage"])
+                test_idempotence.add(self.idempotent_want["upgrade"]["nxos"])
+                test_idempotence.add(self.idempotent_want["upgrade"]["epld"])
+                test_idempotence.add(
+                    self.idempotent_want["options"]["package"]["install"]
+                )
+                # NOTE: InstallOptions doesn't seem to have a way to determine package uninstall.
+                # NOTE: For now, we'll comment this out so that it doesn't muck up idempotence.
+                # test_idempotence.add(self.idempotent_want["options"]["package"]["uninstall"])
+                if True not in test_idempotence:
+                    continue
+                need.append(self.idempotent_want)
+        self.need = copy.copy(need)
+
     def _stage_images(self, serial_numbers) -> None:
         """
         Initiate image staging to the switch(es) associated
@@ -1087,21 +1115,12 @@ class Merged(Common):
         msg = f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
-        instance = ImageStage(self.ansible_module)
+        instance = ImageStage()
+        instance.params = self.params
+        instance.rest_send = self.rest_send
+        instance.results = self.results
         instance.serial_numbers = serial_numbers
         instance.commit()
-        for diff in instance.diff:
-            msg = "adding diff to task_result.diff_stage: "
-            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.diff_stage = copy.deepcopy(diff)
-            self.task_result.diff = copy.deepcopy(diff)
-        for response in instance.response:
-            msg = "adding response to task_result.response_stage: "
-            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.response_stage = copy.deepcopy(response)
-            self.task_result.response = copy.deepcopy(response)
 
     def _validate_images(self, serial_numbers) -> None:
         """
@@ -1113,21 +1132,12 @@ class Merged(Common):
         msg = f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
-        instance = ImageValidate(self.ansible_module)
+        instance = ImageValidate()
         instance.serial_numbers = serial_numbers
+        instance.rest_send = self.rest_send
+        instance.results = self.results
+        instance.params = self.params
         instance.commit()
-        for diff in instance.diff:
-            msg = "adding diff to task_result.diff_validate: "
-            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.diff_validate = copy.deepcopy(diff)
-            self.task_result.diff = copy.deepcopy(diff)
-        for response in instance.response:
-            msg = "adding response to task_result.response_validate: "
-            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.response_validate = copy.deepcopy(response)
-            self.task_result.response = copy.deepcopy(response)
 
     def _upgrade_images(self, devices) -> None:
         """
@@ -1136,21 +1146,11 @@ class Merged(Common):
         Callers:
         - handle_merged_state
         """
-        upgrade = ImageUpgrade(self.ansible_module)
+        upgrade = ImageUpgrade()
+        upgrade.rest_send = self.rest_send
+        upgrade.results = self.results
         upgrade.devices = devices
         upgrade.commit()
-        for diff in upgrade.diff:
-            msg = "adding diff to diff_upgrade: "
-            msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.diff_upgrade = copy.deepcopy(diff)
-            self.task_result.diff = copy.deepcopy(diff)
-        for response in upgrade.response:
-            msg = "adding response to response_upgrade: "
-            msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.task_result.response_upgrade = copy.deepcopy(response)
-            self.task_result.response = copy.deepcopy(response)
 
     def needs_epld_upgrade(self, epld_modules) -> bool:
         """
@@ -1254,7 +1254,7 @@ class Merged(Common):
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += "NX-OS image"
-                self.ansible_module.fail_json(msg)
+                raise ValueError(msg)
 
             msg = f"install_options.epld: {install_options.epld}"
             self.log.debug(msg)
@@ -1271,7 +1271,7 @@ class Merged(Common):
                 msg += f"{device['ip_address']}, but the image policy "
                 msg += f"{install_options.policy_name} does not contain an "
                 msg += "EPLD image."
-                self.ansible_module.fail_json(msg)
+                raise ValueError(msg)
 
     def attach_image_policy(self) -> None:
         """
@@ -1283,6 +1283,10 @@ class Merged(Common):
         self.log.debug(msg)
 
         serial_numbers_to_update: dict = {}
+        self.switch_details.rest_send = self.rest_send
+        self.switch_details.results = self.results
+        self.image_policies.rest_send = self.rest_send
+        self.image_policies.results = self.results
         self.switch_details.refresh()
         self.image_policies.refresh()
 
@@ -1300,44 +1304,15 @@ class Merged(Common):
             )
 
         if len(serial_numbers_to_update) == 0:
-            msg = f"No policies to {action}"
+            msg = f"No policies to attach."
             self.log.debug(msg)
-
-            if action == "attach":
-                self.task_result.diff_attach_policy = instance.diff_null
-                self.task_result.diff = instance.diff_null
-            if action == "detach":
-                self.task_result.diff_detach_policy = instance.diff_null
-                self.task_result.diff = instance.diff_null
             return
 
         for key, value in serial_numbers_to_update.items():
-            instance.policy_name = key
-            instance.action = action
-            instance.serial_numbers = value
-            instance.commit()
-            if action == "attach":
-                self.task_result.response_attach_policy = copy.deepcopy(
-                    instance.response_current
-                )
-                self.task_result.response = copy.deepcopy(instance.response_current)
-            if action == "detach":
-                self.task_result.response_detach_policy = copy.deepcopy(
-                    instance.response_current
-                )
-                self.task_result.response = copy.deepcopy(instance.response_current)
+            self.image_policy_attach.policy_name = key
+            self.image_policy_attach.serial_numbers = value
+            self.image_policy_attach.commit()
 
-        for diff in instance.diff:
-            msg = (
-                f"{instance.action} diff: {json.dumps(diff, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
-            if action == "attach":
-                self.task_result.diff_attach_policy = copy.deepcopy(diff)
-                self.task_result.diff = copy.deepcopy(diff)
-            elif action == "detach":
-                self.task_result.diff_detach_policy = copy.deepcopy(diff)
-                self.task_result.diff = copy.deepcopy(diff)
 
 class Deleted(Common):
     def __init__(self, params):
@@ -1457,6 +1432,8 @@ class Query(Common):
         Caller: main()
         """
         instance = SwitchIssuDetailsByIpAddress(self.ansible_module)
+        instance.rest_send = self.rest_send
+        instance.results = self.results
         instance.refresh()
         response_current = copy.deepcopy(instance.response_current)
         if "DATA" in response_current:
@@ -1473,32 +1450,18 @@ class Query(Common):
             self.task_result.diff_issu_status = instance.filtered_data
             self.task_result.diff = instance.filtered_data
 
-    # def _failure(self, resp) -> None:
-    #     """
-    #     Caller: self.attach_policies()
-    #     """
-    #     res = copy.deepcopy(resp)
-
-    #     if resp.get("DATA"):
-    #         data = copy.deepcopy(resp.get("DATA"))
-    #         if data.get("stackTrace"):
-    #             data.update(
-    #                 {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
-    #             )
-    #             res.update({"DATA": data})
-
-    #     self.ansible_module.fail_json(msg=res)
-
 
 def main():
     """main entry point for module execution"""
 
-    element_spec = {
+    argument_spec = {
         "config": {"required": True, "type": "dict"},
         "state": {"default": "merged", "choices": ["merged", "deleted", "query"]},
     }
 
-    ansible_module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
+    ansible_module = AnsibleModule(
+        argument_spec=argument_spec, supports_check_mode=True
+    )
 
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
@@ -1516,33 +1479,28 @@ def main():
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
-    task_module = ImageUpgradeTask(ansible_module)
+    # pylint: disable=attribute-defined-outside-init
+    try:
+        task = None
+        if params["state"] == "deleted":
+            task = Deleted(params)
+        if params["state"] == "merged":
+            task = Merged(params)
+        if params["state"] == "query":
+            task = Query(params)
+        if task is None:
+            ansible_module.fail_json(f"Invalid state: {params['state']}")
+        task.rest_send = rest_send
+        task.commit()
+    except ValueError as error:
+        ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
-    task_module.get_want()
-    task_module.get_have()
+    task.results.build_final_result()
 
-    if ansible_module.params["state"] == "merged":
-        task_module.get_need_merged()
-    elif ansible_module.params["state"] == "deleted":
-        task_module.get_need_deleted()
-    elif ansible_module.params["state"] == "query":
-        task_module.get_need_query()
-
-    task_module.task_result.changed = False
-    if len(task_module.need) == 0:
-        ansible_module.exit_json(**task_module.task_result.module_result)
-
-    if ansible_module.params["state"] in ["merged", "deleted"]:
-        task_module.task_result.changed = True
-
-    if ansible_module.params["state"] == "merged":
-        task_module.handle_merged_state()
-    elif ansible_module.params["state"] == "deleted":
-        task_module.handle_deleted_state()
-    elif ansible_module.params["state"] == "query":
-        task_module.handle_query_state()
-
-    ansible_module.exit_json(**task_module.task_result.module_result)
+    if True in task.results.failed:  # pylint: disable=unsupported-membership-test
+        msg = "Module failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
 
 
 if __name__ == "__main__":

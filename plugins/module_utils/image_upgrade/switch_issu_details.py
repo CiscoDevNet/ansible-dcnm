@@ -33,7 +33,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties impor
 @Properties.add_rest_send
 @Properties.add_results
 @Properties.add_params
-class SwitchIssuDetails():
+class SwitchIssuDetails:
     """
     ### Summary
     Retrieve switch issu details from the controller and provide
@@ -103,16 +103,17 @@ class SwitchIssuDetails():
         method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = f"ENTERED {self.class_name}().{method_name}"
-        self.log.debug(msg)
 
         self.conversion = ConversionUtils()
         self.endpoint = EpIssu()
+        self.data = {}
         self._action_keys = set()
         self._action_keys.add("imageStaged")
         self._action_keys.add("upgrade")
         self._action_keys.add("validated")
 
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def validate_refresh_parameters(self) -> None:
         """
@@ -166,14 +167,16 @@ class SwitchIssuDetails():
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
-        self.data = self.rest_send.response_current.get("DATA", {}).get("lastOperDataObject", {})
+        self.data = self.rest_send.response_current.get("DATA", {}).get(
+            "lastOperDataObject", {}
+        )
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.rest_send.result_current: "
+        msg += "self.rest_send.result_current: "
         msg += f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -799,11 +802,14 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
                 -   ``filter`` is not set before calling refresh().
         """
         self.refresh_super()
+        method_name = inspect.stack()[0][3]
+
         self.data_subclass = {}
-        for switch in self.response_current["DATA"]["lastOperDataObject"]:
+        for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["ipAddress"]] = switch
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "data_subclass: "
         msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -917,12 +923,14 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
                 -   ``filter`` is not set before calling refresh().
         """
         self.refresh_super()
+        method_name = inspect.stack()[0][3]
 
         self.data_subclass = {}
-        for switch in self.response_current["DATA"]["lastOperDataObject"]:
+        for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["serialNumber"]] = switch
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "data_subclass: "
         msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -1040,11 +1048,14 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         Refresh device_name current issu details from the controller.
         """
         self.refresh_super()
+        method_name = inspect.stack()[0][3]
+
         self.data_subclass = {}
-        for switch in self.response_current["DATA"]["lastOperDataObject"]:
+        for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["deviceName"]] = switch
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "data_subclass: "
         msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
