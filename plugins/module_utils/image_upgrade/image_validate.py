@@ -170,7 +170,7 @@ class ImageValidate:
         Build the payload for the image validation request
         """
         method_name = inspect.stack()[0][3]
-        msg = f"ZZZZZ: ENTERED {self.class_name}.{method_name}: "
+        msg = f"ENTERED {self.class_name}.{method_name}: "
         msg += f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
@@ -355,9 +355,9 @@ class ImageValidate:
         timeout = self.check_timeout
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
-        msg = f"ZZZZ: {self.class_name}.{method_name}: "
-        msg += f"rest_send.unit_test: {self.rest_send.unit_test}"
-        msg += f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"rest_send.unit_test: {self.rest_send.unit_test}, "
+        msg += f"serial_numbers_todo: {sorted(serial_numbers_todo)}."
         self.log.debug(msg)
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
@@ -368,6 +368,9 @@ class ImageValidate:
 
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"serial_number {serial_number} already done.  Continue."
+                    self.log.debug(msg)
                     continue
 
                 self.issu_detail.filter = serial_number
@@ -398,6 +401,11 @@ class ImageValidate:
                 self.log.debug(msg)
                 msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
                 self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Completed. "
+        msg += f" Serial numbers done: {sorted(self.serial_numbers_done)}."
+        self.log.debug(msg)
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "

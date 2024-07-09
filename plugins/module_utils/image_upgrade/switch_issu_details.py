@@ -193,7 +193,7 @@ class SwitchIssuDetails:
         msg += f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"ZZZ {self.class_name}.{method_name}: "
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"self.action: {self.action}, "
         msg += f"self.rest_send.state: {self.rest_send.state}, "
         msg += f"self.rest_send.check_mode: {self.rest_send.check_mode}"

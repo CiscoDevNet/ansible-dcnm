@@ -243,7 +243,7 @@ class ImageInstallOptions:
 
         self._response_data = self.rest_send.response_current.get("DATA", {})
 
-        msg = f"ZZZ: {self.class_name}.{method_name}: "
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"self.response_data: {self.response_data}"
         self.log.debug(msg)
 

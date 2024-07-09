@@ -1045,6 +1045,8 @@ class Merged(Common):
         self.image_policies.rest_send = self.rest_send
         self.image_policy_attach.rest_send = self.rest_send
         self.switch_details.rest_send = self.rest_send
+        # We don't want switch_details results to be saved in self.results
+        self.switch_details.results = Results()
 
         self.get_have()
         self.get_want()
@@ -1057,8 +1059,6 @@ class Merged(Common):
         validate_devices: list[str] = []
         upgrade_devices: list[dict] = []
 
-        # We don't want these results to be saved in self.results
-        self.switch_details.results = Results()
         self.switch_details.refresh()
 
         for switch in self.need:
@@ -1083,11 +1083,11 @@ class Merged(Common):
             ):
                 upgrade_devices.append(switch)
 
-        msg = f"ZZZZZ: {self.class_name}.{method_name}: "
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"stage_devices: {stage_devices}"
         self.log.debug(msg)
 
-        msg = f"ZZZZZ: {self.class_name}.{method_name}: "
+        msg = f"{self.class_name}.{method_name}: "
         msg += f"validate_devices: {validate_devices}"
         self.log.debug(msg)
 
@@ -1156,12 +1156,12 @@ class Merged(Common):
         msg += f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
-        instance = ImageStage()
-        instance.params = self.params
-        instance.rest_send = self.rest_send
-        instance.results = self.results
-        instance.serial_numbers = serial_numbers
-        instance.commit()
+        stage = ImageStage()
+        stage.params = self.params
+        stage.rest_send = self.rest_send
+        stage.results = self.results
+        stage.serial_numbers = serial_numbers
+        stage.commit()
 
     def _validate_images(self, serial_numbers) -> None:
         """
@@ -1175,12 +1175,12 @@ class Merged(Common):
         msg += f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
-        instance = ImageValidate()
-        instance.serial_numbers = serial_numbers
-        instance.rest_send = self.rest_send
-        instance.results = self.results
-        instance.params = self.params
-        instance.commit()
+        validate = ImageValidate()
+        validate.serial_numbers = serial_numbers
+        validate.rest_send = self.rest_send
+        validate.results = self.results
+        validate.params = self.params
+        validate.commit()
 
     def _upgrade_images(self, devices) -> None:
         """
@@ -1214,13 +1214,10 @@ class Merged(Common):
         self.log.debug(msg)
 
         if epld_modules is None:
-            self.log.debug("ZZZ: HERE1")
             return False
         if epld_modules.get("moduleList") is None:
-            self.log.debug("ZZZ: HERE2")
             return False
         for module in epld_modules["moduleList"]:
-            self.log.debug("ZZZ: HERE3")
             new_version = module.get("newVersion", "0x0")
             old_version = module.get("oldVersion", "0x0")
             # int(str, 0) enables python to guess the base
@@ -1235,7 +1232,6 @@ class Merged(Common):
                 msg += "returning True"
                 self.log.debug(msg)
                 return True
-        self.log.debug("ZZZ: HERE4")
         return False
 
     def _verify_install_options(self, devices) -> None:
