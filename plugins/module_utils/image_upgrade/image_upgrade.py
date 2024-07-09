@@ -26,6 +26,8 @@ from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import \
     EpUpgradeImage
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -167,6 +169,7 @@ class ImageUpgrade:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.action = "image_upgrade"
+        self.conversion = ConversionUtils()
         self.endpoint = EpUpgradeImage()
         self.install_options = ImageInstallOptions()
         self.issu_detail = SwitchIssuDetailsByIpAddress()
@@ -306,7 +309,7 @@ class ImageUpgrade:
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         nxos_upgrade = device.get("upgrade").get("nxos")
-        nxos_upgrade = self.make_boolean(nxos_upgrade)
+        nxos_upgrade = self.conversion.make_boolean(nxos_upgrade)
         if not isinstance(nxos_upgrade, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "upgrade.nxos must be a boolean. "
@@ -354,7 +357,7 @@ class ImageUpgrade:
         method_name = inspect.stack()[0][3]
 
         bios_force = device.get("options").get("nxos").get("bios_force")
-        bios_force = self.make_boolean(bios_force)
+        bios_force = self.conversion.make_boolean(bios_force)
         if not isinstance(bios_force, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.bios_force must be a boolean. "
@@ -371,7 +374,7 @@ class ImageUpgrade:
         method_name = inspect.stack()[0][3]
 
         epld_upgrade = device.get("upgrade").get("epld")
-        epld_upgrade = self.make_boolean(epld_upgrade)
+        epld_upgrade = self.conversion.make_boolean(epld_upgrade)
         if not isinstance(epld_upgrade, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "upgrade.epld must be a boolean. "
@@ -381,7 +384,7 @@ class ImageUpgrade:
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
 
-        epld_golden = self.make_boolean(epld_golden)
+        epld_golden = self.conversion.make_boolean(epld_golden)
         if not isinstance(epld_golden, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.epld.golden must be a boolean. "
@@ -418,7 +421,7 @@ class ImageUpgrade:
         method_name = inspect.stack()[0][3]
         reboot = device.get("reboot")
 
-        reboot = self.make_boolean(reboot)
+        reboot = self.conversion.make_boolean(reboot)
         if not isinstance(reboot, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "reboot must be a boolean. "
@@ -435,14 +438,14 @@ class ImageUpgrade:
         config_reload = device.get("options").get("reboot").get("config_reload")
         write_erase = device.get("options").get("reboot").get("write_erase")
 
-        config_reload = self.make_boolean(config_reload)
+        config_reload = self.conversion.make_boolean(config_reload)
         if not isinstance(config_reload, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.config_reload must be a boolean. "
             msg += f"Got {config_reload}."
             raise TypeError(msg)
 
-        write_erase = self.make_boolean(write_erase)
+        write_erase = self.conversion.make_boolean(write_erase)
         if not isinstance(write_erase, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.write_erase must be a boolean. "
@@ -462,7 +465,7 @@ class ImageUpgrade:
         package_install = device.get("options").get("package").get("install")
         package_uninstall = device.get("options").get("package").get("uninstall")
 
-        package_install = self.make_boolean(package_install)
+        package_install = self.conversion.make_boolean(package_install)
         if not isinstance(package_install, bool):
             # This code is never hit since ImageInstallOptions calls
             # fail_json on invalid options.package.install.
@@ -473,7 +476,7 @@ class ImageUpgrade:
             msg += f"Got {package_install}."
             raise TypeError(msg)
 
-        package_uninstall = self.make_boolean(package_uninstall)
+        package_uninstall = self.conversion.make_boolean(package_uninstall)
         if not isinstance(package_uninstall, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.uninstall must be a boolean. "
@@ -514,7 +517,10 @@ class ImageUpgrade:
         self.validate_commit_parameters()
 
         self.issu_detail.rest_send = self.rest_send
-        # We don't want the results to show up in the user's result output.
+        self.install_options.rest_send = self.rest_send
+
+        self.install_options.results = self.results
+        # We don't want issu_detail results to show up in the user's result output.
         self.issu_detail.results = Results()
 
         self._validate_devices()
