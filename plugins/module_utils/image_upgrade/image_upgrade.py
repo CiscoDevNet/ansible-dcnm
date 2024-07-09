@@ -30,68 +30,92 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
 
 
-@Properties.add_params
 @Properties.add_rest_send
 @Properties.add_results
 class ImageUpgrade:
     """
-    Endpoint:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image
-    Verb: POST
+    ### Summary
+    Upgrade the image on one or more switches.
 
-    Usage (where module is an instance of AnsibleModule):
 
-    upgrade = ImageUpgrade(module)
-    upgrade.devices = devices
+    ### Usage example
+    ```python
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(ansible_module.params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    results = Results()
+
+    upgrade = ImageUpgrade()
+    upgrade.rest_send = rest_send
+    upgrade.results = results
+    upgrade.devices = devices # see Example devices structure below
     upgrade.commit()
     data = upgrade.data
+    ```
 
-    Where devices is a list of dict.  Example structure:
+    ### Endpoint:
+    -   path: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image
+    -   verb: POST
 
-        [
-            {
-                'policy': 'KR3F',
-                'ip_address': '172.22.150.102',
-                'policy_changed': False
-                'stage': False,
-                'validate': True,
-                'upgrade': {
-                    'nxos': True,
-                    'epld': False
-                },
-                'options': {
-                    'nxos': {
-                        'mode': 'non_disruptive'
-                        'bios_force': False
-                    },
-                    'epld': {
-                        'module': 'ALL',
-                        'golden': False
-                    },
-                    'reboot': {
-                        'config_reload': False,
-                        'write_erase': False
-                    },
-                    'package': {
-                        'install': False,
-                        'uninstall': False
-                    }
-                },
+    ### Example devices structure
+
+    ```python
+    devices = [
+        {
+            'policy': 'KR3F',
+            'ip_address': '172.22.150.102',
+            'policy_changed': False
+            'stage': False,
+            'validate': True,
+            'upgrade': {
+                'nxos': True,
+                'epld': False
             },
-            etc...
-        ]
+            'options': {
+                'nxos': {
+                    'mode': 'non_disruptive'
+                    'bios_force': False
+                },
+                'epld': {
+                    'module': 'ALL',
+                    'golden': False
+                },
+                'reboot': {
+                    'config_reload': False,
+                    'write_erase': False
+                },
+                'package': {
+                    'install': False,
+                    'uninstall': False
+                }
+            },
+        },
+        {
+            "etc...": "etc..."
+        }
+    ]
+    ```
 
-    Request body:
-        Yes, the keys below are misspelled in the request body:
-            pacakgeInstall
-            pacakgeUnInstall
+    ### Example request body
 
+    - Yes, the keys below are misspelled in the request body:
+        -   ``pacakgeInstall``
+        -   ``pacakgeUnInstall``
+
+        ```json
         {
             "devices": [
                 {
@@ -121,35 +145,42 @@ class ImageUpgrade:
             "pacakgeInstall": false,
             "pacakgeUnInstall": false
         }
-    Response bodies:
-        Responses are text, not JSON, and are returned immediately.
-        They do not contain useful information. We need to poll the controller
-        to determine when the upgrade is complete. Basically, we ignore
-        these responses in favor of the poll responses.
-        - If an action is in progress, text is returned:
-            "Action in progress for some of selected device(s).
-            Please try again after completing current action."
-        -   If an action is not in progress, text is returned:
-            "3"
+        ```
+
+    ### Response bodies
+    -   Responses are text, not JSON, and are returned immediately.
+    -   Responses do not contain useful information. We need to poll
+        the controller to determine when the upgrade is complete.
+        Basically, we ignore these responses in favor of the poll
+        responses.
+    -   If an action is in progress, text is returned:
+        ``Action in progress for some of selected device(s).
+        Please try again after completing current action.``
+    -   If an action is not in progress, text is returned:
+        ``3``
     """
 
     def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImageUpgrade(): "
-        self.log.debug(msg)
 
+        self.action = "image_upgrade"
         self.endpoint = EpUpgradeImage()
         self.install_options = ImageInstallOptions()
         self.issu_detail = SwitchIssuDetailsByIpAddress()
         self.ipv4_done = set()
         self.ipv4_todo = set()
         self.payload: dict = {}
-        self.path = self.endpoint.path
-        self.verb = self.endpoint.verb
+
+        self._rest_send = None
+        self._results = None
 
         self._init_properties()
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def _init_properties(self) -> None:
         """
@@ -163,7 +194,8 @@ class ImageUpgrade:
         #   self._wait_for_current_actions_to_complete()
         #   self._wait_for_image_upgrade_to_complete()
         self.ip_addresses: set = set()
-        # self.properties is already initialized in the parent class
+
+        self.properties = {}
         self.properties["bios_force"] = False
         self.properties["check_interval"] = 10  # seconds
         self.properties["check_timeout"] = 1800  # seconds
@@ -208,9 +240,6 @@ class ImageUpgrade:
             msg += "call instance.devices before calling commit."
             raise ValueError(msg)
 
-        self.issu_detail.rest_send = self.rest_send
-        self.issu_detail.results = self.results
-        self.issu_detail.params = self.rest_send.params
         self.issu_detail.refresh()
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
@@ -457,6 +486,21 @@ class ImageUpgrade:
         self.payload["pacakgeInstall"] = package_install
         self.payload["pacakgeUnInstall"] = package_uninstall
 
+    def validate_commit_parameters(self):
+        """
+        Verify mandatory parameters are set before calling commit.
+        """
+        method_name = inspect.stack()[0][3]
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+
     def commit(self) -> None:
         """
         ### Summary
@@ -467,16 +511,17 @@ class ImageUpgrade:
         """
         method_name = inspect.stack()[0][3]
 
+        self.validate_commit_parameters()
+
+        self.issu_detail.rest_send = self.rest_send
+        # We don't want the results to show up in the user's result output.
+        self.issu_detail.results = Results()
+
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-
-        if self.check_mode is True:
-            self.rest_send.check_mode = True
-        else:
-            self.rest_send.check_mode = False
+        self.rest_send.path = self.endpoint.path
+        self.rest_send.verb = self.endpoint.verb
 
         for device in self.devices:
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
@@ -484,9 +529,11 @@ class ImageUpgrade:
 
             self._build_payload(device)
 
-            msg = "Calling rest_send.commit(): "
-            msg += f"verb {self.verb}, path: {self.path} "
-            msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Calling rest_send.commit(): "
+            msg += f"verb {self.rest_send.verb}, path: {self.rest_send.path} "
+            msg += "payload: "
+            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             self.rest_send.payload = self.payload
@@ -495,10 +542,13 @@ class ImageUpgrade:
             msg = "DONE rest_send.commit()"
             self.log.debug(msg)
 
-            self.results.response = self.rest_send.response_current
-            self.results.result = self.rest_send.result_current
-            self.results.diff = copy.deepcopy(self.payload)
-            self.response_data = self.rest_send.response_current.get("DATA")
+            self.results.action = self.action
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.diff_current = copy.deepcopy(self.payload)
+            self.results.response_current = self.rest_send.response_current
+            self.results.result_current = self.rest_send.result_current
+            self.results.state = self.rest_send.state
+            self.results.register_task_result()
 
             msg = "payload: "
             msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
@@ -506,10 +556,6 @@ class ImageUpgrade:
 
             msg = "self.rest_send.response_current: "
             msg += f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response_data: "
-            msg += f"{self.response_data}"
             self.log.debug(msg)
 
             msg = "self.rest_send.result_current: "
@@ -534,7 +580,7 @@ class ImageUpgrade:
         """
         method_name = inspect.stack()[0][3]
 
-        if self.unit_test is False:
+        if self.rest_send.unit_test is False:
             # See unit test test_image_upgrade_upgrade_00205
             self.ipv4_done = set()
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
@@ -572,7 +618,7 @@ class ImageUpgrade:
         method_name = inspect.stack()[0][3]
 
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        if self.unit_test is False:
+        if self.rest_send.unit_test is False:
             # See unit test test_image_upgrade_upgrade_00240
             self.ipv4_done = set()
         timeout = self.check_timeout

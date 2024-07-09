@@ -32,7 +32,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties impor
 
 @Properties.add_rest_send
 @Properties.add_results
-@Properties.add_params
 class SwitchIssuDetails:
     """
     ### Summary
@@ -104,6 +103,7 @@ class SwitchIssuDetails:
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.action = "switch_issu_details"
         self.conversion = ConversionUtils()
         self.endpoint = EpIssu()
         self.data = {}
@@ -111,6 +111,9 @@ class SwitchIssuDetails:
         self._action_keys.add("imageStaged")
         self._action_keys.add("upgrade")
         self._action_keys.add("validated")
+
+        self._rest_send = None
+        self._results = None
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -144,6 +147,9 @@ class SwitchIssuDetails:
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
         try:
             self.validate_refresh_parameters()
         except ValueError as error:
@@ -171,6 +177,13 @@ class SwitchIssuDetails:
             "lastOperDataObject", {}
         )
 
+        diff = {}
+        for item in self.data:
+            ip_address = item.get("ipAddress")
+            if ip_address is None:
+                continue
+            diff[ip_address] = item
+
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -179,6 +192,22 @@ class SwitchIssuDetails:
         msg += "self.rest_send.result_current: "
         msg += f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
+        msg = f"ZZZ {self.class_name}.{method_name}: "
+        msg += f"self.action: {self.action}, "
+        msg += f"self.rest_send.state: {self.rest_send.state}, "
+        msg += f"self.rest_send.check_mode: {self.rest_send.check_mode}"
+        self.log.debug(msg)
+
+        self.results.action = self.action
+        self.results.state = self.rest_send.state
+        # Set check_mode to True so that results.changed will be set to False
+        # (since we didn't make any changes).
+        self.results.check_mode = True
+        self.results.diff_current = diff
+        self.results.response_current = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.register_task_result()
 
         if (
             self.rest_send.result_current["success"] is False
@@ -268,7 +297,7 @@ class SwitchIssuDetails:
         -   ``bool()`` (true/false)
         -   ``None``
         """
-        return self.make_boolean(self._get("fcoEEnabled"))
+        return self.conversion.make_boolean(self._get("fcoEEnabled"))
 
     @property
     def group(self):
@@ -375,7 +404,7 @@ class SwitchIssuDetails:
         -   ``bool()`` (True or False)
         -   ``None``
         """
-        return self.make_boolean(self._get("mds"))
+        return self.conversion.make_boolean(self._get("mds"))
 
     @property
     def mode(self):
@@ -803,6 +832,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         """
         self.refresh_super()
         method_name = inspect.stack()[0][3]
+        self.action = "switch_issu_details_by_ip_address"
 
         self.data_subclass = {}
         for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
@@ -904,6 +934,7 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         super().__init__()
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+        self.action = "switch_issu_details_by_serial_number"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -1035,6 +1066,7 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         super().__init__()
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+        self.action = "switch_issu_details_by_device_name"
 
         self.data_subclass = {}
         self._filter = None

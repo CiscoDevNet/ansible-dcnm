@@ -525,6 +525,12 @@ class Common:
 
         self.switch_details = SwitchDetails()
         self.image_policies = ImagePolicies()
+        self.install_options = ImageInstallOptions()
+        self.image_policy_attach = ImagePolicyAttach()
+
+        self.image_policies.results = self.results
+        self.install_options.results = self.results
+        self.image_policy_attach.results = self.results
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
@@ -537,7 +543,7 @@ class Common:
 
         Determine current switch ISSU state on the controller
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
@@ -552,7 +558,10 @@ class Common:
 
         Update self.want for all switches defined in the playbook
         """
-        msg = "Calling _merge_global_and_switch_configs with "
+        method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling _merge_global_and_switch_configs with "
         msg += f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -560,7 +569,8 @@ class Common:
 
         self._merge_defaults_to_switch_configs()
 
-        msg = "Calling _validate_switch_configs with self.switch_configs: "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling _validate_switch_configs with self.switch_configs: "
         msg += f"{json.dumps(self.switch_configs, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -568,11 +578,9 @@ class Common:
 
         self.want = self.switch_configs
 
-        msg = f"self.want: {json.dumps(self.want, indent=4, sort_keys=True)}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.want: {json.dumps(self.want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-
-        if len(self.want) == 0:
-            self.ansible_module.exit_json(**self.task_result.module_result)
 
     def _build_idempotent_want(self, want) -> None:
         """
@@ -612,7 +620,10 @@ class Common:
         and the information returned by ImageInstallOptions.
 
         """
-        msg = f"want: {json.dumps(want, indent=4, sort_keys=True)}"
+        method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         self.have.filter = want["ip_address"]
@@ -645,7 +656,8 @@ class Common:
         if self.have.validated == "Success":
             self.idempotent_want["validate"] = False
 
-        msg = f"self.have.reason: {self.have.reason}, "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.have.reason: {self.have.reason}, "
         msg += f"self.have.policy: {self.have.policy}, "
         msg += f"idempotent_want[policy]: {self.idempotent_want['policy']}, "
         msg += f"self.have.upgrade: {self.have.upgrade}"
@@ -665,28 +677,35 @@ class Common:
 
         # Get relevant install options from the controller
         # based on the options in our idempotent_want item
-        instance = ImageInstallOptions(self.ansible_module)
-        instance.policy_name = self.idempotent_want["policy"]
-        instance.serial_number = self.have.serial_number
+        self.install_options.policy_name = self.idempotent_want["policy"]
+        self.install_options.serial_number = self.have.serial_number
 
-        instance.epld = want.get("upgrade", {}).get("epld", False)
-        instance.issu = self.idempotent_want.get("upgrade", {}).get("nxos", False)
-        instance.package_install = (
+        self.install_options.epld = want.get("upgrade", {}).get("epld", False)
+        self.install_options.issu = self.idempotent_want.get("upgrade", {}).get(
+            "nxos", False
+        )
+        self.install_options.package_install = (
             want.get("options", {}).get("package", {}).get("install", False)
         )
-        instance.refresh()
+        self.install_options.refresh()
 
-        msg = "ImageInstallOptions.response: "
-        msg += f"{json.dumps(instance.response_data, indent=4, sort_keys=True)}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "ImageInstallOptions.response: "
+        msg += f"{json.dumps(self.install_options.response_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = "self.idempotent_want PRE EPLD CHECK: "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "self.idempotent_want PRE EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}"
+        msg += f"self.install_options.epld_modules: {self.install_options.epld_modules}"
         self.log.debug(msg)
 
         # if InstallOptions indicates that EPLD is already upgraded,
         # don't upgrade it again.
-        if self.needs_epld_upgrade(instance.epld_modules) is False:
+        if self.needs_epld_upgrade(self.install_options.epld_modules) is False:
             self.idempotent_want["upgrade"]["epld"] = False
 
         msg = "self.idempotent_want POST EPLD CHECK: "
@@ -731,15 +750,15 @@ class Common:
 
     def _build_params_spec(self) -> dict:
         method_name = inspect.stack()[0][3]
-        if self.ansible_module.params["state"] == "merged":
+        if self.params["state"] == "merged":
             return self._build_params_spec_for_merged_state()
-        if self.ansible_module.params["state"] == "deleted":
+        if self.params["state"] == "deleted":
             return self._build_params_spec_for_merged_state()
-        if self.ansible_module.params["state"] == "query":
+        if self.params["state"] == "query":
             return self._build_params_spec_for_query_state()
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"Unsupported state: {self.ansible_module.params['state']}"
-        self.ansible_module.fail_json(msg)
+        msg += f"Unsupported state: {self.params['state']}"
+        raise ValueError(msg)
         return None  # we never reach this, but it makes pylint happy.
 
     @staticmethod
@@ -910,7 +929,7 @@ class Common:
         if not config.get("switches"):
             msg = f"{self.class_name}.{method_name}: "
             msg += "playbook is missing list of switches"
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
 
         self.switch_configs = []
         merged_configs = []
@@ -1005,8 +1024,6 @@ class Merged(Common):
             msg = f"playbook config is required for {self.state}"
             raise ValueError(msg)
 
-        self.image_policy_attach = ImagePolicyAttach()
-
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -1024,7 +1041,15 @@ class Merged(Common):
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
+        self.install_options.rest_send = self.rest_send
+        self.image_policies.rest_send = self.rest_send
+        self.image_policy_attach.rest_send = self.rest_send
+        self.switch_details.rest_send = self.rest_send
+
         self.get_have()
+        self.get_want()
+        if len(self.want) == 0:
+            return
         self.get_need()
         self.attach_image_policy()
 
@@ -1032,10 +1057,12 @@ class Merged(Common):
         validate_devices: list[str] = []
         upgrade_devices: list[dict] = []
 
-        self.switch_details.rest_send = self.rest_send
+        # We don't want these results to be saved in self.results
+        self.switch_details.results = Results()
         self.switch_details.refresh()
 
         for switch in self.need:
+            msg = f"{self.class_name}.{method_name}: "
             msg = f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
@@ -1056,6 +1083,14 @@ class Merged(Common):
             ):
                 upgrade_devices.append(switch)
 
+        msg = f"ZZZZZ: {self.class_name}.{method_name}: "
+        msg += f"stage_devices: {stage_devices}"
+        self.log.debug(msg)
+
+        msg = f"ZZZZZ: {self.class_name}.{method_name}: "
+        msg += f"validate_devices: {validate_devices}"
+        self.log.debug(msg)
+
         self._stage_images(stage_devices)
         self._validate_images(validate_devices)
 
@@ -1069,22 +1104,26 @@ class Merged(Common):
         our want list that are not in our have list.  These items will
         be sent to the controller.
         """
+        method_name = inspect.stack()[0][3]
         need: list[dict] = []
 
-        msg = "self.want: "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "self.want: "
         msg += f"{json.dumps(self.want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         for want in self.want:
             self.have.filter = want["ip_address"]
 
-            msg = f"self.have.serial_number: {self.have.serial_number}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.have.serial_number: {self.have.serial_number}"
             self.log.debug(msg)
 
             if self.have.serial_number is not None:
                 self._build_idempotent_want(want)
 
-                msg = "self.idempotent_want: "
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "self.idempotent_want: "
                 msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
 
@@ -1112,7 +1151,9 @@ class Merged(Common):
         Callers:
         - handle_merged_state
         """
-        msg = f"serial_numbers: {serial_numbers}"
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
         instance = ImageStage()
@@ -1129,7 +1170,9 @@ class Merged(Common):
         Callers:
         - handle_merged_state
         """
-        msg = f"serial_numbers: {serial_numbers}"
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"serial_numbers: {serial_numbers}"
         self.log.debug(msg)
 
         instance = ImageValidate()
@@ -1164,11 +1207,20 @@ class Merged(Common):
         Callers:
         - self._build_idempotent_want
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"epld_modules: {epld_modules}"
+        self.log.debug(msg)
+
         if epld_modules is None:
+            self.log.debug("ZZZ: HERE1")
             return False
         if epld_modules.get("moduleList") is None:
+            self.log.debug("ZZZ: HERE2")
             return False
         for module in epld_modules["moduleList"]:
+            self.log.debug("ZZZ: HERE3")
             new_version = module.get("newVersion", "0x0")
             old_version = module.get("oldVersion", "0x0")
             # int(str, 0) enables python to guess the base
@@ -1183,6 +1235,7 @@ class Merged(Common):
                 msg += "returning True"
                 self.log.debug(msg)
                 return True
+        self.log.debug("ZZZ: HERE4")
         return False
 
     def _verify_install_options(self, devices) -> None:
@@ -1220,10 +1273,14 @@ class Merged(Common):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"len(devices): {len(devices)}, "
+        msg += f"self.results: {self.results}"
+        self.log.debug(msg)
+
         if len(devices) == 0:
             return
 
-        install_options = ImageInstallOptions(self.ansible_module)
         self.switch_details.refresh()
 
         verify_devices = copy.deepcopy(devices)
@@ -1233,43 +1290,42 @@ class Merged(Common):
             self.log.debug(msg)
 
             self.switch_details.ip_address = device.get("ip_address")
-            install_options.serial_number = self.switch_details.serial_number
-            install_options.policy_name = device.get("policy")
-            install_options.epld = device.get("upgrade", {}).get("epld", False)
-            install_options.issu = device.get("upgrade", {}).get("nxos", False)
-            install_options.refresh()
+            self.install_options.serial_number = self.switch_details.serial_number
+            self.install_options.policy_name = device.get("policy")
+            self.install_options.epld = device.get("upgrade", {}).get("epld", False)
+            self.install_options.issu = device.get("upgrade", {}).get("nxos", False)
+            self.install_options.refresh()
 
             msg = "install_options.response_data: "
-            msg += (
-                f"{json.dumps(install_options.response_data, indent=4, sort_keys=True)}"
-            )
+            msg += f"{json.dumps(self.install_options.response_data, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             if (
-                install_options.status not in ["Success", "Skipped"]
+                self.install_options.status not in ["Success", "Skipped"]
                 and device["upgrade"]["nxos"] is True
             ):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "NXOS upgrade is set to True for switch  "
                 msg += f"{device['ip_address']}, but the image policy "
-                msg += f"{install_options.policy_name} does not contain an "
+                msg += f"{self.install_options.policy_name} does not contain an "
                 msg += "NX-OS image"
                 raise ValueError(msg)
 
-            msg = f"install_options.epld: {install_options.epld}"
+            msg = f"install_options.epld: {self.install_options.epld}"
             self.log.debug(msg)
 
             msg = "install_options.epld_modules: "
-            msg += (
-                f"{json.dumps(install_options.epld_modules, indent=4, sort_keys=True)}"
-            )
+            msg += f"{json.dumps(self.install_options.epld_modules, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            if install_options.epld_modules is None and install_options.epld is True:
+            if (
+                self.install_options.epld_modules is None
+                and self.install_options.epld is True
+            ):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "EPLD upgrade is set to True for switch "
                 msg += f"{device['ip_address']}, but the image policy "
-                msg += f"{install_options.policy_name} does not contain an "
+                msg += f"{self.install_options.policy_name} does not contain an "
                 msg += "EPLD image."
                 raise ValueError(msg)
 
@@ -1283,15 +1339,15 @@ class Merged(Common):
         self.log.debug(msg)
 
         serial_numbers_to_update: dict = {}
-        self.switch_details.rest_send = self.rest_send
-        self.switch_details.results = self.results
-        self.image_policies.rest_send = self.rest_send
-        self.image_policies.results = self.results
         self.switch_details.refresh()
         self.image_policies.refresh()
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.need: {json.dumps(self.need, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         for switch in self.need:
-            self.switch_details.ip_address = switch.get("ip_address")
+            self.switch_details.filter = switch.get("ip_address")
             self.image_policies.policy_name = switch.get("policy")
             # ImagePolicyAttach wants a policy name and a list of serial_number.
             # Build dictionary, serial_numbers_to_update, keyed on policy name,
@@ -1304,7 +1360,7 @@ class Merged(Common):
             )
 
         if len(serial_numbers_to_update) == 0:
-            msg = f"No policies to attach."
+            msg = "No policies to attach."
             self.log.debug(msg)
             return
 
@@ -1318,7 +1374,13 @@ class Deleted(Common):
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-        self.params = params
+        try:
+            super().__init__(params)
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during super().__init__(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
@@ -1372,83 +1434,63 @@ class Deleted(Common):
                 self.switch_details.serial_number
             )
 
-        instance = ImagePolicyDetach(self.ansible_module)
+        instance = ImagePolicyDetach()
         if len(serial_numbers_to_update) == 0:
-            msg = f"No policies to delete."
+            msg = "No policies to delete."
             self.log.debug(msg)
-
-            if action == "attach":
-                self.task_result.diff_attach_policy = instance.diff_null
-                self.task_result.diff = instance.diff_null
-            if action == "detach":
-                self.task_result.diff_detach_policy = instance.diff_null
-                self.task_result.diff = instance.diff_null
-            return
 
         for key, value in serial_numbers_to_update.items():
             instance.policy_name = key
-            instance.action = action
             instance.serial_numbers = value
             instance.commit()
-            if action == "attach":
-                self.task_result.response_attach_policy = copy.deepcopy(
-                    instance.response_current
-                )
-                self.task_result.response = copy.deepcopy(instance.response_current)
-            if action == "detach":
-                self.task_result.response_detach_policy = copy.deepcopy(
-                    instance.response_current
-                )
-                self.task_result.response = copy.deepcopy(instance.response_current)
-
-        for diff in instance.diff:
-            msg = (
-                f"{instance.action} diff: {json.dumps(diff, indent=4, sort_keys=True)}"
-            )
-            self.log.debug(msg)
-            if action == "attach":
-                self.task_result.diff_attach_policy = copy.deepcopy(diff)
-                self.task_result.diff = copy.deepcopy(diff)
-            elif action == "detach":
-                self.task_result.diff_detach_policy = copy.deepcopy(diff)
-                self.task_result.diff = copy.deepcopy(diff)
 
 
 class Query(Common):
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-        self.params = params
+        try:
+            super().__init__(params)
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during super().__init__(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        self.issu_detail = SwitchIssuDetailsByIpAddress()
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def handle_query_state(self) -> None:
+    def commit(self) -> None:
         """
         Return the ISSU state of the switch(es) listed in the playbook
 
         Caller: main()
         """
-        instance = SwitchIssuDetailsByIpAddress(self.ansible_module)
-        instance.rest_send = self.rest_send
-        instance.results = self.results
-        instance.refresh()
-        response_current = copy.deepcopy(instance.response_current)
-        if "DATA" in response_current:
-            response_current.pop("DATA")
-        self.task_result.response_issu_status = copy.deepcopy(response_current)
-        self.task_result.response = copy.deepcopy(response_current)
-        for switch in self.need:
-            instance.filter = switch.get("ip_address")
-            msg = f"SwitchIssuDetailsByIpAddress.filter: {instance.filter}, "
-            msg += f"SwitchIssuDetailsByIpAddress.filtered_data: {json.dumps(instance.filtered_data, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            if instance.filtered_data is None:
-                continue
-            self.task_result.diff_issu_status = instance.filtered_data
-            self.task_result.diff = instance.filtered_data
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        self.issu_detail.rest_send = self.rest_send
+        self.issu_detail.results = self.results
+        self.issu_detail.refresh()
+        # self.results.register_task_result()
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.results.metadata: {json.dumps(self.results.metadata, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        # response_current = copy.deepcopy(instance.rest_send.response_current)
+        # if "DATA" in response_current:
+        #     response_current.pop("DATA")
+        # for switch in self.need:
+        #     instance.filter = switch.get("ip_address")
+        #     msg = f"SwitchIssuDetailsByIpAddress.filter: {instance.filter}, "
+        #     msg += f"SwitchIssuDetailsByIpAddress.filtered_data: {json.dumps(instance.filtered_data, indent=4, sort_keys=True)}"
+        #     self.log.debug(msg)
+        #     if instance.filtered_data is None:
+        #         continue
 
 
 def main():
