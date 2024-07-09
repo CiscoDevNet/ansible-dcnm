@@ -31,11 +31,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions impor
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 
-@Properties.add_params
 @Properties.add_rest_send
 @Properties.add_results
 class ImageStage:
@@ -104,18 +105,15 @@ class ImageStage:
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
-        self.action = "image_stage"
-
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.endpoint = EpImageStage()
-        self.path = self.endpoint.path
-        self.verb = self.endpoint.verb
-        self.payload = None
-
-        self.serial_numbers_done = set()
+        self.action = "image_stage"
         self.controller_version = None
+        self.controller_version_instance = ControllerVersion()
+        self.endpoint = EpImageStage()
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
+        self.payload = None
+        self.serial_numbers_done = set()
         self._serial_numbers = None
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
@@ -127,9 +125,8 @@ class ImageStage:
         """
         Populate self.controller_version with the running controller version.
         """
-        instance = ControllerVersion()
-        instance.refresh()
-        self.controller_version = instance.version
+        self.controller_version_instance.refresh()
+        self.controller_version = self.controller_version_instance.version
 
     def prune_serial_numbers(self):
         """
@@ -142,6 +139,20 @@ class ImageStage:
             self.issu_detail.filter = serial_number
             if self.issu_detail.image_staged == "Success":
                 self.serial_numbers.remove(serial_number)
+
+    def register_unchanged_result(self, msg):
+        """
+        ### Summary
+        Register a successful unchanged result with the results object.
+        """
+        self.results.action = self.action
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.diff_current = {}
+        self.results.response_current = {"DATA": [{"key": "ALL", "value": msg}]}
+        self.results.result_current = {"success": True, "changed": False}
+        self.results.response_data = {"response": msg}
+        self.results.state = self.rest_send.state
+        self.results.register_task_result()
 
     def validate_serial_numbers(self):
         """
@@ -168,6 +179,25 @@ class ImageStage:
                 msg += "and try again."
                 raise ControllerResponseError(msg)
 
+    def validate_commit_parameters(self):
+        """
+        Verify mandatory parameters are set before calling commit.
+        """
+        method_name = inspect.stack()[0][3]
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+        if self.serial_numbers is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "serial_numbers must be set before calling commit()."
+            raise ValueError(msg)
+
     def commit(self) -> None:
         """
         ### Summary
@@ -182,23 +212,18 @@ class ImageStage:
         msg = f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
-        if self.serial_numbers is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "call instance.serial_numbers "
-            msg += "before calling commit."
-            raise ValueError(msg)
+        self.validate_commit_parameters()
 
         if len(self.serial_numbers) == 0:
             msg = "No files to stage."
-            response_current = {"DATA": [{"key": "ALL", "value": msg}]}
-            self.results.response_current = response_current
-            self.results.diff_current = {}
-            self.results.action = self.action
-            self.results.check_mode = self.params.get("check_mode")
-            self.results.state = self.params.get("state")
-            self.results.result_current = self.results.ok_result
-            self.results.register_task_result()
+            self.register_unchanged_result(msg)
             return
+
+        self.issu_detail.rest_send = self.rest_send
+        # We don't want the results to show up in the user's result output.
+        self.issu_detail.results = Results()
+
+        self.controller_version_instance.rest_send = self.rest_send
 
         self.prune_serial_numbers()
         self.validate_serial_numbers()
@@ -214,15 +239,15 @@ class ImageStage:
             self.payload["serialNumbers"] = self.serial_numbers
 
         try:
-            self.rest_send.verb = self.verb
-            self.rest_send.path = self.path
+            self.rest_send.verb = self.endpoint.verb
+            self.rest_send.path = self.endpoint.path
             self.rest_send.payload = self.payload
             self.rest_send.commit()
         except (TypeError, ValueError) as error:
             self.results.diff_current = {}
             self.results.action = self.action
-            self.results.check_mode = self.params.get("check_mode")
-            self.results.state = self.params.get("state")
+            self.results.check_mode = self.rest_send.params.get("check_mode")
+            self.results.state = self.rest_send.params.get("state")
             self.results.response_current = copy.deepcopy(
                 self.rest_send.response_current
             )
@@ -239,10 +264,10 @@ class ImageStage:
             self.results.diff_current = copy.deepcopy(self.payload)
 
         self.results.action = self.action
-        self.results.check_mode = self.params.get("check_mode")
+        self.results.check_mode = self.rest_send.params.get("check_mode")
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.results.state = self.params.get("state")
+        self.results.state = self.rest_send.params.get("state")
         self.results.register_task_result()
 
         if not self.rest_send.result_current["success"]:
@@ -263,13 +288,13 @@ class ImageStage:
             diff["serial_number"] = serial_number
 
             self.results.action = self.action
-            self.results.check_mode = self.params.get("check_mode")
+            self.results.check_mode = self.rest_send.params.get("check_mode")
             self.results.diff_current = copy.deepcopy(diff)
             self.results.response_current = copy.deepcopy(
                 self.rest_send.response_current
             )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.state = self.params.get("state")
+            self.results.state = self.rest_send.params.get("state")
             self.results.register_task_result()
 
     def _wait_for_current_actions_to_complete(self):
@@ -285,7 +310,7 @@ class ImageStage:
         timeout = self.check_timeout
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.unit_test is False:
+            if self.rest_send.unit_test is False:
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
@@ -319,7 +344,7 @@ class ImageStage:
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.unit_test is False:
+            if self.rest_send.unit_test is False:
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()

@@ -29,6 +29,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies i
     ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
@@ -114,8 +116,6 @@ class ImagePolicyAttach:
 
         self.payloads = []
 
-        self.switch_issu_details.rest_send = self.rest_send
-        self.switch_issu_details.results = self.results
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
@@ -139,7 +139,7 @@ class ImagePolicyAttach:
                     raise ValueError(msg)
             self.payloads.append(payload)
 
-    def verify_commit_parameters(self):
+    def validate_commit_parameters(self):
         """
         ### Summary
         Validations prior to commit() should be added here.
@@ -162,14 +162,37 @@ class ImagePolicyAttach:
             msg += "calling commit()"
             raise ValueError(msg)
 
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
             raise ValueError(msg)
 
-        self.image_policies.results = self.results
-        self.image_policies.rest_send = self.rest_send  # pylint: disable=no-member
+    def validate_image_policies(self):
+        """
+        ### Summary
+        Validate that the image policy exists on the controller
+        and supports the switch platform.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``policy_name`` does not exist on the controller.
+                -   ``policy_name`` does not support the switch platform.
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
 
         self.image_policies.refresh()
         self.switch_issu_details.refresh()
@@ -208,14 +231,28 @@ class ImagePolicyAttach:
         """
         method_name = inspect.stack()[0][3]
 
-        msg = "ENTERED"
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
         try:
-            self.verify_commit_parameters()
+            self.validate_commit_parameters()
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += r"Error while verifying commit parameters. "
+            msg += "Error while validating commit parameters. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        self.switch_issu_details.rest_send = self.rest_send
+        self.switch_issu_details.results = Results()
+
+        self.image_policies.results = Results()
+        self.image_policies.rest_send = self.rest_send  # pylint: disable=no-member
+
+        try:
+            self.validate_image_policies()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while validating image policies. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
@@ -236,9 +273,12 @@ class ImagePolicyAttach:
 
         self.build_payload()
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"rest_send.check_mode: {self.rest_send.check_mode}"
+        self.log.debug(msg)
+
         payload: dict = {}
         payload["mappingList"] = self.payloads
-        self.rest_send.check_mode = self.params.check_mode
         self.rest_send.payload = payload
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
