@@ -38,6 +38,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_o
     ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
+    WaitForControllerDone
 
 
 @Properties.add_rest_send
@@ -55,7 +57,7 @@ class ImageUpgrade:
     params = {"check_mode": False, "state": "merged"}
     sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(ansible_module.params)
+    rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
     results = Results()
@@ -176,6 +178,7 @@ class ImageUpgrade:
         self.ipv4_done = set()
         self.ipv4_todo = set()
         self.payload: dict = {}
+        self.wait_for_controller_done = WaitForControllerDone()
 
         self._rest_send = None
         self._results = None
@@ -524,7 +527,7 @@ class ImageUpgrade:
         self.issu_detail.results = Results()
 
         self._validate_devices()
-        self._wait_for_current_actions_to_complete()
+        self.wait_for_controller()
 
         for device in self.devices:
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
@@ -577,44 +580,11 @@ class ImageUpgrade:
 
         self._wait_for_image_upgrade_to_complete()
 
-    def _wait_for_current_actions_to_complete(self):
-        """
-        The controller will not upgrade an image if there are any actions
-        in progress.  Wait for all actions to complete before upgrading image.
-        Actions include image staging, image upgrade, and image validation.
-        """
-        method_name = inspect.stack()[0][3]
-
-        if self.rest_send.unit_test is False:
-            # See unit test test_image_upgrade_upgrade_00205
-            self.ipv4_done = set()
-        self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        timeout = self.check_timeout
-
-        while self.ipv4_done != self.ipv4_todo and timeout > 0:
-            sleep(self.check_interval)
-            timeout -= self.check_interval
-            self.issu_detail.refresh()
-
-            for ipv4 in self.ip_addresses:
-                if ipv4 in self.ipv4_done:
-                    continue
-                self.issu_detail.filter = ipv4
-
-                if self.issu_detail.actions_in_progress is False:
-                    self.ipv4_done.add(ipv4)
-                    continue
-
-        if self.ipv4_done != self.ipv4_todo:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Timed out waiting for actions to complete. "
-            msg += "ipv4_done: "
-            msg += f"{','.join(sorted(self.ipv4_done))}, "
-            msg += "ipv4_todo: "
-            msg += f"{','.join(sorted(self.ipv4_todo))}. "
-            msg += "check the device(s) to determine the cause "
-            msg += "(e.g. show install all status)."
-            raise ValueError(msg)
+    def wait_for_controller(self):
+        self.wait_for_controller_done.items = set(copy.copy(self.ip_addresses))
+        self.wait_for_controller_done.item_type = "ipv4_address"
+        self.wait_for_controller_done.rest_send = self.rest_send
+        self.wait_for_controller_done.commit()
 
     def _wait_for_image_upgrade_to_complete(self):
         """

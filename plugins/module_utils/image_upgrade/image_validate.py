@@ -34,6 +34,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
+    WaitForControllerDone
 
 
 @Properties.add_rest_send
@@ -55,7 +57,7 @@ class ImageValidate:
     params = {"check_mode": False, "state": "merged"}
     sender = Sender()
     sender.ansible_module = ansible_module
-    rest_send = RestSend(ansible_module.params)
+    rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
     results = Results()
@@ -65,10 +67,7 @@ class ImageValidate:
     instance.rest_send = rest_send
     instance.results = results
     instance.serial_numbers = ["FDO211218HH", "FDO211218GC"]
-    # optional parameters
-    instance.non_disruptive = True
     instance.commit()
-    data = instance.response_data
     ```
 
     ### Request body
@@ -104,6 +103,7 @@ class ImageValidate:
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
         self.payload = {}
         self.serial_numbers_done: set = set()
+        self.wait_for_controller_done = WaitForControllerDone()
 
         self._rest_send = None
         self._results = None
@@ -250,7 +250,8 @@ class ImageValidate:
         self.issu_detail.results = Results()
         self.prune_serial_numbers()
         self.validate_serial_numbers()
-        self._wait_for_current_actions_to_complete()
+
+        self.wait_for_controller()
 
         self.build_payload()
         self.rest_send.verb = self.endpoint.verb
@@ -283,59 +284,27 @@ class ImageValidate:
         for serial_number in self.serial_numbers_done:
             self.issu_detail.filter = serial_number
             diff = {}
-            diff["action"] = "validate"
+            diff["action"] = self.action
             diff["ip_address"] = self.issu_detail.ip_address
             diff["logical_name"] = self.issu_detail.device_name
             diff["policy"] = self.issu_detail.policy
             diff["serial_number"] = serial_number
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(diff)
-        msg = f"self.diff: {json.dumps(self.diff, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
-    def _wait_for_current_actions_to_complete(self) -> None:
-        """
-        ### Summary
-        The controller will not validate an image if there are any actions in
-        progress.  Wait for all actions to complete before validating image.
-        Actions include image staging, image upgrade, and image validation.
+            self.results.action = self.action
+            self.results.check_mode = self.rest_send.params.get("check_mode")
+            self.results.diff_current = copy.deepcopy(diff)
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.state = self.rest_send.params.get("state")
+            self.results.register_task_result()
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   The actions do not complete within the timeout.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"ENTERED {self.class_name}.{method_name}"
-        self.log.debug(msg)
-
-        if self.rest_send.unit_test is False:
-            self.serial_numbers_done: set = set()
-        serial_numbers_todo = set(copy.copy(self.serial_numbers))
-        timeout = self.check_timeout
-
-        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.rest_send.unit_test is False:
-                sleep(self.check_interval)
-            timeout -= self.check_interval
-            self.issu_detail.refresh()
-
-            for serial_number in self.serial_numbers:
-                if serial_number in self.serial_numbers_done:
-                    continue
-
-                self.issu_detail.filter = serial_number
-
-                if self.issu_detail.actions_in_progress is False:
-                    self.serial_numbers_done.add(serial_number)
-
-        if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Timed out waiting for actions to complete. "
-            msg += "serial_numbers_done: "
-            msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += "serial_numbers_todo: "
-            msg += f"{','.join(sorted(serial_numbers_todo))}"
-            raise ValueError(msg)
+    def wait_for_controller(self):
+        self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+        self.wait_for_controller_done.item_type = "serial_number"
+        self.wait_for_controller_done.rest_send = self.rest_send
+        self.wait_for_controller_done.commit()
 
     def _wait_for_image_validate_to_complete(self) -> None:
         """

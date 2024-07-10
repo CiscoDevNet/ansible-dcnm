@@ -35,60 +35,85 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
+    WaitForControllerDone
 
 
 @Properties.add_rest_send
 @Properties.add_results
 class ImageStage:
     """
-    Endpoint:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
+    ### Summary
+    Stage an image on a set of switches.
 
-    Verb: POST
+    ### Usage example
 
-    Usage (where module is an instance of AnsibleModule):
+    ```python
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    results = Results()
 
-    stage = ImageStage(module)
-    stage.serial_numbers = ["FDO211218HH", "FDO211218GC"]
-    stage.commit()
+    instance = ImageStage()
+    # mandatory parameters
+    instance.rest_send = rest_send
+    instance.results = results
+    instance.serial_numbers = ["FDO211218HH", "FDO211218GC"]
+    instance.commit()
+    ```
 
-    Request body (12.1.2e) (yes, serialNum is misspelled):
+    ### Request body (12.1.2e) (yes, serialNum is misspelled)
+
+    ```json
         {
             "sereialNum": [
                 "FDO211218HH",
                 "FDO211218GC"
             ]
         }
-    Request body (12.1.3b):
+    ```
+
+    ### Request body (12.1.3b):
+    ```json
         {
             "serialNumbers": [
                 "FDO211218HH",
                 "FDO211218GC"
             ]
         }
+    ```
 
-    Response:
-        Unfortunately, the response does not contain consistent data.
-        Would be better if all responses contained serial numbers as keys so that
-        we could verify against a set() of serial numbers.
+    ### Response
+    Unfortunately, the response does not contain consistent data.
+    Would be better if all responses contained serial numbers as keys so that
+    we could verify against a set() of serial numbers.
+
+    ```json
         {
-            'RETURN_CODE': 200,
-            'METHOD': 'POST',
-            'REQUEST_PATH': '.../api/v1/imagemanagement/rest/stagingmanagement/stage-image',
-            'MESSAGE': 'OK',
-            'DATA': [
+            "RETURN_CODE": 200,
+            "METHOD": "POST",
+            "REQUEST_PATH": ".../api/v1/imagemanagement/rest/stagingmanagement/stage-image",
+            "MESSAGE": "OK",
+            "DATA": [
                 {
-                    'key': 'success',
-                    'value': ''
+                    "key": "success",
+                    "value": ""
                 },
                 {
-                    'key': 'success',
-                    'value': ''
+                    "key": "success",
+                    "value": ""
                 }
             ]
         }
+    ```
 
-        Response when there are no files to stage:
+    ### Response when there are no files to stage
+    ```json
         [
             {
                 "key": "FDO211218GC",
@@ -99,6 +124,16 @@ class ImageStage:
                 "value": "No files to stage"
             }
         ]
+    ```
+
+    ### Endpoint Path
+    ```
+    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image
+    ```
+
+    ### Endpoint Verb
+    ``POST``
+
     """
 
     def __init__(self):
@@ -114,6 +149,8 @@ class ImageStage:
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
         self.payload = None
         self.serial_numbers_done = set()
+        self.wait_for_controller_done = WaitForControllerDone()
+
         self._serial_numbers = None
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
@@ -227,7 +264,8 @@ class ImageStage:
 
         self.prune_serial_numbers()
         self.validate_serial_numbers()
-        self._wait_for_current_actions_to_complete()
+
+        self.wait_for_controller()
 
         self.payload = {}
         self._populate_controller_version()
@@ -281,7 +319,7 @@ class ImageStage:
         for serial_number in self.serial_numbers_done:
             self.issu_detail.filter = serial_number
             diff = {}
-            diff["action"] = "stage"
+            diff["action"] = self.action
             diff["ip_address"] = self.issu_detail.ip_address
             diff["logical_name"] = self.issu_detail.device_name
             diff["policy"] = self.issu_detail.policy
@@ -297,41 +335,11 @@ class ImageStage:
             self.results.state = self.rest_send.params.get("state")
             self.results.register_task_result()
 
-    def _wait_for_current_actions_to_complete(self):
-        """
-        The controller will not stage an image if there are any actions in
-        progress.  Wait for all actions to complete before staging image.
-        Actions include image staging, image upgrade, and image validation.
-        """
-        method_name = inspect.stack()[0][3]
-
-        self.serial_numbers_done = set()
-        serial_numbers_todo = set(copy.copy(self.serial_numbers))
-        timeout = self.check_timeout
-
-        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.rest_send.unit_test is False:
-                sleep(self.check_interval)
-            timeout -= self.check_interval
-            self.issu_detail.refresh()
-
-            for serial_number in self.serial_numbers:
-                if serial_number in self.serial_numbers_done:
-                    continue
-
-                self.issu_detail.filter = serial_number
-
-                if self.issu_detail.actions_in_progress is False:
-                    self.serial_numbers_done.add(serial_number)
-
-        if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Timed out waiting for actions to complete. "
-            msg += "serial_numbers_done: "
-            msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += "serial_numbers_todo: "
-            msg += f"{','.join(sorted(serial_numbers_todo))}"
-            raise ValueError(msg)
+    def wait_for_controller(self):
+        self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+        self.wait_for_controller_done.item_type = "serial_number"
+        self.wait_for_controller_done.rest_send = self.rest_send
+        self.wait_for_controller_done.commit()
 
     def _wait_for_image_stage_to_complete(self):
         """

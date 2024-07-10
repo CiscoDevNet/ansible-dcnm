@@ -25,7 +25,9 @@ import logging
 from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
-    EpPolicyAttach
+    EpPolicyDetach
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
     ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -41,10 +43,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_
 @Properties.add_rest_send
 @Properties.add_results
 @Properties.add_params
-class ImagePolicyAttach:
+class ImagePolicyDetach:
     """
     ### Summary
-    Attach image policies to one or more switches.
+    Detach image policies from one or more switches.
 
     ### Raises
     -   ValueError: if:
@@ -71,7 +73,7 @@ class ImagePolicyAttach:
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = ImagePolicyAttach()
+    instance = ImagePolicyDetach()
     instance.params = params
     instance.rest_send = rest_send
     instance.results = results
@@ -87,11 +89,9 @@ class ImagePolicyAttach:
     def __init__(self):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-
-        self.action = "image_policy_attach"
-        self.endpoint = EpPolicyAttach()
-        self.verb = self.endpoint.verb
-        self.path = self.endpoint.path
+        self.action = "image_policy_detach"
+ 
+        self.ep_policy_detach = EpPolicyDetach()
 
         self.image_policies = ImagePolicies()
         self.payloads = []
@@ -108,32 +108,34 @@ class ImagePolicyAttach:
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-    def build_payload(self):
+    def build_diff(self):
         """
-        build the payload to send in the POST request
-        to attach policies to devices
+        ### Summary
+        Build the diff of the detach policy operation.
 
-        caller _attach_policy()
+        ### Raises
+        -   ValueError: if the switch is not managed by the controller.
         """
         method_name = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.payloads = []
+        self.diff = []
 
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            payload: dict = {}
-            payload["policyName"] = self.policy_name
-            payload["hostName"] = self.switch_issu_details.device_name
-            payload["ipAddr"] = self.switch_issu_details.ip_address
-            payload["platform"] = self.switch_issu_details.platform
-            payload["serialNumber"] = self.switch_issu_details.serial_number
-            msg = f"payload: {json.dumps(payload, indent=4)}"
+            diff: dict = {}
+            diff["policyName"] = self.policy_name
+            diff["action"] = self.action
+            diff["hostName"] = self.switch_issu_details.device_name
+            diff["ipAddr"] = self.switch_issu_details.ip_address
+            diff["platform"] = self.switch_issu_details.platform
+            diff["serialNumber"] = self.switch_issu_details.serial_number
+            msg = f"diff: {json.dumps(diff, indent=4)}"
             self.log.debug(msg)
-            for key, value in payload.items():
+            for key, value in diff.items():
                 if value is None:
                     msg = f"{self.class_name}.{method_name}: "
                     msg += f" Unable to determine {key} for switch "
@@ -143,7 +145,7 @@ class ImagePolicyAttach:
                     msg += "Please verify that the switch is managed by "
                     msg += "the controller."
                     raise ValueError(msg)
-            self.payloads.append(payload)
+            self.diff.append(copy.deepcopy(diff))
 
     def validate_commit_parameters(self):
         """
@@ -183,45 +185,6 @@ class ImagePolicyAttach:
             msg += "instance.serial_numbers must be set before "
             msg += "calling commit()"
             raise ValueError(msg)
-
-    def validate_image_policies(self):
-        """
-        ### Summary
-        Validate that the image policy exists on the controller
-        and supports the switch platform.
-
-        ### Raises
-        -   ValueError: if:
-                -   ``policy_name`` does not exist on the controller.
-                -   ``policy_name`` does not support the switch platform.
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"ENTERED {self.class_name}.{method_name}"
-        self.log.debug(msg)
-
-        self.image_policies.refresh()
-        self.switch_issu_details.refresh()
-
-        self.image_policies.policy_name = self.policy_name
-        # Fail if the image policy does not exist.
-        # Image policy creation is handled by a different module.
-        if self.image_policies.name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"policy {self.policy_name} does not exist on "
-            msg += "the controller."
-            raise ValueError(msg)
-
-        for serial_number in self.serial_numbers:
-            self.switch_issu_details.filter = serial_number
-            # Fail if the image policy does not support the switch platform
-            if self.switch_issu_details.platform not in self.image_policies.platform:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"policy {self.policy_name} does not support platform "
-                msg += f"{self.switch_issu_details.platform}. {self.policy_name} "
-                msg += "supports the following platform(s): "
-                msg += f"{self.image_policies.platform}"
-                raise ValueError(msg)
 
     def commit(self):
         """
@@ -264,7 +227,7 @@ class ImagePolicyAttach:
             raise ValueError(msg) from error
 
         self.wait_for_controller()
-        self.attach_policy()
+        self.detach_policy()
 
     def wait_for_controller(self):
         self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
@@ -272,60 +235,54 @@ class ImagePolicyAttach:
         self.wait_for_controller_done.rest_send = self.rest_send
         self.wait_for_controller_done.commit()
 
-    def attach_policy(self):
+    def detach_policy(self):
         """
         ### Summary
-        Attach policy_name to the switch(es) associated with serial_numbers.
+        Detach ``policy_name`` from the switch(es) associated with
+        ``serial_numbers``.
 
         ### Raises
-        -   ValueError: if the result of the POST request is not successful.
+        -   ``ControllerResponseError`` if:
+                -   The result of the DELETE request is not successful.
         """
         method_name = inspect.stack()[0][3]
 
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.build_payload()
-
         msg = f"{self.class_name}.{method_name}: "
         msg += f"rest_send.check_mode: {self.rest_send.check_mode}"
         self.log.debug(msg)
 
-        payload: dict = {}
-        payload["mappingList"] = self.payloads
-        self.rest_send.payload = payload
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
+        self.ep_policy_detach.serial_numbers = self.serial_numbers
+
+        self.rest_send.path = self.ep_policy_detach.path
+        self.rest_send.verb = self.ep_policy_detach.verb
         self.rest_send.commit()
 
         msg = f"result_current: {json.dumps(self.rest_send.result_current, indent=4)}"
         self.log.debug(msg)
-        msg = (
-            f"response_current: {json.dumps(self.rest_send.response_current, indent=4)}"
-        )
+
+        msg = "response_current: "
+        msg += f"{json.dumps(self.rest_send.response_current, indent=4)}"
         self.log.debug(msg)
 
         if not self.rest_send.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Bad result when attaching policy {self.policy_name} "
-            msg += f"to switch. Payload: {payload}."
-            raise ValueError(msg)
+            msg += f"Bad result when detaching policy {self.policy_name} "
+            msg += f"from switches: "
+            msg += f"{','.join(self.serial_numbers)}."
+            raise ControllerResponseError(msg)
 
-        for payload in self.payloads:
-            diff: dict = {}
-            diff["action"] = self.action
-            diff["ip_address"] = payload["ipAddr"]
-            diff["logical_name"] = payload["hostName"]
-            diff["policy_name"] = payload["policyName"]
-            diff["serial_number"] = payload["serialNumber"]
-            self.results.diff = copy.deepcopy(diff)
+        self.results.diff = self.build_diff()
 
     @property
     def policy_name(self):
         """
-        Set the name of the policy to attach, detach, query.
+        ### Summary
+        Set the name of the policy to detach.
 
-        Must be set prior to calling instance.commit()
+        Must be set prior to calling ``commit``.
         """
         return self._policy_name
 
@@ -337,14 +294,14 @@ class ImagePolicyAttach:
     def serial_numbers(self):
         """
         ### Summary
-        Set the serial numbers of the switches to/ which
-        policy_name will be attached.
+        Set the serial numbers of the switches from which
+        ``policy_name`` will be detached.
 
-        Must be set prior to calling commit()
+        Must be set prior to calling ``commit``.
 
         ### Raises
-        - TypeError: if value is not a list.
-        - ValueError: if value is an empty list.
+        -   ``TypeError`` if value is not a list.
+        -   ``ValueError`` if value is an empty list.
         """
         return self._serial_numbers
 
