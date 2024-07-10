@@ -1421,10 +1421,10 @@ class Deleted(Common):
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
-        serial_numbers_to_detach: dict = {}
         self.switch_details.refresh()
         self.image_policies.refresh()
 
+        serial_numbers_to_detach: dict = {}
         for switch in self.need:
             self.switch_details.ip_address = switch.get("ip_address")
             self.image_policies.policy_name = switch.get("policy")
