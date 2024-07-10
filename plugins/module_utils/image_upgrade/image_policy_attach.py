@@ -22,6 +22,7 @@ import copy
 import inspect
 import json
 import logging
+from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyAttach
@@ -94,6 +95,8 @@ class ImagePolicyAttach:
         self.payloads = []
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber()
 
+        self._check_interval = 10  # seconds
+        self._check_timeout = 1800  # seconds
         self._params = None
         self._rest_send = None
         self._results = None
@@ -243,6 +246,7 @@ class ImagePolicyAttach:
             raise ValueError(msg) from error
 
         self.switch_issu_details.rest_send = self.rest_send
+        # Don't include results in user output.
         self.switch_issu_details.results = Results()
 
         self.image_policies.results = Results()
@@ -256,7 +260,52 @@ class ImagePolicyAttach:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
+        self._wait_for_current_actions_to_complete()
         self.attach_policy()
+
+    def _wait_for_current_actions_to_complete(self) -> None:
+        """
+        ### Summary
+        The controller will not validate an image if there are any actions in
+        progress.  Wait for all actions to complete before validating image.
+        Actions include image staging, image upgrade, and image validation.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   The actions do not complete within the timeout.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        if self.rest_send.unit_test is False:
+            self.serial_numbers_done: set = set()
+        serial_numbers_todo = set(copy.copy(self.serial_numbers))
+        timeout = self.check_timeout
+
+        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
+            if self.rest_send.unit_test is False:
+                sleep(self.check_interval)
+            timeout -= self.check_interval
+            self.switch_issu_details.refresh()
+
+            for serial_number in self.serial_numbers:
+                if serial_number in self.serial_numbers_done:
+                    continue
+
+                self.switch_issu_details.filter = serial_number
+
+                if self.switch_issu_details.actions_in_progress is False:
+                    self.serial_numbers_done.add(serial_number)
+
+        if self.serial_numbers_done != serial_numbers_todo:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Timed out waiting for actions to complete. "
+            msg += "serial_numbers_done: "
+            msg += f"{','.join(sorted(self.serial_numbers_done))}, "
+            msg += "serial_numbers_todo: "
+            msg += f"{','.join(sorted(serial_numbers_todo))}"
+            raise ValueError(msg)
 
     def attach_policy(self):
         """
@@ -349,3 +398,57 @@ class ImagePolicyAttach:
             msg += "switch serial number."
             raise ValueError(msg)
         self._serial_numbers = value
+
+    @property
+    def check_interval(self):
+        """
+        ### Summary
+        The validate check interval, in seconds.
+
+        ### Raises
+        -   ``TypeError`` if the value is not an integer.
+        -   ``ValueError`` if the value is less than zero.
+        """
+        return self._check_interval
+
+    @check_interval.setter
+    def check_interval(self, value):
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "must be a positive integer or zero. "
+        msg += f"Got value {value} of type {type(value)}."
+        # isinstance(True, int) is True so we need to check for bool first
+        if isinstance(value, bool):
+            raise TypeError(msg)
+        if not isinstance(value, int):
+            raise TypeError(msg)
+        if value < 0:
+            raise ValueError(msg)
+        self._check_interval = value
+
+    @property
+    def check_timeout(self):
+        """
+        ### Summary
+        The validate check timeout, in seconds.
+
+        ### Raises
+        -   ``TypeError`` if the value is not an integer.
+        -   ``ValueError`` if the value is less than zero.
+        """
+        return self._check_timeout
+
+    @check_timeout.setter
+    def check_timeout(self, value):
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "must be a positive integer or zero. "
+        msg += f"Got value {value} of type {type(value)}."
+        # isinstance(True, int) is True so we need to check for bool first
+        if isinstance(value, bool):
+            raise TypeError(msg)
+        if not isinstance(value, int):
+            raise TypeError(msg)
+        if value < 0:
+            raise ValueError(msg)
+        self._check_timeout = value
