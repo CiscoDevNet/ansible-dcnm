@@ -889,7 +889,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     def filter(self):
         """
         ### Summary
-        Set the ``ip_address`` of the switch to query.
+        Set the ``ipv4_address`` of the switch to query.
 
         ``filter`` needs to be set before accessing this class's properties.
         """
