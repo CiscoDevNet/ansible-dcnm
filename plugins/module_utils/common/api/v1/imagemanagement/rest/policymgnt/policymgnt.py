@@ -299,17 +299,50 @@ class EpPolicyDetach(PolicyMgnt):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._serial_numbers = None
         msg = "ENTERED api.v1.imagemanagement.rest."
         msg += f"policymgnt.{self.class_name}"
         self.log.debug(msg)
 
     @property
     def path(self):
-        return f"{self.policymgnt}/detach-policy"
+        """
+        ### Summary
+        The endpoint path.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``path`` is accessed before setting ``serial_numbers``.
+        """
+        if self.serial_numbers is None:
+            msg = f"{self.class_name}.serial_numbers must be set before "
+            msg += f"accessing {self.class_name}.path."
+            raise ValueError(msg)
+        query_param = ",".join(self.serial_numbers)
+        return f"{self.policymgnt}/detach-policy?serialNumber={query_param}"
 
     @property
     def verb(self):
         return "DELETE"
+    
+    @property
+    def serial_numbers(self):
+        """
+        ### Summary
+        A ``list`` of switch serial numbers.
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   ``serial_numbers`` is not a ``list``.
+        """
+        return self._serial_numbers
+
+    @serial_numbers.setter
+    def serial_numbers(self, value):
+        if not isinstance(value, list):
+            msg = f"{self.class_name}.serial_numbers must be a list "
+            msg += "of switch serial numbers."
+            raise TypeError(msg)
 
 
 class EpPolicyEdit(PolicyMgnt):
