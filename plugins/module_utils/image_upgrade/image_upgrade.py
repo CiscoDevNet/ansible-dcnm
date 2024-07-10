@@ -170,7 +170,7 @@ class ImageUpgrade:
 
         self.action = "image_upgrade"
         self.conversion = ConversionUtils()
-        self.endpoint = EpUpgradeImage()
+        self.ep_upgrade_image = EpUpgradeImage()
         self.install_options = ImageInstallOptions()
         self.issu_detail = SwitchIssuDetailsByIpAddress()
         self.ipv4_done = set()
@@ -526,9 +526,6 @@ class ImageUpgrade:
         self._validate_devices()
         self._wait_for_current_actions_to_complete()
 
-        self.rest_send.path = self.endpoint.path
-        self.rest_send.verb = self.endpoint.verb
-
         for device in self.devices:
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -542,6 +539,8 @@ class ImageUpgrade:
             msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
+            self.rest_send.path = self.ep_upgrade_image.path
+            self.rest_send.verb = self.ep_upgrade_image.verb
             self.rest_send.payload = self.payload
             self.rest_send.commit()
 
