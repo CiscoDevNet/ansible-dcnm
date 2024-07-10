@@ -402,6 +402,7 @@ class RestSend:
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
+        self.payload = None
 
     @property
     def check_mode(self):
