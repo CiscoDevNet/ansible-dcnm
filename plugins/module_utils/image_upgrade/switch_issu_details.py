@@ -827,8 +827,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         Refresh ip_address current issu details from the controller.
 
         ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set before calling refresh().
+        None
         """
         self.refresh_super()
         method_name = inspect.stack()[0][3]
@@ -950,8 +949,7 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         Refresh serial_number current issu details from the controller.
 
         ### Raises
-        -   ``ValueError`` if:
-                -   ``filter`` is not set before calling refresh().
+        None
         """
         self.refresh_super()
         method_name = inspect.stack()[0][3]
@@ -1078,6 +1076,9 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         """
         ### Summary
         Refresh device_name current issu details from the controller.
+
+        ### Raises
+        None
         """
         self.refresh_super()
         method_name = inspect.stack()[0][3]

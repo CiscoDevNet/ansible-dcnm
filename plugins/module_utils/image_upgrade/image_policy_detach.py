@@ -22,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyDetach
@@ -42,7 +41,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_
 
 @Properties.add_rest_send
 @Properties.add_results
-@Properties.add_params
 class ImagePolicyDetach:
     """
     ### Summary
@@ -50,11 +48,8 @@ class ImagePolicyDetach:
 
     ### Raises
     -   ValueError: if:
-            -   ``policy_name`` is not set before calling commit.
             -   ``serial_numbers`` is not set before calling commit.
             -   ``serial_numbers`` is an empty list.
-            -   ``policy_name`` does not exist on the controller.
-            -   ``policy_name`` does not support the switch platform.
     -   TypeError: if:
             -   ``serial_numbers`` is not a list.
 
@@ -74,10 +69,8 @@ class ImagePolicyDetach:
     rest_send.response_handler = ResponseHandler()
 
     instance = ImagePolicyDetach()
-    instance.params = params
     instance.rest_send = rest_send
     instance.results = results
-    instance.policy_name = "NR3F"
     instance.serial_numbers = ["FDO211218GC", "FDO211218HH"]
     instance.commit()
     ```
@@ -90,17 +83,15 @@ class ImagePolicyDetach:
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
         self.action = "image_policy_detach"
- 
-        self.ep_policy_detach = EpPolicyDetach()
 
+        self.ep_policy_detach = EpPolicyDetach()
         self.image_policies = ImagePolicies()
-        self.payloads = []
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber()
         self.wait_for_controller_done = WaitForControllerDone()
 
+        self.diff: dict = {}
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
-        self._params = None
         self._rest_send = None
         self._results = None
 
@@ -121,31 +112,24 @@ class ImagePolicyDetach:
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.diff = []
+        self.diff: dict = {}
 
         self.switch_issu_details.refresh()
         for serial_number in self.serial_numbers:
             self.switch_issu_details.filter = serial_number
-            diff: dict = {}
-            diff["policyName"] = self.policy_name
-            diff["action"] = self.action
-            diff["hostName"] = self.switch_issu_details.device_name
-            diff["ipAddr"] = self.switch_issu_details.ip_address
-            diff["platform"] = self.switch_issu_details.platform
-            diff["serialNumber"] = self.switch_issu_details.serial_number
-            msg = f"diff: {json.dumps(diff, indent=4)}"
+            ipv4 = self.switch_issu_details.ip_address
+
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["policy_name"] = self.switch_issu_details.policy
+            self.diff[ipv4]["device_name"] = self.switch_issu_details.device_name
+            self.diff[ipv4]["ipv4_address"] = self.switch_issu_details.ip_address
+            self.diff[ipv4]["platform"] = self.switch_issu_details.platform
+            self.diff[ipv4]["serial_number"] = self.switch_issu_details.serial_number
+            msg = f"self.diff[{ipv4}]: {json.dumps(self.diff[ipv4], indent=4)}"
             self.log.debug(msg)
-            for key, value in diff.items():
-                if value is None:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f" Unable to determine {key} for switch "
-                    msg += f"{self.switch_issu_details.ip_address}, "
-                    msg += f"{self.switch_issu_details.serial_number}, "
-                    msg += f"{self.switch_issu_details.device_name}. "
-                    msg += "Please verify that the switch is managed by "
-                    msg += "the controller."
-                    raise ValueError(msg)
-            self.diff.append(copy.deepcopy(diff))
 
     def validate_commit_parameters(self):
         """
@@ -154,21 +138,12 @@ class ImagePolicyDetach:
 
         ### Raises
         -   ValueError: if:
-                -   ``policy_name`` is not set.
                 -   ``serial_numbers`` is not set.
-                -   ``policy_name`` does not exist on the controller.
-                -   ``policy_name`` does not support the switch platform.
         """
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED"
         self.log.debug(msg)
-
-        if self.policy_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.policy_name must be set before "
-            msg += "calling commit()"
-            raise ValueError(msg)
 
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -193,10 +168,13 @@ class ImagePolicyDetach:
 
         ### Raises
         -   ValueError: if:
-                -   ``policy_name`` is not set.
                 -   ``serial_numbers`` is not set.
-                -   ``policy_name`` does not exist on the controller.
-                -   ``policy_name`` does not support the switch platform.
+                -   ``results`` is not set.
+                -   ``rest_send`` is not set.
+                -   Error encountered while waiting for controller actions
+                    to complete.
+                -   Error encountered while detaching image policies from
+                    switches.
         """
         method_name = inspect.stack()[0][3]
 
@@ -215,30 +193,42 @@ class ImagePolicyDetach:
         # Don't include results in user output.
         self.switch_issu_details.results = Results()
 
-        self.image_policies.results = Results()
-        self.image_policies.rest_send = self.rest_send  # pylint: disable=no-member
+        try:
+            self.wait_for_controller()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
 
         try:
-            self.validate_image_policies()
-        except ValueError as error:
+            self.detach_policy()
+        except (ControllerResponseError, TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Error while validating image policies. "
+            msg += "Error while detaching image policies from switches. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.wait_for_controller()
-        self.detach_policy()
-
     def wait_for_controller(self):
-        self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
-        self.wait_for_controller_done.item_type = "serial_number"
-        self.wait_for_controller_done.rest_send = self.rest_send
-        self.wait_for_controller_done.commit()
+        """
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+
+        """
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+            self.wait_for_controller_done.item_type = "serial_number"
+            self.wait_for_controller_done.rest_send = self.rest_send
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.wait_for_controller: "
+            msg += "Error while waiting for controller actions to complete. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def detach_policy(self):
         """
         ### Summary
-        Detach ``policy_name`` from the switch(es) associated with
+        Detach image policy from the switch(es) associated with
         ``serial_numbers``.
 
         ### Raises
@@ -250,11 +240,17 @@ class ImagePolicyDetach:
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
+        self.ep_policy_detach.serial_numbers = self.serial_numbers
+
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"rest_send.check_mode: {self.rest_send.check_mode}"
+        msg += "ep_policy_detach: "
+        msg += f"verb: {self.ep_policy_detach.verb}, "
+        msg += f"path: {self.ep_policy_detach.path}"
         self.log.debug(msg)
 
-        self.ep_policy_detach.serial_numbers = self.serial_numbers
+        # Build the diff before sending the request so that
+        # we can include the policy names in the diff.
+        self.build_diff()
 
         self.rest_send.path = self.ep_policy_detach.path
         self.rest_send.verb = self.ep_policy_detach.verb
@@ -267,35 +263,24 @@ class ImagePolicyDetach:
         msg += f"{json.dumps(self.rest_send.response_current, indent=4)}"
         self.log.debug(msg)
 
+        self.results.action = self.action
+        self.results.diff_current = self.diff
+        self.results.response_current = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.register_task_result()
+
         if not self.rest_send.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Bad result when detaching policy {self.policy_name} "
-            msg += f"from switches: "
+            msg += "Bad result when detaching image polices from switches: "
             msg += f"{','.join(self.serial_numbers)}."
             raise ControllerResponseError(msg)
-
-        self.results.diff = self.build_diff()
-
-    @property
-    def policy_name(self):
-        """
-        ### Summary
-        Set the name of the policy to detach.
-
-        Must be set prior to calling ``commit``.
-        """
-        return self._policy_name
-
-    @policy_name.setter
-    def policy_name(self, value):
-        self._policy_name = value
 
     @property
     def serial_numbers(self):
         """
         ### Summary
         Set the serial numbers of the switches from which
-        ``policy_name`` will be detached.
+        image policies will be detached.
 
         Must be set prior to calling ``commit``.
 

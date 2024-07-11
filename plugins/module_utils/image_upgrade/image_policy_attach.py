@@ -272,6 +272,27 @@ class ImagePolicyAttach:
         self.wait_for_controller_done.rest_send = self.rest_send
         self.wait_for_controller_done.commit()
 
+    def build_diff(self):
+        """
+        ### Summary
+        Build the diff for the task result.
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.diff: dict = {}
+        for payload in self.payloads:
+            ipv4 = payload["ipAddr"]
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["ip_address"] = payload["ipAddr"]
+            self.diff[ipv4]["logical_name"] = payload["hostName"]
+            self.diff[ipv4]["policy_name"] = payload["policyName"]
+            self.diff[ipv4]["serial_number"] = payload["serialNumber"]
+
     def attach_policy(self):
         """
         ### Summary
@@ -305,20 +326,18 @@ class ImagePolicyAttach:
         )
         self.log.debug(msg)
 
+        self.build_diff()
+        self.results.diff_current = copy.deepcopy(self.diff)
+        self.results.result_current = self.rest_send.result_current
+        self.results.response_current = self.rest_send.response_current
+        self.results.register_task_result()
+
         if not self.rest_send.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad result when attaching policy {self.policy_name} "
             msg += f"to switch. Payload: {payload}."
             raise ValueError(msg)
 
-        for payload in self.payloads:
-            diff: dict = {}
-            diff["action"] = self.action
-            diff["ip_address"] = payload["ipAddr"]
-            diff["logical_name"] = payload["hostName"]
-            diff["policy_name"] = payload["policyName"]
-            diff["serial_number"] = payload["serialNumber"]
-            self.results.diff = copy.deepcopy(diff)
 
     @property
     def policy_name(self):
