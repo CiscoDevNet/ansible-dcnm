@@ -343,6 +343,7 @@ class EpPolicyDetach(PolicyMgnt):
             msg = f"{self.class_name}.serial_numbers must be a list "
             msg += "of switch serial numbers."
             raise TypeError(msg)
+        self._serial_numbers = value
 
 
 class EpPolicyEdit(PolicyMgnt):

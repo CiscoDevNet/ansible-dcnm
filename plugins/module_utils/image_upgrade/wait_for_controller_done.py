@@ -3,23 +3,41 @@ import inspect
 import logging
 from time import sleep
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsBySerialNumber, SwitchIssuDetailsByIpAddress, SwitchIssuDetailsByDeviceName
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
+    SwitchIssuDetailsByDeviceName, SwitchIssuDetailsByIpAddress,
+    SwitchIssuDetailsBySerialNumber)
+
 
 @Properties.add_rest_send
 class WaitForControllerDone:
+    """
+    ### Summary
+    Wait for actions to complete on the controller.
+
+    Actions include image staging, image upgrade, and image validation.
+
+    ### Raises
+    -   ``ValueError`` if:
+            - Controller actions do not complete within ``timeout`` seconds.
+            - ``items`` is not a set prior to calling ``commit()``.
+            - ``item_type`` is not set prior to calling ``commit()``.
+            - ``rest_send`` is not set prior to calling ``commit()``.
+    """
+
     def __init__(self):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.action = "wait_for_controller"
         self.done = set()
         self.todo = set()
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.issu_details = None
 
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
@@ -48,11 +66,21 @@ class WaitForControllerDone:
         _select["ipv4_address"] = SwitchIssuDetailsByIpAddress
         _select["serial_number"] = SwitchIssuDetailsBySerialNumber
         self.issu_details = _select[self.item_type]()
-        self.issu_details.rest_send = self.rest_send
+        self.issu_details.rest_send = self.rest_send  # pylint: disable=no-member
         self.issu_details.results = Results()
         self.issu_details.results.action = self.action
 
     def verify_commit_parameters(self):
+        """
+        ### Summary
+        Verify that mandatory parameters are set before calling commit().
+
+        ### Raises
+        -   ``ValueError`` if:
+                - ``items`` is not set.
+                - ``item_type`` is not set.
+                - ``rest_send`` is not set.
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
 
@@ -64,12 +92,11 @@ class WaitForControllerDone:
             msg += "item_type must be set before calling commit()."
             raise ValueError(msg)
 
-        if self.rest_send is None:
+        if self.rest_send is None:  # pylint: disable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit()."
             raise ValueError(msg)
 
-        
     def commit(self):
         """
         ### Summary
@@ -80,7 +107,11 @@ class WaitForControllerDone:
         Actions include image staging, image upgrade, and image validation.
 
         ### Raises
-        -   ``ValueError`` if the actions do not complete within the timeout.
+        -   ``ValueError`` if:
+                -   Actions do not complete within ``timeout`` seconds.
+                -   ``items`` is not a set.
+                -   ``item_type`` is not set.
+                -   ``rest_send`` is not set.
         """
         method_name = inspect.stack()[0][3]
 
@@ -93,7 +124,7 @@ class WaitForControllerDone:
         timeout = self.check_timeout
 
         while self.done != self.todo and timeout > 0:
-            if self.rest_send.unit_test is False:
+            if self.rest_send.unit_test is False:  # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
 
@@ -196,6 +227,7 @@ class WaitForControllerDone:
         ```
         """
         return self._items
+
     @items.setter
     def items(self, value):
         if not isinstance(value, set):
@@ -222,6 +254,7 @@ class WaitForControllerDone:
         ```
         """
         return self._item_type
+
     @item_type.setter
     def item_type(self, value):
         if value not in self._valid_item_types:

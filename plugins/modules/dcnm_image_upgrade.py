@@ -442,7 +442,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_val
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsByIpAddress
+    SwitchIssuDetailsByIpAddress, SwitchIssuDetailsBySerialNumber
 
 
 def json_pretty(msg):
@@ -1383,11 +1383,33 @@ class Deleted(Common):
             raise ValueError(msg) from error
 
         self.image_policy_detach = ImagePolicyDetach()
+        self.switch_issu_details = SwitchIssuDetailsByIpAddress()
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
+
+    def get_need(self) -> None:
+        """
+        ### Summary
+        For deleted state, populate self.need list() with items from our want
+        list that are not in our have list.  These items will be sent to
+        the controller.
+
+        Policies are detached only if the policy name matches.
+        """
+        need = []
+        for want in self.want:
+            self.have.filter = want["ip_address"]
+            if self.have.serial_number is None:
+                continue
+            if self.have.policy is None:
+                continue
+            if self.have.policy != want["policy"]:
+                continue
+            need.append(want)
+        self.need = copy.copy(need)
 
     def commit(self) -> None:
         """
@@ -1398,17 +1420,22 @@ class Deleted(Common):
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
+        self.get_have()
+        self.get_want()
+        if len(self.want) == 0:
+            return
+        self.get_need()
+
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
-        self.image_policies.rest_send = self.rest_send
         self.image_policy_detach.rest_send = self.rest_send
-        self.switch_details.rest_send = self.rest_send
+        self.switch_issu_details.rest_send = self.rest_send
 
-        self.image_policies.results = self.results
         self.image_policy_detach.results = self.results
-        # We don't want switch_details results to be saved in self.results
-        self.switch_details.results = Results()
+        # We don't want switch_issu_details results
+        # to clutter the results returned to the playbook.
+        self.switch_issu_details.results = Results()
 
         self.detach_image_policy()
 
@@ -1421,31 +1448,22 @@ class Deleted(Common):
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
 
-        self.switch_details.refresh()
-        self.image_policies.refresh()
+        self.switch_issu_details.refresh()
 
-        serial_numbers_to_detach: dict = {}
+        serial_numbers_to_detach: list = []
         for switch in self.need:
-            self.switch_details.ip_address = switch.get("ip_address")
-            self.image_policies.policy_name = switch.get("policy")
-            # ImagePolicyDetach wants a policy name and a list of serial_number.
-            # Build dictionary, serial_numbers_to_udate, keyed on policy name
-            # whose value is the list of serial numbers to detach.
-            if self.image_policies.name not in serial_numbers_to_detach:
-                serial_numbers_to_detach[self.image_policies.policy_name] = []
-
-            serial_numbers_to_detach[self.image_policies.policy_name].append(
-                self.switch_details.serial_number
-            )
+            self.switch_issu_details.filter = switch.get("ip_address")
+            if self.switch_issu_details.policy is None:
+                continue
+            serial_numbers_to_detach.append(self.switch_issu_details.serial_number)
 
         if len(serial_numbers_to_detach) == 0:
             msg = "No policies to detach."
             self.log.debug(msg)
+            return
 
-        for key, value in serial_numbers_to_detach.items():
-            self.image_policy_detach.policy_name = key
-            self.image_policy_detach.serial_numbers = value
-            self.image_policy_detach.commit()
+        self.image_policy_detach.serial_numbers = serial_numbers_to_detach
+        self.image_policy_detach.commit()
 
 
 class Query(Common):
