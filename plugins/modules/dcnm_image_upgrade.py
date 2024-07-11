@@ -441,8 +441,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_val
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsByIpAddress, SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
+    SwitchIssuDetailsByIpAddress, SwitchIssuDetailsBySerialNumber)
 
 
 def json_pretty(msg):
@@ -763,7 +763,8 @@ class Common:
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Unsupported state: {self.params['state']}"
         raise ValueError(msg)
-        return None  # we never reach this, but it makes pylint happy.
+        # we never reach this, but it makes pylint happy.
+        return None  # pylint: disable=unreachable
 
     @staticmethod
     def _build_params_spec_for_merged_state() -> dict:
@@ -1033,6 +1034,29 @@ class Merged(Common):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
+    def validate_commit_parameters(self) -> None:
+        """
+        ### Summary
+        Verify mandatory parameters are set before calling commit.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+
     def commit(self) -> None:
         """
         ### Summary
@@ -1044,6 +1068,8 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
+
+        self.validate_commit_parameters()
 
         self.install_options.rest_send = self.rest_send
         self.image_policies.rest_send = self.rest_send
@@ -1070,12 +1096,11 @@ class Merged(Common):
             msg = f"switch: {json.dumps(switch, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            self.switch_details.ip_address = switch.get("ip_address")
             device = {}
-            device["serial_number"] = self.switch_details.serial_number
-            self.have.filter = self.switch_details.ip_address
+            self.have.filter = switch.get("ip_address")
+            device["serial_number"] = self.have.serial_number
             device["policy_name"] = switch.get("policy")
-            device["ip_address"] = self.switch_details.ip_address
+            device["ip_address"] = self.have.ip_address
 
             if switch.get("stage") is not False:
                 stage_devices.append(device["serial_number"])
@@ -1144,7 +1169,7 @@ class Merged(Common):
                 # test_idempotence.add(self.idempotent_want["options"]["package"]["uninstall"])
                 if True not in test_idempotence:
                     continue
-                need.append(self.idempotent_want)
+                need.append(copy.deepcopy(self.idempotent_want))        
         self.need = copy.copy(need)
 
     def _stage_images(self, serial_numbers) -> None:
@@ -1371,6 +1396,15 @@ class Merged(Common):
 
 
 class Deleted(Common):
+    """
+    ### Summary
+    Handle deleted state.
+
+    ### Raises
+    -   ``ValueError`` if:
+        -   ``params`` is missing ``config`` key.
+        -   ``commit()`` is issued before setting mandatory properties
+    """
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
@@ -1411,6 +1445,29 @@ class Deleted(Common):
             need.append(want)
         self.need = copy.copy(need)
 
+    def validate_commit_parameters(self) -> None:
+        """
+        ### Summary
+        Verify mandatory parameters are set before calling commit.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+
     def commit(self) -> None:
         """
         ### Summary
@@ -1419,6 +1476,8 @@ class Deleted(Common):
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
+
+        self.validate_commit_parameters()
 
         self.get_have()
         self.get_want()
@@ -1467,6 +1526,15 @@ class Deleted(Common):
 
 
 class Query(Common):
+    """
+    ### Summary
+    Handle query state.
+
+    ### Raises
+    -   ``ValueError`` if:
+        -   ``params`` is missing ``config`` key.
+        -   ``commit()`` is issued before setting mandatory properties
+    """
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
@@ -1485,6 +1553,29 @@ class Query(Common):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
+    def validate_commit_parameters(self) -> None:
+        """
+        ### Summary
+        Verify mandatory parameters are set before calling commit.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+
     def commit(self) -> None:
         """
         Return the ISSU state of the switch(es) listed in the playbook
@@ -1494,6 +1585,8 @@ class Query(Common):
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}."
         self.log.debug(msg)
+
+        self.validate_commit_parameters()
 
         self.issu_detail.rest_send = self.rest_send
         self.issu_detail.results = self.results
