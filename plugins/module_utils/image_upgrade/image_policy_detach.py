@@ -82,8 +82,8 @@ class ImagePolicyDetach:
     def __init__(self):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-        self.action = "image_policy_detach"
 
+        self.action = "image_policy_detach"
         self.ep_policy_detach = EpPolicyDetach()
         self.image_policies = ImagePolicies()
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber()
@@ -128,7 +128,8 @@ class ImagePolicyDetach:
             self.diff[ipv4]["ipv4_address"] = self.switch_issu_details.ip_address
             self.diff[ipv4]["platform"] = self.switch_issu_details.platform
             self.diff[ipv4]["serial_number"] = self.switch_issu_details.serial_number
-            msg = f"self.diff[{ipv4}]: {json.dumps(self.diff[ipv4], indent=4)}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.diff[{ipv4}]: {json.dumps(self.diff[ipv4], indent=4)}"
             self.log.debug(msg)
 
     def validate_commit_parameters(self):
