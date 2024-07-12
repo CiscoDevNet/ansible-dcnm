@@ -110,9 +110,9 @@
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
   until:
-    - result.diff[0].ipAddress == ansible_switch_1
-    - result.diff[1].ipAddress == ansible_switch_2
-    - result.diff[2].ipAddress == ansible_switch_3
+    - ansible_switch_1 in result.diff[0]
+    - ansible_switch_2 in result.diff[0]
+    - ansible_switch_3 in result.diff[0]
   retries: 60
   delay: 5
   ignore_errors: yes
@@ -120,34 +120,55 @@
 ################################################################################
 # DELETED - TEST - Detach policies from two switches and verify.
 ################################################################################
-# Expected result
-# ok: [dcnm] => {
+# Expected output
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "action": "detach",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "detach",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FDO211218AX"
+#                 "172.22.150.103": {
+#                     "action": "image_policy_detach",
+#                     "device_name": "cvd-1312-leaf",
+#                     "ipv4_address": "172.22.150.103",
+#                     "platform": "N9K",
+#                     "policy_name": "NR1F",
+#                     "serial_number": "FDO211218GC"
+#                 },
+#                 "172.22.150.104": {
+#                     "action": "image_policy_detach",
+#                     "device_name": "cvd-1313-leaf",
+#                     "ipv4_address": "172.22.150.104",
+#                     "platform": "N9K",
+#                     "policy_name": "NR1F",
+#                     "serial_number": "FDO211218HH"
+#                 },
+#                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "image_policy_detach",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
 #         "response": [
 #             {
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO211218HB,FDO211218AX",
-#                 "RETURN_CODE": 200
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO211218GC,FDO211218HH",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
 #             }
 #         ]
 #     }
@@ -170,38 +191,69 @@
     that:
     - result.changed == true
     - result.failed == false
-    - (result.diff | length) == 2
+    - (result.diff | length) == 1
+    - result.diff[0][ansible_switch_1]["action"] == "image_policy_detach"
+    - result.diff[0][ansible_switch_2]["action"] == "image_policy_detach"
+    - result.diff[0].sequence_number == 1
+    - (result.metadata | length) == 1
+    - result.metadata[0]["action"] == "image_policy_detach"
+    - result.metadata[0]["check_mode"] == false
+    - result.metadata[0]["state"] == "deleted"
+    - result.metadata[0]["sequence_number"] == 1
     - (result.response | length) == 1
-    - result.diff[0]["action"] == "detach"
-    - result.diff[1]["action"] == "detach"
     - result.response[0].RETURN_CODE == 200
     - result.response[0].DATA == "Successfully detach the policy from device."
     - result.response[0].METHOD == "DELETE"
+    - result.response[0].sequence_number == 1
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].success == true
+    - result.result[0].sequence_number == 1
 
 ################################################################################
 # DELETED - TEST - Detach policies from remaining switch and verify.
 ################################################################################
-# Expected result
-# ok: [dcnm] => {
+# Expected output
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "action": "detach",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
+#                 "172.22.150.113": {
+#                     "action": "image_policy_detach",
+#                     "device_name": "cvd-1212-spine",
+#                     "ipv4_address": "172.22.150.113",
+#                     "platform": "N9K",
+#                     "policy_name": "NR1F",
+#                     "serial_number": "FOX2109PGD0"
+#                 },
+#                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "image_policy_detach",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
 #         "response": [
 #             {
 #                 "DATA": "Successfully detach the policy from device.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FOX2109PHDD",
-#                 "RETURN_CODE": 200
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FOX2109PGD0",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
 #             }
 #         ]
 #     }
@@ -224,12 +276,22 @@
     - result.changed == true
     - result.failed == false
     - (result.diff | length) == 1
+    - result.diff[0][ansible_switch_3]["action"] == "image_policy_detach"
+    - result.diff[0].sequence_number == 1
+    - (result.metadata | length) == 1
+    - result.metadata[0]["action"] == "image_policy_detach"
+    - result.metadata[0]["check_mode"] == false
+    - result.metadata[0]["state"] == "deleted"
+    - result.metadata[0]["sequence_number"] == 1
     - (result.response | length) == 1
-    - result.diff[0]["action"] == "detach"
-    - result.diff[0]["policy_name"] == image_policy_1
     - result.response[0].RETURN_CODE == 200
     - result.response[0].DATA == "Successfully detach the policy from device."
     - result.response[0].METHOD == "DELETE"
+    - result.response[0].sequence_number == 1
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].success == true
+    - result.result[0].sequence_number == 1
 
 ################################################################################
 # CLEANUP
