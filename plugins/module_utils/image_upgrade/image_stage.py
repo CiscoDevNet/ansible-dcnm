@@ -437,16 +437,15 @@ class ImageStage:
                     msg += f"for {device_name}, {serial_number}, {ip_address}. "
                     msg += f"image staged percent: {staged_percent}"
                     raise ValueError(msg)
-
                 if staged_status == "Success":
                     self.serial_numbers_done.add(serial_number)
 
-                msg = f"seconds remaining {timeout}"
-                self.log.debug(msg)
-                msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
-                self.log.debug(msg)
-                msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
-                self.log.debug(msg)
+            msg = f"seconds remaining {timeout}"
+            self.log.debug(msg)
+            msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
+            self.log.debug(msg)
+            msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
+            self.log.debug(msg)
 
         if self.serial_numbers_done != serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "
