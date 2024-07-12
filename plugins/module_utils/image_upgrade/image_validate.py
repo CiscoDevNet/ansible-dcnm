@@ -385,7 +385,7 @@ class ImageValidate:
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.rest_send.unit_test is False: # pylint: disable=no-member
+            if self.rest_send.unit_test is False:  # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
@@ -416,15 +416,15 @@ class ImageValidate:
                     msg += "Devices > View Details > Validate on the "
                     msg += "controller GUI for more details."
                     raise ValueError(msg)
-
                 if validated_status == "Success":
                     self.serial_numbers_done.add(serial_number)
-                msg = f"seconds remaining {timeout}"
-                self.log.debug(msg)
-                msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
-                self.log.debug(msg)
-                msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
-                self.log.debug(msg)
+
+            msg = f"seconds remaining {timeout}"
+            self.log.debug(msg)
+            msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
+            self.log.debug(msg)
+            msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
+            self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "Completed. "
