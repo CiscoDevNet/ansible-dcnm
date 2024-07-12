@@ -26,6 +26,8 @@ from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.stagingmanagement.stagingmanagement import \
     EpImageValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -99,21 +101,23 @@ class ImageValidate:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.action = "image_validate"
+        self.diff: dict = {}
+        self.payload = {}
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+        self.serial_numbers_done: set = set()
+
+        self.conversion = ConversionUtils()
         self.ep_image_validate = EpImageValidate()
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
-        self.payload = {}
-        self.serial_numbers_done: set = set()
         self.wait_for_controller_done = WaitForControllerDone()
 
-        self.saved_response_current = None
-        self.saved_result_current = None
-
+        self._check_interval = 10  # seconds
+        self._check_timeout = 1800  # seconds
+        self._non_disruptive = False
         self._rest_send = None
         self._results = None
         self._serial_numbers = None
-        self._non_disruptive = False
-        self._check_interval = 10  # seconds
-        self._check_timeout = 1800  # seconds
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -219,6 +223,7 @@ class ImageValidate:
         ### Summary
         Register a successful unchanged result with the results object.
         """
+        # pylint: disable=no-member
         self.results.action = self.action
         self.results.diff_current = {}
         self.results.response_current = {"response": msg}
@@ -241,6 +246,7 @@ class ImageValidate:
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit()."
@@ -249,6 +255,7 @@ class ImageValidate:
             msg = f"{self.class_name}.{method_name}: "
             msg += "results must be set before calling commit()."
             raise ValueError(msg)
+        # pylint: enable=no-member
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "serial_numbers must be set before calling commit()."
@@ -281,7 +288,9 @@ class ImageValidate:
             self.register_unchanged_result(msg)
             return
 
+        # pylint: disable=no-member
         self.issu_detail.rest_send = self.rest_send
+        # pylint: enable=no-member
         # We don't want the results to show up in the user's result output.
         self.issu_detail.results = Results()
 
@@ -290,6 +299,7 @@ class ImageValidate:
         self.wait_for_controller()
         self.build_payload()
 
+        # pylint: disable=no-member
         try:
             self.rest_send.verb = self.ep_image_validate.verb
             self.rest_send.path = self.ep_image_validate.path
@@ -332,11 +342,29 @@ class ImageValidate:
         self.results.result_current = copy.deepcopy(self.saved_result_current)
         self.results.register_task_result()
 
-    def wait_for_controller(self) -> None:
-        self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
-        self.wait_for_controller_done.item_type = "serial_number"
-        self.wait_for_controller_done.rest_send = self.rest_send
-        self.wait_for_controller_done.commit()
+    def wait_for_controller(self):
+        """
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+            self.wait_for_controller_done.item_type = "serial_number"
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error {error}."
+            raise ValueError(msg) from error
 
     def _wait_for_image_validate_to_complete(self) -> None:
         """
@@ -356,13 +384,8 @@ class ImageValidate:
         timeout = self.check_timeout
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"rest_send.unit_test: {self.rest_send.unit_test}, "
-        msg += f"serial_numbers_todo: {sorted(serial_numbers_todo)}."
-        self.log.debug(msg)
-
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.rest_send.unit_test is False:
+            if self.rest_send.unit_test is False: # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
@@ -404,8 +427,8 @@ class ImageValidate:
                 self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"Completed. "
-        msg += f" Serial numbers done: {sorted(self.serial_numbers_done)}."
+        msg += "Completed. "
+        msg += f"serial_numbers_done: {sorted(self.serial_numbers_done)}."
         self.log.debug(msg)
 
         if self.serial_numbers_done != serial_numbers_todo:
@@ -426,6 +449,7 @@ class ImageValidate:
 
         commit must be called before accessing this property.
         """
+        # pylint: disable=no-member
         return self.rest_send.response_current.get("DATA")
 
     @property
@@ -469,7 +493,7 @@ class ImageValidate:
     def non_disruptive(self, value) -> None:
         method_name = inspect.stack()[0][3]
 
-        value = self.make_boolean(value)
+        value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.non_disruptive must be a boolean. "

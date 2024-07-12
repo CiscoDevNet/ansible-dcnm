@@ -53,9 +53,11 @@ class ImagePolicyDetach:
     -   TypeError: if:
             -   ``serial_numbers`` is not a list.
 
-    ### Usage (where params is a dict with the following key/values:
+    ### Usage
 
     ```python
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
     params = {
         "check_mode": False,
         "state": "merged"
@@ -83,19 +85,23 @@ class ImagePolicyDetach:
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.action = "image_policy_detach"
+        self.diff: dict = {}
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+
         self.ep_policy_detach = EpPolicyDetach()
         self.image_policies = ImagePolicies()
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber()
         self.wait_for_controller_done = WaitForControllerDone()
 
-        self.diff: dict = {}
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
         self._rest_send = None
         self._results = None
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
@@ -213,12 +219,17 @@ class ImagePolicyDetach:
         Wait for any actions on the controller to complete.
 
         ### Raises
-
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
         """
         try:
             self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
             self.wait_for_controller_done.item_type = "serial_number"
-            self.wait_for_controller_done.rest_send = self.rest_send
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
             self.wait_for_controller_done.commit()
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.wait_for_controller: "
