@@ -95,15 +95,18 @@ class ImageValidate:
     def __init__(self):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
-        self.action = "image_validate"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.endpoint = EpImageValidate()
+        self.action = "image_validate"
+        self.ep_image_validate = EpImageValidate()
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
         self.payload = {}
         self.serial_numbers_done: set = set()
         self.wait_for_controller_done = WaitForControllerDone()
+
+        self.saved_response_current = None
+        self.saved_result_current = None
 
         self._rest_send = None
         self._results = None
@@ -114,6 +117,38 @@ class ImageValidate:
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
+
+    def build_diff(self) -> None:
+        """
+        ### Summary
+        Build the diff of the image validate operation.
+
+        ### Raises
+        None
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.diff: dict = {}
+
+        for serial_number in self.serial_numbers_done:
+            self.issu_detail.filter = serial_number
+            ipv4 = self.issu_detail.ip_address
+
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["ip_address"] = self.issu_detail.ip_address
+            self.diff[ipv4]["logical_name"] = self.issu_detail.device_name
+            self.diff[ipv4]["policy_name"] = self.issu_detail.policy
+            self.diff[ipv4]["serial_number"] = serial_number
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.diff[{ipv4}]: "
+            msg += f"{json.dumps(self.diff[ipv4], indent=4)}"
+            self.log.debug(msg)
 
     def prune_serial_numbers(self) -> None:
         """
@@ -150,6 +185,7 @@ class ImageValidate:
         """
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
+        msg += f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
         self.issu_detail.refresh()
@@ -178,7 +214,7 @@ class ImageValidate:
         self.payload["serialNum"] = self.serial_numbers
         self.payload["nonDisruptive"] = self.non_disruptive
 
-    def register_unchanged_result(self, msg):
+    def register_unchanged_result(self, msg) -> None:
         """
         ### Summary
         Register a successful unchanged result with the results object.
@@ -190,7 +226,7 @@ class ImageValidate:
         self.results.response_data = {"response": msg}
         self.results.register_task_result()
 
-    def validate_commit_parameters(self):
+    def validate_commit_parameters(self) -> None:
         """
         ### Summary
         Verify mandatory parameters are set before calling commit.
@@ -241,36 +277,36 @@ class ImageValidate:
         self.validate_commit_parameters()
 
         if len(self.serial_numbers) == 0:
-            msg = "No serial numbers to validate."
+            msg = "No images to validate."
             self.register_unchanged_result(msg)
             return
 
         self.issu_detail.rest_send = self.rest_send
         # We don't want the results to show up in the user's result output.
         self.issu_detail.results = Results()
+
         self.prune_serial_numbers()
         self.validate_serial_numbers()
-
         self.wait_for_controller()
-
         self.build_payload()
-        self.rest_send.verb = self.endpoint.verb
-        self.rest_send.path = self.endpoint.path
-        self.rest_send.payload = self.payload
-        self.rest_send.commit()
 
-        msg = "self.payload: "
-        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"response_current: {self.rest_send.response_current}"
-        self.log.debug(msg)
-
-        msg = f"result_current: {self.rest_send.result_current}"
-        self.log.debug(msg)
-
-        msg = f"self.response_data: {self.response_data}"
-        self.log.debug(msg)
+        try:
+            self.rest_send.verb = self.ep_image_validate.verb
+            self.rest_send.path = self.ep_image_validate.path
+            self.rest_send.payload = self.payload
+            self.rest_send.commit()
+        except (TypeError, ValueError) as error:
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error while sending request. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
         if not self.rest_send.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
@@ -279,28 +315,24 @@ class ImageValidate:
             self.results.register_task_result()
             raise ControllerResponseError(msg)
 
+        # Save response_current and result_current so they aren't overwritten
+        # by _wait_for_image_validate_to_complete(), which needs to run
+        # before we can build the diff, since the diff is based on the
+        # serial_numbers_done set, which isn't populated until image
+        # validate is complete.
+        self.saved_response_current = copy.deepcopy(self.rest_send.response_current)
+        self.saved_result_current = copy.deepcopy(self.rest_send.result_current)
+
         self._wait_for_image_validate_to_complete()
 
-        for serial_number in self.serial_numbers_done:
-            self.issu_detail.filter = serial_number
-            diff = {}
-            diff["action"] = self.action
-            diff["ip_address"] = self.issu_detail.ip_address
-            diff["logical_name"] = self.issu_detail.device_name
-            diff["policy"] = self.issu_detail.policy
-            diff["serial_number"] = serial_number
+        self.build_diff()
+        self.results.action = self.action
+        self.results.diff_current = copy.deepcopy(self.diff)
+        self.results.response_current = copy.deepcopy(self.saved_response_current)
+        self.results.result_current = copy.deepcopy(self.saved_result_current)
+        self.results.register_task_result()
 
-            self.results.action = self.action
-            self.results.check_mode = self.rest_send.params.get("check_mode")
-            self.results.diff_current = copy.deepcopy(diff)
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.state = self.rest_send.params.get("state")
-            self.results.register_task_result()
-
-    def wait_for_controller(self):
+    def wait_for_controller(self) -> None:
         self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
         self.wait_for_controller_done.item_type = "serial_number"
         self.wait_for_controller_done.rest_send = self.rest_send
@@ -386,7 +418,7 @@ class ImageValidate:
             raise ValueError(msg)
 
     @property
-    def response_data(self):
+    def response_data(self) -> dict:
         """
         ### Summary
         Return the DATA key of the controller response.
@@ -411,7 +443,7 @@ class ImageValidate:
         return self._serial_numbers
 
     @serial_numbers.setter
-    def serial_numbers(self, value: list):
+    def serial_numbers(self, value) -> None:
         method_name = inspect.stack()[0][3]
 
         if not isinstance(value, list):
@@ -423,7 +455,7 @@ class ImageValidate:
         self._serial_numbers = value
 
     @property
-    def non_disruptive(self):
+    def non_disruptive(self) -> bool:
         """
         ### Summary
         Set the non_disruptive flag to True or False.
@@ -434,7 +466,7 @@ class ImageValidate:
         return self._non_disruptive
 
     @non_disruptive.setter
-    def non_disruptive(self, value):
+    def non_disruptive(self, value) -> None:
         method_name = inspect.stack()[0][3]
 
         value = self.make_boolean(value)
@@ -447,7 +479,7 @@ class ImageValidate:
         self._non_disruptive = value
 
     @property
-    def check_interval(self):
+    def check_interval(self) -> int:
         """
         ### Summary
         The validate check interval, in seconds.
@@ -459,7 +491,7 @@ class ImageValidate:
         return self._check_interval
 
     @check_interval.setter
-    def check_interval(self, value):
+    def check_interval(self, value) -> None:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
@@ -474,7 +506,7 @@ class ImageValidate:
         self._check_interval = value
 
     @property
-    def check_timeout(self):
+    def check_timeout(self) -> int:
         """
         ### Summary
         The validate check timeout, in seconds.
@@ -486,7 +518,7 @@ class ImageValidate:
         return self._check_timeout
 
     @check_timeout.setter
-    def check_timeout(self, value):
+    def check_timeout(self, value) -> None:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "

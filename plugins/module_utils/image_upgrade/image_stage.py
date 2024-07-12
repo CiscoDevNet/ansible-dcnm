@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 from time import sleep
 
@@ -145,7 +146,7 @@ class ImageStage:
         self.action = "image_stage"
         self.controller_version = None
         self.controller_version_instance = ControllerVersion()
-        self.endpoint = EpImageStage()
+        self.ep_image_stage = EpImageStage()
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
         self.payload = None
         self.serial_numbers_done = set()
@@ -158,14 +159,46 @@ class ImageStage:
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-    def _populate_controller_version(self):
+    def build_diff(self) -> None:
+        """
+        ### Summary
+        Build the diff of the image stage operation.
+
+        ### Raises
+        None
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.diff: dict = {}
+
+        for serial_number in self.serial_numbers_done:
+            self.issu_detail.filter = serial_number
+            ipv4 = self.issu_detail.ip_address
+
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["ip_address"] = self.issu_detail.ip_address
+            self.diff[ipv4]["logical_name"] = self.issu_detail.device_name
+            self.diff[ipv4]["policy_name"] = self.issu_detail.policy
+            self.diff[ipv4]["serial_number"] = serial_number
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.diff[{ipv4}]: "
+            msg += f"{json.dumps(self.diff[ipv4], indent=4)}"
+            self.log.debug(msg)
+
+    def _populate_controller_version(self) -> None:
         """
         Populate self.controller_version with the running controller version.
         """
         self.controller_version_instance.refresh()
         self.controller_version = self.controller_version_instance.version
 
-    def prune_serial_numbers(self):
+    def prune_serial_numbers(self) -> None:
         """
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
@@ -177,7 +210,7 @@ class ImageStage:
             if self.issu_detail.image_staged == "Success":
                 self.serial_numbers.remove(serial_number)
 
-    def register_unchanged_result(self, msg):
+    def register_unchanged_result(self, msg) -> None:
         """
         ### Summary
         Register a successful unchanged result with the results object.
@@ -191,7 +224,7 @@ class ImageStage:
         self.results.state = self.rest_send.state
         self.results.register_task_result()
 
-    def validate_serial_numbers(self):
+    def validate_serial_numbers(self) -> None:
         """
         ### Summary
         Fail if the image_staged state for any serial_number
@@ -216,7 +249,7 @@ class ImageStage:
                 msg += "and try again."
                 raise ControllerResponseError(msg)
 
-    def validate_commit_parameters(self):
+    def validate_commit_parameters(self) -> None:
         """
         Verify mandatory parameters are set before calling commit.
         """
@@ -235,11 +268,33 @@ class ImageStage:
             msg += "serial_numbers must be set before calling commit()."
             raise ValueError(msg)
 
+    def build_payload(self) -> None:
+        """
+        ### Summary
+        Build the payload for the image stage request.
+        """
+        self.payload = {}
+        self._populate_controller_version()
+
+        if self.controller_version == "12.1.2e":
+            # Yes, version 12.1.2e wants serialNum to be misspelled
+            self.payload["sereialNum"] = self.serial_numbers
+        else:
+            self.payload["serialNumbers"] = self.serial_numbers
+
     def commit(self) -> None:
         """
         ### Summary
         Commit the image staging request to the controller and wait
         for the images to be staged.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+                -   ``serial_numbers`` is not set.
+        -   ``ControllerResponseError`` if:
+                -   The controller response is unsuccessful.
         """
         method_name = inspect.stack()[0][3]
 
@@ -252,40 +307,28 @@ class ImageStage:
         self.validate_commit_parameters()
 
         if len(self.serial_numbers) == 0:
-            msg = "No files to stage."
+            msg = "No images to stage."
             self.register_unchanged_result(msg)
             return
 
         self.issu_detail.rest_send = self.rest_send
+        self.controller_version_instance.rest_send = self.rest_send
         # We don't want the results to show up in the user's result output.
         self.issu_detail.results = Results()
 
-        self.controller_version_instance.rest_send = self.rest_send
-
         self.prune_serial_numbers()
         self.validate_serial_numbers()
-
         self.wait_for_controller()
-
-        self.payload = {}
-        self._populate_controller_version()
-
-        if self.controller_version == "12.1.2e":
-            # Yes, version 12.1.2e wants serialNum to be misspelled
-            self.payload["sereialNum"] = self.serial_numbers
-        else:
-            self.payload["serialNumbers"] = self.serial_numbers
+        self.build_payload()
 
         try:
-            self.rest_send.verb = self.endpoint.verb
-            self.rest_send.path = self.endpoint.path
+            self.rest_send.verb = self.ep_image_stage.verb
+            self.rest_send.path = self.ep_image_stage.path
             self.rest_send.payload = self.payload
             self.rest_send.commit()
         except (TypeError, ValueError) as error:
             self.results.diff_current = {}
             self.results.action = self.action
-            self.results.check_mode = self.rest_send.params.get("check_mode")
-            self.results.state = self.rest_send.params.get("state")
             self.results.response_current = copy.deepcopy(
                 self.rest_send.response_current
             )
@@ -296,54 +339,47 @@ class ImageStage:
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        if self.rest_send.result_current["success"] is False:
-            self.results.diff_current = {}
-        else:
-            self.results.diff_current = copy.deepcopy(self.payload)
-
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.params.get("check_mode")
-        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.results.state = self.rest_send.params.get("state")
-        self.results.register_task_result()
-
         if not self.rest_send.result_current["success"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.rest_send.result_current}. "
+            msg += f"failed: {self.result_current}. "
             msg += f"Controller response: {self.rest_send.response_current}"
-            raise ValueError(msg)
+            self.results.register_task_result()
+            raise ControllerResponseError(msg)
+
+        # Save response_current and result_current so they aren't overwritten
+        # by _wait_for_image_stage_to_complete(), which needs to run
+        # before we can build the diff, since the diff is based on the
+        # serial_numbers_done set, which isn't populated until image
+        # stage is complete.
+        self.saved_response_current = copy.deepcopy(self.rest_send.response_current)
+        self.saved_result_current = copy.deepcopy(self.rest_send.result_current)
 
         self._wait_for_image_stage_to_complete()
 
-        for serial_number in self.serial_numbers_done:
-            self.issu_detail.filter = serial_number
-            diff = {}
-            diff["action"] = self.action
-            diff["ip_address"] = self.issu_detail.ip_address
-            diff["logical_name"] = self.issu_detail.device_name
-            diff["policy"] = self.issu_detail.policy
-            diff["serial_number"] = serial_number
+        self.build_diff()
 
-            self.results.action = self.action
-            self.results.check_mode = self.rest_send.params.get("check_mode")
-            self.results.diff_current = copy.deepcopy(diff)
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.state = self.rest_send.params.get("state")
-            self.results.register_task_result()
+        self.results.action = self.action
+        self.results.diff_current = copy.deepcopy(self.diff)
+        self.results.response_current = copy.deepcopy(self.saved_response_current)
+        self.results.result_current = copy.deepcopy(self.saved_result_current)
+        self.results.register_task_result()
 
-    def wait_for_controller(self):
+    def wait_for_controller(self) -> None:
         self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
         self.wait_for_controller_done.item_type = "serial_number"
         self.wait_for_controller_done.rest_send = self.rest_send
         self.wait_for_controller_done.commit()
 
-    def _wait_for_image_stage_to_complete(self):
+    def _wait_for_image_stage_to_complete(self) -> None:
         """
-        # Wait for image stage to complete
+        ### Summary
+        Wait for image stage to complete
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   Image stage does not complete within ``check_timeout``
+                    seconds.
+                -   Image stage fails for any switch.
         """
         method_name = inspect.stack()[0][3]
 
@@ -394,7 +430,7 @@ class ImageStage:
             raise ValueError(msg)
 
     @property
-    def serial_numbers(self):
+    def serial_numbers(self) -> list:
         """
         ### Summary
         Set the serial numbers of the switches to stage.
@@ -408,7 +444,7 @@ class ImageStage:
         return self._serial_numbers
 
     @serial_numbers.setter
-    def serial_numbers(self, value):
+    def serial_numbers(self, value) -> None:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
@@ -417,7 +453,7 @@ class ImageStage:
         self._serial_numbers = value
 
     @property
-    def check_interval(self):
+    def check_interval(self) -> int:
         """
         ### Summary
         The stage check interval, in seconds.
@@ -431,7 +467,7 @@ class ImageStage:
         return self._check_interval
 
     @check_interval.setter
-    def check_interval(self, value):
+    def check_interval(self, value) -> None:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
@@ -446,7 +482,7 @@ class ImageStage:
         self._check_interval = value
 
     @property
-    def check_timeout(self):
+    def check_timeout(self) -> int:
         """
         ### Summary
         The stage check timeout, in seconds.
@@ -458,7 +494,7 @@ class ImageStage:
         return self._check_timeout
 
     @check_timeout.setter
-    def check_timeout(self, value):
+    def check_timeout(self, value) -> None:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
