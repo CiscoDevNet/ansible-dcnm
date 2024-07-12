@@ -89,9 +89,7 @@ class ImagePolicyAttach:
         method_name = inspect.stack()[0][3]
 
         self.action = "image_policy_attach"
-        self.endpoint = EpPolicyAttach()
-        self.verb = self.endpoint.verb
-        self.path = self.endpoint.path
+        self.ep_policy_attach = EpPolicyAttach()
 
         self.image_policies = ImagePolicies()
         self.payloads = []
@@ -315,8 +313,8 @@ class ImagePolicyAttach:
         payload: dict = {}
         payload["mappingList"] = self.payloads
         self.rest_send.payload = payload
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
+        self.rest_send.path = self.ep_policy_attach.path
+        self.rest_send.verb = self.ep_policy_attach.verb
         self.rest_send.commit()
 
         msg = f"result_current: {json.dumps(self.rest_send.result_current, indent=4)}"
@@ -327,6 +325,7 @@ class ImagePolicyAttach:
         self.log.debug(msg)
 
         self.build_diff()
+        self.results.action = self.action
         self.results.diff_current = copy.deepcopy(self.diff)
         self.results.result_current = self.rest_send.result_current
         self.results.response_current = self.rest_send.response_current
