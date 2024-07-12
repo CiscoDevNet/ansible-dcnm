@@ -139,11 +139,12 @@ class WaitForControllerDone:
 
         if self.done != self.todo:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Timed out waiting for controller actions to complete. "
-            msg += "done: "
-            msg += f"{','.join(sorted(self.done))}, "
-            msg += "todo: "
-            msg += f"{','.join(sorted(self.todo))}"
+            msg += f"Timed out after {self.check_timeout} seconds "
+            msg += f"waiting for controller actions to complete on items: "
+            msg += f"{self.todo}. "
+            if len(self.done) > 0:
+                msg += "The following items did complete: "
+                msg += f"{','.join(sorted(self.done))}."
             raise ValueError(msg)
 
     @property
@@ -231,7 +232,7 @@ class WaitForControllerDone:
     @items.setter
     def items(self, value):
         if not isinstance(value, set):
-            raise ValueError("items must be a set")
+            raise TypeError("items must be a set")
         self._items = value
 
     @property
