@@ -16,6 +16,7 @@
     # testcase: 01_setup_add_switches_to_fabric
     # testcase: 02_setup_replace_image_policies
     # testcase: deleted
+    # testcase: deleted_1x_switch
     # testcase: merged_global_config
     # testcase: merged_override_global_config
     # testcase: query
