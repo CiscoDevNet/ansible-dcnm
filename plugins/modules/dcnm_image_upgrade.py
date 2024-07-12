@@ -1169,7 +1169,7 @@ class Merged(Common):
                 # test_idempotence.add(self.idempotent_want["options"]["package"]["uninstall"])
                 if True not in test_idempotence:
                     continue
-                need.append(copy.deepcopy(self.idempotent_want))        
+                need.append(copy.deepcopy(self.idempotent_want))
         self.need = copy.copy(need)
 
     def _stage_images(self, serial_numbers) -> None:
@@ -1405,6 +1405,7 @@ class Deleted(Common):
         -   ``params`` is missing ``config`` key.
         -   ``commit()`` is issued before setting mandatory properties
     """
+
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
@@ -1535,6 +1536,7 @@ class Query(Common):
         -   ``params`` is missing ``config`` key.
         -   ``commit()`` is issued before setting mandatory properties
     """
+
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]
