@@ -392,9 +392,6 @@ class ImageValidate:
 
             for serial_number in self.serial_numbers:
                 if serial_number in self.serial_numbers_done:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"serial_number {serial_number} already done.  Continue."
-                    self.log.debug(msg)
                     continue
 
                 self.issu_detail.filter = serial_number
