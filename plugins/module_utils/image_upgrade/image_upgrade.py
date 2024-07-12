@@ -551,11 +551,9 @@ class ImageUpgrade:
             self.log.debug(msg)
 
             self.results.action = self.action
-            self.results.check_mode = self.rest_send.check_mode
             self.results.diff_current = copy.deepcopy(self.payload)
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
-            self.results.state = self.rest_send.state
             self.results.register_task_result()
 
             msg = "payload: "
