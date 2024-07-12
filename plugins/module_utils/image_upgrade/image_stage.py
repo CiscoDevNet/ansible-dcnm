@@ -145,11 +145,15 @@ class ImageStage:
 
         self.action = "image_stage"
         self.controller_version = None
+        self.diff: dict = {}
+        self.payload = None
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+        self.serial_numbers_done = set()
+
         self.controller_version_instance = ControllerVersion()
         self.ep_image_stage = EpImageStage()
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
-        self.payload = None
-        self.serial_numbers_done = set()
         self.wait_for_controller_done = WaitForControllerDone()
 
         self._serial_numbers = None
@@ -215,6 +219,7 @@ class ImageStage:
         ### Summary
         Register a successful unchanged result with the results object.
         """
+        # pylint: disable=no-member
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.diff_current = {}
@@ -255,6 +260,7 @@ class ImageStage:
         """
         method_name = inspect.stack()[0][3]
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit()."
@@ -263,6 +269,7 @@ class ImageStage:
             msg = f"{self.class_name}.{method_name}: "
             msg += "results must be set before calling commit()."
             raise ValueError(msg)
+        # pylint: enable=no-member
         if self.serial_numbers is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "serial_numbers must be set before calling commit()."
@@ -311,8 +318,10 @@ class ImageStage:
             self.register_unchanged_result(msg)
             return
 
+        # pylint: disable=no-member
         self.issu_detail.rest_send = self.rest_send
         self.controller_version_instance.rest_send = self.rest_send
+        # pylint: enable=no-member
         # We don't want the results to show up in the user's result output.
         self.issu_detail.results = Results()
 
@@ -321,6 +330,7 @@ class ImageStage:
         self.wait_for_controller()
         self.build_payload()
 
+        # pylint: disable=no-member
         try:
             self.rest_send.verb = self.ep_image_stage.verb
             self.rest_send.path = self.ep_image_stage.path
@@ -365,10 +375,28 @@ class ImageStage:
         self.results.register_task_result()
 
     def wait_for_controller(self) -> None:
-        self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
-        self.wait_for_controller_done.item_type = "serial_number"
-        self.wait_for_controller_done.rest_send = self.rest_send
-        self.wait_for_controller_done.commit()
+        """
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
+        """
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+            self.wait_for_controller_done.item_type = "serial_number"
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.wait_for_controller: "
+            msg += "Error while waiting for controller actions to complete. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def _wait_for_image_stage_to_complete(self) -> None:
         """
@@ -388,7 +416,7 @@ class ImageStage:
         serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
         while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.rest_send.unit_test is False:
+            if self.rest_send.unit_test is False:  # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()

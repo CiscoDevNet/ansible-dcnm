@@ -172,12 +172,15 @@ class ImageUpgrade:
 
         self.action = "image_upgrade"
         self.conversion = ConversionUtils()
+        self.diff: dict = {}
         self.ep_upgrade_image = EpUpgradeImage()
         self.install_options = ImageInstallOptions()
         self.issu_detail = SwitchIssuDetailsByIpAddress()
         self.ipv4_done = set()
         self.ipv4_todo = set()
         self.payload: dict = {}
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
         self.wait_for_controller_done = WaitForControllerDone()
 
         self._rest_send = None
@@ -227,6 +230,37 @@ class ImageUpgrade:
     # We used to have a prune_devices() method here, but this
     # is now done in dcnm_image_upgrade.py.  Consider moving
     # that code here later.
+
+    def build_diff(self) -> None:
+        """
+        ### Summary
+        Build the diff of the image validate operation.
+
+        ### Raises
+        None
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.diff: dict = {}
+
+        for ipv4 in self.ipv4_done:
+            self.issu_detail.filter = ipv4
+
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["ip_address"] = self.issu_detail.ip_address
+            self.diff[ipv4]["logical_name"] = self.issu_detail.device_name
+            self.diff[ipv4]["policy_name"] = self.issu_detail.policy
+            self.diff[ipv4]["serial_number"] = self.issu_detail.serial_number
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.diff[{ipv4}]: "
+            msg += f"{json.dumps(self.diff[ipv4], indent=4)}"
+            self.log.debug(msg)
 
     def _validate_devices(self) -> None:
         """
@@ -496,6 +530,7 @@ class ImageUpgrade:
         """
         Verify mandatory parameters are set before calling commit.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
         if self.rest_send is None:
@@ -519,79 +554,102 @@ class ImageUpgrade:
 
         self.validate_commit_parameters()
 
+        # pylint: disable=no-member
         self.issu_detail.rest_send = self.rest_send
         self.install_options.rest_send = self.rest_send
 
         self.install_options.results = self.results
+        # pylint: enable=no-member
         # We don't want issu_detail results to show up in the user's result output.
         self.issu_detail.results = Results()
 
         self._validate_devices()
         self.wait_for_controller()
 
+        self.saved_response_current = {}
+        self.saved_result_current = {}
         for device in self.devices:
+            ipv4 = device.get("ip_address")
+            if ipv4 not in self.saved_response_current:
+                self.saved_response_current[ipv4] = {}
+            if ipv4 not in self.saved_result_current:
+                self.saved_result_current[ipv4] = {}
+
             msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             self._build_payload(device)
 
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Calling rest_send.commit(): "
-            msg += f"verb {self.rest_send.verb}, path: {self.rest_send.path} "
-            msg += "payload: "
-            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
+            # pylint: disable=no-member
             self.rest_send.path = self.ep_upgrade_image.path
             self.rest_send.verb = self.ep_upgrade_image.verb
             self.rest_send.payload = self.payload
             self.rest_send.commit()
 
-            msg = "DONE rest_send.commit()"
-            self.log.debug(msg)
-
-            self.results.action = self.action
-            self.results.diff_current = copy.deepcopy(self.payload)
-            self.results.response_current = self.rest_send.response_current
-            self.results.result_current = self.rest_send.result_current
-            self.results.register_task_result()
-
-            msg = "payload: "
-            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.rest_send.response_current: "
-            msg += f"{json.dumps(self.rest_send.response_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.rest_send.result_current: "
-            msg += (
-                f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
+            self.saved_response_current[ipv4] = copy.deepcopy(
+                self.rest_send.response_current
             )
-            self.log.debug(msg)
+            self.saved_result_current[ipv4] = copy.deepcopy(
+                self.rest_send.result_current
+            )
 
             if not self.rest_send.result_current["success"]:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"failed: {self.rest_send.result_current}. "
                 msg += f"Controller response: {self.rest_send.response_current}"
+                self.results.register_task_result()
                 raise ControllerResponseError(msg)
 
         self._wait_for_image_upgrade_to_complete()
 
+        self.build_diff()
+        # pylint: disable=no-member
+        self.results.action = self.action
+        self.results.diff_current = copy.deepcopy(self.diff)
+        self.results.response_current = copy.deepcopy(self.saved_response_current)
+        self.results.result_current = copy.deepcopy(self.saved_result_current)
+        self.results.register_task_result()
+
     def wait_for_controller(self):
-        self.wait_for_controller_done.items = set(copy.copy(self.ip_addresses))
-        self.wait_for_controller_done.item_type = "ipv4_address"
-        self.wait_for_controller_done.rest_send = self.rest_send
-        self.wait_for_controller_done.commit()
+        """
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.ip_addresses))
+            self.wait_for_controller_done.item_type = "ipv4_address"
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error {error}."
+            raise ValueError(msg) from error
 
     def _wait_for_image_upgrade_to_complete(self):
         """
+        ### Summary
         Wait for image upgrade to complete
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   The upgrade does not complete within ``check_timeout``
+                    seconds.
+                -   The upgrade fails for any device.
+
         """
         method_name = inspect.stack()[0][3]
 
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        if self.rest_send.unit_test is False:
+        if self.rest_send.unit_test is False:  # pylint: disable=no-member
             # See unit test test_image_upgrade_upgrade_00240
             self.ipv4_done = set()
         timeout = self.check_timeout

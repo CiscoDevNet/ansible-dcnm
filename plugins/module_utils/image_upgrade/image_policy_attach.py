@@ -40,7 +40,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_
 
 @Properties.add_rest_send
 @Properties.add_results
-@Properties.add_params
 class ImagePolicyAttach:
     """
     ### Summary
@@ -56,9 +55,11 @@ class ImagePolicyAttach:
     -   TypeError: if:
             -   ``serial_numbers`` is not a list.
 
-    ### Usage (where params is a dict with the following key/values:
+    ### Usage
 
     ```python
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
     params = {
         "check_mode": False,
         "state": "merged"
@@ -72,7 +73,6 @@ class ImagePolicyAttach:
     rest_send.response_handler = ResponseHandler()
 
     instance = ImagePolicyAttach()
-    instance.params = params
     instance.rest_send = rest_send
     instance.results = results
     instance.policy_name = "NR3F"
@@ -89,16 +89,18 @@ class ImagePolicyAttach:
         method_name = inspect.stack()[0][3]
 
         self.action = "image_policy_attach"
-        self.ep_policy_attach = EpPolicyAttach()
-
-        self.image_policies = ImagePolicies()
+        self.diff: dict = {}
         self.payloads = []
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+
+        self.ep_policy_attach = EpPolicyAttach()
+        self.image_policies = ImagePolicies()
         self.switch_issu_details = SwitchIssuDetailsBySerialNumber()
         self.wait_for_controller_done = WaitForControllerDone()
 
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
-        self._params = None
         self._rest_send = None
         self._results = None
 
@@ -265,10 +267,29 @@ class ImagePolicyAttach:
         self.attach_policy()
 
     def wait_for_controller(self):
-        self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
-        self.wait_for_controller_done.item_type = "serial_number"
-        self.wait_for_controller_done.rest_send = self.rest_send
-        self.wait_for_controller_done.commit()
+        """
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+            self.wait_for_controller_done.item_type = "serial_number"
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error {error}."
+            raise ValueError(msg) from error
+
 
     def build_diff(self):
         """
