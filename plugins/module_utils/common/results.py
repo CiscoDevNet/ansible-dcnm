@@ -237,7 +237,8 @@ class Results:
         msg += f"self.action: {self.action}, "
         msg += f"self.state: {self.state}, "
         msg += f"self.result_current: {self.result_current}, "
-        msg += f"self.diff: {self.diff}"
+        msg += f"self.diff: {self.diff}, "
+        msg += f"self.failed: {self.failed}"
         self.log.debug(msg)
 
         if self.check_mode is True:
@@ -297,8 +298,15 @@ class Results:
 
         if self.result_current.get("success") is True:
             self.failed = False
-        else:
+        elif self.result_current.get("success") is False:
             self.failed = True
+        else:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.result_current['success'] is not a boolean. "
+            msg += f"self.result_current: {self.result_current}. "
+            msg += f"Setting self.failed to False."
+            self.log.debug(msg)
+            self.failed = False
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.diff: {json.dumps(self.diff, indent=4, sort_keys=True)}, "
