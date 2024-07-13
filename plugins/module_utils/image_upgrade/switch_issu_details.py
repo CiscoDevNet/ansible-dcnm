@@ -184,21 +184,6 @@ class SwitchIssuDetails:
                 continue
             diff[ip_address] = item
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "self.rest_send.result_current: "
-        msg += f"{json.dumps(self.rest_send.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.action: {self.action}, "
-        msg += f"self.rest_send.state: {self.rest_send.state}, "
-        msg += f"self.rest_send.check_mode: {self.rest_send.check_mode}"
-        self.log.debug(msg)
-
         self.results.action = self.action
         self.results.state = self.rest_send.state
         # Set check_mode to True so that results.changed will be set to False
@@ -837,11 +822,6 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["ipAddress"]] = switch
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
     def _get(self, item):
         """
         ### Summary
@@ -957,11 +937,6 @@ class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
         self.data_subclass = {}
         for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["serialNumber"]] = switch
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
     def _get(self, item):
         """
@@ -1086,11 +1061,6 @@ class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
         self.data_subclass = {}
         for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["deviceName"]] = switch
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
     def _get(self, item):
         """
