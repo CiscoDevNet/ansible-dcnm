@@ -442,7 +442,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_val
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
-    SwitchIssuDetailsByIpAddress, SwitchIssuDetailsBySerialNumber)
+    SwitchIssuDetailsByIpAddress)
 
 
 def json_pretty(msg):
@@ -550,7 +550,7 @@ class Common:
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
         self.have = SwitchIssuDetailsByIpAddress()
-        self.have.rest_send = self.rest_send
+        self.have.rest_send = self.rest_send  # pylint: disable=no-member
         # Set to Results() instead of self.results so as not to clutter
         # the playbook results.
         self.have.results = Results()
@@ -715,6 +715,45 @@ class Common:
         msg = "self.idempotent_want POST EPLD CHECK: "
         msg += f"{json.dumps(self.idempotent_want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
+    def needs_epld_upgrade(self, epld_modules) -> bool:
+        """
+        Determine if the switch needs an EPLD upgrade
+
+        For all modules, compare EPLD oldVersion and newVersion.
+        Returns:
+        - True if newVersion > oldVersion for any module
+        - False otherwise
+
+        Callers:
+        - self._build_idempotent_want
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"epld_modules: {epld_modules}"
+        self.log.debug(msg)
+
+        if epld_modules is None:
+            return False
+        if epld_modules.get("moduleList") is None:
+            return False
+        for module in epld_modules["moduleList"]:
+            new_version = module.get("newVersion", "0x0")
+            old_version = module.get("oldVersion", "0x0")
+            # int(str, 0) enables python to guess the base
+            # of the str when converting to int.  An
+            # error is thrown without this.
+            if int(new_version, 0) > int(old_version, 0):
+                msg = f"(device: {module.get('deviceName')}), "
+                msg += f"(IP: {module.get('ipAddress')}), "
+                msg += f"(module#: {module.get('module')}), "
+                msg += f"(module: {module.get('moduleType')}), "
+                msg += f"new_version {new_version} > old_version {old_version}, "
+                msg += "returning True"
+                self.log.debug(msg)
+                return True
+        return False
 
     def get_need_deleted(self) -> None:
         """
@@ -1223,45 +1262,6 @@ class Merged(Common):
         upgrade.results = self.results
         upgrade.devices = devices
         upgrade.commit()
-
-    def needs_epld_upgrade(self, epld_modules) -> bool:
-        """
-        Determine if the switch needs an EPLD upgrade
-
-        For all modules, compare EPLD oldVersion and newVersion.
-        Returns:
-        - True if newVersion > oldVersion for any module
-        - False otherwise
-
-        Callers:
-        - self._build_idempotent_want
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"epld_modules: {epld_modules}"
-        self.log.debug(msg)
-
-        if epld_modules is None:
-            return False
-        if epld_modules.get("moduleList") is None:
-            return False
-        for module in epld_modules["moduleList"]:
-            new_version = module.get("newVersion", "0x0")
-            old_version = module.get("oldVersion", "0x0")
-            # int(str, 0) enables python to guess the base
-            # of the str when converting to int.  An
-            # error is thrown without this.
-            if int(new_version, 0) > int(old_version, 0):
-                msg = f"(device: {module.get('deviceName')}), "
-                msg += f"(IP: {module.get('ipAddress')}), "
-                msg += f"(module#: {module.get('module')}), "
-                msg += f"(module: {module.get('moduleType')}), "
-                msg += f"new_version {new_version} > old_version {old_version}, "
-                msg += "returning True"
-                self.log.debug(msg)
-                return True
-        return False
 
     def _verify_install_options(self, devices) -> None:
         """
