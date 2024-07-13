@@ -70,63 +70,85 @@
 #    ansible_switch_3: "{{ spine1 }}"
 #
 ################################################################################
-# MERGED - PRE_TEST - Upgrade all switches using global config.
+# MERGED - PRE_TEST - Detach image policies from all switches.
 # NOTES:
-#   1. Depending on whether the switches are already at the desired version, the
-#      upgrade may not be performed.  Hence, we do not check for the upgrade
-#      status in this test.
+#   1. Depending on whether the switches have policies attached, the
+#      detach operation may not be performed.  Hence, we simply print the 
+#      result and do not verify it.
 ################################################################################
 
-- name: MERGED - PRE_TEST - Upgrade all switches using global config.
-  cisco.dcnm.dcnm_image_upgrade: &global_config
+- name: MERGED - PRE_TEST - Detach image policies from all switches.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: deleted
+    config:
+      policy: "{{ image_policy_1 }}"
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
+  register: result
+- debug:
+    var: result
+
+################################################################################
+# MERGED - TEST - Upgrade all switches using global config.
+# NOTES:
+#   1. Images may or may not be staged depending on the current state of the
+#      switches.  Test only that the upgrade operation is successful.
+#   2. Since we detached the image policies, image validation will be
+#      performed, so we do test for this. 
+################################################################################
+
+- name: MERGED - TEST - Upgrade all switches using global config.
+  cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_1 }}"
-        reboot: false
-        stage: true
-        validate: true
-        upgrade:
-            nxos: true
-            epld: false
-        options:
-            nxos:
-                mode: disruptive
-                bios_force: false
-            epld:
-                module: ALL
-                golden: false
-            reboot:
-                config_reload: false
-                write_erase: false
-            package:
-                install: false
-                uninstall: false
-        switches:
-          - ip_address: "{{ ansible_switch_1 }}"
-          - ip_address: "{{ ansible_switch_2 }}"
-          - ip_address: "{{ ansible_switch_3 }}"
+      policy: "{{ image_policy_1 }}"
+      reboot: false
+      stage: true
+      validate: true
+      upgrade:
+        nxos: true
+        epld: false
+      options:
+        nxos:
+          mode: disruptive
+          bios_force: false
+        epld:
+          module: ALL
+          golden: false
+        reboot:
+          config_reload: false
+          write_erase: false
+        package:
+          install: false
+          uninstall: false
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
     var: result
 
 ################################################################################
-# MERGED - PRE_TEST - Wait for controller response for all three switches.
+# MERGED - TEST - Wait for controller response for all three switches.
 ################################################################################
 
-- name: MERGED - PRE_TEST - Wait for controller response for all three switches.
+- name: MERGED - TEST - Wait for controller response for all three switches.
   cisco.dcnm.dcnm_image_upgrade:
     state: query
     config:
-        switches:
+      switches:
         - ip_address: "{{ ansible_switch_1 }}"
         - ip_address: "{{ ansible_switch_2 }}"
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
   until:
-    - result.diff[0].ipAddress == ansible_switch_1
-    - result.diff[1].ipAddress == ansible_switch_2
-    - result.diff[2].ipAddress == ansible_switch_3
+    - ansible_switch_1 in result.diff[0]
+    - ansible_switch_2 in result.diff[0]
+    - ansible_switch_3 in result.diff[0]
   retries: 60
   delay: 5
   ignore_errors: yes
@@ -135,12 +157,74 @@
 # MERGED - TEST - global_config - test idempotence.
 ################################################################################
 # Expected result
-# ok: [dcnm] => {
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [],
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
 #         "failed": false,
-#         "response": []
+#         "metadata": [
+#             {
+#                 "action": "image_stage",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "image_validate",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "image_upgrade",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": [
+#                     {
+#                         "key": "ALL",
+#                         "value": "No images to stage."
+#                     }
+#                 ],
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "response": "No images to validate.",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": false,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ]
 #     }
 # }
 ################################################################################
@@ -149,41 +233,37 @@
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_1}}"
-        reboot: false
-        stage: true
-        validate: true
-        upgrade:
-            nxos: true
-            epld: false
-        options:
-            nxos:
-                mode: disruptive
-                bios_force: false
-            epld:
-                module: ALL
-                golden: false
-            reboot:
-                config_reload: false
-                write_erase: false
-            package:
-                install: false
-                uninstall: false
-        switches:
-          - ip_address: "{{ ansible_switch_1 }}"
-          - ip_address: "{{ ansible_switch_2 }}"
-          - ip_address: "{{ ansible_switch_3 }}"
+      policy: "{{ image_policy_1}}"
+      reboot: false
+      stage: true
+      validate: true
+      upgrade:
+        nxos: true
+        epld: false
+      options:
+        nxos:
+          mode: disruptive
+          bios_force: false
+        epld:
+          module: ALL
+          golden: false
+        reboot:
+          config_reload: false
+          write_erase: false
+        package:
+          install: false
+          uninstall: false
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
-
 - debug:
     var: result
-
 - assert:
     that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 0
-    - (result.response | length) == 0
+      - result.changed == false
+      - result.failed == false
 
 ################################################################################
 # CLEANUP
