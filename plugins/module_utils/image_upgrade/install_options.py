@@ -148,7 +148,7 @@ class ImageInstallOptions:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.conversion = ConversionUtils()
-        self.endpoint = EpInstallOptions()
+        self.ep_install_options = EpInstallOptions()
 
         self.compatibility_status = {}
         self.payload: dict = {}
@@ -236,8 +236,8 @@ class ImageInstallOptions:
 
         self._build_payload()
 
-        self.rest_send.path = self.endpoint.path
-        self.rest_send.verb = self.endpoint.verb
+        self.rest_send.path = self.ep_install_options.path
+        self.rest_send.verb = self.ep_install_options.verb
         self.rest_send.payload = self.payload
         self.rest_send.commit()
 
