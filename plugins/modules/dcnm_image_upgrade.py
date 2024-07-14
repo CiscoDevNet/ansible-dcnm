@@ -441,8 +441,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_val
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
-    SwitchIssuDetailsByIpAddress)
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.params_spec import \
+    ParamsSpec
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
+    SwitchIssuDetailsByIpAddress
 
 
 def json_pretty(msg):
@@ -455,13 +457,19 @@ def json_pretty(msg):
 @Properties.add_rest_send
 class Common:
     """
-    Classes and methods for Ansible support of Nexus image upgrade.
+    ### Summary
+    Common methods for Ansible support of Nexus image upgrade.
 
-    Ansible states "merged", "deleted", and "query" are implemented.
-
-    merged: stage, validate, upgrade image for one or more devices
-    deleted: delete image policy from one or more devices
-    query: return switch issu details for one or more devices
+    ### Raises
+    -   ``TypeError`` if
+            -   ``params`` is not a dict.
+    -   ``ValueError`` if
+            -   params.check_mode is missing.
+            -   params.state is missing.
+            -   params.state is not one of
+                    -   ``deleted``
+                    -   ``merged``
+                    -   ``query``
     """
 
     def __init__(self, params):
@@ -470,58 +478,23 @@ class Common:
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.valid_states = ["deleted", "merged", "query"]
+        self.check_mode = None
+        self.config = None
+        self.state = None
         self.params = params
-
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "check_mode is required."
-            raise ValueError(msg)
-
-        self._valid_states = ["deleted", "merged", "query"]
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "params is missing state parameter."
-            raise ValueError(msg)
-        if self.state not in self._valid_states:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid state: {self.state}. "
-            msg += f"Expected one of: {','.join(self._valid_states)}."
-            raise ValueError(msg)
-
-        self.config = self.params.get("config", None)
-        if not isinstance(self.config, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "expected dict type for self.config. "
-            msg += f"got {type(self.config).__name__}"
-            raise TypeError(msg)
+        self.validate_params()
 
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
         self._rest_send = None
-
         self.have = None
-
         self.idempotent_want = None
         # populated in self._merge_global_and_switch_configs()
         self.switch_configs = []
 
-        self.path = None
-        self.verb = None
-
-        if not isinstance(self.config, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "expected dict type for self.config. "
-            msg += f"got {type(self.config).__name__}"
-            raise TypeError(msg)
-
-        self.check_mode = False
-
-        self.validated = {}
         self.want = []
         self.need = []
 
@@ -529,6 +502,7 @@ class Common:
         self.image_policies = ImagePolicies()
         self.install_options = ImageInstallOptions()
         self.image_policy_attach = ImagePolicyAttach()
+        self.params_spec = ParamsSpec()
 
         self.image_policies.results = self.results
         self.install_options.results = self.results
@@ -538,6 +512,46 @@ class Common:
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
+
+    def validate_params(self):
+        """
+        ### Summary
+        Validate ``params`` passed to __init__().
+
+        ### Raises
+        -   ``TypeError`` if
+                -   ``params`` is not a dict.
+        -   ``ValueError`` if
+                -   params.check_mode is missing.
+                -   params.state is missing.
+                -   params.state is not one of
+                        -   ``deleted``
+                        -   ``merged``
+                        -   ``query``
+        """
+        method_name = inspect.stack()[0][3]
+
+        self.check_mode = self.params.get("check_mode", None)
+        if self.check_mode is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "check_mode is required."
+            raise ValueError(msg)
+        self.config = self.params.get("config", None)
+        if not isinstance(self.config, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "expected dict type for self.config. "
+            msg += f"got {type(self.config).__name__}"
+            raise TypeError(msg)
+        self.state = self.params.get("state", None)
+        if self.state is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params is missing state parameter."
+            raise ValueError(msg)
+        if self.state not in self.valid_states:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid state: {self.state}. "
+            msg += f"Expected one of: {','.join(self.valid_states)}."
+            raise ValueError(msg)
 
     def get_have(self) -> None:
         """
@@ -558,9 +572,8 @@ class Common:
 
     def get_want(self) -> None:
         """
-        Caller: main()
-
-        Update self.want for all switches defined in the playbook
+        ### Summary
+        Update self.want for all switches defined in the playbook.
         """
         method_name = inspect.stack()[0][3]
 
@@ -570,14 +583,7 @@ class Common:
         self.log.debug(msg)
 
         self._merge_global_and_switch_configs(self.config)
-
         self._merge_defaults_to_switch_configs()
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "Calling _validate_switch_configs with self.switch_configs: "
-        msg += f"{json.dumps(self.switch_configs, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
         self._validate_switch_configs()
 
         self.want = self.switch_configs
@@ -588,15 +594,14 @@ class Common:
 
     def _build_idempotent_want(self, want) -> None:
         """
+        ### Summary
         Build an itempotent want item based on the have item contents.
 
         The have item is obtained from an instance of SwitchIssuDetails
-        created in self.get_have().
+        created in get_have().
 
-        Caller: self.get_need_merged()
-
-        want structure passed to this method:
-
+        ### want structure
+        ```json
         {
             'policy': 'KR3F',
             'stage': True,
@@ -617,40 +622,40 @@ class Common:
             'validate': True,
             'ip_address': '172.22.150.102'
         }
+        ```
 
         The returned idempotent_want structure is identical to the
         above structure, except that the policy_changed key is added,
         and values are modified based on results from the have item,
         and the information returned by ImageInstallOptions.
-
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"{self.class_name}.{method_name}: "
+        msg = f"ENTERED {self.class_name}.{method_name}: "
         msg += f"want: {json.dumps(want, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        # start with a copy of the want item with policy_changed = True
+        want["policy_changed"] = True
+        self.idempotent_want = copy.deepcopy(want)
+
         self.have.filter = want["ip_address"]
 
-        want["policy_changed"] = True
         # The switch does not have an image policy attached.
         # idempotent_want == want with policy_changed = True
         if self.have.serial_number is None:
-            self.idempotent_want = copy.deepcopy(want)
             return
 
         # The switch has an image policy attached which is
         # different from the want policy.
         # idempotent_want == want with policy_changed = True
         if want["policy"] != self.have.policy:
-            self.idempotent_want = copy.deepcopy(want)
             return
 
-        # start with a copy of the want item
-        self.idempotent_want = copy.deepcopy(want)
-        # Give an indication to the caller that the policy has not changed
-        # We can use this later to determine if we need to do anything in
-        # the case where the image is already staged and/or upgraded.
+        # Give an indication to the caller that the image policy has not
+        # changed.  This can be used later to determine if we need to do
+        # anything in the case where the image is already staged and/or
+        # upgraded.
         self.idempotent_want["policy_changed"] = False
 
         # if the image is already staged, don't stage it again
@@ -667,14 +672,10 @@ class Common:
         msg += f"self.have.upgrade: {self.have.upgrade}"
         self.log.debug(msg)
 
-        # if the image is already upgraded, don't upgrade it again
-        if (
-            self.have.reason == "Upgrade"
-            and self.have.policy == self.idempotent_want["policy"]
-            # If upgrade is other than Success, we need to try to upgrade
-            # again.  So only change upgrade.nxos if upgrade is Success.
-            and self.have.upgrade == "Success"
-        ):
+        # if the image is already upgraded, don't upgrade it again.
+        # if the upgrade was previously unsuccessful, we need to try
+        # to upgrade again.
+        if self.have.reason == "Upgrade" and self.have.upgrade == "Success":
             msg = "Set upgrade nxos to False"
             self.log.debug(msg)
             self.idempotent_want["upgrade"]["nxos"] = False
@@ -683,7 +684,6 @@ class Common:
         # based on the options in our idempotent_want item
         self.install_options.policy_name = self.idempotent_want["policy"]
         self.install_options.serial_number = self.have.serial_number
-
         self.install_options.epld = want.get("upgrade", {}).get("epld", False)
         self.install_options.issu = self.idempotent_want.get("upgrade", {}).get(
             "nxos", False
@@ -718,15 +718,17 @@ class Common:
 
     def needs_epld_upgrade(self, epld_modules) -> bool:
         """
-        Determine if the switch needs an EPLD upgrade
+        ### Summary
+        Determine if the switch needs an EPLD upgrade.
 
         For all modules, compare EPLD oldVersion and newVersion.
-        Returns:
-        - True if newVersion > oldVersion for any module
-        - False otherwise
 
-        Callers:
-        - self._build_idempotent_want
+        ### Raises
+        None
+
+        ### Returns
+        -   ``True`` if newVersion > oldVersion for any module.
+        -   ``False`` otherwise.
         """
         method_name = inspect.stack()[0][3]
 
@@ -755,205 +757,9 @@ class Common:
                 return True
         return False
 
-    def get_need_deleted(self) -> None:
-        """
-        Caller: main()
-
-        For deleted state, populate self.need list() with items from our want
-        list that are not in our have list.  These items will be sent to
-        the controller.
-
-        Policies are detached only if the policy name matches.
-        """
-        need = []
-        for want in self.want:
-            self.have.filter = want["ip_address"]
-            if self.have.serial_number is None:
-                continue
-            if self.have.policy is None:
-                continue
-            if self.have.policy != want["policy"]:
-                continue
-            need.append(want)
-        self.need = copy.copy(need)
-
-    def get_need_query(self) -> None:
-        """
-        Caller: main()
-
-        For query state, populate self.need list() with all items from
-        our want list.  These items will be sent to the controller.
-
-        policy name is ignored for query state.
-        """
-        need = []
-        for want in self.want:
-            need.append(want)
-        self.need = copy.copy(need)
-
-    def _build_params_spec(self) -> dict:
-        method_name = inspect.stack()[0][3]
-        if self.params["state"] == "merged":
-            return self._build_params_spec_for_merged_state()
-        if self.params["state"] == "deleted":
-            return self._build_params_spec_for_merged_state()
-        if self.params["state"] == "query":
-            return self._build_params_spec_for_query_state()
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"Unsupported state: {self.params['state']}"
-        raise ValueError(msg)
-        # we never reach this, but it makes pylint happy.
-        return None  # pylint: disable=unreachable
-
-    @staticmethod
-    def _build_params_spec_for_merged_state() -> dict:
-        """
-        Build the specs for the parameters expected when state == merged.
-
-        Caller: _validate_switch_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
-        """
-        params_spec: dict = {}
-        params_spec["ip_address"] = {}
-        params_spec["ip_address"]["required"] = True
-        params_spec["ip_address"]["type"] = "ipv4"
-
-        params_spec["policy"] = {}
-        params_spec["policy"]["required"] = False
-        params_spec["policy"]["type"] = "str"
-
-        params_spec["reboot"] = {}
-        params_spec["reboot"]["required"] = False
-        params_spec["reboot"]["type"] = "bool"
-        params_spec["reboot"]["default"] = False
-
-        params_spec["stage"] = {}
-        params_spec["stage"]["required"] = False
-        params_spec["stage"]["type"] = "bool"
-        params_spec["stage"]["default"] = True
-
-        params_spec["validate"] = {}
-        params_spec["validate"]["required"] = False
-        params_spec["validate"]["type"] = "bool"
-        params_spec["validate"]["default"] = True
-
-        params_spec["upgrade"] = {}
-        params_spec["upgrade"]["required"] = False
-        params_spec["upgrade"]["type"] = "dict"
-        params_spec["upgrade"]["default"] = {}
-        params_spec["upgrade"]["epld"] = {}
-        params_spec["upgrade"]["epld"]["required"] = False
-        params_spec["upgrade"]["epld"]["type"] = "bool"
-        params_spec["upgrade"]["epld"]["default"] = False
-        params_spec["upgrade"]["nxos"] = {}
-        params_spec["upgrade"]["nxos"]["required"] = False
-        params_spec["upgrade"]["nxos"]["type"] = "bool"
-        params_spec["upgrade"]["nxos"]["default"] = True
-
-        section = "options"
-        params_spec[section] = {}
-        params_spec[section]["required"] = False
-        params_spec[section]["type"] = "dict"
-        params_spec[section]["default"] = {}
-
-        sub_section = "nxos"
-        params_spec[section][sub_section] = {}
-        params_spec[section][sub_section]["required"] = False
-        params_spec[section][sub_section]["type"] = "dict"
-        params_spec[section][sub_section]["default"] = {}
-
-        params_spec[section][sub_section]["mode"] = {}
-        params_spec[section][sub_section]["mode"]["required"] = False
-        params_spec[section][sub_section]["mode"]["type"] = "str"
-        params_spec[section][sub_section]["mode"]["default"] = "disruptive"
-        params_spec[section][sub_section]["mode"]["choices"] = [
-            "disruptive",
-            "non_disruptive",
-            "force_non_disruptive",
-        ]
-
-        params_spec[section][sub_section]["bios_force"] = {}
-        params_spec[section][sub_section]["bios_force"]["required"] = False
-        params_spec[section][sub_section]["bios_force"]["type"] = "bool"
-        params_spec[section][sub_section]["bios_force"]["default"] = False
-
-        sub_section = "epld"
-        params_spec[section][sub_section] = {}
-        params_spec[section][sub_section]["required"] = False
-        params_spec[section][sub_section]["type"] = "dict"
-        params_spec[section][sub_section]["default"] = {}
-
-        params_spec[section][sub_section]["module"] = {}
-        params_spec[section][sub_section]["module"]["required"] = False
-        params_spec[section][sub_section]["module"]["type"] = ["str", "int"]
-        params_spec[section][sub_section]["module"]["preferred_type"] = "str"
-        params_spec[section][sub_section]["module"]["default"] = "ALL"
-        params_spec[section][sub_section]["module"]["choices"] = [
-            str(x) for x in range(1, 33)
-        ]
-        params_spec[section][sub_section]["module"]["choices"].extend(
-            list(range(1, 33))
-        )
-        params_spec[section][sub_section]["module"]["choices"].append("ALL")
-
-        params_spec[section][sub_section]["golden"] = {}
-        params_spec[section][sub_section]["golden"]["required"] = False
-        params_spec[section][sub_section]["golden"]["type"] = "bool"
-        params_spec[section][sub_section]["golden"]["default"] = False
-
-        sub_section = "reboot"
-        params_spec[section][sub_section] = {}
-        params_spec[section][sub_section]["required"] = False
-        params_spec[section][sub_section]["type"] = "dict"
-        params_spec[section][sub_section]["default"] = {}
-
-        params_spec[section][sub_section]["config_reload"] = {}
-        params_spec[section][sub_section]["config_reload"]["required"] = False
-        params_spec[section][sub_section]["config_reload"]["type"] = "bool"
-        params_spec[section][sub_section]["config_reload"]["default"] = False
-
-        params_spec[section][sub_section]["write_erase"] = {}
-        params_spec[section][sub_section]["write_erase"]["required"] = False
-        params_spec[section][sub_section]["write_erase"]["type"] = "bool"
-        params_spec[section][sub_section]["write_erase"]["default"] = False
-
-        sub_section = "package"
-        params_spec[section][sub_section] = {}
-        params_spec[section][sub_section]["required"] = False
-        params_spec[section][sub_section]["type"] = "dict"
-        params_spec[section][sub_section]["default"] = {}
-
-        params_spec[section][sub_section]["install"] = {}
-        params_spec[section][sub_section]["install"]["required"] = False
-        params_spec[section][sub_section]["install"]["type"] = "bool"
-        params_spec[section][sub_section]["install"]["default"] = False
-
-        params_spec[section][sub_section]["uninstall"] = {}
-        params_spec[section][sub_section]["uninstall"]["required"] = False
-        params_spec[section][sub_section]["uninstall"]["type"] = "bool"
-        params_spec[section][sub_section]["uninstall"]["default"] = False
-
-        return copy.deepcopy(params_spec)
-
-    @staticmethod
-    def _build_params_spec_for_query_state() -> dict:
-        """
-        Build the specs for the parameters expected when state == query.
-
-        Caller: _validate_switch_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
-        """
-        params_spec: dict = {}
-        params_spec["ip_address"] = {}
-        params_spec["ip_address"]["required"] = True
-        params_spec["ip_address"]["type"] = "ipv4"
-
-        return copy.deepcopy(params_spec)
-
     def _merge_global_and_switch_configs(self, config) -> None:
         """
+        ### Summary
         Merge the global config with each switch config and
         populate list of merged configs self.switch_configs.
 
@@ -967,6 +773,11 @@ class Common:
             is one (see self._merge_defaults_to_switch_configs)
         5.  If global_config and switch_config are both missing a
             mandatory parameter, fail (see self._validate_switch_configs)
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   Playbook is missing list of switches.
+                -   ``MergedDicts()`` raises an error.
         """
         method_name = inspect.stack()[0][3]
 
@@ -1013,10 +824,18 @@ class Common:
         For any items in config which are not set, apply the default
         value from params_spec (if a default value exists).
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        self.params_spec.params = self.params
+        self.params_spec.commit()
+
         configs_to_merge = copy.copy(self.switch_configs)
         merged_configs = []
         merge_defaults = ParamsMergeDefaults()
-        merge_defaults.params_spec = self._build_params_spec()
+        merge_defaults.params_spec = self.params_spec.params_spec
         for switch_config in configs_to_merge:
             merge_defaults.parameters = switch_config
             merge_defaults.commit()
@@ -1025,19 +844,42 @@ class Common:
 
     def _validate_switch_configs(self) -> None:
         """
-        Verify parameters for each switch
-        - fail_json if any parameters are not valid
-        - fail_json if any mandatory parameters are missing
+        ### Summary
+        Verify parameters for each switch.
 
-        Callers:
-            - self.get_want
+        ### Raises
+        -   ``ValueError`` if:
+                -   Any parameter is not valid.
+                -   Mandatory parameters are missing.
+                -   params is not a dict.
+                -   params is missing ``state`` key.
+                -   params ``state`` is not one of:
+                        -   ``deleted``
+                        -   ``merged``
+                        -   ``query``
         """
-        validator = ParamsValidate()
-        validator.params_spec = self._build_params_spec()
+        method_name = inspect.stack()[0][3]
 
-        for switch in self.switch_configs:
-            validator.parameters = switch
-            validator.commit()
+        try:
+            self.params_spec.params = self.params
+            self.params_spec.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during ParamsSpec(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        validator = ParamsValidate()
+        try:
+            validator.params_spec = self.params_spec.params_spec
+            for switch in self.switch_configs:
+                validator.parameters = switch
+                validator.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during ParamsValidate(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
 
 class Merged(Common):
@@ -1225,7 +1067,6 @@ class Merged(Common):
         self.log.debug(msg)
 
         stage = ImageStage()
-        stage.params = self.params
         stage.rest_send = self.rest_send
         stage.results = self.results
         stage.serial_numbers = serial_numbers
@@ -1247,7 +1088,6 @@ class Merged(Common):
         validate.serial_numbers = serial_numbers
         validate.rest_send = self.rest_send
         validate.results = self.results
-        validate.params = self.params
         validate.commit()
 
     def _upgrade_images(self, devices) -> None:
@@ -1578,6 +1418,19 @@ class Query(Common):
             msg += "results must be set before calling commit()."
             raise ValueError(msg)
 
+    def get_need(self) -> None:
+        """
+        ### Summary
+        For query state, populate self.need list() with all items from
+        our want list.  These items will be sent to the controller.
+
+        ``policy`` name is ignored for query state.
+        """
+        need = []
+        for want in self.want:
+            need.append(want)
+        self.need = copy.copy(need)
+
     def commit(self) -> None:
         """
         Return the ISSU state of the switch(es) listed in the playbook
@@ -1589,6 +1442,7 @@ class Query(Common):
         self.log.debug(msg)
 
         self.validate_commit_parameters()
+        self.get_want()
 
         self.issu_detail.rest_send = self.rest_send
         self.issu_detail.results = self.results
