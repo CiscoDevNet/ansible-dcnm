@@ -23,31 +23,23 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
     ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_action import \
-    ImagePolicyAction
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
-    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
     SwitchIssuDetailsByDeviceName, SwitchIssuDetailsByIpAddress,
     SwitchIssuDetailsBySerialNumber)
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
-    ImageUpgradeTask
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.fixture import \
     load_fixture
 
@@ -95,65 +87,33 @@ def image_install_options_fixture():
 @pytest.fixture(name="image_policies")
 def image_policies_fixture():
     """
-    mock ImagePolicies
+    Return ImagePolicies instance.
     """
-    return ImagePolicies(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policy_action")
-def image_policy_action_fixture():
-    """
-    mock ImagePolicyAction
-    """
-    return ImagePolicyAction(MockAnsibleModule)
+    return ImagePolicies()
 
 
 @pytest.fixture(name="image_stage")
 def image_stage_fixture():
     """
-    mock ImageStage
+    Return ImageStage instance.
     """
-    return ImageStage(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_upgrade_common")
-def image_upgrade_common_fixture():
-    """
-    mock ImageUpgradeCommon
-    """
-    return ImageUpgradeCommon(MockAnsibleModule)
+    return ImageStage()
 
 
 @pytest.fixture(name="image_upgrade")
 def image_upgrade_fixture():
     """
-    mock ImageUpgrade
+    Return ImageUpgrade instance.
     """
-    return ImageUpgrade(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_upgrade_task")
-def image_upgrade_task_fixture():
-    """
-    mock ImageUpgradeTask
-    """
-    return ImageUpgradeTask(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_upgrade_task_result")
-def image_upgrade_task_result_fixture():
-    """
-    mock ImageUpgradeTaskResult
-    """
-    return ImageUpgradeTaskResult(MockAnsibleModule)
+    return ImageUpgrade()
 
 
 @pytest.fixture(name="image_validate")
 def image_validate_fixture():
     """
-    mock ImageValidate
+    Return ImageValidate instance
     """
-    return ImageValidate(MockAnsibleModule)
+    return ImageValidate()
 
 
 @pytest.fixture(name="params_validate")
