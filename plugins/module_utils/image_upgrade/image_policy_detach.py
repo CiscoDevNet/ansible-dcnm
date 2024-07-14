@@ -50,7 +50,10 @@ class ImagePolicyDetach:
     -   ValueError: if:
             -   ``serial_numbers`` is not set before calling commit.
             -   ``serial_numbers`` is an empty list.
+            -   The result of the DELETE request is not successful.
     -   TypeError: if:
+            -   ``check_interval`` is not an integer.
+            -   ``check_timeout`` is not an integer.
             -   ``serial_numbers`` is not a list.
 
     ### Usage
@@ -78,7 +81,7 @@ class ImagePolicyDetach:
     ```
 
     ### Endpoint
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/attach-policy
+    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy
     """
 
     def __init__(self):
@@ -180,8 +183,7 @@ class ImagePolicyDetach:
                 -   ``rest_send`` is not set.
                 -   Error encountered while waiting for controller actions
                     to complete.
-                -   Error encountered while detaching image policies from
-                    switches.
+                -   The result of the DELETE request is not successful.
         """
         method_name = inspect.stack()[0][3]
 
