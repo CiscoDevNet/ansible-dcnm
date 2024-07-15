@@ -102,10 +102,12 @@ class ImageValidate:
 
         self.action = "image_validate"
         self.diff: dict = {}
-        self.payload = {}
+        self.payload = None
         self.saved_response_current: dict = {}
         self.saved_result_current: dict = {}
+        # _wait_for_image_validate_to_complete() populates these
         self.serial_numbers_done: set = set()
+        self.serial_numbers_todo = set()
 
         self.conversion = ConversionUtils()
         self.ep_image_validate = EpImageValidate()
@@ -176,16 +178,12 @@ class ImageValidate:
 
     def validate_serial_numbers(self) -> None:
         """
-        Log a warning if the validated state for any serial_number
-        is Failed.
+        ### Summary
+        Fail if "validated" is "Failed" for any serial number.
 
-        TODO:1  Need a way to compare current image_policy with the image
-                policy in the response
-        TODO:3  If validate == Failed, it may have been from the last operation.
-        TODO:3  We can't fail here based on this until we can verify the failure
-                is happening for the current image_policy.
-        TODO:3  Change this to a log message and update the unit test if we can't
-                verify the failure is happening for the current image_policy.
+        ### Raises
+        -   ``ControllerResponseError`` if:
+                -   "validated" is "Failed" for any serial_number.
         """
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
@@ -203,7 +201,7 @@ class ImageValidate:
                 msg += f"{self.issu_detail.serial_number}. "
                 msg += "If this persists, check the switch connectivity to "
                 msg += "the controller and try again."
-                raise ValueError(msg)
+                raise ControllerResponseError(msg)
 
     def build_payload(self) -> None:
         """
@@ -382,9 +380,9 @@ class ImageValidate:
 
         self.serial_numbers_done = set()
         timeout = self.check_timeout
-        serial_numbers_todo = set(copy.copy(self.serial_numbers))
+        self.serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
-        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
+        while self.serial_numbers_done != self.serial_numbers_todo and timeout > 0:
             if self.rest_send.unit_test is False:  # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
@@ -418,7 +416,7 @@ class ImageValidate:
 
             msg = f"seconds remaining {timeout}"
             self.log.debug(msg)
-            msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
+            msg = f"serial_numbers_todo: {sorted(self.serial_numbers_todo)}"
             self.log.debug(msg)
             msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
             self.log.debug(msg)
@@ -428,13 +426,13 @@ class ImageValidate:
         msg += f"serial_numbers_done: {sorted(self.serial_numbers_done)}."
         self.log.debug(msg)
 
-        if self.serial_numbers_done != serial_numbers_todo:
+        if self.serial_numbers_done != self.serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Timed out waiting for image validation to complete. "
             msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
-            msg += f"{','.join(sorted(serial_numbers_todo))}"
+            msg += f"{','.join(sorted(self.serial_numbers_todo))}"
             raise ValueError(msg)
 
     @property
@@ -466,13 +464,15 @@ class ImageValidate:
     @serial_numbers.setter
     def serial_numbers(self, value) -> None:
         method_name = inspect.stack()[0][3]
-
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "serial_numbers must be a python list of "
-            msg += "switch serial numbers. "
-            msg += f"Got {value}."
+            msg += "must be a python list of switch serial numbers."
             raise TypeError(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "must be a python list of switch serial numbers."
+                raise TypeError(msg)
         self._serial_numbers = value
 
     @property
