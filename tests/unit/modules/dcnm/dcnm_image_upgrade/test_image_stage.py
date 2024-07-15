@@ -18,6 +18,7 @@
 # pylint: disable=unused-import
 # Some fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-argument
+# pylint: disable=protected-access
 """
 ImageStage - unit tests
 """
@@ -29,10 +30,9 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from typing import Any, Dict
-from unittest.mock import MagicMock
 
 import inspect
+
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
@@ -46,28 +46,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
     Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsBySerialNumber
 
 from .utils import (MockAnsibleModule, does_not_raise, image_stage_fixture,
-                    issu_details_by_serial_number_fixture, params,
-                    responses_ep_image_stage,
-                    responses_ep_issu, responses_ep_version)
-
-PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
-PATCH_COMMON = PATCH_MODULE_UTILS + "common."
-PATCH_IMAGE_STAGE_REST_SEND_COMMIT = PATCH_IMAGE_UPGRADE + "image_stage.RestSend.commit"
-PATCH_IMAGE_STAGE_REST_SEND_RESULT_CURRENT = (
-    PATCH_IMAGE_UPGRADE + "image_stage.RestSend.result_current"
-)
-PATCH_IMAGE_STAGE_POPULATE_CONTROLLER_VERSION = (
-    "ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade."
-    "ImageStage._populate_controller_version"
-)
-
-DCNM_SEND_CONTROLLER_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
+                    params, responses_ep_image_stage, responses_ep_issu,
+                    responses_ep_version)
 
 
 def test_image_stage_00000(image_stage) -> None:
@@ -114,6 +96,10 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
     -   ``ImageStage``
             - ``_populate_controller_version``
 
+    ### Summary
+    Verify that ``_populate_controller_version`` sets the controller version
+    correctly based on the response from the controller.
+
     ### Test
     - test_image_stage_00100a -> instance.controller_version == "12.1.2e"
     - test_image_stage_00100b -> instance.controller_version == "12.1.3b"
@@ -124,6 +110,7 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
     with either a misspelled "sereialNum" key/value (12.1.2e) or a
     correctly-spelled "serialNumbers" key/value (12.1.3b).
     """
+
     def responses():
         yield responses_ep_version(key)
 
@@ -141,7 +128,7 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
         instance.results = Results()
         instance.rest_send = rest_send
         instance.controller_version_instance.rest_send = rest_send
-        instance._populate_controller_version()  # pylint: disable=protected-access
+        instance._populate_controller_version()
     assert instance.controller_version == expected
 
 
@@ -154,6 +141,11 @@ def test_image_stage_00200(image_stage) -> None:
     ### Summary
     Verify that ``prune_serial_numbers`` prunes serial numbers that have already
     been staged.
+
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that
+        ``imageStaged`` is "none" for three serial numbers and "Success"
+        for two serial numbers in the serial_numbers list.
 
     ### Test
     -   ``serial_numbers`` contains only serial numbers
@@ -186,7 +178,6 @@ def test_image_stage_00200(image_stage) -> None:
         instance.rest_send = rest_send
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
-        # instance.issu_detail = issu_details_by_serial_number
         instance.serial_numbers = [
             "FDO2112189M",
             "FDO211218AX",
@@ -213,6 +204,11 @@ def test_image_stage_00300(image_stage) -> None:
     ### Summary
     Verify that ``validate_serial_numbers`` raises ``ControllerResponseError``
     appropriately.
+
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that
+        ``imageStaged`` is "Success" for one serial number and "Failed"
+        for the other serial number in the serial_numbers list.
 
     ### Test
     - ``ControllerResponseError`` is not called when imageStaged == "Success"
@@ -262,6 +258,11 @@ def test_image_stage_00400(image_stage) -> None:
     -   ``ImageStage``
             - ``_wait_for_image_stage_to_complete``
 
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that
+        ``imageStaged`` is "Success" for all serial numbers in the
+        serial_numbers list.
+
     ### Summary
     Verify proper behavior of _wait_for_image_stage_to_complete when
     imageStaged is "Success" for all serial numbers.
@@ -303,7 +304,7 @@ def test_image_stage_00400(image_stage) -> None:
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
         instance.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
-        instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
+        instance._wait_for_image_stage_to_complete()
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 2
     assert "FDO21120U5D" in instance.serial_numbers_done
@@ -321,14 +322,19 @@ def test_image_stage_00410(image_stage) -> None:
     imageStaged is "Failed" for one serial number and imageStaged
     is "Success" for one serial number.
 
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that
+        ``imageStaged`` is "Success" for one of the serial numbers in the
+        serial_numbers list and "Failed" for the other.
+
     ### Test
-    -   module.serial_numbers_done is a set().
-    -   module.serial_numbers_done has length 1.
-    -   module.serial_numbers_done contains FDO21120U5D
+    -   ``serial_numbers_done`` is a set().
+    -   ``serial_numbers_done`` has length 1.
+    -   ``serial_numbers_done`` contains FDO21120U5D.
         because imageStaged is "Success".
     -   ``ValueError`` is raised on serial number FDO2112189M
         because imageStaged is "Failed".
-    -   error message matches expected.
+    -   Error message matches expectation.
 
     ### Description
     ``_wait_for_image_stage_to_complete`` looks at the imageStaged status
@@ -366,7 +372,7 @@ def test_image_stage_00410(image_stage) -> None:
     match += "staged percent: 90"
 
     with pytest.raises(ValueError, match=match):
-        instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
+        instance._wait_for_image_stage_to_complete()
 
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 1
@@ -385,15 +391,20 @@ def test_image_stage_00420(image_stage) -> None:
     timeout is reached for one serial number (i.e. imageStaged is
     "In-Progress") and imageStaged is "Success" for one serial number.
 
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that
+        ``imageStaged`` is "Success" for one of the serial numbers in the
+        serial_numbers list and "In-Pregress" for the other.
+
     ### Test
-    -   module.serial_numbers_done is a set()
-    -   module.serial_numbers_done has length 1
-    -   module.serial_numbers_done contains FDO21120U5D
-        because imageStaged == "Success"
-    -   module.serial_numbers_done does not contain FDO2112189M
-    -   fail_json is called due to timeout because FDO2112189M
-        imageStaged == "In-Progress"
-    -  error message matches expected
+    -   ``serial_numbers_done`` is a set().
+    -   ``serial_numbers_done`` has length 1.
+    -   ``serial_numbers_done`` contains FDO21120U5D.
+        because imageStaged == "Success".
+    -   ``serial_numbers_done`` does not contain FDO2112189M.
+    -   ``ValueError`` is raised due to timeout because FDO2112189M
+        ``imageStaged`` == "In-Progress".
+    -   Error message matches expectation.
 
     ### Description
     See test_image_stage_410 for functional details.
@@ -432,7 +443,7 @@ def test_image_stage_00420(image_stage) -> None:
     match += "serial_numbers_todo: FDO21120U5D,FDO2112189M"
 
     with pytest.raises(ValueError, match=match):
-        instance._wait_for_image_stage_to_complete()  # pylint: disable=protected-access
+        instance._wait_for_image_stage_to_complete()
     assert isinstance(instance.serial_numbers_done, set)
     assert len(instance.serial_numbers_done) == 1
     assert "FDO21120U5D" in instance.serial_numbers_todo
@@ -451,6 +462,10 @@ def test_image_stage_00500(image_stage) -> None:
     Verify proper behavior of ``wait_for_controller`` when no actions
     are pending.
 
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that no
+        actions are "In-Progress".
+
     ### Test
     -   ``wait_for_controller_done.done`` is a set().
     -   ``serial_numbers_done`` has length 2.
@@ -464,9 +479,9 @@ def test_image_stage_00500(image_stage) -> None:
     ``SwitchIssuDetailsBySerialNumber.actions_in_progress()`` and expects
     this to return False.  ``actions_in_progress()`` returns True until none
     of the following keys has a value of "In-Progress":
-    - imageStaged
-    - upgrade
-    - validated
+    - ``imageStaged``
+    - ``upgrade``
+    - ``validated``
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -495,7 +510,7 @@ def test_image_stage_00500(image_stage) -> None:
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
         instance.serial_numbers = ["FDO21120U5D", "FDO2112189M"]
-        instance.wait_for_controller()  # pylint: disable=protected-access
+        instance.wait_for_controller()
 
     assert isinstance(instance.wait_for_controller_done.done, set)
     assert len(instance.wait_for_controller_done.done) == 2
@@ -513,15 +528,20 @@ def test_image_stage_00510(image_stage) -> None:
 
     ### Summary
     Verify proper behavior of ``wait_for_controller`` when there is a timeout
-    waiting for one serial number to complete staging.
+    waiting for actions on the controller to complete.
+
+    ### Setup
+    -   ``responses_ep_issu()`` returns 200 response indicating that
+        ``imageStaged`` is "In-Progress" for one of the serial numbers in the
+        serial_numbers list.
 
     ### Test
     -   `serial_numbers_done` is a set()
     -   serial_numbers_done has length 1
-    -   module.serial_numbers_done contains FDO21120U5D
+    -   ``serial_numbers_done`` contains FDO21120U5D
         because imageStaged == "Success"
-    -   module.serial_numbers_done does not contain FDO2112189M
-    -   fail_json is called due to timeout because FDO2112189M
+    -   ``serial_numbers_done`` does not contain FDO2112189M
+    -   ``ValueError`` is raised due to timeout because FDO2112189M
         imageStaged == "In-Progress"
 
     ### Description
@@ -563,7 +583,7 @@ def test_image_stage_00510(image_stage) -> None:
     match += r"The following items did complete: FDO21120U5D\."
 
     with pytest.raises(ValueError, match=match):
-        instance.wait_for_controller()  # pylint: disable=protected-access
+        instance.wait_for_controller()
     assert isinstance(instance.wait_for_controller_done.done, set)
     assert len(instance.wait_for_controller_done.done) == 1
     assert "FDO21120U5D" in instance.wait_for_controller_done.todo
@@ -704,6 +724,11 @@ def test_image_stage_00900(image_stage, serial_numbers_is_set, expected) -> None
     Verify that ``commit`` raises ``ValueError`` appropriately based on value of
     ``serial_numbers``.
 
+    ### Setup
+    - responses_ep_issu() returns 200 responses.
+    - responses_ep_version() returns a 200 response.
+    - responses_ep_image_stage() returns a 200 response.
+
     ### Test
     -   ``ValueError`` is raised when serial_numbers is not set.
     -   ``ValueError`` is not called when serial_numbers is set.
@@ -764,14 +789,21 @@ def test_image_stage_00910(
     Verify that the serial number key name in the payload is set correctly
     based on the controller version.
 
+    ### Setup
+    - ``responses_ep_issu()`` returns 200 responses.
+    - ``responses_ep_version()`` returns a 200 response.
+    - ``responses_ep_image_stage()`` returns a 200 response.
+    - ``serial_numbers`` is set to ["FDO21120U5D"]
+
     ### Test
     - controller_version 12.1.2e -> key name "sereialNum" (yes, misspelled)
     - controller_version 12.1.3b -> key name "serialNumbers
 
     ### Description
     ``commit()`` will set the payload key name for the serial number
-    based on ``controller_version``, per Expected Results below.
+    based on ``controller_version``.
     """
+
     def responses():
         yield responses_ep_issu(key)
         yield responses_ep_issu(key)
@@ -804,7 +836,7 @@ def test_image_stage_00910(
     assert expected_serial_number_key in instance.payload.keys()
 
 
-def test_image_stage_00920(monkeypatch, image_stage) -> None:
+def test_image_stage_00920(image_stage) -> None:
     """
     ### Classes and Methods
     -   ``ImageStage``
@@ -815,8 +847,10 @@ def test_image_stage_00920(monkeypatch, image_stage) -> None:
     appropriately when serial_numbers is empty.
 
     ### Setup
-    - SwitchIssuDetailsBySerialNumber is mocked to return a successful response
-    - self.serial_numbers is set to [] (empty list)
+    - ``responses_ep_issu()`` returns 200 responses.
+    - ``responses_ep_version()`` returns a 200 response.
+    - ``responses_ep_image_stage()`` returns a 200 response.
+    - ``serial_numbers`` is set to [] (empty list)
 
     ### Test
     - commit() sets the following to expected values:
@@ -861,14 +895,20 @@ def test_image_stage_00920(monkeypatch, image_stage) -> None:
         instance.commit()
 
     response_msg = "No images to stage."
-    assert instance.results.result == [{"success": True, "changed": False, "sequence_number": 1}]
-    assert instance.results.result_current == {"success": True, "changed": False, "sequence_number": 1}
+    assert instance.results.result == [
+        {"success": True, "changed": False, "sequence_number": 1}
+    ]
+    assert instance.results.result_current == {
+        "success": True,
+        "changed": False,
+        "sequence_number": 1,
+    }
     assert instance.results.response_current == {
         "DATA": [{"key": "ALL", "value": response_msg}],
-         "sequence_number": 1
+        "sequence_number": 1,
     }
     assert instance.results.response == [instance.results.response_current]
-    assert instance.results.response_data == [{'response': 'No images to stage.'}]
+    assert instance.results.response_data == [{"response": "No images to stage."}]
 
 
 def test_image_stage_00930(image_stage) -> None:
@@ -878,17 +918,20 @@ def test_image_stage_00930(image_stage) -> None:
             `   ``commit``
 
     ### Summary
-    Verify that commit() calls fail_json() on 500 response from the controller.
+    Verify that ``ControllerResponseError`` is raised on 500 response from
+    the controller.
 
     ### Setup
-    - IssuDetailsBySerialNumber is mocked to return a successful response
-    - ImageStage is mocked to return a non-successful (500) response
+    - ``responses_ep_issu()`` returns 200 responses.
+    - ``responses_ep_version()`` returns a 200 response.
+    - ``responses_ep_image_stage()`` returns a 500 response.
 
     ### Test
-    - commit() will call fail_json()
+    - commit() raises ``ControllerResponseError``
 
     ### Description
-    commit() will call fail_json() on non-success response from the controller.
+    commit() raises ``ControllerResponseError`` on non-success response
+    from the controller.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -925,11 +968,13 @@ def test_image_stage_00930(image_stage) -> None:
     match += r"failed\. Controller response:.*"
     with pytest.raises(ControllerResponseError, match=match):
         instance.commit()
-    assert instance.results.result == [{"success": False, "changed": False, "sequence_number": 1}]
+    assert instance.results.result == [
+        {"success": False, "changed": False, "sequence_number": 1}
+    ]
     assert instance.results.response_current["RETURN_CODE"] == 500
 
 
-def test_image_stage_00940(monkeypatch, image_stage) -> None:
+def test_image_stage_00940(image_stage) -> None:
     """
     ### Classes and Methods
     -   ``ImageStage``
@@ -940,31 +985,32 @@ def test_image_stage_00940(monkeypatch, image_stage) -> None:
     from the controller for an image stage request.
 
     ### Setup
-    -   IssuDetailsBySerialNumber responses are all successful.
-    -   ImageStage._populate_controller_version returns 12.1.3b
-    -   ImageStage.rest_send.commit returns a successful response.
+    - ``responses_ep_issu()`` returns 200 responses.
+    - ``responses_ep_version()`` returns a 200 response with controller
+        version 12.1.3b.
+    - ``responses_ep_image_stage()`` returns a 200 response.
 
     ### Test
     - commit() sets self.diff to the expected values
     """
     method_name = inspect.stack()[0][3]
-    keyA = f"{method_name}a"
-    keyB = f"{method_name}b"
+    key_a = f"{method_name}a"
+    key_b = f"{method_name}b"
 
     def responses():
         # ImageStage().prune_serial_numbers()
-        yield responses_ep_issu(keyA)
+        yield responses_ep_issu(key_a)
         # ImageStage().validate_serial_numbers()
-        yield responses_ep_issu(keyA)
+        yield responses_ep_issu(key_a)
         # ImageStage().wait_for_controller()
-        yield responses_ep_issu(keyA)
+        yield responses_ep_issu(key_a)
         # ImageStage().build_payload() ->
         #     ControllerVersion()._populate_controller_version()
-        yield responses_ep_version(keyA)
+        yield responses_ep_version(key_a)
         # ImageStage().commit() -> ImageStage().rest_send.commit()
-        yield responses_ep_image_stage(keyA)
+        yield responses_ep_image_stage(key_a)
         # ImageStage()._wait_for_image_stage_to_complete()
-        yield responses_ep_issu(keyB)
+        yield responses_ep_issu(key_b)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -989,7 +1035,11 @@ def test_image_stage_00940(monkeypatch, image_stage) -> None:
         instance.serial_numbers = ["FDO21120U5D"]
         instance.commit()
 
-    assert instance.results.result_current == {"success": True, "changed": True, "sequence_number": 1}
+    assert instance.results.result_current == {
+        "success": True,
+        "changed": True,
+        "sequence_number": 1,
+    }
     assert instance.results.diff[0]["172.22.150.102"]["policy_name"] == "KR5M"
     assert instance.results.diff[0]["172.22.150.102"]["ip_address"] == "172.22.150.102"
     assert instance.results.diff[0]["172.22.150.102"]["serial_number"] == "FDO21120U5D"
