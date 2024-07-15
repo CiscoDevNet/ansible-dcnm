@@ -27,6 +27,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_featu
     ControllerFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
+    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
@@ -147,6 +149,14 @@ def controller_version_fixture():
     return ControllerVersion with mocked AnsibleModule
     """
     return ControllerVersion(MockAnsibleModule)
+
+
+@pytest.fixture(name="image_policies")
+def image_policies_fixture():
+    """
+    Return ImagePolicies instance.
+    """
+    return ImagePolicies()
 
 
 @pytest.fixture(name="sender_dcnm")
@@ -293,6 +303,16 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     response_file = "responses_FabricDetailsByName"
     response = load_fixture(response_file).get(key)
     print(f"responses_fabric_details_by_name: {key} : {response}")
+    return response
+
+
+def responses_image_policies(key: str) -> Dict[str, str]:
+    """
+    Return ImagePolicies controller responses
+    """
+    response_file = "responses_ImagePolicies"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_image_policies: {key} : {response}")
     return response
 
 

@@ -540,7 +540,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00004a": {
+    "test_image_stage_00200a": {
         "TEST_NOTES": [
             "FDO2112189M: imageStaged == none",
             "FDO211218AX: imageStaged == none",
@@ -579,11 +579,11 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00005a": {
+    "test_image_stage_00300a": {
         "TEST_NOTES": [
             "FDO21120U5D: imageStaged == Success",
             "FDO2112189M: imageStaged == Failed",
-            "FDO2112189M: requires deviceName, ipAddress, used in the fail_json message"
+            "FDO2112189M: requires deviceName, ipAddress, used in the ControllerResponseError message"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -606,7 +606,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00020a": {
+    "test_image_stage_00400a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "DATA.lastOperDataObject.serialNumber is present and is this specific value",
@@ -641,7 +641,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00021a": {
+    "test_image_stage_00410a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
@@ -676,7 +676,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00022a": {
+    "test_image_stage_00420a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
@@ -711,7 +711,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00030a": {
+    "test_image_stage_00500a": {
         "TEST_NOTES": [
             "FDO21120U5D upgrade, validated, imageStaged == Success",
             "FDO2112189M upgrade, validated, imageStaged == Success"
@@ -739,7 +739,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00031a": {
+    "test_image_stage_00510a": {
         "TEST_NOTES": [
             "FDO21120U5D upgrade, validated, imageStaged == Success",
             "FDO2112189M upgrade, validated == Success",
@@ -768,7 +768,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00070a": {
+    "test_image_stage_00900a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -858,97 +858,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00071a": {
-        "RETURN_CODE": 200,
-        "METHOD": "GET",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
-        "MESSAGE": "OK",
-        "DATA": {
-            "status": "SUCCESS",
-            "lastOperDataObject": [
-                {
-                    "serialNumber": "FDO21120U5D",
-                    "deviceName": "leaf1",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:20",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.102",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 145740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.102",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "leaf1",
-                    "id": 1,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
-                },
-                {
-                    "serialNumber": "FDO2112189M",
-                    "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Failed",
-                    "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
-                }
-            ],
-            "message": ""
-        }
-    },
-    "test_image_upgrade_stage_00072a": {
+    "test_image_stage_00910a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "DATA.lastOperDataObject.imageStaged == Success",
@@ -969,7 +879,28 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00073a": {
+    "test_image_stage_00910b": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "DATA.lastOperDataObject.imageStaged == Success",
+            "DATA.lastOperDataObject.serialNumber is present"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "serialNumber": "FDO21120U5D",
+                    "imageStaged": "Success"
+                }
+            ],
+            "message": ""
+        }
+    },
+    "test_image_stage_00920a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Using only for RETURN_CODE == 200"
@@ -989,7 +920,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00074a": {
+    "test_image_stage_00930a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "Using only for RETURN_CODE == 200"
@@ -1009,13 +940,47 @@
             "message": ""
         }
     },
-    "test_image_upgrade_stage_00075a": {
+    "test_image_stage_00940a": {
+        "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "MESSAGE == OK",
+            "DATA.lastOperDataObject.deviceName == leaf1",
+            "DATA.lastOperDataObject.imageStaged == null",
+            "DATA.lastOperDataObject.imageStagedPercent == 0",
+            "DATA.lastOperDataObject.ipAddress == 172.22.150.102",
+            "DATA.lastOperDataObject.policy == KR5M",
+            "DATA.lastOperDataObject.serialNumber == FDO21120U5D"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "deviceName": "leaf1",
+                    "imageStaged": "",
+                    "imageStagedPercent": 0,
+                    "ipAddress": "172.22.150.102",
+                    "policy": "KR5M",
+                    "serialNumber": "FDO21120U5D",
+                    "validated": "",
+                    "validatedPercent": 0,
+                    "upgrade": "",
+                    "upgradePercent": 0
+                }
+            ],
+            "message": ""
+        }
+    },
+    "test_image_stage_00940b": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "MESSAGE == OK",
             "DATA.lastOperDataObject.deviceName == leaf1",
             "DATA.lastOperDataObject.imageStaged == Success",
-            "DATA.lastOperDataObject.imageStagedPercent == 100",
+            "DATA.lastOperDataObject.imageStagedPercent == 110",
             "DATA.lastOperDataObject.ipAddress == 172.22.150.102",
             "DATA.lastOperDataObject.policy == KR5M",
             "DATA.lastOperDataObject.serialNumber == FDO21120U5D"
@@ -1033,7 +998,11 @@
                     "imageStagedPercent": 100,
                     "ipAddress": "172.22.150.102",
                     "policy": "KR5M",
-                    "serialNumber": "FDO21120U5D"
+                    "serialNumber": "FDO21120U5D",
+                    "validated": "",
+                    "validatedPercent": 100,
+                    "upgrade": "",
+                    "upgradePercent": 100
                 }
             ],
             "message": ""

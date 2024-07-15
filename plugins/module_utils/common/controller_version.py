@@ -81,6 +81,7 @@ class ControllerVersion:
         self.conversion = ConversionUtils()
         self.endpoint = EpVersion()
         self._response_data = None
+        self._rest_send = None
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)

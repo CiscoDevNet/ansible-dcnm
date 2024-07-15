@@ -31,10 +31,10 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-
-from .utils import (MockAnsibleModule, does_not_raise, image_policies_fixture,
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+    EpPolicies
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
+    MockAnsibleModule, does_not_raise, image_policies_fixture,
                     responses_image_policies)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
@@ -42,7 +42,7 @@ PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
 DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_UPGRADE + "image_policies.dcnm_send"
 
 
-def test_image_upgrade_image_policies_00001(image_policies) -> None:
+def test_image_policies_00000(image_policies) -> None:
     """
     Function
     - ImagePolicies.__init__
@@ -52,12 +52,11 @@ def test_image_upgrade_image_policies_00001(image_policies) -> None:
     """
     with does_not_raise():
         instance = image_policies
-    assert instance.ansible_module == MockAnsibleModule
     assert instance.class_name == "ImagePolicies"
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert instance.ep_policies.class_name == "EpPolicies"
 
 
-def test_image_upgrade_image_policies_00002(image_policies) -> None:
+def test_image_policies_00010(image_policies) -> None:
     """
     Function
     - ImagePolicies._init_properties
@@ -74,7 +73,7 @@ def test_image_upgrade_image_policies_00002(image_policies) -> None:
     assert instance.properties.get("result") is None
 
 
-def test_image_upgrade_image_policies_00010(monkeypatch, image_policies) -> None:
+def test_image_policies_00015(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -94,7 +93,7 @@ def test_image_upgrade_image_policies_00010(monkeypatch, image_policies) -> None
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
-    key = "test_image_upgrade_image_policies_00010a"
+    key = "test_image_policies_00010a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         return responses_image_policies(key)
@@ -120,7 +119,7 @@ def test_image_upgrade_image_policies_00010(monkeypatch, image_policies) -> None
     assert instance.rpm_images is None
 
 
-def test_image_upgrade_image_policies_00020(monkeypatch, image_policies) -> None:
+def test_image_policies_00020(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -132,7 +131,7 @@ def test_image_upgrade_image_policies_00020(monkeypatch, image_policies) -> None
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
-    key = "test_image_upgrade_image_policies_00020a"
+    key = "test_image_policies_00020a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -148,7 +147,7 @@ def test_image_upgrade_image_policies_00020(monkeypatch, image_policies) -> None
     assert instance.result.get("success") is True
 
 
-def test_image_upgrade_image_policies_00021(monkeypatch, image_policies) -> None:
+def test_image_policies_00021(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -163,7 +162,7 @@ def test_image_upgrade_image_policies_00021(monkeypatch, image_policies) -> None
     Endpoint
     - /bad/path
     """
-    key = "test_image_upgrade_image_policies_00021a"
+    key = "test_image_policies_00021a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -179,7 +178,7 @@ def test_image_upgrade_image_policies_00021(monkeypatch, image_policies) -> None
         instance.refresh()
 
 
-def test_image_upgrade_image_policies_00022(monkeypatch, image_policies) -> None:
+def test_image_policies_00022(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -194,7 +193,7 @@ def test_image_upgrade_image_policies_00022(monkeypatch, image_policies) -> None
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
-    key = "test_image_upgrade_image_policies_00022a"
+    key = "test_image_policies_00022a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -210,7 +209,7 @@ def test_image_upgrade_image_policies_00022(monkeypatch, image_policies) -> None
         instance.refresh()
 
 
-def test_image_upgrade_image_policies_00023(monkeypatch, image_policies) -> None:
+def test_image_policies_00023(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -232,7 +231,7 @@ def test_image_upgrade_image_policies_00023(monkeypatch, image_policies) -> None
     they are creating already exist on the controller.  Hence, we cannot
     fail_json when the length of DATA.lastOperDataObject is zero.
     """
-    key = "test_image_upgrade_image_policies_00023a"
+    key = "test_image_policies_00023a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -245,7 +244,7 @@ def test_image_upgrade_image_policies_00023(monkeypatch, image_policies) -> None
         instance.refresh()
 
 
-def test_image_upgrade_image_policies_00024(monkeypatch, image_policies) -> None:
+def test_image_policies_00024(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -264,7 +263,7 @@ def test_image_upgrade_image_policies_00024(monkeypatch, image_policies) -> None
     Endpoint
     - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
     """
-    key = "test_image_upgrade_image_policies_00024a"
+    key = "test_image_policies_00024a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -280,7 +279,7 @@ def test_image_upgrade_image_policies_00024(monkeypatch, image_policies) -> None
     assert image_policies.policy is None
 
 
-def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None:
+def test_image_policies_00025(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -299,7 +298,7 @@ def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None
     - This is to cover a check in ImagePolicies.refresh()
     - This scenario should happen only with a bug, or API change, on the controller.
     """
-    key = "test_image_upgrade_image_policies_00025a"
+    key = "test_image_policies_00025a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -315,7 +314,7 @@ def test_image_upgrade_image_policies_00025(monkeypatch, image_policies) -> None
         instance.refresh()
 
 
-def test_image_upgrade_image_policies_00026(monkeypatch, image_policies) -> None:
+def test_image_policies_00026(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.refresh
@@ -329,7 +328,7 @@ def test_image_upgrade_image_policies_00026(monkeypatch, image_policies) -> None
     - fail_json is called when result["success"] is False.
 
     """
-    key = "test_image_upgrade_image_policies_00026a"
+    key = "test_image_policies_00026a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -345,7 +344,7 @@ def test_image_upgrade_image_policies_00026(monkeypatch, image_policies) -> None
         instance.refresh()
 
 
-def test_image_upgrade_image_policies_00040(image_policies) -> None:
+def test_image_policies_00040(image_policies) -> None:
     """
     Function
     - ImagePolicies._get
@@ -365,7 +364,7 @@ def test_image_upgrade_image_policies_00040(image_policies) -> None:
         instance._get("imageName")  # pylint: disable=protected-access
 
 
-def test_image_upgrade_image_policies_00041(monkeypatch, image_policies) -> None:
+def test_image_policies_00041(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies._get
@@ -384,7 +383,7 @@ def test_image_upgrade_image_policies_00041(monkeypatch, image_policies) -> None
     - fail_json is called when _get() is called with a bad parameter FOO
     - An appropriate error message is provided.
     """
-    key = "test_image_upgrade_image_policies_00041a"
+    key = "test_image_policies_00041a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -403,7 +402,7 @@ def test_image_upgrade_image_policies_00041(monkeypatch, image_policies) -> None
         instance._get("FOO")  # pylint: disable=protected-access
 
 
-def test_image_upgrade_image_policies_00042(monkeypatch, image_policies) -> None:
+def test_image_policies_00042(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies._get
@@ -422,7 +421,7 @@ def test_image_upgrade_image_policies_00042(monkeypatch, image_policies) -> None
     - fail_json is not called
     - The expected policy information is returned.
     """
-    key = "test_image_upgrade_image_policies_00042a"
+    key = "test_image_policies_00042a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
@@ -449,7 +448,7 @@ def test_image_upgrade_image_policies_00042(monkeypatch, image_policies) -> None
     assert value["rpmimages"] == ""
 
 
-def test_image_upgrade_image_policies_00050(image_policies) -> None:
+def test_image_policies_00050(image_policies) -> None:
     """
     Function
     - ImagePolicies.all_policies
@@ -468,7 +467,7 @@ def test_image_upgrade_image_policies_00050(image_policies) -> None:
     assert value == {}
 
 
-def test_image_upgrade_image_policies_00051(monkeypatch, image_policies) -> None:
+def test_image_policies_00051(monkeypatch, image_policies) -> None:
     """
     Function
     - ImagePolicies.all_policies
@@ -481,7 +480,7 @@ def test_image_upgrade_image_policies_00051(monkeypatch, image_policies) -> None
     - fail_json is not called.
     - all_policies returns a dict containing the controller's policies.
     """
-    key = "test_image_upgrade_image_policies_00051a"
+    key = "test_image_policies_00051a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
         print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
