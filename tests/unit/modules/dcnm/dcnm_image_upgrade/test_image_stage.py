@@ -59,7 +59,7 @@ def test_image_stage_00000(image_stage) -> None:
             - ``__init__``
 
     ### Test
-    - Class attributes are initialized to expected values
+    - Class attributes are initialized to expected values.
     """
     with does_not_raise():
         instance = image_stage
@@ -71,6 +71,7 @@ def test_image_stage_00000(image_stage) -> None:
     assert instance.saved_response_current == {}
     assert instance.saved_result_current == {}
     assert isinstance(instance.serial_numbers_done, set)
+    assert isinstance(instance.serial_numbers_todo, set)
 
     assert instance.controller_version_instance.class_name == "ControllerVersion"
     assert instance.ep_image_stage.class_name == "EpImageStage"
