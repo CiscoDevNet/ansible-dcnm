@@ -610,10 +610,10 @@
         "TEST_NOTES": [
             "RETURN_CODE == 200",
             "DATA.lastOperDataObject.serialNumber is present and is this specific value",
-            "DATA.lastOperDataObject.imageStaged == Success",
-            "DATA.lastOperDataObject.imageStagedPercent is present",
-            "DATA.lastOperDataObject.ipAddress is present",
-            "DATA.lastOperDataObject.deviceName is present",
+            "DATA.lastOperDataObject[*].imageStaged == Success",
+            "DATA.lastOperDataObject[*].imageStagedPercent == 100",
+            "DATA.lastOperDataObject[*].ipAddress is present",
+            "DATA.lastOperDataObject[*].deviceName is present",
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present"
         ],
         "RETURN_CODE": 200,
@@ -647,9 +647,12 @@
             "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
             "FDO21120U5D imageStaged == Success",
             "FDO2112189M imageStage == Failed",
-            "DATA.lastOperDataObject.imageStagedPercent is present",
-            "DATA.lastOperDataObject.ipAddress is present",
-            "DATA.lastOperDataObject.deviceName is present"
+            "DATA.lastOperDataObject[0].imageStaged == Success",
+            "DATA.lastOperDataObject[1].imageStaged == Failed",
+            "DATA.lastOperDataObject[0].imageStagedPercent == 100",
+            "DATA.lastOperDataObject[1].imageStagedPercent == 90",
+            "DATA.lastOperDataObject[*].ipAddress is present",
+            "DATA.lastOperDataObject[*].deviceName is present"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -659,11 +662,11 @@
             "status": "SUCCESS",
             "lastOperDataObject": [
                 {
+                    "deviceName": "leaf1",
                     "serialNumber": "FDO21120U5D",
                     "imageStaged": "Success",
                     "imageStagedPercent": 100,
-                    "ipAddress": "172.22.150.102",
-                    "deviceName": "leaf1"
+                    "ipAddress": "172.22.150.102"
                 },
                 {
                     "deviceName": "cvd-2313-leaf",
@@ -694,11 +697,11 @@
             "status": "SUCCESS",
             "lastOperDataObject": [
                 {
+                    "deviceName": "leaf1",
                     "serialNumber": "FDO21120U5D",
                     "imageStaged": "Success",
                     "imageStagedPercent": 100,
-                    "ipAddress": "172.22.150.102",
-                    "deviceName": "leaf1"
+                    "ipAddress": "172.22.150.102"
                 },
                 {
                     "deviceName": "cvd-2313-leaf",
@@ -900,26 +903,6 @@
             "message": ""
         }
     },
-    "test_image_stage_00920a": {
-        "TEST_NOTES": [
-            "RETURN_CODE == 200",
-            "Using only for RETURN_CODE == 200"
-        ],
-        "RETURN_CODE": 200,
-        "METHOD": "GET",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
-        "MESSAGE": "OK",
-        "DATA": {
-            "status": "SUCCESS",
-            "lastOperDataObject": [
-                {
-                    "serialNumber": "FDO21120U5D",
-                    "imageStaged": "Success"
-                }
-            ],
-            "message": ""
-        }
-    },
     "test_image_stage_00930a": {
         "TEST_NOTES": [
             "RETURN_CODE == 200",
@@ -1008,7 +991,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00003a": {
+    "test_image_validate_00200a": {
         "TEST_NOTES": [
             "FDO2112189M validated: none",
             "FDO211218AX validated: none",
@@ -1025,207 +1008,33 @@
             "lastOperDataObject": [
                 {
                     "serialNumber": "FDO2112189M",
-                    "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "none",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "none"
                 },
                 {
                     "serialNumber": "FDO211218AX",
-                    "deviceName": "cvd-2312-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "none",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.107",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.107",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2312-leaf",
-                    "id": 3,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "none"
                 },
                 {
                     "serialNumber": "FDO211218B5",
-                    "deviceName": "cvd-2314-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "none",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.109",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39840,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.109",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2314-leaf",
-                    "id": 4,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "none"
                 },
                 {
                     "serialNumber": "FDO211218FV",
-                    "deviceName": "cvd-1314-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:40",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.105",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 153350,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.105",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-1314-leaf",
-                    "id": 5,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "Success"
                 },
                 {
                     "serialNumber": "FDO211218GC",
-                    "deviceName": "cvd-1312-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-23 01:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.103",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 150610,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.103",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-1312-leaf",
-                    "id": 6,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "Success"
                 }
             ],
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00004a": {
+    "test_image_validate_00300a": {
         "TEST_NOTES": [
             "FDO21120U5D validated: Success",
-            "FDO2112189M validated: Failed"
+            "FDO2112189M validated: Failed",
+            "FDO2112189M: requires deviceName, ipAddress, used in the ControllerResponseError message"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -1236,90 +1045,27 @@
             "lastOperDataObject": [
                 {
                     "serialNumber": "FDO21120U5D",
-                    "deviceName": "leaf1",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
-                    "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:20",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.102",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 145740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.102",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "leaf1",
-                    "id": 1,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "Success"
                 },
                 {
                     "serialNumber": "FDO2112189M",
-                    "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
                     "validated": "Failed",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 50,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "deviceName": "cvd-2313-leaf",
+                    "ipAddress": "172.22.150.108"
                 }
             ],
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00005a": {
+    "test_image_validate_00400a": {
         "TEST_NOTES": [
-            "FDO21120U5D validated: Success",
-            "FDO2112189M validated: Success"
+            "RETURN_CODE == 200",
+            "DATA.lastOperDataObject[*].serialNumber is present and is this specific value",
+            "DATA.lastOperDataObject[*].validated == Success",
+            "DATA.lastOperDataObject[*].validatedPercent == 100",
+            "DATA.lastOperDataObject[*].ipAddress is present",
+            "DATA.lastOperDataObject[*].deviceName is present",
+            "Entries for both serial numbers FDO21120U5D FDO2112189M are present"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -1329,91 +1075,32 @@
             "status": "SUCCESS",
             "lastOperDataObject": [
                 {
-                    "serialNumber": "FDO21120U5D",
                     "deviceName": "leaf1",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
+                    "serialNumber": "FDO21120U5D",
                     "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:20",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.102",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
                     "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 145740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.102",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "leaf1",
-                    "id": 1,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "ipAddress": "172.22.150.102"
                 },
                 {
-                    "serialNumber": "FDO2112189M",
                     "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
+                    "serialNumber": "FDO2112189M",
                     "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
                     "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "ipAddress": "172.22.150.108"
                 }
             ],
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00006a": {
+    "test_image_validate_00410a": {
         "TEST_NOTES": [
-            "FDO21120U5D validated: Success",
-            "FDO2112189M validated: Failed"
+            "RETURN_CODE == 200",
+            "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
+            "FDO21120U5D validated == Success",
+            "FDO2112189M validated == Failed",
+            "DATA.lastOperDataObject.validatedPercent is present",
+            "DATA.lastOperDataObject.ipAddress is present",
+            "DATA.lastOperDataObject.deviceName is present"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -1423,93 +1110,34 @@
             "status": "SUCCESS",
             "lastOperDataObject": [
                 {
-                    "serialNumber": "FDO21120U5D",
                     "deviceName": "leaf1",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
+                    "serialNumber": "FDO21120U5D",
                     "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:20",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.102",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
                     "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 145740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.102",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "leaf1",
-                    "id": 1,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "ipAddress": "172.22.150.102"
                 },
                 {
-                    "serialNumber": "FDO2112189M",
                     "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
+                    "serialNumber": "FDO2112189M",
                     "validated": "Failed",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 90,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validatedPercent": 90,
+                    "ipAddress": "172.22.150.108"
                 }
             ],
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00007a": {
+    "test_image_validate_00420a": {
         "TEST_NOTES": [
+            "RETURN_CODE == 200",
+            "Entries for both serial numbers FDO21120U5D FDO2112189M are present",
             "FDO21120U5D validated: Success",
-            "FDO21120U5D imageStagedPercent: 100",
             "FDO2112189M validated: In-Progress",
-            "FDO2112189M imageStagedPercent: 50"
+            "FDO2112189M imageStage == In-Progress",
+            "FDO21120U5D validatedPercent: 100",
+            "FDO2112189M validatedPercent: 50",
+            "DATA.lastOperDataObject[*].ipAddress is present",
+            "DATA.lastOperDataObject[*].deviceName is present"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -1519,91 +1147,27 @@
             "status": "SUCCESS",
             "lastOperDataObject": [
                 {
-                    "serialNumber": "FDO21120U5D",
                     "deviceName": "leaf1",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
+                    "serialNumber": "FDO21120U5D",
                     "validated": "Success",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:20",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.102",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
                     "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 145740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.102",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "leaf1",
-                    "id": 1,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "ipAddress": "172.22.150.102"
                 },
                 {
-                    "serialNumber": "FDO2112189M",
                     "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
-                    "imageStaged": "Success",
+                    "serialNumber": "FDO2112189M",
                     "validated": "In-Progress",
-                    "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 50,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validatedPercent": 50,
+                    "ipAddress": "172.22.150.108"
                 }
             ],
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00008a": {
+    "test_image_validate_00500a": {
         "TEST_NOTES": [
-            "FDO21120U5D imageStaged, upgrade, validated: Success",
-            "FDO2112189M imageStaged, upgrade, validated: Success"
+            "FDO21120U5D upgrade, validated, imageStaged == Success",
+            "FDO2112189M upgrade, validated, imageStaged == Success"
         ],
         "RETURN_CODE": 200,
         "METHOD": "GET",
@@ -1614,87 +1178,78 @@
             "lastOperDataObject": [
                 {
                     "serialNumber": "FDO21120U5D",
-                    "deviceName": "leaf1",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
                     "imageStaged": "Success",
-                    "validated": "Success",
                     "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-19 02:20",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "easy",
-                    "ipAddress": "172.22.150.102",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 145740,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.102",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "leaf1",
-                    "id": 1,
-                    "group": "easy",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "Success"
                 },
                 {
                     "serialNumber": "FDO2112189M",
-                    "deviceName": "cvd-2313-leaf",
-                    "version": "10.2(5)",
-                    "policy": "KR5M",
-                    "status": "In-Sync",
-                    "reason": "Upgrade",
                     "imageStaged": "Success",
-                    "validated": "Success",
                     "upgrade": "Success",
-                    "upgGroups": "null",
-                    "mode": "Normal",
-                    "systemMode": "Normal",
-                    "vpcRole": "null",
-                    "vpcPeer": "null",
-                    "role": "leaf",
-                    "lastUpgAction": "2023-Oct-06 03:43",
-                    "model": "N9K-C93180YC-EX",
-                    "fabric": "hard",
-                    "ipAddress": "172.22.150.108",
-                    "issuAllowed": "",
-                    "statusPercent": 100,
-                    "imageStagedPercent": 100,
-                    "validatedPercent": 100,
-                    "upgradePercent": 100,
-                    "modelType": 0,
-                    "vdcId": 0,
-                    "ethswitchid": 39890,
-                    "platform": "N9K",
-                    "vpc_role": "null",
-                    "ip_address": "172.22.150.108",
-                    "peer": "null",
-                    "vdc_id": -1,
-                    "sys_name": "cvd-2313-leaf",
-                    "id": 2,
-                    "group": "hard",
-                    "fcoEEnabled": "False",
-                    "mds": "False"
+                    "validated": "Success"
                 }
             ],
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00009a": {
+    "test_image_validate_00510a": {
+        "TEST_NOTES": [
+            "FDO21120U5D upgrade, validated, imageStaged == Success",
+            "FDO2112189M upgrade, imageStaged == Success",
+            "FDO2112189M validated == In-Progress"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "serialNumber": "FDO21120U5D",
+                    "imageStaged": "Success",
+                    "upgrade": "Success",
+                    "validated": "Success"
+                },
+                {
+                    "serialNumber": "FDO2112189M",
+                    "imageStaged": "Success",
+                    "upgrade": "Success",
+                    "validated": "In-Progress"
+                }
+            ],
+            "message": ""
+        }
+    },
+    "test_image_validate_00900a": {
+        "TEST_NOTES": [
+            "FDO21120U5D upgrade, validated, imageStaged == Success",
+            "FDO2112189M upgrade, validated. imageStaged == Success"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
+        "MESSAGE": "OK",
+        "DATA": {
+            "status": "SUCCESS",
+            "lastOperDataObject": [
+                {
+                    "serialNumber": "FDO21120U5D",
+                    "imageStaged": "Success",
+                    "upgrade": "Success",
+                    "validated": "Success"
+                },
+                {
+                    "serialNumber": "FDO2112189M",
+                    "imageStaged": "Success",
+                    "upgrade": "Success",
+                    "validated": "Success"
+                }
+            ],
+            "message": ""
+        }
+    },
+    "test_image_validate_00009a": {
         "TEST_NOTES": [
             "FDO21120U5D imageStaged, upgrade, validated: Success",
             "FDO2112189M imageStaged, upgrade: Success",
@@ -1789,7 +1344,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00020a": {
+    "test_image_validate_00020a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1879,7 +1434,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00023a": {
+    "test_image_validate_00023a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",
@@ -1969,7 +1524,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_validate_00024a": {
+    "test_image_validate_00024a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu",

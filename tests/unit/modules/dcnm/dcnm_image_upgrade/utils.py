@@ -151,7 +151,7 @@ def issu_details_by_serial_number_fixture() -> SwitchIssuDetailsBySerialNumber:
     """
     mock SwitchIssuDetailsBySerialNumber
     """
-    return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
+    return SwitchIssuDetailsBySerialNumber()
 
 
 @pytest.fixture(name="switch_details")
@@ -197,6 +197,16 @@ def responses_ep_image_stage(key: str) -> Dict[str, str]:
     response_file = "responses_ep_image_stage"
     response = load_fixture(response_file).get(key)
     print(f"responses_ep_image_stage: {key} : {response}")
+    return response
+
+
+def responses_ep_image_validate(key: str) -> Dict[str, str]:
+    """
+    Return EpImageValidate controller responses
+    """
+    response_file = "responses_ep_image_validate"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_image_validate: {key} : {response}")
     return response
 
 
@@ -259,16 +269,6 @@ def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     verb = response.get("METHOD")
     print(f"{key} : {verb} : {response}")
     return {"response": response, "verb": verb}
-
-
-def responses_image_validate(key: str) -> Dict[str, str]:
-    """
-    Return ImageValidate controller responses
-    """
-    response_file = "image_upgrade_responses_ImageValidate"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_validate: {key} : {response}")
-    return response
 
 
 def responses_switch_details(key: str) -> Dict[str, str]:
