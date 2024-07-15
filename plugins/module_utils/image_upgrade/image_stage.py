@@ -158,9 +158,11 @@ class ImageStage:
         self.issu_detail = SwitchIssuDetailsBySerialNumber()
         self.wait_for_controller_done = WaitForControllerDone()
 
-        self._serial_numbers = None
         self._check_interval = 10  # seconds
         self._check_timeout = 1800  # seconds
+        self._rest_send = None
+        self._results = None
+        self._serial_numbers = None
 
         msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
@@ -200,6 +202,11 @@ class ImageStage:
         """
         Populate self.controller_version with the running controller version.
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         self.controller_version_instance.refresh()
         self.controller_version = self.controller_version_instance.version
 
@@ -208,6 +215,11 @@ class ImageStage:
         If the image is already staged on a switch, remove that switch's
         serial number from the list of serial numbers to stage.
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         serial_numbers = copy.copy(self.serial_numbers)
         self.issu_detail.refresh()
         for serial_number in serial_numbers:
@@ -215,32 +227,44 @@ class ImageStage:
             if self.issu_detail.image_staged == "Success":
                 self.serial_numbers.remove(serial_number)
 
-    def register_unchanged_result(self, msg) -> None:
+    def register_unchanged_result(self, response_message) -> None:
         """
         ### Summary
         Register a successful unchanged result with the results object.
         """
         # pylint: disable=no-member
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.diff_current = {}
-        self.results.response_current = {"DATA": [{"key": "ALL", "value": msg}]}
+        self.results.response_current = {
+            "DATA": [{"key": "ALL", "value": response_message}]
+        }
         self.results.result_current = {"success": True, "changed": False}
-        self.results.response_data = {"response": msg}
+        self.results.response_data = {"response": response_message}
         self.results.state = self.rest_send.state
         self.results.register_task_result()
 
     def validate_serial_numbers(self) -> None:
         """
         ### Summary
-        Fail if the image_staged state for any serial_number
-        is Failed.
+        Fail if "imageStaged" is "Failed" for any serial number.
 
         ### Raises
         -   ``ControllerResponseError`` if:
-                -   image_staged is Failed for any serial_number.
+                -   "imageStaged" is "Failed" for any serial_number.
         """
         method_name = inspect.stack()[0][3]
+
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         self.issu_detail.refresh()
         for serial_number in self.serial_numbers:
             self.issu_detail.filter = serial_number
@@ -260,6 +284,9 @@ class ImageStage:
         Verify mandatory parameters are set before calling commit.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
         # pylint: disable=no-member
         if self.rest_send is None:
@@ -281,6 +308,11 @@ class ImageStage:
         ### Summary
         Build the payload for the image stage request.
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         self.payload = {}
         self._populate_controller_version()
 
@@ -360,7 +392,7 @@ class ImageStage:
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed. "
+            msg += "failed. "
             msg += f"Controller response: {self.rest_send.response_current}"
             raise ControllerResponseError(msg)
 
@@ -392,6 +424,11 @@ class ImageStage:
                 -   ``item_type`` is not a valid item type.
                 -   The action times out.
         """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         try:
             self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
             self.wait_for_controller_done.item_type = "serial_number"
@@ -417,6 +454,9 @@ class ImageStage:
                 -   Image stage fails for any switch.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
         self.serial_numbers_done = set()
         timeout = self.check_timeout
