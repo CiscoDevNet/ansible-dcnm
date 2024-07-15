@@ -83,6 +83,12 @@ def test_image_stage_00000(image_stage) -> None:
     assert instance.ep_image_stage.path == module_path
     assert instance.ep_image_stage.verb == "POST"
 
+    # properties
+    assert instance.check_interval == 10
+    assert instance.check_timeout == 1800
+    assert instance.rest_send is None
+    assert instance.results is None
+    assert instance.serial_numbers is None
 
 @pytest.mark.parametrize(
     "key, expected",
@@ -113,6 +119,7 @@ def test_image_stage_00100(image_stage, key, expected) -> None:
     """
 
     def responses():
+        # ImageStage()._populate_controller_version
         yield responses_ep_version(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -162,6 +169,7 @@ def test_image_stage_00200(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -224,6 +232,7 @@ def test_image_stage_00300(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage().validate_serial_numbers
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -259,24 +268,24 @@ def test_image_stage_00400(image_stage) -> None:
     -   ``ImageStage``
             - ``_wait_for_image_stage_to_complete``
 
+    ### Summary
+    Verify proper behavior of _wait_for_image_stage_to_complete when
+    ``imageStaged`` is "Success" for all serial numbers.
+
     ### Setup
     -   ``responses_ep_issu()`` returns 200 response indicating that
         ``imageStaged`` is "Success" for all serial numbers in the
         serial_numbers list.
 
-    ### Summary
-    Verify proper behavior of _wait_for_image_stage_to_complete when
-    imageStaged is "Success" for all serial numbers.
-
     ### Test
-    -   imageStaged == "Success" for all serial numbers so
+    -   "imageStaged" == "Success" for all serial numbers so
         ``ControllerResponseError`` is not raised.
-    -   instance.serial_numbers_done is a set().
-    -   instance.serial_numbers_done has length 2.
-    -   instance.serial_numbers_done == module.serial_numbers.
+    -   ``serial_numbers_done`` is a set().
+    -   ``serial_numbers_done`` has length 2.
+    -   ``serial_numbers_done`` == ``serial_numbers``.
 
     ### Description
-    ``_wait_for_image_stage_to_complete`` looks at the imageStaged status for
+    ``_wait_for_image_stage_to_complete`` looks at the "imageStaged" status for
     each serial number and waits for it to be "Success" or "Failed".
     In the case where all serial numbers are "Success", the module returns.
     In the case where any serial number is "Failed", the module raises
@@ -286,6 +295,7 @@ def test_image_stage_00400(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -348,6 +358,7 @@ def test_image_stage_00410(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -389,13 +400,13 @@ def test_image_stage_00420(image_stage) -> None:
 
     ### Summary
     Verify proper behavior of ``_wait_for_image_stage_to_complete`` when
-    timeout is reached for one serial number (i.e. imageStaged is
-    "In-Progress") and imageStaged is "Success" for one serial number.
+    timeout is reached for one serial number (i.e. ``imageStaged`` is
+    "In-Progress") and ``imageStaged`` is "Success" for one serial number.
 
     ### Setup
     -   ``responses_ep_issu()`` returns 200 response indicating that
         ``imageStaged`` is "Success" for one of the serial numbers in the
-        serial_numbers list and "In-Pregress" for the other.
+        serial_numbers list and "In-Progress" for the other.
 
     ### Test
     -   ``serial_numbers_done`` is a set().
@@ -414,6 +425,7 @@ def test_image_stage_00420(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage()._wait_for_image_stage_to_complete
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -488,6 +500,7 @@ def test_image_stage_00500(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage().wait_for_controller
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -552,6 +565,7 @@ def test_image_stage_00510(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage().wait_for_controller
         yield responses_ep_issu(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -732,15 +746,19 @@ def test_image_stage_00900(image_stage, serial_numbers_is_set, expected) -> None
 
     ### Test
     -   ``ValueError`` is raised when serial_numbers is not set.
-    -   ``ValueError`` is not called when serial_numbers is set.
+    -   ``ValueError`` is not raised when serial_numbers is set.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
+        # ImageStage().validate_serial_numbers
         yield responses_ep_issu(key)
+        # ImageStage()._populate_controller_version
         yield responses_ep_version(key)
+        # RestSend.commit_normal_mode
         yield responses_ep_image_stage(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -764,7 +782,6 @@ def test_image_stage_00900(image_stage, serial_numbers_is_set, expected) -> None
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
 
-    instance = image_stage
     if serial_numbers_is_set:
         instance.serial_numbers = ["FDO21120U5D"]
     with expected:
@@ -806,9 +823,13 @@ def test_image_stage_00910(
     """
 
     def responses():
+        # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
+        # ImageStage().validate_serial_numbers
         yield responses_ep_issu(key)
+        # ImageStage()._populate_controller_version
         yield responses_ep_version(key)
+        # RestSend.commit_normal_mode
         yield responses_ep_image_stage(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -848,9 +869,6 @@ def test_image_stage_00920(image_stage) -> None:
     appropriately when serial_numbers is empty.
 
     ### Setup
-    - ``responses_ep_issu()`` returns 200 responses.
-    - ``responses_ep_version()`` returns a 200 response.
-    - ``responses_ep_image_stage()`` returns a 200 response.
     - ``serial_numbers`` is set to [] (empty list)
 
     ### Test
@@ -867,10 +885,7 @@ def test_image_stage_00920(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_ep_issu(key)
-        yield responses_ep_issu(key)
-        yield responses_ep_version(key)
-        yield responses_ep_image_stage(key)
+        yield None
 
     gen_responses = ResponseGenerator(responses())
 
@@ -938,9 +953,13 @@ def test_image_stage_00930(image_stage) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # ImageStage().prune_serial_numbers
         yield responses_ep_issu(key)
+        # ImageStage().validate_serial_numbers
         yield responses_ep_issu(key)
+        # ImageStage()._populate_controller_version
         yield responses_ep_version(key)
+        # RestSend.commit_normal_mode
         yield responses_ep_image_stage(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -1005,8 +1024,7 @@ def test_image_stage_00940(image_stage) -> None:
         yield responses_ep_issu(key_a)
         # ImageStage().wait_for_controller()
         yield responses_ep_issu(key_a)
-        # ImageStage().build_payload() ->
-        #     ControllerVersion()._populate_controller_version()
+        # ImageStage()._populate_controller_version
         yield responses_ep_version(key_a)
         # ImageStage().commit() -> ImageStage().rest_send.commit()
         yield responses_ep_image_stage(key_a)
