@@ -73,7 +73,7 @@ class ImagePolicies:
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.conversion = ConversionUtils()
-        self.endpoint = EpPolicies()
+        self.ep_policies = EpPolicies()
         self.data = {}
         self._all_policies = None
         self._policy_name = None
@@ -124,14 +124,10 @@ class ImagePolicies:
         # We always want to get the controller's current image policy
         # state. We set check_mode to False here so the request will be
         # sent to the controller.
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"endpoint.verb: {self.endpoint.verb}, "
-        msg += f"endpoint.path: {self.endpoint.path}, "
-        self.log.debug(msg)
         self.rest_send.save_settings()
         self.rest_send.check_mode = False
-        self.rest_send.path = self.endpoint.path
-        self.rest_send.verb = self.endpoint.verb
+        self.rest_send.path = self.ep_policies.path
+        self.rest_send.verb = self.ep_policies.verb
         self.rest_send.commit()
         self.rest_send.restore_settings()
 

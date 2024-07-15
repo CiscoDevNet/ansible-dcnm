@@ -33,14 +33,12 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
 
 from .utils import (does_not_raise, image_validate_fixture,
                     issu_details_by_serial_number_fixture,
-                    responses_image_validate, responses_switch_issu_details)
+                    responses_image_validate, responses_ep_issu)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
@@ -54,7 +52,7 @@ PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT = (
 )
 
 
-def test_image_upgrade_validate_00001(image_validate) -> None:
+def test_image_validate_00000(image_validate) -> None:
     """
     Function
     - __init__
@@ -64,17 +62,17 @@ def test_image_upgrade_validate_00001(image_validate) -> None:
     """
     instance = image_validate
     assert instance.class_name == "ImageValidate"
-    assert isinstance(instance.endpoints, ApiEndpoints)
-    assert isinstance(instance.issu_detail, SwitchIssuDetailsBySerialNumber)
+    assert instance.ep_image_validate.class_name == "EpImageValidate"
+    assert instance.issu_detail.class_name == "SwitchIssuDetailsBySerialNumber"
     assert isinstance(instance.serial_numbers_done, set)
     assert (
-        instance.path
+        instance.ep_image_validate.path
         == "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image"
     )
-    assert instance.verb == "POST"
+    assert instance.ep_image_validate.verb == "POST"
 
 
-def test_image_upgrade_validate_00002(image_validate) -> None:
+def test_image_validate_00010(image_validate) -> None:
     """
     Function
     - _init_properties
@@ -93,7 +91,7 @@ def test_image_upgrade_validate_00002(image_validate) -> None:
     assert instance.properties.get("serial_numbers") == []
 
 
-def test_image_upgrade_validate_00003(
+def test_image_validate_00100(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -117,8 +115,8 @@ def test_image_upgrade_validate_00003(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00003a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00003a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -140,7 +138,7 @@ def test_image_upgrade_validate_00003(
     assert "FDO211218GC" not in instance.serial_numbers
 
 
-def test_image_upgrade_validate_00004(
+def test_image_validate_00200(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -159,8 +157,8 @@ def test_image_upgrade_validate_00004(
     instance = image_validate
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00004a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00004a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -177,7 +175,7 @@ def test_image_upgrade_validate_00004(
         instance.validate_serial_numbers()
 
 
-def test_image_upgrade_validate_00005(
+def test_image_validate_00300(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -198,8 +196,8 @@ def test_image_upgrade_validate_00005(
     """
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00005a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00005a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -218,7 +216,7 @@ def test_image_upgrade_validate_00005(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_upgrade_validate_00006(
+def test_image_validate_00310(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -241,8 +239,8 @@ def test_image_upgrade_validate_00006(
     """
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00006a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00006a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -271,7 +269,7 @@ def test_image_upgrade_validate_00006(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_upgrade_validate_00007(
+def test_image_validate_00320(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -291,8 +289,8 @@ def test_image_upgrade_validate_00007(
     """
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00007a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00007a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -320,7 +318,7 @@ def test_image_upgrade_validate_00007(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_upgrade_validate_00008(
+def test_image_validate_00400(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -345,8 +343,8 @@ def test_image_upgrade_validate_00008(
     """
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00008a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00008a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -365,7 +363,7 @@ def test_image_upgrade_validate_00008(
     assert "FDO2112189M" in instance.serial_numbers_done
 
 
-def test_image_upgrade_validate_00009(
+def test_image_validate_00410(
     monkeypatch, image_validate, issu_details_by_serial_number
 ) -> None:
     """
@@ -385,8 +383,8 @@ def test_image_upgrade_validate_00009(
     """
 
     def mock_dcnm_send_issu_details(*args) -> Dict[str, Any]:
-        key = "test_image_upgrade_validate_00009a"
-        return responses_switch_issu_details(key)
+        key = "test_image_validate_00009a"
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
 
@@ -414,7 +412,7 @@ def test_image_upgrade_validate_00009(
     assert "FDO2112189M" not in instance.serial_numbers_done
 
 
-def test_image_upgrade_validate_00022(image_validate) -> None:
+def test_image_validate_00500(image_validate) -> None:
     """
     Function
     - commit
@@ -439,7 +437,7 @@ def test_image_upgrade_validate_00022(image_validate) -> None:
     assert instance.result == [{"success": True}]
 
 
-def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
+def test_image_validate_00510(monkeypatch, image_validate) -> None:
     """
     Function
     - commit
@@ -451,14 +449,14 @@ def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
     Test
     -   fail_json is called on 501 response from controller
     """
-    key = "test_image_upgrade_validate_00023a"
+    key = "test_image_validate_00023a"
 
     # Needed only for the 501 return code
     def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_validate(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
+        return responses_ep_issu(key)
 
     monkeypatch.setattr(
         PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
@@ -477,7 +475,7 @@ def test_image_upgrade_validate_00023(monkeypatch, image_validate) -> None:
         instance.commit()
 
 
-def test_image_upgrade_validate_00024(monkeypatch, image_validate) -> None:
+def test_image_validate_00520(monkeypatch, image_validate) -> None:
     """
     Function
     - commit
@@ -490,13 +488,13 @@ def test_image_upgrade_validate_00024(monkeypatch, image_validate) -> None:
     -   instance.diff is set to the expected value
     -   fail_json is not called
     """
-    key = "test_image_upgrade_validate_00024a"
+    key = "test_image_validate_00024a"
 
     def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
         return responses_image_validate(key)
 
     def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_switch_issu_details(key)
+        return responses_ep_issu(key)
 
     def mock_wait_for_image_validate_to_complete(*args) -> None:
         instance.serial_numbers_done = {"FDO21120U5D"}
@@ -545,7 +543,7 @@ MATCH_00030 += "of switch serial numbers."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
     ],
 )
-def test_image_upgrade_validate_00030(image_validate, value, expected) -> None:
+def test_image_validate_00600(image_validate, value, expected) -> None:
     """
     Function
     - serial_numbers.setter
@@ -578,7 +576,7 @@ MATCH_00040 += "instance.non_disruptive must be a boolean."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
     ],
 )
-def test_image_upgrade_validate_00040(image_validate, value, expected) -> None:
+def test_image_validate_00700(image_validate, value, expected) -> None:
     """
     Function
     - non_disruptive.setter
@@ -611,7 +609,7 @@ MATCH_00050 += "must be a positive integer or zero."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
     ],
 )
-def test_image_upgrade_validate_00050(image_validate, value, expected) -> None:
+def test_image_validate_00800(image_validate, value, expected) -> None:
     """
     Function
     - check_interval.setter
@@ -644,7 +642,7 @@ MATCH_00060 += "must be a positive integer or zero."
         ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
     ],
 )
-def test_image_upgrade_validate_00060(image_validate, value, expected) -> None:
+def test_image_validate_00900(image_validate, value, expected) -> None:
     """
     Function
     - check_timeout.setter

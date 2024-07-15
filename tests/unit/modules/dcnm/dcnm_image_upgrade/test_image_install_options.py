@@ -31,8 +31,6 @@ from typing import Any, Dict
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
 
 from .utils import (MockAnsibleModule, does_not_raise,
                     image_install_options_fixture,
@@ -43,28 +41,29 @@ PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
 DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_UPGRADE + "install_options.dcnm_send"
 
 
-def test_image_upgrade_install_options_00001(image_install_options) -> None:
+def test_image_install_options_00000(image_install_options) -> None:
     """
     Function
     - __init__
 
     Test
-    - fail_json is not called
+    - Exceptions are not raised.
     - Class attributes are initialized to expected values
     """
     with does_not_raise():
         instance = image_install_options
-    assert instance.ansible_module == MockAnsibleModule
+
     assert instance.class_name == "ImageInstallOptions"
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance.ep_install_options.class_name == "EpInstallOptions"
     path = "/appcenter/cisco/ndfc/api/v1/imagemanagement"
     path += "/rest/imageupgrade/install-options"
-    assert instance.path == path
-    assert instance.verb == "POST"
+    assert instance.ep_install_options.path == path
+    assert instance.ep_install_options.verb == "POST"
     assert instance.compatibility_status == {}
 
 
-def test_image_upgrade_install_options_00002(image_install_options) -> None:
+def test_image_install_options_00010(image_install_options) -> None:
     """
     Function
     - _init_properties
@@ -74,23 +73,18 @@ def test_image_upgrade_install_options_00002(image_install_options) -> None:
     """
     with does_not_raise():
         instance = image_install_options
-    assert isinstance(instance.properties, dict)
-    assert instance.properties.get("epld") is False
-    assert instance.properties.get("epld_modules") is None
-    assert instance.properties.get("issu") is True
-    assert instance.properties.get("package_install") is False
-    assert instance.properties.get("policy_name") is None
-    assert instance.properties.get("response") == []
-    assert instance.properties.get("response_current") == {}
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("result") == []
-    assert instance.properties.get("result_current") == {}
-    assert instance.properties.get("serial_number") is None
-    assert instance.properties.get("timeout") == 300
-    assert instance.properties.get("unit_test") is False
+    assert instance.epld is False
+    assert instance.epld_modules is None
+    assert instance.issu is True
+    assert instance.package_install is False
+    assert instance.policy_name is None
+    assert instance.response_data is None
+    assert instance.rest_send is None
+    assert instance.results is None
+    assert instance.serial_number is None
 
 
-def test_image_upgrade_install_options_00004(image_install_options) -> None:
+def test_image_install_options_00004(image_install_options) -> None:
     """
     Function
     - refresh
@@ -109,7 +103,7 @@ def test_image_upgrade_install_options_00004(image_install_options) -> None:
         image_install_options.refresh()
 
 
-def test_image_upgrade_install_options_00005(
+def test_image_install_options_00005(
     monkeypatch, image_install_options
 ) -> None:
     """
@@ -123,7 +117,7 @@ def test_image_upgrade_install_options_00005(
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_install_options_00005a"
+        key = "test_image_install_options_00005a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -157,7 +151,7 @@ def test_image_upgrade_install_options_00005(
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00006(
+def test_image_install_options_00006(
     monkeypatch, image_install_options
 ) -> None:
     """
@@ -169,7 +163,7 @@ def test_image_upgrade_install_options_00006(
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_install_options_00006a"
+        key = "test_image_install_options_00006a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -186,7 +180,7 @@ def test_image_upgrade_install_options_00006(
         instance.refresh()
 
 
-def test_image_upgrade_install_options_00007(
+def test_image_install_options_00007(
     monkeypatch, image_install_options
 ) -> None:
     """
@@ -209,7 +203,7 @@ def test_image_upgrade_install_options_00007(
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_install_options_00007a"
+        key = "test_image_install_options_00007a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -245,7 +239,7 @@ def test_image_upgrade_install_options_00007(
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00008(
+def test_image_install_options_00008(
     monkeypatch, image_install_options
 ) -> None:
     """
@@ -268,7 +262,7 @@ def test_image_upgrade_install_options_00008(
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_install_options_00008a"
+        key = "test_image_install_options_00008a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -308,7 +302,7 @@ def test_image_upgrade_install_options_00008(
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00009(
+def test_image_install_options_00009(
     monkeypatch, image_install_options
 ) -> None:
     """
@@ -331,7 +325,7 @@ def test_image_upgrade_install_options_00009(
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_install_options_00009a"
+        key = "test_image_install_options_00009a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -371,7 +365,7 @@ def test_image_upgrade_install_options_00009(
     assert instance.result_current.get("success") is True
 
 
-def test_image_upgrade_install_options_00010(
+def test_image_install_options_00010(
     monkeypatch, image_install_options
 ) -> None:
     """
@@ -396,7 +390,7 @@ def test_image_upgrade_install_options_00010(
     """
 
     def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_install_options_00010a"
+        key = "test_image_install_options_00010a"
         return responses_image_install_options(key)
 
     monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
@@ -414,7 +408,7 @@ def test_image_upgrade_install_options_00010(
         instance.refresh()
 
 
-def test_image_upgrade_install_options_00011(image_install_options) -> None:
+def test_image_install_options_00011(image_install_options) -> None:
     """
     Function
     - refresh
@@ -456,7 +450,7 @@ def test_image_upgrade_install_options_00011(image_install_options) -> None:
     assert instance.response_data.get("errMessage") == ""
 
 
-def test_image_upgrade_install_options_00020(image_install_options) -> None:
+def test_image_install_options_00020(image_install_options) -> None:
     """
     Function
     - build_payload
@@ -479,7 +473,7 @@ def test_image_upgrade_install_options_00020(image_install_options) -> None:
     assert instance.payload.get("packageInstall") is False
 
 
-def test_image_upgrade_install_options_00021(image_install_options) -> None:
+def test_image_install_options_00021(image_install_options) -> None:
     """
     Function
     - build_payload
@@ -506,7 +500,7 @@ def test_image_upgrade_install_options_00021(image_install_options) -> None:
     assert instance.payload.get("packageInstall") is True
 
 
-def test_image_upgrade_install_options_00022(image_install_options) -> None:
+def test_image_install_options_00022(image_install_options) -> None:
     """
     Function
     - issu setter
@@ -523,7 +517,7 @@ def test_image_upgrade_install_options_00022(image_install_options) -> None:
         instance.issu = "FOO"
 
 
-def test_image_upgrade_install_options_00023(image_install_options) -> None:
+def test_image_install_options_00023(image_install_options) -> None:
     """
     Function
     - epld setter
@@ -540,7 +534,7 @@ def test_image_upgrade_install_options_00023(image_install_options) -> None:
         instance.epld = "FOO"
 
 
-def test_image_upgrade_install_options_00024(image_install_options) -> None:
+def test_image_install_options_00024(image_install_options) -> None:
     """
     Function
     - package_install setter
@@ -557,7 +551,7 @@ def test_image_upgrade_install_options_00024(image_install_options) -> None:
         instance.package_install = "FOO"
 
 
-def test_image_upgrade_install_options_00070(image_install_options) -> None:
+def test_image_install_options_00070(image_install_options) -> None:
     """
     Function
     - refresh
@@ -593,7 +587,7 @@ MATCH_00080 += r"instance\.policy_name must be a string. Got"
         ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00080), True),
     ],
 )
-def test_image_upgrade_install_options_00080(
+def test_image_install_options_00080(
     image_install_options, value, expected, raise_flag
 ) -> None:
     """

@@ -44,6 +44,20 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.f
     load_fixture
 
 
+params = {
+    "state": "merged",
+    "check_mode": False,
+    "config": [
+        {
+            "name": "NR1F",
+            "agnostic": False,
+            "description": "NR1F",
+            "platform": "N9K",
+            "type": "PLATFORM",
+        }
+    ],
+}
+
 class MockAnsibleModule:
     """
     Mock the AnsibleModule class
@@ -82,14 +96,6 @@ def image_install_options_fixture():
     mock ImageInstallOptions
     """
     return ImageInstallOptions(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policies")
-def image_policies_fixture():
-    """
-    Return ImagePolicies instance.
-    """
-    return ImagePolicies()
 
 
 @pytest.fixture(name="image_stage")
@@ -184,13 +190,33 @@ def payloads_image_upgrade(key: str) -> Dict[str, str]:
     return payload
 
 
-def responses_controller_version(key: str) -> Dict[str, str]:
+def responses_ep_image_stage(key: str) -> Dict[str, str]:
     """
-    Return ControllerVersion controller responses
+    Return EpImageStage controller responses
     """
-    response_file = "image_upgrade_responses_ControllerVersion"
+    response_file = "responses_ep_image_stage"
     response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
+    print(f"responses_ep_image_stage: {key} : {response}")
+    return response
+
+
+def responses_ep_issu(key: str) -> Dict[str, str]:
+    """
+    Return EpIssu controller responses
+    """
+    response_file = "responses_ep_issu"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_issu: {key} : {response}")
+    return response
+
+
+def responses_ep_version(key: str) -> Dict[str, str]:
+    """
+    Return EpVersion controller responses
+    """
+    response_file = "responses_ep_version"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_version: {key} : {response}")
     return response
 
 
@@ -204,16 +230,6 @@ def responses_image_install_options(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return ImagePolicies controller responses
-    """
-    response_file = "image_upgrade_responses_ImagePolicies"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_policies: {key} : {response}")
-    return response
-
-
 def responses_image_policy_action(key: str) -> Dict[str, str]:
     """
     Return ImagePolicyAction controller responses
@@ -221,16 +237,6 @@ def responses_image_policy_action(key: str) -> Dict[str, str]:
     response_file = "image_upgrade_responses_ImagePolicyAction"
     response = load_fixture(response_file).get(key)
     print(f"responses_image_policy_action: {key} : {response}")
-    return response
-
-
-def responses_image_stage(key: str) -> Dict[str, str]:
-    """
-    Return ImageStage controller responses
-    """
-    response_file = "image_upgrade_responses_ImageStage"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_stage: {key} : {response}")
     return response
 
 
@@ -272,14 +278,4 @@ def responses_switch_details(key: str) -> Dict[str, str]:
     response_file = "image_upgrade_responses_SwitchDetails"
     response = load_fixture(response_file).get(key)
     print(f"responses_switch_details: {key} : {response}")
-    return response
-
-
-def responses_switch_issu_details(key: str) -> Dict[str, str]:
-    """
-    Return SwitchIssuDetails controller responses
-    """
-    response_file = "image_upgrade_responses_SwitchIssuDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_switch_issu_details: {key} : {response}")
     return response

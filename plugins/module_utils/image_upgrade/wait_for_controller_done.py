@@ -22,7 +22,7 @@ class WaitForControllerDone:
 
     ### Raises
     -   ``ValueError`` if:
-            - Controller actions do not complete within ``timeout`` seconds.
+            - Controller actions do not complete within ``rest_send.timeout`` seconds.
             - ``items`` is not a set prior to calling ``commit()``.
             - ``item_type`` is not set prior to calling ``commit()``.
             - ``rest_send`` is not set prior to calling ``commit()``.
@@ -39,8 +39,6 @@ class WaitForControllerDone:
         self.todo = set()
         self.issu_details = None
 
-        self._check_interval = 10  # seconds
-        self._check_timeout = 1800  # seconds
         self._items = None
         self._item_type = None
         self._rest_send = None
@@ -108,7 +106,7 @@ class WaitForControllerDone:
 
         ### Raises
         -   ``ValueError`` if:
-                -   Actions do not complete within ``timeout`` seconds.
+                -   Actions do not complete within ``rest_send.timeout`` seconds.
                 -   ``items`` is not a set.
                 -   ``item_type`` is not set.
                 -   ``rest_send`` is not set.
@@ -121,12 +119,12 @@ class WaitForControllerDone:
             return
         self.get_filter_class()
         self.todo = copy.copy(self.items)
-        timeout = self.check_timeout
+        timeout = self.rest_send.timeout
 
         while self.done != self.todo and timeout > 0:
             if self.rest_send.unit_test is False:  # pylint: disable=no-member
-                sleep(self.check_interval)
-            timeout -= self.check_interval
+                sleep(self.rest_send.send_interval)
+            timeout -= self.rest_send.send_interval
 
             self.issu_details.refresh()
 
@@ -139,79 +137,13 @@ class WaitForControllerDone:
 
         if self.done != self.todo:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Timed out after {self.check_timeout} seconds "
+            msg += f"Timed out after {self.rest_send.timeout} seconds "
             msg += f"waiting for controller actions to complete on items: "
-            msg += f"{self.todo}. "
+            msg += f"{sorted(self.todo)}. "
             if len(self.done) > 0:
                 msg += "The following items did complete: "
                 msg += f"{','.join(sorted(self.done))}."
             raise ValueError(msg)
-
-    @property
-    def check_interval(self):
-        """
-        ### Summary
-        The validate check interval, in seconds.
-        Default is 10 seconds.
-
-        ### Raises
-        -   ``TypeError`` if the value is not an integer.
-        -   ``ValueError`` if the value is less than zero.
-
-        ### Example
-        ```python
-        instance.check_interval = 10
-        ```
-        """
-        return self._check_interval
-
-    @check_interval.setter
-    def check_interval(self, value):
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "must be a positive integer or zero. "
-        msg += f"Got value {value} of type {type(value)}."
-        # isinstance(True, int) is True so we need to check for bool first
-        if isinstance(value, bool):
-            raise TypeError(msg)
-        if not isinstance(value, int):
-            raise TypeError(msg)
-        if value < 0:
-            raise ValueError(msg)
-        self._check_interval = value
-
-    @property
-    def check_timeout(self):
-        """
-        ### Summary
-        The validate check timeout, in seconds.
-        Default is 1800 seconds.
-
-        ### Raises
-        -   ``TypeError`` if the value is not an integer.
-        -   ``ValueError`` if the value is less than zero.
-
-        ### Example
-        ```python
-        instance.check_timeout = 1800
-        ```
-        """
-        return self._check_timeout
-
-    @check_timeout.setter
-    def check_timeout(self, value):
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "must be a positive integer or zero. "
-        msg += f"Got value {value} of type {type(value)}."
-        # isinstance(True, int) is True so we need to check for bool first
-        if isinstance(value, bool):
-            raise TypeError(msg)
-        if not isinstance(value, int):
-            raise TypeError(msg)
-        if value < 0:
-            raise ValueError(msg)
-        self._check_timeout = value
 
     @property
     def items(self):

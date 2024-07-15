@@ -149,7 +149,9 @@ class ImageStage:
         self.payload = None
         self.saved_response_current: dict = {}
         self.saved_result_current: dict = {}
+        # _wait_for_image_stage_to_complete() populates these
         self.serial_numbers_done = set()
+        self.serial_numbers_todo = set()
 
         self.controller_version_instance = ControllerVersion()
         self.ep_image_stage = EpImageStage()
@@ -177,7 +179,6 @@ class ImageStage:
         self.log.debug(msg)
 
         self.diff: dict = {}
-
         for serial_number in self.serial_numbers_done:
             self.issu_detail.filter = serial_number
             ipv4 = self.issu_detail.ip_address
@@ -308,7 +309,8 @@ class ImageStage:
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        msg = f"self.serial_numbers: {self.serial_numbers}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
         self.validate_commit_parameters()
@@ -350,10 +352,16 @@ class ImageStage:
             raise ValueError(msg) from error
 
         if not self.rest_send.result_current["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.rest_send.response_current}"
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"failed. "
+            msg += f"Controller response: {self.rest_send.response_current}"
             raise ControllerResponseError(msg)
 
         # Save response_current and result_current so they aren't overwritten
@@ -365,7 +373,6 @@ class ImageStage:
         self.saved_result_current = copy.deepcopy(self.rest_send.result_current)
 
         self._wait_for_image_stage_to_complete()
-
         self.build_diff()
 
         self.results.action = self.action
@@ -413,9 +420,9 @@ class ImageStage:
 
         self.serial_numbers_done = set()
         timeout = self.check_timeout
-        serial_numbers_todo = set(copy.copy(self.serial_numbers))
+        self.serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
-        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
+        while self.serial_numbers_done != self.serial_numbers_todo and timeout > 0:
             if self.rest_send.unit_test is False:  # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
@@ -442,18 +449,18 @@ class ImageStage:
 
             msg = f"seconds remaining {timeout}"
             self.log.debug(msg)
-            msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
+            msg = f"serial_numbers_todo: {sorted(self.serial_numbers_todo)}"
             self.log.debug(msg)
             msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
             self.log.debug(msg)
 
-        if self.serial_numbers_done != serial_numbers_todo:
+        if self.serial_numbers_done != self.serial_numbers_todo:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Timed out waiting for image stage to complete. "
             msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
-            msg += f"{','.join(sorted(serial_numbers_todo))}"
+            msg += f"{','.join(sorted(self.serial_numbers_todo))}"
             raise ValueError(msg)
 
     @property
@@ -477,13 +484,19 @@ class ImageStage:
             msg = f"{self.class_name}.{method_name}: "
             msg += "must be a python list of switch serial numbers."
             raise TypeError(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "must be a python list of switch serial numbers."
+                raise TypeError(msg)
         self._serial_numbers = value
 
     @property
     def check_interval(self) -> int:
         """
         ### Summary
-        The stage check interval, in seconds.
+        The interval, in seconds, used to check the status of the image stage
+        operation.  Used by ``_wait_for_image_stage_to_complete()``.
 
         ### Raises
         -   ``TypeError`` if:
@@ -512,7 +525,8 @@ class ImageStage:
     def check_timeout(self) -> int:
         """
         ### Summary
-        The stage check timeout, in seconds.
+        The interval, in seconds, used to check the status of the image stage
+        operation.  Used by ``_wait_for_image_stage_to_complete()``.
 
         ### Raises
         -   ``TypeError`` if:
