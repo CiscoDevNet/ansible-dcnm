@@ -217,7 +217,8 @@ class ImageStage:
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"ENTERED {self.class_name}().{method_name}"
+        msg = f"ENTERED: {self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers {self.serial_numbers}"
         self.log.debug(msg)
 
         serial_numbers = copy.copy(self.serial_numbers)
@@ -260,9 +261,8 @@ class ImageStage:
         """
         method_name = inspect.stack()[0][3]
 
-        method_name = inspect.stack()[0][3]
-
-        msg = f"ENTERED {self.class_name}().{method_name}"
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
         self.issu_detail.refresh()
@@ -363,6 +363,10 @@ class ImageStage:
         self.validate_serial_numbers()
         self.wait_for_controller()
         self.build_payload()
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling RestSend().commit()"
+        self.log.debug(msg)
 
         # pylint: disable=no-member
         try:
