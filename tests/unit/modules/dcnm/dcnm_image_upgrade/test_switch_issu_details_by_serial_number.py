@@ -18,7 +18,7 @@
 # pylint: disable=unused-import
 # Some fixtures need to use *args to match the signature of the function they are mocking
 # pylint: disable=unused-argument
-
+# pylint: disable=protected-access
 
 from __future__ import absolute_import, division, print_function
 
@@ -27,118 +27,133 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from typing import Any, Dict
+import inspect
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 
-from .utils import (does_not_raise, issu_details_by_serial_number_fixture,
+from .utils import (MockAnsibleModule, does_not_raise,
+                    issu_details_by_serial_number_fixture, params,
                     responses_ep_issu)
 
-PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
 
-
-def test_switch_issu_details_by_serial_number_00001(
+def test_switch_issu_details_by_serial_number_00000(
     issu_details_by_serial_number,
 ) -> None:
     """
-    Function
-    - SwitchIssuDetailsBySerialNumber.__init__
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``__init__``
 
-    Test
-    - fail_json is not called
-    - instance.properties is a dict
+    ### Test
+    - Class properties initialized to expected values
+    - instance.action_keys is a set
+    - action_keys contains expected values
+    - Exception is not raised
     """
     with does_not_raise():
         instance = issu_details_by_serial_number
-    assert isinstance(instance.properties, dict)
+
+    action_keys = {"imageStaged", "upgrade", "validated"}
+
+    assert isinstance(instance._action_keys, set)
+    assert instance._action_keys == action_keys
+    assert instance.data == {}
+    assert instance.rest_send is None
+    assert instance.results is None
+
+    assert instance.ep_issu.class_name == "EpIssu"
+    assert instance.conversion.class_name == "ConversionUtils"
 
 
-def test_switch_issu_details_by_serial_number_00002(
+def test_switch_issu_details_by_serial_number_00100(
     issu_details_by_serial_number,
 ) -> None:
     """
-    Function
-    - SwitchIssuDetailsBySerialNumber._init_properties
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``refresh``
 
-    Test
-    - Class properties initialized to expected values
-    - instance.properties is a dict
-    - instance.action_keys is a set
-    - action_keys contains expected values
+    ### Test
+    - instance.results.response is a list
+    - instance.results.response_current is a dict
+    - instance.results.result is a list
+    - instance.results.result_current is a dict
+    - instance.results.response_data is a list
     """
-    instance = issu_details_by_serial_number
-    action_keys = {"imageStaged", "upgrade", "validated"}
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    instance._init_properties()  # pylint: disable=protected-access
-    assert isinstance(instance.properties, dict)
-    assert isinstance(instance.properties.get("action_keys"), set)
-    assert instance.properties.get("action_keys") == action_keys
-    assert instance.properties.get("response_data") == []
-    assert instance.properties.get("response") == []
-    assert instance.properties.get("response_current") == {}
-    assert instance.properties.get("result") == []
-    assert instance.properties.get("result_current") == {}
-    assert instance.properties.get("serial_number") is None
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.refresh()
+
+    assert isinstance(instance.results.response, list)
+    assert isinstance(instance.results.response_current, dict)
+    assert isinstance(instance.results.result, list)
+    assert isinstance(instance.results.result_current, dict)
+    assert isinstance(instance.results.response_data, list)
 
 
-def test_switch_issu_details_by_serial_number_00020(
-    monkeypatch, issu_details_by_serial_number
+def test_switch_issu_details_by_serial_number_00110(
+    issu_details_by_serial_number,
 ) -> None:
     """
-    Function
-    - SwitchIssuDetailsBySerialNumber.refresh
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``refresh``
 
-    Test
-    - instance.response is a list
-    - instance.response_current is a dict
-    - instance.result is a list
-    - instance.result_current is a dict
-    - instance.response_data is a list
+    ### Test
+    -   Properties are set based on ``filter`` value.
+    -   Expected property values are returned.
     """
-    instance = issu_details_by_serial_number
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    key = "test_switch_issu_details_by_serial_number_00020a"
+    def responses():
+        yield responses_ep_issu(key)
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_issu_details: {responses_ep_issu(key)}")
-        return responses_ep_issu(key)
+    gen_responses = ResponseGenerator(responses())
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    instance.refresh()
-    assert isinstance(instance.response, list)
-    assert isinstance(instance.response_current, dict)
-    assert isinstance(instance.result, list)
-    assert isinstance(instance.result_current, dict)
-    assert isinstance(instance.response_data, list)
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.refresh()
+        instance.filter = "FDO21120U5D"
 
-
-def test_switch_issu_details_by_serial_number_00021(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    - SwitchIssuDetailsBySerialNumber.refresh
-
-    Test
-    - Properties are set based on device_name
-    - Expected property values are returned
-    """
-    instance = issu_details_by_serial_number
-
-    key = "test_switch_issu_details_by_serial_number_00021a"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    instance.refresh()
-    instance.filter = "FDO21120U5D"
     assert instance.device_name == "leaf1"
     assert instance.serial_number == "FDO21120U5D"
     # change serial_number to a different switch, expect different information
@@ -198,216 +213,292 @@ def test_switch_issu_details_by_serial_number_00021(
     assert instance.filtered_data.get("deviceName") == "cvd-2313-leaf"
 
 
-def test_switch_issu_details_by_serial_number_00022(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    - SwitchIssuDetailsBySerialNumber.refresh
-
-    Test
-    - instance.result_current is a dict
-    - instance.result_current contains expected key/values for 200 RESULT_CODE
-    """
-    instance = issu_details_by_serial_number
-
-    key = "test_switch_issu_details_by_serial_number_00022a"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    instance.refresh()
-    assert isinstance(instance.result_current, dict)
-    assert instance.result_current.get("found") is True
-    assert instance.result_current.get("success") is True
-
-
-def test_switch_issu_details_by_serial_number_00023(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    - SwitchIssuDetailsBySerialNumber.refresh
-
-    Test
-    - refresh calls handle_response, which calls json_fail on 404 response
-    - Error message matches expectation
-    """
-    instance = issu_details_by_serial_number
-
-    key = "test_switch_issu_details_by_serial_number_00023a"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    match = "Bad result when retriving switch information from the controller"
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.refresh()
-
-
-def test_switch_issu_details_by_serial_number_00024(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    - SwitchIssuDetailsBySerialNumber.refresh
-
-    Test
-    - fail_json is called on 200 response with empty DATA key
-    - Error message matches expectation
-    """
-    instance = issu_details_by_serial_number
-
-    key = "test_switch_issu_details_by_serial_number_00024a"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    match = "SwitchIssuDetailsBySerialNumber.refresh_super: "
-    match += "The controller has no switch ISSU information."
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.refresh()
-
-
-def test_switch_issu_details_by_serial_number_00025(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    - SwitchIssuDetailsBySerialNumber.refresh
-
-    Test
-    - fail_json is called on 200 response with DATA.lastOperDataObject length 0
-    - Error message matches expectation
-    """
-    instance = issu_details_by_serial_number
-
-    key = "test_switch_issu_details_by_serial_number_00025a"
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    match = "SwitchIssuDetailsBySerialNumber.refresh_super: "
-    match += "The controller has no switch ISSU information."
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.refresh()
-
-
-def test_switch_issu_details_by_serial_number_00040(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    - SwitchIssuDetailsBySerialNumber._get
-
-    Summary
-    Verify that _get() calls fail_json because filter is set to an
-    unknown serial_number
-
-    Test
-    - fail_json is called because filter is set to an unknown serial_number
-    - Error message matches expectation
-
-    Description
-    SwitchIssuDetailsBySerialNumber._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set filter or if
-    filter is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has filter
-    to a serial_number that exists on the controller.
-
-    Expected result:
-    1.  fail_json is called with appropriate error message since filter
-        is set to an unknown serial_number.
-    """
-    instance = issu_details_by_serial_number
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_switch_issu_details_by_serial_number_00040a"
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    match = "SwitchIssuDetailsBySerialNumber._get: FOO00000BAR does not exist "
-    match += "on the controller."
-
-    instance.refresh()
-    instance.filter = "FOO00000BAR"
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance._get("serialNumber")  # pylint: disable=protected-access
-
-
-def test_switch_issu_details_by_serial_number_00041(
-    monkeypatch, issu_details_by_serial_number
-) -> None:
-    """
-    Function
-    SwitchIssuDetailsBySerialNumber._get
-
-    Summary
-    Verify that _get() calls fail_json because an unknown property is queried
-
-    Test
-    - fail_json is called on access of unknown property name
-    - Error message matches expectation
-
-    Description
-    SwitchIssuDetailsBySerialNumber._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set filter or if
-    filter is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has filter
-    to a serial_number that exists on the controller.
-
-    Expected results
-    1.  fail_json is called with appropriate error message since an unknown
-        property is queried.
-    """
-    instance = issu_details_by_serial_number
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_switch_issu_details_by_serial_number_00041a"
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    match = "SwitchIssuDetailsBySerialNumber._get: FDO21120U5D unknown "
-    match += "property name: FOO"
-
-    instance.refresh()
-    instance.filter = "FDO21120U5D"
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance._get("FOO")  # pylint: disable=protected-access
-
-
-def test_switch_issu_details_by_serial_number_00042(
+def test_switch_issu_details_by_serial_number_00120(
     issu_details_by_serial_number,
 ) -> None:
     """
-    Function
-    - SwitchIssuDetailsBySerialNumber._get
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``refresh``
 
-    Test
-    - _get() calls fail_json because instance.filter is not set
-    - Error message matches expectation
+    ### Test
+    - instance.results.result_current is a dict
+    - instance.results.result_current contains expected key/values for 200 RESULT_CODE
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    Description
-    SwitchIssuDetailsBySerialNumber._get is called by all getter properties.
-    It raises AnsibleFailJson if the user has not set filter or if
-    filter is unknown, or if an unknown property name is queried.
-    It returns the value of the requested property if the user has filter
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.refresh()
+    assert isinstance(instance.results.result_current, dict)
+    assert instance.results.result_current.get("found") is True
+    assert instance.results.result_current.get("success") is True
+
+
+def test_switch_issu_details_by_serial_number_00130(
+    issu_details_by_serial_number,
+) -> None:
+    """
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``refresh``
+
+    ### Summary
+    Verify behavior when controller response is 404.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+
+    match = r"SwitchIssuDetailsBySerialNumber\.refresh_super:\s+"
+    match += r"Bad result when retriving switch ISSU details from the\s+"
+    match += r"controller\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_switch_issu_details_by_serial_number_00140(
+    issu_details_by_serial_number,
+) -> None:
+    """
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``refresh``
+
+    ### Test
+    -   ``ValueError`` is raised on 200 response with empty DATA key.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+
+    match = r"SwitchIssuDetailsBySerialNumber\.refresh_super:\s+"
+    match += r"The controller has no switch ISSU information\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_switch_issu_details_by_serial_number_00150(
+    issu_details_by_serial_number,
+) -> None:
+    """
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            - ``refresh``
+
+    ### Test
+    -   ``ValueError`` is raised on 200 response with
+        DATA.lastOperDataObject length 0.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+
+    match = r"SwitchIssuDetailsBySerialNumber\.refresh_super:\s+"
+    match += r"The controller has no switch ISSU information\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_switch_issu_details_by_serial_number_00200(
+    issu_details_by_serial_number,
+) -> None:
+    """
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            -   ``_get``
+
+    ### Summary
+    Verify that _get() calls fail_json because filter is set to an
+    unknown serial_number
+
+    ### Test
+    -   `ValueError`` is raised because filter is set to an unknown
+        serial_number.
+    -   Error message matches expectation.
+
+    ### Description
+    ``SwitchIssuDetailsBySerialNumber._get`` is called by all getter
+    properties. It raises ``ValueError`` in the following cases:
+
+    -   If the user has not set filter.
+    -   If filter is unknown.
+    -   If an unknown property name is queried.
+
+    It returns the value of the requested property if ``filter`` is set
     to a serial_number that exists on the controller.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.refresh()
+        instance.filter = "FOO00000BAR"
+
+    match = r"SwitchIssuDetailsBySerialNumber\._get:\s+"
+    match += r"FOO00000BAR does not exist on the controller\."
+    with pytest.raises(ValueError, match=match):
+        instance._get("serialNumber")
+
+
+def test_switch_issu_details_by_serial_number_00210(
+    issu_details_by_serial_number,
+) -> None:
+    """
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            -   ``_get``
+
+
+    ### Summary
+    Verify that ``_get()`` raises ``ValueError`` because an unknown property
+    is queried.
+
+    ### Test
+    -   ``ValueError`` is raised on access of unknown property name.
+    -   Error message matches expectation.
+
+    ### Description
+    See test_switch_issu_details_by_serial_number_00200
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = issu_details_by_serial_number
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.refresh()
+        instance.filter = "FDO21120U5D"
+
+    match = r"SwitchIssuDetailsBySerialNumber\._get:\s+"
+    match += r"FDO21120U5D unknown property name: FOO\."
+
+    with pytest.raises(ValueError, match=match):
+        instance._get("FOO")
+
+
+def test_switch_issu_details_by_serial_number_00220(
+    issu_details_by_serial_number,
+) -> None:
+    """
+    ### Classes and Methods
+    -   ``SwitchIssuDetailsBySerialNumber``
+            -   ``_get``
+
+    ### Test
+    -   ``ValueError`` is raised because instance.filter is not set.
+    -   Error message matches expectation.
+
+    ### Description
+    See test_switch_issu_details_by_serial_number_00200
     """
     with does_not_raise():
         instance = issu_details_by_serial_number
     match = r"SwitchIssuDetailsBySerialNumber\._get: "
     match += r"set instance\.filter to a switch serialNumber "
     match += r"before accessing property role\."
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.role
+    with pytest.raises(ValueError, match=match):
+        instance.role  # pylint: disable=pointless-statement
