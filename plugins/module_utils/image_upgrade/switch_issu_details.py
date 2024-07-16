@@ -105,7 +105,7 @@ class SwitchIssuDetails:
 
         self.action = "switch_issu_details"
         self.conversion = ConversionUtils()
-        self.endpoint = EpIssu()
+        self.ep_issu = EpIssu()
         self.data = {}
         self._action_keys = set()
         self._action_keys.add("imageStaged")
@@ -156,8 +156,8 @@ class SwitchIssuDetails:
             raise ValueError(error) from error
 
         try:
-            self.rest_send.path = self.endpoint.path
-            self.rest_send.verb = self.endpoint.verb
+            self.rest_send.path = self.ep_issu.path
+            self.rest_send.verb = self.ep_issu.verb
 
             # We always want to get the issu details from the controller,
             # regardless of the current value of check_mode.
