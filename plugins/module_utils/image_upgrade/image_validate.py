@@ -156,12 +156,26 @@ class ImageValidate:
             msg += f"{json.dumps(self.diff[ipv4], indent=4)}"
             self.log.debug(msg)
 
+    def build_payload(self) -> None:
+        """
+        Build the payload for the image validation request
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
+
+        self.payload = {}
+        self.payload["serialNum"] = self.serial_numbers
+        self.payload["nonDisruptive"] = self.non_disruptive
+
     def prune_serial_numbers(self) -> None:
         """
         If the image is already validated on a switch, remove that switch's
         serial number from the list of serial numbers to validate.
         """
         method_name = inspect.stack()[0][3]
+
         msg = f"ENTERED: {self.class_name}.{method_name}: "
         msg += f"self.serial_numbers {self.serial_numbers}"
         self.log.debug(msg)
@@ -176,6 +190,24 @@ class ImageValidate:
         msg = f"DONE: self.serial_numbers {self.serial_numbers}"
         self.log.debug(msg)
 
+    def register_unchanged_result(self, response_message) -> None:
+        """
+        ### Summary
+        Register a successful unchanged result with the results object.
+        """
+        # pylint: disable=no-member
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
+        self.results.action = self.action
+        self.results.diff_current = {}
+        self.results.response_current = {"response": response_message}
+        self.results.result_current = {"success": True, "changed": False}
+        self.results.response_data = {"response": response_message}
+        self.results.register_task_result()
+
     def validate_serial_numbers(self) -> None:
         """
         ### Summary
@@ -186,7 +218,8 @@ class ImageValidate:
                 -   "validated" is "Failed" for any serial_number.
         """
         method_name = inspect.stack()[0][3]
-        msg = f"ENTERED {self.class_name}.{method_name}"
+
+        msg = f"ENTERED {self.class_name}.{method_name}: "
         msg += f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
@@ -202,32 +235,6 @@ class ImageValidate:
                 msg += "If this persists, check the switch connectivity to "
                 msg += "the controller and try again."
                 raise ControllerResponseError(msg)
-
-    def build_payload(self) -> None:
-        """
-        Build the payload for the image validation request
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"ENTERED {self.class_name}.{method_name}: "
-        msg += f"self.serial_numbers: {self.serial_numbers}"
-        self.log.debug(msg)
-
-        self.payload = {}
-        self.payload["serialNum"] = self.serial_numbers
-        self.payload["nonDisruptive"] = self.non_disruptive
-
-    def register_unchanged_result(self, msg) -> None:
-        """
-        ### Summary
-        Register a successful unchanged result with the results object.
-        """
-        # pylint: disable=no-member
-        self.results.action = self.action
-        self.results.diff_current = {}
-        self.results.response_current = {"response": msg}
-        self.results.result_current = {"success": True, "changed": False}
-        self.results.response_data = {"response": msg}
-        self.results.register_task_result()
 
     def validate_commit_parameters(self) -> None:
         """
@@ -297,6 +304,10 @@ class ImageValidate:
         self.wait_for_controller()
         self.build_payload()
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling RestSend().commit()"
+        self.log.debug(msg)
+
         # pylint: disable=no-member
         try:
             self.rest_send.verb = self.ep_image_validate.verb
@@ -317,10 +328,16 @@ class ImageValidate:
             raise ValueError(msg) from error
 
         if not self.rest_send.result_current["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.rest_send.response_current}"
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
             self.results.register_task_result()
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "failed. "
+            msg += f"Controller response: {self.rest_send.response_current}"
             raise ControllerResponseError(msg)
 
         # Save response_current and result_current so they aren't overwritten
@@ -352,6 +369,10 @@ class ImageValidate:
                 -   The action times out.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
         try:
             self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
             self.wait_for_controller_done.item_type = "serial_number"
@@ -375,6 +396,7 @@ class ImageValidate:
                 -   The image validation fails.
         """
         method_name = inspect.stack()[0][3]
+
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 

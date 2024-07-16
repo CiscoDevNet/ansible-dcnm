@@ -45,8 +45,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
     ResponseGenerator
 
 from .utils import (MockAnsibleModule, does_not_raise, image_validate_fixture,
-                    params,
-                    responses_ep_image_validate, responses_ep_issu)
+                    params, responses_ep_image_validate, responses_ep_issu)
 
 
 def test_image_validate_00000(image_validate) -> None:
@@ -87,6 +86,7 @@ def test_image_validate_00000(image_validate) -> None:
     assert instance.rest_send is None
     assert instance.results is None
     assert instance.serial_numbers is None
+
 
 # def test_image_validate_00010(image_validate) -> None:
 #     """
@@ -701,7 +701,7 @@ def test_image_validate_00900(image_validate, serial_numbers_is_set, expected) -
     """
     ### Classes and Methods
     -   ``ImageValidate``
-            `   ``commit``
+            -   ``commit``
 
     ### Summary
     Verify that ``commit`` raises ``ValueError`` appropriately based on value of
@@ -751,44 +751,208 @@ def test_image_validate_00900(image_validate, serial_numbers_is_set, expected) -
         instance.commit()
 
 
-#--------------------
-'''
-MATCH_00030 = "ImageValidate.serial_numbers: "
-MATCH_00030 += "instance.serial_numbers must be a python list "
-MATCH_00030 += "of switch serial numbers."
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [
-        ([], does_not_raise()),
-        (True, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-        (False, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-        (10, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00030)),
-    ],
-)
-def test_image_validate_0060x(image_validate, value, expected) -> None:
+def test_image_validate_00920(image_validate) -> None:
     """
-    Function
-    - serial_numbers.setter
+    ### Classes and Methods
+    -   ``ImageValidate``
+            `   ``commit``
 
-    Test
-    - fail_json when serial_numbers is not a list
+    ### Summary
+    Verify that commit() sets result, response, and response_data
+    appropriately when serial_numbers is empty.
+
+    ### Setup
+    - ``serial_numbers`` is set to [] (empty list)
+
+    ### Test
+    - commit() sets the following to expected values:
+        - self.result, self.result_current
+        - self.response, self.response_current
+        - self.response_data
+
+    ### Description
+    When len(serial_numbers) == 0, commit() will set result and
+    response properties, and return without doing anything else.
     """
+
+    def responses():
+        yield None
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.send_interval = 1
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
     with does_not_raise():
         instance = image_validate
-    assert instance.class_name == "ImageValidate"
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.check_timeout = 1
+        instance.check_interval = 1
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
+        instance.serial_numbers = []
+        instance.commit()
 
-    with expected:
-        instance.serial_numbers = value
+    response_msg = "No images to validate."
+    assert instance.results.result == [
+        {"success": True, "changed": False, "sequence_number": 1}
+    ]
+    assert instance.results.result_current == {
+        "success": True,
+        "changed": False,
+        "sequence_number": 1,
+    }
+    assert instance.results.response_current == {
+        "response": response_msg,
+        "sequence_number": 1,
+    }
+    assert instance.results.response == [instance.results.response_current]
+    assert instance.results.response_data == [{"response": response_msg}]
 
 
-MATCH_00040 = "ImageValidate.non_disruptive: "
-MATCH_00040 += "instance.non_disruptive must be a boolean."
+def test_image_validate_00930(image_validate) -> None:
+    """
+    ### Classes and Methods
+    -   ``ImageValidate``
+            `   ``commit``
+
+    ### Summary
+    Verify that ``ControllerResponseError`` is raised on 500 response from
+    the controller.
+
+    ### Setup
+    - ``responses_ep_issu()`` returns 200 responses.
+    - ``responses_ep_version()`` returns a 200 response.
+    - ``responses_ep_image_stage()`` returns a 500 response.
+
+    ### Test
+    - commit() raises ``ControllerResponseError``
+
+    ### Description
+    commit() raises ``ControllerResponseError`` on non-success response
+    from the controller.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        # ImageValidate().prune_serial_numbers
+        yield responses_ep_issu(key)
+        # ImageValidate().validate_serial_numbers
+        yield responses_ep_issu(key)
+        # RestSend.commit_normal_mode
+        yield responses_ep_image_validate(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.send_interval = 1
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_validate
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.check_timeout = 1
+        instance.check_interval = 1
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
+        instance.serial_numbers = ["FDO21120U5D"]
+
+    match = r"ImageValidate\.commit:\s+"
+    match += r"failed\. Controller response:.*"
+    with pytest.raises(ControllerResponseError, match=match):
+        instance.commit()
+    assert instance.results.result == [
+        {"success": False, "changed": False, "sequence_number": 1}
+    ]
+    assert instance.results.response_current["RETURN_CODE"] == 500
+
+
+def test_image_validate_00940(image_validate) -> None:
+    """
+    ### Classes and Methods
+    -   ``ImageValidate``
+            `   ``commit``
+
+    ### Summary
+    Verify that commit() sets self.diff to expected values on 200 response
+    from the controller for an image stage request.
+
+    ### Setup
+    - ``responses_ep_issu()`` returns 200 responses.
+    - ``responses_ep_version()`` returns a 200 response with controller
+        version 12.1.3b.
+    - ``responses_ep_image_stage()`` returns a 200 response.
+
+    ### Test
+    - commit() sets self.diff to the expected values
+    """
+    method_name = inspect.stack()[0][3]
+    key_a = f"{method_name}a"
+    key_b = f"{method_name}b"
+
+    def responses():
+        # ImageValidate.prune_serial_numbers()
+        yield responses_ep_issu(key_a)
+        # ImageValidate.validate_serial_numbers()
+        yield responses_ep_issu(key_a)
+        # ImageValidate().wait_for_controller()
+        yield responses_ep_issu(key_a)
+        # ImageStage().commit() -> ImageStage().rest_send.commit()
+        yield responses_ep_image_validate(key_a)
+        # ImageValidate._wait_for_image_validate_to_complete()
+        yield responses_ep_issu(key_b)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.send_interval = 1
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_validate
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.check_timeout = 1
+        instance.check_interval = 1
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
+        instance.serial_numbers = ["FDO21120U5D"]
+        instance.commit()
+
+    assert instance.results.result_current == {
+        "success": True,
+        "changed": True,
+        "sequence_number": 1,
+    }
+    assert instance.results.diff[0]["172.22.150.102"]["policy_name"] == "KR5M"
+    assert instance.results.diff[0]["172.22.150.102"]["ip_address"] == "172.22.150.102"
+    assert instance.results.diff[0]["172.22.150.102"]["serial_number"] == "FDO21120U5D"
+
+
+MATCH_01000 = "ImageValidate.non_disruptive: "
+MATCH_01000 += "instance.non_disruptive must be a boolean."
 
 
 @pytest.mark.parametrize(
@@ -796,21 +960,23 @@ MATCH_00040 += "instance.non_disruptive must be a boolean."
     [
         (True, does_not_raise()),
         (False, does_not_raise()),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        (10, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
-        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00040)),
+        (None, pytest.raises(TypeError, match=MATCH_01000)),
+        ("FOO", pytest.raises(TypeError, match=MATCH_01000)),
+        (10, pytest.raises(TypeError, match=MATCH_01000)),
+        ([1, 2], pytest.raises(TypeError, match=MATCH_01000)),
+        ({1, 2}, pytest.raises(TypeError, match=MATCH_01000)),
+        ({"a": 1, "b": 2}, pytest.raises(TypeError, match=MATCH_01000)),
     ],
 )
-def test_image_validate_0070x(image_validate, value, expected) -> None:
+def test_image_validate_01000(image_validate, value, expected) -> None:
     """
-    Function
-    - non_disruptive.setter
+    ### Classes and Methods
+    -   ``ImageValidate``
+            - ``non_disruptive.setter``
 
-    Test
-    - fail_json when non_disruptive is not a boolean
+    ### Test
+    -   ``TypeError`` is raised if ``non_disruptive`` is not a boolean.
+
     """
     with does_not_raise():
         instance = image_validate
@@ -818,184 +984,3 @@ def test_image_validate_0070x(image_validate, value, expected) -> None:
 
     with expected:
         instance.non_disruptive = value
-
-
-MATCH_00050 = "ImageValidate.check_interval: "
-MATCH_00050 += "must be a positive integer or zero."
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [
-        (10, does_not_raise()),
-        (-10, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-        (False, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00050)),
-    ],
-)
-def test_image_validate_0080x(image_validate, value, expected) -> None:
-    """
-    Function
-    - check_interval.setter
-
-    Test
-    - fail_json when check_interval is not an integer
-    """
-    with does_not_raise():
-        instance = image_validate
-    assert instance.class_name == "ImageValidate"
-
-    with expected:
-        instance.check_interval = value
-
-
-MATCH_00060 = "ImageValidate.check_timeout: "
-MATCH_00060 += "must be a positive integer or zero."
-
-
-@pytest.mark.parametrize(
-    "value, expected",
-    [
-        (10, does_not_raise()),
-        (-10, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-        ("FOO", pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-        (False, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-        (None, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-        ([1, 2], pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-        ({1, 2}, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-        ({"a": 1, "b": 2}, pytest.raises(AnsibleFailJson, match=MATCH_00060)),
-    ],
-)
-def test_image_validate_0090x(image_validate, value, expected) -> None:
-    """
-    Function
-    - check_timeout.setter
-
-    Test
-    - fail_json when check_timeout is not an integer
-    """
-    with does_not_raise():
-        instance = image_validate
-    assert instance.class_name == "ImageValidate"
-
-    with expected:
-        instance.check_timeout = value
-
-
-def test_image_validate_01000(image_validate) -> None:
-    """
-    ### Classes and Methods
-    -   ``ImageValidate``
-            - ``commit``
-
-    ### Summary
-    Verify that instance.commit() returns without doing anything when
-    ``serial_numbers`` is an empty list.
-
-    Test
-    - instance.response is set to {} because dcnm_send was not called
-    - instance.result is set to {} because dcnm_send was not called
-
-    Description
-    If instance.serial_numbers is an empty list, instance.commit() returns
-    without calling dcnm_send.
-    """
-    with does_not_raise():
-        instance = image_validate
-        instance.serial_numbers = []
-        instance.commit()
-    assert instance.response == [{"response": "No serial numbers to validate."}]
-    assert instance.result == [{"success": True}]
-
-
-def test_image_validate_01010(monkeypatch, image_validate) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that instance.commit() calls fail_json on failure response from
-    the controller (501).
-
-    Test
-    -   fail_json is called on 501 response from controller
-    """
-    key = "test_image_validate_00023a"
-
-    # Needed only for the 501 return code
-    def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_validate(key)
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT,
-        {"success": False, "changed": False},
-    )
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    with does_not_raise():
-        instance = image_validate
-        instance.serial_numbers = ["FDO21120U5D"]
-    MATCH = "ImageValidate.commit_normal_mode: failed: "
-    with pytest.raises(AnsibleFailJson, match=MATCH):
-        instance.commit()
-
-
-def test_image_validate_01020(monkeypatch, image_validate) -> None:
-    """
-    Function
-    - commit
-
-    Summary
-    Verify that instance.commit() sets instance.diff appropriately on
-    a successful response from the controller.
-
-    Test
-    -   instance.diff is set to the expected value
-    -   fail_json is not called
-    """
-    key = "test_image_validate_00024a"
-
-    def mock_rest_send_image_validate(*args, **kwargs) -> Dict[str, Any]:
-        return responses_image_validate(key)
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    def mock_wait_for_image_validate_to_complete(*args) -> None:
-        instance.serial_numbers_done = {"FDO21120U5D"}
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_VALIDATE_REST_SEND_COMMIT, mock_rest_send_image_validate
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_VALIDATE_REST_SEND_RESULT_CURRENT,
-        {"success": True, "changed": True},
-    )
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-
-    with does_not_raise():
-        instance = image_validate
-        instance.unit_test = True
-        instance.serial_numbers = ["FDO21120U5D"]
-        monkeypatch.setattr(
-            instance,
-            "_wait_for_image_validate_to_complete",
-            mock_wait_for_image_validate_to_complete,
-        )
-        instance.commit()
-
-    assert instance.diff[0]["action"] == "validate"
-    assert instance.diff[0]["policy"] == "KR5M"
-    assert instance.diff[0]["ip_address"] == "172.22.150.102"
-    assert instance.diff[0]["serial_number"] == "FDO21120U5D"
-'''
