@@ -1,5 +1,5 @@
 {
-    "test_image_upgrade_switch_issu_details_by_device_name_00020a": {
+    "test_switch_issu_details_by_device_name_00100a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName is required by the test"
@@ -18,7 +18,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00021a": {
+    "test_switch_issu_details_by_device_name_00110a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "Two switches present",
@@ -79,7 +79,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00022a": {
+    "test_switch_issu_details_by_device_name_00120a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName is required by the test"
@@ -98,7 +98,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00023a": {
+    "test_switch_issu_details_by_device_name_00130a": {
         "TEST_NOTES": [
             "RETURN_CODE 404",
             "MESSAGE != OK",
@@ -115,7 +115,7 @@
             "path": "/bad/path"
         }
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00024a": {
+    "test_switch_issu_details_by_device_name_00140a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA is empty"
@@ -126,7 +126,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00025a": {
+    "test_switch_issu_details_by_device_name_00150a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject is empty"
@@ -141,7 +141,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00040a": {
+    "test_switch_issu_details_by_device_name_00200a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName != FOO is required by the test"
@@ -160,7 +160,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_device_name_00041a": {
+    "test_switch_issu_details_by_device_name_00210a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.deviceName == leaf1 is required by the test"
@@ -179,7 +179,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00100a": {
+    "test_switch_issu_details_by_ip_address_00100a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject.ipAddress is required by the test"
@@ -198,7 +198,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00021a": {
+    "test_switch_issu_details_by_ip_address_00110a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "Two switches present",
@@ -260,7 +260,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00022a": {
+    "test_switch_issu_details_by_ip_address_00120a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.ipAddress is required by the test"
@@ -279,7 +279,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00023a": {
+    "test_switch_issu_details_by_ip_address_00130a": {
         "TEST_NOTES": [
             "RETURN_CODE 404",
             "MESSAGE != OK",
@@ -296,7 +296,7 @@
             "path": "/bad/path"
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00024a": {
+    "test_switch_issu_details_by_ip_address_00140a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA is empty"
@@ -307,7 +307,7 @@
         "MESSAGE": "OK",
         "DATA": {}
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00025a": {
+    "test_switch_issu_details_by_ip_address_00150a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.lastOperDataObject is empty"
@@ -322,7 +322,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00040a": {
+    "test_switch_issu_details_by_ip_address_00200a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.ipAddress != 1.1.1.1 is required by the test"
@@ -341,7 +341,7 @@
             "message": ""
         }
     },
-    "test_image_upgrade_switch_issu_details_by_ip_address_00041a": {
+    "test_switch_issu_details_by_ip_address_00210a": {
         "TEST_NOTES": [
             "RETURN_CODE 200",
             "DATA.ipAddress == 172.22.150.102 is required by the test"

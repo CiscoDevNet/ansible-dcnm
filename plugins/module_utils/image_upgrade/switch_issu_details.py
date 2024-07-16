@@ -849,7 +849,7 @@ class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            raise ValueError(msg, **self.failed_result)
+            raise ValueError(msg)
 
         return self.conversion.make_none(
             self.conversion.make_boolean(self.data_subclass[self.filter].get(item))
