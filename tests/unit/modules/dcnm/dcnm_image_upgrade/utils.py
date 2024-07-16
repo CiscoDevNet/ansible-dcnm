@@ -131,19 +131,19 @@ def params_validate_fixture():
 
 
 @pytest.fixture(name="issu_details_by_device_name")
-def issu_details_by_device_name_fixture():
+def issu_details_by_device_name_fixture() -> SwitchIssuDetailsByDeviceName:
     """
     mock SwitchIssuDetailsByDeviceName
     """
-    return SwitchIssuDetailsByDeviceName(MockAnsibleModule)
+    return SwitchIssuDetailsByDeviceName()
 
 
 @pytest.fixture(name="issu_details_by_ip_address")
-def issu_details_by_ip_address_fixture():
+def issu_details_by_ip_address_fixture() -> SwitchIssuDetailsByIpAddress:
     """
     mock SwitchIssuDetailsByIpAddress
     """
-    return SwitchIssuDetailsByIpAddress(MockAnsibleModule)
+    return SwitchIssuDetailsByIpAddress()
 
 
 @pytest.fixture(name="issu_details_by_serial_number")

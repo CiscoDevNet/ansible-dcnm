@@ -54,11 +54,14 @@ def test_switch_issu_details_by_serial_number_00000(
     -   ``SwitchIssuDetailsBySerialNumber``
             - ``__init__``
 
+    ### Summary
+    Verify class initialization.
+
     ### Test
-    - Class properties initialized to expected values
-    - instance.action_keys is a set
-    - action_keys contains expected values
-    - Exception is not raised
+    -   Class properties initialized to expected values.
+    -   ``action_keys`` is a set.
+    -   ``action_keys`` contains expected values.
+    -   Exception is not raised.
     """
     with does_not_raise():
         instance = issu_details_by_serial_number
@@ -222,8 +225,9 @@ def test_switch_issu_details_by_serial_number_00120(
             - ``refresh``
 
     ### Test
-    - instance.results.result_current is a dict
-    - instance.results.result_current contains expected key/values for 200 RESULT_CODE
+    -   ``results.result_current`` is a dict.
+    -   ``results.result_current`` contains expected key/values
+        for 200 RESULT_CODE.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -382,7 +386,7 @@ def test_switch_issu_details_by_serial_number_00200(
             -   ``_get``
 
     ### Summary
-    Verify that _get() calls fail_json because filter is set to an
+    Verify that _get() raises ``ValueError`` because filter is set to an
     unknown serial_number
 
     ### Test
@@ -448,7 +452,7 @@ def test_switch_issu_details_by_serial_number_00210(
     -   Error message matches expectation.
 
     ### Description
-    See test_switch_issu_details_by_serial_number_00200
+    See test_switch_issu_details_by_serial_number_00200.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -489,11 +493,8 @@ def test_switch_issu_details_by_serial_number_00220(
             -   ``_get``
 
     ### Test
-    -   ``ValueError`` is raised because instance.filter is not set.
+    -   ``_get()`` raises ``ValueError`` because ``filter`` is not set.
     -   Error message matches expectation.
-
-    ### Description
-    See test_switch_issu_details_by_serial_number_00200
     """
     with does_not_raise():
         instance = issu_details_by_serial_number
