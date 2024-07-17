@@ -171,16 +171,17 @@ class ImageUpgrade:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.action = "image_upgrade"
-        self.conversion = ConversionUtils()
         self.diff: dict = {}
+        self.ipv4_done = set()
+        self.ipv4_todo = set()
+        self.payload = None
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+
+        self.conversion = ConversionUtils()
         self.ep_upgrade_image = EpUpgradeImage()
         self.install_options = ImageInstallOptions()
         self.issu_detail = SwitchIssuDetailsByIpAddress()
-        self.ipv4_done = set()
-        self.ipv4_todo = set()
-        self.payload: dict = {}
-        self.saved_response_current: dict = {}
-        self.saved_result_current: dict = {}
         self.wait_for_controller_done = WaitForControllerDone()
 
         self._rest_send = None
@@ -205,22 +206,22 @@ class ImageUpgrade:
         self.ip_addresses: set = set()
 
         self.properties = {}
-        self.properties["bios_force"] = False
-        self.properties["check_interval"] = 10  # seconds
-        self.properties["check_timeout"] = 1800  # seconds
-        self.properties["config_reload"] = False
-        self.properties["devices"] = None
-        self.properties["disruptive"] = True
-        self.properties["epld_golden"] = False
-        self.properties["epld_module"] = "ALL"
-        self.properties["epld_upgrade"] = False
-        self.properties["force_non_disruptive"] = False
-        self.properties["response_data"] = []
-        self.properties["non_disruptive"] = False
-        self.properties["package_install"] = False
-        self.properties["package_uninstall"] = False
-        self.properties["reboot"] = False
-        self.properties["write_erase"] = False
+        self._bios_force = False
+        self._check_interval = 10  # seconds
+        self._check_timeout = 1800  # seconds
+        self._config_reload = False
+        self._devices = None
+        self._disruptive = True
+        self._epld_golden = False
+        self._epld_module = "ALL"
+        self._epld_upgrade = False
+        self._force_non_disruptive = False
+        self._response_data = []
+        self._non_disruptive = False
+        self._package_install = False
+        self._package_uninstall = False
+        self._reboot = False
+        self._write_erase = False
 
         self.valid_nxos_mode: set = set()
         self.valid_nxos_mode.add("disruptive")
@@ -272,6 +273,7 @@ class ImageUpgrade:
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}: "
         msg = f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -279,6 +281,10 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.devices before calling commit."
             raise ValueError(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg = f"Calling: self.issu_detail.refresh()"
+        self.log.debug(msg)
 
         self.issu_detail.refresh()
         for device in self.devices:
@@ -298,11 +304,14 @@ class ImageUpgrade:
         """
         Build the request payload to upgrade the switches.
         """
-        # issu_detail.refresh() has already been called in _validate_devices()
-        # so no need to call it here.
-        msg = f"ENTERED _build_payload: device {device}"
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"device {device}"
         self.log.debug(msg)
 
+        # issu_detail.refresh() has already been called in _validate_devices()
+        # so no need to call it here.
         self.issu_detail.filter = device.get("ip_address")
 
         self.install_options.serial_number = self.issu_detail.serial_number
@@ -343,7 +352,10 @@ class ImageUpgrade:
         """
         Build the issuUpgrade portion of the payload.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         nxos_upgrade = device.get("upgrade").get("nxos")
         nxos_upgrade = self.conversion.make_boolean(nxos_upgrade)
@@ -359,6 +371,9 @@ class ImageUpgrade:
         Build the issuUpgradeOptions1 portion of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         # nxos_mode: The choices for nxos_mode are mutually-exclusive.
         # If one is set to True, the others must be False.
@@ -393,6 +408,13 @@ class ImageUpgrade:
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+
         bios_force = device.get("options").get("nxos").get("bios_force")
         bios_force = self.conversion.make_boolean(bios_force)
         if not isinstance(bios_force, bool):
@@ -409,6 +431,9 @@ class ImageUpgrade:
         Build the epldUpgrade and epldOptions portions of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         epld_upgrade = device.get("upgrade").get("epld")
         epld_upgrade = self.conversion.make_boolean(epld_upgrade)
@@ -456,6 +481,10 @@ class ImageUpgrade:
         Build the reboot portion of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         reboot = device.get("reboot")
 
         reboot = self.conversion.make_boolean(reboot)
@@ -471,6 +500,9 @@ class ImageUpgrade:
         Build the rebootOptions portion of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         config_reload = device.get("options").get("reboot").get("config_reload")
         write_erase = device.get("options").get("reboot").get("write_erase")
@@ -498,6 +530,9 @@ class ImageUpgrade:
         Build the packageInstall and packageUnInstall portions of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         package_install = device.get("options").get("package").get("install")
         package_uninstall = device.get("options").get("package").get("uninstall")
@@ -533,6 +568,9 @@ class ImageUpgrade:
         # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit()."
@@ -551,6 +589,9 @@ class ImageUpgrade:
         ### Raises
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         self.validate_commit_parameters()
 
@@ -575,10 +616,17 @@ class ImageUpgrade:
             if ipv4 not in self.saved_result_current:
                 self.saved_result_current[ipv4] = {}
 
-            msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}."
             self.log.debug(msg)
 
             self._build_payload(device)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Calling RestSend.commit(). "
+            msg += f"verb: {self.ep_upgrade_image.verb}, "
+            msg += f"path: {self.ep_upgrade_image.path}."
+            self.log.debug(msg)
 
             # pylint: disable=no-member
             self.rest_send.path = self.ep_upgrade_image.path
@@ -622,6 +670,10 @@ class ImageUpgrade:
                 -   The action times out.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         try:
             self.wait_for_controller_done.items = set(copy.copy(self.ip_addresses))
             self.wait_for_controller_done.item_type = "ipv4_address"
@@ -648,6 +700,9 @@ class ImageUpgrade:
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
         if self.rest_send.unit_test is False:  # pylint: disable=no-member
             # See unit test test_image_upgrade_upgrade_00240
@@ -655,7 +710,8 @@ class ImageUpgrade:
         timeout = self.check_timeout
 
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
-            sleep(self.check_interval)
+            if self.rest_send.unit_test is False:  # pylint: disable=no-member
+                sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
 
@@ -709,7 +765,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("bios_force")
+        return self._bios_force
 
     @bios_force.setter
     def bios_force(self, value):
@@ -718,7 +774,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.bios_force must be a boolean."
             raise TypeError(msg)
-        self.properties["bios_force"] = value
+        self._bios_force = value
 
     @property
     def config_reload(self):
@@ -727,7 +783,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("config_reload")
+        return self._config_reload
 
     @config_reload.setter
     def config_reload(self, value):
@@ -736,7 +792,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.config_reload must be a boolean."
             raise TypeError(msg)
-        self.properties["config_reload"] = value
+        self._config_reload = value
 
     @property
     def devices(self) -> list:
@@ -751,7 +807,7 @@ class ImageUpgrade:
         ]
         Must be set before calling instance.commit()
         """
-        return self.properties.get("devices", [{}])
+        return self._devices
 
     @devices.setter
     def devices(self, value: list):
@@ -774,7 +830,7 @@ class ImageUpgrade:
                 msg += "ip_address. "
                 msg += f"Got {value}."
                 raise ValueError(msg)
-        self.properties["devices"] = value
+        self._devices = value
 
     @property
     def disruptive(self):
@@ -783,7 +839,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("disruptive")
+        return self._disruptive
 
     @disruptive.setter
     def disruptive(self, value):
@@ -792,7 +848,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.disruptive must be a boolean."
             raise TypeError(msg)
-        self.properties["disruptive"] = value
+        self._disruptive = value
 
     @property
     def epld_golden(self):
@@ -801,7 +857,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("epld_golden")
+        return self._epld_golden
 
     @epld_golden.setter
     def epld_golden(self, value):
@@ -810,7 +866,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_golden must be a boolean."
             raise TypeError(msg)
-        self.properties["epld_golden"] = value
+        self._epld_golden = value
 
     @property
     def epld_upgrade(self):
@@ -819,7 +875,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("epld_upgrade")
+        return self._epld_upgrade
 
     @epld_upgrade.setter
     def epld_upgrade(self, value):
@@ -828,7 +884,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_upgrade must be a boolean."
             raise TypeError(msg)
-        self.properties["epld_upgrade"] = value
+        self._epld_upgrade = value
 
     @property
     def epld_module(self):
@@ -839,7 +895,7 @@ class ImageUpgrade:
         Valid values: integer or "ALL"
         Default: "ALL"
         """
-        return self.properties.get("epld_module")
+        return self._epld_module
 
     @epld_module.setter
     def epld_module(self, value):
@@ -856,7 +912,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_module must be an integer or 'ALL'"
             raise TypeError(msg)
-        self.properties["epld_module"] = value
+        self._epld_module = value
 
     @property
     def force_non_disruptive(self):
@@ -865,7 +921,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("force_non_disruptive")
+        return self._force_non_disruptive
 
     @force_non_disruptive.setter
     def force_non_disruptive(self, value):
@@ -874,7 +930,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.force_non_disruptive must be a boolean."
             raise TypeError(msg)
-        self.properties["force_non_disruptive"] = value
+        self._force_non_disruptive = value
 
     @property
     def non_disruptive(self):
@@ -883,7 +939,7 @@ class ImageUpgrade:
 
         Default: True
         """
-        return self.properties.get("non_disruptive")
+        return self._non_disruptive
 
     @non_disruptive.setter
     def non_disruptive(self, value):
@@ -892,7 +948,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.non_disruptive must be a boolean."
             raise TypeError(msg)
-        self.properties["non_disruptive"] = value
+        self._non_disruptive = value
 
     @property
     def package_install(self):
@@ -901,7 +957,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("package_install")
+        return self._package_install
 
     @package_install.setter
     def package_install(self, value):
@@ -910,7 +966,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.package_install must be a boolean."
             raise TypeError(msg)
-        self.properties["package_install"] = value
+        self._package_install = value
 
     @property
     def package_uninstall(self):
@@ -919,7 +975,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("package_uninstall")
+        return self._package_uninstall
 
     @package_uninstall.setter
     def package_uninstall(self, value):
@@ -928,7 +984,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.package_uninstall must be a boolean."
             raise TypeError(msg)
-        self.properties["package_uninstall"] = value
+        self._package_uninstall = value
 
     @property
     def reboot(self):
@@ -937,7 +993,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("reboot")
+        return self._reboot
 
     @reboot.setter
     def reboot(self, value):
@@ -946,7 +1002,7 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.reboot must be a boolean."
             raise TypeError(msg)
-        self.properties["reboot"] = value
+        self._reboot = value
 
     @property
     def write_erase(self):
@@ -955,7 +1011,7 @@ class ImageUpgrade:
 
         Default: False
         """
-        return self.properties.get("write_erase")
+        return self._write_erase
 
     @write_erase.setter
     def write_erase(self, value):
@@ -964,14 +1020,14 @@ class ImageUpgrade:
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.write_erase must be a boolean."
             raise TypeError(msg)
-        self.properties["write_erase"] = value
+        self._write_erase = value
 
     @property
     def check_interval(self):
         """
         Return the image upgrade check interval in seconds
         """
-        return self.properties.get("check_interval")
+        return self._check_interval
 
     @check_interval.setter
     def check_interval(self, value):
@@ -984,14 +1040,14 @@ class ImageUpgrade:
             raise TypeError(msg)
         if not isinstance(value, int):
             raise TypeError(msg)
-        self.properties["check_interval"] = value
+        self._check_interval = value
 
     @property
     def check_timeout(self):
         """
         Return the image upgrade check timeout in seconds
         """
-        return self.properties.get("check_timeout")
+        return self._check_timeout
 
     @check_timeout.setter
     def check_timeout(self, value):
@@ -1004,4 +1060,4 @@ class ImageUpgrade:
             raise TypeError(msg)
         if not isinstance(value, int):
             raise TypeError(msg)
-        self.properties["check_timeout"] = value
+        self._check_timeout = value
