@@ -180,13 +180,13 @@ def load_playbook_config(key: str) -> Dict[str, str]:
     return playbook_config
 
 
-def payloads_image_upgrade(key: str) -> Dict[str, str]:
+def payloads_ep_image_upgrade(key: str) -> Dict[str, str]:
     """
-    Return payloads for ImageUpgrade
+    Return payloads for EpImageUpgrade
     """
-    payload_file = "image_upgrade_payloads_ImageUpgrade"
+    payload_file = "payloads_ep_image_upgrade"
     payload = load_fixture(payload_file).get(key)
-    print(f"payload_data_image_upgrade: {key} : {payload}")
+    print(f"payloads_ep_image_upgrade: {key} : {payload}")
     return payload
 
 
@@ -200,9 +200,19 @@ def responses_ep_image_stage(key: str) -> Dict[str, str]:
     return response
 
 
+def responses_ep_image_upgrade(key: str) -> Dict[str, str]:
+    """
+    Return EpImageUpgrade responses
+    """
+    response_file = "responses_ep_image_upgrade"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_image_upgrade: {key} : {response}")
+    return response
+
+
 def responses_ep_image_validate(key: str) -> Dict[str, str]:
     """
-    Return EpImageValidate controller responses
+    Return EpImageValidate responses
     """
     response_file = "responses_ep_image_validate"
     response = load_fixture(response_file).get(key)
@@ -212,7 +222,7 @@ def responses_ep_image_validate(key: str) -> Dict[str, str]:
 
 def responses_ep_issu(key: str) -> Dict[str, str]:
     """
-    Return EpIssu controller responses
+    Return EpIssu responses
     """
     response_file = "responses_ep_issu"
     response = load_fixture(response_file).get(key)
@@ -222,7 +232,7 @@ def responses_ep_issu(key: str) -> Dict[str, str]:
 
 def responses_ep_version(key: str) -> Dict[str, str]:
     """
-    Return EpVersion controller responses
+    Return EpVersion responses
     """
     response_file = "responses_ep_version"
     response = load_fixture(response_file).get(key)
@@ -230,19 +240,19 @@ def responses_ep_version(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_install_options(key: str) -> Dict[str, str]:
+def responses_ep_install_options(key: str) -> Dict[str, str]:
     """
-    Return ImageInstallOptions controller responses
+    Return EpInstallOptions responses
     """
-    response_file = "image_upgrade_responses_ImageInstallOptions"
+    response_file = "responses_ep_install_options"
     response = load_fixture(response_file).get(key)
-    print(f"{key} : : {response}")
+    print(f"responses_ep_install_options: {key} : {response}")
     return response
 
 
 def responses_image_policy_action(key: str) -> Dict[str, str]:
     """
-    Return ImagePolicyAction controller responses
+    Return ImagePolicyAction responses
     """
     response_file = "image_upgrade_responses_ImagePolicyAction"
     response = load_fixture(response_file).get(key)
@@ -250,19 +260,9 @@ def responses_image_policy_action(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_upgrade(key: str) -> Dict[str, str]:
-    """
-    Return ImageUpgrade controller responses
-    """
-    response_file = "image_upgrade_responses_ImageUpgrade"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_image_upgrade: {key} : {response}")
-    return response
-
-
 def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     """
-    Return ImageUpgradeCommon controller responses
+    Return ImageUpgradeCommon responses
     """
     response_file = "image_upgrade_responses_ImageUpgradeCommon"
     response = load_fixture(response_file).get(key)
@@ -273,7 +273,7 @@ def responses_image_upgrade_common(key: str) -> Dict[str, str]:
 
 def responses_switch_details(key: str) -> Dict[str, str]:
     """
-    Return SwitchDetails controller responses
+    Return SwitchDetails responses
     """
     response_file = "image_upgrade_responses_SwitchDetails"
     response = load_fixture(response_file).get(key)
