@@ -172,6 +172,7 @@ class ImageUpgrade:
 
         self.action = "image_upgrade"
         self.diff: dict = {}
+        # Used in _wait_for_upgrade_to_complete()
         self.ipv4_done = set()
         self.ipv4_todo = set()
         self.payload = None
@@ -216,7 +217,6 @@ class ImageUpgrade:
         self._epld_module = "ALL"
         self._epld_upgrade = False
         self._force_non_disruptive = False
-        self._response_data = []
         self._non_disruptive = False
         self._package_install = False
         self._package_uninstall = False
@@ -587,6 +587,10 @@ class ImageUpgrade:
         for the images to be upgraded.
 
         ### Raises
+        -   ``ControllerResponseError`` if the controller returns a non-200
+            response.
+        -   ``ValueError`` if:
+                -   ``RestSend()`` raises a ``TypeError`` or ``ValueError``.
         """
         method_name = inspect.stack()[0][3]
 
@@ -629,10 +633,23 @@ class ImageUpgrade:
             self.log.debug(msg)
 
             # pylint: disable=no-member
-            self.rest_send.path = self.ep_upgrade_image.path
-            self.rest_send.verb = self.ep_upgrade_image.verb
-            self.rest_send.payload = self.payload
-            self.rest_send.commit()
+            try:
+                self.rest_send.path = self.ep_upgrade_image.path
+                self.rest_send.verb = self.ep_upgrade_image.verb
+                self.rest_send.payload = self.payload
+                self.rest_send.commit()
+            except (TypeError, ValueError) as error:
+                self.results.diff_current = {}
+                self.results.action = self.action
+                self.results.response_current = copy.deepcopy(
+                    self.rest_send.response_current
+                )
+                self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+                self.results.register_task_result()
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error while sending request. "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
 
             self.saved_response_current[ipv4] = copy.deepcopy(
                 self.rest_send.response_current

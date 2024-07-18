@@ -870,7 +870,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_upgrade_00030a": {
+    "test_image_upgrade_01130a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -925,7 +925,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_upgrade_00031a": {
+    "test_image_upgrade_01140a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -980,7 +980,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_upgrade_00032a": {
+    "test_image_upgrade_01160a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
@@ -1035,7 +1035,7 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options",
         "RETURN_CODE": 200
     },
-    "test_image_upgrade_00033a": {
+    "test_image_upgrade_02000a": {
         "DATA": {
             "compatibilityStatusList": [
                 {
