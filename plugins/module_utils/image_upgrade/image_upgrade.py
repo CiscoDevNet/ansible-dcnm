@@ -282,10 +282,6 @@ class ImageUpgrade:
             msg += "call instance.devices before calling commit."
             raise ValueError(msg)
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg = f"Calling: self.issu_detail.refresh()"
-        self.log.debug(msg)
-
         self.issu_detail.refresh()
         for device in self.devices:
             self.issu_detail.filter = device.get("ip_address")
@@ -413,7 +409,6 @@ class ImageUpgrade:
 
         msg = f"ENTERED: {self.class_name}.{method_name}."
         self.log.debug(msg)
-
 
         bios_force = device.get("options").get("nxos").get("bios_force")
         bios_force = self.conversion.make_boolean(bios_force)
@@ -627,7 +622,7 @@ class ImageUpgrade:
             self._build_payload(device)
 
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Calling RestSend.commit(). "
+            msg += "Calling RestSend.commit(). "
             msg += f"verb: {self.ep_upgrade_image.verb}, "
             msg += f"path: {self.ep_upgrade_image.path}."
             self.log.debug(msg)
@@ -644,7 +639,9 @@ class ImageUpgrade:
                 self.results.response_current = copy.deepcopy(
                     self.rest_send.response_current
                 )
-                self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+                self.results.result_current = copy.deepcopy(
+                    self.rest_send.result_current
+                )
                 self.results.register_task_result()
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error while sending request. "
