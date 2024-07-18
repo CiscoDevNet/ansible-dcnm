@@ -76,6 +76,7 @@ def test_image_upgrade_00000(image_upgrade) -> None:
             - ``__init__``
 
     ### Test
+
     - Class attributes are initialized to expected values.
     """
     with does_not_raise():
@@ -114,6 +115,7 @@ def test_image_upgrade_00010(image_upgrade) -> None:
             - ``_init_properties``
 
     ### Test
+
     - Class properties are initialized to expected values.
     """
     instance = image_upgrade
@@ -148,18 +150,20 @@ def test_image_upgrade_00100(image_upgrade) -> None:
             -   ``validate_devices``
 
     ### Test
-    -   ip_addresses contains the ip addresses of the devices for which
+
+    -   ``ip_addresses`` contains the ip addresses of the devices for which
         validation succeeds.
 
     ### Description
+
     ImageUpgrade.validate_devices updates the set ImageUpgrade.ip_addresses
     with the ip addresses of the devices for which validation succeeds.
     Currently, validation succeeds for all devices.  This function may be
     updated in the future to handle various failure scenarios.
 
-    ### Expected results
+    ### Expected result
 
-    1.  instance.ip_addresses will contain {"172.22.150.102", "172.22.150.108"}
+    1.  ``ip_addresses`` will contain {"172.22.150.102", "172.22.150.108"}
     """
     devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
@@ -200,7 +204,8 @@ def test_image_upgrade_01000(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
-    - ``ValueError`` is called because devices is None.
+
+    - ``ValueError`` is called because ``devices`` is None.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -239,18 +244,19 @@ def test_image_upgrade_01010(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
-    - upgrade.nxos set to invalid value
+
+    -   ``upgrade.nxos`` set to invalid value
 
     ### Setup
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded.
-    -   The methods called by commit are mocked to simulate that the
-        the image has already been staged and validated and the device
-        has already been upgraded to the desired version.
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing.
 
-    Expected results:
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   responses_ep_issu.json indicates that the image has already
+        been staged, validated, and the device has already been upgraded
+        to the desired version.
+    -   responses_ep_install_options.json indicates that the image EPLD
+        does not need upgrade.
+
+    ### Expected result
 
     1.  ``commit`` calls ``_build_payload`` which raises ``ValueError``
     """
@@ -314,30 +320,28 @@ def test_image_upgrade_01020(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
+
     - non-default values are set for several options.
-    - policy_changed is set to False.
+    - ``policy_changed`` is set to False.
     - Verify that payload is built correctly.
 
     ### Setup
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded.
-    -   commit -> _build_payload -> issu_details is mocked to simulate
-        that the image has already been staged and validated and the
-        device has already been upgraded to the desired version.
-    -   commit -> _build_payload -> install_options is mocked to simulate
-        that the EPLD image does not need upgrade.
-    -   The following methods, called by commit() are mocked to do nothing:
-        - _wait_for_current_actions_to_complete
-        - _wait_for_image_upgrade_to_complete
-    -   RestSend is mocked to return a successful response
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   responses_ep_issu.json indicates that the image has already
+        been staged, validated, and the device has already been upgraded
+        to the desired version.
+    -   responses_ep_install_options.json indicates that the image EPLD
+        does not need upgrade.
+    -   responses_ep_image_upgrade.json returns a successful response.
 
 
-    Expected results:
+    ### Expected result
 
     1.  instance.payload (built by instance._build_payload and based on
         instance.devices) will equal a payload previously obtained by running
-        ansible-playbook against the controller for this scenario, which verifies
-        that the non-default values are included in the payload.
+        ansible-playbook against the controller for this scenario, which
+        verifies that the non-default values are included in the payload.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -403,26 +407,24 @@ def test_image_upgrade_01030(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
-    - User explicitely sets default values for several options
-    - policy_changed is set to True
+
+    -   User explicitly sets default values for several options.
+    -   ``policy_changed`` is set to True.
 
     ### Setup
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   commit -> _build_payload -> issu_details is mocked to simulate
-        that the image has already been staged and validated and the
-        device has already been upgraded to the desired version.
-    -   commit -> _build_payload -> install_options is mocked to simulate
-        that the image EPLD does not need upgrade.
-    -   The following methods, called by commit() are mocked to do nothing:
-        - _wait_for_current_actions_to_complete
-        - _wait_for_image_upgrade_to_complete
-    -   RestSend is mocked to return a successful response
 
-    ### Expected results
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   responses_ep_issu.json indicates that the image has already
+        been staged, validated, and the device has already been upgraded to
+        the desired version.
+    -   responses_ep_install_options.json indicates that the image EPLD
+        does not need upgrade.
+    -   responses_ep_image_upgrade.json returns a successful response.
+
+    ### Expected result
 
     -   instance.payload will equal a payload previously obtained by
-        running ansible-playbook against the controller for this scenario
+        running ansible-playbook against the controller for this scenario.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -487,19 +489,20 @@ def test_image_upgrade_01040(image_upgrade) -> None:
             -   ``_build_payload``
             -   ``commit``
 
-    ## Test
+    ### Test
+
     - Invalid value for ``nxos.mode``
 
-    ## Setup
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   The methods called by commit are mocked to simulate that the
-        device has not yet been upgraded to the desired version
-    -   Method called by commit, _wait_for_current_actions_to_complete
-        is mocked to do nothing
-    -   instance.devices is set to contain an invalid nxos.mode value
+    ### Setup
 
-    ### Expected results
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain an invalid ``nxos.mode`` value.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+
+    ### Expected result
 
     -   ``commit`` calls ``_build_payload``, which raises ``ValueError``
     """
@@ -568,37 +571,43 @@ def test_image_upgrade_01050(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
+
     - Force code coverage of ``nxos.mode`` == "non_disruptive" path.
 
     ### Setup
-    -   ``ImageUpgrade.devices`` is set to a list of one dict for a device
-        to be upgraded.
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
     -   ``devices`` is set to contain ``nxos.mode`` == "non_disruptive",
         forcing the code to take ``nxos_mode`` == "non_disruptive" path.
+    -   responses_ep_issu.json (key_a) indicates that the device has not yet
+        been upgraded to the desired version
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+    -   responses_ep_issu.json (key_b) indicates that the device upgrade has
+        completed.
 
-    ### Expected results
+    ### Expected result
 
     1.  self.payload["issuUpgradeOptions1"]["disruptive"] is False
     2.  self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is False
     3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] is True
     """
     method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
+    key_a = f"{method_name}a"
+    key_b = f"{method_name}b"
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
-        yield responses_ep_issu(key)
+        yield responses_ep_issu(key_a)
         # ImageUpgrade.wait_for_controller
-        yield responses_ep_issu(key)
+        yield responses_ep_issu(key_a)
         # ImageUpgrade._build_payload
         #     -> ImageInstallOptions.refresh
-        yield responses_ep_install_options(key)
+        yield responses_ep_install_options(key_a)
         # ImageUpgrade.commit
-        yield responses_ep_image_upgrade(key)
+        yield responses_ep_image_upgrade(key_a)
         # ImageUpgrade._wait_for_image_upgrade_to_complete
-        yield responses_ep_issu(key)
+        yield responses_ep_issu(key_b)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -652,37 +661,43 @@ def test_image_upgrade_01060(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
+
     -   Force code coverage of ``nxos.mode`` == "force_non_disruptive" path.
 
-    ### Setup:
-    -   ``ImageUpgrade.devices`` is set to a list of one dict for a device
-        to be upgraded.
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
+    ### Setup
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
     -   ``devices`` is set to contain ``nxos.mode`` == "force_non_disruptive",
         forcing the code to take ``nxos_mode`` == "force_non_disruptive" path
+    -   responses_ep_issu.json (key_a) indicates that the device has not yet
+        been upgraded to the desired version
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+    -   responses_ep_issu.json (key_b) indicates that the device upgrade has
+        completed.
 
-    Expected results:
+    ### Expected result
 
     1.  self.payload["issuUpgradeOptions1"]["disruptive"] is False
     2.  self.payload["issuUpgradeOptions1"]["forceNonDisruptive"] is True
     3.  self.payload["issuUpgradeOptions1"]["nonDisruptive"] is False
     """
     method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
+    key_a = f"{method_name}a"
+    key_b = f"{method_name}b"
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
-        yield responses_ep_issu(key)
+        yield responses_ep_issu(key_a)
         # ImageUpgrade.wait_for_controller
-        yield responses_ep_issu(key)
+        yield responses_ep_issu(key_a)
         # ImageUpgrade._build_payload
         #     -> ImageInstallOptions.refresh
-        yield responses_ep_install_options(key)
+        yield responses_ep_install_options(key_a)
         # ImageUpgrade.commit
-        yield responses_ep_image_upgrade(key)
+        yield responses_ep_image_upgrade(key_a)
         # ImageUpgrade._wait_for_image_upgrade_to_complete
-        yield responses_ep_issu(key)
+        yield responses_ep_issu(key_b)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -735,16 +750,20 @@ def test_image_upgrade_01070(image_upgrade) -> None:
             -   ``_build_payload``
 
    ### Test
+
     -   Invalid value for ``options.nxos.bios_force``
 
-    Setup:
-    -   ``ImageUpgrade.devices`` is set to a list of one dict for a device
-        to be upgraded.
-    -   Responses are mocked to allow the code to reach ``_build_payload``.
+    ### Setup
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
     -   ``devices`` is set to contain a non-boolean value for
         ``options.nxos.bios_force``.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
 
-    Expected results:
+    ### Expected result
 
     1.  ``_build_payload_issu_options_2`` raises ``TypeError``
     """
@@ -813,15 +832,17 @@ def test_image_upgrade_01080(image_upgrade) -> None:
     ### Test
     -   Incompatible values for ``options.epld.golden`` and ``upgrade.nxos``.
 
-    Setup:
-    -   ``ImageUpgrade.devices`` is set to a list of one dict for a device
-        to be upgraded.
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
+    ### Setup
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
     -   ``devices`` is set to contain ``epld.golden`` == True and
         ``upgrade.nxos`` == True.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
 
-    Expected results:
+    ### Expected result
 
     1.  ``commit`` calls ``_build_payload`` which raises ``ValueError``.
     """
@@ -890,16 +911,19 @@ def test_image_upgrade_01090(image_upgrade) -> None:
             -   ``commit``
 
     ### Test
+
     -   Invalid value for ``epld.module``
 
     ### Setup
-    -   ``ImageUpgrade.devices`` is set to a list of one dict for a device
-        to be upgraded.
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
-    -   ``devices`` is set to contain invalid ``epld.module``.
 
-    ### Expected results
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid ``epld.module``.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+
+    ### Expected result
 
     1.  ``commit`` calls ``_build_payload`` which raises ``ValueError``
     """
@@ -969,13 +993,14 @@ def test_image_upgrade_01100(monkeypatch, image_upgrade) -> None:
     -   Invalid value for ``epld.golden``
 
     ### Setup
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
     -   instance.devices is set to contain invalid ``epld.golden``
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
 
-    ### Expected results
+    ### Expected result
 
     1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``
     """
@@ -1044,12 +1069,14 @@ def test_image_upgrade_01110(monkeypatch, image_upgrade) -> None:
     ### Test
     - Invalid value for ``reboot``
 
-    Setup:
-    -   ``ImageUpgrade.devices`` is set to a list of one dict for a device
-        to be upgraded.
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
+    ### Setup
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
     -   ``devices`` is set to contain invalid value for ``reboot``.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
 
     ## Expected result
 
@@ -1111,24 +1138,26 @@ def test_image_upgrade_01110(monkeypatch, image_upgrade) -> None:
 
 def test_image_upgrade_01120(monkeypatch, image_upgrade) -> None:
     """
-    Function
     ### Classes and Methods
     -   ``ImageUpgrade``
             -   ``_build_payload``
             -   ``commit``
 
-    Test
+    ### Test
+
     - Invalid value for ``options.reboot.config_reload``.
 
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   Responses are mocked to allow the code to reach ``commit``,
-        and for ``commit`` to succeed.
-    -   instance.devices is set to contain invalid value for
-        ``options.reboot.config_reload``.
+    ### Setup
 
-    Expected results:
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid value for
+        ``options.reboot.config_reload``.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+
+    ### Expected result
 
     1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``.
     """
@@ -1183,53 +1212,65 @@ def test_image_upgrade_01120(monkeypatch, image_upgrade) -> None:
     match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.config_reload must be a boolean. Got FOO\."
     with pytest.raises(TypeError, match=match):
-        instance.unit_test = True
         instance.commit()
 
 
-def test_image_upgrade_00030(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01130(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade.commit
+    ### Classes and Methods
 
-    Test
+    -   ``ImageUpgrade``
+            -   ``_build_payload``
+            -   ``commit``
+
+    ### Test
+
     - Invalid value for options.reboot.write_erase
 
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   The methods called by commit are mocked to simulate that the
-        device has not yet been upgraded to the desired version
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing
-    -   instance.devices is set to contain invalid value for
-        options.reboot.write_erase
+    ### Setup
 
-    Expected results:
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid value for
+        ``options.reboot.write_erase``.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
 
-    1.  commit calls _build_payload which calls fail_json
+    ### Expected result
+
+    1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``
     """
-    instance = image_upgrade
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    key = "test_image_upgrade_00030a"
+    def responses():
+        # ImageUpgrade.validate_commit_parameters
+        yield responses_ep_issu(key)
+        # ImageUpgrade.wait_for_controller
+        yield responses_ep_issu(key)
+        # ImageUpgrade._build_payload
+        #     -> ImageInstallOptions.refresh
+        yield responses_ep_install_options(key)
 
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_install_options(key)
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
+    with does_not_raise():
+        instance = image_upgrade
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
 
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
-
+    # options.reboot.write_erase is invalid
     instance.devices = [
         {
             "policy": "NR3F",
@@ -1250,60 +1291,73 @@ def test_image_upgrade_00030(monkeypatch, image_upgrade) -> None:
 
     match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.write_erase must be a boolean. Got FOO\."
-    with pytest.raises(ValueError, match=match):
-        instance.unit_test = True
+    with pytest.raises(TypeError, match=match):
         instance.commit()
 
 
-def test_image_upgrade_00031(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01140(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade.commit
+    ### Classes and Methods
 
-    Test
-    - Invalid value for options.package.uninstall
+    -   ``ImageUpgrade``
+            -   ``_build_payload``
+            -   ``commit``
 
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   The methods called by commit are mocked to simulate that the
-        device has not yet been upgraded to the desired version
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing
-    -   instance.devices is set to contain invalid value for
-        options.package.uninstall
+    ### Test
 
-    Expected results:
+    Invalid value for ``options.package.uninstall``.
 
-    1.  commit calls _build_payload which calls fail_json
+    ### Setup
 
-    NOTES:
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid value for
+        ``options.package.uninstall``
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+
+    ### Expected result
+
+    1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``
+
+    ### NOTES
+
     1. The corresponding test for options.package.install is missing.
-        It's not needed since ImageInstallOptions will call fail_json
-        on invalid values before ImageUpgrade has a chance to verify
+        It's not needed since ``ImageInstallOptions`` will raise exceptions
+        on invalid values before ``ImageUpgrade`` has a chance to verify
         the value.
     """
-    instance = image_upgrade
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    key = "test_image_upgrade_00031a"
+    def responses():
+        # ImageUpgrade.validate_commit_parameters
+        yield responses_ep_issu(key)
+        # ImageUpgrade.wait_for_controller
+        yield responses_ep_issu(key)
+        # ImageUpgrade._build_payload
+        #     -> ImageInstallOptions.refresh
+        yield responses_ep_install_options(key)
 
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_install_options(key)
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
+    with does_not_raise():
+        instance = image_upgrade
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
 
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
-
+    # options.package.uninstall is invalid
     instance.devices = [
         {
             "policy": "NR3F",
@@ -1324,78 +1378,82 @@ def test_image_upgrade_00031(monkeypatch, image_upgrade) -> None:
 
     match = "ImageUpgrade._build_payload_package: "
     match += r"options.package.uninstall must be a boolean. Got FOO\."
-    with pytest.raises(ValueError, match=match):
-        instance.unit_test = True
+    with pytest.raises(TypeError, match=match):
         instance.commit()
 
 
-def test_image_upgrade_00032(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01140(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade.commit
+    ### Classes and Methods
 
-    Test
-    - Bad result code in image upgrade response
+    -   ``ImageUpgrade``
+            -   ``_build_payload``
+            -   ``commit``
 
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   The methods called by commit are mocked to simulate that the
-        device has not yet been upgraded to the desired version
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing
-    -   ImageUpgrade response (mock_dcnm_send_image_upgrade_commit) is set
-        to return RESULT_CODE 500 with MESSAGE "Internal Server Error"
+    ### Test
 
-    Expected results:
+    Invalid value for ``options.package.uninstall``.
 
-    1.  commit calls fail_json because self.result will not equal "success"
+    ### Setup
 
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid value for
+        ``options.package.uninstall``
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+
+    ### Expected result
+
+    1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``
+
+    ### NOTES
+
+    1. The corresponding test for options.package.install is missing.
+        It's not needed since ``ImageInstallOptions`` will raise exceptions
+        on invalid values before ``ImageUpgrade`` has a chance to verify
+        the value.
     """
-    instance = image_upgrade
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    key = "test_image_upgrade_00032a"
+    def responses():
+        # ImageUpgrade.validate_commit_parameters
+        yield responses_ep_issu(key)
+        # ImageUpgrade.wait_for_controller
+        yield responses_ep_issu(key)
+        # ImageUpgrade._build_payload
+        #     -> ImageInstallOptions.refresh
+        yield responses_ep_install_options(key)
 
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_install_options(key)
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
+    with does_not_raise():
+        instance = image_upgrade
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
 
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_ep_image_upgrade(key)
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT,
-        {"success": False, "changed": False},
-    )
-
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
-
+    # options.package.uninstall is invalid
     instance.devices = [
         {
             "policy": "NR3F",
-            "reboot": False,
+            "reboot": True,
             "stage": True,
             "upgrade": {"nxos": True, "epld": True},
             "options": {
                 "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
+                "package": {"install": False, "uninstall": "FOO"},
                 "epld": {"module": "ALL", "golden": False},
                 "reboot": {"config_reload": False, "write_erase": False},
             },
@@ -1405,57 +1463,151 @@ def test_image_upgrade_00032(monkeypatch, image_upgrade) -> None:
         }
     ]
 
-    match = "ImageUpgrade.commit_normal_mode: failed: "
-    match += r"\{'success': False, 'changed': False\}. "
-    match += r"Controller response: \{'DATA': 123, "
-    match += "'MESSAGE': 'Internal Server Error', 'METHOD': 'POST', "
-    match += "'REQUEST_PATH': "
-    match += "'https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/"
-    match += "imagemanagement/rest/imageupgrade/upgrade-image', "
-    match += r"'RETURN_CODE': 500\}"
-    with pytest.raises(ValueError, match=match):
+    match = "ImageUpgrade._build_payload_package: "
+    match += r"options.package.uninstall must be a boolean. Got FOO\."
+    with pytest.raises(TypeError, match=match):
         instance.commit()
 
 
-def test_image_upgrade_00033(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01150(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade.commit
+    ### Classes and Methods
 
-    Test
+    -   ``ImageUpgrade``
+            -   ``_build_payload``
+            -   ``commit``
+
+    ### Test
+
+    Invalid value for ``options.package.install``.
+
+    ### Setup
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid value for
+        ``options.package.install``
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+
+    ### Expected result
+
+    1.  ``commit`` calls ``_build_payload`` which calls 
+        ``ImageInstallOptions.package_install`` which raises
+        ``TypeError``.
+
+    ### NOTES
+    1.  This test differs from the previous test since ``ImageInstallOptions``
+        catches the error sooner.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        # ImageUpgrade.validate_commit_parameters
+        yield responses_ep_issu(key)
+        # ImageUpgrade.wait_for_controller
+        yield responses_ep_issu(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_upgrade
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
+
+    # options.package.install is invalid
+    instance.devices = [
+        {
+            "policy": "NR3F",
+            "reboot": True,
+            "stage": True,
+            "upgrade": {"nxos": True, "epld": True},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": False},
+                "package": {"install": "FOO", "uninstall": False},
+                "epld": {"module": "ALL", "golden": False},
+                "reboot": {"config_reload": False, "write_erase": False},
+            },
+            "validate": True,
+            "ip_address": "172.22.150.102",
+            "policy_changed": True,
+        }
+    ]
+
+    match = r"ImageInstallOptions\.package_install:\s+"
+    match += r"package_install must be a boolean value\.\s+"
+    match += r"Got FOO\."
+    with pytest.raises(TypeError, match=match):
+        instance.commit()
+
+
+def test_image_upgrade_01160(image_upgrade) -> None:
+    """
+    ### Classes and Methods
+
+    -   ``ImageUpgrade``
+            -   ``_build_payload``
+            -   ``commit``
+
+    ### Test
+
     - Invalid value for upgrade.epld
 
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded
-    -   The methods called by commit are mocked to simulate that the
-        device has not yet been upgraded to the desired version
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing
-    -   instance.devices is set to contain invalid value for
-        upgrade.epld
+    ### Setup
 
-    Expected results:
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   ``devices`` is set to contain invalid value for ``upgrade.epld``.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
 
-    1.  commit calls _build_payload which calls fail_json
+    ### Expected result
+
+    1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``.
     """
-    instance = image_upgrade
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    key = "test_image_upgrade_00033a"
+    def responses():
+        # ImageUpgrade.validate_commit_parameters
+        yield responses_ep_issu(key)
+        # ImageUpgrade.wait_for_controller
+        yield responses_ep_issu(key)
+        # ImageUpgrade._build_payload
+        #     -> ImageInstallOptions.refresh
+        yield responses_ep_install_options(key)
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
+    with does_not_raise():
+        instance = image_upgrade
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
 
+    # upgrade.epld is invalid
     instance.devices = [
         {
             "policy": "NR3F",
@@ -1474,79 +1626,69 @@ def test_image_upgrade_00033(monkeypatch, image_upgrade) -> None:
 
     match = "ImageInstallOptions.epld: "
     match += r"epld must be a boolean value. Got FOO\."
-    with pytest.raises(ValueError, match=match):
-        instance.unit_test = True
+    with pytest.raises(TypeError, match=match):
         instance.commit()
 
 
-# test getter properties
-# check_interval (see test_image_upgrade_00070)
-# check_timeout (see test_image_upgrade_00075)
-
-
-def test_image_upgrade_00045(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_02000(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade.commit
-    - ImageUpgradeCommon.response_data getter
+    ### Classes and Methods
 
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded.
-    -   The methods called by commit are mocked to simulate that the
-        the image has already been staged and validated and the device
-        has already been upgraded to the desired version.
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing.
+    -   ``ImageUpgrade``
+            -   ``commit``
 
+    #### Test
 
-    Expected results:
+    - Bad result code in image upgrade response
 
-    1.  instance.response_data == 121
+    ### Setup
+
+    -   ``devices`` is set to a list of one dict for a device to be upgraded.
+    -   responses_ep_issu.json indicates that the device has not yet been
+        upgraded to the desired version.
+    -   responses_ep_install_options.json indicates that EPLD upgrade is
+        not needed.
+    -   responses_ep_image_upgrade.json returns RESULT_CODE 500 with
+        MESSAGE "Internal Server Error".
+
+    ### Expected result
+
+    1.  ``commit`` raises ``ControllerResponseError`` because
+        ``rest_send.result_current`` does not equal "success".
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        # ImageUpgrade.validate_commit_parameters
+        yield responses_ep_issu(key)
+        # ImageUpgrade.wait_for_controller
+        yield responses_ep_issu(key)
+        # ImageUpgrade._build_payload
+        #     -> ImageInstallOptions.refresh
+        yield responses_ep_install_options(key)
+        # ImageUpgrade.commit
+        yield responses_ep_image_upgrade(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.timeout = 1
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
     with does_not_raise():
         instance = image_upgrade
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
 
-    key = "test_image_upgrade_00045a"
-
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return {}
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
-
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_ep_image_upgrade(key)
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
-    )
-
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
-    )
-
+    # Valid payload
     instance.devices = [
         {
             "policy": "NR3F",
@@ -1564,185 +1706,27 @@ def test_image_upgrade_00045(monkeypatch, image_upgrade) -> None:
             "policy_changed": True,
         }
     ]
-    with does_not_raise():
+
+    match = "ImageUpgrade.commit: failed: "
+    match += r"\{'success': False, 'changed': False\}. "
+    match += r"Controller response: \{'DATA': 123, "
+    match += "'MESSAGE': 'Internal Server Error', 'METHOD': 'POST', "
+    match += "'REQUEST_PATH': "
+    match += "'https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/"
+    match += "imagemanagement/rest/imageupgrade/upgrade-image', "
+    match += r"'RETURN_CODE': 500\}"
+    with pytest.raises(ControllerResponseError, match=match):
         instance.commit()
-    assert instance.response_data == [121]
 
 
-def test_image_upgrade_00046(monkeypatch, image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgradeCommon.result
-    - ImageUpgrade.commit
-
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded.
-    -   The methods called by commit are mocked to simulate that the
-        the image has already been staged and validated and the device
-        has already been upgraded to the desired version.
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing.
-
-
-    Expected results:
-
-    1. instance.result is a list: [{'success': True, 'changed': True}]
-    """
-    with does_not_raise():
-        instance = image_upgrade
-
-    key = "test_image_upgrade_00046a"
-
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return {}
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
-
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
-    )
-
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
-    )
-
-    instance.devices = [
-        {
-            "policy": "KR5M",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": False, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": True},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-        }
-    ]
-
-    with does_not_raise():
-        instance.unit_test = True
-        instance.commit()
-    assert instance.result == [{"success": True, "changed": True}]
-
-
-def test_image_upgrade_00047(monkeypatch, image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgradeCommon.response
-    - ImageUpgrade.commit
-
-    Setup:
-    -   ImageUpgrade.devices is set to a list of one dict for a device
-        to be upgraded.
-    -   The methods called by commit are mocked to simulate that the
-        the image has already been staged and validated and the device
-        has already been upgraded to the desired version.
-    -   Methods called by commit that wait for current actions, and
-        image upgrade, to complete are mocked to do nothing.
-
-
-    Expected results:
-
-    1. instance.response is a list
-    """
-    with does_not_raise():
-        instance = image_upgrade
-
-    key = "test_image_upgrade_00047a"
-
-    def mock_dcnm_send_install_options(*args, **kwargs) -> Dict[str, Any]:
-        return {}
-
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_issu(key)
-
-    def mock_wait_for_current_actions_to_complete(*args, **kwargs):
-        pass
-
-    def mock_wait_for_image_upgrade_to_complete(*args, **kwargs):
-        pass
-
-    def mock_rest_send_image_upgrade(*args, **kwargs) -> Dict[str, Any]:
-        return responses_ep_image_upgrade(key)
-
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT, mock_rest_send_image_upgrade
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT, responses_ep_image_upgrade(key)
-    )
-    monkeypatch.setattr(
-        PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT, {"success": True, "changed": True}
-    )
-
-    monkeypatch.setattr(DCNM_SEND_INSTALL_OPTIONS, mock_dcnm_send_install_options)
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_current_actions_to_complete",
-        mock_wait_for_current_actions_to_complete,
-    )
-    monkeypatch.setattr(
-        instance,
-        "_wait_for_image_upgrade_to_complete",
-        mock_wait_for_image_upgrade_to_complete,
-    )
-
-    instance.devices = [
-        {
-            "policy": "KR5M",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": False, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": True},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-        }
-    ]
-
-    with does_not_raise():
-        instance.commit()
-    assert isinstance(instance.response, list)
-    assert instance.response[0]["DATA"] == 121
+# test getter properties
 
 
 # test setter properties
 
-MATCH_00060 = "ImageUpgrade.bios_force: instance.bios_force must be a boolean."
+
+MATCH_03000 = r"ImageUpgrade\.bios_force:\s+"
+MATCH_03000 += r"instance.bios_force must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -1750,19 +1734,23 @@ MATCH_00060 = "ImageUpgrade.bios_force: instance.bios_force must be a boolean."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00060), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03000), True),
     ],
 )
-def test_image_upgrade_00060(
+def test_image_upgrade_03000(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.bios_force
+    ### Classes and Methods
 
-    Verify that bios_force does not call fail_json if passed a boolean.
-    Verify that bios_force does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``bios_force``
+
+    ### Test
+
+    -   ``bios_force`` does not raise ``TypeError`` if passed a boolean.
+    -   ``bios_force`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -1775,29 +1763,34 @@ def test_image_upgrade_00060(
         assert instance.bios_force is False
 
 
-MATCH_00070 = r"ImageUpgrade\.check_interval: instance\.check_interval "
-MATCH_00070 += r"must be an integer\."
+MATCH_03010 = r"ImageUpgrade\.check_interval: instance\.check_interval "
+MATCH_03010 += r"must be an integer\."
 
 
 @pytest.mark.parametrize(
     "value, expected, raise_flag",
     [
         (1, does_not_raise(), False),
-        (False, pytest.raises(ValueError, match=MATCH_00070), True),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00070), True),
+        (False, pytest.raises(TypeError, match=MATCH_03010), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03010), True),
     ],
 )
-def test_image_upgrade_00070(
+def test_image_upgrade_03010(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.check_interval
+    ### Classes and Methods
 
-    Summary
-    Verify that check_interval does not call fail_json if the value is an integer
-    and does call fail_json if the value is not an integer.  Verify that the
-    default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``check_interval``
+
+    ### Test
+
+    -   ``check_interval`` does not raise ``TypeError`` if the value is an
+        integer
+    -   ``check_interval`` raises ``TypeError`` if the value is not an
+        integer
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -1809,29 +1802,32 @@ def test_image_upgrade_00070(
         assert instance.check_interval == 10
 
 
-MATCH_00075 = r"ImageUpgrade\.check_timeout: instance\.check_timeout "
-MATCH_00075 += r"must be an integer\."
+MATCH_03020 = r"ImageUpgrade\.check_timeout: instance\.check_timeout "
+MATCH_03020 += r"must be an integer\."
 
 
 @pytest.mark.parametrize(
     "value, expected, raise_flag",
     [
         (1, does_not_raise(), False),
-        (False, pytest.raises(ValueError, match=MATCH_00075), True),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00075), True),
+        (False, pytest.raises(TypeError, match=MATCH_03020), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03020), True),
     ],
 )
-def test_image_upgrade_00075(
+def test_image_upgrade_03020(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.check_timeout
+    ### Classes and Methods
 
-    Summary
-    Verify that check_timeout does not call fail_json if the value is an integer
-    and does call fail_json if the value is not an integer.  Verify that the
-    default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``check_timeout``
+
+    ### Test
+
+    -   ``check_timeout`` does not raise ``TypeError`` if passed an integer.
+    -   ``check_timeout`` raises ``TypeError`` if passed a non-integer.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -1843,8 +1839,8 @@ def test_image_upgrade_00075(
         assert instance.check_timeout == 1800
 
 
-MATCH_00080 = r"ImageUpgrade\.config_reload: "
-MATCH_00080 += r"instance\.config_reload must be a boolean\."
+MATCH_03030 = r"ImageUpgrade\.config_reload: "
+MATCH_03030 += r"instance\.config_reload must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -1852,20 +1848,23 @@ MATCH_00080 += r"instance\.config_reload must be a boolean\."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00080), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03030), True),
     ],
 )
-def test_image_upgrade_00080(
+def test_image_upgrade_03030(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.config_reload
+    ### Classes and Methods
 
-    Summary
-    Verify that config_reload does not call fail_json if passed a boolean.
-    Verify that config_reload does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``config_reload``
+
+    ### Test
+
+    -   ``config_reload`` does not raise ``TypeError`` if passed a boolean.
+    -   ``config_reload`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -1878,39 +1877,46 @@ def test_image_upgrade_00080(
         assert instance.config_reload is False
 
 
-MATCH_00090_COMMON = "ImageUpgrade.devices: "
-MATCH_00090_COMMON += "instance.devices must be a python list of dict"
+MATCH_03040_COMMON = r"ImageUpgrade.devices:\s+"
+MATCH_03040_COMMON += r"instance\.devices must be a python list of dict"
 
-MATCH_00090_FAIL_1 = f"{MATCH_00090_COMMON}. Got not a list."
-MATCH_00090_FAIL_2 = rf"{MATCH_00090_COMMON}. Got \['not a dict'\]."
+MATCH_03040_FAIL_1 = rf"{MATCH_03040_COMMON}. Got not a list\."
+MATCH_03040_FAIL_2 = rf"{MATCH_03040_COMMON}. Got \['not a dict'\]\."
 
-MATCH_00090_FAIL_3 = f"{MATCH_00090_COMMON}, where each dict contains "
-MATCH_00090_FAIL_3 += "the following keys: ip_address. "
-MATCH_00090_FAIL_3 += r"Got \[\{'bad_key_ip_address': '192.168.1.1'\}\]."
+MATCH_03040_FAIL_3 = rf"{MATCH_03040_COMMON}, where each dict contains\s+"
+MATCH_03040_FAIL_3 += "the following keys: ip_address\.\s+"
+MATCH_03040_FAIL_3 += r"Got \[\{'bad_key_ip_address': '192.168.1.1'\}\]."
 
-DATA_00090_PASS = [{"ip_address": "192.168.1.1"}]
-DATA_00090_FAIL_1 = "not a list"
-DATA_00090_FAIL_2 = ["not a dict"]
-DATA_00090_FAIL_3 = [{"bad_key_ip_address": "192.168.1.1"}]
+DATA_03040_PASS = [{"ip_address": "192.168.1.1"}]
+DATA_03040_FAIL_1 = "not a list"
+DATA_03040_FAIL_2 = ["not a dict"]
+DATA_03040_FAIL_3 = [{"bad_key_ip_address": "192.168.1.1"}]
 
 
 @pytest.mark.parametrize(
     "value, expected",
     [
-        (DATA_00090_PASS, does_not_raise()),
-        (DATA_00090_FAIL_1, pytest.raises(ValueError, match=MATCH_00090_FAIL_1)),
-        (DATA_00090_FAIL_2, pytest.raises(ValueError, match=MATCH_00090_FAIL_2)),
-        (DATA_00090_FAIL_3, pytest.raises(ValueError, match=MATCH_00090_FAIL_3)),
+        (DATA_03040_PASS, does_not_raise()),
+        (DATA_03040_FAIL_1, pytest.raises(TypeError, match=MATCH_03040_FAIL_1)),
+        (DATA_03040_FAIL_2, pytest.raises(TypeError, match=MATCH_03040_FAIL_2)),
+        (DATA_03040_FAIL_3, pytest.raises(ValueError, match=MATCH_03040_FAIL_3)),
     ],
 )
-def test_image_upgrade_00090(image_upgrade, value, expected) -> None:
+def test_image_upgrade_03040(image_upgrade, value, expected) -> None:
     """
-    Function
-    - ImageUpgrade.devices
+    ### Classes and Methods
 
-    Summary
-    Verify that devices does not call fail_json if passed a list of dicts
-    and does call fail_json if passed a non-list or a list of non-dicts.
+    -   ``ImageUpgrade``
+            - ``devices``
+
+    ### Test
+
+    -   ``devices`` does not raise Exception if passed a valid list
+        of dict.
+    -   ``devices`` raises ``TypeError`` if passed a non-list or a list of
+        non-dicts.
+    -   ``devices`` raises ``ValueError`` if passed a list of dict where
+        dict is missing mandatory key "ip_address".
     """
     instance = image_upgrade
 
@@ -1918,8 +1924,8 @@ def test_image_upgrade_00090(image_upgrade, value, expected) -> None:
         instance.devices = value
 
 
-MATCH_00100 = "ImageUpgrade.disruptive: "
-MATCH_00100 += "instance.disruptive must be a boolean."
+MATCH_03050 = r"ImageUpgrade\.disruptive:\s+"
+MATCH_03050 += r"instance\.disruptive must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -1927,20 +1933,23 @@ MATCH_00100 += "instance.disruptive must be a boolean."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00100), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03050), True),
     ],
 )
-def test_image_upgrade_00100x(
+def test_image_upgrade_03050(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.disruptive
+    ### Classes and Methods
 
-    Summary
-    Verify that disruptive does not call fail_json if passed a boolean.
-    Verify that disruptive does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``disruptive``
+
+    ### Test
+
+    -   ``disruptive`` does not raise ``TypeError`` if passed a boolean.
+    -   ``disruptive`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     instance = image_upgrade
 
@@ -1952,8 +1961,8 @@ def test_image_upgrade_00100x(
         assert instance.disruptive is True
 
 
-MATCH_00110 = "ImageUpgrade.epld_golden: "
-MATCH_00110 += "instance.epld_golden must be a boolean."
+MATCH_03060 = "ImageUpgrade.epld_golden: "
+MATCH_03060 += "instance.epld_golden must be a boolean."
 
 
 @pytest.mark.parametrize(
@@ -1961,20 +1970,23 @@ MATCH_00110 += "instance.epld_golden must be a boolean."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00110), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03060), True),
     ],
 )
-def test_image_upgrade_00110x(
+def test_image_upgrade_03060(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.epld_golden
+    ### Classes and Methods
 
-    Summary
-    Verify that epld_golden does not call fail_json if passed a boolean.
-    Verify that epld_golden does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``epld_golden``
+
+    ### Test
+
+    -   ``epld_golden`` does not raise ``TypeError`` if passed a boolean.
+    -   ``epld_golden`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     instance = image_upgrade
 
@@ -1986,8 +1998,8 @@ def test_image_upgrade_00110x(
         assert instance.epld_golden is False
 
 
-MATCH_00120 = "ImageUpgrade.epld_upgrade: "
-MATCH_00120 += "instance.epld_upgrade must be a boolean."
+MATCH_03070 = "ImageUpgrade.epld_upgrade: "
+MATCH_03070 += "instance.epld_upgrade must be a boolean."
 
 
 @pytest.mark.parametrize(
@@ -1995,20 +2007,23 @@ MATCH_00120 += "instance.epld_upgrade must be a boolean."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00120), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03070), True),
     ],
 )
-def test_image_upgrade_00120x(
+def test_image_upgrade_03070(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.epld_upgrade
+    ### Classes and Methods
 
-    Summary
-    Verify that epld_upgrade does not call fail_json if passed a boolean.
-    Verify that epld_upgrade does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``epld_upgrade``
+
+    ### Test
+
+    -   ``epld_upgrade`` does not raise ``TypeError`` if passed a boolean.
+    -   ``epld_upgrade`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     instance = image_upgrade
 
@@ -2020,8 +2035,8 @@ def test_image_upgrade_00120x(
         assert instance.epld_upgrade is False
 
 
-MATCH_00130 = "ImageUpgrade.epld_module: "
-MATCH_00130 += "instance.epld_module must be an integer or 'ALL'"
+MATCH_03080 = "ImageUpgrade.epld_module: "
+MATCH_03080 += "instance.epld_module must be an integer or 'ALL'"
 
 
 @pytest.mark.parametrize(
@@ -2031,21 +2046,24 @@ MATCH_00130 += "instance.epld_module must be an integer or 'ALL'"
         (1, does_not_raise(), False),
         (27, does_not_raise(), False),
         ("27", does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00130), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03080), True),
     ],
 )
-def test_image_upgrade_00130x(
+def test_image_upgrade_03080(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.epld_module
+    ### Classes and Methods
 
-    Summary
-    Verify that epld_module does not call fail_json if passed a valid value.
-    Verify that epld_module does call fail_json if passed an invalid value.
-    Verify that the default value is set if fail_json is called.
-    Verify that valid string values are converted to int()
+    -   ``ImageUpgrade``
+            - ``epld_module``
+
+    ### Test
+
+    -   ``epld_module`` does not raise ``TypeError`` if passed a valid value.
+    -   ``epld_module`` raises ``TypeError`` if passed an invalid value.
+    -   ``epld_module`` converts valid string values to integer.
+    -   The default value ("ALL") is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -2069,20 +2087,25 @@ MATCH_00140 += r"instance\.force_non_disruptive must be a boolean\."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00140), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_00140), True),
     ],
 )
-def test_image_upgrade_00140x(
+def test_image_upgrade_03090(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.force_non_disruptive
+    ### Classes and Methods
 
-    Summary
-    Verify that force_non_disruptive does not call fail_json if passed a boolean.
-    Verify that force_non_disruptive does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``force_non_disruptive``
+
+    ### Test
+
+    -   ``force_non_disruptive`` does not raise ``TypeError`` if passed
+        a boolean.
+    -   ``force_non_disruptive`` raises ``TypeError`` if passed a
+        non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     instance = image_upgrade
 
@@ -2094,8 +2117,8 @@ def test_image_upgrade_00140x(
         assert instance.force_non_disruptive is False
 
 
-MATCH_00150 = r"ImageUpgrade\.non_disruptive: "
-MATCH_00150 += r"instance\.non_disruptive must be a boolean\."
+MATCH_03100 = r"ImageUpgrade\.non_disruptive:\s+"
+MATCH_03100 += r"instance\.non_disruptive must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -2103,20 +2126,23 @@ MATCH_00150 += r"instance\.non_disruptive must be a boolean\."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00150), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03100), True),
     ],
 )
-def test_image_upgrade_00150x(
+def test_image_upgrade_03100(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.non_disruptive
+    ### Classes and Methods
 
-    Summary
-    Verify that non_disruptive does not call fail_json if passed a boolean.
-    Verify that non_disruptive does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``non_disruptive``
+
+    ### Test
+
+    -   ``non_disruptive`` does not raise ``TypeError`` if passed a boolean.
+    -   ``non_disruptive`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -2128,8 +2154,8 @@ def test_image_upgrade_00150x(
         assert instance.non_disruptive is False
 
 
-MATCH_00160 = r"ImageUpgrade\.package_install: "
-MATCH_00160 += r"instance\.package_install must be a boolean\."
+MATCH_03110 = r"ImageUpgrade\.package_install:\s+"
+MATCH_03110 += r"instance\.package_install must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -2137,20 +2163,23 @@ MATCH_00160 += r"instance\.package_install must be a boolean\."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00160), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03110), True),
     ],
 )
-def test_image_upgrade_00160x(
+def test_image_upgrade_03110(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.package_install
+    ### Classes and Methods
 
-    Summary
-    Verify that package_install does not call fail_json if passed a boolean.
-    Verify that package_install does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``package_install``
+
+    ### Test
+
+    -   ``package_install`` does not raise ``TypeError`` if passed a boolean.
+    -   ``package_install`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -2162,8 +2191,8 @@ def test_image_upgrade_00160x(
         assert instance.package_install is False
 
 
-MATCH_00170 = "ImageUpgrade.package_uninstall: "
-MATCH_00170 += "instance.package_uninstall must be a boolean."
+MATCH_03120 = r"ImageUpgrade\.package_uninstall:\s+"
+MATCH_03120 += r"instance.package_uninstall must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -2171,20 +2200,23 @@ MATCH_00170 += "instance.package_uninstall must be a boolean."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00170), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03120), True),
     ],
 )
-def test_image_upgrade_00170x(
+def test_image_upgrade_03120(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.package_uninstall
+    ### Classes and Methods
 
-    Summary
-    Verify that package_uninstall does not call fail_json if passed a boolean.
-    Verify that package_uninstall does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``package_uninstall``
+
+    ### Test
+
+    -   ``package_uninstall`` does not raise ``TypeError`` if passed a boolean.
+    -   ``package_uninstall`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -2196,8 +2228,8 @@ def test_image_upgrade_00170x(
         assert instance.package_uninstall is False
 
 
-MATCH_00180 = r"ImageUpgrade\.reboot: "
-MATCH_00180 += r"instance\.reboot must be a boolean\."
+MATCH_03130 = r"ImageUpgrade\.reboot:\s+"
+MATCH_03130 += r"instance\.reboot must be a boolean\."
 
 
 @pytest.mark.parametrize(
@@ -2205,20 +2237,23 @@ MATCH_00180 += r"instance\.reboot must be a boolean\."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00180), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03130), True),
     ],
 )
-def test_image_upgrade_00180x(
+def test_image_upgrade_03130(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.reboot
+    ### Classes and Methods
 
-    Summary
-    Verify that reboot does not call fail_json if passed a boolean.
-    Verify that reboot does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``reboot``
+
+    ### Test
+
+    -   ``reboot`` does not raise ``TypeError`` if passed a boolean.
+    -   ``reboot`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -2230,8 +2265,8 @@ def test_image_upgrade_00180x(
         assert instance.reboot is False
 
 
-MATCH_00190 = "ImageUpgrade.write_erase: "
-MATCH_00190 += "instance.write_erase must be a boolean."
+MATCH_03140 = "ImageUpgrade.write_erase: "
+MATCH_03140 += "instance.write_erase must be a boolean."
 
 
 @pytest.mark.parametrize(
@@ -2239,20 +2274,23 @@ MATCH_00190 += "instance.write_erase must be a boolean."
     [
         (True, does_not_raise(), False),
         (False, does_not_raise(), False),
-        ("FOO", pytest.raises(ValueError, match=MATCH_00190), True),
+        ("FOO", pytest.raises(TypeError, match=MATCH_03140), True),
     ],
 )
-def test_image_upgrade_00190x(
+def test_image_upgrade_03140(
     image_upgrade, value, expected, raise_flag
 ) -> None:
     """
-    Function
-    - ImageUpgrade.write_erase
+    ### Classes and Methods
 
-    Summary
-    Verify that write_erase does not call fail_json if passed a boolean.
-    Verify that write_erase does call fail_json if passed a non-boolean.
-    Verify that the default value is set if fail_json is called.
+    -   ``ImageUpgrade``
+            - ``write_erase``
+
+    ### Test
+
+    -   ``write_erase`` does not raise ``TypeError`` if passed a boolean.
+    -   ``write_erase`` raises ``TypeError`` if passed a non-boolean.
+    -   The default value is set if ``TypeError`` is raised.
     """
     with does_not_raise():
         instance = image_upgrade
@@ -2264,215 +2302,285 @@ def test_image_upgrade_00190x(
         assert instance.write_erase is False
 
 
-def test_image_upgrade_00200x(
-    monkeypatch, image_upgrade, issu_details_by_ip_address
-) -> None:
+def test_image_upgrade_04000(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade._wait_for_current_actions_to_complete
+    ### Classes and Methods
 
-    Test
-    - Two switches are added to ipv4_done
+    -   ``ImageUpgrade``
+            -   ``wait_for_controller``
 
-    Description
-    _wait_for_current_actions_to_complete waits until staging, validation,
-    and upgrade actions are complete for all ip addresses.  It calls
-    SwitchIssuDetailsByIpAddress.actions_in_progress() and expects
-    this to return False.  actions_in_progress() returns True until none of
+    ### Test
+
+    -   Two switches are added to ``wait_for_controller_done.done``.
+
+    ### Setup
+
+    -   responses_ep_issu_detail.json indicates that both switches are
+        upgraded to the desired version.
+
+    ### Description
+    ``wait_for_controller_done`` waits until staging, validation,
+    and upgrade actions are complete for all ip addresses.  It accesses
+    ``SwitchIssuDetailsByIpAddress.actions_in_progress`` and expects
+    this to return False.  ``actions_in_progress`` returns True until none of
     the following keys has a value of "In-Progress":
 
+    ```json
     ["imageStaged", "upgrade", "validated"]
+    ```
 
-    Expectations:
-    1.  instance.ipv4_done is a set()
-    2.  instance.ipv4_done is length 2
-    3.  instance.ipv4_done contains all ip addresses in
-        instance.ip_addresses
-    4.  fail_json is not called
+    ### Expected result
+
+    1.  ``instance.wait_for_controller_done.done`` is length 2.
+    2.  ``instance.wait_for_controller_done.done`` contains all ip
+        addresses in ``ip_addresses``.
+    3.  Exceptions are not raised.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_00200a"
-        return responses_ep_issu(key)
+    def responses():
+        # ImageUpgrade.wait_for_controller.
+        yield responses_ep_issu(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.timeout = 1
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_upgrade
-        instance.unit_test = True
-        instance.issu_detail = issu_details_by_ip_address
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
         instance.ip_addresses = [
             "172.22.150.102",
             "172.22.150.108",
         ]
-        instance.check_interval = 0
-        instance._wait_for_current_actions_to_complete()
-    assert isinstance(instance.ipv4_done, set)
-    assert len(instance.ipv4_done) == 2
-    assert "172.22.150.102" in instance.ipv4_done
-    assert "172.22.150.108" in instance.ipv4_done
+        instance.wait_for_controller()
+    assert len(instance.wait_for_controller_done.done) == 2
+    assert "172.22.150.102" in instance.wait_for_controller_done.done
+    assert "172.22.150.108" in instance.wait_for_controller_done.done
 
 
-def test_image_upgrade_00205x(
-    monkeypatch, image_upgrade, issu_details_by_ip_address
-) -> None:
+def test_image_upgrade_04100(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade._wait_for_current_actions_to_complete
+    ### Classes and Methods
 
-    Summary
-    -   Verify that ipv4_done contains two ip addresses since
-        issu_detail is mocked to indicate that no actions are in
-        progress for either ip address.
-    -   Verify in post analysis that the continue statement is
-        hit in the for loop that iterates over ip addresses since
-        one of the ip addresses is manually added to ipv4_done.
+    -   ``ImageUpgrade``
+            -   ``wait_for_controller``
 
-    Setup
-    -   Manually add one ip address to ipv4_done
-    -   Set instance.unit_test to True so that instance.ipv4_done is not
-        initialized to an empty set in _wait_for_current_actions_to_complete
+    ### Test
 
-    Description
-    _wait_for_current_actions_to_complete waits until staging, validation,
-    and upgrade actions are complete for all ip addresses.  It calls
-    SwitchIssuDetailsByIpAddress.actions_in_progress() and expects
-    this to return False.  actions_in_progress() returns True until none of
-    the following keys has a value of "In-Progress":
+    -   Two switches are added to ``wait_for_controller_done.done``.
 
-    ["imageStaged", "upgrade", "validated"]
+    ### Setup
 
-    Expectations:
-    1.  instance.ipv4_done is a set()
-    2.  instance.ipv4_done is length 2
-    3.  instance.ipv4_done contains all ip addresses in
-        instance.ip_addresses
-    4.  fail_json is not called
-    5.  (Post analysis) converage tool indicates tha the continue
-        statement is hit.
+    -   responses_ep_issu_detail.json (all keys) indicate that "validated"
+        is "Success" and "upgrade" is "Success" for all switches.
+    -   responses_ep_issu_detail.json (key_a) indicates that "imageStaged"
+        is "In-Progress" for all switches
+    -   responses_ep_issu_detail.json (key_a) indicates that "imageStaged"
+        is "Success" for one switch and "In-Progress" for one switch.
+    -   responses_ep_issu_detail.json (key_c) indicates that "imageStaged"
+        is "Success" for all switches.
+
+    ### Description
+    See test_image_upgrade_04000 for functional details.
+
+    This test ensures that the following continue statement in
+    ``WaitForControllerDone().commit()`` is hit.
+
+    ```python
+    for item in self.todo:
+        if item in self.done:
+            continue
+    ```
+
+    ### Expected result
+
+    1.  ``instance.wait_for_controller_done.done`` is length 2.
+    2.  ``instance.wait_for_controller_done.done`` contains all ip
+        addresses in ``ip_addresses``.
+    3.  Exceptions are not raised.
     """
+    method_name = inspect.stack()[0][3]
+    key_a = f"{method_name}a"
+    key_b = f"{method_name}b"
+    key_c = f"{method_name}c"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_00205a"
-        return responses_ep_issu(key)
+    def responses():
+        # ImageUpgrade.wait_for_controller.
+        yield responses_ep_issu(key_a)
+        yield responses_ep_issu(key_b)
+        yield responses_ep_issu(key_c)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    #rest_send.timeout = 1
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_upgrade
-        instance.unit_test = True
-        instance.issu_detail = issu_details_by_ip_address
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
         instance.ip_addresses = [
             "172.22.150.102",
             "172.22.150.108",
         ]
-        instance.check_interval = 0
-        instance.ipv4_done.add("172.22.150.102")
-        instance._wait_for_current_actions_to_complete()
-    assert isinstance(instance.ipv4_done, set)
-    assert len(instance.ipv4_done) == 2
-    assert "172.22.150.102" in instance.ipv4_done
-    assert "172.22.150.108" in instance.ipv4_done
+        instance.wait_for_controller()
+    assert len(instance.wait_for_controller_done.done) == 2
+    assert "172.22.150.102" in instance.wait_for_controller_done.done
+    assert "172.22.150.108" in instance.wait_for_controller_done.done
 
 
-def test_image_upgrade_00210x(
-    monkeypatch, image_upgrade, issu_details_by_ip_address
-) -> None:
+def test_image_upgrade_04110(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade._wait_for_current_actions_to_complete
+    ### Classes and Methods
 
-    Test
+    -   ``ImageUpgrade``
+            -   ``wait_for_controller``
+
+    ### Test
     - one switch is added to ipv4_done
-    - fail_json is called due to timeout
+    - ValueError is raised due to timeout
 
-    See test_image_upgrade_00080 for functional details.
+    ### Description
+    See test_image_upgrade_04000 for functional details.
 
-    Expectations:
-    - instance.ipv4_done is a set()
-    - instance.ipv4_done is length 1
-    - instance.ipv4_done contains 172.22.150.102
-    - instance.ipv4_done does not contain 172.22.150.108
-    - fail_json is called due to timeout
-    - fail_json error message is matched
+    ### Expected result
+
+    1.  ``wait_for_controller_done.done`` is length 1.
+    2.  ``wait_for_controller_done.done`` contains 172.22.150.102
+    3.  ``wait_for_controller_done.done`` does not contain 172.22.150.108
+    4.  ``ValueError`` is raised due to timeout.
+    5.  ``ValueError`` error message matches expectation.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_00210a"
-        return responses_ep_issu(key)
+    def responses():
+        # ImageUpgrade.wait_for_controller.
+        yield responses_ep_issu(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.timeout = 1
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_upgrade
-        instance.unit_test = True
-        instance.issu_detail = issu_details_by_ip_address
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
         instance.ip_addresses = [
             "172.22.150.102",
             "172.22.150.108",
         ]
-        instance.check_interval = 1
-        instance.check_timeout = 1
 
-    match = "ImageUpgrade._wait_for_current_actions_to_complete: "
-    match += "Timed out waiting for actions to complete. "
-    match += r"ipv4_done: 172\.22\.150\.102, "
-    match += r"ipv4_todo: 172\.22\.150\.102,172\.22\.150\.108\. "
-    match += r"check the device\(s\) to determine the cause "
-    match += r"\(e\.g\. show install all status\)\."
+    match = r"ImageUpgrade\.wait_for_controller:\s+"
+    match += r"Error WaitForControllerDone\.commit:\s+"
+    match += r"Timed out after 1 seconds waiting for controller actions\s+"
+    match += r"to complete on items:\s+"
+    match += r"\['172.22.150.102', '172.22.150.108'\]\.\s+"
+    match += r"The following items did complete: 172\.22\.150\.102\.\."
+
     with pytest.raises(ValueError, match=match):
-        instance._wait_for_current_actions_to_complete()
+        instance.wait_for_controller()
+
     assert isinstance(instance.ipv4_done, set)
-    assert len(instance.ipv4_done) == 1
-    assert "172.22.150.102" in instance.ipv4_done
-    assert "172.22.150.108" not in instance.ipv4_done
+    assert len(instance.wait_for_controller_done.done) == 1
+    assert "172.22.150.102" in instance.wait_for_controller_done.done
+    assert "172.22.150.108" not in instance.wait_for_controller_done.done
 
 
-def test_image_upgrade_00220x(
-    monkeypatch, image_upgrade, issu_details_by_ip_address
-) -> None:
+def test_image_upgrade_04120(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade._wait_for_image_upgrade_to_complete
+    ### Classes and Methods
 
-    Test
-    - One ip address is added to ipv4_done due to issu_detail.upgrade == "Success"
-    - fail_json is called due one ip address with issu_detail.upgrade == "Failed"
+    -   ``ImageUpgrade``
+            -   ``_wait_for_image_upgrade_to_complete``
 
-    Description
-    _wait_for_image_upgrade_to_complete looks at the upgrade status for each
-    ip address and waits for it to be "Success" or "Failed".
-    In the case where all ip addresses are "Success", the module returns.
-    In the case where any ip address is "Failed", the module calls fail_json.
+    ### Test
 
-    Expectations:
-    - instance.ipv4_done is a set()
-    - instance.ipv4_done has length 1
-    - instance.ipv4_done contains 172.22.150.102, upgrade is "Success"
-    - Call fail_json on ip address 172.22.150.108, upgrade is "Failed"
+    -   One ip address is added to ``ipv4_done`` due to
+        ``issu_detail.upgrade`` == "Success".
+    -   ``ValueError`` is raised due one ip address with
+        ``issu_detail.upgrade`` == "Failed".
+
+    ### Description
+
+    -   ``_wait_for_image_upgrade_to_complete`` looks at the upgrade status for
+        each ip address and waits for it to be "Success" or "Failed".
+    -   If all ip addresses are "Success", the module returns.
+    -   If any ip address is "Failed", the module raises ``ValueError``.
+
+    ### Expected result
+
+    - ``ipv4_done`` is a set().
+    - ``ipv4_done`` has length 1.
+    -   ``ipv4_done`` contains 172.22.150.102, upgrade is "Success".
+    -   ``ValueError`` is raised because ip address 172.22.150.108,
+        upgrade status is "Failed".
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_00220a"
-        return responses_ep_issu(key)
+    def responses():
+        # ImageUpgrade._wait_for_image_upgrade_to_complete.
+        yield responses_ep_issu(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.timeout = 1
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_upgrade
-        instance.unit_test = True
-        instance.issu_detail = issu_details_by_ip_address
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
         instance.ip_addresses = [
             "172.22.150.102",
             "172.22.150.108",
         ]
-        instance.check_interval = 0
-    match = "ImageUpgrade._wait_for_image_upgrade_to_complete: "
-    match += "Seconds remaining 1800: "
-    match += "upgrade image Failed for cvd-2313-leaf, FDO2112189M, "
-    match += r"172\.22\.150\.108, upgrade_percent 50\. "
-    match += "Check the controller to determine the cause. "
-    match += "Operations > Image Management > Devices > View Details."
+
+    match = r"ImageUpgrade\._wait_for_image_upgrade_to_complete:\s+"
+    match += r"Seconds remaining 1790:\s+"
+    match += r"upgrade image Failed for cvd-2313-leaf, FDO2112189M,\s+"
+    match += r"172\.22\.150\.108, upgrade_percent 50\.\s+"
+    match += r"Check the controller to determine the cause\.\s+"
+    match += r"Operations > Image Management > Devices > View Details\."
+
     with pytest.raises(ValueError, match=match):
         instance._wait_for_image_upgrade_to_complete()
     assert isinstance(instance.ipv4_done, set)
@@ -2481,237 +2589,163 @@ def test_image_upgrade_00220x(
     assert "172.22.150.108" not in instance.ipv4_done
 
 
-def test_image_upgrade_00230x(
-    monkeypatch, image_upgrade, issu_details_by_ip_address
-) -> None:
+def test_image_upgrade_04130(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade._wait_for_image_upgrade_to_complete
+    ### Classes and Methods
 
-    Test
-    -   One ip address is added to ipv4_done as
-        issu_detail.upgrade == "Success"
-    -   fail_json is called due to timeout since one
-        ip address has value issu_detail.upgrade == "In-Progress"
+    -   ``ImageUpgrade``
+            -   ``_wait_for_image_upgrade_to_complete``
 
-    Description
+    ### Test
+
+    -   One ip address is added to ``ipv4_done`` because
+        issu_detail.upgrade == "Success".
+    -   ``ValueError`` is raised due to timeout since one
+        ip address returns ``issu_detail.upgrade`` == "In-Progress".
+
+    ### Description
     _wait_for_image_upgrade_to_complete looks at the upgrade status for each
     ip address and waits for it to be "Success" or "Failed".
     In the case where all ip addresses are "Success", the module returns.
     In the case where any ip address is "Failed", the module calls fail_json.
     In the case where any ip address is "In-Progress", the module waits until
-    timeout is exceeded
+    timeout is exceeded.
 
-    Expectations:
-    - instance.ipv4_done is a set()
-    - instance.ipv4_done has length 1
-    - instance.ipv4_done contains 172.22.150.102, upgrade is "Success"
-    - fail_json is called due to timeout exceeded
+    ### Expected result
+
+    -   instance.ipv4_done is a set().
+    -   instance.ipv4_done has length 1.
+    -   instance.ipv4_done contains 172.22.150.102, upgrade is "Success".
+    -   ''ValueError'' is raised due to timeout exceeded.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_00230a"
-        return responses_ep_issu(key)
+    def responses():
+        # ImageUpgrade._wait_for_image_upgrade_to_complete.
+        yield responses_ep_issu(key)
+        # SwitchIssuDetailsByIpAddress.refresh_super
+        yield responses_ep_issu(key)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_upgrade
-        instance.unit_test = True
-        instance.issu_detail = issu_details_by_ip_address
+        instance.check_timeout = 1
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
         instance.ip_addresses = [
             "172.22.150.102",
             "172.22.150.108",
         ]
-        instance.check_interval = 1
-        instance.check_timeout = 1
 
-    match = "ImageUpgrade._wait_for_image_upgrade_to_complete: "
-    match += r"The following device\(s\) did not complete upgrade: "
-    match += r"\['172\.22\.150\.108'\]. "
-    match += "Check the controller to determine the cause. "
-    match += "Operations > Image Management > Devices > View Details. "
-    match += r"And/or check the device\(s\) "
+    match = r"ImageUpgrade\._wait_for_image_upgrade_to_complete:\s+"
+    match += r"The following device\(s\) did not complete upgrade:\s+"
+    match += r"\['172\.22\.150\.108'\].\s+"
+    match += r"Check the controller to determine the cause\.\s+"
+    match += r"Operations > Image Management > Devices > View Details\.\s+"
+    match += r"And/or check the device\(s\)\s+"
     match += r"\(e\.g\. show install all status\)\."
+
     with pytest.raises(ValueError, match=match):
         instance._wait_for_image_upgrade_to_complete()
+
     assert isinstance(instance.ipv4_done, set)
     assert len(instance.ipv4_done) == 1
     assert "172.22.150.102" in instance.ipv4_done
     assert "172.22.150.108" not in instance.ipv4_done
 
 
-def test_image_upgrade_00240x(
-    monkeypatch, image_upgrade, issu_details_by_ip_address
-) -> None:
+def test_image_upgrade_04140(image_upgrade) -> None:
     """
-    Function
-    - ImageUpgrade._wait_for_image_upgrade_to_complete
+    ### Classes and Methods
 
-    Summary
-    Verify that, when two ip addresses are checked, the method's
-    continue statement is reached.  This is verified in post analysis
-    using the coverage report.
+    -   ``ImageUpgrade``
+            -   ``_wait_for_image_upgrade_to_complete``
 
-    Setup
-    -   SwitchIssuDetails is mocked to indicate that both ip address
-        upgrade status == Success
-    -   instance.ipv4_done is set manually to contain one of the ip addresses
-    -   Set instance.unit_test to True so that instance.ipv4_done is not
-        initialized to an empty set in _wait_for_image_upgrade_to_complete
+    ### Test
+    For code coverage purposes, ensure that, when two ip addresses are
+    processed, `_wait_for_image_upgrade_to_complete` continue statement
+    is reached. Specifically:
+
+    ```python
+    for ipv4 in self.ip_addresses:
+        if ipv4 in self.ipv4_done:
+            continue
+    ```
+
+    ### Setup
+
+    -   responses_ep_issu_detail.json (all keys) indicate that "imageStaged",
+        "validated" are "Success" for all switches.
+    -   responses_ep_issu_detail.json (key_a) indicates that "upgrade"
+        is "In-Progress" for all switches
+    -   responses_ep_issu_detail.json (key_a) indicates that "upgrade"
+        is "Success" for one switch and "In-Progress" for one switch.
+    -   responses_ep_issu_detail.json (key_c) indicates that "upgrade"
+        is "Success" for all switches.
 
     Description
     _wait_for_image_upgrade_to_complete looks at the upgrade status for each
     ip address and waits for it to be "Success" or "Failed".
     In the case where all ip addresses are "Success", the module returns.
-    Since instance.ipv4_done is manually populated with one of the ip addresses,
-    and instance.unit_test is set to True, the method's continue statement is
-    reached.  This is verified in post analysis using the coverage report.
+    In the case where any ip address is "In-Progress", the module waits until
+    timeout is exceeded.  For this test, we incrementally change the status
+    of the ip addresses from "In-Progress" to "Success", until all ip addresses
+    are "Success".  This ensures that the conti``nue statement in the for loop
+    is reached.
 
     Expectations:
     - instance.ipv4_done will have length 2
     - instance.ipv4_done contains 172.22.150.102 and 172.22.150.108
-    - fail_json is not called
+    - Exceptions are not raised.
     """
+    method_name = inspect.stack()[0][3]
+    key_a = f"{method_name}a"
+    key_b = f"{method_name}b"
+    key_c = f"{method_name}c"
 
-    def mock_dcnm_send_issu_details(*args, **kwargs) -> Dict[str, Any]:
-        key = "test_image_upgrade_00240a"
-        return responses_ep_issu(key)
+    def responses():
+        # ImageUpgrade._wait_for_image_upgrade_to_complete.
+        yield responses_ep_issu(key_a)
+        # ImageUpgrade._wait_for_image_upgrade_to_complete.
+        yield responses_ep_issu(key_b)
+        # ImageUpgrade._wait_for_image_upgrade_to_complete.
+        yield responses_ep_issu(key_c)
 
-    monkeypatch.setattr(DCNM_SEND_ISSU_DETAILS, mock_dcnm_send_issu_details)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_upgrade
-        instance.unit_test = True
-        instance.issu_detail = issu_details_by_ip_address
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.issu_detail.rest_send = rest_send
+        instance.issu_detail.results = Results()
         instance.ip_addresses = [
             "172.22.150.102",
             "172.22.150.108",
         ]
-        instance.check_interval = 1
-        instance.check_timeout = 1
-        instance.ipv4_done.add("172.22.150.102")
         instance._wait_for_image_upgrade_to_complete()
+
     assert isinstance(instance.ipv4_done, set)
     assert len(instance.ipv4_done) == 2
     assert "172.22.150.102" in instance.ipv4_done
     assert "172.22.150.108" in instance.ipv4_done
-
-
-def test_image_upgrade_00250x(image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgrade._build_payload_issu_upgrade
-
-    Summary
-    Verify that fail_json is called when device.upgrade.nxos is not a boolean
-
-    Setup
-    -   device.upgrade.nxos is set to "FOO"
-    -   device is passed to _build_payload_issu_upgrade
-    """
-    match = r"ImageUpgrade\._build_payload_issu_upgrade: upgrade\.nxos must "
-    match += r"be a boolean\. Got FOO\."
-
-    device = {"upgrade": {"nxos": "FOO"}}
-
-    with does_not_raise():
-        instance = image_upgrade
-    with pytest.raises(ValueError, match=match):
-        instance._build_payload_issu_upgrade(device)
-
-
-def test_image_upgrade_00260x(image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgrade._build_payload_issu_options_1
-
-    Summary
-    Verify that fail_json is called when device.options.nxos.mode is
-    set to an invalid value.
-
-    Setup
-    -   device.options.nxos.mode is set to invalid value "FOO"
-    -   device is passed to _build_payload_issu_options_1
-    """
-    match = r"ImageUpgrade\._build_payload_issu_options_1: "
-    match += r"options\.nxos\.mode must be one of.*Got FOO\."
-
-    device = {"options": {"nxos": {"mode": "FOO"}}}
-
-    with does_not_raise():
-        instance = image_upgrade
-    with pytest.raises(ValueError, match=match):
-        instance._build_payload_issu_options_1(device)
-
-
-def test_image_upgrade_00270x(image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgrade._build_payload_epld
-
-    Summary
-    Verify that fail_json is called when device.upgrade.epld is not a boolean
-
-    Setup
-    -   device.upgrade.epld is set to "FOO"
-    -   device is passed to _build_payload_epld
-    """
-    match = r"ImageUpgrade\._build_payload_epld: upgrade.epld must be a "
-    match += r"boolean\. Got FOO\."
-
-    device = {"upgrade": {"epld": "FOO"}}
-
-    with does_not_raise():
-        instance = image_upgrade
-    with pytest.raises(ValueError, match=match):
-        instance._build_payload_epld(device)
-
-
-def test_image_upgrade_00280x(image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgrade._build_payload_package
-
-    Summary
-    Verify that fail_json is called when device.options.package.install
-    is not a boolean
-
-    Setup
-    -   device.options.package.install is set to "FOO"
-    -   device is passed to _build_payload_package
-    """
-    match = r"ImageUpgrade\._build_payload_package: options.package.install "
-    match += r"must be a boolean\. Got FOO\."
-
-    device = {"options": {"package": {"install": "FOO"}}}
-
-    with does_not_raise():
-        instance = image_upgrade
-    with pytest.raises(ValueError, match=match):
-        instance._build_payload_package(device)
-
-
-def test_image_upgrade_00281x(image_upgrade) -> None:
-    """
-    Function
-    - ImageUpgrade._build_payload_package
-
-    Summary
-    Verify that fail_json is called when device.options.package.uninstall
-    is not a boolean
-
-    Setup
-    -   device.options.package.install is set to a boolean
-    -   device.options.package.uninstall is set to "FOO"
-    -   device is passed to _build_payload_package
-    """
-    match = r"ImageUpgrade\._build_payload_package: options.package.uninstall "
-    match += r"must be a boolean\. Got FOO\."
-
-    device = {"options": {"package": {"install": True, "uninstall": "FOO"}}}
-
-    with does_not_raise():
-        instance = image_upgrade
-    with pytest.raises(ValueError, match=match):
-        instance._build_payload_package(device)

@@ -34,89 +34,12 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
         "RETURN_CODE": 200
     },
-    "test_image_upgrade_01080a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_01090a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_01100a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_01110a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_01120a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_00030a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_00031a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_00032a": {
+    "test_image_upgrade_02000a": {
         "DATA": 123,
         "MESSAGE": "Internal Server Error",
         "METHOD": "POST",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
         "RETURN_CODE": 500
-    },
-    "test_image_upgrade_00033a": {
-        "DATA": 123,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_00045a": {
-        "DATA": 121,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_00046a": {
-        "DATA": 121,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
-    },
-    "test_image_upgrade_00047a": {
-        "DATA": 121,
-        "MESSAGE": "OK",
-        "METHOD": "POST",
-        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-        "RETURN_CODE": 200
     },
     "test_image_upgrade_0000XX": {
         "DATA": {
