@@ -50,24 +50,6 @@ from .utils import (MockAnsibleModule, does_not_raise, image_upgrade_fixture,
                     responses_ep_install_options, responses_ep_image_upgrade,
                     responses_ep_issu)
 
-PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
-
-PATCH_IMAGE_UPGRADE_REST_SEND_COMMIT = (
-    PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend.commit"
-)
-PATCH_IMAGE_UPGRADE_REST_SEND_RESPONSE_CURRENT = (
-    PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend.response_current"
-)
-PATCH_IMAGE_UPGRADE_REST_SEND_RESULT_CURRENT = (
-    PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend.result_current"
-)
-
-REST_SEND_IMAGE_UPGRADE = PATCH_IMAGE_UPGRADE + "image_upgrade.RestSend"
-DCNM_SEND_IMAGE_UPGRADE_COMMON = PATCH_IMAGE_UPGRADE + "image_upgrade_common.dcnm_send"
-DCNM_SEND_INSTALL_OPTIONS = PATCH_IMAGE_UPGRADE + "install_options.dcnm_send"
-DCNM_SEND_ISSU_DETAILS = PATCH_IMAGE_UPGRADE + "switch_issu_details.dcnm_send"
-
 
 def test_image_upgrade_00000(image_upgrade) -> None:
     """
