@@ -28,9 +28,9 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 from typing import Any, Dict
 
-import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
@@ -45,9 +45,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file impo
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 
-from .utils import (MockAnsibleModule, does_not_raise, image_upgrade_fixture,
-                    issu_details_by_ip_address_fixture, params, payloads_ep_image_upgrade,
-                    responses_ep_install_options, responses_ep_image_upgrade,
+from .utils import (MockAnsibleModule, devices_image_upgrade, does_not_raise,
+                    image_upgrade_fixture, issu_details_by_ip_address_fixture,
+                    params, payloads_ep_image_upgrade,
+                    responses_ep_image_upgrade, responses_ep_install_options,
                     responses_ep_issu)
 
 
@@ -89,6 +90,7 @@ def test_image_upgrade_00000(image_upgrade) -> None:
     assert instance.non_disruptive is False
     assert instance.rest_send is None
     assert instance.results is None
+
 
 def test_image_upgrade_00010(image_upgrade) -> None:
     """
@@ -147,8 +149,6 @@ def test_image_upgrade_00100(image_upgrade) -> None:
 
     1.  ``ip_addresses`` will contain {"172.22.150.102", "172.22.150.108"}
     """
-    devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
-
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
@@ -163,6 +163,8 @@ def test_image_upgrade_00100(image_upgrade) -> None:
     rest_send = RestSend(params)
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
+
+    devices = [{"ip_address": "172.22.150.102"}, {"ip_address": "172.22.150.108"}]
 
     with does_not_raise():
         instance = image_upgrade
@@ -189,8 +191,6 @@ def test_image_upgrade_01000(image_upgrade) -> None:
 
     - ``ValueError`` is called because ``devices`` is None.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
 
     def responses():
         yield None
@@ -245,6 +245,11 @@ def test_image_upgrade_01010(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters.
         yield responses_ep_issu(key)
@@ -272,21 +277,7 @@ def test_image_upgrade_01010(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # Set upgrade.nxos to invalid value "FOO"
-    instance.devices = [
-        {
-            "policy": "KR5M",
-            "stage": True,
-            "upgrade": {"nxos": "FOO", "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": True},
-                "package": {"install": False, "uninstall": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_issu_upgrade: upgrade.nxos must be a\s+"
     match += r"boolean\. Got FOO\."
@@ -328,6 +319,11 @@ def test_image_upgrade_01020(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -358,23 +354,8 @@ def test_image_upgrade_01020(image_upgrade) -> None:
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
 
-    instance.devices = [
-        {
-            "policy": "KR5M",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": False, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": True},
-                "package": {"install": True, "uninstall": False},
-                "epld": {"module": 1, "golden": True},
-                "reboot": {"config_reload": True, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": False,
-        }
-    ]
+    # non-default values are set for several options
+    instance.devices = gen_devices.next
 
     with does_not_raise():
         instance.commit()
@@ -411,6 +392,11 @@ def test_image_upgrade_01030(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -441,23 +427,8 @@ def test_image_upgrade_01030(image_upgrade) -> None:
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
 
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": True, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    # Default values explicitely set for several options
+    instance.devices = gen_devices.next
 
     with does_not_raise():
         instance.commit()
@@ -491,6 +462,11 @@ def test_image_upgrade_01040(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -518,23 +494,7 @@ def test_image_upgrade_01040(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # nxos.mode is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "FOO", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_issu_options_1:\s+"
     match += r"options.nxos.mode must be one of\s+"
@@ -578,6 +538,11 @@ def test_image_upgrade_01050(image_upgrade) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
+    def devices():
+        yield devices_image_upgrade(key_a)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key_a)
@@ -609,23 +574,7 @@ def test_image_upgrade_01050(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # nxos.mode == non_disruptive
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "non_disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     with does_not_raise():
         instance.commit()
@@ -668,6 +617,11 @@ def test_image_upgrade_01060(image_upgrade) -> None:
     key_a = f"{method_name}a"
     key_b = f"{method_name}b"
 
+    def devices():
+        yield devices_image_upgrade(key_a)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key_a)
@@ -699,23 +653,7 @@ def test_image_upgrade_01060(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # nxos.mode == force_non_disruptive
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "force_non_disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     with does_not_raise():
         instance.commit()
@@ -727,30 +665,35 @@ def test_image_upgrade_01060(image_upgrade) -> None:
 
 def test_image_upgrade_01070(image_upgrade) -> None:
     """
-    ### Classes and Methods
-    -   ``ImageUpgrade``
-            -   ``_build_payload``
+     ### Classes and Methods
+     -   ``ImageUpgrade``
+             -   ``_build_payload``
 
-   ### Test
+    ### Test
 
-    -   Invalid value for ``options.nxos.bios_force``
+     -   Invalid value for ``options.nxos.bios_force``
 
-    ### Setup
+     ### Setup
 
-    -   ``devices`` is set to a list of one dict for a device to be upgraded.
-    -   ``devices`` is set to contain a non-boolean value for
-        ``options.nxos.bios_force``.
-    -   responses_ep_issu.json indicates that the device has not yet been
-        upgraded to the desired version.
-    -   responses_ep_install_options.json indicates that EPLD upgrade is
-        not needed.
+     -   ``devices`` is set to a list of one dict for a device to be upgraded.
+     -   ``devices`` is set to contain a non-boolean value for
+         ``options.nxos.bios_force``.
+     -   responses_ep_issu.json indicates that the device has not yet been
+         upgraded to the desired version.
+     -   responses_ep_install_options.json indicates that EPLD upgrade is
+         not needed.
 
-    ### Expected result
+     ### Expected result
 
-    1.  ``_build_payload_issu_options_2`` raises ``TypeError``
+     1.  ``_build_payload_issu_options_2`` raises ``TypeError``
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
+
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
@@ -779,23 +722,7 @@ def test_image_upgrade_01070(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.nxos.bios_force is invalid (FOO)
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": "FOO"},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_issu_options_2:\s+"
     match += r"options\.nxos\.bios_force must be a boolean\.\s+"
@@ -831,6 +758,11 @@ def test_image_upgrade_01080(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -858,23 +790,7 @@ def test_image_upgrade_01080(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.epld.golden is True and upgrade.nxos is True
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": True},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_epld:\s+"
     match += r"Invalid configuration for 172\.22\.150\.102\.\s+"
@@ -912,6 +828,11 @@ def test_image_upgrade_01090(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -939,23 +860,7 @@ def test_image_upgrade_01090(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.epld.module is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "FOO", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_epld:\s+"
     match += r"options\.epld\.module must either be 'ALL'\s+"
@@ -964,7 +869,7 @@ def test_image_upgrade_01090(image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_upgrade_01100(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01100(image_upgrade) -> None:
     """
     ### Classes and Methods
     -   ``ImageUpgrade``
@@ -988,6 +893,11 @@ def test_image_upgrade_01100(monkeypatch, image_upgrade) -> None:
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
+
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
@@ -1016,23 +926,7 @@ def test_image_upgrade_01100(monkeypatch, image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.epld.golden is not a boolean
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": "FOO"},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_epld:\s+"
     match += r"options\.epld\.golden must be a boolean\.\s+"
@@ -1041,7 +935,7 @@ def test_image_upgrade_01100(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_upgrade_01110(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01110(image_upgrade) -> None:
     """
     ### Classes and Methods
     -   ``ImageUpgrade``
@@ -1066,6 +960,11 @@ def test_image_upgrade_01110(monkeypatch, image_upgrade) -> None:
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
+
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
@@ -1094,23 +993,7 @@ def test_image_upgrade_01110(monkeypatch, image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # reboot is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": "FOO",
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageUpgrade\._build_payload_reboot:\s+"
     match += r"reboot must be a boolean\. Got FOO\."
@@ -1118,7 +1001,7 @@ def test_image_upgrade_01110(monkeypatch, image_upgrade) -> None:
         instance.commit()
 
 
-def test_image_upgrade_01120(monkeypatch, image_upgrade) -> None:
+def test_image_upgrade_01120(image_upgrade) -> None:
     """
     ### Classes and Methods
     -   ``ImageUpgrade``
@@ -1145,6 +1028,11 @@ def test_image_upgrade_01120(monkeypatch, image_upgrade) -> None:
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
+
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
@@ -1173,23 +1061,7 @@ def test_image_upgrade_01120(monkeypatch, image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.reboot.config_reload is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": True,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": "FOO", "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.config_reload must be a boolean. Got FOO\."
@@ -1226,6 +1098,11 @@ def test_image_upgrade_01130(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -1253,23 +1130,7 @@ def test_image_upgrade_01130(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.reboot.write_erase is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": True,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": "FOO"},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = "ImageUpgrade._build_payload_reboot_options: "
     match += r"options.reboot.write_erase must be a boolean. Got FOO\."
@@ -1313,92 +1174,10 @@ def test_image_upgrade_01140(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    def responses():
-        # ImageUpgrade.validate_commit_parameters
-        yield responses_ep_issu(key)
-        # ImageUpgrade.wait_for_controller
-        yield responses_ep_issu(key)
-        # ImageUpgrade._build_payload
-        #     -> ImageInstallOptions.refresh
-        yield responses_ep_install_options(key)
+    def devices():
+        yield devices_image_upgrade(key)
 
-    gen_responses = ResponseGenerator(responses())
-
-    sender = Sender()
-    sender.ansible_module = MockAnsibleModule()
-    sender.gen = gen_responses
-    rest_send = RestSend(params)
-    rest_send.unit_test = True
-    rest_send.response_handler = ResponseHandler()
-    rest_send.sender = sender
-
-    with does_not_raise():
-        instance = image_upgrade
-        instance.results = Results()
-        instance.rest_send = rest_send
-        instance.issu_detail.rest_send = rest_send
-        instance.issu_detail.results = Results()
-
-    # options.package.uninstall is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": True,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": "FOO"},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
-
-    match = "ImageUpgrade._build_payload_package: "
-    match += r"options.package.uninstall must be a boolean. Got FOO\."
-    with pytest.raises(TypeError, match=match):
-        instance.commit()
-
-
-def test_image_upgrade_01140(image_upgrade) -> None:
-    """
-    ### Classes and Methods
-
-    -   ``ImageUpgrade``
-            -   ``_build_payload``
-            -   ``commit``
-
-    ### Test
-
-    Invalid value for ``options.package.uninstall``.
-
-    ### Setup
-
-    -   ``devices`` is set to a list of one dict for a device to be upgraded.
-    -   ``devices`` is set to contain invalid value for
-        ``options.package.uninstall``
-    -   responses_ep_issu.json indicates that the device has not yet been
-        upgraded to the desired version.
-    -   responses_ep_install_options.json indicates that EPLD upgrade is
-        not needed.
-
-    ### Expected result
-
-    1.  ``commit`` calls ``_build_payload`` which raises ``TypeError``
-
-    ### NOTES
-
-    1. The corresponding test for options.package.install is missing.
-        It's not needed since ``ImageInstallOptions`` will raise exceptions
-        on invalid values before ``ImageUpgrade`` has a chance to verify
-        the value.
-    """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
+    gen_devices = ResponseGenerator(devices())
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
@@ -1427,23 +1206,7 @@ def test_image_upgrade_01140(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.package.uninstall is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": True,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": "FOO"},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = "ImageUpgrade._build_payload_package: "
     match += r"options.package.uninstall must be a boolean. Got FOO\."
@@ -1475,7 +1238,7 @@ def test_image_upgrade_01150(image_upgrade) -> None:
 
     ### Expected result
 
-    1.  ``commit`` calls ``_build_payload`` which calls 
+    1.  ``commit`` calls ``_build_payload`` which calls
         ``ImageInstallOptions.package_install`` which raises
         ``TypeError``.
 
@@ -1485,6 +1248,11 @@ def test_image_upgrade_01150(image_upgrade) -> None:
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
+
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
 
     def responses():
         # ImageUpgrade.validate_commit_parameters
@@ -1510,23 +1278,7 @@ def test_image_upgrade_01150(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # options.package.install is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": True,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": "FOO", "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = r"ImageInstallOptions\.package_install:\s+"
     match += r"package_install must be a boolean value\.\s+"
@@ -1563,6 +1315,11 @@ def test_image_upgrade_01160(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -1590,21 +1347,7 @@ def test_image_upgrade_01160(image_upgrade) -> None:
         instance.issu_detail.results = Results()
 
     # upgrade.epld is invalid
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": "FOO"},
-            "options": {
-                "package": {
-                    "uninstall": False,
-                }
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    instance.devices = gen_devices.next
 
     match = "ImageInstallOptions.epld: "
     match += r"epld must be a boolean value. Got FOO\."
@@ -1641,6 +1384,11 @@ def test_image_upgrade_02000(image_upgrade) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    def devices():
+        yield devices_image_upgrade(key)
+
+    gen_devices = ResponseGenerator(devices())
+
     def responses():
         # ImageUpgrade.validate_commit_parameters
         yield responses_ep_issu(key)
@@ -1670,24 +1418,8 @@ def test_image_upgrade_02000(image_upgrade) -> None:
         instance.issu_detail.rest_send = rest_send
         instance.issu_detail.results = Results()
 
-    # Valid payload
-    instance.devices = [
-        {
-            "policy": "NR3F",
-            "reboot": False,
-            "stage": True,
-            "upgrade": {"nxos": True, "epld": True},
-            "options": {
-                "nxos": {"mode": "disruptive", "bios_force": False},
-                "package": {"install": False, "uninstall": False},
-                "epld": {"module": "ALL", "golden": False},
-                "reboot": {"config_reload": False, "write_erase": False},
-            },
-            "validate": True,
-            "ip_address": "172.22.150.102",
-            "policy_changed": True,
-        }
-    ]
+    # Valid devices
+    instance.devices = gen_devices.next
 
     match = "ImageUpgrade.commit: failed: "
     match += r"\{'success': False, 'changed': False\}. "
@@ -1719,9 +1451,7 @@ MATCH_03000 += r"instance.bios_force must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03000), True),
     ],
 )
-def test_image_upgrade_03000(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03000(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -1757,9 +1487,7 @@ MATCH_03010 += r"must be an integer\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03010), True),
     ],
 )
-def test_image_upgrade_03010(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03010(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -1796,9 +1524,7 @@ MATCH_03020 += r"must be an integer\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03020), True),
     ],
 )
-def test_image_upgrade_03020(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03020(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -1833,9 +1559,7 @@ MATCH_03030 += r"instance\.config_reload must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03030), True),
     ],
 )
-def test_image_upgrade_03030(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03030(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -1866,7 +1590,7 @@ MATCH_03040_FAIL_1 = rf"{MATCH_03040_COMMON}. Got not a list\."
 MATCH_03040_FAIL_2 = rf"{MATCH_03040_COMMON}. Got \['not a dict'\]\."
 
 MATCH_03040_FAIL_3 = rf"{MATCH_03040_COMMON}, where each dict contains\s+"
-MATCH_03040_FAIL_3 += "the following keys: ip_address\.\s+"
+MATCH_03040_FAIL_3 += r"the following keys: ip_address\.\s+"
 MATCH_03040_FAIL_3 += r"Got \[\{'bad_key_ip_address': '192.168.1.1'\}\]."
 
 DATA_03040_PASS = [{"ip_address": "192.168.1.1"}]
@@ -1918,9 +1642,7 @@ MATCH_03050 += r"instance\.disruptive must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03050), True),
     ],
 )
-def test_image_upgrade_03050(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03050(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -1955,9 +1677,7 @@ MATCH_03060 += "instance.epld_golden must be a boolean."
         ("FOO", pytest.raises(TypeError, match=MATCH_03060), True),
     ],
 )
-def test_image_upgrade_03060(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03060(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -1992,9 +1712,7 @@ MATCH_03070 += "instance.epld_upgrade must be a boolean."
         ("FOO", pytest.raises(TypeError, match=MATCH_03070), True),
     ],
 )
-def test_image_upgrade_03070(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03070(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2031,9 +1749,7 @@ MATCH_03080 += "instance.epld_module must be an integer or 'ALL'"
         ("FOO", pytest.raises(TypeError, match=MATCH_03080), True),
     ],
 )
-def test_image_upgrade_03080(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03080(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2072,9 +1788,7 @@ MATCH_00140 += r"instance\.force_non_disruptive must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_00140), True),
     ],
 )
-def test_image_upgrade_03090(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03090(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2111,9 +1825,7 @@ MATCH_03100 += r"instance\.non_disruptive must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03100), True),
     ],
 )
-def test_image_upgrade_03100(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03100(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2148,9 +1860,7 @@ MATCH_03110 += r"instance\.package_install must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03110), True),
     ],
 )
-def test_image_upgrade_03110(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03110(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2185,9 +1895,7 @@ MATCH_03120 += r"instance.package_uninstall must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03120), True),
     ],
 )
-def test_image_upgrade_03120(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03120(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2222,9 +1930,7 @@ MATCH_03130 += r"instance\.reboot must be a boolean\."
         ("FOO", pytest.raises(TypeError, match=MATCH_03130), True),
     ],
 )
-def test_image_upgrade_03130(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03130(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2259,9 +1965,7 @@ MATCH_03140 += "instance.write_erase must be a boolean."
         ("FOO", pytest.raises(TypeError, match=MATCH_03140), True),
     ],
 )
-def test_image_upgrade_03140(
-    image_upgrade, value, expected, raise_flag
-) -> None:
+def test_image_upgrade_03140(image_upgrade, value, expected, raise_flag) -> None:
     """
     ### Classes and Methods
 
@@ -2410,7 +2114,7 @@ def test_image_upgrade_04100(image_upgrade) -> None:
     sender.ansible_module = MockAnsibleModule()
     sender.gen = gen_responses
     rest_send = RestSend(params)
-    #rest_send.timeout = 1
+    # rest_send.timeout = 1
     rest_send.unit_test = True
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
@@ -2565,6 +2269,7 @@ def test_image_upgrade_04120(image_upgrade) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance._wait_for_image_upgrade_to_complete()
+
     assert isinstance(instance.ipv4_done, set)
     assert len(instance.ipv4_done) == 1
     assert "172.22.150.102" in instance.ipv4_done

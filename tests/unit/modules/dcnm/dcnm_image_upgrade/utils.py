@@ -25,8 +25,8 @@ from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
-    ImagePolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
@@ -35,14 +35,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_val
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
     SwitchIssuDetailsByDeviceName, SwitchIssuDetailsByIpAddress,
     SwitchIssuDetailsBySerialNumber)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.fixture import \
     load_fixture
-
 
 params = {
     "state": "merged",
@@ -57,6 +54,7 @@ params = {
         }
     ],
 }
+
 
 class MockAnsibleModule:
     """
@@ -93,9 +91,9 @@ class MockAnsibleModule:
 @pytest.fixture(name="image_install_options")
 def image_install_options_fixture():
     """
-    mock ImageInstallOptions
+    Return ImageInstallOptions instance.
     """
-    return ImageInstallOptions(MockAnsibleModule)
+    return ImageInstallOptions()
 
 
 @pytest.fixture(name="image_stage")
@@ -117,7 +115,7 @@ def image_upgrade_fixture():
 @pytest.fixture(name="image_validate")
 def image_validate_fixture():
     """
-    Return ImageValidate instance
+    Return ImageValidate instance.
     """
     return ImageValidate()
 
@@ -125,15 +123,15 @@ def image_validate_fixture():
 @pytest.fixture(name="params_validate")
 def params_validate_fixture():
     """
-    mock ParamsValidate
+    Return ParamsValidate instance.
     """
-    return ParamsValidate(MockAnsibleModule)
+    return ParamsValidate()
 
 
 @pytest.fixture(name="issu_details_by_device_name")
 def issu_details_by_device_name_fixture() -> SwitchIssuDetailsByDeviceName:
     """
-    mock SwitchIssuDetailsByDeviceName
+    Return SwitchIssuDetailsByDeviceName instance.
     """
     return SwitchIssuDetailsByDeviceName()
 
@@ -141,7 +139,7 @@ def issu_details_by_device_name_fixture() -> SwitchIssuDetailsByDeviceName:
 @pytest.fixture(name="issu_details_by_ip_address")
 def issu_details_by_ip_address_fixture() -> SwitchIssuDetailsByIpAddress:
     """
-    mock SwitchIssuDetailsByIpAddress
+    Return SwitchIssuDetailsByIpAddress instance.
     """
     return SwitchIssuDetailsByIpAddress()
 
@@ -149,7 +147,7 @@ def issu_details_by_ip_address_fixture() -> SwitchIssuDetailsByIpAddress:
 @pytest.fixture(name="issu_details_by_serial_number")
 def issu_details_by_serial_number_fixture() -> SwitchIssuDetailsBySerialNumber:
     """
-    mock SwitchIssuDetailsBySerialNumber
+    Return SwitchIssuDetailsBySerialNumber instance.
     """
     return SwitchIssuDetailsBySerialNumber()
 
@@ -157,9 +155,9 @@ def issu_details_by_serial_number_fixture() -> SwitchIssuDetailsBySerialNumber:
 @pytest.fixture(name="switch_details")
 def switch_details_fixture():
     """
-    mock SwitchDetails
+    Return SwitchDetails instance.
     """
-    return SwitchDetails(MockAnsibleModule)
+    return SwitchDetails()
 
 
 @contextmanager
@@ -178,6 +176,17 @@ def load_playbook_config(key: str) -> Dict[str, str]:
     playbook_config = load_fixture(playbook_file).get(key)
     print(f"load_playbook_config: {key} : {playbook_config}")
     return playbook_config
+
+
+def devices_image_upgrade(key: str) -> Dict[str, str]:
+    """
+    Return data for the ImageUpgrade().devices property.
+    Used by test_image_upgrade.py
+    """
+    devices_file = "devices_image_upgrade"
+    devices = load_fixture(devices_file).get(key)
+    print(f"devices_image_upgrade: {key} : {devices}")
+    return devices
 
 
 def payloads_ep_image_upgrade(key: str) -> Dict[str, str]:
