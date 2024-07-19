@@ -19,6 +19,7 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import \
@@ -35,16 +36,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties impor
 @Properties.add_results
 class ImageInstallOptions:
     """
+    ### Summary
     Retrieve install-options details for ONE switch from the controller and
     provide property accessors for the policy attributes.
 
-    Caveats:
-        -   This retrieves for a SINGLE switch only.
-        -   Set serial_number and policy_name and call refresh() for
-            each switch separately.
+    ### Caveats
 
-    Usage (where module is an instance of AnsibleModule):
+    -   This retrieves for a SINGLE switch only.
+    -   Set serial_number and policy_name and call refresh() for
+        each switch separately.
 
+    ### Usage
+
+    ```python
     instance = ImageInstallOptions()
     # Mandatory
     instance.rest_send = rest_send
@@ -63,13 +67,18 @@ class ImageInstallOptions:
         exit(1)
     status = instance.status
     platform = instance.platform
-    etc...
+    ### etc...
+    ```
 
-    install-options are retrieved by calling instance.refresh().
+    install-options are retrieved by calling ``refresh()``.
 
-    Endpoint:
+    ### Endpoint
+
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options
-    Request body:
+
+    ### Payload
+
+    ```json
     {
         "devices": [
             {
@@ -85,11 +94,15 @@ class ImageInstallOptions:
         "epld": false,
         "packageInstall": false
     }
-    Response body:
-    NOTES:
-    1.  epldModules will be null if epld is false in the request body.
-        This class converts this to None (python NoneType) in this case.
+    ```
 
+    ### Response body
+
+    -   NOTES
+        1.  epldModules will be null if epld is false in the request body.
+            This class converts this to None (python NoneType) in this case.
+
+    ```json
     {
         "compatibilityStatusList": [
             {
@@ -139,6 +152,7 @@ class ImageInstallOptions:
         "installPacakges": null,
         "errMessage": ""
     }
+    ```
     """
 
     def __init__(self) -> None:
@@ -147,11 +161,13 @@ class ImageInstallOptions:
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.compatibility_status = {}
+        self.payload: dict = {}
+
         self.conversion = ConversionUtils()
         self.ep_install_options = EpInstallOptions()
 
-        self.compatibility_status = {}
-        self.payload: dict = {}
+        self._response_data = None
 
         self._init_properties()
         msg = f"ENTERED {self.class_name}().{method_name}"
@@ -161,25 +177,28 @@ class ImageInstallOptions:
         """
         ### Summary
         Initialize class properties.
+
+        ### Raises
+        None
         """
         self._epld = False
-        self._epld_modules = {}
         self._issu = True
         self._package_install = False
         self._policy_name = None
-        self._response_data = None
         self._rest_send = None
         self._results = None
         self._serial_number = None
         self._timeout = 300
-        self._unit_test = False
 
     def _validate_refresh_parameters(self) -> None:
         """
-        Ensure parameters are set correctly for a refresh() call.
+        ### Summary
+        -   Ensure parameters are set correctly for a refresh() call.
 
-        fail_json if not.
+        ### Raises
+        ``ValueError`` if parameters are not set correctly.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
         if self.policy_name is None:
@@ -207,6 +226,10 @@ class ImageInstallOptions:
         ### Summary
         Refresh ``self.response_data`` with current install-options from
         the controller.
+
+        ### Raises
+        -   ``ControllerResponseError``: if the controller response is bad.
+            e.g. 401, 500 error, etc.
         """
         method_name = inspect.stack()[0][3]
 
@@ -226,6 +249,7 @@ class ImageInstallOptions:
             msg += "must be True before calling refresh(). Skipping."
             self.log.debug(msg)
             self.compatibility_status = {}
+            # Yes, installPackages is intentionally misspelled below.
             self._response_data = {
                 "compatibilityStatusList": [],
                 "epldModules": {},
@@ -236,17 +260,20 @@ class ImageInstallOptions:
 
         self._build_payload()
 
+        # pylint: disable=no-member
         self.rest_send.path = self.ep_install_options.path
         self.rest_send.verb = self.ep_install_options.verb
         self.rest_send.payload = self.payload
         self.rest_send.commit()
 
         self._response_data = self.rest_send.response_current.get("DATA", {})
+        # pylint: enable=no-member
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.response_data: {self.response_data}"
+        msg += f"self.response_data: {json.dumps(self.response_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        # pylint: disable=no-member
         if self.rest_send.result_current["success"] is False:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retrieving install-options from "
@@ -260,6 +287,7 @@ class ImageInstallOptions:
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
             raise ControllerResponseError(msg)
+        # pylint: enable=no-member
 
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
@@ -267,13 +295,18 @@ class ImageInstallOptions:
             self.compatibility_status = self.response_data.get(
                 "compatibilityStatusList", [{}]
             )[0]
-        _default_epld_modules = {"moduleList": []}
-        self._epld_modules = self.response_data.get(
-            "epldModules", _default_epld_modules
-        )
+        # epldModules is handled in the epld_modules.getter property
 
     def _build_payload(self) -> None:
         """
+        ### Summary
+        Build the payload for the install-options request.
+
+        ### Raises
+        None
+
+        ### Payload structure
+        ```json
         {
             "devices": [
                 {
@@ -285,6 +318,7 @@ class ImageInstallOptions:
             "epld": false,
             "packageInstall": false
         }
+        ```
         """
         self.payload: dict = {}
         self.payload["devices"] = []
@@ -300,6 +334,13 @@ class ImageInstallOptions:
         self.log.debug(msg)
 
     def _get(self, item):
+        """
+        ### Summary
+        Return items from self.response_data.
+
+        ### Raises
+        None
+        """
         return self.conversion.make_boolean(
             self.conversion.make_none(self.response_data.get(item))
         )
@@ -308,7 +349,11 @@ class ImageInstallOptions:
     @property
     def policy_name(self):
         """
+        ### Summary
         Set the policy_name of the policy to query.
+
+        ### Raises
+        ``TypeError``: if value is not a string.
         """
         return self._policy_name
 
@@ -324,7 +369,11 @@ class ImageInstallOptions:
     @property
     def serial_number(self):
         """
+        ### Summary
         Set the serial_number of the device to query.
+
+        ### Raises
+        None
         """
         return self._serial_number
 
@@ -336,11 +385,19 @@ class ImageInstallOptions:
     @property
     def issu(self):
         """
+        ### Summary
         Enable (True) or disable (False) issu compatibility check.
-        Valid values:
-            True - Enable issu compatibility check
-            False - Disable issu compatibility check
-        Default: True
+
+        ### Raises
+        ``TypeError``: if value is not a boolean.
+
+        ### Valid values
+
+        -   True - Enable issu compatibility check
+        -   False - Disable issu compatibility check
+
+        ### Default value
+        True
         """
         return self._issu
 
@@ -357,12 +414,19 @@ class ImageInstallOptions:
     @property
     def epld(self):
         """
+        ### Summary
         Enable (True) or disable (False) epld compatibility check.
 
-        Valid values:
-            True - Enable epld compatibility check
-            False - Disable epld compatibility check
-        Default: False
+        ### Raises
+        ``TypeError`` if value is not a boolean.
+
+        ### Valid values
+
+        -   True - Enable epld compatibility check
+        -   False - Disable epld compatibility check
+
+        ### Default value
+        False
         """
         return self._epld
 
@@ -379,11 +443,19 @@ class ImageInstallOptions:
     @property
     def package_install(self):
         """
+        ### Summary
         Enable (True) or disable (False) package_install compatibility check.
-        Valid values:
-            True - Enable package_install compatibility check
-            False - Disable package_install compatibility check
-        Default: False
+
+        ### Raises
+        ``TypeError`` if value is not a boolean.
+
+        ### Valid values
+
+        -   True - Enable package_install compatibility check
+        -   False - Disable package_install compatibility check
+
+        ### Default value
+        False
         """
         return self._package_install
 
@@ -402,71 +474,88 @@ class ImageInstallOptions:
     @property
     def comp_disp(self):
         """
-        Return the compDisp (CLI output from show install all status)
-        of the install-options response, if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the compDisp (CLI output from show install all status)
+            of the install-options response, if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("compDisp")
 
     @property
     def device_name(self):
         """
-        Return the deviceName of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the deviceName of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("deviceName")
 
     @property
     def epld_modules(self):
         """
-        Return the epldModules of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
 
-        epldModules will be "null" if self.epld is False.
-        _get will convert to NoneType in this case.
+        -   Return the epldModules of the install-options response,
+            if it exists.
+        -   Return None otherwise.
+
+        ### Notes
+        -   epldModules will be "null" if self.epld is False.
+        -   _get() will convert to NoneType in this case.
         """
-        return self._epld_modules
+        return self._get("epldModules")
 
     @property
     def err_message(self):
         """
-        Return the errMessage of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the errMessage of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self._get("errMessage")
 
     @property
     def install_option(self):
         """
-        Return the installOption of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the installOption of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("installOption")
 
     @property
     def install_packages(self):
         """
-        Return the installPackages of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
 
-        NOTE:   yes, installPacakges is misspelled in the response in the
-                following versions (at least):
-                12.1.2e
-                12.1.3b
+        -   Return the installPackages of the install-options response,
+            if it exists.
+        -   Return None otherwise
+
+        ### NOTE
+        Yes, installPacakges is misspelled in the response in the following
+        controller versions (at least):
+
+        -   12.1.2e
+        -   12.1.3b
         """
         return self._get("installPacakges")
 
     @property
     def ip_address(self):
         """
-        Return the ipAddress of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ipAddress of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("ipAddress")
 
@@ -474,6 +563,7 @@ class ImageInstallOptions:
     def response_data(self) -> dict:
         """
         ### Summary
+
         -   Return the DATA portion of the controller response.
         -   Return empty dict otherwise.
         """
@@ -482,18 +572,22 @@ class ImageInstallOptions:
     @property
     def os_type(self):
         """
-        Return the osType of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the osType of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("osType")
 
     @property
     def platform(self):
         """
-        Return the platform of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the platform of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("platform")
 
@@ -501,6 +595,7 @@ class ImageInstallOptions:
     def pre_issu_link(self):
         """
         ### Summary
+
         -   Return the ``preIssuLink`` of the install-options response,
             if it exists.
         -   Return ``None`` otherwise.
@@ -511,6 +606,7 @@ class ImageInstallOptions:
     def raw_data(self):
         """
         ### Summary
+
         -   Return the raw data of the install-options response,
             if it exists.
         -   Return ``None`` otherwise.
@@ -521,15 +617,17 @@ class ImageInstallOptions:
     def raw_response(self):
         """
         ### Summary
+
         -   Return the raw install-options response, if it exists.
         -   Alias for self.rest_send.response_current
         """
-        return self.rest_send.response_current
+        return self.rest_send.response_current  # pylint: disable=no-member
 
     @property
     def rep_status(self):
         """
         ### Summary
+
         -   Return the ``repStatus`` of the install-options response,
             if it exists.
         -   Return ``None`` otherwise.
@@ -540,6 +638,7 @@ class ImageInstallOptions:
     def status(self):
         """
         ### Summary
+
         -   Return the ``status`` of the install-options response,
             if it exists.
         -   Return ``None`` otherwise.
@@ -550,6 +649,7 @@ class ImageInstallOptions:
     def timestamp(self):
         """
         ### Summary
+
         -   Return the ``timestamp`` of the install-options response,
             if it exists.
         -   Return ``None`` otherwise.
@@ -560,6 +660,7 @@ class ImageInstallOptions:
     def version(self):
         """
         ### Summary
+
         -   Return the ``version`` of the install-options response,
             if it exists.
         -   Return ``None`` otherwise.
@@ -570,6 +671,7 @@ class ImageInstallOptions:
     def version_check(self):
         """
         ### Summary
+
         -   Return the ``versionCheck`` (version check CLI output)
             of the install-options response, if it exists.
         -   Return ``None`` otherwise.
