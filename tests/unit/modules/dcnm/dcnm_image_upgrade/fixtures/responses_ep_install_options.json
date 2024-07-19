@@ -1,5 +1,5 @@
 {
-    "test_image_upgrade_install_options_00005a": {
+    "test_image_install_options_00110a": {
         "TEST_NOTES": [
             "All attributes in compatibilityStatusList are tested",
             "epldModules is tested",
@@ -32,7 +32,7 @@
             "errMessage": ""
         }
     },
-    "test_image_upgrade_install_options_00006a": {
+    "test_image_install_options_00120a": {
         "TEST_NOTES": [
             "RETURN_CODE 500 is tested"
         ],
@@ -44,7 +44,7 @@
             "error": "null"
         }
     },
-    "test_image_upgrade_install_options_00007a": {
+    "test_image_install_options_00130a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == true, epld == false, packageInstall false",
             "Device has no policy attached",
@@ -81,7 +81,7 @@
             "errMessage": ""
         }
     },
-    "test_image_upgrade_install_options_00008a": {
+    "test_image_install_options_00140a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == true, epld == true, packageInstall false",
             "Device has no policy attached",
@@ -146,7 +146,7 @@
             "errMessage": ""
         }
     },
-    "test_image_upgrade_install_options_00009a": {
+    "test_image_install_options_00150a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == false, epld == true, packageInstall false",
             "Device has no policy attached",
@@ -195,7 +195,7 @@
             "errMessage": ""
         }
     },
-    "test_image_upgrade_install_options_00010a": {
+    "test_image_install_options_00160a": {
         "TEST_NOTES": [
             "POST REQUEST contents: issu == true, epld == true, packageInstall true",
             "RETURN_CODE is 500 due to packageInstall is true, but policy contains no packages",
