@@ -74,9 +74,9 @@ def test_image_validate_00000(image_validate) -> None:
     assert instance.issu_detail.class_name == "SwitchIssuDetailsBySerialNumber"
     assert instance.wait_for_controller_done.class_name == "WaitForControllerDone"
 
-    module_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
-    module_path += "stagingmanagement/validate-image"
-    assert instance.ep_image_validate.path == module_path
+    endpoint_path = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/"
+    endpoint_path += "stagingmanagement/validate-image"
+    assert instance.ep_image_validate.path == endpoint_path
     assert instance.ep_image_validate.verb == "POST"
 
     # properties
