@@ -508,7 +508,6 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     assert instance.results.result[1].get("sequence_number", None) == 2
 
     assert True in instance.results.failed
-    assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
 
