@@ -46,10 +46,6 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
     MockAnsibleModule, ResponseGenerator, does_not_raise,
     image_policies_fixture, params, responses_ep_policies)
 
-PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
-DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_UPGRADE + "image_policies.dcnm_send"
-
 
 def test_image_policies_00000(image_policies) -> None:
     """
@@ -75,7 +71,7 @@ def test_image_policies_00000(image_policies) -> None:
     assert instance.rest_send is None
 
 
-def test_image_policies_00100(monkeypatch, image_policies) -> None:
+def test_image_policies_00100(image_policies) -> None:
     """
     ### Classes and Methods
 
@@ -97,18 +93,25 @@ def test_image_policies_00100(monkeypatch, image_policies) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    key = "test_image_policies_00010a"
+    def responses():
+        yield responses_ep_policies(key)
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        return responses_image_policies(key)
+    gen_responses = ResponseGenerator(responses())
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    instance = image_policies
     with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
         instance.refresh()
+
     instance.policy_name = "KR5M"
-    assert isinstance(instance.response, dict)
     assert instance.agnostic is False
     assert instance.description == "10.2.(5) with EPLD"
     assert instance.epld_image_name == "n9000-epld.10.2.5.M.img"
@@ -123,318 +126,466 @@ def test_image_policies_00100(monkeypatch, image_policies) -> None:
     assert instance.rpm_images is None
 
 
-def test_image_policies_00020(monkeypatch, image_policies) -> None:
+def test_image_policies_00200(image_policies) -> None:
     """
-    Function
-    - ImagePolicies.refresh
-    - ImagePolicies.result
+    ### Classes and Methods
 
-    Test
-    - Imagepolicies.result contains expected key/values on 200 response from endpoint.
+    -   ``ImagePolicies()``
+            -   ``refresh``
+            -   ``rest_send.result_current``
 
-    Endpoint
-    - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
+    ### Summary
+    -   ``Imagepolicies.rest_send.result`` contains expected key/values on 200
+        response from endpoint.
     """
-    key = "test_image_policies_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
+    def responses():
+        yield responses_ep_policies(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = image_policies
-    with does_not_raise():
-        instance.refresh()
-    assert isinstance(instance.result, dict)
-    assert instance.result.get("found") is True
-    assert instance.result.get("success") is True
-
-
-def test_image_policies_00021(monkeypatch, image_policies) -> None:
-    """
-    Function
-    - ImagePolicies.refresh
-
-    Summary
-    Verify that fail_json is called when the response from the controller
-    contains a 404 RETURN_CODE.
-
-    Test
-    - fail_json is called on 404 RETURN_CODE in response.
-
-    Endpoint
-    - /bad/path
-    """
-    key = "test_image_policies_00021a"
-
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
-
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
-
-    match = "ImagePolicies.refresh: Bad response when retrieving "
-    match += "image policy information from the controller."
-
-    instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.refresh()
-
-
-def test_image_policies_00022(monkeypatch, image_policies) -> None:
-    """
-    Function
-    - ImagePolicies.refresh
-
-    Summary
-    Verify that fail_json is called when the response from the controller
-    contains an empty DATA key.
-
-    Test
-    - fail_json is called on 200 RETURN_CODE with empty DATA key.
-
-    Endpoint
-    - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
-    """
-    key = "test_image_policies_00022a"
-
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
-
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
-
-    match = "ImagePolicies.refresh: Bad response when retrieving "
-    match += "image policy information from the controller."
-
-    instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
-        instance.refresh()
-
-
-def test_image_policies_00023(monkeypatch, image_policies) -> None:
-    """
-    Function
-    - ImagePolicies.refresh
-
-    Summary
-    Verify that fail_json is not called when a 200 response from the controller
-    contains DATA.lastOperDataObject with length == 0.
-
-    Test
-    - do not fail_json when DATA.lastOperDataObject length == 0
-    - 200 response
-
-    Endpoint
-    - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
-
-    Discussion
-    dcnm_image_policy classes ImagePolicyCreate and ImagePolicyCreateBulk
-    both call ImagePolicies.refresh() when checking if the image policies
-    they are creating already exist on the controller.  Hence, we cannot
-    fail_json when the length of DATA.lastOperDataObject is zero.
-    """
-    key = "test_image_policies_00023a"
-
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
-
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
-
-    instance = image_policies
-    with does_not_raise():
-        instance.refresh()
-
-
-def test_image_policies_00024(monkeypatch, image_policies) -> None:
-    """
-    Function
-    - ImagePolicies.refresh
-    - ImagePolicies.policy_name
-
-    Summary
-    Verify when policy_name is set to a policy that does not exist on the
-    controller, instance.policy returns None.
-
-    Setup
-    - instance.policy_name is set to a policy that does not exist on the controller.
-
-    Test
-    - instance.policy returns None
-
-    Endpoint
-    - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
-    """
-    key = "test_image_policies_00024a"
-
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
-
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+
+    assert isinstance(instance.rest_send.result_current, dict)
+    assert instance.rest_send.result_current.get("found") is True
+    assert instance.rest_send.result_current.get("success") is True
+
+
+def test_image_policies_00300(image_policies) -> None:
+    """
+    ### Classes and Methods
+
+    -   ``ImagePolicies()``
+            -   ``refresh``
+
+    ### Summary
+    Verify that ``ControllerResponseError`` is raised when the controller
+    response RETURN_CODE == 404.
+
+    ### Test
+
+    -   ``ControllerResponseError`` is called on response with RETURN_CODE == 404.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"ImagePolicies\.refresh:\s+"
+    match += r"Bad response when retrieving image policy information\s+"
+    match += r"from the controller\."
+
+    with pytest.raises(ControllerResponseError, match=match):
+        instance.refresh()
+
+
+def test_image_policies_00400(image_policies) -> None:
+    """
+    ### Classes and Methods
+
+    -   ``ImagePolicies()``
+            -   ``refresh``
+
+    ### Summary
+    Verify that ``ControllerResponseError`` is raised when the controller
+    response contains an empty DATA key.
+
+    ### Test
+
+    -   ``ControllerResponseError`` is raised on RETURN_CODE == 200 with empty
+        DATA key.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"ImagePolicies\.refresh:\s+"
+    match += r"Bad response when retrieving image policy information\s+"
+    match += r"from the controller\."
+
+    with pytest.raises(ControllerResponseError, match=match):
+        instance.refresh()
+
+
+def test_image_policies_00500(image_policies) -> None:
+    """
+    ### Classes and Methods
+
+    -   ``ImagePolicies()``
+            -   ``refresh``
+
+    ### Summary
+    Verify that exceptions are not raised on controller response with
+    RETURN_CODE == 200 containing ``DATA.lastOperDataObject`` with
+    length == 0.
+
+    ### Test
+
+    -   Exception is not raised for ``DATA.lastOperDataObject`` length == 0.
+    -   RETURN_CODE == 200.
+
+    ### Discussion
+    dcnm_image_policy classes ``ImagePolicyCreate`` and
+    ``ImagePolicyCreateBulk`` both call ``ImagePolicies.refresh()`` when
+    checking if the image policies they are creating already exist on the
+    controller.  Hence, we cannot raise an exception when the length of
+    ``DATA.lastOperDataObject`` is zero.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
+
+    assert (
+        instance.rest_send.response_current.get("DATA").get("lastOperDataObject") == []
+    )
+    assert instance.rest_send.response_current.get("RETURN_CODE") == 200
+
+
+def test_image_policies_00600(image_policies) -> None:
+    """
+    ### Classes and Methods
+
+    -   ``ImagePolicies()``
+            -   ``refresh``
+            -   ``policy_name``
+
+    ### Summary
+    Verify when ``policy_name`` is set to a policy that does not exist on the
+    controller, ``policy`` returns None.
+
+    ### Setup
+
+    -   ``policy_name`` is set to a policy that does not exist on
+        the controller.
+
+    ### Test
+
+    -   ``policy`` returns None.
+
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
         instance.refresh()
         image_policies.policy_name = "FOO"
 
     assert image_policies.policy is None
 
 
-def test_image_policies_00025(monkeypatch, image_policies) -> None:
+def test_image_policies_00700(image_policies) -> None:
     """
-    Function
-    - ImagePolicies.refresh
+    ### Classes and Methods
 
-    Summary
-    Verify that fail_json is called when the response from the controller
-    is missing the policyName key.
+    -   ``ImagePolicies()``
+            -   ``refresh``
 
-    Test
-    - fail_json is called on response with missing policyName key.
+    ### Summary
+    Verify that ``ValueError`` is raised when the controller response
+    is missing the "policyName" key.
 
-    Endpoint
-    - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
+    ### Test
 
-    NOTES
-    - This is to cover a check in ImagePolicies.refresh()
-    - This scenario should happen only with a bug, or API change, on the controller.
+    -   ``ValueError`` is raised on response with missing "policyName" key.
+
+    ### NOTES
+
+    -   This is to cover a check in ``ImagePolicies.refresh()``.
+    -   This scenario should happen only with a controller bug or API change.
     """
-    key = "test_image_policies_00025a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
+    def responses():
+        yield responses_ep_policies(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    gen_responses = ResponseGenerator(responses())
 
-    match = "ImagePolicies.refresh: "
-    match += "Cannot parse policy information from the controller."
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"ImagePolicies\.refresh:\s+"
+    match += r"Cannot parse policy information from the controller\."
 
     instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.refresh()
 
 
-def test_image_policies_00026(monkeypatch, image_policies) -> None:
+def test_image_policies_00800(image_policies) -> None:
     """
-    Function
-    - ImagePolicies.refresh
-    - ImageUpgradeCommon._handle_response
+    ### Classes and Methods
 
-    Summary
-    Verify that fail_json is called when ImageUpgradeCommon._handle_response()
-    returns a non-successful result.
+    -   ``ImagePolicies()``
+            -   ``refresh``
 
-    Test
-    - fail_json is called when result["success"] is False.
+    ### Summary
+    Verify that ``ControllerResponseError`` is raised when
+    ``RestSend().result_current`` indicates an unsuccessful response.
+
+    ### Test
+
+    -   ``ControllerResponseError`` is raised when
+        ``RestSend().result_current["success"]`` is False.
 
     """
-    key = "test_image_policies_00026a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
+    def responses():
+        yield responses_ep_policies(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    gen_responses = ResponseGenerator(responses())
 
-    match = "ImagePolicies.refresh: Bad result when retrieving image policy "
-    match += r"information from the controller\."
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
-    instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"ImagePolicies\.refresh:\s+"
+    match += r"Failed to retrieve image policy information\s+"
+    match += r"from the controller\.\s+"
+    match += r"Controller response:.*"
+
+    with pytest.raises(ControllerResponseError, match=match):
         instance.refresh()
 
 
-def test_image_policies_00040(image_policies) -> None:
+def test_image_policies_02000(image_policies) -> None:
     """
-    Function
-    - ImagePolicies._get
+    ### Classes and Methods
 
-    Summary
-    Verify that fail_json is called when _get() is called prior to setting policy_name.
+    -   ``ImagePolicies()``
+            -   ``_get()``
 
-    Test
-    - fail_json is called when _get() is called prior to setting policy_name.
-    - Appropriate error message is provided.
+    ### Summary
+    Verify that ``ValueError`` is raised when ``_get()`` is called prior to
+    setting ``policy_name``.
+
+    ### Test
+
+    -   ``ValueError`` is raised when _get() is called prior to setting
+        ``policy_name``.
+    -   Error messages matches expectation.
     """
+
+    def responses():
+        yield None
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+
     match = "ImagePolicies._get: instance.policy_name must be "
     match += "set before accessing property imageName."
 
-    instance = image_policies
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance._get("imageName")  # pylint: disable=protected-access
 
 
-def test_image_policies_00041(monkeypatch, image_policies) -> None:
+def test_image_policies_02100(image_policies) -> None:
     """
-    Function
-    - ImagePolicies._get
+    ### Classes and Methods
 
-    Summary
-    Verify that fail_json is called when ImagePolicies._get is called
+    -   ``ImagePolicies()``
+            -   ``_get()``
+
+    ### Summary
+    Verify that ``ValueError`` is raised when ``_get`` is called
     with an argument that does not match an item in the response data
     for the policy_name returned by the controller.
 
-    Setup
-    -   instance.commit() is called and retrieves a response from the
-        controller containing informationi for policy KR5M.
-    - policy_name is set to KR5M.
+    ### Setup
 
-    Test
-    - fail_json is called when _get() is called with a bad parameter FOO
-    - An appropriate error message is provided.
+    -   ``refresh`` is called and retrieves a response from the
+        controller containing information for image policy KR5M.
+    -   ``policy_name`` is set to KR5M.
+
+    ### Test
+
+    -   ``ValueError`` is raised when ``_get()`` is called with a
+        parameter name "FOO" that does not match any key in the
+        response data for the ``policy_name``.
+    -   Error message matches expectation.
     """
-    key = "test_image_policies_00041a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
+    def responses():
+        yield responses_ep_policies(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    gen_responses = ResponseGenerator(responses())
 
-    match = r"ImagePolicies\._get: KR5M does not have a key named FOO\."
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
         instance.refresh()
         instance.policy_name = "KR5M"
 
-    with pytest.raises(AnsibleFailJson, match=match):
+    match = r"ImagePolicies\._get: KR5M does not have a key named FOO\."
+
+    with pytest.raises(ValueError, match=match):
         instance._get("FOO")  # pylint: disable=protected-access
 
 
-def test_image_policies_00042(monkeypatch, image_policies) -> None:
+def test_image_policies_02200(image_policies) -> None:
     """
-    Function
-    - ImagePolicies._get
+    ### Classes and Methods
 
-    Summary
+    -   ``ImagePolicies()``
+            -   ``_get()``
+
+    ### Summary
     Verify that the correct image policy information is returned when
-    ImagePolicies._get is called with the "policy" arguement.
+    ``ImagePolicies._get()`` is called with the "policy" arguement.
 
-    Setup
-    -   instance.commit() is called and retrieves a response from the
-        controller containing informationi for policy KR5M.
-    - policy_name is set to KR5M.
-    - _get("policy") is called.
+    ### Setup
 
-    Test
-    - fail_json is not called
-    - The expected policy information is returned.
+    -   ``refresh`` is called and retrieves a response from the
+        controller containing information for image policy KR5M.
+    -   ``policy_name`` is set to KR5M.
+    -   _get("policy") is called.
+
+    ### Test
+
+    -   Exception is not raised.
+    -   The expected policy information is returned.
     """
-    key = "test_image_policies_00042a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
+    def responses():
+        yield responses_ep_policies(key)
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
         instance.refresh()
         instance.policy_name = "KR5M"
         value = instance._get("policy")  # pylint: disable=protected-access
@@ -452,48 +603,86 @@ def test_image_policies_00042(monkeypatch, image_policies) -> None:
     assert value["rpmimages"] == ""
 
 
-def test_image_policies_00050(image_policies) -> None:
+def test_image_policies_03000(image_policies) -> None:
     """
-    Function
-    - ImagePolicies.all_policies
+    ### Classes and Methods
 
-    Summary
-    Verify that all_policies returns an empty dict when no policies exist
+    -   ``ImagePolicies()``
+            -   ``all_policies``
+
+    ### Summary
+    Verify that ``all_policies`` returns an empty dict when no policies exist
     on the controller.
 
     Test
-    - fail_json is not called.
-    - all_policies returns an empty dict.
+    -   Exception is not raised.
+    -   ``all_policies`` returns an empty dict.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
     with does_not_raise():
         instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.refresh()
         value = instance.all_policies
     assert value == {}
 
 
-def test_image_policies_00051(monkeypatch, image_policies) -> None:
+def test_image_policies_03100(image_policies) -> None:
     """
-    Function
-    - ImagePolicies.all_policies
+    ### Classes and Methods
 
-    Summary
+    -   ``ImagePolicies()``
+            -   ``all_policies``
+
+    ### Summary
     Verify that, when policies exist on the controller, all_policies returns a dict
     containing these policies.
 
-    Test
-    - fail_json is not called.
-    - all_policies returns a dict containing the controller's policies.
+    ### Test
+
+    -   Exception is not raised.
+    -   ``all_policies`` returns a dict containing the controller's image policies.
     """
     key = "test_image_policies_00051a"
 
-    def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:
-        print(f"mock_dcnm_send_image_policies: {responses_image_policies(key)}")
-        return responses_image_policies(key)
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    monkeypatch.setattr(DCNM_SEND_IMAGE_POLICIES, mock_dcnm_send_image_policies)
+    def responses():
+        yield responses_ep_policies(key)
 
-    instance = image_policies
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
     with does_not_raise():
+        instance = image_policies
+        instance.rest_send = rest_send
+        instance.results = Results()
         instance.refresh()
         value = instance.all_policies
     assert value["KR5M"]["agnostic"] == "false"
