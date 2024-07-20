@@ -111,7 +111,8 @@ def test_ep_policy_mgnt_00050():
     """
     with does_not_raise():
         instance = EpPolicyDetach()
-    assert instance.path == f"{PATH_PREFIX}/detach-policy"
+        instance.serial_numbers = ["AB12345CD"]
+    assert instance.path == f"{PATH_PREFIX}/detach-policy?serialNumber=AB12345CD"
     assert instance.verb == "DELETE"
 
 
