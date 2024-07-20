@@ -72,16 +72,17 @@ class ImagePolicies:
         self.class_name = self.__class__.__name__
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self._all_policies = None
         self.conversion = ConversionUtils()
         self.ep_policies = EpPolicies()
         self.data = {}
-        self._all_policies = None
         self._policy_name = None
         self._response_data = None
         self._results = None
         self._rest_send = None
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 

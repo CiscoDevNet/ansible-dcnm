@@ -1,5 +1,5 @@
 {
-    "test_image_upgrade_image_policies_00010a": {
+    "test_image_upgrade_image_policies_00100a": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
