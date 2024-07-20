@@ -22,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-from time import sleep
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyAttach

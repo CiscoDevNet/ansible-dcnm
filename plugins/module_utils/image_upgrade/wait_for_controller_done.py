@@ -138,7 +138,7 @@ class WaitForControllerDone:
         if self.done != self.todo:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Timed out after {self.rest_send.timeout} seconds "
-            msg += f"waiting for controller actions to complete on items: "
+            msg += "waiting for controller actions to complete on items: "
             msg += f"{sorted(self.todo)}. "
             if len(self.done) > 0:
                 msg += "The following items did complete: "
