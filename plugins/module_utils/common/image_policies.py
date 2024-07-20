@@ -144,6 +144,13 @@ class ImagePolicies:
             msg = "the controller has no defined image policies."
             self.log.debug(msg)
 
+        if self.rest_send.result_current["success"] is not True:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Failed to retrieve image policy information from "
+            msg += "the controller. "
+            msg += f"Controller response: {self.rest_send.response_current}"
+            raise ControllerResponseError(msg)
+
         self._response_data = {}
         self._all_policies = {}
         self.data = {}
