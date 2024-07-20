@@ -26,16 +26,25 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 from typing import Any, Dict
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicies
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    MockAnsibleModule, does_not_raise, image_policies_fixture,
-                    responses_image_policies)
+    MockAnsibleModule, ResponseGenerator, does_not_raise,
+    image_policies_fixture, params, responses_ep_policies)
 
 PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
 PATCH_IMAGE_UPGRADE = PATCH_MODULE_UTILS + "image_upgrade."
@@ -44,55 +53,50 @@ DCNM_SEND_IMAGE_POLICIES = PATCH_IMAGE_UPGRADE + "image_policies.dcnm_send"
 
 def test_image_policies_00000(image_policies) -> None:
     """
-    Function
-    - ImagePolicies.__init__
+    ### Classes and Methods
 
-    Test
-    - Class attributes are initialized to expected values
+    -   ``ImagePolicies()``
+            -   ``__init__``
+
+    ### Test
+
+    -   Class attributes and properties are initialized to expected values.
     """
     with does_not_raise():
         instance = image_policies
+    assert instance.all_policies == {}
     assert instance.class_name == "ImagePolicies"
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance.data == {}
     assert instance.ep_policies.class_name == "EpPolicies"
+    assert instance.policy_name is None
+    assert instance.response_data == {}
+    assert instance.results is None
+    assert instance.rest_send is None
 
 
-def test_image_policies_00010(image_policies) -> None:
+def test_image_policies_00100(monkeypatch, image_policies) -> None:
     """
-    Function
-    - ImagePolicies._init_properties
+    ### Classes and Methods
 
-    Test
-    - Class properties are initialized to expected values
+    -   ``ImagePolicies()``
+            -   ``refresh``
+            -   ``policy_name``
+
+    ### Summary
+    Verify that ``refresh`` returns image policy info and that the filtered
+    properties associated with ``policy_name`` are the expected values.
+
+    ### Test
+
+    -   properties for ``policy_name`` are set to reflect the response from
+        the controller.
+    -   200 RETURN_CODE.
+    -   Exception is not raised.
     """
-    with does_not_raise():
-        instance = image_policies
-    assert isinstance(image_policies.properties, dict)
-    assert instance.properties.get("policy_name") is None
-    assert instance.properties.get("response_data") == {}
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-
-def test_image_policies_00015(monkeypatch, image_policies) -> None:
-    """
-    Function
-    - ImagePolicies.refresh
-    - ImagePolicies.policy_name
-
-
-    Summary
-    Verify that refresh returns image policy info and that the filtered
-    properties associated with policy_name are the expected values.
-
-    Test
-    -   properties for policy_name are set to reflect the response from
-        the controller
-    -   200 RETURN_CODE
-    -   fail_json is not called
-
-    Endpoint
-    - /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies
-    """
     key = "test_image_policies_00010a"
 
     def mock_dcnm_send_image_policies(*args) -> Dict[str, Any]:

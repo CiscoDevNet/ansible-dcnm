@@ -79,7 +79,7 @@ class ControllerVersion:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.conversion = ConversionUtils()
-        self.endpoint = EpVersion()
+        self.ep_version = EpVersion()
         self._response_data = None
         self._rest_send = None
 
@@ -90,9 +90,10 @@ class ControllerVersion:
         """
         Refresh self.response_data with current version info from the Controller
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
-        self.rest_send.path = self.endpoint.path
-        self.rest_send.verb = self.endpoint.verb
+        self.rest_send.path = self.ep_version.path
+        self.rest_send.verb = self.ep_version.verb
         self.rest_send.commit()
 
         if self.rest_send.result_current["success"] is False:
@@ -192,20 +193,6 @@ class ControllerVersion:
         Return the data retrieved from the request
         """
         return self._response_data
-
-    @property
-    def result(self):
-        """
-        Return the GET result from the Controller
-        """
-        return self._result
-
-    @property
-    def response(self):
-        """
-        Return the GET response from the Controller
-        """
-        return self._response
 
     @property
     def mode(self):

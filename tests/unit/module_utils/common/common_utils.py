@@ -138,7 +138,7 @@ class MockAnsibleModule:
 @pytest.fixture(name="controller_features")
 def controller_features_fixture():
     """
-    return ControllerFeatures
+    return ControllerFeatures instance.
     """
     return ControllerFeatures(params)
 
@@ -146,9 +146,9 @@ def controller_features_fixture():
 @pytest.fixture(name="controller_version")
 def controller_version_fixture():
     """
-    return ControllerVersion with mocked AnsibleModule
+    return ControllerVersion instance.
     """
-    return ControllerVersion(MockAnsibleModule)
+    return ControllerVersion()
 
 
 @pytest.fixture(name="image_policies")
@@ -286,13 +286,13 @@ def responses_controller_features(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_controller_version(key: str) -> Dict[str, str]:
+def responses_ep_version(key: str) -> Dict[str, str]:
     """
-    Return data in responses_ControllerVersion.json
+    Return responses for endpoint EpVersion.
     """
-    response_file = "responses_ControllerVersion"
+    response_file = "responses_ep_version"
     response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
+    print(f"responses_ep_version: {key} : {response}")
     return response
 
 
@@ -306,13 +306,13 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_policies(key: str) -> Dict[str, str]:
+def responses_ep_policies(key: str) -> Dict[str, str]:
     """
-    Return ImagePolicies controller responses
+    Return controller responses for the EpPolicies() endpoint.
     """
-    response_file = "responses_ImagePolicies"
+    response_file = "responses_ep_policies"
     response = load_fixture(response_file).get(key)
-    print(f"responses_image_policies: {key} : {response}")
+    print(f"responses_ep_policies: {key} : {response}")
     return response
 
 
