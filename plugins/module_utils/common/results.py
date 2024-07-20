@@ -302,9 +302,9 @@ class Results:
             self.failed = True
         else:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"self.result_current['success'] is not a boolean. "
+            msg += "self.result_current['success'] is not a boolean. "
             msg += f"self.result_current: {self.result_current}. "
-            msg += f"Setting self.failed to False."
+            msg += "Setting self.failed to False."
             self.log.debug(msg)
             self.failed = False
 

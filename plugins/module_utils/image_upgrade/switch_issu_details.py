@@ -19,7 +19,6 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
-import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.packagemgnt.packagemgnt import \
