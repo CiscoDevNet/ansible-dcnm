@@ -324,7 +324,7 @@ class EpPolicyDetach(PolicyMgnt):
     @property
     def verb(self):
         return "DELETE"
-    
+
     @property
     def serial_numbers(self):
         """
