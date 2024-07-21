@@ -140,7 +140,7 @@ def controller_features_fixture():
     """
     return ControllerFeatures instance.
     """
-    return ControllerFeatures(params)
+    return ControllerFeatures()
 
 
 @pytest.fixture(name="controller_version")
