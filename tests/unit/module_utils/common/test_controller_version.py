@@ -36,8 +36,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (

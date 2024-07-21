@@ -32,22 +32,22 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import \
-    EpFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
     ControllerFeatures
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
     MockAnsibleModule, ResponseGenerator, controller_features_fixture,
     does_not_raise, params, responses_controller_features)
 
 
-def test_controller_features_00010(controller_features) -> None:
+def test_controller_features_00000(controller_features) -> None:
     """
     Classes and Methods
     - ControllerFeatures
@@ -60,53 +60,35 @@ def test_controller_features_00010(controller_features) -> None:
     with does_not_raise():
         instance = controller_features
     assert instance.class_name == "ControllerFeatures"
-    assert isinstance(instance.api_features, EpFeatures)
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert instance.check_mode is False
+    assert instance.ep_features.class_name == "EpFeatures"
+    assert instance.conversion.class_name == "ConversionUtils"
     assert instance.filter is None
-    assert instance.response is None
     assert instance.response_data is None
     assert instance.rest_send is None
-    assert instance.result is None
-
-
-def test_controller_features_00020(controller_features) -> None:
-    """
-    Classes and Methods
-    - ControllerFeatures
-        - __init__()
-
-    Test
-    - ``ValueError`` is raised when params is missing check_mode
-    """
-    params = {}
-    match = r"ControllerFeatures\.__init__\(\):\s+"
-    match += r"check_mode is required\."
-    with pytest.raises(ValueError, match=match):
-        instance = ControllerFeatures(params)  # pylint: disable=unused-variable
 
 
 def test_controller_features_00030(controller_features) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - ControllerFeatures()
         - __init__()
         - refresh()
 
-    Summary
-    -   Verify ControllerFeatures().refresh() raises ``ValueError``
-        when ``ControllerFeatures().rest_send`` is not set.
+    ### Summary
+    Verify ``refresh`` raises ``ValueError`` when ``rest_send`` is not set.
 
-    Code Flow - Setup
+    ### Setup
+
     -   ControllerFeatures() is instantiated
 
-    Code Flow - Test
-    -   ControllerFeatures().refresh() is called without having
-        first set ControllerFeatures().rest_send
+    ### Test
 
-    Expected Result
+    -   ``refresh`` is called without having first set ``rest_send``.
+
+    ### Expected Result
     -   ``ValueError`` is raised
-    -   Exception message matches expected
+    -   Exception message matches expected.
     """
     with does_not_raise():
         instance = controller_features
@@ -120,29 +102,33 @@ def test_controller_features_00030(controller_features) -> None:
 
 def test_controller_features_00040(monkeypatch, controller_features) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - ControllerFeatures()
         - __init__()
         - refresh()
 
-    Summary
+    ### Summary
+
     - Verify refresh() success case:
         -   RETURN_CODE is 200.
         -   Controller response contains expected structure and values.
 
-    Code Flow - Setup
+    ### Setup
+
     -   ControllerFeatures() is instantiated
-    -   dcnm_send() is patched to return the mocked controller response
     -   ControllerFeatures().RestSend() is instantiated
     -   ControllerFeatures().refresh() is called
     -   responses_ControllerFeatures contains a dict with:
         - RETURN_CODE == 200
         - DATA == [<controller_features_info from controller>]
 
-    Code Flow - Test
+    ### Test
+
     -   ControllerFeatures().refresh() is called
 
-    Expected Result
+    ### Expected Result
+
     -   Exception is not raised
     -   instance.response_data returns expected controller features data
     -   ControllerFeatures()._properties are updated
@@ -150,27 +136,23 @@ def test_controller_features_00040(monkeypatch, controller_features) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_controller_features(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = controller_features
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-
-    with does_not_raise():
+        instance.rest_send = rest_send
         instance.refresh()
         instance.filter = "pmn"
 
@@ -179,13 +161,11 @@ def test_controller_features_00040(monkeypatch, controller_features) -> None:
     assert instance.oper_state == "started"
     assert instance.enabled is True
     assert instance.started is True
-    assert isinstance(instance.response, dict)
     assert isinstance(instance.response_data, dict)
-    assert isinstance(instance.result, dict)
-    assert instance.response.get("MESSAGE", None) == "OK"
-    assert instance.response.get("RETURN_CODE", None) == 200
-    assert instance.result.get("success", None) is True
-    assert instance.result.get("found", None) is True
+    assert instance.rest_send.response_current.get("MESSAGE", None) == "OK"
+    assert instance.rest_send.response_current.get("RETURN_CODE", None) == 200
+    assert instance.rest_send.result_current.get("success", None) is True
+    assert instance.rest_send.result_current.get("found", None) is True
 
     with does_not_raise():
         instance.filter = "vxlan"
@@ -199,52 +179,52 @@ def test_controller_features_00040(monkeypatch, controller_features) -> None:
 
 def test_controller_features_00050(monkeypatch, controller_features) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - ControllerFeatures()
         - __init__()
         - refresh()
 
-    Summary
-    - Verify refresh() failure behavior:
-        -   RETURN_CODE is 500.
+    ### Summary
+    Verify refresh() failure behavior. RETURN_CODE is 500.
 
-    Code Flow - Setup
+    ### Setup
+
     -   ControllerFeatures() is instantiated
-    -   dcnm_send() is patched to return the mocked controller response
     -   ControllerFeatures().RestSend() is instantiated
     -   ControllerFeatures().refresh() is called
     -   responses_ControllerFeatures contains a dict with:
         - RETURN_CODE == 500
 
-    Code Flow - Test
+    ### Test
+
     -   ControllerFeatures().refresh() is called
 
-    Expected Result
+    ### Expected Result
+
     -   ``ControllerResponseError`` is raised
     -   Exception message matches expected
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_controller_features(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = controller_features
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+        instance.rest_send = rest_send
 
     match = r"ControllerFeatures\.refresh: Bad controller response:"
     with pytest.raises(ControllerResponseError, match=match):
@@ -253,54 +233,57 @@ def test_controller_features_00050(monkeypatch, controller_features) -> None:
 
 def test_controller_features_00060(monkeypatch, controller_features) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - ControllerFeatures()
         - __init__()
         - refresh()
 
-    Summary
-    - Verify refresh() failure due to unexpected controller response structure.:
+    ### Summary
+    Verify refresh() failure due to unexpected controller response structure.
+
         -   RETURN_CODE is 200.
         -   DATA is missing.
 
-    Code Flow - Setup
+    ### Setup
+
     -   ControllerFeatures() is instantiated
-    -   dcnm_send() is patched to return the mocked controller response
     -   ControllerFeatures().RestSend() is instantiated
     -   ControllerFeatures().refresh() is called
     -   responses_ControllerFeatures contains a dict with:
         - RETURN_CODE == 200
         - DATA is missing
 
-    Code Flow - Test
+    ### Test
     -   ControllerFeatures().refresh() is called
 
-    Expected Result
+    ### Expected Result
     -   ``ControllerResponseError`` is raised
     -   Exception message matches expected
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     def responses():
         yield responses_controller_features(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = controller_features
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+        instance.rest_send = rest_send
 
     match = r"ControllerFeatures\.refresh: "
     match += r"Controller response does not match expected structure:"
@@ -315,8 +298,8 @@ MATCH_00070 += r"value must be an instance of RestSend\..*"
 @pytest.mark.parametrize(
     "value, does_raise, expected",
     [
-        (RestSend(MockAnsibleModule()), False, does_not_raise()),
-        (ControllerFeatures(params), True, pytest.raises(TypeError, match=MATCH_00070)),
+        (RestSend(params), False, does_not_raise()),
+        (ControllerFeatures(), True, pytest.raises(TypeError, match=MATCH_00070)),
         (None, True, pytest.raises(TypeError, match=MATCH_00070)),
         ("foo", True, pytest.raises(TypeError, match=MATCH_00070)),
         (10, True, pytest.raises(TypeError, match=MATCH_00070)),
