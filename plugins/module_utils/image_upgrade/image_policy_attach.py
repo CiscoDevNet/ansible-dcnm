@@ -289,7 +289,6 @@ class ImagePolicyAttach:
             msg += f"Error {error}."
             raise ValueError(msg) from error
 
-
     def build_diff(self):
         """
         ### Summary
@@ -356,7 +355,6 @@ class ImagePolicyAttach:
             msg += f"Bad result when attaching policy {self.policy_name} "
             msg += f"to switch. Payload: {payload}."
             raise ValueError(msg)
-
 
     @property
     def policy_name(self):
