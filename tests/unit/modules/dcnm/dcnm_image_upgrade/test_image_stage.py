@@ -90,6 +90,7 @@ def test_image_stage_00000(image_stage) -> None:
     assert instance.results is None
     assert instance.serial_numbers is None
 
+
 @pytest.mark.parametrize(
     "key, expected",
     [
