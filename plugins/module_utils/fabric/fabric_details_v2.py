@@ -42,39 +42,16 @@ class FabricDetails:
     See subclass docstrings for details.
 
     ### Raises
-    -   ``ValueError`` if:
-            -   Mandatory properties are not set.
-            -   RestSend object raises ``TypeError`` or ``ValueError``.
-            -   ``params`` is missing ``check_mode`` key.
-            -   ``params`` is missing ``state`` key.
-
-    params is AnsibleModule.params
+    None
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
-        self.params = params
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "check_mode is missing from params. "
-            msg += f"params: {params}."
-            raise ValueError(msg)
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "state is missing from params. "
-            msg += f"params: {params}."
-            raise ValueError(msg)
 
         self.action = "fabric_details"
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED FabricDetails() (v2)"
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
         self.data = {}
@@ -467,7 +444,7 @@ class FabricDetailsByName(FabricDetails):
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = FabricDetailsByName(params)
+    instance = FabricDetailsByName()
     instance.rest_send = rest_send
     instance.results = Results()
     instance.refresh()
@@ -497,7 +474,7 @@ class FabricDetailsByName(FabricDetails):
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = FabricDetailsByName(params)
+    instance = FabricDetailsByName()
     instance.rest_send = rest_send
     instance.results = Results()
     instance.refresh()
@@ -508,19 +485,12 @@ class FabricDetailsByName(FabricDetails):
     controller, keyed on fabric name.
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        try:
-            super().__init__(params)
-        except ValueError as error:
-            msg = "FabricDetailsByName.__init__: "
-            msg += "Failed in super().__init__(). "
-            msg += f"Error detail: {error}"
-            raise ValueError(msg) from error
+        super().__init__()
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED FabricDetailsByName() "
-        msg += f"params {params}."
+        msg = "ENTERED FabricDetailsByName()"
         self.log.debug(msg)
 
         self.data_subclass = {}
@@ -698,7 +668,7 @@ class FabricDetailsByNvPair(FabricDetails):
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = FabricDetailsNvPair(params)
+    instance = FabricDetailsNvPair()
     instance.filter_key = "DCI_SUBNET_RANGE"
     instance.filter_value = "10.33.0.0/16"
     instance.refresh()
@@ -706,15 +676,9 @@ class FabricDetailsByNvPair(FabricDetails):
     ```
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        try:
-            super().__init__(params)
-        except ValueError as error:
-            msg = "FabricDetailsByNvPair.__init__: "
-            msg += "Failed in super().__init__(). "
-            msg += f"Error detail: {error}"
-            raise ValueError(msg) from error
+        super().__init__()
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 

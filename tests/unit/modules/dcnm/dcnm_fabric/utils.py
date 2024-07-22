@@ -188,7 +188,7 @@ def fabric_delete_fixture():
 @pytest.fixture(name="fabric_details")
 def fabric_details_fixture():
     """
-    mock FabricDetails
+    Return FabricDetails instance.
     """
     instance = MockAnsibleModule()
     instance.state = "merged"
@@ -198,9 +198,9 @@ def fabric_details_fixture():
 @pytest.fixture(name="fabric_details_v2")
 def fabric_details_v2_fixture():
     """
-    mock FabricDetails() v2
+    Return FabricDetails() v2 instance
     """
-    return FabricDetailsV2(params)
+    return FabricDetailsV2()
 
 
 @pytest.fixture(name="fabric_details_by_name")
@@ -216,12 +216,9 @@ def fabric_details_by_name_fixture():
 @pytest.fixture(name="fabric_details_by_name_v2")
 def fabric_details_by_name_v2_fixture():
     """
-    mock FabricDetailsByName version 2
+    Return FabricDetailsByName version 2 instance
     """
-    instance = MockAnsibleModule()
-    instance.state = "query"
-    instance.check_mode = False
-    return FabricDetailsByNameV2(instance.params)
+    return FabricDetailsByNameV2()
 
 
 @pytest.fixture(name="fabric_details_by_nv_pair")
@@ -237,11 +234,9 @@ def fabric_details_by_nv_pair_fixture():
 @pytest.fixture(name="fabric_details_by_nv_pair_v2")
 def fabric_details_by_nv_pair_v2_fixture():
     """
-    mock FabricDetailsByNvPair version 2
+    Return FabricDetailsByNvPair version 2 instance
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetailsByNvPairV2(instance.params)
+    return FabricDetailsByNvPairV2()
 
 
 @pytest.fixture(name="fabric_query")

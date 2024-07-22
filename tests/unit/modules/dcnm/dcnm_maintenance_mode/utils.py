@@ -104,12 +104,9 @@ def common_fixture():
 @pytest.fixture(name="fabric_details_by_name_v2")
 def fabric_details_by_name_v2_fixture():
     """
-    mock FabricDetailsByName version 2
+    Return FabricDetailsByName version 2 instance
     """
-    instance = MockAnsibleModule()
-    instance.state = "query"
-    instance.check_mode = False
-    return FabricDetailsByNameV2(instance.params)
+    return FabricDetailsByNameV2()
 
 
 @pytest.fixture(name="response_handler")
