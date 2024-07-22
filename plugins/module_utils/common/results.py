@@ -22,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 
 class Results:
@@ -205,7 +204,7 @@ class Results:
         self._build_properties()
 
     def _build_properties(self):
-        self.properties: Dict[str, Any] = {}
+        self.properties: dict = {}
         self.properties["action"] = None
         self.properties["changed"] = set()
         self.properties["check_mode"] = False
@@ -368,7 +367,7 @@ class Results:
         self.final_result["metadata"] = self.metadata
 
     @property
-    def failed_result(self) -> Dict[str, Any]:
+    def failed_result(self) -> dict:
         """
         return a result for a failed task with no changes
         """
@@ -381,7 +380,7 @@ class Results:
         return result
 
     @property
-    def ok_result(self) -> Dict[str, Any]:
+    def ok_result(self) -> dict:
         """
         return a result for a successful task with no changes
         """

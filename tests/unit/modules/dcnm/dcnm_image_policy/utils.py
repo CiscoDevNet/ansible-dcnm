@@ -18,7 +18,6 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
@@ -102,7 +101,7 @@ class GenerateResponses:
         """
         return next(self.gen)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -150,7 +149,7 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg, kwargs)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -265,7 +264,7 @@ def does_not_raise():
     yield
 
 
-def data_payload(key: str) -> Dict[str, str]:
+def data_payload(key: str) -> dict[str, str]:
     """
     Return data for unit tests of the Payload() class
     """
@@ -275,7 +274,7 @@ def data_payload(key: str) -> Dict[str, str]:
     return data
 
 
-def configs_config2payload(key: str) -> Dict[str, str]:
+def configs_config2payload(key: str) -> dict[str, str]:
     """
     Return configs for Config2Payload
     """
@@ -285,7 +284,7 @@ def configs_config2payload(key: str) -> Dict[str, str]:
     return data
 
 
-def configs_payload2config(key: str) -> Dict[str, str]:
+def configs_payload2config(key: str) -> dict[str, str]:
     """
     Return configs for Payload2Config
     """
@@ -295,7 +294,7 @@ def configs_payload2config(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_config2payload(key: str) -> Dict[str, str]:
+def payloads_config2payload(key: str) -> dict[str, str]:
     """
     Return payloads for Config2Payload
     """
@@ -305,7 +304,7 @@ def payloads_config2payload(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_payload2config(key: str) -> Dict[str, str]:
+def payloads_payload2config(key: str) -> dict[str, str]:
     """
     Return payloads for Payload2Config
     """
@@ -315,7 +314,7 @@ def payloads_payload2config(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_create(key: str) -> Dict[str, str]:
+def payloads_image_policy_create(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyCreate
     """
@@ -325,7 +324,7 @@ def payloads_image_policy_create(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
+def payloads_image_policy_create_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyCreateBulk
     """
@@ -335,7 +334,7 @@ def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+def payloads_image_policy_replace_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyReplaceBulk
     """
@@ -345,7 +344,7 @@ def payloads_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_update(key: str) -> Dict[str, str]:
+def payloads_image_policy_update(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyUpdate
     """
@@ -355,7 +354,7 @@ def payloads_image_policy_update(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_update_bulk(key: str) -> Dict[str, str]:
+def payloads_image_policy_update_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyUpdateBulk
     """
@@ -365,7 +364,7 @@ def payloads_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_ep_policies(key: str) -> Dict[str, str]:
+def responses_ep_policies(key: str) -> dict[str, str]:
     """
     Return responses for EpPolicies() endpoint
     """
@@ -375,7 +374,7 @@ def responses_ep_policies(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_ep_policy_create(key: str) -> Dict[str, str]:
+def responses_ep_policy_create(key: str) -> dict[str, str]:
     """
     Return responses for EpPolicyCreate() endpoint
     """
@@ -385,7 +384,7 @@ def responses_ep_policy_create(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_ep_policy_delete(key: str) -> Dict[str, str]:
+def responses_ep_policy_delete(key: str) -> dict[str, str]:
     """
     Return responses for EpPolicyDelete() endpoint
     """
@@ -395,7 +394,7 @@ def responses_ep_policy_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_ep_policy_edit(key: str) -> Dict[str, str]:
+def responses_ep_policy_edit(key: str) -> dict[str, str]:
     """
     Return responses for EpPolicyEdit() endpoint
     """
@@ -405,7 +404,7 @@ def responses_ep_policy_edit(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_create(key: str) -> Dict[str, str]:
+def responses_image_policy_create(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyCreate
     """
@@ -415,7 +414,7 @@ def responses_image_policy_create(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
+def responses_image_policy_create_bulk(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyCreateBulk
     """
@@ -425,7 +424,7 @@ def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_delete(key: str) -> Dict[str, str]:
+def responses_image_policy_delete(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyDelete
     """
@@ -435,7 +434,7 @@ def responses_image_policy_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+def responses_image_policy_replace_bulk(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyReplaceBulk
     """
@@ -445,7 +444,7 @@ def responses_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_update(key: str) -> Dict[str, str]:
+def responses_image_policy_update(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyUpdate
     """
@@ -455,7 +454,7 @@ def responses_image_policy_update(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_update_bulk(key: str) -> Dict[str, str]:
+def responses_image_policy_update_bulk(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyUpdateBulk
     """
@@ -465,7 +464,7 @@ def responses_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
+def results_image_policy_create_bulk(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyCreateBulk
     """
@@ -475,7 +474,7 @@ def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_delete(key: str) -> Dict[str, str]:
+def results_image_policy_delete(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyDelete
     """
@@ -485,7 +484,7 @@ def results_image_policy_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+def results_image_policy_replace_bulk(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyReplaceBulk
     """
@@ -495,7 +494,7 @@ def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_task_result(key: str) -> Dict[str, str]:
+def results_image_policy_task_result(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyTaskResult
     """
@@ -505,7 +504,7 @@ def results_image_policy_task_result(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_update(key: str) -> Dict[str, str]:
+def results_image_policy_update(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyUpdate
     """
@@ -515,7 +514,7 @@ def results_image_policy_update(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_update_bulk(key: str) -> Dict[str, str]:
+def results_image_policy_update_bulk(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyUpdateBulk
     """
@@ -525,7 +524,7 @@ def results_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def image_policies_all_policies(key: str) -> Dict[str, str]:
+def image_policies_all_policies(key: str) -> dict[str, str]:
     """
     Return mocked return values for ImagePolicies().all_policies property
     """
@@ -535,7 +534,7 @@ def image_policies_all_policies(key: str) -> Dict[str, str]:
     return data
 
 
-def rest_send_response_current(key: str) -> Dict[str, str]:
+def rest_send_response_current(key: str) -> dict[str, str]:
     """
     Mocked return values for RestSend().response_current property
     """
@@ -545,7 +544,7 @@ def rest_send_response_current(key: str) -> Dict[str, str]:
     return data
 
 
-def rest_send_result_current(key: str) -> Dict[str, str]:
+def rest_send_result_current(key: str) -> dict[str, str]:
     """
     Mocked return values for RestSend().result_current property
     """

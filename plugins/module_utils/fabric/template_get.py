@@ -21,7 +21,6 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
     EpTemplate
@@ -205,7 +204,7 @@ class TemplateGet:
         return self._properties["template"]
 
     @template.setter
-    def template(self, value: Dict[str, Any]) -> None:
+    def template(self, value) -> None:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "

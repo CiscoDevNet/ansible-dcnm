@@ -29,7 +29,6 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import logging
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
