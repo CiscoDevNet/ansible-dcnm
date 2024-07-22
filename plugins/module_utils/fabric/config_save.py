@@ -20,7 +20,6 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
-from typing import Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricConfigSave
@@ -74,7 +73,7 @@ class FabricConfigSave:
             msg += "params is missing mandatory state parameter."
             raise ValueError(msg)
 
-        self.config_save_result: Dict[str, bool] = {}
+        self.config_save_result: dict[str, bool] = {}
 
         self.path = None
         self.verb = None

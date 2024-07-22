@@ -26,9 +26,6 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-import inspect
-from typing import Any, Dict
-
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender

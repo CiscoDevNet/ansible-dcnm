@@ -19,7 +19,6 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
@@ -113,7 +112,7 @@ class FabricCommon:
         """
         Initialize the properties dictionary.
         """
-        self._properties: Dict[str, Any] = {}
+        self._properties: dict = {}
         self._properties["fabric_details"] = None
         self._properties["fabric_summary"] = None
         self._properties["fabric_type"] = "VXLAN_EVPN"

@@ -18,7 +18,6 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
@@ -78,7 +77,7 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg, kwargs)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -168,7 +167,7 @@ def does_not_raise():
     yield
 
 
-def load_playbook_config(key: str) -> Dict[str, str]:
+def load_playbook_config(key: str) -> dict[str, str]:
     """
     Return playbook configs for ImageUpgradeTask
     """
@@ -178,7 +177,7 @@ def load_playbook_config(key: str) -> Dict[str, str]:
     return playbook_config
 
 
-def devices_image_upgrade(key: str) -> Dict[str, str]:
+def devices_image_upgrade(key: str) -> dict[str, str]:
     """
     Return data for the ImageUpgrade().devices property.
     Used by test_image_upgrade.py
@@ -189,7 +188,7 @@ def devices_image_upgrade(key: str) -> Dict[str, str]:
     return devices
 
 
-def payloads_ep_image_upgrade(key: str) -> Dict[str, str]:
+def payloads_ep_image_upgrade(key: str) -> dict[str, str]:
     """
     Return payloads for EpImageUpgrade
     """
@@ -199,7 +198,7 @@ def payloads_ep_image_upgrade(key: str) -> Dict[str, str]:
     return payload
 
 
-def responses_ep_image_stage(key: str) -> Dict[str, str]:
+def responses_ep_image_stage(key: str) -> dict[str, str]:
     """
     Return EpImageStage controller responses
     """
@@ -209,7 +208,7 @@ def responses_ep_image_stage(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_image_upgrade(key: str) -> Dict[str, str]:
+def responses_ep_image_upgrade(key: str) -> dict[str, str]:
     """
     Return EpImageUpgrade responses
     """
@@ -219,7 +218,7 @@ def responses_ep_image_upgrade(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_image_validate(key: str) -> Dict[str, str]:
+def responses_ep_image_validate(key: str) -> dict[str, str]:
     """
     Return EpImageValidate responses
     """
@@ -229,7 +228,7 @@ def responses_ep_image_validate(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_issu(key: str) -> Dict[str, str]:
+def responses_ep_issu(key: str) -> dict[str, str]:
     """
     Return EpIssu responses
     """
@@ -239,7 +238,7 @@ def responses_ep_issu(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_version(key: str) -> Dict[str, str]:
+def responses_ep_version(key: str) -> dict[str, str]:
     """
     Return EpVersion responses
     """
@@ -249,7 +248,7 @@ def responses_ep_version(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_install_options(key: str) -> Dict[str, str]:
+def responses_ep_install_options(key: str) -> dict[str, str]:
     """
     Return EpInstallOptions responses
     """
@@ -259,7 +258,7 @@ def responses_ep_install_options(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_policy_action(key: str) -> Dict[str, str]:
+def responses_image_policy_action(key: str) -> dict[str, str]:
     """
     Return ImagePolicyAction responses
     """
@@ -269,7 +268,7 @@ def responses_image_policy_action(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_upgrade_common(key: str) -> Dict[str, str]:
+def responses_image_upgrade_common(key: str) -> dict[str, str]:
     """
     Return ImageUpgradeCommon responses
     """
@@ -280,7 +279,7 @@ def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     return {"response": response, "verb": verb}
 
 
-def responses_switch_details(key: str) -> Dict[str, str]:
+def responses_switch_details(key: str) -> dict[str, str]:
     """
     Return SwitchDetails responses
     """

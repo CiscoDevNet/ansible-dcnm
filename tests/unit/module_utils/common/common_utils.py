@@ -18,7 +18,6 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
@@ -97,7 +96,7 @@ class ResponseGenerator:
         """
         return "response_generator"
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -125,7 +124,7 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -247,7 +246,7 @@ def does_not_raise():
     yield
 
 
-def merge_dicts_data(key: str) -> Dict[str, str]:
+def merge_dicts_data(key: str) -> dict[str, str]:
     """
     Return data from merge_dicts.json for merge_dicts unit tests.
     """
@@ -257,7 +256,7 @@ def merge_dicts_data(key: str) -> Dict[str, str]:
     return data
 
 
-def merge_dicts_v2_data(key: str) -> Dict[str, str]:
+def merge_dicts_v2_data(key: str) -> dict[str, str]:
     """
     Return data from merge_dicts_v2.json for merge_dicts_v2 unit tests.
     """
@@ -267,7 +266,7 @@ def merge_dicts_v2_data(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_deploy_maintenance_mode(key: str) -> Dict[str, str]:
+def responses_deploy_maintenance_mode(key: str) -> dict[str, str]:
     """
     Return data in responses_DeployMaintenanceMode.json
     """
@@ -277,7 +276,7 @@ def responses_deploy_maintenance_mode(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_controller_features(key: str) -> Dict[str, str]:
+def responses_controller_features(key: str) -> dict[str, str]:
     """
     Return data in responses_ControllerFeatures.json
     """
@@ -286,7 +285,7 @@ def responses_controller_features(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_version(key: str) -> Dict[str, str]:
+def responses_ep_version(key: str) -> dict[str, str]:
     """
     Return responses for endpoint EpVersion.
     """
@@ -296,7 +295,7 @@ def responses_ep_version(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
+def responses_fabric_details_by_name(key: str) -> dict[str, str]:
     """
     Return data in responses_FabricDetailsByName.json
     """
@@ -306,7 +305,7 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_ep_policies(key: str) -> Dict[str, str]:
+def responses_ep_policies(key: str) -> dict[str, str]:
     """
     Return controller responses for the EpPolicies() endpoint.
     """
@@ -316,7 +315,7 @@ def responses_ep_policies(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_maintenance_mode(key: str) -> Dict[str, str]:
+def responses_maintenance_mode(key: str) -> dict[str, str]:
     """
     Return data in responses_MaintenanceMode.json
     """
@@ -326,7 +325,7 @@ def responses_maintenance_mode(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_sender_dcnm(key: str) -> Dict[str, str]:
+def responses_sender_dcnm(key: str) -> dict[str, str]:
     """
     Return data in responses_SenderDcnm.json
     """
@@ -336,7 +335,7 @@ def responses_sender_dcnm(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_sender_file(key: str) -> Dict[str, str]:
+def responses_sender_file(key: str) -> dict[str, str]:
     """
     Return data in responses_SenderFile.json
     """
@@ -346,7 +345,7 @@ def responses_sender_file(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_switch_details(key: str) -> Dict[str, str]:
+def responses_switch_details(key: str) -> dict[str, str]:
     """
     Return data in responses_SwitchDetails.json
     """

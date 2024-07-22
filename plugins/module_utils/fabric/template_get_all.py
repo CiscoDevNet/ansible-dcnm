@@ -21,7 +21,6 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
-from typing import Any, Dict
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
     EpTemplates
@@ -171,14 +170,14 @@ class TemplateGetAll:
         self._properties["results"] = value
 
     @property
-    def templates(self) -> Dict[str, Any]:
+    def templates(self) -> dict:
         """
         Return the templates retrieved from the controller.
         """
         return self._properties["templates"]
 
     @templates.setter
-    def templates(self, value: Dict[str, Any]) -> None:
+    def templates(self, value) -> None:
         method_name = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "

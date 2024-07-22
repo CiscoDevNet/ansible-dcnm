@@ -18,7 +18,6 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
@@ -109,7 +108,7 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg, kwargs)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -325,7 +324,7 @@ def does_not_raise():
     yield
 
 
-def nv_pairs_verify_playbook_params(key: str) -> Dict[str, str]:
+def nv_pairs_verify_playbook_params(key: str) -> dict[str, str]:
     """
     Return fabric nvPairs for VerifyPlaybookParams
     """
@@ -335,7 +334,7 @@ def nv_pairs_verify_playbook_params(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_fabric_common(key: str) -> Dict[str, str]:
+def payloads_fabric_common(key: str) -> dict[str, str]:
     """
     Return payloads for FabricCommon
     """
@@ -345,7 +344,7 @@ def payloads_fabric_common(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_fabric_create(key: str) -> Dict[str, str]:
+def payloads_fabric_create(key: str) -> dict[str, str]:
     """
     Return payloads for FabricCreate
     """
@@ -355,7 +354,7 @@ def payloads_fabric_create(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_fabric_create_bulk(key: str) -> Dict[str, str]:
+def payloads_fabric_create_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for FabricCreateBulk
     """
@@ -365,7 +364,7 @@ def payloads_fabric_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_fabric_create_common(key: str) -> Dict[str, str]:
+def payloads_fabric_create_common(key: str) -> dict[str, str]:
     """
     Return payloads for FabricCreateCommon
     """
@@ -375,7 +374,7 @@ def payloads_fabric_create_common(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_fabric_replaced_bulk(key: str) -> Dict[str, str]:
+def payloads_fabric_replaced_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for FabricReplacedBulk
     """
@@ -385,7 +384,7 @@ def payloads_fabric_replaced_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_fabric_update_bulk(key: str) -> Dict[str, str]:
+def payloads_fabric_update_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for FabricUpdateBulk
     """
@@ -395,7 +394,7 @@ def payloads_fabric_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_verify_playbook_params(key: str) -> Dict[str, str]:
+def payloads_verify_playbook_params(key: str) -> dict[str, str]:
     """
     Return payloads for VerifyPlaybookParams
     """
@@ -405,7 +404,7 @@ def payloads_verify_playbook_params(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_config_deploy(key: str) -> Dict[str, str]:
+def responses_config_deploy(key: str) -> dict[str, str]:
     """
     Return responses for config_deploy requests
     """
@@ -415,7 +414,7 @@ def responses_config_deploy(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_config_save(key: str) -> Dict[str, str]:
+def responses_config_save(key: str) -> dict[str, str]:
     """
     Return responses for config_save requests
     """
@@ -425,7 +424,7 @@ def responses_config_save(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_config_deploy(key: str) -> Dict[str, str]:
+def responses_fabric_config_deploy(key: str) -> dict[str, str]:
     """
     Return responses for FabricConfigDeploy() class
     """
@@ -435,7 +434,7 @@ def responses_fabric_config_deploy(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_config_save(key: str) -> Dict[str, str]:
+def responses_fabric_config_save(key: str) -> dict[str, str]:
     """
     Return responses for FabricConfigSave() class
     """
@@ -445,7 +444,7 @@ def responses_fabric_config_save(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_common(key: str) -> Dict[str, str]:
+def responses_fabric_common(key: str) -> dict[str, str]:
     """
     Return responses for FabricCommon
     """
@@ -455,7 +454,7 @@ def responses_fabric_common(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_create(key: str) -> Dict[str, str]:
+def responses_fabric_create(key: str) -> dict[str, str]:
     """
     Return responses for FabricCreate
     """
@@ -465,7 +464,7 @@ def responses_fabric_create(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_create_bulk(key: str) -> Dict[str, str]:
+def responses_fabric_create_bulk(key: str) -> dict[str, str]:
     """
     Return responses for FabricCreateBulk
     """
@@ -475,7 +474,7 @@ def responses_fabric_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_delete(key: str) -> Dict[str, str]:
+def responses_fabric_delete(key: str) -> dict[str, str]:
     """
     Return responses for FabricDelete
     """
@@ -485,7 +484,7 @@ def responses_fabric_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details(key: str) -> Dict[str, str]:
+def responses_fabric_details(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetails
     """
@@ -495,7 +494,7 @@ def responses_fabric_details(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details_v2(key: str) -> Dict[str, str]:
+def responses_fabric_details_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetails version 2
     """
@@ -505,7 +504,7 @@ def responses_fabric_details_v2(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
+def responses_fabric_details_by_name(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetailsByName
     """
@@ -515,7 +514,7 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details_by_name_v2(key: str) -> Dict[str, str]:
+def responses_fabric_details_by_name_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetailsByName version 2
     """
@@ -525,7 +524,7 @@ def responses_fabric_details_by_name_v2(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details_by_nv_pair(key: str) -> Dict[str, str]:
+def responses_fabric_details_by_nv_pair(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetailsByNvPair
     """
@@ -535,7 +534,7 @@ def responses_fabric_details_by_nv_pair(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_details_by_nv_pair_v2(key: str) -> Dict[str, str]:
+def responses_fabric_details_by_nv_pair_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetailsByNvPair version 2
     """
@@ -545,7 +544,7 @@ def responses_fabric_details_by_nv_pair_v2(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_query(key: str) -> Dict[str, str]:
+def responses_fabric_query(key: str) -> dict[str, str]:
     """
     Return responses for FabricQuery
     """
@@ -555,7 +554,7 @@ def responses_fabric_query(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_replaced_bulk(key: str) -> Dict[str, str]:
+def responses_fabric_replaced_bulk(key: str) -> dict[str, str]:
     """
     Return responses for FabricReplacedBulk
     """
@@ -565,7 +564,7 @@ def responses_fabric_replaced_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_summary(key: str) -> Dict[str, str]:
+def responses_fabric_summary(key: str) -> dict[str, str]:
     """
     Return responses for FabricSummary
     """
@@ -575,7 +574,7 @@ def responses_fabric_summary(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_fabric_update_bulk(key: str) -> Dict[str, str]:
+def responses_fabric_update_bulk(key: str) -> dict[str, str]:
     """
     Return responses for FabricUpdateBulk
     """
@@ -585,7 +584,7 @@ def responses_fabric_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_response_handler(key: str) -> Dict[str, str]:
+def responses_response_handler(key: str) -> dict[str, str]:
     """
     Return responses for ResponseHandler
     """
@@ -595,7 +594,7 @@ def responses_response_handler(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_template_get(key: str) -> Dict[str, str]:
+def responses_template_get(key: str) -> dict[str, str]:
     """
     Return responses for TemplateGet
     """
@@ -605,7 +604,7 @@ def responses_template_get(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_template_get_all(key: str) -> Dict[str, str]:
+def responses_template_get_all(key: str) -> dict[str, str]:
     """
     Return responses for TemplateGetAll
     """
@@ -615,7 +614,7 @@ def responses_template_get_all(key: str) -> Dict[str, str]:
     return data
 
 
-def results_fabric_details(key: str) -> Dict[str, str]:
+def results_fabric_details(key: str) -> dict[str, str]:
     """
     Return results for FabricDetails
     """
@@ -625,7 +624,7 @@ def results_fabric_details(key: str) -> Dict[str, str]:
     return data
 
 
-def results_fabric_common(key: str) -> Dict[str, str]:
+def results_fabric_common(key: str) -> dict[str, str]:
     """
     Return results for FabricCommon
     """
@@ -635,7 +634,7 @@ def results_fabric_common(key: str) -> Dict[str, str]:
     return data
 
 
-def results_fabric_create_bulk(key: str) -> Dict[str, str]:
+def results_fabric_create_bulk(key: str) -> dict[str, str]:
     """
     Return results for FabricCreateBulk
     """
@@ -645,7 +644,7 @@ def results_fabric_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_fabric_delete(key: str) -> Dict[str, str]:
+def results_fabric_delete(key: str) -> dict[str, str]:
     """
     Return results for FabricDelete
     """
@@ -655,7 +654,7 @@ def results_fabric_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def rest_send_response_current(key: str) -> Dict[str, str]:
+def rest_send_response_current(key: str) -> dict[str, str]:
     """
     Mocked return values for RestSend().response_current property
     """
@@ -665,7 +664,7 @@ def rest_send_response_current(key: str) -> Dict[str, str]:
     return data
 
 
-def rest_send_result_current(key: str) -> Dict[str, str]:
+def rest_send_result_current(key: str) -> dict[str, str]:
     """
     Mocked return values for RestSend().result_current property
     """
@@ -675,7 +674,7 @@ def rest_send_result_current(key: str) -> Dict[str, str]:
     return data
 
 
-def templates_param_info(key: str) -> Dict[str, str]:
+def templates_param_info(key: str) -> dict[str, str]:
     """
     Return fabric templates for ParamInfo
     """
@@ -684,7 +683,7 @@ def templates_param_info(key: str) -> Dict[str, str]:
     return data
 
 
-def templates_ruleset(key: str) -> Dict[str, str]:
+def templates_ruleset(key: str) -> dict[str, str]:
     """
     Return fabric templates for RuleSet
     """
@@ -693,7 +692,7 @@ def templates_ruleset(key: str) -> Dict[str, str]:
     return data
 
 
-def templates_verify_playbook_params(key: str) -> Dict[str, str]:
+def templates_verify_playbook_params(key: str) -> dict[str, str]:
     """
     Return fabric templates for VerifyPlaybookParams
     """
