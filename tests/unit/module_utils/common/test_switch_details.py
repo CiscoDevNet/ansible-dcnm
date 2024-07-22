@@ -26,16 +26,9 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.inventory.inventory import \
-    EpAllSwitches
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
@@ -65,10 +58,8 @@ def test_switch_details_00000() -> None:
         instance = SwitchDetails()
     assert instance.action == "switch_details"
     assert instance.class_name == "SwitchDetails"
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.ep_all_switches, EpAllSwitches)
-    assert instance.path == EpAllSwitches().path
-    assert instance.verb == EpAllSwitches().verb
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance.ep_all_switches.class_name == "EpAllSwitches"
     assert instance._filter is None
     assert instance._info is None
     assert instance._rest_send is None
@@ -459,6 +450,64 @@ def test_switch_details_00500(monkeypatch) -> None:
     match += r"Error updating results\.\s+"
     match += r"Error detail: Results\(\)\.action:\s+"
     match += r"simulated TypeError\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_switch_details_00550() -> None:
+    """
+    ### Classes and Methods
+    -   SwitchDetails()
+            -   update_results()
+            -   refresh()
+
+    ### Summary
+    Verify ``refresh()`` raises ``ValueError`` when ``update_results``
+    raises ``ControllerResponseError``.
+
+    ### Setup - Code
+    -   Sender() is initialized and configured.
+    -   RestSend() is initialized and configured.
+    -   SwitchDetails() is initialized and configured.
+
+    ### Setup - Data
+    responses_switch_details() returns a response with:
+    -   RETURN_CODE: 500
+    -   MESSAGE: "NOK".
+
+    ### Trigger
+    -   SwitchDetails().refresh() is called.
+
+    ### Expected Result
+    -   ``update_results`` raises ``ControllerResponseError``.
+    -   ``refresh`` re-raises ``ControllerResponseError`` as ``ValueError``.
+    """
+
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_switch_details(key)
+
+    sender = Sender()
+    sender.gen = ResponseGenerator(responses())
+    rest_send = RestSend(PARAMS)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+
+    with does_not_raise():
+        instance = SwitchDetails()
+        instance.rest_send = rest_send
+        instance.results = Results()
+
+    match = r"SwitchDetails\.refresh:\s+"
+    match += r"Error updating results\.\s+"
+    match += r"Error detail:\s+"
+    match += r"SwitchDetails\.update_results:\s+"
+    match += r"Unable to retrieve switch information from the controller\.\s+"
+    match += r"Got response.*"
     with pytest.raises(ValueError, match=match):
         instance.refresh()
 
