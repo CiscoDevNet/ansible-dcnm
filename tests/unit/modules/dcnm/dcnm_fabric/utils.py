@@ -132,8 +132,7 @@ def fabric_config_deploy_fixture():
     """
     return instance of FabricConfigDeploy()
     """
-    instance = MockAnsibleModule()
-    return FabricConfigDeploy(instance.params)
+    return FabricConfigDeploy()
 
 
 @pytest.fixture(name="fabric_config_save")

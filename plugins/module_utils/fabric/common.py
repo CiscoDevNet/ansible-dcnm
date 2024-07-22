@@ -63,7 +63,7 @@ class FabricCommon:
 
         self.conversion = ConversionUtils()
         self.config_save = FabricConfigSave(params)
-        self.config_deploy = FabricConfigDeploy(params)
+        self.config_deploy = FabricConfigDeploy()
         self.fabric_types = FabricTypes()
 
         msg = "ENTERED FabricCommon(): "

@@ -32,16 +32,10 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricConfigDeploy
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
-    FabricConfigDeploy
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
@@ -65,50 +59,14 @@ def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
         instance = fabric_config_deploy
     assert instance.class_name == "FabricConfigDeploy"
     assert instance.action == "config_deploy"
-    assert instance.check_mode is False
     assert instance.config_deploy_result == {}
     assert instance.fabric_name is None
     assert instance.path is None
     assert instance.rest_send is None
     assert instance.results is None
     assert instance.verb is None
-    assert instance.state == "merged"
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.ep_config_deploy, EpFabricConfigDeploy)
-
-
-def test_fabric_config_deploy_00011() -> None:
-    """
-    Classes and Methods
-    - FabricConfigDeploy
-        - __init__()
-
-    Summary
-    -   Verify FabricConfigDeploy().__init__() raises ``ValueError``
-        when check_mode is not set.
-    """
-    params = {"state": "merged"}
-    match = r"FabricConfigDeploy\.__init__\(\):\s+"
-    match += r"params is missing mandatory check_mode parameter\."
-    with pytest.raises(ValueError, match=match):
-        instance = FabricConfigDeploy(params)  # pylint: disable=unused-variable
-
-
-def test_fabric_config_deploy_00012() -> None:
-    """
-    Classes and Methods
-    - FabricConfigDeploy
-        - __init__()
-
-    Summary
-    -   Verify FabricConfigDeploy().__init__() raises ``ValueError``
-        when state is not set.
-    """
-    params = {"check_mode": False}
-    match = r"FabricConfigDeploy\.__init__\(\):\s+"
-    match += r"params is missing mandatory state parameter\."
-    with pytest.raises(ValueError, match=match):
-        instance = FabricConfigDeploy(params)  # pylint: disable=unused-variable
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance.ep_config_deploy.class_name == "EpFabricConfigDeploy"
 
 
 MATCH_00020a = r"ConversionUtils\.validate_fabric_name: "

@@ -38,13 +38,13 @@ class FabricConfigDeploy:
     -   Update FabricConfigDeploy().results to reflect success/failure of
         the operation on the controller.
 
-    ## Usage (where params is AnsibleModule.params)
+    ## Usage
 
     ```python
-    config_deploy = FabricConfigDeploy(params)
+    config_deploy = FabricConfigDeploy()
     config_deploy.rest_send = RestSend()
     config_deploy.payload = payload # a valid payload dictionary
-    config_deploy.fabric_details = FabricDetailsByName(params)
+    config_deploy.fabric_details = FabricDetailsByName()
     config_deploy.fabric_summary = FabricSummary(params)
     config_deploy.results = Results()
     try:
@@ -54,28 +54,15 @@ class FabricConfigDeploy:
     ```
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.params = params
         self.action = "config_deploy"
         self.cannot_deploy_fabric_reason = ""
         self.config_deploy_failed = False
         self.fabric_can_be_deployed = False
-
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory check_mode parameter."
-            raise ValueError(msg)
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory state parameter."
-            raise ValueError(msg)
 
         self.config_deploy_result: dict[str, bool] = {}
 
@@ -86,9 +73,7 @@ class FabricConfigDeploy:
         self.conversion = ConversionUtils()
         self.ep_config_deploy = EpFabricConfigDeploy()
 
-        msg = "ENTERED FabricConfigDeploy(): "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricConfigDeploy():"
         self.log.debug(msg)
 
     def _init_properties(self):
@@ -233,8 +218,8 @@ class FabricConfigDeploy:
         if self.fabric_can_be_deployed is False:
             self.results.diff_current = {}
             self.results.action = self.action
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.state = self.rest_send.state
             self.results.response_current = {
                 "RETURN_CODE": 200,
                 "MESSAGE": self.cannot_deploy_fabric_reason,
@@ -269,8 +254,8 @@ class FabricConfigDeploy:
             }
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
