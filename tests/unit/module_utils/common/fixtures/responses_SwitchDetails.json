@@ -532,6 +532,28 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
         "RETURN_CODE": 200
     },
+    "test_switch_details_00550a": {
+        "TEST_NOTES": [
+            "DATA[0] contains valid content",
+            "RETURN_CODE: 500",
+            "MESSAGE: NOK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "NOK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 500
+    },
     "test_switch_details_00700a": {
         "TEST_NOTES": [
             "DATA[0].mode is null",
