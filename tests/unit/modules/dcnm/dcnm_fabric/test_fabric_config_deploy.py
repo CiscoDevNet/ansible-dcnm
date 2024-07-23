@@ -41,7 +41,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_config_deploy_fixture,
     fabric_details_by_name_fixture, fabric_summary_fixture, params,
-    responses_fabric_config_deploy, responses_fabric_details_by_name,
+    responses_ep_fabric_config_deploy, responses_fabric_details_by_name,
     responses_fabric_summary)
 
 
@@ -61,10 +61,8 @@ def test_fabric_config_deploy_00010(fabric_config_deploy) -> None:
     assert instance.action == "config_deploy"
     assert instance.config_deploy_result == {}
     assert instance.fabric_name is None
-    assert instance.path is None
     assert instance.rest_send is None
     assert instance.results is None
-    assert instance.verb is None
     assert instance.conversion.class_name == "ConversionUtils"
     assert instance.ep_config_deploy.class_name == "EpFabricConfigDeploy"
 
@@ -501,7 +499,7 @@ def test_fabric_config_deploy_00210(
     def responses():
         yield responses_fabric_summary(key)
         yield responses_fabric_details_by_name(key)
-        yield responses_fabric_config_deploy(key)
+        yield responses_ep_fabric_config_deploy(key)
 
     gen = ResponseGenerator(responses())
 
@@ -611,7 +609,7 @@ def test_fabric_config_deploy_00220(
     def responses():
         yield responses_fabric_summary(key)
         yield responses_fabric_details_by_name(key)
-        yield responses_fabric_config_deploy(key)
+        yield responses_ep_fabric_config_deploy(key)
 
     gen = ResponseGenerator(responses())
 

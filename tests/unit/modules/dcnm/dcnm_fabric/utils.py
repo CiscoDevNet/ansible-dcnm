@@ -140,8 +140,7 @@ def fabric_config_save_fixture():
     """
     return instance of FabricConfigSave()
     """
-    instance = MockAnsibleModule()
-    return FabricConfigSave(instance.params)
+    return FabricConfigSave()
 
 
 @pytest.fixture(name="fabric_create")
@@ -418,21 +417,21 @@ def responses_config_save(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_config_deploy(key: str) -> dict[str, str]:
+def responses_ep_fabric_config_deploy(key: str) -> dict[str, str]:
     """
-    Return responses for FabricConfigDeploy() class
+    Return responses for EpFabricConfigDeploy() endpoint
     """
-    data_file = "responses_FabricConfigDeploy"
+    data_file = "responses_ep_fabric_config_deploy"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
 
 
-def responses_fabric_config_save(key: str) -> dict[str, str]:
+def responses_ep_fabric_config_save(key: str) -> dict[str, str]:
     """
-    Return responses for FabricConfigSave() class
+    Return responses for EpFabricConfigSave() endpoint.
     """
-    data_file = "responses_FabricConfigSave"
+    data_file = "responses_ep_fabric_config_save"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

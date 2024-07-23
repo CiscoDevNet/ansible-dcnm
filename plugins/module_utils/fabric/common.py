@@ -62,7 +62,7 @@ class FabricCommon:
             raise ValueError(msg)
 
         self.conversion = ConversionUtils()
-        self.config_save = FabricConfigSave(params)
+        self.config_save = FabricConfigSave()
         self.config_deploy = FabricConfigDeploy()
         self.fabric_types = FabricTypes()
 
