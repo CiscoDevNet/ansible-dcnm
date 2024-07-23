@@ -91,19 +91,13 @@ class FabricCommon:
         self.path = None
         self.verb = None
 
-        self._init_properties()
-        self._init_key_translations()
+        self._fabric_details = None
+        self._fabric_summary = None
+        self._fabric_type = "VXLAN_EVPN"
+        self._rest_send = None
+        self._results = None
 
-    def _init_properties(self) -> None:
-        """
-        Initialize the properties dictionary.
-        """
-        self._properties: dict = {}
-        self._properties["fabric_details"] = None
-        self._properties["fabric_summary"] = None
-        self._properties["fabric_type"] = "VXLAN_EVPN"
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
+        self._init_key_translations()
 
     def _init_key_translations(self):
         """
@@ -379,22 +373,22 @@ class FabricCommon:
         """
         An instance of the FabricDetails class.
         """
-        return self._properties["fabric_details"]
+        return self._fabric_details
 
     @fabric_details.setter
     def fabric_details(self, value):
-        self._properties["fabric_details"] = value
+        self._fabric_details = value
 
     @property
     def fabric_summary(self):
         """
         An instance of the FabricSummary class.
         """
-        return self._properties["fabric_summary"]
+        return self._fabric_summary
 
     @fabric_summary.setter
     def fabric_summary(self, value):
-        self._properties["fabric_summary"] = value
+        self._fabric_summary = value
 
     @property
     def fabric_type(self):
@@ -405,7 +399,7 @@ class FabricCommon:
 
         See ``FabricTypes().valid_fabric_types`` for valid values
         """
-        return self._properties["fabric_type"]
+        return self._fabric_type
 
     @fabric_type.setter
     def fabric_type(self, value):
@@ -416,26 +410,26 @@ class FabricCommon:
             msg += f"{self.fabric_types.valid_fabric_types}. "
             msg += f"Got {value}"
             raise ValueError(msg)
-        self._properties["fabric_type"] = value
+        self._fabric_type = value
 
     @property
     def rest_send(self):
         """
         An instance of the RestSend class.
         """
-        return self._properties["rest_send"]
+        return self._rest_send
 
     @rest_send.setter
     def rest_send(self, value):
-        self._properties["rest_send"] = value
+        self._rest_send = value
 
     @property
     def results(self):
         """
         An instance of the Results class.
         """
-        return self._properties["results"]
+        return self._results
 
     @results.setter
     def results(self, value):
-        self._properties["results"] = value
+        self._results = value
