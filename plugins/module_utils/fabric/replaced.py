@@ -47,10 +47,10 @@ class FabricReplacedCommon(FabricCommon):
     - FabricReplacedBulk
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "replace"
+        self.action = "fabric_replace"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -72,10 +72,7 @@ class FabricReplacedCommon(FabricCommon):
         # Populated in _fabric_needs_update_for_replaced_state()
         self._controller_config = {}
 
-        msg = "ENTERED FabricReplacedCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricReplacedCommon()"
         self.log.debug(msg)
 
     def _translate_payload_for_comparison(self, payload: dict) -> dict:
@@ -426,8 +423,6 @@ class FabricReplacedCommon(FabricCommon):
             -   ``FabricReplacedCommon()._config_save()``
             -   ``FabricReplacedCommon()._config_deploy()``
         """
-        self.rest_send.check_mode = self.check_mode
-
         try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
@@ -522,8 +517,8 @@ class FabricReplacedCommon(FabricCommon):
             self.rest_send.result_current["success"]
         )
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
@@ -539,7 +534,7 @@ class FabricReplacedCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self._properties["payloads"]
+        return self._payloads
 
     @payloads.setter
     def payloads(self, value):
@@ -555,7 +550,7 @@ class FabricReplacedCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(error) from error
-        self._properties["payloads"] = value
+        self._payloads = value
 
 
 class FabricReplacedBulk(FabricReplacedCommon):
@@ -597,21 +592,14 @@ class FabricReplacedBulk(FabricReplacedCommon):
     ```
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payloads = None
+
         self.log.debug("ENTERED FabricReplacedBulk()")
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties dict is already initialized in FabricCommon
-        self._properties["payloads"] = None
 
     def commit(self):
         """
@@ -646,8 +634,8 @@ class FabricReplacedBulk(FabricReplacedCommon):
             raise ValueError(msg)
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
 
         self.template_get.rest_send = self.rest_send
         try:

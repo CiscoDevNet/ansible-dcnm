@@ -231,7 +231,7 @@ def fabric_details_by_nv_pair_v2_fixture():
 @pytest.fixture(name="fabric_query")
 def fabric_query_fixture():
     """
-    Return FabricQuery() instance
+    Return FabricQuery() instance.
     """
     return FabricQuery()
 
@@ -239,11 +239,9 @@ def fabric_query_fixture():
 @pytest.fixture(name="fabric_replaced_bulk")
 def fabric_replaced_bulk_fixture():
     """
-    mock FabricReplacedBulk
+    Return FabricReplacedBulk() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "replaced"
-    return FabricReplacedBulk(instance.params)
+    return FabricReplacedBulk()
 
 
 @pytest.fixture(name="fabric_summary")
