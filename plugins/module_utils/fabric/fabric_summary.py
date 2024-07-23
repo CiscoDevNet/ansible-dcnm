@@ -119,21 +119,14 @@ class FabricSummary(FabricCommon):
 
         self.results = Results()
 
-        self._build_properties()
+        self._border_gateway_count = 0
+        self._device_count = 0
+        self._fabric_name = None
+        self._leaf_count = 0
+        self._spine_count = 0
 
         msg = "ENTERED FabricSummary()"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        Initialize properties specific to this class.
-        """
-        # self._properties is already initialized in the parent class
-        self._properties["border_gateway_count"] = 0
-        self._properties["device_count"] = 0
-        self._properties["fabric_name"] = None
-        self._properties["leaf_count"] = 0
-        self._properties["spine_count"] = 0
 
     def _update_device_counts(self):
         """
@@ -148,14 +141,14 @@ class FabricSummary(FabricCommon):
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self._properties["border_gateway_count"] = self.data.get("switchRoles", {}).get(
+        self._border_gateway_count = self.data.get("switchRoles", {}).get(
             "border gateway", 0
         )
-        self._properties["leaf_count"] = self.data.get("switchRoles", {}).get("leaf", 0)
-        self._properties["spine_count"] = self.data.get("switchRoles", {}).get(
+        self._leaf_count = self.data.get("switchRoles", {}).get("leaf", 0)
+        self._spine_count = self.data.get("switchRoles", {}).get(
             "spine", 0
         )
-        self._properties["device_count"] = (
+        self._device_count = (
             self.leaf_count + self.spine_count + self.border_gateway_count
         )
 
@@ -294,7 +287,7 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["border_gateway_count"]
+        return self._border_gateway_count
 
     @property
     def device_count(self) -> int:
@@ -307,7 +300,7 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["device_count"]
+        return self._device_count
 
     @property
     def fabric_is_empty(self) -> bool:
@@ -333,7 +326,7 @@ class FabricSummary(FabricCommon):
         -   setter: Raise ``ValueError`` if fabric_name is invalid (i.e.
             the controller would return an error due to invalid characters).
         """
-        return self._properties.get("fabric_name")
+        return self._fabric_name
 
     @fabric_name.setter
     def fabric_name(self, value: str):
@@ -341,7 +334,7 @@ class FabricSummary(FabricCommon):
             self.conversion.validate_fabric_name(value)
         except ValueError as error:
             raise ValueError(error) from error
-        self._properties["fabric_name"] = value
+        self._fabric_name = value
 
     @property
     def leaf_count(self) -> int:
@@ -354,7 +347,7 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["leaf_count"]
+        return self._leaf_count
 
     @property
     def spine_count(self) -> int:
@@ -367,4 +360,4 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["spine_count"]
+        return self._spine_count
