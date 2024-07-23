@@ -32,8 +32,6 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
@@ -42,41 +40,42 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, does_not_raise, fabric_delete_fixture, params,
+    MockAnsibleModule, does_not_raise, fabric_delete_fixture,
     responses_fabric_delete, responses_fabric_details_by_name,
     responses_fabric_summary, rest_send_response_current)
 
+PARAMS = {"state": "deleted", "check_mode": False}
 
-def test_fabric_delete_00010(fabric_delete) -> None:
+def test_fabric_delete_00000(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
         - __init__()
-        - _build_properties()
 
-    Test
+    ### Test
+
     - Class attributes are initialized to expected values
     - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_delete
-        instance.fabric_details = FabricDetailsByName(params)
-    assert instance.action == "delete"
+        instance.fabric_details = FabricDetailsByName()
+    assert instance.action == "fabric_delete"
     assert instance._cannot_delete_fabric_reason is None
     assert instance.class_name == "FabricDelete"
     assert instance.fabric_names is None
     assert instance._fabrics_to_delete == []
     assert instance.path is None
-    assert instance.state == "deleted"
     assert instance.verb is None
     assert instance.ep_fabric_delete.class_name == "EpFabricDelete"
     assert instance.fabric_details.class_name == "FabricDetailsByName"
@@ -84,31 +83,37 @@ def test_fabric_delete_00010(fabric_delete) -> None:
 
 def test_fabric_delete_00020(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
         - __init__()
         - _set_fabric_delete_endpoint()
 
-    Summary
-    -   Verify that endpoint values are set correctly when a valid
-        fabric_name is passed to _set_fabric_delete_endpoint()
+   ### Summary
+
+    -   Verify that endpoint values are set correctly when ``fabric_names``
+        contains a valid fabric name.
     -   Verify that an Exception is not raised
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = fabric_delete
-        instance.results = Results()
+        instance.rest_send = RestSend(PARAMS)
         instance._set_fabric_delete_endpoint("MyFabric")
     path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics"
     path += "/MyFabric"
-    assert instance.path == path
-    assert instance.verb == "DELETE"
+    assert instance.rest_send.path == path
+    assert instance.rest_send.verb == "DELETE"
 
 
 def test_fabric_delete_00021(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
@@ -116,7 +121,8 @@ def test_fabric_delete_00021(fabric_delete) -> None:
         - __init__()
         - _set_fabric_delete_endpoint()
 
-    Summary
+   ### Summary
+
     -   Verify ``TypeError`` is raised because call to
         _set_fabric_delete_endpoint() is missing argument
         ``fabric_name``.
@@ -134,17 +140,19 @@ def test_fabric_delete_00021(fabric_delete) -> None:
 @pytest.mark.parametrize("fabric_name", [None, 123, 123.45, [], {}])
 def test_fabric_delete_00022(fabric_delete, fabric_name) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
     - FabricDelete
         - __init__()
         - _set_fabric_delete_endpoint()
-        - ApiEndpoints.fabric_delete
+    - EpFabricDelete()
 
-    Summary
-    -   Verify ApiEndpoints re-raises ``TypeError`` raised by
+   ### Summary
+
+    -   Verify EpFabricDelete() re-raises ``TypeError`` raised by
         ConversionUtils() because ``fabric_name`` argument passed
         to _set_fabric_delete_endpoint() is not a string.
     """
@@ -160,17 +168,19 @@ def test_fabric_delete_00022(fabric_delete, fabric_name) -> None:
 @pytest.mark.parametrize("fabric_name", ["", "1abc", "a,bcd", "abc d", "ab!d"])
 def test_fabric_delete_00023(fabric_delete, fabric_name) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
     - FabricDelete
         - __init__()
         - _set_fabric_delete_endpoint()
-        - ApiEndpoints.fabric_delete
+        - EpFabricDelete()
 
-    Summary
-    -   Verify ApiEndpoints() re-raises ``ValueError`` raised by
+   ### Summary
+
+    -   Verify EpFabricDelete() re-raises ``ValueError`` raised by
         ConversionUtils() because ``fabric_name`` argument passed
         to _set_fabric_delete_endpoint() is an invalid string.
     """
@@ -188,7 +198,8 @@ def test_fabric_delete_00023(fabric_delete, fabric_name) -> None:
 
 def test_fabric_delete_00030(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
@@ -196,15 +207,17 @@ def test_fabric_delete_00030(fabric_delete) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    Summary
+   ### Summary
+
     -   Verify that ``ValueError`` is raised because fabric_names is not set
         prior to calling commit()
 
     """
     with does_not_raise():
         instance = fabric_delete
+        instance.fabric_details = FabricDetailsByName()
+        instance.rest_send = RestSend(PARAMS)
         instance.results = Results()
-        instance.rest_send = RestSend(MockAnsibleModule())
 
     match = r"FabricDelete\._validate_commit_parameters: "
     match += "fabric_names must be set prior to calling commit."
@@ -214,7 +227,8 @@ def test_fabric_delete_00030(fabric_delete) -> None:
 
 def test_fabric_delete_00031(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
@@ -222,13 +236,14 @@ def test_fabric_delete_00031(fabric_delete) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    Summary
+   ### Summary
+
     -   Verify that ``ValueError`` is raised because rest_send is not set
         prior to calling commit()
-
     """
     with does_not_raise():
         instance = fabric_delete
+        instance.fabric_details = FabricDetailsByName()
         instance.results = Results()
         instance.fabric_names = ["MyFabric"]
 
@@ -240,7 +255,8 @@ def test_fabric_delete_00031(fabric_delete) -> None:
 
 def test_fabric_delete_00032(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
@@ -248,14 +264,16 @@ def test_fabric_delete_00032(fabric_delete) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    Summary
+   ### Summary
+
     -   Verify that ``ValueError`` is raised because results is not set
         prior to calling commit()
 
     """
     with does_not_raise():
         instance = fabric_delete
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details = FabricDetailsByName()
+        instance.rest_send = RestSend(PARAMS)
         instance.fabric_names = ["MyFabric"]
 
     match = r"FabricDelete\._validate_commit_parameters: "
@@ -264,9 +282,10 @@ def test_fabric_delete_00032(fabric_delete) -> None:
         instance.commit()
 
 
-def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
+def test_fabric_delete_00040(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -280,12 +299,14 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
         - __init__()
         - commit()
 
-    Summary
+    ### Summary
+
     -   Verify successful fabric delete code path.
     -   The user attempts to delete a fabric and the fabric exists on the
         controller, and the fabric is empty.
 
-    Code Flow
+    ### Code Flow
+
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
         which succeeds since all required parameters are set.
     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
@@ -312,39 +333,32 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_delete(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend({"state": "deleted", "check_mode": False})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_delete
         instance.fabric_names = ["f1"]
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = rest_send
+        instance.fabric_details.results = Results()
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -359,7 +373,7 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
 
-    assert instance.results.metadata[0].get("action", None) == "delete"
+    assert instance.results.metadata[0].get("action", None) == "fabric_delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "deleted"
@@ -381,7 +395,8 @@ def test_fabric_delete_00040(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -395,7 +410,8 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
         - __init__()
         - commit()
 
-    Summary
+   ### Summary
+
     -   Verify FabricDelete().commit() re-raises ``ValueError`` when
         ``EpFabricDelete()._send_requests() re-raises ``ValueError`` when
         ``EpFabricDelete()._send_request() re-raises ``ValueError`` when
@@ -404,7 +420,8 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
         controller, and the fabric is empty, but _set_fabric_delete_endpoint()
         re-raises ``ValueError``.
 
-    Code Flow
+   ### Code Flow
+
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
         which succeeds since all required parameters are set.
     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
@@ -446,37 +463,31 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
             msg = "mocked MockEpFabricDelete().fabric_name setter exception."
             raise ValueError(msg)
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend({"state": "deleted", "check_mode": False})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_delete
         monkeypatch.setattr(instance, "ep_fabric_delete", MockEpFabricDelete())
         instance.fabric_names = ["f1"]
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = rest_send
+        instance.fabric_details.results = Results()
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
 
     match = r"mocked MockEpFabricDelete\(\)\.fabric_name setter exception\."
@@ -495,12 +506,12 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[1].get("sequence_number", None) == 2
 
-    assert instance.results.metadata[0].get("action", None) == "delete"
+    assert instance.results.metadata[0].get("action", None) == "fabric_delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "deleted"
 
-    assert instance.results.metadata[1].get("action", None) == "delete"
+    assert instance.results.metadata[1].get("action", None) == "fabric_delete"
     assert instance.results.metadata[1].get("check_mode", None) is False
     assert instance.results.metadata[1].get("sequence_number", None) == 2
     assert instance.results.metadata[1].get("state", None) == "deleted"
@@ -516,9 +527,10 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     assert True not in instance.results.changed
 
 
-def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
+def test_fabric_delete_00043(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -532,12 +544,14 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
         - __init__()
         - commit()
 
-    Summary
+   ### Summary
+
     -   Verify successful fabric delete code path (fabric does not exist).
     -   The user attempts to delete a fabric and the fabric does not exist
         on the controller.
 
-    Code Flow
+   ### Code Flow
+
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
         which succeeds since all required parameters are set.
     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
@@ -553,38 +567,31 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend({"state": "deleted", "check_mode": False})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_delete
         instance.fabric_names = ["f1"]
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = rest_send
+        instance.fabric_details.results = Results()
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -599,7 +606,7 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.diff[0].get("fabric_name", None) is None
 
-    assert instance.results.metadata[0].get("action", None) == "delete"
+    assert instance.results.metadata[0].get("action", None) == "fabric_delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "deleted"
@@ -616,9 +623,10 @@ def test_fabric_delete_00043(monkeypatch, fabric_delete) -> None:
     assert True not in instance.results.changed
 
 
-def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
+def test_fabric_delete_00044(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -632,13 +640,15 @@ def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
         - __init__()
         - commit()
 
-    Summary
-    -   Verify unsuccessful fabric delete code path.
+   ### Summary
+
+    -   Verify unsuccessful fabric delete code path.  RETURN_CODE == 500.
     -   The user attempts to delete a fabric and the fabric exists on the
         controller, and the fabric is empty, but the controller
         RETURN_CODE is not 200.
 
-    Code Flow
+   ### Code Flow
+
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
         which succeeds since all required parameters are set.
     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
@@ -666,39 +676,32 @@ def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_delete(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend({"state": "deleted", "check_mode": False})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_delete
         instance.fabric_names = ["f1"]
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = rest_send
+        instance.fabric_details.results = Results()
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -712,7 +715,7 @@ def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "delete"
+    assert instance.results.metadata[0].get("action", None) == "fabric_delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "deleted"
@@ -734,7 +737,8 @@ def test_fabric_delete_00044(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -749,14 +753,16 @@ def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
         - commit()
         - _verify_fabric_can_be_deleted()
 
-    Summary
+   ### Summary
+
     -   Verify unsuccessful fabric delete code path.
     -   FabricDelete()._verify_fabric_can_be_deleted() raises ``ValueError``
         because fabric is not empty.
     -   The user attempts to delete a fabric and the fabric exists on the
         controller, and the fabric is not empty.
 
-    Code Flow
+   ### Code Flow
+
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
         which succeeds since all required parameters are set.
     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
@@ -778,37 +784,31 @@ def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend({"state": "deleted", "check_mode": False})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_delete
         instance.fabric_names = ["f1"]
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = rest_send
+        instance.fabric_details.results = Results()
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     match = r"FabricDelete\._verify_fabric_can_be_deleted: "
     match += "Fabric f1 cannot be deleted since it is not empty. "
@@ -836,7 +836,7 @@ def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is False
 
-    assert instance.results.metadata[0].get("action", None) == "delete"
+    assert instance.results.metadata[0].get("action", None) == "fabric_delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "deleted"
@@ -846,7 +846,8 @@ def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -861,12 +862,14 @@ def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
         - commit()
         - _verify_fabric_can_be_deleted()
 
-    Summary
+   ### Summary
+
     -   Verify unsuccessful fabric delete code path.
     -   FabricDelete()._verify_fabric_delete() re-raises ``ValueError``
         because FabricSummary().refresh() raises ``ControllerResponseError``.
 
-    Code Flow
+   ### Code Flow
+
     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
         which succeeds since all required parameters are set.
     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
@@ -891,37 +894,31 @@ def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
         yield responses_fabric_details_by_name(key)
         yield responses_fabric_summary(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend({"state": "deleted", "check_mode": False})
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_delete
         instance.fabric_names = ["f1"]
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.fabric_summary = FabricSummary(params)
-        instance.fabric_summary.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_summary.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = rest_send
+        instance.fabric_details.results = Results()
+        instance.fabric_summary = FabricSummary()
+        instance.fabric_summary.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     match = r"FabricSummary\._verify_controller_response:\s+"
     match += r"Failed to retrieve fabric_summary for fabric_name f1.\s+"
@@ -950,7 +947,7 @@ def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
     assert instance.results.result[0].get("changed", None) is False
     assert instance.results.result[0].get("success", None) is False
 
-    assert instance.results.metadata[0].get("action", None) == "delete"
+    assert instance.results.metadata[0].get("action", None) == "fabric_delete"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "deleted"
@@ -960,7 +957,8 @@ def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00060(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
@@ -968,7 +966,8 @@ def test_fabric_delete_00060(fabric_delete) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    Summary
+   ### Summary
+
     -   Verify that ``ValueError`` is raised because fabric_names
         is not a list.
     """
@@ -983,7 +982,8 @@ def test_fabric_delete_00060(fabric_delete) -> None:
 
 def test_fabric_delete_00061(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
@@ -991,13 +991,13 @@ def test_fabric_delete_00061(fabric_delete) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    Summary
+   ### Summary
+
     -   Verify that ``ValueError`` is raised because fabric_names is an
         empty list.
     """
     with does_not_raise():
         instance = fabric_delete
-        # instance.rest_send = RestSend(MockAnsibleModule())
 
     match = r"FabricDelete\.fabric_names: "
     match += r"fabric_names must be a list of at least one string. got \[\]\."
@@ -1007,7 +1007,8 @@ def test_fabric_delete_00061(fabric_delete) -> None:
 
 def test_fabric_delete_00062(fabric_delete) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricDelete
@@ -1015,7 +1016,8 @@ def test_fabric_delete_00062(fabric_delete) -> None:
         - commit()
         - _validate_commit_parameters()
 
-    Summary
+   ### Summary
+
     -   Verify that ``ValueError`` is raised because fabric_names is a
         list containing non-string elements.
     """
