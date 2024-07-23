@@ -61,11 +61,11 @@ def test_fabric_common_00010(fabric_common) -> None:
         instance = fabric_common
     assert instance.class_name == "FabricCommon"
 
-    assert instance._properties["fabric_details"] is None
-    assert instance._properties["fabric_summary"] is None
-    assert instance._properties["fabric_type"] == "VXLAN_EVPN"
-    assert instance._properties["rest_send"] is None
-    assert instance._properties["results"] is None
+    assert instance._fabric_details is None
+    assert instance._fabric_summary is None
+    assert instance._fabric_type == "VXLAN_EVPN"
+    assert instance._rest_send is None
+    assert instance._results is None
 
 
 def test_fabric_common_00020(fabric_common) -> None:
