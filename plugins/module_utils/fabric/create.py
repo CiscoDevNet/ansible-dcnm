@@ -57,16 +57,8 @@ class FabricCreateCommon(FabricCommon):
 
         self._payloads_to_commit: list = []
 
-        self._build_properties()
-
         msg = "ENTERED FabricCreateCommon()"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        - Add properties specific to this class
-        - self._properties is initialized in FabricCommon
-        """
 
     def _build_payloads_to_commit(self) -> None:
         """
@@ -81,7 +73,7 @@ class FabricCreateCommon(FabricCommon):
         """
         self.fabric_details.refresh()
 
-        self._payloads_to_commit = []
+        self._payloads_to_commit: list = []
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
                 continue
