@@ -78,9 +78,22 @@ class FabricSummary(FabricCommon):
     Usage:
 
     ```python
-    params = ansible_module.params
-    instance = FabricSummary(params)
-    instance.rest_send = RestSend(ansible_module)
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {
+        "check_mode": False,
+        "state": "merged"
+    }
+
+    sender = Sender()
+    sender.ansible_module = ansible_module
+
+    rest_send = RestSend(params)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+
+    instance = FabricSummary()
+    instance.rest_send = rest_send
     instance.fabric_name = "MyFabric"
     instance.refresh()
     fabric_summary = instance.data
@@ -89,8 +102,8 @@ class FabricSummary(FabricCommon):
     etc...
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -108,9 +121,7 @@ class FabricSummary(FabricCommon):
 
         self._build_properties()
 
-        msg = "ENTERED FabricSummary(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode} "
+        msg = "ENTERED FabricSummary()"
         self.log.debug(msg)
 
     def _build_properties(self):

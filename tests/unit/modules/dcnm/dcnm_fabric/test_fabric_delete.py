@@ -34,10 +34,14 @@ import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
@@ -74,8 +78,8 @@ def test_fabric_delete_00010(fabric_delete) -> None:
     assert instance.path is None
     assert instance.state == "deleted"
     assert instance.verb is None
-    assert isinstance(instance.ep_fabric_delete, EpFabricDelete)
-    assert isinstance(instance.fabric_details, FabricDetailsByName)
+    assert instance.ep_fabric_delete.class_name == "EpFabricDelete"
+    assert instance.fabric_details.class_name == "FabricDetailsByName"
 
 
 def test_fabric_delete_00020(fabric_delete) -> None:

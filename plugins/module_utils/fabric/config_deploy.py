@@ -25,6 +25,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabri
     EpFabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -94,6 +96,7 @@ class FabricConfigDeploy:
 
     def _can_fabric_be_deployed(self) -> None:
         """
+        ### Summary
         -   Set self.fabric_can_be_deployed to True if the fabric configuration
             can be deployed.
         -   Set self.fabric_can_be_deployed to False otherwise.
@@ -104,7 +107,8 @@ class FabricConfigDeploy:
 
         deploy = self.payload.get("DEPLOY", None)
         if deploy is False or deploy is None:
-            msg = f"Fabric {self.fabric_name} DEPLOY is False or None. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} DEPLOY is False or None. "
             msg += "Skipping config-deploy."
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
@@ -115,7 +119,8 @@ class FabricConfigDeploy:
         try:
             self.fabric_summary.fabric_name = self.fabric_name
         except ValueError as error:
-            msg = f"Fabric {self.fabric_name} is invalid. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} is invalid. "
             msg += "Cannot deploy fabric. "
             msg += f"Error detail: {error}"
             self.log.debug(msg)
@@ -130,6 +135,7 @@ class FabricConfigDeploy:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error during FabricSummary().refresh(). "
             msg += f"Error detail: {error}"
+            self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
             self.config_deploy_failed = True
@@ -145,11 +151,13 @@ class FabricConfigDeploy:
             return
 
         try:
+            self.fabric_details.results = Results()
             self.fabric_details.refresh()
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error during FabricDetailsByName().refresh(). "
             msg += f"Error detail: {error}"
+            self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
             self.config_deploy_failed = True
@@ -158,7 +166,8 @@ class FabricConfigDeploy:
         self.fabric_details.filter = self.fabric_name
 
         if self.fabric_details.deployment_freeze is True:
-            msg = f"Fabric {self.fabric_name} DEPLOYMENT_FREEZE == True. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} DEPLOYMENT_FREEZE == True. "
             msg += "Cannot deploy a fabric with deployment freeze enabled."
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
@@ -167,7 +176,8 @@ class FabricConfigDeploy:
             return
 
         if self.fabric_details.is_read_only is True:
-            msg = f"Fabric {self.fabric_name} IS_READ_ONLY == True. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} IS_READ_ONLY == True. "
             msg += "Cannot deploy a read only fabric."
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg

@@ -121,10 +121,9 @@ class MockAnsibleModule:
 @pytest.fixture(name="fabric_common")
 def fabric_common_fixture():
     """
-    return instance of FabricCommon()
+    Return FabricCommon() instance.
     """
-    instance = MockAnsibleModule()
-    return FabricCommon(instance.params)
+    return FabricCommon()
 
 
 @pytest.fixture(name="fabric_config_deploy")
@@ -146,21 +145,17 @@ def fabric_config_save_fixture():
 @pytest.fixture(name="fabric_create")
 def fabric_create_fixture():
     """
-    mock FabricCreate
+    Return FabricCreate() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricCreate(instance.params)
+    return FabricCreate()
 
 
 @pytest.fixture(name="fabric_create_bulk")
 def fabric_create_bulk_fixture():
     """
-    mock FabricCreateBulk
+    Return FabricCreateBulk() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricCreateBulk(instance.params)
+    return FabricCreateBulk()
 
 
 @pytest.fixture(name="fabric_create_common")
@@ -260,11 +255,9 @@ def fabric_replaced_bulk_fixture():
 @pytest.fixture(name="fabric_summary")
 def fabric_summary_fixture():
     """
-    mock FabricSummary
+    Return FabricSummary() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricSummary(instance.params)
+    return FabricSummary()
 
 
 @pytest.fixture(name="fabric_types")

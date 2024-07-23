@@ -44,7 +44,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_config_deploy_fixture,
-    fabric_details_by_name_fixture, fabric_summary_fixture, params,
+    fabric_details_by_name_v2_fixture, fabric_summary_fixture, params,
     responses_ep_fabric_config_deploy, responses_fabric_details_by_name,
     responses_fabric_summary)
 
@@ -216,7 +216,7 @@ def test_fabric_config_deploy_00040(
 
 
 def test_fabric_config_deploy_00120(
-    fabric_config_deploy, fabric_details_by_name, fabric_summary
+    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
 ) -> None:
     """
     Classes and Methods
@@ -235,7 +235,7 @@ def test_fabric_config_deploy_00120(
 
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(params)
         instance.results = Results()
@@ -249,7 +249,7 @@ def test_fabric_config_deploy_00120(
 
 
 def test_fabric_config_deploy_00130(
-    fabric_config_deploy, fabric_details_by_name, fabric_summary
+    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
 ) -> None:
     """
     Classes and Methods
@@ -267,7 +267,7 @@ def test_fabric_config_deploy_00130(
     """
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.fabric_summary = fabric_summary
         instance.results = Results()
@@ -281,7 +281,7 @@ def test_fabric_config_deploy_00130(
 
 
 def test_fabric_config_deploy_00140(
-    fabric_config_deploy, fabric_details_by_name, fabric_summary
+    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
 ) -> None:
     """
     Classes and Methods
@@ -299,7 +299,7 @@ def test_fabric_config_deploy_00140(
     """
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.fabric_summary = fabric_summary
         instance.rest_send = RestSend(params)
@@ -344,7 +344,7 @@ def test_fabric_config_deploy_00150(fabric_config_deploy, fabric_summary) -> Non
 
 
 def test_fabric_config_deploy_00160(
-    fabric_config_deploy, fabric_details_by_name
+    fabric_config_deploy, fabric_details_by_name_v2
 ) -> None:
     """
     Classes and Methods
@@ -362,7 +362,7 @@ def test_fabric_config_deploy_00160(
     """
     with does_not_raise():
         instance = fabric_config_deploy
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.rest_send = RestSend(params)
 
@@ -375,15 +375,17 @@ def test_fabric_config_deploy_00160(
 
 
 def test_fabric_config_deploy_00200(
-    monkeypatch, fabric_config_deploy, fabric_details_by_name, fabric_summary
+    monkeypatch, fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
 ) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricConfigDeploy()
         - __init__()
         - commit()
 
-    Summary
+    ### Summary
+
     -   Verify that FabricConfigDeploy().commit()
         re-raises ``ValueError`` when EpFabricConfigDeploy() raises
         ``ValueError``.
@@ -404,6 +406,7 @@ def test_fabric_config_deploy_00200(
             -   Raise ``ValueError``.
             """
             msg = "mocked EpFabricConfigDeploy().path getter exception"
+            print(f"ZZZ msg {msg}")
             raise ValueError(msg)
 
     def responses():
@@ -429,7 +432,7 @@ def test_fabric_config_deploy_00200(
     with does_not_raise():
         instance = fabric_config_deploy
         monkeypatch.setattr(instance, "ep_config_deploy", MockEpFabricConfigDeploy())
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.fabric_details.rest_send = rest_send
         instance.payload = payload
         instance.fabric_summary = fabric_summary
@@ -443,7 +446,7 @@ def test_fabric_config_deploy_00200(
 
 
 def test_fabric_config_deploy_00210(
-    fabric_config_deploy, fabric_details_by_name, fabric_summary
+    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
 ) -> None:
     """
     Classes and Methods
@@ -526,7 +529,7 @@ def test_fabric_config_deploy_00210(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.rest_send = rest_send
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.fabric_details.rest_send = instance.rest_send
         instance.payload = payload
         instance.fabric_summary = fabric_summary
@@ -559,7 +562,7 @@ def test_fabric_config_deploy_00210(
 
 
 def test_fabric_config_deploy_00220(
-    fabric_config_deploy, fabric_details_by_name, fabric_summary
+    fabric_config_deploy, fabric_details_by_name_v2, fabric_summary
 ) -> None:
     """
     Classes and Methods
@@ -634,7 +637,7 @@ def test_fabric_config_deploy_00220(
     with does_not_raise():
         instance = fabric_config_deploy
         instance.rest_send = rest_send
-        instance.fabric_details = fabric_details_by_name
+        instance.fabric_details = fabric_details_by_name_v2
         instance.fabric_details.rest_send = rest_send
         instance.payload = payload
         instance.fabric_summary = fabric_summary

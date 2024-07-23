@@ -32,43 +32,29 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types imp
 
 class FabricCommon:
     """
+    ### Summary
     Common methods used by the other classes supporting
     the dcnm_fabric module
 
-    Usage (where params is AnsibleModule.params)
+    ### Usage
 
     class MyClass(FabricCommon):
-        def __init__(self, params):
-            super().__init__(params)
+        def __init__(self):
+            super().__init__()
         ...
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.params = params
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "check_mode is required"
-            raise ValueError(msg)
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "state is required"
-            raise ValueError(msg)
 
         self.conversion = ConversionUtils()
         self.config_save = FabricConfigSave()
         self.config_deploy = FabricConfigDeploy()
         self.fabric_types = FabricTypes()
 
-        msg = "ENTERED FabricCommon(): "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricCommon()"
         self.log.debug(msg)
 
         # key: fabric_name, value: boolean
@@ -324,7 +310,7 @@ class FabricCommon:
         - raise ``ValueError`` if the payload is missing mandatory keys
         """
         method_name = inspect.stack()[0][3]
-        if self.state not in {"merged", "replaced"}:
+        if self.action not in {"fabric_create", "fabric_replace"}:
             return
         msg = f"{self.class_name}.{method_name}: "
         msg += f"payload: {payload}"

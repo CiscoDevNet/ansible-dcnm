@@ -38,10 +38,10 @@ class FabricCreateCommon(FabricCommon):
     - FabricCreateBulk
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action: str = "create"
+        self.action = "fabric_create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -59,10 +59,7 @@ class FabricCreateCommon(FabricCommon):
 
         self._build_properties()
 
-        msg = "ENTERED FabricCreateCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricCreateCommon()"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -135,8 +132,6 @@ class FabricCreateCommon(FabricCommon):
         NOTES:
         -   This overrides the parent class method.
         """
-        self.rest_send.check_mode = self.check_mode
-
         for payload in self._payloads_to_commit:
             try:
                 self._set_fabric_create_endpoint(payload)
@@ -163,8 +158,8 @@ class FabricCreateCommon(FabricCommon):
             else:
                 self.results.diff_current = copy.deepcopy(payload)
             self.results.action = self.action
-            self.results.state = self.state
-            self.results.check_mode = self.check_mode
+            self.results.state = self.rest_send.state
+            self.results.check_mode = self.rest_send.check_mode
             self.results.response_current = copy.deepcopy(
                 self.rest_send.response_current
             )
@@ -250,8 +245,8 @@ class FabricCreateBulk(FabricCreateCommon):
     ```
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -315,8 +310,8 @@ class FabricCreate(FabricCreateCommon):
     -   FabricCreateBulk is used instead.
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")

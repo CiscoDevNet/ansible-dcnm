@@ -69,10 +69,10 @@ class FabricDelete(FabricCommon):
     ansible_module.exit_json(**task.results.final_result)
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "delete"
+        self.action = "fabric_delete"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -82,16 +82,7 @@ class FabricDelete(FabricCommon):
 
         self._cannot_delete_fabric_reason = None
 
-        # path and verb cannot be defined here because endpoints.fabric name
-        # must be set first.  Set these to None here and define them later in
-        # the commit() method.
-        self.path = None
-        self.verb = None
-
-        msg = "ENTERED FabricDelete(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricDelete()"
         self.log.debug(msg)
 
     def _build_properties(self):
@@ -138,19 +129,6 @@ class FabricDelete(FabricCommon):
         msg += f"Fabric {fabric_name} cannot be deleted since it is not "
         msg += "empty. Remove all devices from the fabric and try again."
         raise ValueError(msg)
-
-    def _set_fabric_delete_endpoint(self, fabric_name) -> None:
-        """
-        - Set the fabric delete endpoint for fabric_name
-        - Raise ``ValueError`` if the endpoint assignment fails
-        """
-        try:
-            self.ep_fabric_delete.fabric_name = fabric_name
-        except (ValueError, TypeError) as error:
-            raise ValueError(error) from error
-
-        self.path = self.ep_fabric_delete.path
-        self.verb = self.ep_fabric_delete.verb
 
     def _validate_commit_parameters(self):
         """
@@ -251,17 +229,20 @@ class FabricDelete(FabricCommon):
 
     def _send_request(self, fabric_name):
         """
-        -   Send a delete request to the controller and register the result.
-        -   Raise ``ValueError`` if the fabric delete endpoint cannot be set
+        ### Summary
+        Send a delete request to the controller and register the result.
+
+        ### Raises
+            -   ``ValueError`` if the fabric delete endpoint cannot be set.
         """
         try:
-            self._set_fabric_delete_endpoint(fabric_name)
-        except ValueError as error:
+            self.ep_fabric_delete.fabric_name = fabric_name
+            self.rest_send.path = self.ep_fabric_delete.path
+            self.rest_send.verb = self.ep_fabric_delete.verb
+            self.rest_send.commit()
+        except (ValueError, TypeError) as error:
             raise ValueError(error) from error
 
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.commit()
         self.register_result(fabric_name)
 
     def register_result(self, fabric_name):
