@@ -172,7 +172,7 @@ class FabricCreateCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self._properties["payloads"]
+        return self._payloads
 
     @payloads.setter
     def payloads(self, value):
@@ -193,7 +193,7 @@ class FabricCreateCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(error) from error
-        self._properties["payloads"] = value
+        self._payloads = value
 
 
 class FabricCreateBulk(FabricCreateCommon):
@@ -242,16 +242,8 @@ class FabricCreateBulk(FabricCreateCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payloads = None
         self.log.debug("ENTERED FabricCreateBulk()")
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties dict is already initialized in the parent class
-        self._properties["payloads"] = None
 
     def commit(self):
         """
@@ -307,16 +299,8 @@ class FabricCreate(FabricCreateCommon):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payload = None
         self.log.debug("ENTERED FabricCreate()")
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # self._properties is already initialized in the parent class
-        self._properties["payload"] = None
 
     def commit(self):
         """
@@ -363,7 +347,7 @@ class FabricCreate(FabricCreateCommon):
         """
         Return a fabric create payload.
         """
-        return self._properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
@@ -382,10 +366,10 @@ class FabricCreate(FabricCreateCommon):
             self._verify_payload(value)
         except ValueError as error:
             raise ValueError(error) from error
-        self._properties["payload"] = value
+        self._payload = value
         # payloads is also set to a list containing one payload.
         # commit() calls FabricCreateCommon()._build_payloads_to_commit(),
         # which expects a list of payloads.
         # FabricCreateCommon()._build_payloads_to_commit() verifies that
         # the fabric does not already exist on the controller.
-        self._properties["payloads"] = [value]
+        self._payloads = [value]
