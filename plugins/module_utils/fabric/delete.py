@@ -77,20 +77,13 @@ class FabricDelete(FabricCommon):
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._fabrics_to_delete = []
-        self._build_properties()
         self.ep_fabric_delete = EpFabricDelete()
+        self._fabric_names = None
 
         self._cannot_delete_fabric_reason = None
 
         msg = "ENTERED FabricDelete()"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        self._properties holds property values for the class
-        """
-        # self._properties is already set in the parent class
-        self._properties["fabric_names"] = None
 
     def _get_fabrics_to_delete(self) -> None:
         """
@@ -137,6 +130,11 @@ class FabricDelete(FabricCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        if self.fabric_details is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_details must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
@@ -170,8 +168,8 @@ class FabricDelete(FabricCommon):
             raise ValueError(error) from error
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.diff_current = {}
 
         try:
@@ -213,9 +211,10 @@ class FabricDelete(FabricCommon):
         -   We don't want RestSend to retry on errors since the likelihood of a
             timeout error when deleting a fabric is low, and there are cases of
             permanent errors for which we don't want to retry.  Hence, we set
-            timeout to 1 second.
+            timeout to 1 second and restore the original timeout after the
+            requests are sent.
         """
-        self.rest_send.check_mode = self.check_mode
+        self.rest_send.save_settings()
         self.rest_send.timeout = 1
 
         for fabric_name in self._fabrics_to_delete:
@@ -226,6 +225,15 @@ class FabricDelete(FabricCommon):
                 self.results.failed = True
                 self.register_result(fabric_name)
                 raise ValueError(error) from error
+        self.rest_send.restore_settings()
+
+    def _set_fabric_delete_endpoint(self, fabric_name):
+        try:
+            self.ep_fabric_delete.fabric_name = fabric_name
+            self.rest_send.path = self.ep_fabric_delete.path
+            self.rest_send.verb = self.ep_fabric_delete.verb
+        except (ValueError, TypeError) as error:
+            raise ValueError(error) from error
 
     def _send_request(self, fabric_name):
         """
@@ -236,9 +244,7 @@ class FabricDelete(FabricCommon):
             -   ``ValueError`` if the fabric delete endpoint cannot be set.
         """
         try:
-            self.ep_fabric_delete.fabric_name = fabric_name
-            self.rest_send.path = self.ep_fabric_delete.path
-            self.rest_send.verb = self.ep_fabric_delete.verb
+            self._set_fabric_delete_endpoint(fabric_name)
             self.rest_send.commit()
         except (ValueError, TypeError) as error:
             raise ValueError(error) from error
@@ -254,16 +260,20 @@ class FabricDelete(FabricCommon):
             the success or failure of the request.
         """
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        if self.rest_send is not None:
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.state = self.rest_send.state
+        else:
+            self.results.check_mode = False
+            self.results.state = "unknown"
 
-        if fabric_name is None:
+        if fabric_name is None or self.rest_send is None:
             self.results.diff_current = {}
             self.results.response_current = {}
             self.results.result_current = {"success": False, "changed": False}
             self.results.register_task_result()
             return
-
+    
         if self.rest_send.result_current.get("success", None) is True:
             self.results.diff_current = {"FABRIC_NAME": fabric_name}
             # need this to match the else clause below since we
@@ -290,7 +300,7 @@ class FabricDelete(FabricCommon):
         - setter: set list of fabric_names
         - setter: raise ``ValueError`` if ``value`` is not a ``list`` of ``str``
         """
-        return self._properties["fabric_names"]
+        return self._fabric_names
 
     @fabric_names.setter
     def fabric_names(self, value):
@@ -313,4 +323,4 @@ class FabricDelete(FabricCommon):
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
                 raise ValueError(msg)
-        self._properties["fabric_names"] = value
+        self._fabric_names = value
