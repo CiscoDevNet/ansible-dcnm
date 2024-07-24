@@ -135,8 +135,8 @@ class FabricConfigSave:
         if self.fabric_can_be_saved is False:
             self.results.diff_current = {}
             self.results.action = self.action
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.state = self.rest_send.state
             self.results.response_current = {
                 "RETURN_CODE": 200,
                 "MESSAGE": self.cannot_save_fabric_reason,
