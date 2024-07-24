@@ -40,20 +40,17 @@ class FabricUpdateCommon(FabricCommon):
     - FabricUpdateBulk
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "update"
+        self.action = "fabric_update"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.ep_fabric_update = EpFabricUpdate()
         self.fabric_types = FabricTypes()
 
-        msg = "ENTERED FabricUpdateCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricUpdateCommon()"
         self.log.debug(msg)
 
     def _fabric_needs_update_for_merged_state(self, payload):
@@ -212,8 +209,6 @@ class FabricUpdateCommon(FabricCommon):
             -   ``FabricUpdateCommon()._config_save()``
             -   ``FabricUpdateCommon()._config_deploy()``
         """
-        self.rest_send.check_mode = self.check_mode
-
         try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
@@ -309,8 +304,8 @@ class FabricUpdateCommon(FabricCommon):
             self.rest_send.result_current["success"]
         )
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
@@ -326,7 +321,7 @@ class FabricUpdateCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self._properties["payloads"]
+        return self._payloads
 
     @payloads.setter
     def payloads(self, value):
@@ -342,7 +337,7 @@ class FabricUpdateCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(error) from error
-        self._properties["payloads"] = value
+        self._payloads = value
 
 
 class FabricUpdateBulk(FabricUpdateCommon):
@@ -382,21 +377,15 @@ class FabricUpdateBulk(FabricUpdateCommon):
     ansible_module.exit_json(**task.results.final_result)
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED FabricUpdateBulk()")
+        self._payloads = None
 
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties dict is already initialized in FabricCommon
-        self._properties["payloads"] = None
+        msg = "ENTERED FabricUpdateBulk()"
+        self.log.debug(msg)
 
     def commit(self):
         """
@@ -431,8 +420,8 @@ class FabricUpdateBulk(FabricUpdateCommon):
             raise ValueError(msg)
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
 
         try:
             self._build_payloads_for_merged_state()

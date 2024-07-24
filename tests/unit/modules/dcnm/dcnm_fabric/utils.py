@@ -255,7 +255,7 @@ def fabric_summary_fixture():
 @pytest.fixture(name="fabric_types")
 def fabric_types_fixture():
     """
-    mock FabricTypes
+    Return FabricTypes() instance.
     """
     return FabricTypes()
 
@@ -263,17 +263,15 @@ def fabric_types_fixture():
 @pytest.fixture(name="fabric_update_bulk")
 def fabric_update_bulk_fixture():
     """
-    mock FabricUpdateBulk
+    Return FabricUpdateBulk() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricUpdateBulk(instance.params)
+    return FabricUpdateBulk()
 
 
 @pytest.fixture(name="response_handler")
 def response_handler_fixture():
     """
-    mock ResponseHandler()
+    Return ResponseHandler() instance.
     """
     return ResponseHandler()
 
@@ -281,7 +279,7 @@ def response_handler_fixture():
 @pytest.fixture(name="template_get")
 def template_get_fixture():
     """
-    mock TemplateGet
+    Return TemplateGet() instance.
     """
     return TemplateGet()
 
@@ -289,7 +287,7 @@ def template_get_fixture():
 @pytest.fixture(name="template_get_all")
 def template_get_all_fixture():
     """
-    mock TemplateGetAll
+    Return TemplateGetAll() instance.
     """
     return TemplateGetAll()
 

@@ -304,7 +304,7 @@ class FabricCommon:
         - raise ``ValueError`` if the payload is missing mandatory keys
         """
         method_name = inspect.stack()[0][3]
-        if self.action not in {"fabric_create", "fabric_replace"}:
+        if self.action not in {"fabric_create", "fabric_replace", "fabric_update"}:
             return
         msg = f"{self.class_name}.{method_name}: "
         msg += f"payload: {payload}"
