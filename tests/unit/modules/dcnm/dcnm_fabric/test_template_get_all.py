@@ -47,7 +47,7 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils im
     template_get_all_fixture)
 
 
-def test_template_get_all_00010(template_get_all) -> None:
+def test_template_get_all_00000(template_get_all) -> None:
     """
     Classes and Methods
     - TemplateGetAll
@@ -60,14 +60,14 @@ def test_template_get_all_00010(template_get_all) -> None:
     with does_not_raise():
         instance = template_get_all
     assert instance.class_name == "TemplateGetAll"
-    assert isinstance(instance.ep_templates, EpTemplates)
+    assert instance.ep_templates.class_name == "EpTemplates"
     assert instance.response == []
     assert instance.response_current == {}
     assert instance.result == []
     assert instance.result_current == {}
-    assert instance._properties["templates"] is None
-    assert instance._properties["rest_send"] is None
-    assert instance._properties["results"] is None
+    assert instance._templates is None
+    assert instance._rest_send is None
+    assert instance._results is None
 
 
 MATCH_00020 = r"TemplateGetAll\.rest_send: "
