@@ -2832,9 +2832,9 @@ class Replaced(Common):
         self.action = "fabric_replaced"
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.fabric_details = FabricDetailsByName(self.params)
-        self.fabric_replaced = FabricReplacedBulk(self.params)
-        self.fabric_summary = FabricSummary(self.params)
+        self.fabric_details = FabricDetailsByName()
+        self.fabric_replaced = FabricReplacedBulk()
+        self.fabric_summary = FabricSummary()
         self.fabric_types = FabricTypes()
         self.merged = None
         self.need_create = []
