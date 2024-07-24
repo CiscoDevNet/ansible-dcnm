@@ -142,7 +142,7 @@
       - result.diff[0].sequence_number == 1
       - result.diff[0].FABRIC_MTU == 1500
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -277,7 +277,7 @@
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "replace"
+      - result.metadata[0].action == "fabric_replace"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "replaced"
@@ -369,7 +369,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "replace"
+      - result.metadata[0].action == "fabric_replace"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "replaced"
@@ -459,7 +459,7 @@
       - result.diff[0].FABRIC_NAME == fabric_name_4
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"

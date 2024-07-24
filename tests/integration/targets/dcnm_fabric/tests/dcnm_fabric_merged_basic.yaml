@@ -22,23 +22,23 @@
 #    - fabric_type_2  # VXLAN_EVPN_MSD
 #    - fabric_name_3
 #    - fabric_type_3  # LAN_CLASSIC
-# 3. Delete fabrics under test, if they exist
+# 2. Delete fabrics under test, if they exist
 #    - fabric_name_1
 #    - fabric_name_2
 #    - fabric_name_3
 ################################################################################
 # TEST
 ################################################################################
-# 4. Create fabrics and verify result
+# 3. Create fabrics and verify result
 #    - fabric_name_1
 #    - fabric_name_1
 #    - fabric_name_1
-# 5. Merge additional configs into fabric_1 and fabric_2 and verify result
-# 6. Merge additional config into fabric_3 and verify result
+# 4. Merge additional configs into fabric_1 and fabric_2 and verify result
+# 5. Merge additional config into fabric_3 and verify result
 ################################################################################
 # CLEANUP
 ################################################################################
-# 7. Delete fabrics under test
+# 6. Delete fabrics under test
 #    - fabric_name_1
 #    - fabric_name_1
 #    - fabric_name_1
@@ -104,19 +104,19 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 3,
 #                 "state": "merged"
@@ -216,11 +216,11 @@
       - result.diff[2].sequence_number == 3
       - result.diff[2].BOOTSTRAP_ENABLE == false
       - result.diff[2].IS_READ_ONLY == false
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "create"
+      - result.metadata[1].action == "fabric_create"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -274,13 +274,13 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "merged"
@@ -425,11 +425,11 @@
       - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "update"
+      - result.metadata[1].action == "fabric_update"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -520,7 +520,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -607,7 +607,7 @@
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -649,7 +649,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -684,7 +684,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -720,19 +720,19 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             },
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "deleted"
 #             },
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 3,
 #                 "state": "deleted"
@@ -806,15 +806,15 @@
       - result.diff[2].FABRIC_NAME == fabric_name_3
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "delete"
+      - result.metadata[1].action == "fabric_delete"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "deleted"
-      - result.metadata[2].action == "delete"
+      - result.metadata[2].action == "fabric_delete"
       - result.metadata[2].check_mode == False
       - result.metadata[2].sequence_number == 3
       - result.metadata[2].state == "deleted"

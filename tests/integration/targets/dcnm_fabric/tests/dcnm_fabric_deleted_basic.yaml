@@ -307,11 +307,11 @@
       - result.diff[0].sequence_number == 1
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "delete"
+      - result.metadata[1].action == "fabric_delete"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "deleted"
@@ -388,7 +388,7 @@
       - result.diff[0].FABRIC_NAME == fabric_name_3
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
@@ -450,7 +450,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
