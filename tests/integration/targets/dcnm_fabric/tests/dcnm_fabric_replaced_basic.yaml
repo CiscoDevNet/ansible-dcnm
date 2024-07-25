@@ -28,15 +28,15 @@
 # TEST
 # 4. Create fabrics with non-default configs and verify result
 #    - fabric_name_1
-#    - fabric_name_1
-#    - fabric_name_1
+#    - fabric_name_2
+#    - fabric_name_3
 # 5. Replace configs for fabric_1 and fabric_2 and verify result
 # 6. Replace config for fabric_3 and verify result
 # CLEANUP
 # 7. Delete fabrics under test
 #    - fabric_name_1
-#    - fabric_name_1
-#    - fabric_name_1
+#    - fabric_name_2
+#    - fabric_name_3
 ################################################################################
 # REQUIREMENTS
 ################################################################################
