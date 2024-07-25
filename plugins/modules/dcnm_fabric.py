@@ -2313,25 +2313,24 @@ import copy
 import inspect
 import json
 import logging
-from os import environ
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
-    Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
     ControllerFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
+    Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
     ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
+    Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
     FabricCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
@@ -2380,29 +2379,58 @@ class Common(FabricCommon):
         self._implemented_states = set()
 
         self.params = params
+        # populated in self.validate_input()
+        self.payloads = {}
 
+        self.populate_check_mode()
+        self.populate_state()
+        self.populate_config()
+
+        self.results = Results()
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+        self._rest_send = None
+        self._verify_playbook_params = VerifyPlaybookParams()
+
+        self.have = {}
+        self.query = []
+        self.validated = []
+        self.want = []
+
+        msg = "ENTERED Common(): "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
+
+    def populate_check_mode(self):
+        """
+        ### Summary
+        Populate ``check_mode`` with the playbook check_mode.
+
+        ### Raises
+        -   ValueError if check_mode is not provided.
+        """
+        method_name = inspect.stack()[0][3]
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "check_mode is required."
             raise ValueError(msg)
 
-        self._valid_states = ["deleted", "merged", "query", "replaced"]
-        self._states_require_config = {"merged", "replaced"}
+    def populate_config(self):
+        """
+        ### Summary
+        Populate ``config`` with the playbook config.
 
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "params is missing state parameter."
-            raise ValueError(msg)
-        if self.state not in self._valid_states:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid state: {self.state}. "
-            msg += f"Expected one of: {','.join(self._valid_states)}."
-            raise ValueError(msg)
-
+        ### Raises
+        -   ValueError if:
+                -   ``state`` is "merged" or "replaced" and ``config`` is None.
+                -   ``config`` is not a list.
+        """
+        method_name = inspect.stack()[0][3]
+        states_requiring_config = {"merged", "replaced"}
         self.config = self.params.get("config", None)
-        if self.state in self._states_require_config:
+        if self.state in states_requiring_config:
             if self.config is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "params is missing config parameter."
@@ -2413,59 +2441,79 @@ class Common(FabricCommon):
                 msg += f"got {type(self.config).__name__}"
                 raise ValueError(msg)
 
-        self.results = Results()
-        self.results.state = self.state
-        self.results.check_mode = self.check_mode
+    def populate_state(self):
+        """
+        ### Summary
+        Populate ``state`` with the playbook state.
 
-        self._rest_send = None
+        ### Raises
+        -   ValueError if:
+                -   ``state`` is not provided.
+                -   ``state`` is not a valid state.
+        """
+        method_name = inspect.stack()[0][3]
 
-        self._verify_playbook_params = VerifyPlaybookParams()
+        valid_states = ["deleted", "merged", "query", "replaced"]
 
-        # populated in self.validate_input()
-        self.payloads = {}
-
-
-        self.validated = []
-        self.have = {}
-        self.want = []
-        self.query = []
-
-        msg = "ENTERED Common(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
+        self.state = self.params.get("state", None)
+        if self.state is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params is missing state parameter."
+            raise ValueError(msg)
+        if self.state not in valid_states:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid state: {self.state}. "
+            msg += f"Expected one of: {','.join(valid_states)}."
+            raise ValueError(msg)
 
     def get_have(self):
         """
-        Caller: main()
-
-        Build self.have, which is a dict containing the current controller
+        ### Summary
+        Build ``self.have``, which is a dict containing the current controller
         fabrics and their details.
 
-        Have is a dict, keyed on fabric_name, where each element is a dict
-        with the following structure:
+        ### Raises
+        -   ``ValueError`` if the controller returns an error when attempting to
+            retrieve the fabric details.
 
-        {
+        ### have structure
+
+        ``have`` is a dict, keyed on fabric_name, where each element is a dict
+        with the following structure.
+
+        ```python
+        have = {
             "fabric_name": "fabric_name",
             "fabric_config": {
                 "fabricName": "fabric_name",
                 "fabricType": "VXLAN EVPN",
-                etc...
+                "etc...": "etc..."
             }
         }
+        ```
+
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.have = FabricDetailsByName()
-        self.have.rest_send = self.rest_send
-        self.have.results = Results()
-        self.have.refresh()
+        try:
+            self.have = FabricDetailsByName()
+            self.have.rest_send = self.rest_send
+            self.have.results = Results()
+            self.have.refresh()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Controller returned error when attempting to retrieve "
+            msg += "fabric details. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def get_want(self) -> None:
         """
-        Caller: main()
+        ### Summary
+        -   Validate the playbook configs.
+        -   Update self.want with the playbook configs.
 
-        1. Validate the playbook configs
-        2. Update self.want with the playbook configs
+        ### Raises
+        -   ``ValueError`` if the playbook configs are invalid.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         merged_configs = []
@@ -2482,12 +2530,19 @@ class Common(FabricCommon):
 
     def get_controller_features(self) -> None:
         """
+        ### Summary
+
         -   Retrieve the state of relevant controller features
         -   Populate self.features
                 -   key: FABRIC_TYPE
                 -   value: True or False
                         -   True if feature is started for this fabric type
                         -   False otherwise
+
+        ### Raises
+
+        -   ``ValueError`` if the controller returns an error when attempting to
+            retrieve the controller features.
         """
         method_name = inspect.stack()[0][3]
         self.features = {}
@@ -2509,35 +2564,39 @@ class Common(FabricCommon):
 
 class Deleted(Common):
     """
+    ### Summary
     Handle deleted state
     """
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
         super().__init__(params)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.action = "fabric_delete"
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
         self.delete = FabricDelete()
+        self._implemented_states.add("deleted")
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED Deleted(): "
         msg += f"state: {self.results.state}, "
         msg += f"check_mode: {self.results.check_mode}"
         self.log.debug(msg)
 
-        self._implemented_states.add("deleted")
-
     def commit(self) -> None:
         """
-        delete the fabrics in self.want that exist on the controller
+        ### Summary
+        delete the fabrics in ``self.want`` that exist on the controller.
+
+        ### Raises
+
+        -   ``ValueError`` if the controller returns an error when attempting to
+            delete the fabrics.
         """
         self.get_want()
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "entered"
+        msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
 
         self.fabric_details = FabricDetailsByName()
@@ -2570,7 +2629,23 @@ class Deleted(Common):
 
 class Merged(Common):
     """
-    Handle merged state
+    ### Summary
+    Handle merged state.
+
+    ### Raises
+
+    -   ``ValueError`` if:
+        -   The controller features required for the fabric type are not
+            running on the controller.
+        -   The playbook parameters are invalid.
+        -   The controller returns an error when attempting to retrieve
+            the template.
+        -   The controller returns an error when attempting to retrieve
+            the fabric details.
+        -   The controller returns an error when attempting to create
+            the fabric.
+        -   The controller returns an error when attempting to update
+            the fabric.
     """
 
     def __init__(self, params):
@@ -2600,9 +2675,18 @@ class Merged(Common):
 
     def get_need(self):
         """
-        Caller: commit()
+        ### Summary
+        Build ``self.need`` for merged state.
 
-        Build self.need for merged state
+        ### Raises
+        -   ``ValueError`` if:
+            -   The controller features required for the fabric type are not
+                running on the controller.
+            -   The playbook parameters are invalid.
+            -   The controller returns an error when attempting to retrieve
+                the template.
+            -   The controller returns an error when attempting to retrieve
+                the fabric details.
         """
         method_name = inspect.stack()[0][3]
         self.payloads = {}
@@ -2685,7 +2769,21 @@ class Merged(Common):
 
     def commit(self):
         """
-        Commit the merged state request
+        ### Summary
+        Commit the merged state request.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   The controller features required for the fabric type are not
+                running on the controller.
+            -   The playbook parameters are invalid.
+            -   The controller returns an error when attempting to retrieve
+                the template.
+            -   The controller returns an error when attempting to retrieve
+                the fabric details.
+            -   The controller returns an error when attempting to create
+                the fabric.
+            -   The controller returns an error when attempting to update
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
@@ -2706,9 +2804,15 @@ class Merged(Common):
 
     def send_need_create(self) -> None:
         """
-        Caller: commit()
-
+        ### Summary
         Build and send the payload to create fabrics specified in the playbook.
+
+        ### Raises
+
+        -   ``ValueError`` if:
+            -   Any payload is invalid.
+            -   The controller returns an error when attempting to create
+                the fabric.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
@@ -2737,9 +2841,15 @@ class Merged(Common):
 
     def send_need_update(self) -> None:
         """
-        Caller: commit()
-
+        ### Summary
         Build and send the payload to create fabrics specified in the playbook.
+
+        ### Raises
+
+        -   ``ValueError`` if:
+            -   Any payload is invalid.
+            -   The controller returns an error when attempting to update
+                the fabric.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
@@ -2771,15 +2881,24 @@ class Merged(Common):
 
 class Query(Common):
     """
-    Handle query state
+    ### Summary
+    Handle query state.
+
+    ### Raises
+
+    -   ``ValueError`` if:
+        -   The playbook parameters are invalid.
+        -   The controller returns an error when attempting to retrieve
+            the fabric details.
     """
 
     def __init__(self, ansible_module):
         self.class_name = self.__class__.__name__
         super().__init__(ansible_module)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.action = "fabric_query"
+        self._implemented_states.add("query")
+
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED Query(): "
@@ -2787,11 +2906,17 @@ class Query(Common):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-        self._implemented_states.add("query")
-
     def commit(self) -> None:
         """
-        1.  query the fabrics in self.want that exist on the controller
+        ### Summary
+        query the fabrics in ``self.want`` that exist on the controller.
+
+        ### Raises
+
+        -   ``ValueError`` if:
+            -   Any fabric names are invalid.
+            -   The controller returns an error when attempting to
+                query the fabrics.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -2801,7 +2926,7 @@ class Query(Common):
 
         self.get_want()
 
-        fabric_query = FabricQuery(self.params)
+        fabric_query = FabricQuery()
         fabric_query.fabric_details = self.fabric_details
         fabric_query.results = self.results
 
@@ -2821,7 +2946,22 @@ class Query(Common):
 
 class Replaced(Common):
     """
-    Handle replaced state
+    ### Summary
+    Handle replaced state.
+
+    ### Raises
+
+    -   ``ValueError`` if:
+        -   The controller features required for the fabric type are not
+            running on the controller.
+        -   The playbook parameters are invalid.
+        -   The controller returns an error when attempting to retrieve
+            the template.
+        -   The controller returns an error when attempting to retrieve
+            the fabric details.
+        -   The controller returns an error when attempting to create
+            the fabric.
+        -   The controller returns an error when attempting to update
     """
 
     def __init__(self, params):
@@ -2849,9 +2989,13 @@ class Replaced(Common):
 
     def get_need(self):
         """
-        Caller: commit()
+        ### Summary
+        Build ``self.need`` for replaced state.
 
-        Build self.need for replaced state
+        ### Raises
+        -   ``ValueError`` if:
+            -   The controller features required for the fabric type are not
+                running on the controller.
         """
         method_name = inspect.stack()[0][3]
         self.payloads = {}
@@ -2880,9 +3024,16 @@ class Replaced(Common):
 
     def commit(self):
         """
-        Commit the replaced state request
+        ### Summary
+        Commit the replaced state request.
+
+        ### Raises
+
+        -   ``ValueError`` if:
+            -   The controller features required for the fabric type are not
+                running on the controller.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
 
@@ -2900,11 +3051,16 @@ class Replaced(Common):
 
     def send_need_replaced(self) -> None:
         """
-        Caller: commit()
-
+        ### Summary
         Build and send the payload to modify fabrics specified in the
         playbook per replaced state handling.
 
+        ### Raises
+
+        -   ``ValueError`` if:
+            -   Any payload is invalid.
+            -   The controller returns an error when attempting to
+                 update the fabric.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered. "
@@ -2914,7 +3070,6 @@ class Replaced(Common):
 
         if len(self.need_create) != 0:
             self.merged = Merged(self.params)
-            self.merged.ansible_module = self.ansible_module
             self.merged.rest_send = self.rest_send
             self.merged.fabric_details.rest_send = self.rest_send
             self.merged.fabric_summary.rest_send = self.rest_send
@@ -2945,7 +3100,20 @@ class Replaced(Common):
 
 
 def main():
-    """main entry point for module execution"""
+    """
+    ### Summary
+    main entry point for module execution.
+
+    -   In the event that ``ValueError`` is raised, ``AnsibleModule.fail_json``
+        is called with the error message.
+    -   Else, ``AnsibleModule.exit_json`` is called with the final result.
+
+    ### Raises
+    -   ``ValueError`` if:
+        -   The playbook parameters are invalid.
+        -   The controller returns an error when attempting to
+            delete, create, query, or update the fabrics.
+    """
 
     argument_spec = {}
     argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
