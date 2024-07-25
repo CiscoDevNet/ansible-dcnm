@@ -86,7 +86,6 @@ class FabricConfigSave:
         msg = "ENTERED FabricConfigSave()"
         self.log.debug(msg)
 
-
     def _can_fabric_be_saved(self) -> None:
         """
         -   Set self.fabric_can_be_saved to True if the fabric configuration

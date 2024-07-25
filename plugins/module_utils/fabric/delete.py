@@ -273,7 +273,7 @@ class FabricDelete(FabricCommon):
             self.results.result_current = {"success": False, "changed": False}
             self.results.register_task_result()
             return
-    
+
         if self.rest_send.result_current.get("success", None) is True:
             self.results.diff_current = {"FABRIC_NAME": fabric_name}
             # need this to match the else clause below since we

@@ -53,6 +53,7 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils im
 
 PARAMS = {"state": "deleted", "check_mode": False}
 
+
 def test_fabric_delete_00000(fabric_delete) -> None:
     """
     ### Classes and Methods
@@ -83,23 +84,20 @@ def test_fabric_delete_00000(fabric_delete) -> None:
 
 def test_fabric_delete_00020(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - _set_fabric_delete_endpoint()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - _set_fabric_delete_endpoint()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that endpoint values are set correctly when ``fabric_names``
-        contains a valid fabric name.
-    -   Verify that an Exception is not raised
+     -   Verify that endpoint values are set correctly when ``fabric_names``
+         contains a valid fabric name.
+     -   Verify that an Exception is not raised
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     with does_not_raise():
         instance = fabric_delete
         instance.rest_send = RestSend(PARAMS)
@@ -112,20 +110,20 @@ def test_fabric_delete_00020(fabric_delete) -> None:
 
 def test_fabric_delete_00021(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-        - payloads setter
-    - FabricDelete
-        - __init__()
-        - _set_fabric_delete_endpoint()
+     - FabricCommon
+         - __init__()
+         - payloads setter
+     - FabricDelete
+         - __init__()
+         - _set_fabric_delete_endpoint()
 
-   ### Summary
+    ### Summary
 
-    -   Verify ``TypeError`` is raised because call to
-        _set_fabric_delete_endpoint() is missing argument
-        ``fabric_name``.
+     -   Verify ``TypeError`` is raised because call to
+         _set_fabric_delete_endpoint() is missing argument
+         ``fabric_name``.
     """
     with does_not_raise():
         instance = fabric_delete
@@ -140,21 +138,21 @@ def test_fabric_delete_00021(fabric_delete) -> None:
 @pytest.mark.parametrize("fabric_name", [None, 123, 123.45, [], {}])
 def test_fabric_delete_00022(fabric_delete, fabric_name) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-        - payloads setter
-    - FabricDelete
-        - __init__()
-        - _set_fabric_delete_endpoint()
-    - EpFabricDelete()
+     - FabricCommon
+         - __init__()
+         - payloads setter
+     - FabricDelete
+         - __init__()
+         - _set_fabric_delete_endpoint()
+     - EpFabricDelete()
 
-   ### Summary
+    ### Summary
 
-    -   Verify EpFabricDelete() re-raises ``TypeError`` raised by
-        ConversionUtils() because ``fabric_name`` argument passed
-        to _set_fabric_delete_endpoint() is not a string.
+     -   Verify EpFabricDelete() re-raises ``TypeError`` raised by
+         ConversionUtils() because ``fabric_name`` argument passed
+         to _set_fabric_delete_endpoint() is not a string.
     """
     match = r"ConversionUtils\.validate_fabric_name: "
     match += "Invalid fabric name. Expected string. Got"
@@ -168,21 +166,21 @@ def test_fabric_delete_00022(fabric_delete, fabric_name) -> None:
 @pytest.mark.parametrize("fabric_name", ["", "1abc", "a,bcd", "abc d", "ab!d"])
 def test_fabric_delete_00023(fabric_delete, fabric_name) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-        - payloads setter
-    - FabricDelete
-        - __init__()
-        - _set_fabric_delete_endpoint()
-        - EpFabricDelete()
+     - FabricCommon
+         - __init__()
+         - payloads setter
+     - FabricDelete
+         - __init__()
+         - _set_fabric_delete_endpoint()
+         - EpFabricDelete()
 
-   ### Summary
+    ### Summary
 
-    -   Verify EpFabricDelete() re-raises ``ValueError`` raised by
-        ConversionUtils() because ``fabric_name`` argument passed
-        to _set_fabric_delete_endpoint() is an invalid string.
+     -   Verify EpFabricDelete() re-raises ``ValueError`` raised by
+         ConversionUtils() because ``fabric_name`` argument passed
+         to _set_fabric_delete_endpoint() is an invalid string.
     """
     match = r"ConversionUtils\.validate_fabric_name: "
     match += rf"Invalid fabric name: {fabric_name}\. "
@@ -198,19 +196,19 @@ def test_fabric_delete_00023(fabric_delete, fabric_name) -> None:
 
 def test_fabric_delete_00030(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _validate_commit_parameters()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that ``ValueError`` is raised because fabric_names is not set
-        prior to calling commit()
+     -   Verify that ``ValueError`` is raised because fabric_names is not set
+         prior to calling commit()
 
     """
     with does_not_raise():
@@ -227,19 +225,19 @@ def test_fabric_delete_00030(fabric_delete) -> None:
 
 def test_fabric_delete_00031(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _validate_commit_parameters()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that ``ValueError`` is raised because rest_send is not set
-        prior to calling commit()
+     -   Verify that ``ValueError`` is raised because rest_send is not set
+         prior to calling commit()
     """
     with does_not_raise():
         instance = fabric_delete
@@ -255,19 +253,19 @@ def test_fabric_delete_00031(fabric_delete) -> None:
 
 def test_fabric_delete_00032(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _validate_commit_parameters()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that ``ValueError`` is raised because results is not set
-        prior to calling commit()
+     -   Verify that ``ValueError`` is raised because results is not set
+         prior to calling commit()
 
     """
     with does_not_raise():
@@ -395,51 +393,51 @@ def test_fabric_delete_00040(fabric_delete) -> None:
 
 def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon()
-        - __init__()
-        - payloads setter
-    - FabricDetails()
-        - __init__()
-        - refresh_super()
-    - FabricDetailsByName()
-        - __init__()
-        - refresh()
-    - FabricDelete
-        - __init__()
-        - commit()
+     - FabricCommon()
+         - __init__()
+         - payloads setter
+     - FabricDetails()
+         - __init__()
+         - refresh_super()
+     - FabricDetailsByName()
+         - __init__()
+         - refresh()
+     - FabricDelete
+         - __init__()
+         - commit()
 
-   ### Summary
+    ### Summary
 
-    -   Verify FabricDelete().commit() re-raises ``ValueError`` when
-        ``EpFabricDelete()._send_requests() re-raises ``ValueError`` when
-        ``EpFabricDelete()._send_request() re-raises ``ValueError`` when
-        ``FabricDelete()._set_fabric_delete_endpoint()`` raises ``ValueError``.
-    -   The user attempts to delete a fabric and the fabric exists on the
-        controller, and the fabric is empty, but _set_fabric_delete_endpoint()
-        re-raises ``ValueError``.
+     -   Verify FabricDelete().commit() re-raises ``ValueError`` when
+         ``EpFabricDelete()._send_requests() re-raises ``ValueError`` when
+         ``EpFabricDelete()._send_request() re-raises ``ValueError`` when
+         ``FabricDelete()._set_fabric_delete_endpoint()`` raises ``ValueError``.
+     -   The user attempts to delete a fabric and the fabric exists on the
+         controller, and the fabric is empty, but _set_fabric_delete_endpoint()
+         re-raises ``ValueError``.
 
-   ### Code Flow
+    ### Code Flow
 
-    -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
-        which succeeds since all required parameters are set.
-    -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDetails().refresh() which returns a dict with keys
-        DATA == [{f1 fabric data dict}], RETURN_CODE == 200
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDelete()._verify_fabric_can_be_deleted() which returns
-        successfully (does not raise ``ValueError``)
-    -   FabricDelete()._get_fabrics_to_delete() sets
-        FabricDelete()._fabrics_to_delete to a list containing fabric f1.
-    -   FabricDelete().commit() calls FabricDelete()._send_requests()
-    -   FabricDelete._send_requests() sets RestSend() parameters
-    -   FabricDelete._send_requests() calls FabricDelete._send_request() for
-        each fabric in the FabricDelete()._fabrics_to_delete list.
-    -   FabricDelete._send_request() calls FabricDelete._set_fabric_delete_endpoint()
-        which calls EpFabricDelete().fabric_name setter, which is mocked to raise
-        ``ValueError``.
+     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
+         which succeeds since all required parameters are set.
+     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDetails().refresh() which returns a dict with keys
+         DATA == [{f1 fabric data dict}], RETURN_CODE == 200
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDelete()._verify_fabric_can_be_deleted() which returns
+         successfully (does not raise ``ValueError``)
+     -   FabricDelete()._get_fabrics_to_delete() sets
+         FabricDelete()._fabrics_to_delete to a list containing fabric f1.
+     -   FabricDelete().commit() calls FabricDelete()._send_requests()
+     -   FabricDelete._send_requests() sets RestSend() parameters
+     -   FabricDelete._send_requests() calls FabricDelete._send_request() for
+         each fabric in the FabricDelete()._fabrics_to_delete list.
+     -   FabricDelete._send_request() calls FabricDelete._set_fabric_delete_endpoint()
+         which calls EpFabricDelete().fabric_name setter, which is mocked to raise
+         ``ValueError``.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -529,40 +527,40 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00043(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon()
-        - __init__()
-        - payloads setter
-    - FabricDetails()
-        - __init__()
-        - refresh_super()
-    - FabricDetailsByName()
-        - __init__()
-        - refresh()
-    - FabricDelete
-        - __init__()
-        - commit()
+     - FabricCommon()
+         - __init__()
+         - payloads setter
+     - FabricDetails()
+         - __init__()
+         - refresh_super()
+     - FabricDetailsByName()
+         - __init__()
+         - refresh()
+     - FabricDelete
+         - __init__()
+         - commit()
 
-   ### Summary
+    ### Summary
 
-    -   Verify successful fabric delete code path (fabric does not exist).
-    -   The user attempts to delete a fabric and the fabric does not exist
-        on the controller.
+     -   Verify successful fabric delete code path (fabric does not exist).
+     -   The user attempts to delete a fabric and the fabric does not exist
+         on the controller.
 
-   ### Code Flow
+    ### Code Flow
 
-    -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
-        which succeeds since all required parameters are set.
-    -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDetails().refresh() which returns a dict with keys
-        DATA == [], RETURN_CODE == 200
-    -   FabricDelete()._get_fabrics_to_delete() sets
-        FabricDelete()._fabrics_to_delete to an empty list.
-    -   FabricDelete().commit() sets results and calls register_result().
-    -   FabricDelete().register_result() registers the results of the fabric
-        delete operation.
+     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
+         which succeeds since all required parameters are set.
+     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDetails().refresh() which returns a dict with keys
+         DATA == [], RETURN_CODE == 200
+     -   FabricDelete()._get_fabrics_to_delete() sets
+         FabricDelete()._fabrics_to_delete to an empty list.
+     -   FabricDelete().commit() sets results and calls register_result().
+     -   FabricDelete().register_result() registers the results of the fabric
+         delete operation.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -625,53 +623,53 @@ def test_fabric_delete_00043(fabric_delete) -> None:
 
 def test_fabric_delete_00044(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon()
-        - __init__()
-        - payloads setter
-    - FabricDetails()
-        - __init__()
-        - refresh_super()
-    - FabricDetailsByName()
-        - __init__()
-        - refresh()
-    - FabricDelete
-        - __init__()
-        - commit()
+     - FabricCommon()
+         - __init__()
+         - payloads setter
+     - FabricDetails()
+         - __init__()
+         - refresh_super()
+     - FabricDetailsByName()
+         - __init__()
+         - refresh()
+     - FabricDelete
+         - __init__()
+         - commit()
 
-   ### Summary
+    ### Summary
 
-    -   Verify unsuccessful fabric delete code path.  RETURN_CODE == 500.
-    -   The user attempts to delete a fabric and the fabric exists on the
-        controller, and the fabric is empty, but the controller
-        RETURN_CODE is not 200.
+     -   Verify unsuccessful fabric delete code path.  RETURN_CODE == 500.
+     -   The user attempts to delete a fabric and the fabric exists on the
+         controller, and the fabric is empty, but the controller
+         RETURN_CODE is not 200.
 
-   ### Code Flow
+    ### Code Flow
 
-    -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
-        which succeeds since all required parameters are set.
-    -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDetails().refresh() which returns a dict with keys
-        DATA == [{f1 fabric data dict}], RETURN_CODE == 200
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDelete()._verify_fabric_can_be_deleted() which returns
-        successfully (does not raise ``ValueError``)
-    -   FabricDelete()._get_fabrics_to_delete() sets
-        FabricDelete()._fabrics_to_delete to a list containing fabric f1.
-    -   FabricDelete().commit() calls FabricDelete()._send_requests()
-    -   FabricDelete._send_requests() sets RestSend() parameters
-    -   FabricDelete._send_requests() calls FabricDelete._send_request() for
-        each fabric in the FabricDelete()._fabrics_to_delete list.
-    -   FabricDelete._send_request() calls FabricDelete._set_fabric_delete_endpoint()
-        which returns the request endpoint information (path, verb) for fabric f1.
-    -   FabricDelete._send_request() sets RestSend().path and RestSend().verb and
-        calls RestSend().commit(), which sends the request.
-    -   The response includes a RETURN_CODE != 200
-    -   FabricDelete()._send_request() calls FabricDelete().register_result()
-    -   FabricDelete().register_result() sets the results for the fabric
-        delete operation.
+     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
+         which succeeds since all required parameters are set.
+     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDetails().refresh() which returns a dict with keys
+         DATA == [{f1 fabric data dict}], RETURN_CODE == 200
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDelete()._verify_fabric_can_be_deleted() which returns
+         successfully (does not raise ``ValueError``)
+     -   FabricDelete()._get_fabrics_to_delete() sets
+         FabricDelete()._fabrics_to_delete to a list containing fabric f1.
+     -   FabricDelete().commit() calls FabricDelete()._send_requests()
+     -   FabricDelete._send_requests() sets RestSend() parameters
+     -   FabricDelete._send_requests() calls FabricDelete._send_request() for
+         each fabric in the FabricDelete()._fabrics_to_delete list.
+     -   FabricDelete._send_request() calls FabricDelete._set_fabric_delete_endpoint()
+         which returns the request endpoint information (path, verb) for fabric f1.
+     -   FabricDelete._send_request() sets RestSend().path and RestSend().verb and
+         calls RestSend().commit(), which sends the request.
+     -   The response includes a RETURN_CODE != 200
+     -   FabricDelete()._send_request() calls FabricDelete().register_result()
+     -   FabricDelete().register_result() sets the results for the fabric
+         delete operation.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -737,49 +735,49 @@ def test_fabric_delete_00044(fabric_delete) -> None:
 
 def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon()
-        - __init__()
-        - payloads setter
-    - FabricDetails()
-        - __init__()
-        - refresh_super()
-    - FabricDetailsByName()
-        - __init__()
-        - refresh()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _verify_fabric_can_be_deleted()
+     - FabricCommon()
+         - __init__()
+         - payloads setter
+     - FabricDetails()
+         - __init__()
+         - refresh_super()
+     - FabricDetailsByName()
+         - __init__()
+         - refresh()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _verify_fabric_can_be_deleted()
 
-   ### Summary
+    ### Summary
 
-    -   Verify unsuccessful fabric delete code path.
-    -   FabricDelete()._verify_fabric_can_be_deleted() raises ``ValueError``
-        because fabric is not empty.
-    -   The user attempts to delete a fabric and the fabric exists on the
-        controller, and the fabric is not empty.
+     -   Verify unsuccessful fabric delete code path.
+     -   FabricDelete()._verify_fabric_can_be_deleted() raises ``ValueError``
+         because fabric is not empty.
+     -   The user attempts to delete a fabric and the fabric exists on the
+         controller, and the fabric is not empty.
 
-   ### Code Flow
+    ### Code Flow
 
-    -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
-        which succeeds since all required parameters are set.
-    -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDetails().refresh() which returns a dict with keys
-        DATA == [{f1 fabric data dict}], RETURN_CODE == 200
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDelete()._verify_fabric_can_be_deleted() raises ``ValueError``
-        since the fabric is not empty.
-    -   FabricDelete()._get_fabrics_to_delete() re-raises ``ValueError``
-    -   FabricDelete().commit() catches the ``ValueError``, sets
-        the (failed) results for the fabric delete operation, and calls
-        self.register_result(None)
-    -   FabricDelete().register_result() sets the final result for the
-        fabric delete operation and returns.
-    -   FabricDelete().commit() re-raises the ``ValueError`` which is caught
-        by the main Task(), in real life, but caught by the test here.
+     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
+         which succeeds since all required parameters are set.
+     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDetails().refresh() which returns a dict with keys
+         DATA == [{f1 fabric data dict}], RETURN_CODE == 200
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDelete()._verify_fabric_can_be_deleted() raises ``ValueError``
+         since the fabric is not empty.
+     -   FabricDelete()._get_fabrics_to_delete() re-raises ``ValueError``
+     -   FabricDelete().commit() catches the ``ValueError``, sets
+         the (failed) results for the fabric delete operation, and calls
+         self.register_result(None)
+     -   FabricDelete().register_result() sets the final result for the
+         fabric delete operation and returns.
+     -   FabricDelete().commit() re-raises the ``ValueError`` which is caught
+         by the main Task(), in real life, but caught by the test here.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -846,50 +844,50 @@ def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon()
-        - __init__()
-        - payloads setter
-    - FabricDetails()
-        - __init__()
-        - refresh_super()
-    - FabricDetailsByName()
-        - __init__()
-        - refresh()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _verify_fabric_can_be_deleted()
+     - FabricCommon()
+         - __init__()
+         - payloads setter
+     - FabricDetails()
+         - __init__()
+         - refresh_super()
+     - FabricDetailsByName()
+         - __init__()
+         - refresh()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _verify_fabric_can_be_deleted()
 
-   ### Summary
+    ### Summary
 
-    -   Verify unsuccessful fabric delete code path.
-    -   FabricDelete()._verify_fabric_delete() re-raises ``ValueError``
-        because FabricSummary().refresh() raises ``ControllerResponseError``.
+     -   Verify unsuccessful fabric delete code path.
+     -   FabricDelete()._verify_fabric_delete() re-raises ``ValueError``
+         because FabricSummary().refresh() raises ``ControllerResponseError``.
 
-   ### Code Flow
+    ### Code Flow
 
-    -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
-        which succeeds since all required parameters are set.
-    -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDetails().refresh() which returns a dict with keys
-        DATA == [{f1 fabric data dict}], RETURN_CODE == 200
-    -   FabricDelete()._get_fabrics_to_delete() calls
-        FabricDelete()._verify_fabric_can_be_deleted() which calls
-        FabricSummary().refresh() which raises ``ControllerResponseError``
-        due to a 404 RETURN_CODE.
-    -   FabricDelete()._verify_fabric_can_be_deleted() re-raises the
-        ``ControllerResponseError`` and a ``ValueError``.
-    -   FabricDelete()._get_fabrics_to_delete() re-raises the ``ValueError``.
-    -   FabricDelete().commit() catches the ``ValueError``, sets
-        the (failed) results for the fabric delete operation, and calls
-        self.register_result(None)
-    -   FabricDelete().register_result() sets the final result for the
-        fabric delete operation and returns.
-    -   FabricDelete().commit() re-raises the ``ValueError`` which is caught
-        by the main Task() in real life, but caught by the test here.
+     -   FabricDelete.commit() calls FabricDelete()._validate_commit_parameters()
+         which succeeds since all required parameters are set.
+     -   FabricDelete.commit() calls FabricDelete()._get_fabrics_to_delete()
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDetails().refresh() which returns a dict with keys
+         DATA == [{f1 fabric data dict}], RETURN_CODE == 200
+     -   FabricDelete()._get_fabrics_to_delete() calls
+         FabricDelete()._verify_fabric_can_be_deleted() which calls
+         FabricSummary().refresh() which raises ``ControllerResponseError``
+         due to a 404 RETURN_CODE.
+     -   FabricDelete()._verify_fabric_can_be_deleted() re-raises the
+         ``ControllerResponseError`` and a ``ValueError``.
+     -   FabricDelete()._get_fabrics_to_delete() re-raises the ``ValueError``.
+     -   FabricDelete().commit() catches the ``ValueError``, sets
+         the (failed) results for the fabric delete operation, and calls
+         self.register_result(None)
+     -   FabricDelete().register_result() sets the final result for the
+         fabric delete operation and returns.
+     -   FabricDelete().commit() re-raises the ``ValueError`` which is caught
+         by the main Task() in real life, but caught by the test here.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -957,19 +955,19 @@ def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
 
 def test_fabric_delete_00060(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _validate_commit_parameters()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that ``ValueError`` is raised because fabric_names
-        is not a list.
+     -   Verify that ``ValueError`` is raised because fabric_names
+         is not a list.
     """
     with does_not_raise():
         instance = fabric_delete
@@ -982,19 +980,19 @@ def test_fabric_delete_00060(fabric_delete) -> None:
 
 def test_fabric_delete_00061(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _validate_commit_parameters()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that ``ValueError`` is raised because fabric_names is an
-        empty list.
+     -   Verify that ``ValueError`` is raised because fabric_names is an
+         empty list.
     """
     with does_not_raise():
         instance = fabric_delete
@@ -1007,19 +1005,19 @@ def test_fabric_delete_00061(fabric_delete) -> None:
 
 def test_fabric_delete_00062(fabric_delete) -> None:
     """
-    ### Classes and Methods
+     ### Classes and Methods
 
-    - FabricCommon
-        - __init__()
-    - FabricDelete
-        - __init__()
-        - commit()
-        - _validate_commit_parameters()
+     - FabricCommon
+         - __init__()
+     - FabricDelete
+         - __init__()
+         - commit()
+         - _validate_commit_parameters()
 
-   ### Summary
+    ### Summary
 
-    -   Verify that ``ValueError`` is raised because fabric_names is a
-        list containing non-string elements.
+     -   Verify that ``ValueError`` is raised because fabric_names is a
+         list containing non-string elements.
     """
     with does_not_raise():
         instance = fabric_delete
