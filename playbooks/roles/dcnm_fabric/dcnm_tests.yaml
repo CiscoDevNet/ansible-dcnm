@@ -30,6 +30,7 @@
     # testcase: dcnm_fabric_merged_save_deploy
     # testcase: dcnm_fabric_merged_save_deploy_ipfm
     # testcase: dcnm_fabric_replaced_basic
+    # testcase: dcnm_fabric_replaced_basic_vxlan
     # testcase: dcnm_fabric_replaced_basic_ipfm
     # testcase: dcnm_fabric_replaced_save_deploy
     # testcase: dcnm_fabric_replaced_save_deploy_ipfm
