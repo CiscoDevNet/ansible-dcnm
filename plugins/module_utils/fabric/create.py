@@ -138,6 +138,7 @@ class FabricCreateCommon(FabricCommon):
             # We don't want RestSend to retry on errors since the likelihood of a
             # timeout error when creating a fabric is low, and there are many cases
             # of permanent errors for which we don't want to retry.
+            # pylint: disable=no-member
             self.rest_send.timeout = 1
 
             self.rest_send.path = self.path
@@ -256,6 +257,7 @@ class FabricCreateBulk(FabricCreateCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit. "
@@ -318,7 +320,7 @@ class FabricCreate(FabricCreateCommon):
             in FabricCreateCommom()
         """
         method_name = inspect.stack()[0][3]
-        if self.rest_send is None:
+        if self.rest_send is None:  # pylint: disable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit. "
             raise ValueError(msg)

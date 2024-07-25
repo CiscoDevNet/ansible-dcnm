@@ -504,6 +504,7 @@ def test_fabric_details_v2_00170(fabric_details_v2, monkeypatch) -> None:
         """
         Mock EpFabrics class
         """
+
         @property
         def verb(self):
             """

@@ -45,7 +45,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_config_deploy_fixture,
     fabric_details_by_name_v2_fixture, fabric_summary_fixture, params,
-    responses_ep_fabric_config_deploy, responses_fabric_details_by_name,
+    responses_ep_fabric_config_deploy, responses_fabric_details_by_name_v2,
     responses_fabric_summary)
 
 
@@ -411,7 +411,7 @@ def test_fabric_config_deploy_00200(
 
     def responses():
         yield responses_fabric_summary(key)
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -507,7 +507,7 @@ def test_fabric_config_deploy_00210(
 
     def responses():
         yield responses_fabric_summary(key)
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_ep_fabric_config_deploy(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -613,7 +613,7 @@ def test_fabric_config_deploy_00220(
 
     def responses():
         yield responses_fabric_summary(key)
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_ep_fabric_config_deploy(key)
 
     gen_responses = ResponseGenerator(responses())

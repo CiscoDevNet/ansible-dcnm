@@ -49,8 +49,8 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_replaced_bulk_fixture,
     payloads_fabric_replaced_bulk, responses_config_deploy,
-    responses_config_save, responses_fabric_details_by_name,
-    responses_fabric_replaced_bulk, responses_fabric_summary)
+    responses_config_save, responses_fabric_replaced_bulk,
+    responses_fabric_summary)
 
 PARAMS = {"state": "replaced", "check_mode": False}
 

@@ -34,8 +34,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
     FabricCreate, FabricCreateBulk, FabricCreateCommon)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import (
-    FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetails as FabricDetailsV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
@@ -174,16 +172,6 @@ def fabric_delete_fixture():
     return FabricDelete()
 
 
-@pytest.fixture(name="fabric_details")
-def fabric_details_fixture():
-    """
-    Return FabricDetails instance.
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetails(instance.params)
-
-
 @pytest.fixture(name="fabric_details_v2")
 def fabric_details_v2_fixture():
     """
@@ -192,32 +180,12 @@ def fabric_details_v2_fixture():
     return FabricDetailsV2()
 
 
-@pytest.fixture(name="fabric_details_by_name")
-def fabric_details_by_name_fixture():
-    """
-    mock FabricDetailsByName
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetailsByName(instance.params)
-
-
 @pytest.fixture(name="fabric_details_by_name_v2")
 def fabric_details_by_name_v2_fixture():
     """
     Return FabricDetailsByName version 2 instance
     """
     return FabricDetailsByNameV2()
-
-
-@pytest.fixture(name="fabric_details_by_nv_pair")
-def fabric_details_by_nv_pair_fixture():
-    """
-    mock FabricDetailsByNvPair
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetailsByNvPair(instance.params)
 
 
 @pytest.fixture(name="fabric_details_by_nv_pair_v2")
@@ -460,16 +428,6 @@ def responses_fabric_delete(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_details(key: str) -> dict[str, str]:
-    """
-    Return responses for FabricDetails
-    """
-    data_file = "responses_FabricDetails"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
 def responses_fabric_details_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetails version 2
@@ -480,31 +438,11 @@ def responses_fabric_details_v2(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_details_by_name(key: str) -> dict[str, str]:
-    """
-    Return responses for FabricDetailsByName
-    """
-    data_file = "responses_FabricDetailsByName"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
 def responses_fabric_details_by_name_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetailsByName version 2
     """
     data_file = "responses_FabricDetailsByName_V2"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def responses_fabric_details_by_nv_pair(key: str) -> dict[str, str]:
-    """
-    Return responses for FabricDetailsByNvPair
-    """
-    data_file = "responses_FabricDetailsByNvPair"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

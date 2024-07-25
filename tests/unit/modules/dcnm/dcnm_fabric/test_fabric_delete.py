@@ -48,7 +48,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_delete_fixture,
-    responses_fabric_delete, responses_fabric_details_by_name,
+    responses_fabric_delete, responses_fabric_details_by_name_v2,
     responses_fabric_summary, rest_send_response_current)
 
 PARAMS = {"state": "deleted", "check_mode": False}
@@ -332,7 +332,7 @@ def test_fabric_delete_00040(fabric_delete) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_delete(key)
 
@@ -462,7 +462,7 @@ def test_fabric_delete_00042(monkeypatch, fabric_delete) -> None:
             raise ValueError(msg)
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -566,7 +566,7 @@ def test_fabric_delete_00043(fabric_delete) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -675,7 +675,7 @@ def test_fabric_delete_00044(fabric_delete) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_delete(key)
 
@@ -783,7 +783,7 @@ def test_fabric_delete_00050(monkeypatch, fabric_delete) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -893,7 +893,7 @@ def test_fabric_delete_00051(monkeypatch, fabric_delete) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())

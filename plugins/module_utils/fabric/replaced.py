@@ -482,6 +482,7 @@ class FabricReplacedCommon(FabricCommon):
             except ValueError as error:
                 raise ValueError(error) from error
 
+        # pylint: disable=no-member
         # Skip config-save if prior actions encountered errors.
         if True in self.results.failed:
             return
@@ -547,6 +548,7 @@ class FabricReplacedCommon(FabricCommon):
         # We don't want RestSend to retry on errors since the likelihood of a
         # timeout error when updating a fabric is low, and there are many cases
         # of permanent errors for which we don't want to retry.
+        # pylint: disable=no-member
         self.rest_send.timeout = 1
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -673,6 +675,7 @@ class FabricReplacedBulk(FabricReplacedCommon):
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."

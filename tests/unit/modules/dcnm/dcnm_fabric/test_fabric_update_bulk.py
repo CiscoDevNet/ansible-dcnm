@@ -49,7 +49,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_update_bulk_fixture,
     payloads_fabric_update_bulk, responses_config_deploy,
-    responses_config_save, responses_fabric_details_by_name,
+    responses_config_save, responses_fabric_details_by_name_v2,
     responses_fabric_summary, responses_fabric_update_bulk)
 
 PARAMS = {"state": "merged", "check_mode": False}
@@ -323,7 +323,7 @@ def test_fabric_update_bulk_00030(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -467,7 +467,7 @@ def test_fabric_update_bulk_00031(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
         yield responses_config_save(key)
         yield responses_fabric_summary(key)
@@ -623,7 +623,7 @@ def test_fabric_update_bulk_00032(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
@@ -745,7 +745,7 @@ def test_fabric_update_bulk_00033(fabric_update_bulk) -> None:
     PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -859,7 +859,7 @@ def test_fabric_update_bulk_00034(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
@@ -1014,11 +1014,11 @@ def test_fabric_update_bulk_00035(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
         yield responses_config_save(key)
         yield responses_fabric_summary(key)
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_config_deploy(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -1192,7 +1192,7 @@ def test_fabric_update_bulk_00036(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
         yield responses_fabric_update_bulk(key)
 
@@ -1340,7 +1340,7 @@ def test_fabric_update_bulk_00040(fabric_update_bulk) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_update_bulk(key)
         yield responses_config_save(key)
         yield responses_fabric_summary(key)
@@ -1787,7 +1787,7 @@ def test_fabric_update_bulk_00130(monkeypatch, fabric_update_bulk) -> None:
         raise ValueError(f"raised FabricCommon._config_save {fabric_name} exception.")
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -1868,7 +1868,7 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
         raise ValueError(msg)
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_summary(key)
 
     gen_responses = ResponseGenerator(responses())

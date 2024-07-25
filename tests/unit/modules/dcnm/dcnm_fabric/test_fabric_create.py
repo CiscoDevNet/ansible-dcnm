@@ -47,7 +47,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_create_fixture, params,
     payloads_fabric_create, responses_fabric_create,
-    responses_fabric_details_by_name, rest_send_response_current)
+    responses_fabric_details_by_name_v2, rest_send_response_current)
 
 
 def test_fabric_create_00000(fabric_create) -> None:
@@ -324,7 +324,7 @@ def test_fabric_create_00030(fabric_create) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_create(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -427,7 +427,7 @@ def test_fabric_create_00031(fabric_create) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 
@@ -499,7 +499,7 @@ def test_fabric_create_00032(monkeypatch, fabric_create) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_create(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -598,7 +598,7 @@ def test_fabric_create_00033(monkeypatch, fabric_create) -> None:
     key = f"{method_name}a"
 
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
 
     gen_responses = ResponseGenerator(responses())
 

@@ -159,6 +159,7 @@ class FabricSummary(FabricCommon):
         """
         try:
             self.ep_fabric_summary.fabric_name = self.fabric_name
+            # pylint: disable=no-member
             self.rest_send.path = self.ep_fabric_summary.path
             self.rest_send.verb = self.ep_fabric_summary.verb
         except ValueError as error:
@@ -174,6 +175,7 @@ class FabricSummary(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        # pylint: disable=no-member
         controller_return_code = self.rest_send.response_current.get(
             "RETURN_CODE", None
         )
@@ -212,6 +214,7 @@ class FabricSummary(FabricCommon):
             msg += f"{self.class_name}.refresh()."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Set {self.class_name}.rest_send prior to calling "
@@ -243,6 +246,7 @@ class FabricSummary(FabricCommon):
         self.results.result = self.rest_send.result_current
         self.results.register_task_result()
 
+        # pylint: enable=no-member
         try:
             self._verify_controller_response()
         except ControllerResponseError as error:

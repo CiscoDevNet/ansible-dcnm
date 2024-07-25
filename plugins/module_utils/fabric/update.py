@@ -105,6 +105,7 @@ class FabricUpdateCommon(FabricCommon):
             # configuration on the controller:
             # - Update Results()
             # - raise ValueError
+            # pylint: disable=no-member
             if nv_pairs.get(key) is None:
                 self.results.diff_current = {}
                 self.results.result_current = {"success": False, "changed": False}
@@ -120,7 +121,7 @@ class FabricUpdateCommon(FabricCommon):
                 msg += f"fabric {fabric_name}"
                 self.log.debug(msg)
                 raise ValueError(msg)
-
+            # pylint: enable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += f"key: {key}, payload_value: {payload_value}, "
             msg += f"fabric_value: {nv_pairs.get(key)}"
@@ -224,6 +225,7 @@ class FabricUpdateCommon(FabricCommon):
                 raise ValueError(error) from error
 
         # Skip config-save if prior actions encountered errors.
+        # pylint: disable=no-member
         if True in self.results.failed:
             return
 
@@ -236,6 +238,7 @@ class FabricUpdateCommon(FabricCommon):
         # Skip config-deploy if prior actions encountered errors.
         if True in self.results.failed:
             return
+        # pylint: enable=no-member
 
         for payload in self._payloads_to_commit:
             try:
@@ -289,6 +292,7 @@ class FabricUpdateCommon(FabricCommon):
         # We don't want RestSend to retry on errors since the likelihood of a
         # timeout error when updating a fabric is low, and there are many cases
         # of permanent errors for which we don't want to retry.
+        # pylint: disable=no-member
         self.rest_send.timeout = 1
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -414,6 +418,7 @@ class FabricUpdateBulk(FabricUpdateCommon):
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."

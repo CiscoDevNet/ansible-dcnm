@@ -2892,9 +2892,9 @@ class Query(Common):
             the fabric details.
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
-        super().__init__(ansible_module)
+        super().__init__(params)
 
         self.action = "fabric_query"
         self._implemented_states.add("query")
@@ -2918,8 +2918,6 @@ class Query(Common):
             -   The controller returns an error when attempting to
                 query the fabrics.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
         self.fabric_details = FabricDetailsByName()
         self.fabric_details.rest_send = self.rest_send
         self.fabric_details.results = self.results

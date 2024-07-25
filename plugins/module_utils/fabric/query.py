@@ -31,6 +31,13 @@ class FabricQuery(FabricCommon):
     ### Summary
     Query fabrics.
 
+    ### Raises
+    -   ``ValueError`` if:
+        -   ``fabric_details`` is not set.
+        -   ``fabric_names`` is not set.
+        -   ``rest_send`` is not set.
+        -   ``results`` is not set.
+
     ### Usage
 
     ```python
@@ -88,11 +95,15 @@ class FabricQuery(FabricCommon):
     @property
     def fabric_names(self):
         """
-        - setter: return the fabric names
-        - getter: set the fable_names
-        - getter: raise ``ValueError`` if ``value`` is not a ``list``
-        - getter: raise ``ValueError`` if ``value`` is an empty list
-        - getter: raise ``ValueError`` if ``value`` is not a list of strings
+        ### Summary
+        -   setter: return the fabric names
+        -   getter: set the fabric_names
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``value`` is not a list.
+            -   ``value`` is an empty list.
+            -   ``value`` is not a list of strings.
 
         """
         return self._fabric_names
@@ -122,8 +133,15 @@ class FabricQuery(FabricCommon):
 
     def _validate_commit_parameters(self):
         """
-        - validate the parameters for commit
-        - raise ``ValueError`` if ``fabric_names`` is not set
+        ### Summary
+        -   validate the parameters for commit.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``fabric_details`` is not set.
+            -   ``fabric_names`` is not set.
+            -   ``rest_send`` is not set.
+            -   ``results`` is not set.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
@@ -137,11 +155,13 @@ class FabricQuery(FabricCommon):
             msg += "fabric_names must be set before calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set before calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=access-member-before-definition
         if self.results is None:
             # Instantiate Results() to register the failure
             self.results = Results()
@@ -151,14 +171,18 @@ class FabricQuery(FabricCommon):
 
     def commit(self):
         """
-        - query each of the fabrics in self.fabric_names
-        - raise ``ValueError`` if ``fabric_names`` is not set
-        - raise ``ValueError`` if ``fabric_details`` is not set
+        ### Summary
+        -   query each of the fabrics in ``fabric_names``.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``_validate_commit_parameters`` raises ``ValueError``.
 
         """
         try:
             self._validate_commit_parameters()
         except ValueError as error:
+            # pylint: disable=no-member
             self.results.action = self.action
             self.results.changed = False
             self.results.failed = True
@@ -170,12 +194,15 @@ class FabricQuery(FabricCommon):
                 self.results.state = "query"
             self.results.register_task_result()
             raise ValueError(error) from error
+            # pylint: enable=no-member
 
         self.fabric_details.refresh()
 
+        # pylint: disable=no-member
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
+        # pylint: enable=no-member
 
         msg = f"self.fabric_names: {self.fabric_names}"
         self.log.debug(msg)
@@ -186,6 +213,7 @@ class FabricQuery(FabricCommon):
                     self.fabric_details.all_data[fabric_name]
                 )
 
+        # pylint: disable=no-member
         self.results.diff_current = add_to_diff
         self.results.response_current = copy.deepcopy(
             self.fabric_details.results.response_current
