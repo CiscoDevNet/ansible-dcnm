@@ -22,6 +22,8 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
     FabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
@@ -30,6 +32,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types imp
     FabricTypes
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class FabricCommon:
     """
     ### Summary
@@ -46,6 +50,7 @@ class FabricCommon:
 
     def __init__(self):
         self.class_name = self.__class__.__name__
+        self.action = None
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -146,6 +151,7 @@ class FabricCommon:
             return
 
         self.config_save.payload = payload
+        # pylint: disable=no-member
         self.config_save.rest_send = self.rest_send
         self.config_save.results = self.results
         try:
@@ -176,6 +182,7 @@ class FabricCommon:
             self.config_deploy.fabric_details = self.fabric_details
             self.config_deploy.payload = payload
             self.config_deploy.fabric_summary = self.fabric_summary
+            # pylint: disable=no-member
             self.config_deploy.rest_send = self.rest_send
             self.config_deploy.results = self.results
         except TypeError as error:
@@ -220,6 +227,7 @@ class FabricCommon:
         try:
             mac_address = self.conversion.translate_mac_address(mac_address)
         except ValueError as error:
+            # pylint: disable=no-member
             self.results.failed = True
             self.results.changed = False
             self.results.register_task_result()
@@ -250,6 +258,7 @@ class FabricCommon:
             self._fixup_anycast_gw_mac()
             self._fixup_bgp_as()
         except ValueError as error:
+            # pylint: disable=no-member
             self.results.failed = True
             self.results.changed = False
             self.results.register_task_result()
@@ -411,25 +420,3 @@ class FabricCommon:
             msg += f"Got {value}"
             raise ValueError(msg)
         self._fabric_type = value
-
-    @property
-    def rest_send(self):
-        """
-        An instance of the RestSend class.
-        """
-        return self._rest_send
-
-    @rest_send.setter
-    def rest_send(self, value):
-        self._rest_send = value
-
-    @property
-    def results(self):
-        """
-        An instance of the Results class.
-        """
-        return self._results
-
-    @results.setter
-    def results(self, value):
-        self._results = value
