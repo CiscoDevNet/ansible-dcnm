@@ -251,6 +251,7 @@
 #                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "REPLICATION_MODE": "Ingress",
+#                 "SITE_ID": "65000",
 #                 "sequence_number": 1
 #             },
 #             {
@@ -317,6 +318,7 @@
 #                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                         "REPLICATION_MODE": "Ingress",
+#                         "SITE_ID": "65000",
 #                         "UNDERLAY_IS_V6": "false",
 #                     }
 #                 },
@@ -401,9 +403,10 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
         FABRIC_TYPE: "{{ fabric_type_1 }}"
-        BGP_AS: 65535
         ANYCAST_GW_MAC: aaaabbbbcccc
+        BGP_AS: 65535
         REPLICATION_MODE: Ingress
+        SITE_ID: 65000
         UNDERLAY_IS_V6: false
         DEPLOY: false
       - FABRIC_NAME: "{{ fabric_name_2 }}"
@@ -420,6 +423,7 @@
       - (result.diff | length) == 6
       - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.diff[0].SITE_ID == "65000"
       - result.diff[0].sequence_number == 1
       - result.diff[1].FABRIC_NAME == fabric_name_2
       - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
@@ -455,7 +459,9 @@
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
+      - result.response[0].DATA.nvPairs.SITE_ID == "65000"
       - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
       - result.response[1].sequence_number == 2

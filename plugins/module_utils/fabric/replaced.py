@@ -121,19 +121,52 @@ class FabricReplacedCommon(FabricCommon):
             translated_payload[user_parameter] = user_value
         return copy.deepcopy(translated_payload)
 
+    def update_site_id(self, playbook, controller):
+        """
+        ### Summary
+        Special-case handling for fabric SITE_ID parameter update.
+
+        ### Raises
+        None
+
+        ### Discussion
+        -   If playbook.SITE_ID == controller.SITE_ID, no change is needed.
+            Return None.
+        -   If playbook.SITE_ID == controller.BGP_AS, no change is needed.
+            Return None.
+        -   If playbook.SITE_ID is not None and playbook.SITE_ID != BGP_AS,
+            update payload with playbook.SITE_ID.
+        -   If playbook.SITE_ID is None, and controller.SITE_ID != controller.BGP_AS,
+            update the payload with controller.BGP_AS.
+        -   Default return is None (don't add SITE_ID to payload).
+        """
+        bgp_as = self._controller_config.get("BGP_AS", None)
+        if playbook == controller:
+            return None
+        if playbook == bgp_as:
+            return None
+        if playbook is not None and playbook != bgp_as:
+            return {"SITE_ID": playbook}
+        if playbook is None and controller != bgp_as:
+            return {"SITE_ID": bgp_as}
+        return None
+
     def update_replaced_payload(self, parameter, playbook, controller, default):
         """
+        ### Summary
         Given a parameter, and the parameter's values from:
+
         -   playbook config
         -   controller fabric config
         -   default value from the template
 
         Return either:
+
         -   None if the parameter does not need to be updated.
         -   A dict with the parameter and playbook value if the parameter
             needs to be updated.
 
-        Usage:
+        ### Usage:
         ```python
         payload_to_send_to_controller = {}
         for parameter, controller in _controller_config.items():
@@ -144,9 +177,21 @@ class FabricReplacedCommon(FabricCommon):
                 continue
             payload_to_send_to_controller.update(result)
         ```
+
+        ### NOTES
+        -   Special-case SITE_ID.
+            -   The template default value is "", but the actual default value
+                is BGP_AS.
+        -   Explicitely skip ANYCAST_RP_IP_RANGE_INTERNAL.
+            -   It is an internal parameter, but is not specified as such in
+                the fabric template.
         """
+        if parameter == "ANYCAST_RP_IP_RANGE_INTERNAL":
+            return None
+        if parameter == "SITE_ID":
+            return self.update_site_id(playbook, controller)
         if playbook is None:
-            if controller != default:
+            if controller not in {default, ""}:
                 if default is None:
                     # The controller prefers empty string over null.
                     return {parameter: ""}

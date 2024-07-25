@@ -175,6 +175,7 @@
         BGP_AS: 65535
         ANYCAST_GW_MAC: aaaabbbbcccc
         REPLICATION_MODE: Ingress
+        SITE_ID: 65000
         UNDERLAY_IS_V6: false
         DEPLOY: true
       - FABRIC_NAME: "{{ fabric_name_3 }}"
@@ -196,6 +197,7 @@
       - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[0].REPLICATION_MODE == "Ingress"
+      - result.diff[0].SITE_ID == 65000
       - result.diff[0].UNDERLAY_IS_V6 == false
       - result.diff[1].FABRIC_NAME == fabric_name_3
       - result.diff[1].sequence_number == 2
@@ -216,10 +218,20 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
+      - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
+      - result.response[0].DATA.nvPairs.SITE_ID == "65000"
+      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[1].sequence_number == 2
       - result.response[1].MESSAGE == "OK"
       - result.response[1].METHOD == "POST"
       - result.response[1].RETURN_CODE == 200
+      - result.response[1].DATA.nvPairs.BOOTSTRAP_ENABLE == "false"
+      - result.response[1].DATA.nvPairs.FABRIC_NAME == fabric_name_3
+      - result.response[1].DATA.nvPairs.IS_READ_ONLY == "false"
+      - result.response[1].DATA.nvPairs.SUBINTERFACE_RANGE == "2-100"
       - (result.result | length) == 2
       - result.result[0].changed == true
       - result.result[0].success == true
@@ -416,8 +428,10 @@
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "2020.0000.00aa"
+      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Multicast"
+      - result.response[0].DATA.nvPairs.SITE_ID == "65535"
       - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[1].sequence_number == 2
       - result.response[1].DATA.status == 'Config save is completed'

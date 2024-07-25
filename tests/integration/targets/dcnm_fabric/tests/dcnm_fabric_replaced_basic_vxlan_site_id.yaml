@@ -274,7 +274,6 @@
       - result.diff[0].ANYCAST_GW_MAC == "2020.0000.00aa"
       - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].REPLICATION_MODE == "Multicast"
-      - result.diff[0].SITE_ID == "65535"
       - result.diff[0].sequence_number == 1
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
