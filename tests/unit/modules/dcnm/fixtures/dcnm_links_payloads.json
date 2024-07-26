@@ -328,7 +328,7 @@
         "link-uuid": "LINK-UUID-1446600",
         "sw2-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/1",
+          "if-name": "ethernet1/1",
           "sw-sys-name": "n9kv-num-2",
           "sw-serial-number": "9FX7O3TU2QM"
         },
@@ -388,7 +388,7 @@
         "templateName": "int_pre_provision_intra_fabric_link",
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/2",
+          "if-name": "ethernet1/2",
           "sw-sys-name": "n9kv-num-1",
           "sw-serial-number": "9IF87L089SZ"
         },
@@ -406,7 +406,7 @@
         "link-uuid": "LINK-UUID-1419160",
         "sw2-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-sys-name": "n9kv-num-2",
           "sw-serial-number": "9FX7O3TU2QM"
         },
@@ -431,7 +431,7 @@
         "templateName": "ios_xe_int_intra_fabric_num_link",
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-sys-name": "n9kv-num-1",
           "sw-serial-number": "9IF87L089SZ"
         },
@@ -449,7 +449,7 @@
         "link-uuid": "LINK-UUID-1435300",
         "sw2-info": {
           "fabric-name": "mmudigon-unnumbered",
-          "if-name": "Ethernet1/1",
+          "if-name": "ethernet1/1",
           "sw-sys-name": "n9kv-unnum-2",
           "sw-serial-number": "9AF3VNZYAKS"
         },
@@ -502,7 +502,7 @@
         "templateName": "int_pre_provision_intra_fabric_link",
         "sw1-info": {
           "fabric-name": "mmudigon-unnumbered",
-          "if-name": "Ethernet1/2",
+          "if-name": "ethernet1/2",
           "sw-sys-name": "n9kv-unnum-1",
           "sw-serial-number": "9EFX823RUL3"
         },
@@ -520,7 +520,7 @@
         "link-uuid": "LINK-UUID-1419050",
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/1",
+          "if-name": "ethernet1/1",
           "sw-sys-name": "n9kv-ipv6-2",
           "sw-serial-number": "9ITWBH9OIAH"
         },
@@ -564,7 +564,7 @@
         "link-uuid": "LINK-UUID-1419110",
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/2",
+          "if-name": "ethernet1/2",
           "sw-sys-name": "n9kv-ipv6-2",
           "sw-serial-number": "9ITWBH9OIAH"
         },
@@ -574,7 +574,7 @@
         "templateName": "int_pre_provision_intra_fabric_link",
         "sw1-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/2",
+          "if-name": "ethernet1/2",
           "sw-sys-name": "n9kv-ipv6-1",
           "sw-serial-number": "9BH0813WFWT"
         },
@@ -592,7 +592,7 @@
         "link-uuid": "LINK-UUID-1419180",
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-sys-name": "n9kv-ipv6-2",
           "sw-serial-number": "9ITWBH9OIAH"
         },
@@ -669,7 +669,7 @@
         "templateName": "int_intra_vpc_peer_keep_alive_link",
         "sw1-info": {
           "fabric-name": "mmudigon",
-          "if-name": "Ethernet1/4",
+          "if-name": "ethernet1/4",
           "sw-sys-name": "n9kv-100",
           "sw-serial-number": "9M99N34RDED"
         },
@@ -687,14 +687,14 @@
         "link-uuid": "LINK-UUID-1446600",
         "templateName": "ext_fabric_setup",
         "sw2-info": {
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-sys-name": "test22",
           "sw-serial-number": "9E15XSEM5MS",
           "fabric-name": "test_net"
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-sys-name": "n9kv-227",
           "sw-serial-number": "953E68OKK1L"
         },
@@ -742,7 +742,7 @@
         "link-dbid": 1467700,
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/4",
+          "if-name": "ethernet1/4",
           "sw-serial-number": "953E68OKK1L",
           "sw-sys-name": "n9kv-test3"
         },
@@ -785,7 +785,7 @@
         "link-uuid": "LINK-UUID-1446600",
         "templateName": "ext_evpn_multisite_overlay_setup",
         "sw2-info": {
-          "if-name": "Ethernet1/5",
+          "if-name": "ethernet1/5",
           "sw-serial-number": "9E15XSEM5MS",
           "fabric-name": "test_net",
           "sw-sys-name": "test22"
@@ -837,7 +837,7 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/6",
+          "if-name": "ethernet1/6",
           "sw-serial-number": "953E68OKK1L",
           "sw-sys-name": "n9kv-test3"
         },
@@ -876,7 +876,7 @@
         "link-uuid": "LINK-UUID-1446600",
         "templateName": "ext_multisite_underlay_setup",
         "sw2-info": {
-          "if-name": "Ethernet1/7",
+          "if-name": "ethernet1/7",
           "sw-serial-number": "98YWRN9WCSC",
           "fabric-name": "test_net1",
           "sw-sys-name": "n9kv-test1"
@@ -934,7 +934,7 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/8",
+          "if-name": "ethernet1/8",
           "sw-serial-number": "953E68OKK1L",
           "sw-sys-name": "n9kv-test3"
         },
@@ -970,14 +970,14 @@
       "DATA": {
         "link-uuid": "LINK-UUID-1446600",
         "sw2-info": {
-          "if-name": "Ethernet1/9",
+          "if-name": "ethernet1/9",
           "sw-serial-number": "98YWRN9WCSC",
           "fabric-name": "test_net1",
           "sw-sys-name": "n9kv-test1"
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/9",
+          "if-name": "ethernet1/9",
           "sw-serial-number": "953E68OKK1L",
           "sw-sys-name": "n9kv-test3"
         }
@@ -1112,7 +1112,7 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-unnumbered",
-          "if-name": "Ethernet1/1",
+          "if-name": "ethernet1/1",
           "sw-serial-number": "9EFX823RUL3"
         },
         "sw2-info": {
@@ -1134,7 +1134,7 @@
         },
         "sw2-info": {
           "fabric-name": "mmudigon-unnumbered",
-          "if-name": "Ethernet1/2",
+          "if-name": "ethernet1/2",
           "sw-serial-number": "9AF3VNZYAKS"
         },
         "templateName": "int_pre_provision_intra_fabric_link"
@@ -1173,13 +1173,13 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/1",
+          "if-name": "ethernet1/1",
           "if-op-reason": "Link not connected",
           "sw-serial-number": "9BH0813WFWT"
         },
         "sw2-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/1",
+          "if-name": "ethernet1/1",
           "sw-serial-number": "9ITWBH9OIAH"
         },
         "templateName": "int_intra_fabric_ipv6_link_local"
@@ -1230,7 +1230,7 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-ipv6-underlay",
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-serial-number": "9BH0813WFWT"
         },
         "sw2-info": {
@@ -1273,12 +1273,12 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon",
-          "if-name": "Ethernet1/4",
+          "if-name": "ethernet1/4",
           "sw-serial-number": "9M99N34RDED"
         },
         "sw2-info": {
           "fabric-name": "mmudigon",
-          "if-name": "Ethernet1/4",
+          "if-name": "ethernet1/4",
           "sw-serial-number": "9NXHSNTEO6C"
         },
         "templateName": "int_intra_vpc_peer_keep_alive_link"
@@ -1320,7 +1320,7 @@
         },
         "sw2-info": {
           "fabric-name": "test_net1",
-          "if-name": "Ethernet1/8",
+          "if-name": "ethernet1/8",
           "sw-serial-number": "98YWRN9WCSC"
         },
         "templateName": "ext_evpn_multisite_overlay_setup"
@@ -1355,7 +1355,7 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/7",
+          "if-name": "ethernet1/7",
           "sw-serial-number": "953E68OKK1L"
         },
         "sw2-info": {
@@ -1424,12 +1424,12 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/5",
+          "if-name": "ethernet1/5",
           "sw-serial-number": "953E68OKK1L"
         },
         "sw2-info": {
           "fabric-name": "test_net",
-          "if-name": "Ethernet1/5",
+          "if-name": "ethernet1/5",
           "sw-serial-number": "9E15XSEM5MS"
         },
         "templateName": "ext_evpn_multisite_overlay_setup"
@@ -1463,7 +1463,7 @@
         },
         "sw1-info": {
           "fabric-name": "mmudigon-numbered",
-          "if-name": "Ethernet1/4",
+          "if-name": "ethernet1/4",
           "sw-serial-number": "953E68OKK1L"
         },
         "sw2-info": {
@@ -1504,7 +1504,7 @@
         },
         "sw2-info": {
           "fabric-name": "test_net",
-          "if-name": "Ethernet1/3",
+          "if-name": "ethernet1/3",
           "sw-serial-number": "9E15XSEM5MS"
         },
         "templateName": "ext_fabric_setup"
