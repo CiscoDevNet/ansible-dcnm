@@ -38,11 +38,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_create_fixture, params, payloads_fabric_create,
-    responses_fabric_create, responses_fabric_details_by_name,
-    rest_send_response_current)
+    MockAnsibleModule, does_not_raise, fabric_create_fixture, params,
+    payloads_fabric_create, responses_fabric_create,
+    responses_fabric_details_by_name, rest_send_response_current)
 
 
 def test_fabric_create_00010(fabric_create) -> None:

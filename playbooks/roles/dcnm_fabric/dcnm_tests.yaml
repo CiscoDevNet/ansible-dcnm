@@ -1,5 +1,6 @@
 ---
-# This playbook can be used to execute the dcnm_fabric test role.
+# This playbook can be used to execute integration tests for
+# the role located in:
 #
 # Modify the vars section with details for testing setup.
 #

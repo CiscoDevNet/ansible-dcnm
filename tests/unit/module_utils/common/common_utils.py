@@ -28,10 +28,22 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_featu
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
+    MaintenanceMode
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode_info import \
+    MaintenanceModeInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts import \
     MergeDicts
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
+    MergeDicts as MergeDictsV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
     ParamsValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
+    ParamsValidate as ParamsValidateV2
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
+    Sender as SenderDcnm
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender as SenderFile
 
 from .fixture import load_fixture
 
@@ -44,8 +56,8 @@ params = {
 
 class ResponseGenerator:
     """
-    Given a generator, return the items in the generator with
-    each call to the next property
+    Given a coroutine which yields dictionaries, return the yielded items
+    with each call to the next property
 
     For usage in the context of dcnm_image_policy unit tests, see:
         test: test_image_policy_create_bulk_00037
@@ -73,6 +85,16 @@ class ResponseGenerator:
         """
         return next(self.gen)
 
+    @property
+    def implements(self):
+        """
+        ### Summary
+        Used by Sender() classes to verify Sender().gen is a
+        response generator which implements the response_generator
+        interfacee.
+        """
+        return "response_generator"
+
     def public_method_for_pylint(self) -> Any:
         """
         Add one public method to appease pylint
@@ -95,7 +117,7 @@ class MockAnsibleModule:
     supports_check_mode = True
 
     @staticmethod
-    def fail_json(msg) -> AnsibleFailJson:
+    def fail_json(msg, **kwargs) -> AnsibleFailJson:
         """
         mock the fail_json method
         """
@@ -127,12 +149,52 @@ def controller_version_fixture():
     return ControllerVersion(MockAnsibleModule)
 
 
+@pytest.fixture(name="sender_dcnm")
+def sender_dcnm_fixture():
+    """
+    return Send() imported from sender_dcnm.py
+    """
+    instance = SenderDcnm()
+    instance.ansible_module = MockAnsibleModule
+    return instance
+
+
+@pytest.fixture(name="sender_file")
+def sender_file_fixture():
+    """
+    return Send() imported from sender_file.py
+    """
+
+    def responses():
+        yield {}
+
+    instance = SenderFile()
+    instance.gen = ResponseGenerator(responses())
+    return instance
+
+
 @pytest.fixture(name="log")
 def log_fixture():
     """
     return Log with mocked AnsibleModule
     """
     return Log(MockAnsibleModule)
+
+
+@pytest.fixture(name="maintenance_mode")
+def maintenance_mode_fixture():
+    """
+    return MaintenanceMode
+    """
+    return MaintenanceMode(params)
+
+
+@pytest.fixture(name="maintenance_mode_info")
+def maintenance_mode_info_fixture():
+    """
+    return MaintenanceModeInfo
+    """
+    return MaintenanceModeInfo(params)
 
 
 @pytest.fixture(name="merge_dicts")
@@ -143,12 +205,28 @@ def merge_dicts_fixture():
     return MergeDicts(MockAnsibleModule)
 
 
+@pytest.fixture(name="merge_dicts_v2")
+def merge_dicts_v2_fixture():
+    """
+    return MergeDicts() version 2
+    """
+    return MergeDictsV2()
+
+
 @pytest.fixture(name="params_validate")
 def params_validate_fixture():
     """
     return ParamsValidate with mocked AnsibleModule
     """
     return ParamsValidate(MockAnsibleModule)
+
+
+@pytest.fixture(name="params_validate_v2")
+def params_validate_v2_fixture():
+    """
+    return ParamsValidate version 2
+    """
+    return ParamsValidateV2()
 
 
 @contextmanager
@@ -161,7 +239,7 @@ def does_not_raise():
 
 def merge_dicts_data(key: str) -> Dict[str, str]:
     """
-    Return data for merge_dicts unit tests
+    Return data from merge_dicts.json for merge_dicts unit tests.
     """
     data_file = "merge_dicts"
     data = load_fixture(data_file).get(key)
@@ -169,9 +247,29 @@ def merge_dicts_data(key: str) -> Dict[str, str]:
     return data
 
 
+def merge_dicts_v2_data(key: str) -> Dict[str, str]:
+    """
+    Return data from merge_dicts_v2.json for merge_dicts_v2 unit tests.
+    """
+    data_file = "merge_dicts_v2"
+    data = load_fixture(data_file).get(key)
+    print(f"merge_dicts_v2_data: {key} : {data}")
+    return data
+
+
+def responses_deploy_maintenance_mode(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_DeployMaintenanceMode.json
+    """
+    response_file = "responses_DeployMaintenanceMode"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_deploy_maintenance_mode: {key} : {response}")
+    return response
+
+
 def responses_controller_features(key: str) -> Dict[str, str]:
     """
-    Return ControllerFeatures controller responses
+    Return data in responses_ControllerFeatures.json
     """
     response_file = "responses_ControllerFeatures"
     response = load_fixture(response_file).get(key)
@@ -180,9 +278,59 @@ def responses_controller_features(key: str) -> Dict[str, str]:
 
 def responses_controller_version(key: str) -> Dict[str, str]:
     """
-    Return ControllerVersion controller responses
+    Return data in responses_ControllerVersion.json
     """
     response_file = "responses_ControllerVersion"
     response = load_fixture(response_file).get(key)
     print(f"responses_controller_version: {key} : {response}")
+    return response
+
+
+def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_FabricDetailsByName.json
+    """
+    response_file = "responses_FabricDetailsByName"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_fabric_details_by_name: {key} : {response}")
+    return response
+
+
+def responses_maintenance_mode(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_MaintenanceMode.json
+    """
+    response_file = "responses_MaintenanceMode"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_maintenance_mode: {key} : {response}")
+    return response
+
+
+def responses_sender_dcnm(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_SenderDcnm.json
+    """
+    response_file = "responses_SenderDcnm"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_sender_dcnm: {key} : {response}")
+    return response
+
+
+def responses_sender_file(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_SenderFile.json
+    """
+    response_file = "responses_SenderFile"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_sender_file: {key} : {response}")
+    return response
+
+
+def responses_switch_details(key: str) -> Dict[str, str]:
+    """
+    Return data in responses_SwitchDetails.json
+    """
+    response_file = "responses_SwitchDetails"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_switch_details: {key} : {response}")
     return response

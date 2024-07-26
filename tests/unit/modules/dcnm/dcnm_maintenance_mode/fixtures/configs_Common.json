@@ -1,0 +1,142 @@
+{
+    "TEST_NOTES": [
+        "Mocked playbook configurations for Common unit tests.",
+        "tests/unit/modules/dcnm/dcnm_maintenance_mode/test_dcnm_maintenance_mode_common.py",
+        "00070a - top-level config is inherited by all switches"
+    ],
+    "test_dcnm_maintenance_mode_common_00100a": {
+        "deploy": true,
+        "mode": "normal",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3"
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00110a": {
+        "deploy": true,
+        "mode": "normal",
+        "wait_for_mode_change": true,
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": false,
+                "mode": "maintenance",
+                "wait_for_mode_change": false
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00120a": {
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "deploy": true,
+                "mode": "normal",
+                "wait_for_mode_change": true
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": false,
+                "mode": "maintenance",
+                "wait_for_mode_change": false
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00130a": {
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00140a": {
+        "switches": [
+            {
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00150a": {
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "mode": "foo"
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00160a": {
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "deploy": "foo",
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00170a": {
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": "foo"
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            }
+        ]
+    },
+    "test_dcnm_maintenance_mode_common_00180a": {
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            },
+            {
+                "ip_address": "192.168.1.3",
+                "deploy": true,
+                "mode": "maintenance",
+                "wait_for_mode_change": true
+            }
+        ]
+    }
+}
