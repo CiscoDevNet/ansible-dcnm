@@ -2920,12 +2920,13 @@ class Query(Common):
         """
         self.fabric_details = FabricDetailsByName()
         self.fabric_details.rest_send = self.rest_send
-        self.fabric_details.results = self.results
+        self.fabric_details.results = Results()
 
         self.get_want()
 
         fabric_query = FabricQuery()
         fabric_query.fabric_details = self.fabric_details
+        fabric_query.rest_send = self.rest_send
         fabric_query.results = self.results
 
         fabric_names_to_query = []

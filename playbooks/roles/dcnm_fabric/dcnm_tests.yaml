@@ -35,6 +35,7 @@
     # testcase: dcnm_fabric_replaced_basic_ipfm
     # testcase: dcnm_fabric_replaced_save_deploy
     # testcase: dcnm_fabric_replaced_save_deploy_ipfm
+    # testcase: dcnm_fabric_query_basic.yaml
     fabric_name_1: VXLAN_EVPN_Fabric
     fabric_type_1: VXLAN_EVPN
     fabric_name_2: VXLAN_EVPN_MSD_Fabric
