@@ -1,0 +1,112 @@
+################################################################################
+# RUNTIME
+################################################################################
+
+# Recent run times (MM:SS.ms):
+# 00:18.960
+# 00:19.240
+# 00:18.836
+################################################################################
+# STEPS
+################################################################################
+
+# SETUP
+# 1. The following images must already be uploaded to the switches
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - nxos_image_1
+#    - nxos_image_2
+#    - epld_image_1
+#    - epld_image_2
+# 2. No need for fabric
+# 3. Query images under test, if they exist
+#    - nxos_image_1
+#    - nxos_image_2
+# CLEANUP
+# 7. No cleanup required
+
+################################################################################
+# REQUIREMENTS
+################################################################################
+
+# 1. The following images must already be uploaded to the controller
+#    See vars: section below
+#    - nxos_image_1
+#    - nxos_image_2
+#    - epld_image_1
+#    - epld_image_2
+# 2. No need for fabric or switches
+#
+# Example vars for dcnm_image_policy integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: dcnm_image_policy_deleted
+#   fabric_name: f1
+#   username: admin
+#   password: "foobar"
+#   switch_username: admin
+#   switch_password: "foobar"
+#   spine1: 172.22.150.114
+#   spine2: 172.22.150.115
+#   leaf1: 172.22.150.106
+#   leaf2: 172.22.150.107
+#   leaf3: 172.22.150.108
+#   leaf4: 172.22.150.109
+#   # for dcnm_image_policy role
+#   image_policy_1: "KR5M"
+#   image_policy_2: "NR1F"
+#   epld_image_1: n9000-epld.10.2.5.M.img
+#   epld_image_2: n9000-epld.10.3.1.F.img
+#   nxos_image_1: n9000-dk9.10.2.5.M.bin
+#   nxos_image_2: n9000-dk9.10.3.1.F.bin
+#   nxos_release_1: 10.2.5_nxos64-cs_64bit
+#   nxos_release_2: 10.3.1_nxos64-cs_64bit
+
+################################################################################
+# SETUP
+################################################################################
+# TODO: Add file upload task here
+################################################################################
+# QUERY - TEST - Delete files
+################################################################################
+# Expected result
+# TODO - Add expected result here
+################################################################################
+# QUERY - TEST - Query files
+################################################################################
+# Expected result
+# TODO - Add expected result here
+- name: QUERY - TEST - Query files
+  cisco.dcnm.dcnm_bootflash:
+      state: query
+      files:
+      - "{{ nxos_image_1 }}"
+      - "{{ nxos_image_2 }}"
+      switches:
+      - ip_address: "{{ spine1 }}"
+      - ip_address: "{{ spine2 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 1
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "QUERY"
+    - result.response[0].RETURN_CODE == 200
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "bootflash_query"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "query"
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true
+
