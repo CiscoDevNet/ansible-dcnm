@@ -165,8 +165,25 @@ class BootflashInfo:
             self.rest_send.commit()
             self.info_dict[switch] = copy.deepcopy(self.rest_send.response_current.get("DATA", {}))
 
-    def validate_get_parameters(self):
+    def validate_prerequisites_for_get(self):
+        """
+        ### Summary
+        Verify that mandatory prerequisites are met before calling _get()
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``refresh`` has not been called.
+                -   ``filter_switch`` is not set.
+                -   ``filter_file`` is not set.
+        """
         method_name = inspect.stack()[0][3]
+
+        if not self.info:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "refresh must be called before retrieving bootflash "
+            msg += "properties."
+            raise ValueError(msg)
+
         if self.filter_switch is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "filter_switch must be set before "
@@ -179,45 +196,49 @@ class BootflashInfo:
             msg += f"accessing match properties."
             raise ValueError(msg)
 
-    def _get(self, search_item):
+    def build_matches(self):
         """
         ### Summary
-        Return the value of item from the switch and file matching
-        ``filter_switch`` and ``filter_file``.
+        Build a list of matches from the info_dict.
 
         ### Raises
-        -   ``ValueError`` if ``filter_switch`` and ``filter_file`` are
-            not set.
         """
         method_name = inspect.stack()[0][3]
 
-        self.validate_get_parameters()
+        self.matches = []
 
         if self.filter_switch not in self.info:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"filter_switch {self.filter_switch} not found in info."
             self.log.debug(msg)
-            return None
+            return
 
-        self.matches = []
-        
         data = self.info.get(self.filter_switch, {})
+        self.bootflash_data_map = data.get("bootFlashDataMap", {})
+        self.bootflash_space_map = data.get("bootFlashSpaceMap", {})
+        self.partitions = data.get("partitions", [])
 
-        bootflash_data_map = data.get("bootFlashDataMap", {})
-        bootflash_space_map = data.get("bootFlashSpaceMap", {})
-        partitions = data.get("partitions", [])
+        if len(self.partitions) == 0:
+            return
 
-        if len(partitions) == 0:
-            return None
-
-        for partition in partitions:
-            if partition not in bootflash_data_map:
+        for partition in self.partitions:
+            if partition not in self.bootflash_data_map:
                 continue
-            for item in bootflash_data_map[partition]:
+            for item in self.bootflash_data_map[partition]:
                 if item.get("fileName", None) != self.filter_file:
                     continue
                 self.matches.append(item)
 
+    def populate_property(self, search_item):
+        """
+        ### Summary
+        Populate the property (search_item) from the match.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``search_item`` is not a key in the match.
+        """
+        method_name = inspect.stack()[0][3]
         if len(self.matches) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"No matches found for {self.filter_switch} and "
@@ -231,8 +252,8 @@ class BootflashInfo:
             msg += f"{self.filter_file}."
             self.log.debug(msg)
             return None
-        else:
-            self.match = self.matches[0]
+
+        self.match = self.matches[0]
 
         if search_item not in self.match:
             msg = f"{self.class_name}.{method_name}: "
@@ -243,6 +264,22 @@ class BootflashInfo:
         return self.conversion.make_boolean(
             self.conversion.make_none(self.match[search_item])
         )
+
+    def _get(self, search_item):
+        """
+        ### Summary
+        Return the value of item from the switch and file matching
+        ``filter_switch`` and ``filter_file``.
+
+        ### Raises
+        -   ``ValueError`` if ``filter_switch`` and ``filter_file`` are
+            not set.
+        """
+        method_name = inspect.stack()[0][3]
+
+        self.validate_prerequisites_for_get()
+        self.build_matches()
+        return self.populate_property(search_item)
 
     @property
     def bootflash_type(self):
