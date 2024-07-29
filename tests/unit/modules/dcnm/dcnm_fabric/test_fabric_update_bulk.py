@@ -40,12 +40,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details i
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
     FabricSummary
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_update_bulk_fixture, params, payloads_fabric_update_bulk,
-    responses_config_deploy, responses_config_save,
-    responses_fabric_details_by_name, responses_fabric_summary,
-    responses_fabric_update_bulk)
+    MockAnsibleModule, does_not_raise, fabric_update_bulk_fixture, params,
+    payloads_fabric_update_bulk, responses_config_deploy,
+    responses_config_save, responses_fabric_details_by_name,
+    responses_fabric_summary, responses_fabric_update_bulk)
 
 
 def test_fabric_update_bulk_00010(fabric_update_bulk) -> None:
@@ -1846,7 +1847,7 @@ def test_fabric_update_bulk_00140(monkeypatch, fabric_update_bulk) -> None:
 def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
     """
     Classes and Methods
-    - ApiEndpoints().fabric_update
+    - EpFabricUpdate().fabric_name setter
     - FabricCommon()
         - __init__()
     - FabricUpdateCommon()
@@ -1857,34 +1858,39 @@ def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
     Summary
     -   Verify FabricUpdateCommon()._send_payload() catches and
         re-raises ``ValueError`` raised by
-        ApiEndpoints().fabric_update
+        EpFabricUpdate().fabric_name setter.
 
     Setup
-    -   Mock ApiEndpoints().fabric_update property to raise ``ValueError``.
-    -   Monkeypatch ApiEndpoints().fabric_update to the mocked method.
+    -   Mock EpFabricUpdate().fabric_name property to raise ``ValueError``.
+    -   Monkeypatch EpFabricUpdate().fabric_name to the mocked method.
     -   Populate FabricUpdateCommon._payloads_to_commit with a payload
         which contains a valid payload.
     """
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpFabricUpdate:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.fabric_update property to raise ``ValueError``.
+        Mock the MockEpFabricUpdate.fabric_name property to raise ``ValueError``.
         """
 
         @property
-        def fabric_update(self):
+        def fabric_name(self):
             """
             Mocked property getter
             """
-            raise ValueError("mocked ApiEndpoints().fabric_update getter exception.")
 
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.fabric_delete"
+        @fabric_name.setter
+        def fabric_name(self, value):
+            """
+            Mocked property setter
+            """
+            raise ValueError(
+                "mocked MockEpFabricUpdate().fabric_name setter exception."
+            )
 
     with does_not_raise():
         instance = fabric_update_bulk
 
-    monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
+    monkeypatch.setattr(instance, "ep_fabric_update", MockEpFabricUpdate())
 
     payload = {
         "BGP_AS": "65001",
@@ -1893,6 +1899,6 @@ def test_fabric_update_bulk_00150(monkeypatch, fabric_update_bulk) -> None:
         "FABRIC_TYPE": "VXLAN_EVPN",
     }
 
-    match = r"mocked ApiEndpoints\(\)\.fabric_update getter exception\."
+    match = r"mocked MockEpFabricUpdate\(\)\.fabric_name setter exception\."
     with pytest.raises(ValueError, match=match):
         instance._send_payload(payload)

@@ -32,12 +32,12 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabricUpdate
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
@@ -52,12 +52,13 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get imp
     TemplateGet
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
     VerifyPlaybookParams
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_replaced_bulk_fixture, params, payloads_fabric_replaced_bulk,
-    responses_config_deploy, responses_config_save,
-    responses_fabric_details_by_name, responses_fabric_replaced_bulk,
-    responses_fabric_summary)
+    MockAnsibleModule, does_not_raise, fabric_replaced_bulk_fixture, params,
+    payloads_fabric_replaced_bulk, responses_config_deploy,
+    responses_config_save, responses_fabric_details_by_name,
+    responses_fabric_replaced_bulk, responses_fabric_summary)
 
 
 def test_fabric_replaced_bulk_00010(fabric_replaced_bulk) -> None:
@@ -81,7 +82,7 @@ def test_fabric_replaced_bulk_00010(fabric_replaced_bulk) -> None:
     assert instance.path is None
     assert instance.verb is None
     assert instance.state == "replaced"
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_fabric_update, EpFabricUpdate)
     assert isinstance(instance.fabric_details, FabricDetailsByName)
     assert isinstance(instance.fabric_summary, FabricSummary)
     assert isinstance(instance.fabric_types, FabricTypes)
@@ -390,12 +391,14 @@ def test_fabric_replaced_bulk_00031(
         ("PARAM_5", "c", "c", "c", None),
         ("PARAM_6", None, "c", "c", None),
         ("PARAM_7", None, "b", "c", {"PARAM_7": "c"}),
-        ("PARAM_8", None, "b", None, None),
+        ("PARAM_8", None, "b", None, {"PARAM_8": ""}),
         ("PARAM_9", None, None, None, None),
         ("PARAM_10", "a", None, None, {"PARAM_10": "a"}),
-        ("PARAM_11", "a", "b", None, {"PARAM_11": "a"}),
-        ("PARAM_12", "a", None, "c", {"PARAM_12": "a"}),
-        ("PARAM_13", None, None, "c", None),
+        ("PARAM_11", "a", "a", None, None),
+        ("PARAM_12", "a", "b", None, {"PARAM_12": "a"}),
+        ("PARAM_13", "a", None, "a", {"PARAM_13": "a"}),
+        ("PARAM_14", "a", None, "c", {"PARAM_14": "a"}),
+        ("PARAM_15", None, None, "c", {"PARAM_15": "c"}),
     ],
 )
 def test_fabric_replaced_bulk_00040(

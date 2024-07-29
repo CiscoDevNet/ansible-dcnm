@@ -34,14 +34,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
 
 class RestSend:
     """
+    ### Summary
     Send REST requests to the controller with retries, and handle responses.
 
-    Usage (where ansible_module is an instance of AnsibleModule):
+    ### Usage
+    ``ansible_module`` is an instance of ``AnsibleModule``.
 
+    ```python
     rest_send = RestSend(ansible_module)
     rest_send.path = "/rest/top-down/fabrics"
     rest_send.verb = "GET"
-    rest_send.payload = my_payload # Optional
+    rest_send.payload = my_payload # optional
+    rest_send.timeout = 300 # optional
+    rest_send.unit_test = True # optional
     rest_send.commit()
 
     # list of responses from the controller for this session
@@ -52,6 +57,7 @@ class RestSend:
     result = rest_send.result
     # dict with current controller result
     result_current = rest_send.result_current
+    ```
     """
 
     def __init__(self, ansible_module):
@@ -85,6 +91,9 @@ class RestSend:
         self.log.debug(msg)
 
     def _verify_commit_parameters(self):
+        """
+        Verify that required parameters are set prior to calling ``commit()``
+        """
         if self.verb is None:
             msg = f"{self.class_name}._verify_commit_parameters: "
             msg += "verb must be set before calling commit()."
@@ -110,14 +119,14 @@ class RestSend:
         """
         Simulate a dcnm_send() call for check_mode
 
-        Properties read:
-            self.verb: HTTP verb e.g. GET, POST, PUT, DELETE
-            self.path: HTTP path e.g. http://controller_ip/path/to/endpoint
-            self.payload: Optional HTTP payload
+        ### Properties read:
+            -   ``verb``: HTTP verb e.g. DELETE, GET, POST, PUT
+            -   ``path``: HTTP path e.g. http://controller_ip/path/to/endpoint
+            -   ``payload``: Optional HTTP payload
 
-        Properties written:
-            self.properties["response_current"]: raw simulated response
-            self.properties["result_current"]: result from self._handle_response() method
+        ### Properties written:
+            -   ``response_current``: raw simulated response
+            -   ``result_current``: result from self._handle_response() method
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -147,16 +156,18 @@ class RestSend:
         """
         Call dcnm_send() with retries until successful response or timeout is exceeded.
 
-        Properties read:
-            self.send_interval: interval between retries (set in ImageUpgradeCommon)
-            self.timeout: timeout in seconds (set in ImageUpgradeCommon)
-            self.verb: HTTP verb e.g. GET, POST, PUT, DELETE
-            self.path: HTTP path e.g. http://controller_ip/path/to/endpoint
-            self.payload: Optional HTTP payload
+        ### Raises
+            -   AnsibleModule.fail_json() if the response is not a dict
+        ### Properties read
+            -   ``send_interval``: interval between retries (set in ImageUpgradeCommon)
+            -   ``timeout``: timeout in seconds (set in ImageUpgradeCommon)
+            -   ``verb``: HTTP verb e.g. GET, POST, PUT, DELETE
+            -   ``path``: HTTP path e.g. http://controller_ip/path/to/endpoint
+            -   ``payload`` Optional HTTP payload
 
-        Properties written:
-            self.properties["response"]: raw response from the controller
-            self.properties["result"]: result from self._handle_response() method
+        ## Properties written
+            -   ``response``: raw response from the controller
+            -   ``result``: result from self._handle_response() method
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -247,16 +258,20 @@ class RestSend:
 
     def _handle_get_response(self, response):
         """
-        Caller:
-            - self._handle_response()
-        Handle controller responses to GET requests
-        Returns: dict() with the following keys:
-        - found:
-            - False, if request error was "Not found" and RETURN_CODE == 404
-            - True otherwise
-        - success:
-            - False if RETURN_CODE != 200 or MESSAGE != "OK"
-            - True otherwise
+        ### Summary
+        Handle GET responses from the controller.
+
+        ### Caller
+        ``self._handle_response()``
+
+        ### Returns
+        ``dict`` with the following keys:
+            - found:
+                - False, if request error was "Not found" and RETURN_CODE == 404
+                - True otherwise
+            - success:
+                - False if RETURN_CODE != 200 or MESSAGE != "OK"
+                - True otherwise
         """
         result = {}
         success_return_codes = {200, 404}
@@ -280,18 +295,21 @@ class RestSend:
 
     def _handle_post_put_delete_response(self, response):
         """
-        Caller:
-            - self.self._handle_response()
-
+        ### Summary
         Handle POST, PUT responses from the controller.
 
-        Returns: dict() with the following keys:
-        - changed:
-            - True if changes were made to by the controller
-            - False otherwise
-        - success:
-            - False if RETURN_CODE != 200 or MESSAGE != "OK"
-            - True otherwise
+        ### Caller
+        ``self.self._handle_response()``
+
+
+        ### Returns
+        ``dict`` with the following keys:
+            - changed:
+                - True if changes were made to by the controller
+                - False otherwise
+            - success:
+                - False if RETURN_CODE != 200 or MESSAGE != "OK"
+                - True otherwise
         """
         result = {}
         if response.get("ERROR") is not None:
@@ -309,17 +327,18 @@ class RestSend:
     @property
     def check_mode(self):
         """
+        ### Summary
         Determines if dcnm_send should be called.
 
-        Default: False
+        ### Default
+        ``False``
 
-        If False, dcnm_send is called. Real controller responses
-        are returned by RestSend()
+        -   If ``False``, dcnm_send is called. Real controller responses
+            are returned by RestSend()
+        -   If ``True``, dcnm_send is not called. Simulated controller
+            responses are returned by RestSend()
 
-        If True, dcnm_send is not called. Simulated controller responses
-        are returned by RestSend()
-
-        Discussion:
+        ### Discussion
         We don't set check_mode from the value of self.ansible_module.check_mode
         because we want to be able to read data from the controller even when
         self.ansible_module.check_mode is True. For example, SwitchIssuDetails
@@ -349,7 +368,12 @@ class RestSend:
     def path(self):
         """
         Endpoint path for the REST request.
-        e.g. "/appcenter/cisco/ndfc/api/v1/...etc..."
+
+        ### Raises
+        None
+
+        ### Example
+        ``/appcenter/cisco/ndfc/api/v1/...etc...``
         """
         return self.properties.get("path")
 
@@ -361,6 +385,9 @@ class RestSend:
     def payload(self):
         """
         Return the payload to send to the controller
+
+        ### Raises
+        None
         """
         return self.properties["payload"]
 
@@ -372,9 +399,11 @@ class RestSend:
     def response_current(self):
         """
         Return the current POST response from the controller
-        instance.commit() must be called first.
+        as a ``dict``. ``commit()`` must be called first.
 
-        This is a dict of the current response from the controller.
+        -   getter: Return a copy of ``response_current``
+        -   setter: Set ``response_current``
+        -   setter: call ``Ansible.fail_json`` if value is not a dict
         """
         return copy.deepcopy(self.properties.get("response_current"))
 
@@ -392,9 +421,12 @@ class RestSend:
     def response(self):
         """
         Return the aggregated POST response from the controller
-        instance.commit() must be called first.
+        ``commit()`` must be called first.
 
         This is a list of responses from the controller.
+        -   getter: Return a copy of ``response``
+        -   setter: Append to ``response``
+        -   setter: call ``Ansible.fail_json`` if value is not a dict
         """
         return copy.deepcopy(self.properties.get("response"))
 
@@ -415,6 +447,10 @@ class RestSend:
         instance.commit() must be called first.
 
         This is a list of results from the controller.
+
+        -   getter: Return a copy of result
+        -   setter: Append to result
+        -   setter: call ``Ansible.fail_json`` if value is not a dict
         """
         return copy.deepcopy(self.properties.get("result"))
 
@@ -435,6 +471,10 @@ class RestSend:
         instance.commit() must be called first.
 
         This is a dict containing the current result.
+
+        -   getter: Return a copy of ``result_current``
+        -   setter: Set ``result_current``
+        -   setter: call ``Ansible.fail_json`` if value is not a dict
         """
         return copy.deepcopy(self.properties.get("result_current"))
 
@@ -451,9 +491,21 @@ class RestSend:
     @property
     def send_interval(self):
         """
+        ### Summary
         Send interval, in seconds, for retrying responses from the controller.
-        Valid values: int()
-        Default: 5
+
+        ### Valid values
+        ``int``
+        ### Default
+        ``5``
+
+        ### Raises
+        Calls ``AnsibleModule.fail_json`` if value is not an ``int``
+
+        -   getter: Returns ``send_interval``
+        -   setter: Sets ``send_interval``
+        -   setter: Calls ``AnsibleModule.fail_json`` if value is not
+            an ``int``
         """
         return self.properties.get("send_interval")
 
@@ -469,9 +521,17 @@ class RestSend:
     @property
     def timeout(self):
         """
+        ### Summary
         Timeout, in seconds, for retrieving responses from the controller.
-        Valid values: int()
-        Default: 300
+
+        ### Raises
+        Calls ``AnsibleModule.fail_json`` if value is not an ``int``
+
+        ### Valid values
+        ``int``
+
+        ### Default
+        ``300``
         """
         return self.properties.get("timeout")
 
@@ -487,9 +547,15 @@ class RestSend:
     @property
     def unit_test(self):
         """
-        Is the class running under a unit test.
+        ### Summary
+        Is RestSend being called from a unit test.
         Set this to True in unit tests to speed the test up.
-        Default: False
+
+        ### Raises
+        Calls ``AnsibleModule.fail_json`` if value is not an ``bool``
+
+        ### Default
+        ``False``
         """
         return self.properties.get("unit_test")
 
@@ -506,7 +572,12 @@ class RestSend:
     def verb(self):
         """
         Verb for the REST request.
-        One of "GET", "POST", "PUT", "DELETE"
+
+        ### Raises
+        Calls ``AnsibleModule.fail_json`` if value is not a valid verb.
+
+        ### Valid values
+        ``GET``, ``POST``, ``PUT``, ``DELETE``
         """
         return self.properties.get("verb")
 

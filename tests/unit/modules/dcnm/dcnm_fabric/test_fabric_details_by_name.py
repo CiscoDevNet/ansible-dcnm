@@ -32,17 +32,19 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabrics
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_details_by_name_fixture, responses_fabric_details_by_name)
+    MockAnsibleModule, does_not_raise, fabric_details_by_name_fixture,
+    responses_fabric_details_by_name)
 
 
 def test_fabric_details_by_name_00010(fabric_details_by_name) -> None:
@@ -65,7 +67,7 @@ def test_fabric_details_by_name_00010(fabric_details_by_name) -> None:
     assert instance.data == {}
     assert instance.data_subclass == {}
     assert instance._properties["filter"] is None
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_fabrics, EpFabrics)
     assert isinstance(instance.results, Results)
     assert isinstance(instance.conversion, ConversionUtils)
 
@@ -549,7 +551,7 @@ def test_fabric_details_by_name_00060(fabric_details_by_name) -> None:
     match += r"FabricDetailsByName\.filter must be set before calling "
     match += r"FabricDetailsByName\.filtered_data"
     with pytest.raises(ValueError, match=match):
-        instance.filtered_data
+        instance.filtered_data  # pylint: disable=pointless-statement
 
 
 def test_fabric_details_by_name_00061(fabric_details_by_name) -> None:

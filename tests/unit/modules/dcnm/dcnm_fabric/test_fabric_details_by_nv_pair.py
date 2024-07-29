@@ -32,17 +32,19 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+    EpFabrics
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_details_by_nv_pair_fixture, responses_fabric_details_by_nv_pair)
+    MockAnsibleModule, does_not_raise, fabric_details_by_nv_pair_fixture,
+    responses_fabric_details_by_nv_pair)
 
 
 def test_fabric_details_by_nv_pair_00010(fabric_details_by_nv_pair) -> None:
@@ -66,7 +68,7 @@ def test_fabric_details_by_nv_pair_00010(fabric_details_by_nv_pair) -> None:
     assert instance.data_subclass == {}
     assert instance._properties["filter_key"] is None
     assert instance._properties["filter_value"] is None
-    assert isinstance(instance.endpoints, ApiEndpoints)
+    assert isinstance(instance.ep_fabrics, EpFabrics)
     assert isinstance(instance.results, Results)
     assert isinstance(instance.conversion, ConversionUtils)
 

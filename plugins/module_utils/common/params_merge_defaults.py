@@ -27,6 +27,10 @@ from typing import Any, Dict
 
 class ParamsMergeDefaults:
     """
+    ## DEPRECATED
+    Use ``ParamsMergeDefaults`` from ``params_merge_defaults_v2.py`` for
+    all new development.
+
     Merge default parameters into parameters.
 
     Given a parameter specification (params_spec) and a playbook config

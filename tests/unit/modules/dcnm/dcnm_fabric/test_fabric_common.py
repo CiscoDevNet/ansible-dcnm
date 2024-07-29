@@ -386,7 +386,7 @@ MATCH_00113a = r"FabricCommon\._verify_payload:\s+"
 MATCH_00113a += r"Playbook configuration for fabric .* contains an invalid\s+"
 MATCH_00113a += r"FABRIC_TYPE\s+\(.*\)\.\s+"
 MATCH_00113a += r"Valid values for FABRIC_TYPE:\s+"
-MATCH_00113a += r"\['LAN_CLASSIC', 'VXLAN_EVPN', 'VXLAN_EVPN_MSD'\]\.\s+"
+MATCH_00113a += r"\[.*]\.\s+"
 MATCH_00113a += r"Bad configuration:\s+"
 
 
