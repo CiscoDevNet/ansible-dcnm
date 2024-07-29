@@ -12,8 +12,8 @@
   connection: ansible.netcommon.httpapi
 
   vars:
-    # testcase: dcnm_switch_bootflash_deleted
-    # testcase: dcnm_switch_bootflash_query
+    # testcase: dcnm_bootflash_deleted
+    # testcase: dcnm_bootflash_query
     switch_username: admin
     switch_password: "foobar"
     spine1: 192.168.1.2
@@ -30,4 +30,4 @@
     nxos_release_2: 10.3.1_nxos64-cs_64bit
 
   roles:
-    - dcnm_switch_bootflash
+    - dcnm_bootflash

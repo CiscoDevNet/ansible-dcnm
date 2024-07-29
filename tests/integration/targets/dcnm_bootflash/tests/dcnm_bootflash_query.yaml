@@ -11,22 +11,16 @@
 ################################################################################
 
 # SETUP
-# 1. The following images must already be uploaded to the controller
+# 1. The following images must already be uploaded to the switches
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
 #    - nxos_image_1
 #    - nxos_image_2
 #    - epld_image_1
 #    - epld_image_2
-# 2. No need for fabric or switches
-# 3. Delete image policies under test, if they exist
-#    - image_policy_1
-#    - image_policy_2
-# TEST
-# 4. Create image policies and verify result
-#    - image_policy_1
-#    - image_policy_2
-# 5. Delete image_policy_1 and verify result
-# 6. Delete image_policy_2 and verify result
+# 2. No need for fabric
+# 3. Query images under test, if they exist
+#    - nxos_image_1
+#    - nxos_image_2
 # CLEANUP
 # 7. No cleanup required
 
@@ -74,18 +68,18 @@
 ################################################################################
 # TODO: Add file upload task here
 ################################################################################
-# DELETED - TEST - Delete files
+# QUERY - TEST - Delete files
 ################################################################################
 # Expected result
 # TODO - Add expected result here
 ################################################################################
-# DELETED - TEST - Delete files
+# QUERY - TEST - Query files
 ################################################################################
 # Expected result
 # TODO - Add expected result here
-- name: DELETED - TEST - Delete files
-  cisco.dcnm.dcnm_switch_bootflash:
-      state: deleted
+- name: QUERY - TEST - Query files
+  cisco.dcnm.dcnm_bootflash:
+      state: query
       files:
       - "{{ nxos_image_1 }}"
       - "{{ nxos_image_2 }}"
@@ -104,13 +98,13 @@
     - (result.diff | length) == 1
     - (result.response | length) == 1
     - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "DELETE"
+    - result.response[0].METHOD == "QUERY"
     - result.response[0].RETURN_CODE == 200
     - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_delete"
+    - result.metadata[0].action == "bootflash_query"
     - result.metadata[0].check_mode == False
     - result.metadata[0].sequence_number == 1
-    - result.metadata[0].state == "deleted"
+    - result.metadata[0].state == "query"
     - (result.result | length) == 1
     - result.result[0].changed == true
     - result.result[0].sequence_number == 1
