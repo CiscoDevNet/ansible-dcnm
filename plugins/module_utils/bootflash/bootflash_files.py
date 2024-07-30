@@ -136,10 +136,10 @@ class BootflashFiles:
         msg += f"action {self.action}, "
         self.log.debug(msg)
 
-    def ip_address_to_serial_number(self, ip_address):
+    def refresh_switch_details(self):
         """
         ### Summary
-        Convert ip_address to serial_number.
+        If switch details are not already refreshed, refresh them.
 
         ### Raises
         -   ``ValueError`` if:
@@ -156,6 +156,19 @@ class BootflashFiles:
             self.switch_details.refresh()
             self.switch_details_refreshed = True
 
+    def ip_address_to_serial_number(self, ip_address):
+        """
+        ### Summary
+        Convert ip_address to serial_number.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   switch_details is not set.
+        """
+        method_name = inspect.stack()[0][3]
+
+        self.refresh_switch_details()
+
         self.switch_details.filter = ip_address
         try:
             serial_number = self.switch_details.serial_number
@@ -166,6 +179,24 @@ class BootflashFiles:
             msg += f"Error detail: {error}."
             raise ValueError(msg) from error
         return serial_number
+
+    def ok_to_delete_files(self, ip_address):
+        """
+        ### Summary
+        -   Return True if files can be deleted on the switch with ip_address.
+        -   Return False otherwise.
+
+        ### Raises
+        None
+        """
+        self.refresh_switch_details()
+        bad_modes = ["inconsistent", "migration"]
+        self.switch_details.filter = ip_address
+        if self.switch_details.mode in bad_modes:
+            reason = f"switch mode is {self.switch_details.mode}"
+            self.ok_to_delete_files_reason = reason
+            return False
+        return True
 
     def validate_commit_parameters(self) -> None:
         """
@@ -286,6 +317,11 @@ class BootflashFiles:
         None
         """
         self.validate_prerequisites_for_add_file()
+
+        if not self.ok_to_delete_files(self.ip_address):
+            msg = f"Cannot delete files on switch {self.ip_address}. "
+            msg += f"Reason: {self.ok_to_delete_files_reason}."
+            raise ValueError(msg)
 
         add_payload = {
             "serialNumber": self.ip_address_to_serial_number(self.ip_address),
