@@ -139,6 +139,8 @@ import logging
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
+    BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -153,8 +155,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm impo
     Sender
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
     SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
-    ImagePolicyDelete
 
 
 def json_pretty(msg):
@@ -319,7 +319,7 @@ class Deleted(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.delete = ImagePolicyDelete()
+        self.instance = BootflashFiles()
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
@@ -328,35 +328,32 @@ class Deleted(Common):
 
     def commit(self) -> None:
         """
-        If config is present, delete all policies in self.want that exist on the controller
-        If config is not present, delete all policies on the controller
+        Delete the specified files from the bootflash of the specified switches.
         """
+        self.get_want()
+
         self.results.state = self.state
         self.results.check_mode = self.check_mode
-        self.delete.policy_names = self.get_policies_to_delete()
-        self.delete.results = self.results
-        self.delete.rest_send = self.rest_send
-        self.delete.params = self.params
-        self.delete.commit()
+        self.instance.results = self.results
+        self.instance.rest_send = self.rest_send
+        self.instance.switch_details = SwitchDetails()
+        self.instance.switch_details.results = Results()
+        self.instance.switch_details.rest_send = self.rest_send
 
-    def get_policies_to_delete(self) -> list[str]:
-        """
-        Return a list of policy names to delete
+        for switch in self.switches:
+            self.instance.ip_address = switch["ip_address"]
+            for file in switch["files"]:
+                self.instance.bootflash_type = "active"
+                self.instance.file_name = file
+                self.instance.file_path = "bootflash:"
+                self.instance.partition = "bootflash:"
+                self.instance.add_file()
 
-        -   In config is present, return list of image policy names
-            in self.want.
-        -   If config is not present, return ["delete_all_image_policies"],
-            which ``ImagePolicyDelete()`` interprets as "delete all image
-            policies on the controller".
-        """
-        if not self.config:
-            return ["delete_all_image_policies"]
-        self.get_want()
-        policy_names_to_delete = []
-        for want in self.want:
-            policy_names_to_delete.append(want["policyName"])
-        return policy_names_to_delete
-
+        # self.instance.ip_address = "172.22.150.113"
+        # self.instance.file_name = "oz_201.cfg"
+        # self.instance.file_path = "bootflash:"
+        # self.instance.partition = "bootflash:"
+        self.instance.commit()
 
 class Query(Common):
     """

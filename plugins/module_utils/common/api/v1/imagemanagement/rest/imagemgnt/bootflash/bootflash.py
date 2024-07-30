@@ -54,7 +54,7 @@ class EpBootflashFiles(Bootflash):
     -   None
 
     ### Path
-    -   ``/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files``
+    -   ``../api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files``
 
     ### Verb
     -   DELETE
@@ -100,7 +100,7 @@ class EpBootflashInfo(Bootflash):
         -   ``serial_number`` is not set.
 
     ### Path
-    -   ``/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber={serial_number}``
+    -   ``../api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber={serial_number}``
 
     ### Verb
     -   DELETE
