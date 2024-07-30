@@ -20,16 +20,16 @@ import copy
 import inspect
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
+    EpBootflashInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
-    EpBootflashInfo
 
-@Properties.add_params
+
 @Properties.add_results
 class BootflashInfo:
     """
@@ -45,6 +45,53 @@ class BootflashInfo:
             -   switches contains anything other than strings.
 
     ### Usage
+
+    There are two usage scenarios for this class.  The simple use-case is
+    to retrieve bootflash information for one or more switches and subsequently
+    filter and access it via the class's convenience properties.
+
+    #### Simple Usage
+
+    ```python
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(ansible_module.params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    instance = BootflashQuery()
+    instance.results = Results()
+
+    # BootflashInfo() uses SwitchDetails() to convert
+    # switch ip addresses to serial numbers (which is
+    # required by the NDFC API).
+    instance.switch_details = SwitchDetails()
+
+    # We pass switch_details.results a separate instance of
+    # results because we are not interested in its results.
+    instance.switch_details.results = Results()
+
+    instance.switches = ["192.168.1.1"]
+    instance.refresh()
+    instance.filter_switch = "192.168.1.1"
+    instance.filter_file = "nxos_image.bin"
+
+    # Assuming there was a match for the switch and file, the following
+    # information can be retrieved.  If there was not a match, these
+    # properties will return None.
+
+    bootflash_type = instance.bootflash_type
+    date = instance.date
+    device_name = instance.device_name
+    file_name = instance.file_name
+    file_path = instance.file_path
+    ip_address = instance.ip_address
+    name = instance.name
+    serial_number = instance.serial_number
+    ```
+
+    #### More involved usage
+
     ```python
     sender = Sender()
     sender.ansible_module = ansible_module
@@ -55,18 +102,61 @@ class BootflashInfo:
     results = Results()
 
     instance = BootflashQuery()
-    instance.results = results
-    instance.switches = ["192.168.1.1", "192.168.1.2"]
-    instance.commit()
-    diff = instance.results.diff_current # contains the image policy information
-    result = instance.results.result_current # contains the result(s) of the query
-    response = instance.results.response_current # contains the response(s) from the controller
+    instance.results = Results()
+
+    # BootflashInfo() uses SwitchDetails() to convert
+    # switch ip addresses to serial numbers (which is
+    # required by the NDFC API).
+    instance.switch_details = SwitchDetails()
+
+    # We pass switch_details.results a separate instance of
+    # results because we are not interested in its results.
+    instance.switch_details.results = Results()
+
+    # We'll retrieve information about two files
+    # on each of two switches.
+    switches = ["192.168.1.1", 192.168.1.2"]
+    files = ["nxos_image.bin", "nxos_image2.bin"]
+
+    instance.switches = switches
+    instance.refresh()
+    for switch in switches:
+        instance.filter_switch = switch
+        for file in files:
+            instance.filter_file = file
+            instance.build_matches()
+            instance.results.register_task_result()
+
+    # The results can be printed by accessing instance.results.diff.
+    # instance.results.diff is a list of dictionaries.  Each dictionary
+    # is keyed on the switch ip address and contains a list of matches for
+    # that switch.  The matches are dictionaries containing the bootflash
+    # information for the file.
+
+    print(f"{json.dumps(instance.results.diff, sort_keys=True, indent=4)}")
+
+    # Accessing individual file information for the first switch in the switches
+    # array would go something like:
+
+    switch1 = switches[0]
+    file_name = instance.results.diff[0][switch1][0]["fileName"]
+    size = instance.results.diff[0][switch1][0]["size"]
+
     ```
 
     ### Structure
 
     The structure of the info_dict is a list of dictionaries. Each dictionary
-    contains the following keys:
+    contains the following keys.
+
+    The observant reader will notice that NDFC inserts a leading space before
+    ipAddr's value i.e.
+
+    " 192.168.1.1"
+
+    We strip this space and update the dictionary with the stripped ip_address
+    before returning the dictionary to the user and before populating this
+    class's associated ip_address property.
 
     ```json
     {
@@ -75,7 +165,7 @@ class BootflashInfo:
         "deviceName": "cvd-1212-spine",
         "fileName": "n9000-epld.10.2.5.M.img",
         "filePath": "bootflash:",
-        "ipAddr": " 172.22.150.113",
+        "ipAddr": " 192.168.1.1",
         "name": "bootflash:",
         "serialNumber": "BDY3814QDD0",
         "size": "218233885"
@@ -88,10 +178,21 @@ class BootflashInfo:
 
         self.action = "bootflash_query"
         self.conversion = ConversionUtils()
+        self.ep_bootflash_info = EpBootflashInfo()
 
-        self._info_dict = {}
+        self.bootflash_data_map = {}
+        self.bootflash_space_map = {}
+        self.partitions = []
+
+        self.info_dict = {}
         self.matches = []
-        self.match = {}
+        self._match = {}
+        # Used to collect individual responses and results for each
+        # switch in self.switches.  Keyed on switch ip_address.
+        # Updated in refresh_bootflash_info().
+        self.response_dict = {}
+        self.result_dict = {}
+
         self._results = None
         self._switch_details = None
         self._switches = None
@@ -101,21 +202,19 @@ class BootflashInfo:
         msg += f"action {self.action}, "
         self.log.debug(msg)
 
-
-    # pylint: disable=no-member
-    def refresh(self):
+    def validate_refresh_parameters(self) -> None:
         """
         ### Summary
-        query each of the switches in self.switches
+        Verify that mandatory prerequisites are met before calling refresh.
 
         ### Raises
         -   ``ValueError`` if:
+                -   rest_send is not set.
+                -   results is not set.
+                -   switch_details is not set.
                 -   switches is not set.
-
-        ### Notes
-        -   pylint: disable=no-member is needed due to the rest_send property
-            being dynamically created by the @Properties.add_results decorator.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
         if self.rest_send is None:
@@ -138,6 +237,26 @@ class BootflashInfo:
             msg += "switches must be set prior to calling refresh."
             raise ValueError(msg)
 
+    # pylint: disable=no-member
+    def refresh(self):
+        """
+        ### Summary
+        Retrieve switch details for each of the switches in self.switches.
+
+        This is used to convert switch ip address to serial_number, which is
+        required by EpBootflashInfo().
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   switches is not set.
+
+        ### Notes
+        -   pylint: disable=no-member is needed due to the results property
+            being dynamically created by the @Properties.add_results decorator.
+        """
+        # pylint: disable=no-member
+        self.validate_refresh_parameters()
+
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
@@ -149,23 +268,34 @@ class BootflashInfo:
         self.refresh_bootflash_info()
 
     def refresh_bootflash_info(self):
-        method_name = inspect.stack()[0][3]
+        """
+        ### Summary
+        Retrieve bootflash information for each switch in self.switches.
 
+        ### Raises
+        None
+        """
         self.info_dict = {}
+        self.response_dict = {}
+        self.result_dict = {}
         for switch in self.switches:
             self.switch_details.filter = switch
             serial_number = self.switch_details.serial_number
             if serial_number is None:
                 continue
-            self.info_dict[switch] = {}
-            endpoint = EpBootflashInfo()
-            endpoint.serial_number = serial_number
-            self.rest_send.path = endpoint.path
-            self.rest_send.verb = endpoint.verb
-            self.rest_send.commit()
-            self.info_dict[switch] = copy.deepcopy(self.rest_send.response_current.get("DATA", {}))
 
-    def validate_prerequisites_for_get(self):
+            self.ep_bootflash_info.serial_number = serial_number
+            self.rest_send.path = self.ep_bootflash_info.path
+            self.rest_send.verb = self.ep_bootflash_info.verb
+            self.rest_send.commit()
+
+            self.info_dict[switch] = copy.deepcopy(
+                self.rest_send.response_current.get("DATA", {})
+            )
+            self.response_dict[switch] = copy.deepcopy(self.rest_send.response_current)
+            self.result_dict[switch] = copy.deepcopy(self.rest_send.result_current)
+
+    def validate_prerequisites_for_build_matches(self):
         """
         ### Summary
         Verify that mandatory prerequisites are met before calling _get()
@@ -187,13 +317,13 @@ class BootflashInfo:
         if self.filter_switch is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "filter_switch must be set before "
-            msg += f"accessing match properties."
+            msg += "accessing match properties."
             raise ValueError(msg)
 
         if self.filter_file is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "filter_file must be set before "
-            msg += f"accessing match properties."
+            msg += "accessing match properties."
             raise ValueError(msg)
 
     def build_matches(self):
@@ -205,6 +335,7 @@ class BootflashInfo:
         """
         method_name = inspect.stack()[0][3]
 
+        self.validate_prerequisites_for_build_matches()
         self.matches = []
 
         if self.filter_switch not in self.info:
@@ -228,6 +359,23 @@ class BootflashInfo:
                 if item.get("fileName", None) != self.filter_file:
                     continue
                 self.matches.append(item)
+
+        diff = {}
+        for match in self.matches:
+            match_copy = copy.deepcopy(match)
+            ip_addr = match_copy.get("ipAddr", None)
+            if ip_addr is None:
+                continue
+            # NDFC inserts a leading space before ipAddr. Strip this
+            # and update the dictionary with the stripped ip_address.
+            ip_address = ip_addr.strip()
+            match_copy.update({"ipAddr": ip_address})
+            if ip_address not in diff:
+                diff[ip_address] = []
+            diff[ip_address].append(match_copy)
+        self.results.diff_current = diff
+        self.results.result_current = self.result_dict
+        self.results.response_current = self.response_dict
 
     def populate_property(self, search_item):
         """
@@ -253,7 +401,7 @@ class BootflashInfo:
             self.log.debug(msg)
             return None
 
-        self.match = self.matches[0]
+        self._match = self.matches[0]
 
         if search_item not in self.match:
             msg = f"{self.class_name}.{method_name}: "
@@ -275,9 +423,6 @@ class BootflashInfo:
         -   ``ValueError`` if ``filter_switch`` and ``filter_file`` are
             not set.
         """
-        method_name = inspect.stack()[0][3]
-
-        self.validate_prerequisites_for_get()
         self.build_matches()
         return self.populate_property(search_item)
 
@@ -320,7 +465,6 @@ class BootflashInfo:
         ``Sep 19 22:20:07 2023``
         """
         return self._get("date")
-
 
     @property
     def device_name(self):
@@ -391,7 +535,7 @@ class BootflashInfo:
         to a file.
 
         ### Raises
-        None 
+        None
         """
         return self._filter_file
 
@@ -412,7 +556,7 @@ class BootflashInfo:
         of the query to a single switch.
 
         ### Raises
-        None 
+        None
         """
         return self._filter_switch
 
@@ -450,6 +594,39 @@ class BootflashInfo:
         ``192.168.1.2``
         """
         return self._get("ipAddr")
+
+    @property
+    def match(self):
+        """
+        ### Summary
+        Return the current file information dictionary, if any,
+        that matches ``filter_switch`` and ``filter_file``.
+
+        ### Raises
+        None
+
+        ### Associated key
+        None
+
+        ### Example value
+        The leading space in ipAddr's value is stripped in build_matches()
+        so you won't have to worry about it.
+
+        ```json
+        {
+            "bootflash_type": "active",
+            "date": "Sep 19 22:20:07 2023",
+            "deviceName": "cvd-1212-spine",
+            "fileName": "n9000-epld.10.2.5.M.img",
+            "filePath": "bootflash:",
+            "ipAddr": "172.22.150.113",
+            "name": "bootflash:",
+            "serialNumber": "BDY3814QDD0",
+            "size": "218233885"
+        }
+        ```
+        """
+        return self._match
 
     @property
     def name(self):
@@ -510,7 +687,6 @@ class BootflashInfo:
         ``218233885``
         """
         return self._get("size")
-
 
     @property
     def switch_details(self):

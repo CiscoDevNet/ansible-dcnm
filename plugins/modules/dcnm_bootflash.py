@@ -246,7 +246,7 @@ class Common:
         self.have = BootflashInfo()
         self.have.results = self.results
         self.have.rest_send = self.rest_send  # pylint: disable=no-member
-        self.have.refresh()
+        self.have.switch_details = SwitchDetails()
 
     def get_want(self) -> None:
         """
@@ -264,6 +264,7 @@ class Common:
             msg = f"{self.class_name}.{method_name}: "
             msg += "params is missing files parameter."
             raise ValueError(msg)
+
         self.files = self.params["files"]
 
         if not isinstance(self.files, list):
@@ -276,6 +277,7 @@ class Common:
             msg = f"{self.class_name}.{method_name}: "
             msg += "params is missing switches parameter."
             raise ValueError(msg)
+
         self.switches = self.params["switches"]
 
         if not isinstance(self.switches, list):
@@ -298,7 +300,8 @@ class Common:
                 msg += "Expected list of strings for switch['files']. "
                 msg += f"Got {type(switch['files']).__name__}"
                 raise TypeError(msg)
-        self.want.append(switch)
+            self.want.append(switch)
+
 
 class Deleted(Common):
     """
@@ -372,8 +375,6 @@ class Query(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.query = BootflashInfo()
-
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -393,6 +394,7 @@ class Query(Common):
         self.results.check_mode = self.check_mode
 
         self.get_want()
+        self.get_have()
 
         if len(self.switches) == 0:
             msg = f"{self.class_name}.{method_name}: "
@@ -402,26 +404,15 @@ class Query(Common):
         switches_to_query = []
         for switch in self.switches:
             switches_to_query.append(switch["ip_address"])
-        self.query.params = self.params
-        self.query.results = self.results
-        self.query.rest_send = self.rest_send
-        self.query.switch_details = SwitchDetails()
-        self.query.switches = switches_to_query
-        self.query.refresh()
+        self.have.switches = switches_to_query
+        self.have.refresh()
 
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"query.info(): {json_pretty(self.query.info)}"
-        self.log.debug(msg)
-
-        self.query.filter_file = "nxos64-cs.10.3.1.F.bin"
-        self.query.filter_switch = "172.22.150.113"
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"file_name: {self.query.file_name}, "
-        msg += f"file_size: {self.query.size}, "
-        msg += f"switch_ip: {self.query.ip_address}, "
-        msg += f"switch_serial: {self.query.serial_number}"
-        self.log.debug(msg)
+        for switch in self.switches:
+            self.have.filter_switch = switch["ip_address"]
+            for file in switch["files"]:
+                self.have.filter_file = file
+                self.have.build_matches()
+                self.results.register_task_result()
 
 
 def main():
