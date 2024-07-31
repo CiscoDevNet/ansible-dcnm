@@ -227,7 +227,6 @@ class BootflashFiles:
         if len(self.payload["deleteFiles"]) == 0:
             raise_exception("payload")
 
-    # pylint: disable=no-member
     def commit(self):
         """
         ### Summary
