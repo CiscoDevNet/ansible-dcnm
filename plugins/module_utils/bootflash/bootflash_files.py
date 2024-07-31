@@ -115,12 +115,6 @@ class BootflashFiles:
         self.conversion = ConversionUtils()
         self.ep_bootflash_info = EpBootflashFiles()
 
-        # Used to collect individual responses and results for each
-        # switch in self.switches.  Keyed on switch ip_address.
-        # Updated in refresh_bootflash_info().
-        self.response_dict = {}
-        self.result_dict = {}
-
         self.ok_to_delete_files_reason = None
         self.payload = {"deleteFiles": []}
 
@@ -130,12 +124,11 @@ class BootflashFiles:
         self._file_size = None
         self._ip_address = None
         self._partition = None
-
-        self.switch_details_refreshed = False
-
         self._rest_send = None
         self._results = None
         self._switch_details = None
+
+        self.switch_details_refreshed = False
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED BootflashQuery(): "
