@@ -26,10 +26,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 
 
+@Properties.add_rest_send
 @Properties.add_results
 class BootflashFiles:
     """
@@ -116,9 +115,8 @@ class BootflashFiles:
         self.response_dict = {}
         self.result_dict = {}
 
-        self.payload = {
-            "deleteFiles": []
-        }
+        self.ok_to_delete_files_reason = None
+        self.payload = {"deleteFiles": []}
 
         self._bootflash_type = None
         self._file_name = None
@@ -127,7 +125,8 @@ class BootflashFiles:
         self._ip_address = None
 
         self.switch_details_refreshed = False
-        
+
+        self._rest_send = None
         self._results = None
         self._switch_details = None
 
@@ -249,7 +248,6 @@ class BootflashFiles:
 
         self.delete_files()
 
-
     def delete_files(self):
         """
         ### Summary
@@ -258,6 +256,7 @@ class BootflashFiles:
         ### Raises
         None
         """
+        # pylint: disable=no-member
         self.rest_send.path = self.ep_bootflash_info.path
         self.rest_send.verb = self.ep_bootflash_info.verb
         self.rest_send.payload = self.payload
@@ -321,9 +320,9 @@ class BootflashFiles:
                     "filePath": self.file_path,
                     "fileName": self.file_name,
                     # "fileSize": self.file_size,
-                    "bootflashType": self.bootflash_type
+                    "bootflashType": self.bootflash_type,
                 }
-            ]
+            ],
         }
 
         self.payload["deleteFiles"].append(add_payload)
@@ -351,7 +350,6 @@ class BootflashFiles:
     @bootflash_type.setter
     def bootflash_type(self, value):
         self._bootflash_type = value
-
 
     @property
     def file_path(self):
@@ -395,7 +393,7 @@ class BootflashFiles:
         ``n9000-epld.10.2.5.M.img``
         """
         return self._file_name
-    
+
     @file_name.setter
     def file_name(self, value):
         self._file_name = value
