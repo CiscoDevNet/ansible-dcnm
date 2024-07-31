@@ -178,39 +178,37 @@ class Common:
 
         self.params = params
 
+        def raise_error(msg):
+            raise ValueError(f"{self.class_name}.{method_name}: {msg}")
+
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "check_mode is required."
-            raise ValueError(msg)
+            msg = "check_mode is required."
+            raise_error(msg)
 
         self._valid_states = ["deleted", "query"]
         self._states_require_config = {"deleted", "query"}
 
         self.state = self.params.get("state", None)
         if self.state is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "params is missing state parameter."
-            raise ValueError(msg)
+            msg = "params is missing state parameter."
+            raise_error(msg)
         if self.state not in self._valid_states:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid state: {self.state}. "
+            msg = f"Invalid state: {self.state}. "
             msg += f"Expected one of: {','.join(self._valid_states)}."
-            raise ValueError(msg)
+            raise_error(msg)
 
         self.files = self.params.get("files", None)
         if not isinstance(self.files, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Expected list of strings for self.files. "
+            msg = "Expected list of strings for self.files. "
             msg += f"Got {type(self.files).__name__}"
-            raise TypeError(msg)
+            raise_error(msg)
 
         self.switches = self.params.get("switches", None)
         if not isinstance(self.switches, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Expected list of dict for self.switches. "
+            msg = "Expected list of dict for self.switches. "
             msg += f"Got {type(self.files).__name__}"
-            raise TypeError(msg)
+            raise_error(msg)
 
         self.results = Results()
         self.results.state = self.state
@@ -260,46 +258,45 @@ class Common:
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
+        def raise_value_error(msg):
+            raise ValueError(f"{self.class_name}.{method_name}: {msg}")
+        def raise_type_error(msg):
+            raise TypeError(f"{self.class_name}.{method_name}: {msg}")
+
         if self.params.get("files", None) is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "params is missing files parameter."
-            raise ValueError(msg)
+            msg = "params is missing files parameter."
+            raise_value_error(msg)
 
         self.files = self.params["files"]
 
         if not isinstance(self.files, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Expected list of strings for self.files. "
+            msg = "Expected list of strings for self.files. "
             msg += f"Got {type(self.files).__name__}"
-            raise TypeError(msg)
+            raise_type_error(msg)
 
         if self.params.get("switches", None) is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "params is missing switches parameter."
-            raise ValueError(msg)
+            msg = "params is missing switches parameter."
+            raise_value_error(msg)
 
         self.switches = self.params["switches"]
 
         if not isinstance(self.switches, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Expected list of dict for self.switches. "
+            msg = "Expected list of dict for self.switches. "
             msg += f"Got {type(self.files).__name__}"
-            raise TypeError(msg)
+            raise_type_error(msg)
 
         for switch in self.switches:
             if switch.get("ip_address", None) is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Expected ip_address in switch dict. "
+                msg = "Expected ip_address in switch dict. "
                 msg += f"Got {switch}"
-                raise ValueError(msg)
+                raise_value_error(msg)
 
             if switch.get("files", None) is None:
                 switch["files"] = self.files
             if not isinstance(switch["files"], list):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Expected list of strings for switch['files']. "
+                msg = "Expected list of strings for switch['files']. "
                 msg += f"Got {type(switch['files']).__name__}"
-                raise TypeError(msg)
+                raise_type_error(msg)
             self.want.append(switch)
 
 
@@ -349,10 +346,6 @@ class Deleted(Common):
                 self.instance.partition = "bootflash:"
                 self.instance.add_file()
 
-        # self.instance.ip_address = "172.22.150.113"
-        # self.instance.file_name = "oz_201.cfg"
-        # self.instance.file_path = "bootflash:"
-        # self.instance.partition = "bootflash:"
         self.instance.commit()
 
 class Query(Common):
