@@ -213,25 +213,19 @@ class BootflashFiles:
         # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
-        if self.rest_send is None:
+        def raise_exception(property_name):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling commit."
-            raise ValueError(msg)
+            msg += f"{property_name} must be set before calling commit()."
+            raise ValueError(f"{msg}")
 
-        if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set prior to calling commit."
-            raise ValueError(msg)
-
-        if self.switch_details is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "switch_details must be set prior to calling commit."
-            raise ValueError(msg)
-
-        if self.payload is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "add_file must be called at least once prior to calling commit."
-            raise ValueError(msg)
+        if not self.rest_send:
+            raise_exception("rest_send")
+        if not self.results:
+            raise_exception("results")
+        if not self.switch_details:
+            raise_exception("switch_details")
+        if len(self.payload["deleteFiles"]) == 0:
+            raise_exception("payload")
 
     # pylint: disable=no-member
     def commit(self):
