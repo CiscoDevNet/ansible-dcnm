@@ -72,8 +72,12 @@
 ################################################################################
 # SETUP
 ################################################################################
-# TODO: Add file upload task here
-################################################################################
+# TODO: Add setup here
+# For now, we will assume that the files are already created on the switches.
+# The easiest/quickest way to do this is as follows:
+# switch# echo foo > foo.txt
+# switch# echo bar > bar.txt
+#################################################################################
 # DELETED - TEST - Delete files
 ################################################################################
 # Expected result
@@ -86,12 +90,14 @@
 - name: DELETED - TEST - Delete files
   cisco.dcnm.dcnm_bootflash:
       state: deleted
-      files:
-      - "{{ nxos_image_1 }}"
-      - "{{ nxos_image_2 }}"
       switches:
       - ip_address: "{{ spine1 }}"
+        files:
+        - "foo.txt"
+        - "bar.txt"
       - ip_address: "{{ spine2 }}"
+        files:
+        - "baz.txt"
   register: result
 
 - debug:
