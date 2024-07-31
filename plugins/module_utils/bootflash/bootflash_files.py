@@ -129,6 +129,7 @@ class BootflashFiles:
         self._file_path = None
         self._file_size = None
         self._ip_address = None
+        self._partition = None
 
         self.switch_details_refreshed = False
 
@@ -320,13 +321,12 @@ class BootflashFiles:
 
         add_payload = {
             "serialNumber": self.ip_address_to_serial_number(self.ip_address),
-            "partition": self.file_path,
+            "partition": self.partition,
             "files": [
                 {
-                    "filePath": self.file_path,
-                    "fileName": self.file_name,
-                    # "fileSize": self.file_size,
                     "bootflashType": self.bootflash_type,
+                    "fileName": self.file_name,
+                    "filePath": self.file_path,
                 }
             ],
         }
@@ -346,7 +346,7 @@ class BootflashFiles:
         None
 
         ### Associated key
-        ``bootflash_type``
+        ``bootflashType``
 
         ### Example value
         ``active``
@@ -445,6 +445,27 @@ class BootflashFiles:
     @file_size.setter
     def file_size(self, value):
         self._file_size = value
+
+    @property
+    def partition(self):
+        """
+        ### Summary
+        The partition on which ``file_name`` resides.
+
+        ### Raises
+        None
+
+        ### Associated key
+        ``partition``
+
+        ### Example value
+        ``bootflash:``
+        """
+        return self._partition
+
+    @partition.setter
+    def partition(self, value):
+        self._partition = value
 
     @property
     def switch_details(self):
