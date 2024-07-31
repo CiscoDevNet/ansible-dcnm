@@ -37,11 +37,18 @@ class BootflashFiles:
 
     ### Raises
     -   ``ValueError`` if:
-            -   params is not set.
-            -   switches is not set.
+            -   ``rest_send`` is not set before calling commit()
+            -   ``results`` is not set before calling commit()
+            -   ``switch_details`` is not set before calling commit()
+            -   payload.deleteFiles is empty when calling commit()
+            -   ``bootflash_type`` is not set before calling add_file()
+            -   ``file_name`` is not set before calling add_file()
+            -   ``file_path`` is not set before calling add_file()
+            -   ``ip_address`` is not set before calling add_file()
+            -   ``switch_details`` is not set before calling add_file()
     -   ``TypeError`` if:
-            -   switches is not a list.
-            -   switches contains anything other than strings.
+            -   ``switch_details`` is not an instance of ``SwitchDetails``.
+            -   ip_address to serial_number conversion fails.
 
     ### Usage
 
@@ -75,10 +82,9 @@ class BootflashFiles:
     instance.partition = "bootflash:"
     instance.add_file()
     instance.commit()
-
     ```
 
-    ### Structure
+    ### Payload Structure
 
     The structure of the request body to delete bootflash files.
 
