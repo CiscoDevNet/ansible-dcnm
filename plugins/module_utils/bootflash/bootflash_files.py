@@ -231,14 +231,11 @@ class BootflashFiles:
     def commit(self):
         """
         ### Summary
-        Send the payload to delete files from bootflash.
-
-        This is used to convert switch ip address to serial_number, which is
-        required by EpBootflashFiles().
+        Send the payload to delete files.
 
         ### Raises
         -   ``ValueError`` if:
-                -   switches is not set.
+                -   Mandatory parameters are not set.
 
         ### Notes
         -   pylint: disable=no-member is needed due to the results property
