@@ -18,9 +18,10 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.discovery.discovery import \
+    EpBootflashDiscovery
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
     EpBootflashInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
@@ -81,7 +82,6 @@ class BootflashInfo:
     # information can be retrieved.  If there was not a match, these
     # properties will return None.
 
-    bootflash_type = instance.bootflash_type
     date = instance.date
     device_name = instance.device_name
     filename = instance.filename
@@ -89,6 +89,7 @@ class BootflashInfo:
     ip_address = instance.ip_address
     name = instance.name
     serial_number = instance.serial_number
+    supervisor = instance.supervisor
     ```
 
     #### More involved usage
@@ -159,6 +160,9 @@ class BootflashInfo:
     before returning the dictionary to the user and before populating this
     class's associated ip_address property.
 
+    In this class, the property ``supervisor`` is used to access the value of
+    ``bootflash_type``.
+
     ```json
     {
         "bootflash_type": "active",
@@ -179,6 +183,7 @@ class BootflashInfo:
 
         self.action = "bootflash_query"
         self.conversion = ConversionUtils()
+        self.ep_bootflash_discovery = EpBootflashDiscovery()
         self.ep_bootflash_info = EpBootflashInfo()
 
         self.bootflash_data_map = {}
@@ -285,6 +290,13 @@ class BootflashInfo:
             if serial_number is None:
                 continue
 
+            # rediscover bootflash contents for the switch
+            self.ep_bootflash_discovery.serial_number = serial_number
+            self.rest_send.path = self.ep_bootflash_discovery.path
+            self.rest_send.verb = self.ep_bootflash_discovery.verb
+            self.rest_send.commit()
+
+            # retrieve bootflash information for the switch
             self.ep_bootflash_info.serial_number = serial_number
             self.rest_send.path = self.ep_bootflash_info.path
             self.rest_send.verb = self.ep_bootflash_info.verb
@@ -315,6 +327,26 @@ class BootflashInfo:
             msg += "properties."
             raise ValueError(msg)
 
+    def strip_ipaddr_leading_space(self, item) -> dict:
+        """
+        ### Summary
+        NDFC inserts a leading space before ipAddr's value. Strip
+        this, update the dictionary with the stripped ip_address,
+        and return the updated dictionary.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ipAddr key is missing from ``item``.
+        """
+        method_name = inspect.stack()[0][3]
+        ipaddr = item.get("ipAddr", None)
+        if ipaddr is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"ipAddr not found in item: {item}."
+            raise ValueError(msg)
+        item.update({"ipAddr": ipaddr.strip()})
+        return copy.deepcopy(item)
+
     def build_matches(self):
         """
         ### Summary
@@ -344,33 +376,37 @@ class BootflashInfo:
             if self.filter_partition and partition != self.filter_partition:
                 continue
             for item in self.bootflash_data_map[partition]:
-                item_copy = copy.deepcopy(item)
-                ipaddr = item_copy.get("ipAddr")
-                if ipaddr:
-                    item_copy.update({"ipAddr": ipaddr.strip()})
-                if self.filter_filename and item_copy.get("fileName", None) != self.filter_filename:
+                item_copy = self.strip_ipaddr_leading_space(item)
+                if (
+                    self.filter_filename
+                    and item_copy.get("fileName", None) != self.filter_filename
+                ):
                     continue
-                if self.filter_switch and item_copy.get("ipAddr", None) != self.filter_switch:
+                if (
+                    self.filter_switch
+                    and item_copy.get("ipAddr", None) != self.filter_switch
+                ):
                     continue
-                if self.filter_filepath and item_copy.get("filePath", None) != self.filter_filepath:
+                if (
+                    self.filter_filepath
+                    and item_copy.get("filePath", None) != self.filter_filepath
+                ):
                     continue
-                if self.filter_supervisor and item_copy.get("bootflash_type", None) != self.filter_supervisor:
+                if (
+                    self.filter_supervisor
+                    and item_copy.get("bootflash_type", None) != self.filter_supervisor
+                ):
                     continue
                 self.matches.append(item_copy)
 
         diff = {}
         for match in self.matches:
-            match_copy = copy.deepcopy(match)
-            ip_addr = match_copy.get("ipAddr", None)
-            if ip_addr is None:
+            ip_address = match.get("ipAddr", None)
+            if ip_address is None:
                 continue
-            # NDFC inserts a leading space before ipAddr. Strip this
-            # and update the dictionary with the stripped ip_address.
-            ip_address = ip_addr.strip()
-            match_copy.update({"ipAddr": ip_address})
             if ip_address not in diff:
                 diff[ip_address] = []
-            diff[ip_address].append(match_copy)
+            diff[ip_address].append(match)
         self.results.diff_current = diff
         self.results.result_current = self.result_dict
         self.results.response_current = self.response_dict
@@ -427,26 +463,6 @@ class BootflashInfo:
         """
         self.build_matches()
         return self.populate_property(search_item)
-
-    @property
-    def bootflash_type(self):
-        """
-        ### Summary
-        Return the current ``bootflash_type``.
-
-        ``bootflash_type`` is the type of bootflash that hosts the filename
-        that was matched.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``bootflash_type``
-
-        ### Example value
-        ``active``
-        """
-        return self._get("bootflash_type")
 
     @property
     def date(self):
@@ -709,7 +725,8 @@ class BootflashInfo:
     def supervisor(self):
         """
         ### Summary
-        Return the current ``supervisor``.  Alias for ''bootflash_type''.
+        Return the state of the ``supervisor`` card on which ``filename``
+        resides.
 
         ``supervisor`` is either "active" or "standby" and represents the
         status of the supervisor on which the ``filename`` resides.
@@ -721,7 +738,8 @@ class BootflashInfo:
         ``bootflash_type``
 
         ### Example value
-        ``active``
+        -   ``active``
+        -   ``standby``
         """
         return self._get("bootflash_type")
 
