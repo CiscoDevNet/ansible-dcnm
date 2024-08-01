@@ -36,31 +36,67 @@ options:
             - deleted
             - query
         default: query
-
-    files:
+    config:
         description:
-            - List of files to be deleted or queried.
-        type: list
-        elements: str
-        default: []
-    switches:
-        description:
-            - List of switches containing files to be deleted or queried.
-        type: list
-        elements: dict
+            - Configuration parameters for the module.
+        type: dict
+        required: true
         suboptions:
-            ip_address:
+            targets:
                 description:
-                    - The ip address of a switch.
-                type: str
-                required: true
-            files:
-                description:
-                    - A list of files overridding the global files list.
+                    - List of dictionaries containing options for files to be deleted or queried.
                 type: list
-                elements: str
+                elements: dict
                 default: []
                 required: false
+                suboptions:
+                    filepath:
+                        description:
+                            - The path to the file to be deleted or queried.
+                        type: str
+                        required: true
+                    supervisor:
+                        description:
+                            - Either active or standby. The supervisor containing the filepath.
+                        type: str
+                        required: false
+                        choices:
+                            - active
+                            - standby
+                        default: active
+            switches:
+                description:
+                    - List of dictionaries containing switches on which query or delete operations are executed.
+                type: list
+                elements: dict
+                suboptions:
+                    ip_address:
+                        description:
+                            - The ip address of a switch.
+                        type: str
+                        required: true
+                    targets:
+                        description:
+                            - List of dictionaries containing options for files to be deleted or queried.
+                        type: list
+                        elements: dict
+                        default: []
+                        required: false
+                        suboptions:
+                            filepath:
+                                description:
+                                    - The path to the file to be deleted or queried.
+                                type: str
+                                required: true
+                            supervisor:
+                                description:
+                                    - Either active or standby. The supervisor containing the filepath.
+                                type: str
+                                required: false
+                                choices:
+                                    - active
+                                    - standby
+                                default: active
 
 """
 
@@ -78,56 +114,67 @@ EXAMPLES = """
 #
 #   Return information for one or more files.
 #
-# Delete two files from two switches.
+# Delete two files from each of three switches.
 
-    -   name: Delete Image policies
-        cisco.dcnm.dcnm_bootflash:
-            state: deleted
-            files:
-            -   nxos64-cs.10.3.2.F.bin
-            -   nxos64-cs.10.3.1.F.bin
-            switches:
-            -   ip_address: 192.168.1.1
-            -   ip_address: 192.168.1.2
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Delete two files from each of two switches
+  cisco.dcnm.dcnm_bootflash:
+    state: deleted
+    config:
+      targets:
+        - filepath: bootflash:/myDir/foo.txt
+          supervisor: active
+        - filepath: usb1:/bar.txt
+          supervisor: standby
+      switches:
+        - ip_address: 192.168.1.1
+        - ip_address: 192.168.1.2
+        - ip_address: 192.168.1.3
 
-# Delete two files from switch 192.168.1.1 and
-# switch 192.168.1.2, and delete one file from
-# switch 192.168.1.3.
+# Delete two files from switch 192.168.1.1 and switch 192.168.1.2:
+#   - foo.txt on the active supervisor's bootflash: device.
+#   - bar.txt on the standby supervisor's usb1: device.
+# Delete one file from switch 192.168.1.3:
+#   - baz.txt on the standby supervisor's bootflash: device.
 
-    -   name: Delete Image policies
-        cisco.dcnm.dcnm_bootflash:
-            state: deleted
-            files:
-            -   nxos64-cs.10.3.2.F.bin
-            -   nxos64-cs.10.3.1.F.bin
-            switches:
-            -   ip_address: 192.168.1.1
-            -   ip_address: 192.168.1.2
-            -   ip_address: 192.168.1.3
-                files:
-                -   nxos64-cs.10.3.1.F.bin
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Delete two files from each of two switches
+  cisco.dcnm.dcnm_bootflash:
+    state: deleted
+    config:
+      targets:
+        - filepath: bootflash:/myDir/foo.txt
+          supervisor: active
+        - filepath: usb1:/bar.txt
+          supervisor: standby
+      switches:
+        - ip_address: 192.168.1.1
+        - ip_address: 192.168.1.2
+        - ip_address: 192.168.1.3
+          targets:
+            - filepath: bootflash:/baz.txt
+              supervisor: standby
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 
-# Query the controller for one file on switch 192.168.1.1.
+# Query the controller for information about one file on three switches.
+# Since the default for supervisor is "active", the module will query the
+# active supervisor's bootflash: device.
 
-    -   name: Query files
-        cisco.dcnm.dcnm_bootflash:
-            state: query
-            files:
-            -   nxos64-cs.10.3.2.F.bin
-            switches:
-            -   ip_address: 192.168.1.1
-        register: result
-    -   name: print result
-        ansible.builtin.debug:
-            var: result
+- name: Query file on three switches
+  cisco.dcnm.dcnm_bootflash:
+    state: query
+    config:
+      targets:
+        - filepath: bootflash:/myDir/foo.txt
+    switches:
+      - ip_address: 192.168.1.1
+      - ip_address: 192.168.1.2
+      - ip_address: 192.168.1.3
+  register: result
+- name: print result
+  ansible.builtin.debug:
+    var: result
 
 """
 
@@ -198,13 +245,19 @@ class Common:
             msg += f"Expected one of: {','.join(self._valid_states)}."
             raise_error(msg)
 
-        self.files = self.params.get("files", None)
-        if not isinstance(self.files, list):
-            msg = "Expected list of strings for self.files. "
+        self.config = self.params.get("config", None)
+        if not isinstance(self.config, dict):
+            msg = "Expected dict for config. "
+            msg += f"Got {type(self.config).__name__}"
+            raise_error(msg)
+
+        self.targets = self.config.get("targets", [])
+        if not isinstance(self.targets, list):
+            msg = "Expected list of dict for self.targets. "
             msg += f"Got {type(self.files).__name__}"
             raise_error(msg)
 
-        self.switches = self.params.get("switches", None)
+        self.switches = self.config.get("switches", [])
         if not isinstance(self.switches, list):
             msg = "Expected list of dict for self.switches. "
             msg += f"Got {type(self.files).__name__}"
@@ -235,7 +288,8 @@ class Common:
         """
         Caller: main()
 
-        self.have consists of the current image policies on the controller
+        self.have consists of the controller's understanding of the current
+        state of files on the switches.
         """
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
@@ -263,42 +317,27 @@ class Common:
         def raise_type_error(msg):
             raise TypeError(f"{self.class_name}.{method_name}: {msg}")
 
-        if self.params.get("files", None) is None:
-            msg = "params is missing files parameter."
-            raise_value_error(msg)
-
-        self.files = self.params["files"]
-
-        if not isinstance(self.files, list):
-            msg = "Expected list of strings for self.files. "
-            msg += f"Got {type(self.files).__name__}"
-            raise_type_error(msg)
-
-        if self.params.get("switches", None) is None:
-            msg = "params is missing switches parameter."
-            raise_value_error(msg)
-
-        self.switches = self.params["switches"]
-
-        if not isinstance(self.switches, list):
-            msg = "Expected list of dict for self.switches. "
-            msg += f"Got {type(self.files).__name__}"
-            raise_type_error(msg)
-
         for switch in self.switches:
             if switch.get("ip_address", None) is None:
                 msg = "Expected ip_address in switch dict. "
                 msg += f"Got {switch}"
                 raise_value_error(msg)
 
-            if switch.get("files", None) is None:
-                switch["files"] = self.files
-            if not isinstance(switch["files"], list):
-                msg = "Expected list of strings for switch['files']. "
-                msg += f"Got {type(switch['files']).__name__}"
+            if switch.get("targets", None) is None:
+                switch["targets"] = self.targets
+            if not isinstance(switch["targets"], list):
+                msg = "Expected list of dictionaries for switch['targets']. "
+                msg += f"Got {type(switch['targets']).__name__}"
                 raise_type_error(msg)
-            self.want.append(switch)
 
+            for target in switch["targets"]:
+                if target.get("filepath", None) is None:
+                    msg = "Expected filepath in target dict. "
+                    msg += f"Got {target}"
+                    raise_value_error(msg)
+                if target.get("supervisor", None) is None:
+                    target["supervisor"] = "active"
+            self.want.append(switch)
 
 class Deleted(Common):
     """
@@ -316,37 +355,121 @@ class Deleted(Common):
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
 
-        self.instance = BootflashFiles()
+        self.bootflash_files = BootflashFiles()
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
+    def parse_target(self, target) -> None:
+        """
+        ### Summary
+        Parse the target.filepath parameter into its consituent
+        API parameters.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``filepath`` is not set in the target dict.
+            -   ``supervisor`` is not set in the target dict.
+
+        ### Target Structure
+        {
+            filepath: bootflash:/myDir/foo.txt
+            supervisor: active
+        }
+
+        Set the following API parameters from the above structure:
+
+        - self.partition: bootflash:
+        - self.filepath: bootflash/myDir
+        - self.filename: foo.txt
+        - self.supervisor: active
+        """
+        method_name = inspect.stack()[0][3]
+        def raise_error(msg):
+            raise ValueError(f"{self.class_name}.{method_name}: {msg}")
+        if target.get("filepath", None) is None:
+            msg = "Expected filepath in target dict. "
+            msg += f"Got {target}"
+            raise_error(msg)
+        if target.get("supervisor", None) is None:
+            msg = "Expected supervisor in target dict. "
+            msg += f"Got {target}"
+            raise_error(msg)
+
+        parts = target.get("filepath").split('/')
+        self.partition = parts[0]
+        self.filepath = '/'.join(parts[0:-1]) + "/"
+        self.filename = parts[-1]
+        self.supervisor = target.get("supervisor")
+
+    def file_exists(self) -> bool:
+        """
+        ### Summary
+        -   Return True if the file exists on the switch.
+        -   Return False otherwise.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.bootflash_info.filter_filename = self.filename
+        self.bootflash_info.filter_filepath = self.filepath
+        self.bootflash_info.filter_partition = self.partition
+        self.bootflash_info.filter_supervisor = self.supervisor
+        self.bootflash_info.filter_switch = self.ip_address
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"filename: {self.filename}, "
+        msg += f"filepath: {self.filepath}, "
+        msg += f"partition: {self.partition}, "
+        msg += f"supervisor: {self.supervisor}, "
+        msg += f"switch: {self.ip_address}"
+        self.log.debug(msg)
+
+        if self.bootflash_info.filename is None:
+            return False
+        return True
+
     def commit(self) -> None:
         """
-        Delete the specified files from the bootflash of the specified switches.
+        ### Summary
+        Delete the specified files if they exist.
         """
         self.get_want()
+        self.bootflash_info = BootflashInfo()
+        self.bootflash_info.results = Results()
+        self.bootflash_info.rest_send = self.rest_send  # pylint: disable=no-member
+        self.bootflash_info.switch_details = SwitchDetails()
+
+        switch_list = []
+        for switch in self.switches:
+            switch_list.append(switch["ip_address"])
+        self.bootflash_info.switches = switch_list
+        self.bootflash_info.refresh()
 
         self.results.state = self.state
         self.results.check_mode = self.check_mode
-        self.instance.results = self.results
-        self.instance.rest_send = self.rest_send
-        self.instance.switch_details = SwitchDetails()
-        self.instance.switch_details.results = Results()
-        self.instance.switch_details.rest_send = self.rest_send
+        self.bootflash_files.results = self.results
+        self.bootflash_files.rest_send = self.rest_send
+        self.bootflash_files.switch_details = SwitchDetails()
+        self.bootflash_files.switch_details.results = Results()
 
         for switch in self.switches:
-            self.instance.ip_address = switch["ip_address"]
-            for file in switch["files"]:
-                self.instance.bootflash_type = "active"
-                self.instance.file_name = file
-                self.instance.file_path = "bootflash:"
-                self.instance.partition = "bootflash:"
-                self.instance.add_file()
+            self.ip_address = switch["ip_address"]
+            for target in switch["targets"]:
+                self.parse_target(target)
+                if not self.file_exists():
+                    continue
+                self.bootflash_files.ip_address = switch["ip_address"]
+                self.bootflash_files.bootflash_type = self.supervisor
+                self.bootflash_files.file_name = self.filename
+                self.bootflash_files.file_path = self.filepath
+                self.bootflash_files.partition = self.partition
+                self.bootflash_files.add_file()
 
-        self.instance.commit()
+        self.bootflash_files.commit()
 
 class Query(Common):
     """
@@ -411,20 +534,12 @@ def main():
     """
 
     argument_spec = {
-        "files": {
-            "required": False,
-            "type": "list",
-            "elements": "str",
-            "default": [],
-        },
-        "switches": {
-            "required": False,
-            "type": "list",
-            "elements": "dict",
-            "default": [],
+        "config": {
+            "required": True,
+            "type": "dict",
         },
         "state": {
-            "default": "merged",
+            "default": "query",
             "choices": ["deleted", "query"],
         },
     }
@@ -459,7 +574,7 @@ def main():
             ansible_module.fail_json(f"Invalid state: {params['state']}")
         task.rest_send = rest_send
         task.commit()
-    except ValueError as error:
+    except (TypeError, ValueError) as error:
         ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
     task.results.build_final_result()

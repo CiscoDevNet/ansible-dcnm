@@ -18,6 +18,7 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
+import json
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
@@ -83,8 +84,8 @@ class BootflashInfo:
     bootflash_type = instance.bootflash_type
     date = instance.date
     device_name = instance.device_name
-    file_name = instance.file_name
-    file_path = instance.file_path
+    filename = instance.filename
+    filepath = instance.filepath
     ip_address = instance.ip_address
     name = instance.name
     serial_number = instance.serial_number
@@ -139,7 +140,7 @@ class BootflashInfo:
     # array would go something like:
 
     switch1 = switches[0]
-    file_name = instance.results.diff[0][switch1][0]["fileName"]
+    filename = instance.results.diff[0][switch1][0]["fileName"]
     size = instance.results.diff[0][switch1][0]["size"]
 
     ```
@@ -314,18 +315,6 @@ class BootflashInfo:
             msg += "properties."
             raise ValueError(msg)
 
-        if self.filter_switch is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "filter_switch must be set before "
-            msg += "accessing match properties."
-            raise ValueError(msg)
-
-        if self.filter_file is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "filter_file must be set before "
-            msg += "accessing match properties."
-            raise ValueError(msg)
-
     def build_matches(self):
         """
         ### Summary
@@ -349,16 +338,25 @@ class BootflashInfo:
         self.bootflash_space_map = data.get("bootFlashSpaceMap", {})
         self.partitions = data.get("partitions", [])
 
-        if len(self.partitions) == 0:
-            return
-
         for partition in self.partitions:
             if partition not in self.bootflash_data_map:
                 continue
+            if self.filter_partition and partition != self.filter_partition:
+                continue
             for item in self.bootflash_data_map[partition]:
-                if item.get("fileName", None) != self.filter_file:
+                item_copy = copy.deepcopy(item)
+                ipaddr = item_copy.get("ipAddr")
+                if ipaddr:
+                    item_copy.update({"ipAddr": ipaddr.strip()})
+                if self.filter_filename and item_copy.get("fileName", None) != self.filter_filename:
                     continue
-                self.matches.append(item)
+                if self.filter_switch and item_copy.get("ipAddr", None) != self.filter_switch:
+                    continue
+                if self.filter_filepath and item_copy.get("filePath", None) != self.filter_filepath:
+                    continue
+                if self.filter_supervisor and item_copy.get("bootflash_type", None) != self.filter_supervisor:
+                    continue
+                self.matches.append(item_copy)
 
         diff = {}
         for match in self.matches:
@@ -390,14 +388,14 @@ class BootflashInfo:
         if len(self.matches) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"No matches found for {self.filter_switch} and "
-            msg += f"{self.filter_file}."
+            msg += f"{self.filter_filename}."
             self.log.debug(msg)
             return None
 
         if len(self.matches) > 1:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Multiple matches found for {self.filter_switch} and "
-            msg += f"{self.filter_file}."
+            msg += f"{self.filter_filename}."
             self.log.debug(msg)
             return None
 
@@ -405,7 +403,7 @@ class BootflashInfo:
 
         if search_item not in self.match:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.filter_switch} {self.filter_file} does not have "
+            msg += f"{self.filter_switch} {self.filter_filename} does not have "
             msg += f"a key named {search_item}."
             raise ValueError(msg)
 
@@ -417,11 +415,15 @@ class BootflashInfo:
         """
         ### Summary
         Return the value of item from the switch and file matching
-        ``filter_switch`` and ``filter_file``.
+        the query filters.  Query filters are:
+            -   filter_filename
+            -   filter_filepath
+            -   filter_partition
+            -   filter_supervisor
+            -   filter_switch
 
         ### Raises
-        -   ``ValueError`` if ``filter_switch`` and ``filter_file`` are
-            not set.
+        -   None
         """
         self.build_matches()
         return self.populate_property(search_item)
@@ -432,8 +434,8 @@ class BootflashInfo:
         ### Summary
         Return the current ``bootflash_type``.
 
-        ``bootflash_type`` is the type of bootflash on which the matching
-        file_name resides.
+        ``bootflash_type`` is the type of bootflash that hosts the filename
+        that was matched.
 
         ### Raises
         None
@@ -452,8 +454,7 @@ class BootflashInfo:
         ### Summary
         Return the current ``date``.
 
-        ``date`` is the date stamp of the file_name matching filter_switch
-        and filter_file.  Associated with key ``date``.
+        ``date`` is the date stamp of the ``filename`` that was matched.
 
         ### Raises
         None
@@ -472,8 +473,8 @@ class BootflashInfo:
         ### Summary
         Return the current ``device_name``.
 
-        ``device_name`` is the hostname of the device matching filter_switch
-        and filter_file.
+        ``device_name`` is the hostname of the device that hosts the
+        ``filename`` that was matched.
 
         ### Raises
         None
@@ -487,12 +488,12 @@ class BootflashInfo:
         return self._get("deviceName")
 
     @property
-    def file_name(self):
+    def filename(self):
         """
         ### Summary
-        Return the current ``file_name``.
+        Return the current ``filename``.
 
-        ``file_name`` is the name of the file that was matched.
+        ``filename`` is the name of the file that was matched.
 
         ### Raises
         None
@@ -506,13 +507,12 @@ class BootflashInfo:
         return self._get("fileName")
 
     @property
-    def file_path(self):
+    def filepath(self):
         """
         ### Summary
-        Return the current ``file_path``.
+        Return the current ``filepath``.
 
-        ``file_path`` is the path to the file that was matched
-        on ``filter_switch`` + ``filter_file``.
+        ``filepath`` is the path to the file that was matched.
 
         ### Raises
         None
@@ -520,31 +520,91 @@ class BootflashInfo:
         ### Associated key
         ``filePath``
 
-        ### Example file_path
+        ### Example filepath
         ``bootflash:``
         """
-        return self._get("fileName")
+        return self._get("filePath")
 
     @property
-    def filter_file(self):
+    def filter_filename(self):
         """
         ### Summary
-        Return the current filter_file.
+        Return the current ``filter_filename``.
 
-        filter_file is a filename used to filter the results of the query
-        to a file.
+        ``filter_filename`` is a filename used to filter the results
+        of the query.
 
         ### Raises
         None
         """
-        return self._filter_file
+        return self._filter_filename
 
-    @filter_file.setter
-    def filter_file(self, value):
-        msg = "ENTERED BootflashQuery.filter_file.setter: "
+    @filter_filename.setter
+    def filter_filename(self, value):
+        msg = "ENTERED BootflashQuery.filter_filename.setter: "
         msg += f"value {value}"
         self.log.debug(msg)
-        self._filter_file = value
+        self._filter_filename = value
+
+    @property
+    def filter_filepath(self):
+        """
+        ### Summary
+        Return the current ``filter_filepath``.
+
+        ``filter_filepath`` is a file path used to filter the results
+        of the query.
+
+        ### Raises
+        None
+        """
+        return self._filter_filepath
+
+    @filter_filepath.setter
+    def filter_filepath(self, value):
+        msg = "ENTERED BootflashQuery.filter_filepath.setter: "
+        msg += f"value {value}"
+        self.log.debug(msg)
+        self._filter_filepath = value
+
+    @property
+    def filter_partition(self):
+        """
+        ### Summary
+        Return the current ``filter_partition``.
+
+        ``filter_partition`` is a partition (flash device) used to filter
+        the results of the query.
+
+        ### Raises
+        None
+        """
+        return self._filter_partition
+
+    @filter_partition.setter
+    def filter_partition(self, value):
+        msg = "ENTERED BootflashQuery.filter_partition.setter: "
+        msg += f"value {value}"
+        self.log.debug(msg)
+        self._filter_partition = value
+
+    @property
+    def filter_supervisor(self):
+        """
+        ### Summary
+        Return the current ``filter_supervisor``.
+
+        ``filter_supervisor`` is either "active" or "standby" and represents
+         the state of the supervisor which hosts filename.
+
+        ### Raises
+        None
+        """
+        return self._filter_supervisor
+
+    @filter_supervisor.setter
+    def filter_supervisor(self, value):
+        self._filter_supervisor = value
 
     @property
     def filter_switch(self):
@@ -553,7 +613,7 @@ class BootflashInfo:
         Return the current filter_switch.
 
         filter_switch is a switch ipv4 address used to filter the results
-        of the query to a single switch.
+        of the query.
 
         ### Raises
         None
@@ -562,9 +622,6 @@ class BootflashInfo:
 
     @filter_switch.setter
     def filter_switch(self, value):
-        msg = "ENTERED BootflashQuery.filter_switch.setter: "
-        msg += f"value {value}"
-        self.log.debug(msg)
         self._filter_switch = value
 
     @property
@@ -581,8 +638,8 @@ class BootflashInfo:
         ### Summary
         Return the current ``ip_address``.
 
-        ``ip_address`` is ip address associated with the device matching
-        ``filter_switch`` and ``filter_file``.
+        ``ip_address`` is the ip address associated with the device that hosts
+        the ``filename`` that was matched.
 
         ### Raises
         None
@@ -600,7 +657,7 @@ class BootflashInfo:
         """
         ### Summary
         Return the current file information dictionary, if any,
-        that matches ``filter_switch`` and ``filter_file``.
+        that matches the query filters.
 
         ### Raises
         None
@@ -646,7 +703,27 @@ class BootflashInfo:
         ### Example value
         ``bootflash:``
         """
-        return self._get("fileName")
+        return self._get("name")
+
+    @property
+    def supervisor(self):
+        """
+        ### Summary
+        Return the current ``supervisor``.  Alias for ''bootflash_type''.
+
+        ``supervisor`` is either "active" or "standby" and represents the
+        status of the supervisor on which the ``filename`` resides.
+
+        ### Raises
+        None
+
+        ### Associated key
+        ``bootflash_type``
+
+        ### Example value
+        ``active``
+        """
+        return self._get("bootflash_type")
 
     @property
     def serial_number(self):

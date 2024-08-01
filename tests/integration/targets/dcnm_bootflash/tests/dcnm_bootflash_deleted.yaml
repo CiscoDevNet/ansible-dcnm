@@ -90,14 +90,18 @@
 - name: DELETED - TEST - Delete files
   cisco.dcnm.dcnm_bootflash:
       state: deleted
-      switches:
-      - ip_address: "{{ spine1 }}"
-        files:
-        - "foo.txt"
-        - "bar.txt"
-      - ip_address: "{{ spine2 }}"
-        files:
-        - "baz.txt"
+      config:
+        targets:
+          - filepath: bootflash:/foo.txt
+            supervisor: active
+          - filepath: bootflash:/bar.txt
+          - filepath: bootflash:/fb8/20170927_1.cfg
+            supervisor: active
+          - filepath: bootflash:/fb8/20180223_1.cfg
+            supervisor: active
+        switches:
+          - ip_address: "{{ spine1 }}"
+          - ip_address: "{{ spine2 }}"
   register: result
 
 - debug:

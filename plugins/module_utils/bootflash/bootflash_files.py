@@ -142,16 +142,22 @@ class BootflashFiles:
 
         ### Raises
         -   ``ValueError`` if:
-                -   switch_details is not set.
+                -   ``switch_details`` is not set.
+                -   ``rest_send`` is not set.
         """
         method_name = inspect.stack()[0][3]
+        def raise_exception(property_name):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{property_name} must be set before calling {method_name}."
+            raise ValueError(f"{msg}")
 
         if self.switch_details is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"switch_details must be set before calling {method_name}."
-            raise ValueError(msg)
+            raise_exception("switch_details")
+        if self.rest_send is None:
+            raise_exception("rest_send")
 
         if self.switch_details_refreshed is False:
+            self.switch_details.rest_send = self.rest_send
             self.switch_details.refresh()
             self.switch_details_refreshed = True
 
@@ -223,8 +229,6 @@ class BootflashFiles:
             raise_exception("results")
         if not self.switch_details:
             raise_exception("switch_details")
-        if len(self.payload["deleteFiles"]) == 0:
-            raise_exception("payload")
 
     def commit(self):
         """
@@ -257,14 +261,18 @@ class BootflashFiles:
         None
         """
         # pylint: disable=no-member
-        self.rest_send.path = self.ep_bootflash_info.path
-        self.rest_send.verb = self.ep_bootflash_info.verb
-        self.rest_send.payload = self.payload
-        self.rest_send.commit()
+        if self.payload["deleteFiles"]:
+            self.rest_send.path = self.ep_bootflash_info.path
+            self.rest_send.verb = self.ep_bootflash_info.verb
+            self.rest_send.payload = self.payload
+            self.rest_send.commit()
+            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+        else:
+            self.results.result_current = {"success": True, "found": False}
+            self.results.response_current = {"MESSAGE": "No files to delete.", "RESULT_CODE": 200}
 
         self.results.diff_current = copy.deepcopy(self.payload)
-        self.results.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
 
     def validate_prerequisites_for_add_file(self):
