@@ -41,10 +41,10 @@ class BootflashFiles:
             -   ``results`` is not set before calling commit()
             -   ``switch_details`` is not set before calling commit()
             -   payload.deleteFiles is empty when calling commit()
-            -   ``bootflash_type`` is not set before calling add_file()
             -   ``file_name`` is not set before calling add_file()
             -   ``file_path`` is not set before calling add_file()
             -   ``ip_address`` is not set before calling add_file()
+            -   ``supervisor`` is not set before calling add_file()
             -   ``switch_details`` is not set before calling add_file()
     -   ``TypeError`` if:
             -   ``switch_details`` is not an instance of ``SwitchDetails``.
@@ -75,7 +75,7 @@ class BootflashFiles:
 
     # Delete a file in the root directory of the bootflash
     # on the active supervisor of switch 192.168.1.1:
-    instance.bootflash_type = "active"
+    instance.supervisor = "active"
     instance.file_name = "nxos_image.bin"
     instance.file_path = "bootflash:/mydir"
     instance.ip_address = "192.168.1.1"
@@ -118,7 +118,6 @@ class BootflashFiles:
         self.ok_to_delete_files_reason = None
         self.payload = {"deleteFiles": []}
 
-        self._bootflash_type = None
         self._file_name = None
         self._file_path = None
         self._file_size = None
@@ -126,6 +125,7 @@ class BootflashFiles:
         self._partition = None
         self._rest_send = None
         self._results = None
+        self._supervisor = None
         self._switch_details = None
 
         self.switch_details_refreshed = False
@@ -146,6 +146,7 @@ class BootflashFiles:
                 -   ``rest_send`` is not set.
         """
         method_name = inspect.stack()[0][3]
+
         def raise_exception(property_name):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{property_name} must be set before calling {method_name}."
@@ -153,6 +154,7 @@ class BootflashFiles:
 
         if self.switch_details is None:
             raise_exception("switch_details")
+        # pylint: disable=no-member
         if self.rest_send is None:
             raise_exception("rest_send")
 
@@ -266,11 +268,16 @@ class BootflashFiles:
             self.rest_send.verb = self.ep_bootflash_info.verb
             self.rest_send.payload = self.payload
             self.rest_send.commit()
-            self.results.response_current = copy.deepcopy(self.rest_send.response_current)
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         else:
             self.results.result_current = {"success": True, "found": False}
-            self.results.response_current = {"MESSAGE": "No files to delete.", "RESULT_CODE": 200}
+            self.results.response_current = {
+                "MESSAGE": "No files to delete.",
+                "RESULT_CODE": 200,
+            }
 
         self.results.diff_current = copy.deepcopy(self.payload)
         self.results.register_task_result()
@@ -282,10 +289,11 @@ class BootflashFiles:
 
         ### Raises
         -   ``ValueError`` if:
-                -   ``bootflash_type`` is not set.
                 -   ``file_name`` is not set.
                 -   ``file_path`` is not set.
                 -   ``ip_address`` is not set.
+                -   ``supervisor`` is not set.
+                -   ``switch_details`` is not set.
         """
         method_name = inspect.stack()[0][3]
 
@@ -294,14 +302,14 @@ class BootflashFiles:
             msg += f"{property_name} must be set before calling add_file()."
             raise ValueError(f"{msg}")
 
-        if not self.bootflash_type:
-            raise_exception("bootflash_type")
         if not self.file_name:
             raise_exception("file_name")
         if not self.file_path:
             raise_exception("file_path")
         if not self.ip_address:
             raise_exception("ip_address")
+        if not self.supervisor:
+            raise_exception("supervisor")
         if not self.switch_details:
             raise_exception("switch_details")
 
@@ -325,7 +333,7 @@ class BootflashFiles:
             "partition": self.partition,
             "files": [
                 {
-                    "bootflashType": self.bootflash_type,
+                    "bootflashType": self.supervisor,
                     "fileName": self.file_name,
                     "filePath": self.file_path,
                 }
@@ -333,30 +341,6 @@ class BootflashFiles:
         }
 
         self.payload["deleteFiles"].append(add_payload)
-
-    @property
-    def bootflash_type(self):
-        """
-        ### Summary
-        Return the current ``bootflash_type``.
-
-        ``bootflash_type`` is the type of bootflash on which the matching
-        file_name resides.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``bootflashType``
-
-        ### Example value
-        ``active``
-        """
-        return self._bootflash_type
-
-    @bootflash_type.setter
-    def bootflash_type(self, value):
-        self._bootflash_type = value
 
     @property
     def file_path(self):
@@ -374,7 +358,7 @@ class BootflashFiles:
 
         ### Example values
         -   ``bootflash:``
-        -   ``bootflash:/mydir/mysubdir``
+        -   ``bootflash:/mydir/mysubdir/``
         """
         return self._file_path
 
@@ -406,27 +390,6 @@ class BootflashFiles:
         self._file_name = value
 
     @property
-    def ip_address(self):
-        """
-        ### Summary
-        The ip address of the switch on which ``file_name`` resides.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``serialNumber`` (ip_address is converted to serialNumber)
-
-        ### Example value
-        ``192.168.1.2``
-        """
-        return self._ip_address
-
-    @ip_address.setter
-    def ip_address(self, value):
-        self._ip_address = value
-
-    @property
     def file_size(self):
         """
         ### Summary
@@ -448,6 +411,27 @@ class BootflashFiles:
         self._file_size = value
 
     @property
+    def ip_address(self):
+        """
+        ### Summary
+        The ip address of the switch on which ``file_name`` resides.
+
+        ### Raises
+        None
+
+        ### Associated key
+        ``serialNumber`` (ip_address is converted to serialNumber)
+
+        ### Example value
+        ``192.168.1.2``
+        """
+        return self._ip_address
+
+    @ip_address.setter
+    def ip_address(self, value):
+        self._ip_address = value
+
+    @property
     def partition(self):
         """
         ### Summary
@@ -467,6 +451,31 @@ class BootflashFiles:
     @partition.setter
     def partition(self, value):
         self._partition = value
+
+    @property
+    def supervisor(self):
+        """
+        ### Summary
+        Return the current ``supervisor``.
+
+        ``supervisor`` is the switch supervisor card (active or standby)
+        on which ``file_name`` resides.
+
+        ### Raises
+        None
+
+        ### Associated key
+        ``bootflashType``
+
+        ### Example values
+        -   ``active``
+        -   ``standby``
+        """
+        return self._supervisor
+
+    @supervisor.setter
+    def supervisor(self, value):
+        self._supervisor = value
 
     @property
     def switch_details(self):
