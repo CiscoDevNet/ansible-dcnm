@@ -85,7 +85,7 @@ options:
                         suboptions:
                             filepath:
                                 description:
-                                    - The path to the file to be deleted or queried.
+                                    - The path to the file to be deleted or queried.  Only files in the root directory of the partition are currently supported.
                                 type: str
                                 required: true
                             supervisor:
@@ -121,9 +121,9 @@ EXAMPLES = """
     state: deleted
     config:
       targets:
-        - filepath: bootflash:/myDir/foo.txt
+        - filepath: bootflash:/foo.txt
           supervisor: active
-        - filepath: usb1:/bar.txt
+        - filepath: bootflash:/bar.txt
           supervisor: standby
       switches:
         - ip_address: 192.168.1.1
@@ -132,18 +132,18 @@ EXAMPLES = """
 
 # Delete two files from switch 192.168.1.1 and switch 192.168.1.2:
 #   - foo.txt on the active supervisor's bootflash: device.
-#   - bar.txt on the standby supervisor's usb1: device.
+#   - bar.txt on the standby supervisor's bootflash: device.
 # Delete one file from switch 192.168.1.3:
 #   - baz.txt on the standby supervisor's bootflash: device.
 
-- name: Delete two files from each of two switches
+- name: Delete files
   cisco.dcnm.dcnm_bootflash:
     state: deleted
     config:
       targets:
-        - filepath: bootflash:/myDir/foo.txt
+        - filepath: bootflash:/foo.txt
           supervisor: active
-        - filepath: usb1:/bar.txt
+        - filepath: bootflash:/bar.txt
           supervisor: standby
       switches:
         - ip_address: 192.168.1.1
@@ -166,7 +166,7 @@ EXAMPLES = """
     state: query
     config:
       targets:
-        - filepath: bootflash:/myDir/foo.txt
+        - filepath: bootflash:/foo.txt
     switches:
       - ip_address: 192.168.1.1
       - ip_address: 192.168.1.2
@@ -184,10 +184,10 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
-    BootflashInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
     BootflashFiles
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
+    BootflashInfo
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -254,13 +254,13 @@ class Common:
         self.targets = self.config.get("targets", [])
         if not isinstance(self.targets, list):
             msg = "Expected list of dict for self.targets. "
-            msg += f"Got {type(self.files).__name__}"
+            msg += f"Got {type(self.targets).__name__}"
             raise_error(msg)
 
         self.switches = self.config.get("switches", [])
         if not isinstance(self.switches, list):
             msg = "Expected list of dict for self.switches. "
-            msg += f"Got {type(self.files).__name__}"
+            msg += f"Got {type(self.switches).__name__}"
             raise_error(msg)
 
         self.results = Results()
@@ -314,6 +314,7 @@ class Common:
 
         def raise_value_error(msg):
             raise ValueError(f"{self.class_name}.{method_name}: {msg}")
+
         def raise_type_error(msg):
             raise TypeError(f"{self.class_name}.{method_name}: {msg}")
 
@@ -339,6 +340,7 @@ class Common:
                     target["supervisor"] = "active"
             self.want.append(switch)
 
+
 class Deleted(Common):
     """
     Handle deleted state
@@ -356,6 +358,12 @@ class Deleted(Common):
             raise ValueError(msg) from error
 
         self.bootflash_files = BootflashFiles()
+        self.bootflash_info = BootflashInfo()
+        self.partition = None
+        self.filepath = None
+        self.filename = None
+        self.ip_address = None
+        self.supervisor = None
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
@@ -365,8 +373,7 @@ class Deleted(Common):
     def parse_target(self, target) -> None:
         """
         ### Summary
-        Parse the target.filepath parameter into its consituent
-        API parameters.
+        Parse the target.filepath parameter into its consituent API parameters.
 
         ### Raises
         -   ``ValueError`` if:
@@ -382,13 +389,32 @@ class Deleted(Common):
         Set the following API parameters from the above structure:
 
         - self.partition: bootflash:
-        - self.filepath: bootflash/myDir
+        - self.filepath: bootflash:/myDir/
         - self.filename: foo.txt
         - self.supervisor: active
+
+        ### Notes
+        -   While this method is written to support files in directories, the
+            NDFC API does not support listing files within a directory.
+            Hence, we currently support only files in the root directory of
+            the partition.
+        -   If the file is located in the root directory of the of the
+            partition, the filepath MUST NOT have a trailing slash.
+            i.e. filepath == "bootflash:/" will NOT match.  It MUST
+            be "bootflash:".
+        -   If the file is located in a directory, the filepath MUST
+            have a trailing slash.  i.e. filepath == "bootflash:/myDir"
+            will NOT match since NDFC is not smart enough to add the
+            slash between the filepath and filename and, using the example
+            in Target Structure above, it will reconstruct the path as
+            bootflash:/myDirfoo.txt which, of course, will not match
+            (or worse yet, match and delete the wrong file).
         """
         method_name = inspect.stack()[0][3]
+
         def raise_error(msg):
             raise ValueError(f"{self.class_name}.{method_name}: {msg}")
+
         if target.get("filepath", None) is None:
             msg = "Expected filepath in target dict. "
             msg += f"Got {target}"
@@ -398,9 +424,19 @@ class Deleted(Common):
             msg += f"Got {target}"
             raise_error(msg)
 
-        parts = target.get("filepath").split('/')
+        parts = target.get("filepath").split("/")
         self.partition = parts[0]
-        self.filepath = '/'.join(parts[0:-1]) + "/"
+        # If len(parts) == 2, the file is located in the root directory of the
+        # partition. In this case we DO NOT want to add a trailing slash to
+        # the filepath.  i.e. filepath == "bootflash:/" will NOT match.
+        self.filepath = "/".join(parts[0:-1])
+        # If there's one or more directory levels in the path we DO need to
+        # add a trailing slash to filepath.
+        if len(parts) > 2:
+            # Input: bootflash:/myDir/foo.txt
+            # parts: ['bootflash:', 'myDir', 'foo.txt']
+            # Result: self.filepath == bootflash:/myDir/
+            self.filepath = "/".join(parts[0:-1]) + "/"
         self.filename = parts[-1]
         self.supervisor = target.get("supervisor")
 
@@ -409,6 +445,14 @@ class Deleted(Common):
         ### Summary
         -   Return True if the file exists on the switch.
         -   Return False otherwise.
+
+        ### Raises
+        None
+
+        ### Notes
+        -   We currently support only files in the root directory of the
+            partition.  This is because the NDFC API does not support
+            listing files within a directory.
         """
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
@@ -423,13 +467,16 @@ class Deleted(Common):
         msg = f"{self.class_name}.{method_name}: "
         msg += f"filename: {self.filename}, "
         msg += f"filepath: {self.filepath}, "
+        msg += f"ip_address: {self.ip_address}, "
         msg += f"partition: {self.partition}, "
-        msg += f"supervisor: {self.supervisor}, "
-        msg += f"switch: {self.ip_address}"
-        self.log.debug(msg)
+        msg += f"supervisor: {self.supervisor} "
 
         if self.bootflash_info.filename is None:
+            msg += "not found in bootflash_info."
+            self.log.debug(msg)
             return False
+        msg += "found in bootflash_info."
+        self.log.debug(msg)
         return True
 
     def commit(self) -> None:
@@ -438,7 +485,6 @@ class Deleted(Common):
         Delete the specified files if they exist.
         """
         self.get_want()
-        self.bootflash_info = BootflashInfo()
         self.bootflash_info.results = Results()
         self.bootflash_info.rest_send = self.rest_send  # pylint: disable=no-member
         self.bootflash_info.switch_details = SwitchDetails()
@@ -462,14 +508,15 @@ class Deleted(Common):
                 self.parse_target(target)
                 if not self.file_exists():
                     continue
-                self.bootflash_files.ip_address = switch["ip_address"]
-                self.bootflash_files.bootflash_type = self.supervisor
                 self.bootflash_files.file_name = self.filename
                 self.bootflash_files.file_path = self.filepath
+                self.bootflash_files.ip_address = switch["ip_address"]
                 self.bootflash_files.partition = self.partition
+                self.bootflash_files.supervisor = self.supervisor
                 self.bootflash_files.add_file()
 
         self.bootflash_files.commit()
+
 
 class Query(Common):
     """
