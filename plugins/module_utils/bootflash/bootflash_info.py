@@ -232,25 +232,19 @@ class BootflashInfo:
         # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
+        def raise_exception(property):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{property} must be set prior to calling refresh."
+            raise ValueError()
+
         if self.rest_send is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling refresh."
-            raise ValueError(msg)
-
+            raise_exception("rest_send")
         if self.results is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set prior to calling refresh."
-            raise ValueError(msg)
-
+            raise_exception("results")
         if self.switch_details is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "switch_details must be set prior to calling refresh."
-            raise ValueError(msg)
-
+            raise_exception("switch_details")
         if self.switches is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "switches must be set prior to calling refresh."
-            raise ValueError(msg)
+            raise_exception("switches")
 
     # pylint: disable=no-member
     def refresh(self):
