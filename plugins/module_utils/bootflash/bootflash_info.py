@@ -65,20 +65,27 @@ class BootflashInfo:
     instance.results = Results()
 
     # BootflashInfo() uses SwitchDetails() to convert
-    # switch ip addresses to serial numbers (which is
-    # required by the NDFC API).
+    # switch ip addresses to switch serial numbers since
+    # the NDFC API selects switches by serial number.
     instance.switch_details = SwitchDetails()
 
     # We pass switch_details.results a separate instance of
     # results because we are not interested in its results.
     instance.switch_details.results = Results()
-
     instance.switches = ["192.168.1.1"]
     instance.refresh()
-    instance.filter_switch = "192.168.1.1"
-    instance.filter_file = "nxos_image.bin"
 
-    # Assuming there was a match for the switch and file, the following
+    # Filters can be added indenpendently of each other.
+    # The more filters that are added, the more specific the
+    # results will be.
+    instance.filter_filename = "nxos_image.bin"
+    instance.filter_filepath = "bootflash:/"
+    instance.filter_partition = "bootflash:"
+    instance.filter_supervisor = "active"
+    instance.filter_switch = "192.168.1.1"
+
+
+    # Assuming there was a match for the filters, the following
     # information can be retrieved.  If there was not a match, these
     # properties will return None.
 
@@ -87,8 +94,10 @@ class BootflashInfo:
     filename = instance.filename
     filepath = instance.filepath
     ip_address = instance.ip_address
+    match = instance.match # dictionary containing raw bootflash information
     name = instance.name
     serial_number = instance.serial_number
+    size = instance.size
     supervisor = instance.supervisor
     ```
 
@@ -148,8 +157,8 @@ class BootflashInfo:
 
     ### Structure
 
-    The structure of the info_dict is a list of dictionaries. Each dictionary
-    contains the following keys.
+    The structure of the info_dict is a list of dictionaries. The structure of
+    each dictionary is provided below.
 
     The observant reader will notice that NDFC inserts a leading space before
     ipAddr's value i.e.
@@ -552,6 +561,9 @@ class BootflashInfo:
 
         ### Raises
         None
+
+        ### Example
+        instance.filter_filename = "nxos_image.bin"
         """
         return self._filter_filename
 
@@ -573,6 +585,9 @@ class BootflashInfo:
 
         ### Raises
         None
+
+        ### Example
+        instance.filter_filepath = "bootflash:/"
         """
         return self._filter_filepath
 
@@ -594,6 +609,9 @@ class BootflashInfo:
 
         ### Raises
         None
+
+        ### Example
+        instance.filter_partition = "bootflash:"
         """
         return self._filter_partition
 
@@ -615,6 +633,9 @@ class BootflashInfo:
 
         ### Raises
         None
+
+        ### Example
+        instance.filter_supervisor = "active"
         """
         return self._filter_supervisor
 
