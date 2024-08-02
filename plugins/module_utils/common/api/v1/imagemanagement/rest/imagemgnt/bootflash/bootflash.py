@@ -90,7 +90,7 @@ class EpBootflashFiles(Bootflash):
 
 class EpBootflashInfo(Bootflash):
     """
-    ## api.v1.imagemanagement.rest.imagemgnt.bootflash.EpBootFlashInfo()
+    ## api.v1.imagemanagement.rest.imagemgnt.bootflash.EpBootflashInfo()
 
     ### Description
     Return endpoint information for bootflash-info.
