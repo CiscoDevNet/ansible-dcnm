@@ -88,6 +88,14 @@ class EpBootflashDiscovery(Discovery):
 
     @property
     def path(self):
+        """
+        ### Summary
+        The endpoint path.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``serial_number`` is not set.
+        """
         if self.serial_number is None:
             msg = f"{self.class_name}.path: serial_number is required."
             raise ValueError(msg)
@@ -95,12 +103,23 @@ class EpBootflashDiscovery(Discovery):
 
     @property
     def serial_number(self):
+        """
+        ### Summary
+        The serial number of the switch hosting the bootflash to be rediscovered.
+
+        ### Raises
+        None
+        """
         return self._serial_number
+
     @serial_number.setter
     def serial_number(self, value):
         self._serial_number = value
 
     @property
     def verb(self):
+        """
+        ### Summary
+        The endpoint verb.
+        """
         return "GET"
-
