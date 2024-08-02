@@ -11,71 +11,48 @@
 ################################################################################
 
 # SETUP
-# 1. The following images must already be uploaded to the controller
-#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - nxos_image_1
-#    - nxos_image_2
-#    - epld_image_1
-#    - epld_image_2
-# 2. No need for fabric or switches
-# 3. Delete image policies under test, if they exist
-#    - image_policy_1
-#    - image_policy_2
+# 1. Two switches are required for this test spine1 and spine2
+# 2. Files must be created on bootflash manually as NDFC does not
+#    provide a quick way to create files on bootflash. To create
+#    the files manually, do the following directly on the switches:
+#    - On spine1, create a file named foo.txt
+#      switch# echo foo > foo.txt
+#    - On spine2, create a file named bar.txt
+#      switch# echo bar > bar.txt
 # TEST
-# 4. Create image policies and verify result
-#    - image_policy_1
-#    - image_policy_2
-# 5. Delete image_policy_1 and verify result
-# 6. Delete image_policy_2 and verify result
+# 3. Run the playbook
 # CLEANUP
-# 7. No cleanup required
-
+# 4. No cleanup required
+#
 ################################################################################
 # REQUIREMENTS
 ################################################################################
 
-# 1. The following images must already be uploaded to the controller
-#    See vars: section below
-#    - nxos_image_1
-#    - nxos_image_2
-#    - epld_image_1
-#    - epld_image_2
-# 2. No need for fabric or switches
-#
-# Example vars for dcnm_image_policy integration tests
+# 1. Two switches are required for this test
+#    - spine1
+#    - spine2
+# 3. Fabric name and type does not matter.
+# Example vars for dcnm_bootflash integration tests
 # Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
 #
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
-#   testcase: dcnm_image_policy_deleted
-#   fabric_name: f1
+#   testcase: dcnm_bootflash_deleted
 #   username: admin
 #   password: "foobar"
 #   switch_username: admin
 #   switch_password: "foobar"
 #   spine1: 172.22.150.114
 #   spine2: 172.22.150.115
-#   leaf1: 172.22.150.106
-#   leaf2: 172.22.150.107
-#   leaf3: 172.22.150.108
-#   leaf4: 172.22.150.109
-#   # for dcnm_image_policy role
-#   image_policy_1: "KR5M"
-#   image_policy_2: "NR1F"
-#   epld_image_1: n9000-epld.10.2.5.M.img
-#   epld_image_2: n9000-epld.10.3.1.F.img
-#   nxos_image_1: n9000-dk9.10.2.5.M.bin
-#   nxos_image_2: n9000-dk9.10.3.1.F.bin
-#   nxos_release_1: 10.2.5_nxos64-cs_64bit
-#   nxos_release_2: 10.3.1_nxos64-cs_64bit
-
+#
 ################################################################################
 # SETUP
 ################################################################################
-# TODO: Add setup here
 # For now, we will assume that the files are already created on the switches.
 # The easiest/quickest way to do this is as follows:
+# On spine1
 # switch# echo foo > foo.txt
+# On spine2
 # switch# echo bar > bar.txt
 #################################################################################
 # DELETED - TEST - Delete files
@@ -88,20 +65,18 @@
 # Expected result
 # TODO - Add expected result here
 - name: DELETED - TEST - Delete files
-  cisco.dcnm.dcnm_bootflash:
+  cisco.dcnm.dcnm_bootflash: &delete_files
       state: deleted
       config:
         targets:
           - filepath: bootflash:/foo.txt
             supervisor: active
-          - filepath: bootflash:/bar.txt
-          - filepath: bootflash:/fb8/20170927_1.cfg
-            supervisor: active
-          - filepath: bootflash:/fb8/20180223_1.cfg
-            supervisor: active
         switches:
           - ip_address: "{{ spine1 }}"
           - ip_address: "{{ spine2 }}"
+            targets:
+            - filepath: bootflash:/bar.txt
+              supervisor: active
   register: result
 
 - debug:
@@ -126,3 +101,14 @@
     - result.result[0].sequence_number == 1
     - result.result[0].success == true
 
+- name: DELETED - TEST - Delete files. Idempotence
+  cisco.dcnm.dcnm_bootflash: *delete_files
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == false
+    - result.failed == false
