@@ -263,21 +263,24 @@ class Common:
             msg += f"Got {type(self.switches).__name__}"
             raise_error(msg)
 
-        self.results = Results()
-        self.results.state = self.state
-        self.results.check_mode = self.check_mode
-
         self._rest_send = None
 
         self.have = None
-        self.validated = []
-        self.want = []
-
+        self.filepath = None
+        self.filename = None
+        self.ip_address = None
         # files to be deleted
         self.need_delete = []
         # policies to be queried
         self.need_query = []
+        self.partition = None
+        self.results = Results()
+        self.results.state = self.state
+        self.results.check_mode = self.check_mode
+        self.supervisor = None
+        self.validated = []
         self.validated_configs = []
+        self.want = []
 
         msg = f"ENTERED Common().{method_name}: "
         msg += f"state: {self.state}, "
@@ -339,36 +342,6 @@ class Common:
                 if target.get("supervisor", None) is None:
                     target["supervisor"] = "active"
             self.want.append(switch)
-
-
-class Deleted(Common):
-    """
-    Handle deleted state
-    """
-
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        method_name = inspect.stack()[0][3]
-        try:
-            super().__init__(params)
-        except (TypeError, ValueError) as error:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Error during super().__init__(). "
-            msg += f"Error detail: {error}"
-            raise ValueError(msg) from error
-
-        self.bootflash_files = BootflashFiles()
-        self.bootflash_info = BootflashInfo()
-        self.partition = None
-        self.filepath = None
-        self.filename = None
-        self.ip_address = None
-        self.supervisor = None
-
-        msg = f"ENTERED {self.class_name}().{method_name}: "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
 
     def parse_target(self, target) -> None:
         """
@@ -439,6 +412,31 @@ class Deleted(Common):
             self.filepath = "/".join(parts[0:-1]) + "/"
         self.filename = parts[-1]
         self.supervisor = target.get("supervisor")
+
+
+class Deleted(Common):
+    """
+    Handle deleted state
+    """
+
+    def __init__(self, params):
+        self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+        try:
+            super().__init__(params)
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error during super().__init__(). "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        self.bootflash_files = BootflashFiles()
+        self.bootflash_info = BootflashInfo()
+
+        msg = f"ENTERED {self.class_name}().{method_name}: "
+        msg += f"state: {self.state}, "
+        msg += f"check_mode: {self.check_mode}"
+        self.log.debug(msg)
 
     def file_exists(self) -> bool:
         """
@@ -569,8 +567,12 @@ class Query(Common):
 
         for switch in self.switches:
             self.have.filter_switch = switch["ip_address"]
-            for file in switch["files"]:
-                self.have.filter_file = file
+            for target in switch["targets"]:
+                self.parse_target(target)
+                self.have.filter_filename = self.filename
+                self.have.filter_filepath = self.filepath
+                self.have.filter_partition = self.partition
+                self.have.filter_supervisor = self.supervisor
                 self.have.build_matches()
                 self.results.register_task_result()
 
