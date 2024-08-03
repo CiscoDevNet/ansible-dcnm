@@ -75,8 +75,8 @@
           - ip_address: "{{ spine1 }}"
           - ip_address: "{{ spine2 }}"
             targets:
-            - filepath: bootflash:/bar.txt
-              supervisor: active
+              - filepath: bootflash:/bar.txt
+                supervisor: active
   register: result
 
 - debug:

@@ -51,26 +51,1884 @@
 ################################################################################
 # SETUP
 ################################################################################
-# TODO: Add file upload task here
-################################################################################
-# QUERY - TEST - Delete files
-################################################################################
-# Expected result
-# TODO - Add expected result here
+# SETUP
+# 1. Two switches are required for this test: spine1 and spine2
+# 2. Files must be created on bootflash manually as NDFC does not
+#    provide a quick way to create files on bootflash. To create
+#    the files manually, do the following directly on the switches:
+#    - On spine1, create a file named foo.txt
+#      switch# echo foo > foo.txt
+#    - On spine2, create a file named bar.txt
+#      switch# echo bar > bar.txt
+# TEST
+# 3. Run the playbook
+# CLEANUP
+# 4. Manually delete the files, if desired.
 ################################################################################
 # QUERY - TEST - Query files
 ################################################################################
 # Expected result
-# TODO - Add expected result here
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "172.22.150.112": [
+#                     {
+#                         "bootflash_type": "active",
+#                         "date": "Aug 03 01:37:06 2024",
+#                         "deviceName": "cvd-1211-spine",
+#                         "fileName": "foo.txt",
+#                         "filePath": "bootflash:",
+#                         "ipAddr": "172.22.150.112",
+#                         "name": "bootflash:",
+#                         "serialNumber": "FOX2109PGCS",
+#                         "size": "4"
+#                     }
+#                 ],
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "172.22.150.113": [
+#                     {
+#                         "bootflash_type": "active",
+#                         "date": "Aug 03 01:38:10 2024",
+#                         "deviceName": "cvd-1212-spine",
+#                         "fileName": "bar.txt",
+#                         "filePath": "bootflash:",
+#                         "ipAddr": "172.22.150.113",
+#                         "name": "bootflash:",
+#                         "serialNumber": "FOX2109PGD0",
+#                         "size": "4"
+#                     }
+#                 ],
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "bootflash_query",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "query"
+#             },
+#             {
+#                 "action": "bootflash_query",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "query"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "172.22.150.112": {
+#                     "DATA": {
+#                         "bootFlashDataMap": {
+#                             "bootflash:": [
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 21:02:25 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": ".rpmstore/",
+#                                     "filePath": "bootflash:.rpmstore/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 16 07:31:03 2020",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": ".swtam/",
+#                                     "filePath": "bootflash:.swtam/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 30 23:37:23 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "3960"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 11 01:20:51 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "EASY_SW_INTF_BRIEF",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "6072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 18 21:25:10 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "INTF_BRIEF_CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "5773"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 18 21:26:15 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "MIN-EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "3795"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 18 21:26:28 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "acfg_base_running_cfg_vdc1",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "3795"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Mar 23 02:24:11 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "admin.rc.cli",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 20 03:10:49 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "apple/",
+#                                     "filePath": "bootflash:apple/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 01:53:35 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "bios_daemon.dbg",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "72300"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 05 01:43:49 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "bootflash_sync_list",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 25 21:09:26 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "cvd/",
+#                                     "filePath": "bootflash:cvd/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 31 01:39:55 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp/",
+#                                     "filePath": "bootflash:ebgp/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 13 02:57:52 2021",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp_dual_stack/",
+#                                     "filePath": "bootflash:ebgp_dual_stack/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 21 22:36:58 2019",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp_ipv4/",
+#                                     "filePath": "bootflash:ebgp_ipv4/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 18 00:10:07 2019",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp_ipv6/",
+#                                     "filePath": "bootflash:ebgp_ipv6/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 22 02:26:33 2019",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "eem_snapshots/",
+#                                     "filePath": "bootflash:eem_snapshots/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 11 01:20:59 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ef-minimum-config",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2794"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 24 09:31:43 2021",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "evpn/",
+#                                     "filePath": "bootflash:evpn/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 04 21:13:30 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "evt_log_snapshot/",
+#                                     "filePath": "bootflash:evt_log_snapshot/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 01 04:27:03 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "fb8/",
+#                                     "filePath": "bootflash:fb8/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 03 01:37:06 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "foo.txt",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "4"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Mar 24 23:46:22 2020",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "home/",
+#                                     "filePath": "bootflash:home/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 30 05:28:45 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "intersight/",
+#                                     "filePath": "bootflash:intersight/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 30 05:22:37 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "log_profile.yaml",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2468"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 05 22:38:58 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "lost+found/",
+#                                     "filePath": "bootflash:lost+found/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:19:55 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "n9000-epld.10.2.5.M.img",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "218233885"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 03:07:06 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nexuscloud/",
+#                                     "filePath": "bootflash:nexuscloud/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 28 02:52:01 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.2.3.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "1958595072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 01:23:34 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.2.4.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2007928832"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:17:44 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.2.5.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "1943380992"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:16:22 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.3.2.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2297351168"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 21 18:12:58 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "oz_cfg.txt",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "29371"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:33:10 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "platform-sdk.cmd",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 18:53:25 2020",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "rfc5549/",
+#                                     "filePath": "bootflash:rfc5549/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 21:03:30 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "scripts/",
+#                                     "filePath": "bootflash:scripts/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 15 17:54:25 2017",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "virtual-instance/",
+#                                     "filePath": "bootflash:virtual-instance/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 }
+#                             ]
+#                         },
+#                         "bootFlashSpaceMap": {
+#                             "bootflash:": {
+#                                 "bootflash_type": "active",
+#                                 "deviceName": "cvd-1211-spine",
+#                                 "freeSpace": 12995145728,
+#                                 "ipAddr": " 172.22.150.112",
+#                                 "name": "bootflash:",
+#                                 "serialNumber": "FOX2109PGCS",
+#                                 "totalSpace": 21685153792,
+#                                 "usedSpace": 8690008064
+#                             }
+#                         },
+#                         "partitions": [
+#                             "bootflash:"
+#                         ],
+#                         "requiredSpace": "NA"
+#                     },
+#                     "MESSAGE": "OK",
+#                     "METHOD": "GET",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+#                     "RETURN_CODE": 200
+#                 },
+#                 "172.22.150.113": {
+#                     "DATA": {
+#                         "bootFlashDataMap": {
+#                             "bootflash:": [
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:21 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": ".rpmstore/",
+#                                     "filePath": "bootflash:.rpmstore/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 26 01:29:16 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": ".snapshots/",
+#                                     "filePath": "bootflash:.snapshots/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Nov 23 09:58:46 2019",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": ".swtam/",
+#                                     "filePath": "bootflash:.swtam/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 30 23:38:04 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "6258"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 04 21:58:26 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "EASY_SW_INTF_BRIEF",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "5773"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 11 21:56:31 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "INTF_BRIEF_CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "6072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 11 21:58:09 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "MIN-EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "3484"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Mar 23 02:16:39 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "admin.rc.cli",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 20 03:09:58 2018",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "apple/",
+#                                     "filePath": "bootflash:apple/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 03 01:38:10 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "bar.txt",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "4"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 01:53:26 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "bios_daemon.dbg",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "58396"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 05 01:42:51 2018",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "bootflash_sync_list",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 25 21:09:26 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "cvd/",
+#                                     "filePath": "bootflash:cvd/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 31 01:38:50 2018",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp/",
+#                                     "filePath": "bootflash:ebgp/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 13 02:57:51 2021",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp_dual_stack/",
+#                                     "filePath": "bootflash:ebgp_dual_stack/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 21 22:35:10 2019",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp_ipv4/",
+#                                     "filePath": "bootflash:ebgp_ipv4/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 18 00:08:21 2019",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp_ipv6/",
+#                                     "filePath": "bootflash:ebgp_ipv6/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 06 20:14:49 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "eem_snapshots/",
+#                                     "filePath": "bootflash:eem_snapshots/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 04 21:58:33 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ef-minimum-config",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2767"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 24 09:32:01 2021",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "evpn/",
+#                                     "filePath": "bootflash:evpn/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:58 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "evt_log_snapshot/",
+#                                     "filePath": "bootflash:evt_log_snapshot/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 01 04:27:58 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "fb8/",
+#                                     "filePath": "bootflash:fb8/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 16 07:07:03 2020",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "home/",
+#                                     "filePath": "bootflash:home/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:27:24 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "intersight/",
+#                                     "filePath": "bootflash:intersight/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:56 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "log_profile.yaml",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2566"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 20 20:50:30 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "lost+found/",
+#                                     "filePath": "bootflash:lost+found/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:20:07 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "n9000-epld.10.2.5.M.img",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "218233885"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Nov 07 20:42:40 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "n9000-epld.10.3.1.F.img",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "266383517"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 03:07:31 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nexuscloud/",
+#                                     "filePath": "bootflash:nexuscloud/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 28 02:49:18 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.2.3.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "1958595072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 01:23:45 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.2.4.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2007928832"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:17:57 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.2.5.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "1943380992"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Nov 07 20:41:41 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.3.1.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2077222400"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:16:35 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.3.2.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2297351168"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:33:07 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "platform-sdk.cmd",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 18:53:25 2020",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "rfc5549/",
+#                                     "filePath": "bootflash:rfc5549/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 05 18:44:07 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "scripts/",
+#                                     "filePath": "bootflash:scripts/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 15 18:01:37 2017",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "virtual-instance/",
+#                                     "filePath": "bootflash:virtual-instance/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 }
+#                             ]
+#                         },
+#                         "bootFlashSpaceMap": {
+#                             "bootflash:": {
+#                                 "bootflash_type": "active",
+#                                 "deviceName": "cvd-1212-spine",
+#                                 "freeSpace": 10630582272,
+#                                 "ipAddr": " 172.22.150.113",
+#                                 "name": "bootflash:",
+#                                 "serialNumber": "FOX2109PGD0",
+#                                 "totalSpace": 21685153792,
+#                                 "usedSpace": 11054571520
+#                             }
+#                         },
+#                         "partitions": [
+#                             "bootflash:"
+#                         ],
+#                         "requiredSpace": "NA"
+#                     },
+#                     "MESSAGE": "OK",
+#                     "METHOD": "GET",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+#                     "RETURN_CODE": 200
+#                 },
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "172.22.150.112": {
+#                     "DATA": {
+#                         "bootFlashDataMap": {
+#                             "bootflash:": [
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 21:02:25 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": ".rpmstore/",
+#                                     "filePath": "bootflash:.rpmstore/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 16 07:31:03 2020",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": ".swtam/",
+#                                     "filePath": "bootflash:.swtam/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 30 23:37:23 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "3960"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 11 01:20:51 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "EASY_SW_INTF_BRIEF",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "6072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 18 21:25:10 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "INTF_BRIEF_CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "5773"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 18 21:26:15 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "MIN-EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "3795"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 18 21:26:28 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "acfg_base_running_cfg_vdc1",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "3795"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Mar 23 02:24:11 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "admin.rc.cli",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 20 03:10:49 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "apple/",
+#                                     "filePath": "bootflash:apple/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 01:53:35 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "bios_daemon.dbg",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "72300"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 05 01:43:49 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "bootflash_sync_list",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 25 21:09:26 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "cvd/",
+#                                     "filePath": "bootflash:cvd/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 31 01:39:55 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp/",
+#                                     "filePath": "bootflash:ebgp/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 13 02:57:52 2021",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp_dual_stack/",
+#                                     "filePath": "bootflash:ebgp_dual_stack/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 21 22:36:58 2019",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp_ipv4/",
+#                                     "filePath": "bootflash:ebgp_ipv4/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 18 00:10:07 2019",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ebgp_ipv6/",
+#                                     "filePath": "bootflash:ebgp_ipv6/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 22 02:26:33 2019",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "eem_snapshots/",
+#                                     "filePath": "bootflash:eem_snapshots/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 11 01:20:59 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "ef-minimum-config",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2794"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 24 09:31:43 2021",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "evpn/",
+#                                     "filePath": "bootflash:evpn/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 04 21:13:30 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "evt_log_snapshot/",
+#                                     "filePath": "bootflash:evt_log_snapshot/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 01 04:27:03 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "fb8/",
+#                                     "filePath": "bootflash:fb8/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 03 01:37:06 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "foo.txt",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "4"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Mar 24 23:46:22 2020",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "home/",
+#                                     "filePath": "bootflash:home/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 30 05:28:45 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "intersight/",
+#                                     "filePath": "bootflash:intersight/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 30 05:22:37 2024",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "log_profile.yaml",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2468"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 05 22:38:58 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "lost+found/",
+#                                     "filePath": "bootflash:lost+found/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:19:55 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "n9000-epld.10.2.5.M.img",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "218233885"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 03:07:06 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nexuscloud/",
+#                                     "filePath": "bootflash:nexuscloud/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 28 02:52:01 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.2.3.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "1958595072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 01:23:34 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.2.4.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2007928832"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:17:44 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.2.5.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "1943380992"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:16:22 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "nxos64-cs.10.3.2.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "2297351168"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 21 18:12:58 2018",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "oz_cfg.txt",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "29371"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:33:10 2022",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "platform-sdk.cmd",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 18:53:25 2020",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "rfc5549/",
+#                                     "filePath": "bootflash:rfc5549/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 21:03:30 2023",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "scripts/",
+#                                     "filePath": "bootflash:scripts/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 15 17:54:25 2017",
+#                                     "deviceName": "cvd-1211-spine",
+#                                     "fileName": "virtual-instance/",
+#                                     "filePath": "bootflash:virtual-instance/",
+#                                     "ipAddr": " 172.22.150.112",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGCS",
+#                                     "size": "0"
+#                                 }
+#                             ]
+#                         },
+#                         "bootFlashSpaceMap": {
+#                             "bootflash:": {
+#                                 "bootflash_type": "active",
+#                                 "deviceName": "cvd-1211-spine",
+#                                 "freeSpace": 12995145728,
+#                                 "ipAddr": " 172.22.150.112",
+#                                 "name": "bootflash:",
+#                                 "serialNumber": "FOX2109PGCS",
+#                                 "totalSpace": 21685153792,
+#                                 "usedSpace": 8690008064
+#                             }
+#                         },
+#                         "partitions": [
+#                             "bootflash:"
+#                         ],
+#                         "requiredSpace": "NA"
+#                     },
+#                     "MESSAGE": "OK",
+#                     "METHOD": "GET",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+#                     "RETURN_CODE": 200
+#                 },
+#                 "172.22.150.113": {
+#                     "DATA": {
+#                         "bootFlashDataMap": {
+#                             "bootflash:": [
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:21 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": ".rpmstore/",
+#                                     "filePath": "bootflash:.rpmstore/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 26 01:29:16 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": ".snapshots/",
+#                                     "filePath": "bootflash:.snapshots/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Nov 23 09:58:46 2019",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": ".swtam/",
+#                                     "filePath": "bootflash:.swtam/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 30 23:38:04 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "6258"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 04 21:58:26 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "EASY_SW_INTF_BRIEF",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "5773"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 11 21:56:31 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "INTF_BRIEF_CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "6072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 11 21:58:09 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "MIN-EASY-SW-RUNNING-CONFIG",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "3484"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Mar 23 02:16:39 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "admin.rc.cli",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 20 03:09:58 2018",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "apple/",
+#                                     "filePath": "bootflash:apple/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 03 01:38:10 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "bar.txt",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "4"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 01:53:26 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "bios_daemon.dbg",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "58396"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 05 01:42:51 2018",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "bootflash_sync_list",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 25 21:09:26 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "cvd/",
+#                                     "filePath": "bootflash:cvd/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 31 01:38:50 2018",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp/",
+#                                     "filePath": "bootflash:ebgp/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 13 02:57:51 2021",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp_dual_stack/",
+#                                     "filePath": "bootflash:ebgp_dual_stack/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 21 22:35:10 2019",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp_ipv4/",
+#                                     "filePath": "bootflash:ebgp_ipv4/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 18 00:08:21 2019",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ebgp_ipv6/",
+#                                     "filePath": "bootflash:ebgp_ipv6/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 06 20:14:49 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "eem_snapshots/",
+#                                     "filePath": "bootflash:eem_snapshots/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 04 21:58:33 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "ef-minimum-config",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2767"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 24 09:32:01 2021",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "evpn/",
+#                                     "filePath": "bootflash:evpn/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:58 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "evt_log_snapshot/",
+#                                     "filePath": "bootflash:evt_log_snapshot/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Aug 01 04:27:58 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "fb8/",
+#                                     "filePath": "bootflash:fb8/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "May 16 07:07:03 2020",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "home/",
+#                                     "filePath": "bootflash:home/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:27:24 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "intersight/",
+#                                     "filePath": "bootflash:intersight/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:56 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "log_profile.yaml",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2566"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 20 20:50:30 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "lost+found/",
+#                                     "filePath": "bootflash:lost+found/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:20:07 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "n9000-epld.10.2.5.M.img",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "218233885"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Nov 07 20:42:40 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "n9000-epld.10.3.1.F.img",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "266383517"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 03:07:31 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nexuscloud/",
+#                                     "filePath": "bootflash:nexuscloud/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 28 02:49:18 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.2.3.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "1958595072"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 14 01:23:45 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.2.4.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2007928832"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Sep 19 22:17:57 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.2.5.M.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "1943380992"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Nov 07 20:41:41 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.3.1.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2077222400"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:16:35 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "nxos64-cs.10.3.2.F.bin",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2297351168"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Dec 21 02:33:07 2022",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "platform-sdk.cmd",
+#                                     "filePath": "bootflash:",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 06 18:53:25 2020",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "rfc5549/",
+#                                     "filePath": "bootflash:rfc5549/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Oct 05 18:44:07 2023",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "scripts/",
+#                                     "filePath": "bootflash:scripts/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 },
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Apr 15 18:01:37 2017",
+#                                     "deviceName": "cvd-1212-spine",
+#                                     "fileName": "virtual-instance/",
+#                                     "filePath": "bootflash:virtual-instance/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "0"
+#                                 }
+#                             ]
+#                         },
+#                         "bootFlashSpaceMap": {
+#                             "bootflash:": {
+#                                 "bootflash_type": "active",
+#                                 "deviceName": "cvd-1212-spine",
+#                                 "freeSpace": 10630582272,
+#                                 "ipAddr": " 172.22.150.113",
+#                                 "name": "bootflash:",
+#                                 "serialNumber": "FOX2109PGD0",
+#                                 "totalSpace": 21685153792,
+#                                 "usedSpace": 11054571520
+#                             }
+#                         },
+#                         "partitions": [
+#                             "bootflash:"
+#                         ],
+#                         "requiredSpace": "NA"
+#                     },
+#                     "MESSAGE": "OK",
+#                     "METHOD": "GET",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+#                     "RETURN_CODE": 200
+#                 },
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "172.22.150.112": {
+#                     "found": true,
+#                     "success": true
+#                 },
+#                 "172.22.150.113": {
+#                     "found": true,
+#                     "success": true
+#                 },
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "172.22.150.112": {
+#                     "found": true,
+#                     "success": true
+#                 },
+#                 "172.22.150.113": {
+#                     "found": true,
+#                     "success": true
+#                 },
+#                 "sequence_number": 2
+#             }
+#         ]
+#     }
+# }
+
 - name: QUERY - TEST - Query files
   cisco.dcnm.dcnm_bootflash:
       state: query
-      files:
-      - "{{ nxos_image_1 }}"
-      - "{{ nxos_image_2 }}"
-      switches:
-      - ip_address: "{{ spine1 }}"
-      - ip_address: "{{ spine2 }}"
+      config:
+        targets:
+          - filepath: bootflash:/foo.txt
+            supervisor: active
+        switches:
+          - ip_address: "{{ spine1 }}"
+          - ip_address: "{{ spine2 }}"
+            targets:
+              - filepath: bootflash:/bar.txt
+                supervisor: active
   register: result
 
 - debug:
@@ -78,36 +1936,32 @@
 
 - name: Prepare assertions
   set_fact:
-    diff0_filename: "{{ nxos_image_1 }} in result.diff[0].{{ spine1 }}.filename"
-    diff1_filename: "{{ nxos_image_1 }} not in result.diff[1].{{ spine1 }}.filename"
-    diff2_filename: "{{ nxos_image_1 }} in result.diff[2].{{ spine2 }}.filename"
-    diff3_filename: "{{ nxos_image_2 }} in result.diff[3].{{ spine2 }}.filename"
-    response0_return_code: "200 in result.response[0].RETURN_CODE"
-    response0_message: "OK in result.response[0].MESSAGE"
-    response0_method: "GET in result.response[0].METHOD"
-    result0_found: "true in result.result[0].{{ spine1 }}.found"
-    result1_found: "false in result.result[1].{{ spine1 }}.found"
-    result2_found: "true in result.result[2].{{ spine2 }}.found"
-    result3_found: "true in result.result[3].{{ spine2 }}.found"
-    result0_success: "true in result.result[0].{{ spine1 }}.success"
-    result1_success: "false in result.result[1].{{ spine1 }}.success"
-    result2_success: "true in result.result[2].{{ spine2 }}.success"
-    result3_success: "true in result.result[3].{{ spine2 }}.success"
+    diff0_filename: "result.diff[0].{{ spine1 }}.filename == foo.txt"
+    diff1_filename: "result.diff[1].{{ spine2 }}.filename == bar.txt"
+    response0_return_code: "result.response[0].RETURN_CODE == 200"
+    response0_message: "result.response[0].MESSAGE == OK"
+    response0_method: "result.response[0].METHOD == GET"
+    result01_found: "result.result[0].{{ spine1 }}.found == true"
+    result02_found: "result.result[0].{{ spine2 }}.found == true"
+    result11_found: "result.result[1].{{ spine1 }}.found == true"
+    result12_found: "result.result[1].{{ spine2 }}.found == true"
+    result01_success: "result.result[0].{{ spine1 }}.success == true"
+    result02_success: "result.result[0].{{ spine2 }}.success == true"
+    result11_success: "result.result[1].{{ spine1 }}.success == true"
+    result12_success: "result.result[1].{{ spine2 }}.success == true"
 
 - assert:
     that:
     - result.changed == false
     - result.failed == false
-    - (result.diff | length) == 4
-    - (result.response | length) == 4
+    - (result.diff | length) == 2
+    - (result.response | length) == 2
     - diff0_filename
     - diff1_filename
-    - diff2_filename
-    - diff3_filename
     - response0_return_code
     - response0_message
     - response0_method
-    - (result.metadata | length) == 4
+    - (result.metadata | length) == 2
     - result.metadata[0].action == "bootflash_query"
     - result.metadata[0].check_mode == False
     - result.metadata[0].sequence_number == 1
@@ -116,22 +1970,14 @@
     - result.metadata[1].check_mode == False
     - result.metadata[1].sequence_number == 2
     - result.metadata[1].state == "query"
-    - result.metadata[2].action == "bootflash_query"
-    - result.metadata[2].check_mode == False
-    - result.metadata[2].sequence_number == 3
-    - result.metadata[2].state == "query"
-    - result.metadata[3].action == "bootflash_query"
-    - result.metadata[3].check_mode == False
-    - result.metadata[3].sequence_number == 4
-    - result.metadata[3].state == "query"
-    - (result.result | length) == 4
-    - result0_found
-    - result1_found
-    - result2_found
-    - result3_found
-    - result0_success
-    - result1_success
-    - result2_success
-    - result3_success
+    - (result.result | length) == 2
+    - result01_found
+    - result02_found
+    - result11_found
+    - result12_found
+    - result01_success
+    - result02_success
+    - result11_success
+    - result12_success
 
 
