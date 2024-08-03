@@ -212,6 +212,12 @@ class BootflashInfo:
         self._switch_details = None
         self._switches = None
 
+        self._filter_filename = None
+        self._filter_filepath = None
+        self._filter_partition = None
+        self._filter_supervisor = None
+        self._filter_switch = None
+
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED BootflashQuery(): "
         msg += f"action {self.action}, "
