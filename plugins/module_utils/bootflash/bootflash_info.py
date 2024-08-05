@@ -133,8 +133,8 @@ class BootflashInfo:
     instance.refresh()
     for switch in switches:
         instance.filter_switch = switch
-        for file in files:
-            instance.filter_file = file
+        for target in targets:
+            instance.filter_file = target.get("filename")
             instance.build_matches()
             instance.results.register_task_result()
 
@@ -238,9 +238,9 @@ class BootflashInfo:
         # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
-        def raise_exception(property):
+        def raise_exception(property_name):
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{property} must be set prior to calling refresh."
+            msg += f"{property_name} must be set prior to calling refresh."
             raise ValueError()
 
         if self.rest_send is None:
@@ -356,12 +356,13 @@ class BootflashInfo:
         item.update({"ipAddr": ipaddr.strip()})
         return copy.deepcopy(item)
 
-    def build_matches(self):
+    def build_matches(self) -> None:
         """
         ### Summary
         Build a list of matches from the info_dict.
 
         ### Raises
+        None
         """
         method_name = inspect.stack()[0][3]
 
@@ -416,35 +417,48 @@ class BootflashInfo:
             if ip_address not in diff:
                 diff[ip_address] = []
             diff[ip_address].append(match)
-        self.results.diff_current = diff
-        self.results.result_current = self.result_dict
-        self.results.response_current = self.response_dict
+        self.diff_dict = diff
 
-    def populate_property(self, search_item):
+    def build_match(self) -> None:
         """
         ### Summary
-        Populate the property (search_item) from the match.
+        Populate self.match from self.matches.
 
         ### Raises
-        -   ``ValueError`` if:
-            -   ``search_item`` is not a key in the match.
         """
+        self.build_matches()
+
         method_name = inspect.stack()[0][3]
         if len(self.matches) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"No matches found for {self.filter_switch} and "
             msg += f"{self.filter_filename}."
             self.log.debug(msg)
-            return None
 
         if len(self.matches) > 1:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Multiple matches found for {self.filter_switch} and "
-            msg += f"{self.filter_filename}."
-            self.log.debug(msg)
-            return None
+            msg += "Multiple matches found for the provided filters. "
+            msg += "The properties in this class do not support retrieval "
+            msg += "for multiple matches. Use instance.matches to access all "
+            msg += "matches and build your own logic to retrieve values from "
+            msg += "multiple matches."
+            raise ValueError(msg)
 
         self._match = self.matches[0]
+
+    def populate_property(self, search_item):
+        """
+        ### Summary
+        If search_item key exists in self.match, return its value.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``search_item`` does not exist in self.match.
+
+        """
+        method_name = inspect.stack()[0][3]
+
+        self.build_match()
 
         if search_item not in self.match:
             msg = f"{self.class_name}.{method_name}: "
@@ -459,13 +473,17 @@ class BootflashInfo:
     def _get(self, search_item):
         """
         ### Summary
-        Return the value of item from the switch and file matching
-        the query filters.  Query filters are:
-            -   filter_filename
-            -   filter_filepath
-            -   filter_partition
-            -   filter_supervisor
-            -   filter_switch
+        Return the value of item from self.match.
+
+        self.match is the result of matching the query filters set by the user.
+
+        Query filters:
+
+        -   filter_filename
+        -   filter_filepath
+        -   filter_partition
+        -   filter_supervisor
+        -   filter_switch
 
         ### Raises
         -   None

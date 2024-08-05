@@ -188,6 +188,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_fil
     BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.parse_target import \
+    ParseTarget
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -265,21 +267,12 @@ class Common:
 
         self._rest_send = None
 
-        self.have = None
-        self.filepath = None
-        self.filename = None
+        self.bootflash_info = BootflashInfo()
         self.ip_address = None
-        # files to be deleted
-        self.need_delete = []
-        # policies to be queried
-        self.need_query = []
-        self.partition = None
+        self.parse_target = ParseTarget()
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
-        self.supervisor = None
-        self.validated = []
-        self.validated_configs = []
         self.want = []
 
         msg = f"ENTERED Common().{method_name}: "
@@ -287,29 +280,53 @@ class Common:
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def get_have(self) -> None:
-        """
-        Caller: main()
-
-        self.have consists of the controller's understanding of the current
-        state of files on the switches.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"ENTERED {self.class_name}.{method_name}"
-        self.log.debug(msg)
-
-        self.have = BootflashInfo()
-        self.have.results = self.results
-        self.have.rest_send = self.rest_send  # pylint: disable=no-member
-        self.have.switch_details = SwitchDetails()
-
     def get_want(self) -> None:
         """
-        Caller: main()
+        ### Summary
+        1.  Validate the playbook configs
+        2.  Convert the validated configs to the structure required by the
+            the Delete() and Query() classes.
+        3.  Update self.want with this list of payloads
 
-        1. Validate the playbook configs
-        2. Convert the validated configs to payloads
-        3. Update self.want with this list of payloads
+        If a switch in the switches list does not have a targets key, add the
+        targets key with the value of the global targets list from the
+        playbook.  Else, use the switch's targets info (i.e. the switch's
+        targets info overrides the global targets info).
+
+        ### Raises
+        -   ValueError if:
+            -   ``ip_address`` is missing from a switch dict.
+            -   ``filepath`` is missing from a target dict.
+        -   TypeError if:
+            -   The value of ``targets`` is not a list of dictionaries.
+
+        ### ``want`` Structure
+        -   A list of dictionaries.  Each dictionary contains the following keys:
+            -   ip_address: The ip address of the switch.
+            -   targets: A list of dictionaries.  Each dictionary contains the
+                following keys:
+                -   filepath: The path to the file to be deleted or queried.
+                -   supervisor: The supervisor containing the filepath.
+
+        ### Example ``want`` Structure
+        ```json
+        [
+            {
+                "ip_address": "192.168.1.1",
+                "targets": [
+                    {
+                        "filepath": "bootflash:/foo.txt",
+                        "supervisor": "active"
+                    },
+                    {
+                        "filepath": "bootflash:/bar.txt",
+                        "supervisor": "standby"
+                    }
+                ]
+            }
+        ]
+        ```
+
         """
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}"
@@ -343,80 +360,15 @@ class Common:
                     target["supervisor"] = "active"
             self.want.append(switch)
 
-    def parse_target(self, target) -> None:
-        """
-        ### Summary
-        Parse the target.filepath parameter into its consituent API parameters.
-
-        ### Raises
-        -   ``ValueError`` if:
-            -   ``filepath`` is not set in the target dict.
-            -   ``supervisor`` is not set in the target dict.
-
-        ### Target Structure
-        {
-            filepath: bootflash:/myDir/foo.txt
-            supervisor: active
-        }
-
-        Set the following API parameters from the above structure:
-
-        - self.partition: bootflash:
-        - self.filepath: bootflash:/myDir/
-        - self.filename: foo.txt
-        - self.supervisor: active
-
-        ### Notes
-        -   While this method is written to support files in directories, the
-            NDFC API does not support listing files within a directory.
-            Hence, we currently support only files in the root directory of
-            the partition.
-        -   If the file is located in the root directory of the of the
-            partition, the filepath MUST NOT have a trailing slash.
-            i.e. filepath == "bootflash:/" will NOT match.  It MUST
-            be "bootflash:".
-        -   If the file is located in a directory, the filepath MUST
-            have a trailing slash.  i.e. filepath == "bootflash:/myDir"
-            will NOT match since NDFC is not smart enough to add the
-            slash between the filepath and filename and, using the example
-            in Target Structure above, it will reconstruct the path as
-            bootflash:/myDirfoo.txt which, of course, will not match
-            (or worse yet, match and delete the wrong file).
-        """
-        method_name = inspect.stack()[0][3]
-
-        def raise_error(msg):
-            raise ValueError(f"{self.class_name}.{method_name}: {msg}")
-
-        if target.get("filepath", None) is None:
-            msg = "Expected filepath in target dict. "
-            msg += f"Got {target}"
-            raise_error(msg)
-        if target.get("supervisor", None) is None:
-            msg = "Expected supervisor in target dict. "
-            msg += f"Got {target}"
-            raise_error(msg)
-
-        parts = target.get("filepath").split("/")
-        self.partition = parts[0]
-        # If len(parts) == 2, the file is located in the root directory of the
-        # partition. In this case we DO NOT want to add a trailing slash to
-        # the filepath.  i.e. filepath == "bootflash:/" will NOT match.
-        self.filepath = "/".join(parts[0:-1])
-        # If there's one or more directory levels in the path we DO need to
-        # add a trailing slash to filepath.
-        if len(parts) > 2:
-            # Input: bootflash:/myDir/foo.txt
-            # parts: ['bootflash:', 'myDir', 'foo.txt']
-            # Result: self.filepath == bootflash:/myDir/
-            self.filepath = "/".join(parts[0:-1]) + "/"
-        self.filename = parts[-1]
-        self.supervisor = target.get("supervisor")
-
 
 class Deleted(Common):
     """
+    ### Summary
     Handle deleted state
+
+    ### Raises
+    -   ValueError if:
+        -   ``Common.__init__()`` raises TypeError or ValueError.
     """
 
     def __init__(self, params):
@@ -431,7 +383,6 @@ class Deleted(Common):
             raise ValueError(msg) from error
 
         self.bootflash_files = BootflashFiles()
-        self.bootflash_info = BootflashInfo()
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
@@ -456,18 +407,18 @@ class Deleted(Common):
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.bootflash_info.filter_filename = self.filename
-        self.bootflash_info.filter_filepath = self.filepath
-        self.bootflash_info.filter_partition = self.partition
-        self.bootflash_info.filter_supervisor = self.supervisor
+        self.bootflash_info.filter_filename = self.parse_target.filename
+        self.bootflash_info.filter_filepath = self.parse_target.filepath
+        self.bootflash_info.filter_partition = self.parse_target.partition
+        self.bootflash_info.filter_supervisor = self.parse_target.supervisor
         self.bootflash_info.filter_switch = self.ip_address
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"filename: {self.filename}, "
-        msg += f"filepath: {self.filepath}, "
+        msg += f"filename: {self.parse_target.filename}, "
+        msg += f"filepath: {self.parse_target.filepath}, "
         msg += f"ip_address: {self.ip_address}, "
-        msg += f"partition: {self.partition}, "
-        msg += f"supervisor: {self.supervisor} "
+        msg += f"partition: {self.parse_target.partition}, "
+        msg += f"supervisor: {self.parse_target.supervisor} "
 
         if self.bootflash_info.filename is None:
             msg += "not found in bootflash_info."
@@ -481,6 +432,14 @@ class Deleted(Common):
         """
         ### Summary
         Delete the specified files if they exist.
+
+        ### Raises
+        None.  While this method does not directly raise exceptions, it
+        calls other methods that may raise the following exceptions:
+
+        -   ControllerResponseError
+        -   TypeError
+        -   ValueError
         """
         self.get_want()
         self.bootflash_info.results = Results()
@@ -503,14 +462,15 @@ class Deleted(Common):
         for switch in self.switches:
             self.ip_address = switch["ip_address"]
             for target in switch["targets"]:
-                self.parse_target(target)
+                self.parse_target.target = target
+                self.parse_target.commit()
                 if not self.file_exists():
                     continue
-                self.bootflash_files.file_name = self.filename
-                self.bootflash_files.file_path = self.filepath
+                self.bootflash_files.file_name = self.parse_target.filename
+                self.bootflash_files.file_path = self.parse_target.filepath
                 self.bootflash_files.ip_address = switch["ip_address"]
-                self.bootflash_files.partition = self.partition
-                self.bootflash_files.supervisor = self.supervisor
+                self.bootflash_files.partition = self.parse_target.partition
+                self.bootflash_files.supervisor = self.parse_target.supervisor
                 self.bootflash_files.add_file()
 
         self.bootflash_files.commit()
@@ -518,7 +478,12 @@ class Deleted(Common):
 
 class Query(Common):
     """
-    Handle query state
+    ### Summary
+    Handle query state.
+
+    ### Raises
+    -   ValueError if:
+        -   ``Common.__init__()`` raises TypeError or ValueError.
     """
 
     def __init__(self, params):
@@ -540,7 +505,18 @@ class Query(Common):
 
     def commit(self) -> None:
         """
-        1.  query the bootflash on switches in self.want
+        ### Summary
+        query the bootflash on all switches in self.switches
+        and register the results.
+
+        ### Raises
+        None.  While this method does not directly raise exceptions, it
+        calls other methods that may raise the following exceptions:
+
+        -   ControllerResponseError
+        -   TypeError
+        -   ValueError
+
         """
         method_name = inspect.stack()[0][3]
         msg = f"ENTERED {self.class_name}.{method_name}: "
@@ -552,29 +528,50 @@ class Query(Common):
         self.results.check_mode = self.check_mode
 
         self.get_want()
-        self.get_have()
 
         if len(self.switches) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "No switches to query."
             return
 
+        self.bootflash_info.results = self.results
+        self.bootflash_info.rest_send = self.rest_send
+        self.bootflash_info.switch_details = SwitchDetails()
+
         switches_to_query = []
         for switch in self.switches:
             switches_to_query.append(switch["ip_address"])
-        self.have.switches = switches_to_query
-        self.have.refresh()
+        self.bootflash_info.switches = switches_to_query
+        self.bootflash_info.refresh()
+        self.results.response_current = self.bootflash_info.response_dict
+        self.results.result_current = self.bootflash_info.result_dict
 
+        result_current = {}
+        response_current = {}
+        diff_current = {}
         for switch in self.switches:
-            self.have.filter_switch = switch["ip_address"]
+            self.bootflash_info.filter_switch = switch["ip_address"]
+            if switch["ip_address"] not in result_current:
+                result_current[switch["ip_address"]] = []
+            if switch["ip_address"] not in response_current:
+                response_current[switch["ip_address"]] = []
+            if switch["ip_address"] not in diff_current:
+                diff_current[switch["ip_address"]] = []
             for target in switch["targets"]:
-                self.parse_target(target)
-                self.have.filter_filename = self.filename
-                self.have.filter_filepath = self.filepath
-                self.have.filter_partition = self.partition
-                self.have.filter_supervisor = self.supervisor
-                self.have.build_matches()
-                self.results.register_task_result()
+                self.parse_target.target = target
+                self.parse_target.commit()
+                self.bootflash_info.filter_filename = self.parse_target.filename
+                self.bootflash_info.filter_filepath = self.parse_target.filepath
+                self.bootflash_info.filter_partition = self.parse_target.partition
+                self.bootflash_info.filter_supervisor = self.parse_target.supervisor
+                self.bootflash_info.build_match()
+                diff_current[switch["ip_address"]].append(self.bootflash_info.match)
+
+            result_current[switch["ip_address"]] = self.bootflash_info.result_dict
+            response_current[switch["ip_address"]] = self.bootflash_info.response_dict
+
+        self.results.diff_current = diff_current
+        self.results.register_task_result()
 
 
 def main():
