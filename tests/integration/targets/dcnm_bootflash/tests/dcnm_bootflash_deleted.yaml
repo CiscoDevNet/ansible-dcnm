@@ -58,12 +58,70 @@
 # DELETED - TEST - Delete files
 ################################################################################
 # Expected result
-# TODO - Add expected result here
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "deleteFiles": [
+#                     {
+#                         "files": [
+#                             {
+#                                 "bootflashType": "active",
+#                                 "fileName": "foo.txt",
+#                                 "filePath": "bootflash:"
+#                             }
+#                         ],
+#                         "partition": "bootflash:",
+#                         "serialNumber": "FOX2109PGCS"
+#                     },
+#                     {
+#                         "files": [
+#                             {
+#                                 "bootflashType": "active",
+#                                 "fileName": "bar.txt",
+#                                 "filePath": "bootflash:"
+#                             }
+#                         ],
+#                         "partition": "bootflash:",
+#                         "serialNumber": "FOX2109PGD0"
+#                     }
+#                 ],
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "bootflash_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "File(s) Deleted Successfully. \nDeleted files: [foo.txt][bar.txt]",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
 ################################################################################
 # DELETED - TEST - Delete files
 ################################################################################
-# Expected result
-# TODO - Add expected result here
+
 - name: DELETED - TEST - Delete files
   cisco.dcnm.dcnm_bootflash: &delete_files
       state: deleted
@@ -101,7 +159,46 @@
     - result.result[0].sequence_number == 1
     - result.result[0].success == true
 
-- name: DELETED - TEST - Delete files. Idempotence
+################################################################################
+# DELETED - TEST - Delete files. Idempotence.
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "deleteFiles": [],
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "bootflash_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No files to delete.",
+#                 "RESULT_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+#################################################################################
+- name: DELETED - TEST - Delete files. Idempotence.
   cisco.dcnm.dcnm_bootflash: *delete_files
   register: result
 
@@ -112,3 +209,19 @@
     that:
     - result.changed == false
     - result.failed == false
+    - (result.diff | length) == 1
+    - result.diff[0].deleteFiles == []
+    - result.diff[0].sequence_number == 1
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "bootflash_delete"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "deleted"
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "No files to delete."
+    - result.response[0].RESULT_CODE == 200
+    - result.response[0].sequence_number == 1
+    - (result.result | length) == 1
+    - result.result[0].found == false
+    - result.result[0].success == true
+    - result.result[0].sequence_number == 1
