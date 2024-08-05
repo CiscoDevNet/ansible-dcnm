@@ -444,27 +444,25 @@ class BootflashInfo:
             msg += "multiple matches."
             raise ValueError(msg)
 
-        self._match = self.matches[0]
+        if len(self.matches) == 1:
+            self._match = self.matches[0]
+        else:
+            self._match = {}
 
     def populate_property(self, search_item):
         """
         ### Summary
-        If search_item key exists in self.match, return its value.
+        -   If search_item key exists in self.match, return its value.
+        -   Return None otherwise.
 
         ### Raises
-        -   ``ValueError`` if:
-            -   ``search_item`` does not exist in self.match.
-
+        None
         """
-        method_name = inspect.stack()[0][3]
 
         self.build_match()
 
         if search_item not in self.match:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.filter_switch} {self.filter_filename} does not have "
-            msg += f"a key named {search_item}."
-            raise ValueError(msg)
+            return None
 
         return self.conversion.make_boolean(
             self.conversion.make_none(self.match[search_item])
