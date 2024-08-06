@@ -50,12 +50,47 @@ class BootflashInfo:
             -   switches contains anything other than strings.
 
     ### Usage
+    We start with list of targets, where target is a dictionary containing
+    a filepath and a supervisor key:
 
-    There are two usage scenarios for this class.  The simple use-case is
-    to retrieve bootflash information for one or more switches and subsequently
-    filter and access it via the class's convenience properties.
+    ```python
+    targets = [
+        {
+            "filepath": "bootflash:/*.txt",
+            "supervisor": "active"
+        },
+        {
+            "filepath": "bootflash:/abc.txt",
+            "supervisor": "standby"
+        }
+    ]
+    ```
 
-    #### Simple Usage
+    1.  Create an instance of BootflashInfo() and set the switches
+        property to a list of switch ip addresses.
+    2.  Set instance.switch_details to the SwitchDetails() class and
+        pass it a separate instance of Results() since we don't want
+        to save the results of the switch details query.
+    3.  Define a list of switch IP addresses and pass this to the
+        ``instance.switches`` property.
+    4.  Call ``instance.refresh()`` to retrieve switch details for each of the
+        switches in the switches.  This is used to convert switch ip address
+        to serial_number, which is required by the bootflash-info endpoint,
+        defined in ``EpBootflashInfo()``.
+    5.  We then call ``instance.refresh_bootflash_info()`` to retrieve
+        bootflash contents for each switch in the switches list.
+    6.  We can then filter the results by switch (``filter_switch``),
+        supervisor (``filter_supervisor``), and filepath (``filter_filepath``).
+    7.  ``filter_filepath`` supports file globbing.  Below, we are filtering
+        for any file on any partition with a three-letter name and a .txt
+        extension.  e.g. bootflash:/abc.txt.
+    8.  We call ``instance.build_matches()`` to build a list of files matching
+        the filters.
+    9.  We call ``instance.results.register_task_result()`` to register the
+        results, which creates instance.results.diff, a list of dictionaries
+        keyed on the switch ip address.  Each dictionary contains a list of
+        matches for that switch.  The matches are dictionaries containing the
+        bootflash information for the file.
 
     ```python
     sender = Sender()
@@ -64,7 +99,7 @@ class BootflashInfo:
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
-    instance = BootflashQuery()
+    instance = BootflashInfo()
     instance.results = Results()
 
     # BootflashInfo() uses SwitchDetails() to convert
@@ -75,70 +110,25 @@ class BootflashInfo:
     # We pass switch_details.results a separate instance of
     # results because we are not interested in its results.
     instance.switch_details.results = Results()
-    instance.switches = ["192.168.1.1"]
+    instance.switches = ["192.168.1.1", "192.168.1.2"]
     instance.refresh()
 
     # Filters can be added indenpendently of each other.
-    # The more filters that are added, the more specific the
-    # results will be.
+    # The more filters added, the more specific the results.
+    # ``filter_switch`` is limited to the switches in the
+    # ``instance.switches`` list, since this is the information
+    # that ``instance.refresh`` caches when ``instance.refresh``
+    # is called.
 
-    # filter_filepath supports file globbing.
-    instance.filter_filepath = "*:/???.txt"
-    instance.filter_supervisor = "active"
     instance.filter_switch = "192.168.1.1"
+    instance.filter_supervisor = "active"
+    # filter_filepath supports file globbing.
+    # The below means "Any file on any partition with a three-letter
+    # name and a .txt extension." e.g. bootflash:/abc.txt
+    instance.filter_filepath = "*:/???.txt"
 
-    # Assuming there was a match for the filters, the following
-    # information can be retrieved.  If there was not a match, these
-    # properties will return None.
-
-    date = instance.date
-    device_name = instance.device_name
-    filename = instance.filename
-    filepath = instance.filepath
-    ip_address = instance.ip_address
-    match = instance.match # dictionary containing raw bootflash information
-    name = instance.name
-    serial_number = instance.serial_number
-    size = instance.size
-    supervisor = instance.supervisor
-    ```
-
-    #### More involved usage
-
-    ```python
-    sender = Sender()
-    sender.ansible_module = ansible_module
-    rest_send = RestSend(ansible_module.params)
-    rest_send.response_handler = ResponseHandler()
-    rest_send.sender = sender
-
-    results = Results()
-
-    instance = BootflashInfo()
-    instance.results = Results()
-
-    # BootflashInfo() uses SwitchDetails() to convert
-    # switch ip addresses to serial numbers (which is
-    # required by the NDFC API).
-    instance.switch_details = SwitchDetails()
-
-    # We pass switch_details.results a separate instance of
-    # results because we are not interested in its results.
-    instance.switch_details.results = Results()
-
-    # We'll retrieve information about two files
-    # on each of two switches.
-    switches = ["192.168.1.1", 192.168.1.2"]
-    files = ["nxos_image.bin", "nxos_image2.bin"]
-
-    instance.switches = switches
-    instance.refresh()
-    for switch in switches:
-        instance.filter_switch = switch
-        for target in targets:
-            instance.filter_filepath = "bootflash:/*.txt"
-            instance.build_matches()
-            instance.results.register_task_result()
+    instance.build_matches()
+    instance.results.register_task_result()
 
     # The results can be printed by accessing instance.results.diff.
     # instance.results.diff is a list of dictionaries.  Each dictionary
@@ -148,44 +138,38 @@ class BootflashInfo:
 
     print(f"{json.dumps(instance.results.diff, sort_keys=True, indent=4)}")
 
-    # Accessing individual file information for the first switch in the switches
-    # array would go something like:
-
-    switch1 = switches[0]
-    filename = instance.results.diff[0][switch1][0]["fileName"]
-    size = instance.results.diff[0][switch1][0]["size"]
-
     ```
 
-    ### ``info_dict`` Structure
-
-    The structure of the info_dict is a list of dictionaries. The structure of
-    each dictionary is provided below.
-
-    The observant reader will notice that NDFC inserts a leading space before
-    ipAddr's value i.e.
-
-    " 192.168.1.1"
-
-    We strip this space and update the dictionary with the stripped ip_address
-    before returning the dictionary to the user and before populating this
-    class's associated ip_address property.
-
-    In this class, the property ``supervisor`` is used to access the value of
-    ``bootflash_type``.
+    ### instance.results.diff Structure
 
     ```json
-    {
-        "bootflash_type": "active",
-        "date": "Sep 19 22:20:07 2023",
-        "deviceName": "cvd-1212-spine",
-        "fileName": "n9000-epld.10.2.5.M.img",
-        "filePath": "bootflash:",
-        "ipAddr": " 192.168.1.1",
-        "name": "bootflash:",
-        "serialNumber": "BDY3814QDD0",
-        "size": "218233885"
-    }
+        "diff": [
+            {
+                "172.22.150.112": [
+                    {
+                        "date": "2024-08-06 16:14:59",
+                        "device_name": "cvd-1211-spine",
+                        "filepath": "bootflash:/bling.txt",
+                        "ip_address": "172.22.150.112",
+                        "serial_number": "FOX2109PGCS",
+                        "size": "2",
+                        "supervisor": "active"
+                    }
+                ],
+                "172.22.150.113": [
+                    {
+                        "date": "2024-08-06 16:15:59",
+                        "device_name": "cvd-1212-spine",
+                        "filepath": "bootflash:/blong.txt",
+                        "ip_address": "172.22.150.113",
+                        "serial_number": "FOX2109PGD0",
+                        "size": "2",
+                        "supervisor": "active"
+                    }
+                ],
+                "sequence_number": 1
+            }
+        ]
     ```
     """
 
@@ -239,19 +223,19 @@ class BootflashInfo:
         # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
-        def raise_exception(property_name):
+        def raise_value_error_if_not_set(property_name):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{property_name} must be set prior to calling refresh."
             raise ValueError()
 
         if self.rest_send is None:
-            raise_exception("rest_send")
+            raise_value_error_if_not_set("rest_send")
         if self.results is None:
-            raise_exception("results")
+            raise_value_error_if_not_set("results")
         if self.switch_details is None:
-            raise_exception("switch_details")
+            raise_value_error_if_not_set("switch_details")
         if self.switches is None:
-            raise_exception("switches")
+            raise_value_error_if_not_set("switches")
 
     # pylint: disable=no-member
     def refresh(self):
@@ -337,7 +321,15 @@ class BootflashInfo:
             msg += "properties."
             raise ValueError(msg)
 
-    def filter_supervisor_matches(self, target):
+    def match_filter_filepath(self, target):
+        if not self.filter_filepath:
+            return False
+        posix = PurePosixPath(target.get("filepath"))
+        if not posix.match(self.filter_filepath):
+            return False
+        return True
+
+    def match_filter_supervisor(self, target):
         """
         ### Summary
         -   Return True if the target's ``bootflash_type`` matches
@@ -353,7 +345,7 @@ class BootflashInfo:
             return False
         return True
 
-    def filter_switch_matches(self, target):
+    def match_filter_switch(self, target):
         """
         ### Summary
         -   Return True if the target's ``ip_address`` matches
@@ -396,13 +388,11 @@ class BootflashInfo:
                 self.file_info_to_target.file_info = file_info
                 self.file_info_to_target.commit()
                 target = self.file_info_to_target.target
-                if not self.filter_switch_matches(target):
+                if not self.match_filter_switch(target):
                     continue
-                if self.filter_filepath:
-                    posix = PurePosixPath(target.get("filepath"))
-                    if not posix.match(self.filter_filepath):
-                        continue
-                if not self.filter_supervisor_matches(target):
+                if not self.match_filter_filepath(target):
+                    continue
+                if not self.match_filter_supervisor(target):
                     continue
                 self._matches.append(target)
 
