@@ -127,7 +127,7 @@
       state: deleted
       config:
         targets:
-          - filepath: bootflash:/*.txt
+          - filepath: "*:/*.txt"
             supervisor: active
         switches:
           - ip_address: "{{ spine1 }}"
