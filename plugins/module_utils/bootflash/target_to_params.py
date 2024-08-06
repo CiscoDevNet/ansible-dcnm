@@ -19,7 +19,16 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-class ParseTarget:
+class TargetToParams:
+    """
+    ### Summary
+    Parse file_info into its consituent API parameters.
+
+    ### Raises
+    -   ``ValueError`` if:
+        -   ``filepath`` is not set in the target dict.
+        -   ``supervisor`` is not set in the target dict.
+    """
     def __init__(self) -> None:
         self.class_name = self.__class__.__name__
 
@@ -30,7 +39,7 @@ class ParseTarget:
         self._supervisor = None
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ParseTarget(): "
+        msg = "ENTERED TargetToParams(): "
         self.log.debug(msg)
 
     def commit(self):
@@ -44,7 +53,7 @@ class ParseTarget:
         """
         if self.target is None:
             msg = f"{self.class_name}.commit: "
-            msg += f"target must be set before calling commit."
+            msg += f"file_info must be set before calling commit."
             raise ValueError(msg)
 
         self.parse_target()
@@ -52,7 +61,7 @@ class ParseTarget:
     def parse_target(self) -> None:
         """
         ### Summary
-        Parse the target.filepath parameter into its consituent API parameters.
+        Parse target into its consituent API parameters.
 
         ### Raises
         -   ``ValueError`` if:

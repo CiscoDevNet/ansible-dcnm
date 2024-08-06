@@ -188,8 +188,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_fil
     BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.parse_target import \
-    ParseTarget
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.target_to_params import \
+    TargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.file_info_to_target import \
+    FileInfoToTarget
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -269,10 +271,11 @@ class Common:
 
         self.bootflash_info = BootflashInfo()
         self.ip_address = None
-        self.parse_target = ParseTarget()
+        self.file_info_to_target = FileInfoToTarget()
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
+        self.target_to_params = TargetToParams()
         self.want = []
 
         msg = f"ENTERED Common().{method_name}: "
@@ -316,10 +319,12 @@ class Common:
                 "targets": [
                     {
                         "filepath": "bootflash:/foo.txt",
+                        "match": "exact",
                         "supervisor": "active"
                     },
                     {
-                        "filepath": "bootflash:/bar.txt",
+                        "filepath": "bar",
+                        "match": "contains",
                         "supervisor": "standby"
                     }
                 ]
@@ -356,6 +361,8 @@ class Common:
                     msg = "Expected filepath in target dict. "
                     msg += f"Got {target}"
                     raise_value_error(msg)
+                if target.get("match", None) is None:
+                    target["match"] = "exact"
                 if target.get("supervisor", None) is None:
                     target["supervisor"] = "active"
             self.want.append(switch)
@@ -407,18 +414,18 @@ class Deleted(Common):
         msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.bootflash_info.filter_filename = self.parse_target.filename
-        self.bootflash_info.filter_filepath = self.parse_target.filepath
-        self.bootflash_info.filter_partition = self.parse_target.partition
-        self.bootflash_info.filter_supervisor = self.parse_target.supervisor
+        self.bootflash_info.filter_filename = self.target_to_params.filename
+        self.bootflash_info.filter_filepath = self.target_to_params.filepath
+        self.bootflash_info.filter_partition = self.target_to_params.partition
+        self.bootflash_info.filter_supervisor = self.target_to_params.supervisor
         self.bootflash_info.filter_switch = self.ip_address
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"filename: {self.parse_target.filename}, "
-        msg += f"filepath: {self.parse_target.filepath}, "
+        msg += f"filename: {self.target_to_params.filename}, "
+        msg += f"filepath: {self.target_to_params.filepath}, "
         msg += f"ip_address: {self.ip_address}, "
-        msg += f"partition: {self.parse_target.partition}, "
-        msg += f"supervisor: {self.parse_target.supervisor} "
+        msg += f"partition: {self.target_to_params.partition}, "
+        msg += f"supervisor: {self.target_to_params.supervisor} "
 
         if self.bootflash_info.filename is None:
             msg += "not found in bootflash_info."
@@ -458,19 +465,42 @@ class Deleted(Common):
         self.bootflash_files.rest_send = self.rest_send
         self.bootflash_files.switch_details = SwitchDetails()
         self.bootflash_files.switch_details.results = Results()
-
+        
+        # matches is a dictionary keyed on switch ip address.
+        # Value is a list of matches (files to be deleted).
+        # {
+        #     "172.22.150.112": [
+        #         {
+        #             "date": "2024-08-05 19:23:24",
+        #             "device_name": "cvd-1211-spine",
+        #             "filepath": "bootflash:/foo.txt",
+        #             "ip_address": "172.22.150.112",
+        #             "serial_number": "FOX2109PGCS",
+        #             "size": "2",
+        #             "supervisor": "active"
+        #         }
+        #     ]
+        # {
+        matches = {}
         for switch in self.switches:
-            self.ip_address = switch["ip_address"]
+            self.bootflash_info.filter_switch = switch["ip_address"]
+            if switch["ip_address"] not in matches:
+                matches[switch["ip_address"]] = []
+
             for target in switch["targets"]:
-                self.parse_target.target = target
-                self.parse_target.commit()
-                if not self.file_exists():
-                    continue
-                self.bootflash_files.file_name = self.parse_target.filename
-                self.bootflash_files.file_path = self.parse_target.filepath
-                self.bootflash_files.ip_address = switch["ip_address"]
-                self.bootflash_files.partition = self.parse_target.partition
-                self.bootflash_files.supervisor = self.parse_target.supervisor
+                self.bootflash_info.filter_filepath = target.get("filepath")
+                self.bootflash_info.filter_supervisor = target.get("supervisor")                
+                matches[switch["ip_address"]].extend(self.bootflash_info.matches)
+
+        for ip_address in matches:
+            for target in matches[ip_address]:
+                self.target_to_params.target = target
+                self.target_to_params.commit()
+                self.bootflash_files.filename = self.target_to_params.filename
+                self.bootflash_files.filepath = self.target_to_params.filepath
+                self.bootflash_files.ip_address = ip_address
+                self.bootflash_files.partition = self.target_to_params.partition
+                self.bootflash_files.supervisor = self.target_to_params.supervisor
                 self.bootflash_files.add_file()
 
         self.bootflash_files.commit()
@@ -543,6 +573,7 @@ class Query(Common):
             switches_to_query.append(switch["ip_address"])
         self.bootflash_info.switches = switches_to_query
         self.bootflash_info.refresh()
+
         self.results.response_current = self.bootflash_info.response_dict
         self.results.result_current = self.bootflash_info.result_dict
 
@@ -557,15 +588,11 @@ class Query(Common):
                 response_current[switch["ip_address"]] = []
             if switch["ip_address"] not in diff_current:
                 diff_current[switch["ip_address"]] = []
+
             for target in switch["targets"]:
-                self.parse_target.target = target
-                self.parse_target.commit()
-                self.bootflash_info.filter_filename = self.parse_target.filename
-                self.bootflash_info.filter_filepath = self.parse_target.filepath
-                self.bootflash_info.filter_partition = self.parse_target.partition
-                self.bootflash_info.filter_supervisor = self.parse_target.supervisor
-                self.bootflash_info.build_match()
-                diff_current[switch["ip_address"]].append(self.bootflash_info.match)
+                self.bootflash_info.filter_filepath = target.get("filepath")
+                self.bootflash_info.filter_supervisor = target.get("supervisor")                
+                diff_current[switch["ip_address"]].extend(self.bootflash_info.matches)
 
             result_current[switch["ip_address"]] = self.bootflash_info.result_dict
             response_current[switch["ip_address"]] = self.bootflash_info.response_dict

@@ -1018,14 +1018,14 @@
       state: query
       config:
         targets:
-          - filepath: bootflash:/foo.txt
+          - filepath: bootflash:/*.txt
             supervisor: active
         switches:
           - ip_address: "{{ spine1 }}"
           - ip_address: "{{ spine2 }}"
-            targets:
-              - filepath: bootflash:/bar.txt
-                supervisor: active
+            # targets:
+            #   - filepath: bootflash:/bar.txt
+            #     supervisor: active
   register: result
 
 - debug:
