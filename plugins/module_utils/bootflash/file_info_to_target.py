@@ -79,6 +79,8 @@ class FileInfoToTarget:
     {
         "filepath": "bootflash:/n9000-epld.10.2.5.M.img",
         "supervisor": "active"
+        "ip_address": "192.168.1.1"
+        "serial_number": "BDY3814QDD0"
     }
     ```
     """
