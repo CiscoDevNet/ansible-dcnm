@@ -19,19 +19,22 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
+
 class TargetToParams:
     """
     ### Summary
-    Parse file_info into its consituent API parameters.
+    Parse ``target`` into its consituent API parameters.
 
     ### Raises
     -   ``ValueError`` if:
         -   ``filepath`` is not set in the target dict.
         -   ``supervisor`` is not set in the target dict.
     """
+
     def __init__(self) -> None:
         self.class_name = self.__class__.__name__
 
+        self.committed = False
         self._filename = None
         self._filepath = None
         self._target = None
@@ -53,10 +56,11 @@ class TargetToParams:
         """
         if self.target is None:
             msg = f"{self.class_name}.commit: "
-            msg += f"file_info must be set before calling commit."
+            msg += "target must be set before calling commit."
             raise ValueError(msg)
 
         self.parse_target()
+        self.committed = True
 
     def parse_target(self) -> None:
         """
@@ -130,35 +134,106 @@ class TargetToParams:
 
     @property
     def filename(self):
+        """
+        ### Summary
+        Return the filename parsed from ``target``.
+
+        ### Raises
+        ``ValueError`` if:
+        -   ``commit()`` has not been called before accessing this property.
+        """
+        method_name = inspect.stack()[0][3]
+        if not self.committed:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"commit() must be called before accessing {method_name}."
+            raise ValueError(msg)
         return self._filename
+
     @filename.setter
     def filename(self, value):
         self._filename = value
 
     @property
     def filepath(self):
+        """
+        ### Summary
+        Return the filepath parsed from ``target``.
+
+        ### Raises
+        ``ValueError`` if:
+        -   ``commit()`` has not been called before accessing this property.
+        """
+        method_name = inspect.stack()[0][3]
+        if not self.committed:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"commit() must be called before accessing {method_name}."
+            raise ValueError(msg)
         return self._filepath
+
     @filepath.setter
     def filepath(self, value):
         self._filepath = value
 
     @property
     def target(self):
+        """
+        ### Summary
+        The target to be parsed.  This is a dictionary with the following
+        structure:
+
+        ```json
+        {
+            "filepath": "bootflash:/myDir/foo.txt",
+            "supervisor": "active"
+        }
+        ```
+        """
         return self._target
+
     @target.setter
     def target(self, value):
         self._target = value
 
     @property
     def partition(self):
+        """
+        ### Summary
+        Return the partition parsed from ``target``.
+
+        ### Raises
+        ``ValueError`` if:
+        -   ``commit()`` has not been called before accessing this property.
+        """
+        method_name = inspect.stack()[0][3]
+        if not self.committed:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"commit() must be called before accessing {method_name}."
+            raise ValueError(msg)
         return self._partition
+
     @partition.setter
     def partition(self, value):
         self._partition = value
 
     @property
     def supervisor(self):
+        """
+        ### Summary
+        Return the supervisor parsed from ``target``. This is the state
+        (active or standby) of the supervisor that hosts the file described
+        in ``target``.
+
+        ### Raises
+        ``ValueError`` if:
+        -   ``commit()`` has not been called before accessing this property.
+        """
+        method_name = inspect.stack()[0][3]
+        if not self.committed:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"commit() must be called before accessing {method_name}."
+            raise ValueError(msg)
         return self._supervisor
+
     @supervisor.setter
     def supervisor(self, value):
         self._supervisor = value
