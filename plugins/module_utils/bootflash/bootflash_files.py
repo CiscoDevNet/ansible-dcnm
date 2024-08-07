@@ -332,48 +332,80 @@ class BootflashFiles:
 
     def file_exists_in_payload(self):
         """
-            "deleteFiles": [
-                {
-                    "files": [
-                        {
-                            "bootflashType": "active",
-                            "fileName": "bar.txt",
-                            "filePath": "bootflash:"
-                        }
-                    ],
-                    "partition": "bootflash:",
-                    "serialNumber": "FOX2109PGCS"
-                },
-                {
-                    "files": [
-                        {
-                            "bootflashType": "active",
-                            "fileName": "black.txt",
-                            "filePath": "bootflash:"
-                        }
-                    ],
-                    "partition": "bootflash:",
-                    "serialNumber": "FOX2109PGD0"
-                }
-            ]
+        "deleteFiles": [
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "bar.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGCS"
+            },
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGD0"
+            }
+        ]
         """
         file_found = False
         for item in self.payload["deleteFiles"]:
             serial_number = item.get("serialNumber")
             partition = item.get("partition")
-            msg = f"serial_number: {serial_number}, partition: {partition}"
-            self.log.debug(msg)
-            msg = f"in.serial_number: {self.ip_address_to_serial_number(self.ip_address)}, "
-            msg += f"in.partition: {self.partition}"
-            self.log.debug(msg)
             if serial_number != self.ip_address_to_serial_number(self.ip_address):
                 continue
             if partition != self.partition:
                 continue
             file_found = True
+            break
         return file_found
 
     def add_file_to_existing_payload(self):
+        """
+        ### Summary
+        Add a file to the payload if the following are true:
+        -   The serialNumber and partition associated with the file exist in
+            the payload.
+        -   The file does not already exist in the files list for that
+            serialNumber and partition.
+
+        ### Raises
+        None
+
+        ### Details
+        We are looking at the following structure.
+
+        ```json
+        {
+            "deleteFiles": [
+                {
+                    "files": [
+                        {
+                            "bootflashType": "active",
+                            "fileName": "air.txt",
+                            "filePath": "bootflash:"
+                        },
+                        {
+                            "bootflashType": "active",
+                            "fileName": "earth.txt",
+                            "filePath": "bootflash:"
+                        },
+                    ],
+                    "partition": "bootflash:",
+                    "serialNumber": "FOX2109PGCS"
+                },
+            ]
+        }
+        """
         for item in self.payload["deleteFiles"]:
             serial_number = item.get("serialNumber")
             partition = item.get("partition")
@@ -383,7 +415,10 @@ class BootflashFiles:
                 continue
             files = item.get("files")
             for file in files:
-                if file.get("fileName") == self.filename:
+                if (
+                    file.get("fileName") == self.filename
+                    and file.get("bootflashType") == self.supervisor
+                ):
                     return
             files.append(
                 {
@@ -395,6 +430,14 @@ class BootflashFiles:
             item.update({"files": files})
 
     def add_file_to_payload(self):
+        """
+        ### Summary
+        Add a file to the payload if the serialNumber and partition do not
+        yet exist in the payload.
+
+        ### Raises
+        None
+        """
         if not self.file_exists_in_payload():
             add_payload = {
                 "serialNumber": self.ip_address_to_serial_number(self.ip_address),
@@ -428,7 +471,6 @@ class BootflashFiles:
 
         self.add_file_to_payload()
         self.update_diff()
-
 
     def update_diff(self):
         """
@@ -649,7 +691,7 @@ class BootflashFiles:
             bootflash-files payload includes only serialNumber, it
             is good to use target as the diff since it contains the
             ip_address and serial_number (as well as the size, date
-            etc, which are potential more useful than the info in the 
+            etc, which are potential more useful than the info in the
             payload).
         """
         return self._target
@@ -658,4 +700,3 @@ class BootflashFiles:
     def target(self, value):
         # TODO: Add validation for target
         self._target = value
-
