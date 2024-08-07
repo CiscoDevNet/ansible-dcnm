@@ -121,14 +121,14 @@ class BootflashFiles:
         # self.diff, if used, is keyed on switch ip_address and is updated
         # in self.update_diff().
         self.diff = {}
-        self.ep_bootflash_info = EpBootflashFiles()
+        self.ep_bootflash_files = EpBootflashFiles()
 
         self.ok_to_delete_files_reason = None
         self.payload = {"deleteFiles": []}
 
-        self._file_name = None
-        self._file_path = None
-        self._file_size = None
+        self._filename = None
+        self._filepath = None
+        self._filesize = None
         self._ip_address = None
         self._partition = None
         self._rest_send = None
@@ -273,8 +273,8 @@ class BootflashFiles:
         """
         # pylint: disable=no-member
         if self.payload["deleteFiles"]:
-            self.rest_send.path = self.ep_bootflash_info.path
-            self.rest_send.verb = self.ep_bootflash_info.verb
+            self.rest_send.path = self.ep_bootflash_files.path
+            self.rest_send.verb = self.ep_bootflash_files.verb
             self.rest_send.payload = self.payload
             self.rest_send.commit()
             self.results.response_current = copy.deepcopy(
@@ -507,11 +507,11 @@ class BootflashFiles:
         -   ``bootflash:``
         -   ``bootflash:/mydir/mysubdir/``
         """
-        return self._file_path
+        return self._filepath
 
     @filepath.setter
     def filepath(self, value):
-        self._file_path = value
+        self._filepath = value
 
     @property
     def filename(self):
@@ -530,14 +530,14 @@ class BootflashFiles:
         ### Example value
         ``n9000-epld.10.2.5.M.img``
         """
-        return self._file_name
+        return self._filename
 
     @filename.setter
     def filename(self, value):
-        self._file_name = value
+        self._filename = value
 
     @property
-    def file_size(self):
+    def filesize(self):
         """
         ### Summary
         The file size, in bytes, of ``filename``.
@@ -551,11 +551,11 @@ class BootflashFiles:
         ### Example value
         ``218233885``
         """
-        return self._file_size
+        return self._filesize
 
-    @file_size.setter
-    def file_size(self, value):
-        self._file_size = value
+    @filesize.setter
+    def filesize(self, value):
+        self._filesize = value
 
     @property
     def ip_address(self):
