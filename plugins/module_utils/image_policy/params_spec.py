@@ -19,7 +19,6 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
-from typing import Any, Dict
 
 
 class ParamsSpec:
@@ -239,7 +238,7 @@ class ParamsSpec:
         self._params = value
 
     @property
-    def params_spec(self) -> Dict[str, Any]:
+    def params_spec(self) -> dict:
         """
         ### Summary
         Return the parameter specification

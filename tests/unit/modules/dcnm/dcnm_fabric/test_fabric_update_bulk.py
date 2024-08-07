@@ -762,7 +762,6 @@ def test_fabric_update_bulk_00033(monkeypatch, fabric_update_bulk) -> None:
     assert instance.results.metadata[0].get("state", None) == "merged"
 
     assert True in instance.results.failed
-    assert False not in instance.results.failed
     assert False in instance.results.changed
 
 

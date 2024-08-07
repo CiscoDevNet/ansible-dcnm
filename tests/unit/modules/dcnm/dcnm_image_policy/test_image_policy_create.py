@@ -223,7 +223,6 @@ def test_image_policy_create_00030(image_policy_create) -> None:
         instance = image_policy_create
         instance.results = Results()
         instance.rest_send = rest_send
-        instance.params = params
         instance.payload = gen_payloads.next
         instance.commit()
     assert instance._payloads_to_commit == []

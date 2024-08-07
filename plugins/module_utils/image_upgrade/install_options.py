@@ -18,35 +18,40 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 import json
 import logging
-import time
-from typing import Any, Dict
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import \
+    EpInstallOptions
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
-class ImageInstallOptions(ImageUpgradeCommon):
+@Properties.add_rest_send
+@Properties.add_results
+class ImageInstallOptions:
     """
+    ### Summary
     Retrieve install-options details for ONE switch from the controller and
     provide property accessors for the policy attributes.
 
-    Caveats:
-        -   This retrieves for a SINGLE switch only.
-        -   Set serial_number and policy_name and call refresh() for
-            each switch separately.
+    ### Caveats
 
-    Usage (where module is an instance of AnsibleModule):
+    -   This retrieves for a SINGLE switch only.
+    -   Set serial_number and policy_name and call refresh() for
+        each switch separately.
 
-    instance = ImageInstallOptions(module)
+    ### Usage
+
+    ```python
+    instance = ImageInstallOptions()
     # Mandatory
+    instance.rest_send = rest_send
     instance.policy_name = "NR3F"
     instance.serial_number = "FDO211218GC"
     # Optional
@@ -62,13 +67,18 @@ class ImageInstallOptions(ImageUpgradeCommon):
         exit(1)
     status = instance.status
     platform = instance.platform
-    etc...
+    ### etc...
+    ```
 
-    install-options are retrieved by calling instance.refresh().
+    install-options are retrieved by calling ``refresh()``.
 
-    Endpoint:
+    ### Endpoint
+
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/install-options
-    Request body:
+
+    ### Payload
+
+    ```json
     {
         "devices": [
             {
@@ -84,11 +94,15 @@ class ImageInstallOptions(ImageUpgradeCommon):
         "epld": false,
         "packageInstall": false
     }
-    Response body:
-    NOTES:
-    1.  epldModules will be null if epld is false in the request body.
-        This class converts this to None (python NoneType) in this case.
+    ```
 
+    ### Response body
+
+    -   NOTES
+        1.  epldModules will be null if epld is false in the request body.
+            This class converts this to None (python NoneType) in this case.
+
+    ```json
     {
         "compatibilityStatusList": [
             {
@@ -138,66 +152,91 @@ class ImageInstallOptions(ImageUpgradeCommon):
         "installPacakges": null,
         "errMessage": ""
     }
+    ```
     """
 
-    def __init__(self, ansible_module) -> None:
-        super().__init__(ansible_module)
+    def __init__(self) -> None:
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ImageInstallOptions()")
-
-        self.endpoints = ApiEndpoints()
-
-        self.path = self.endpoints.install_options.get("path")
-        self.verb = self.endpoints.install_options.get("verb")
-
-        self.payload: Dict[str, Any] = {}
 
         self.compatibility_status = {}
+        self.payload: dict = {}
+
+        self.conversion = ConversionUtils()
+        self.ep_install_options = EpInstallOptions()
+
+        self._response_data = None
 
         self._init_properties()
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def _init_properties(self):
-        # self.properties is already initialized in the parent class
-        self.properties["epld"] = False
-        self.properties["epld_modules"] = None
-        self.properties["issu"] = True
-        self.properties["package_install"] = False
-        self.properties["policy_name"] = None
-        self.properties["response_data"] = None
-        self.properties["serial_number"] = None
-        self.properties["timeout"] = 300
-        self.properties["unit_test"] = False
+        """
+        ### Summary
+        Initialize class properties.
+
+        ### Raises
+        None
+        """
+        self._epld = False
+        self._issu = True
+        self._package_install = False
+        self._policy_name = None
+        self._rest_send = None
+        self._results = None
+        self._serial_number = None
+        self._timeout = 300
 
     def _validate_refresh_parameters(self) -> None:
         """
-        Ensure parameters are set correctly for a refresh() call.
+        ### Summary
+        -   Ensure parameters are set correctly for a refresh() call.
 
-        fail_json if not.
+        ### Raises
+        ``ValueError`` if parameters are not set correctly.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
+
         if self.policy_name is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.policy_name must be set before "
-            msg += "calling refresh()"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += "policy_name must be set before calling refresh()."
+            raise ValueError(msg)
+
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling refresh()."
+            raise ValueError(msg)
+
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling refresh()."
+            raise ValueError(msg)
 
         if self.serial_number is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "instance.serial_number must be set before "
-            msg += "calling refresh()"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += "serial_number must be set before calling refresh()."
+            raise ValueError(msg)
 
     def refresh(self) -> None:
         """
-        Refresh self.response_data with current install-options from the controller
+        ### Summary
+        Refresh ``self.response_data`` with current install-options from
+        the controller.
+
+        ### Raises
+        -   ``ControllerResponseError``: if the controller response is bad.
+            e.g. 401, 500 error, etc.
         """
         method_name = inspect.stack()[0][3]
 
         self._validate_refresh_parameters()
 
-        msg = f"self.epld {self.epld}, "
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.epld {self.epld}, "
         msg += f"self.issu {self.issu}, "
         msg += f"self.package_install {self.package_install}"
         self.log.debug(msg)
@@ -210,9 +249,10 @@ class ImageInstallOptions(ImageUpgradeCommon):
             msg += "must be True before calling refresh(). Skipping."
             self.log.debug(msg)
             self.compatibility_status = {}
-            self.properties["response_data"] = {
+            # Yes, installPackages is intentionally misspelled below.
+            self._response_data = {
                 "compatibilityStatusList": [],
-                "epldModules": None,
+                "epldModules": {},
                 "installPacakges": None,
                 "errMessage": "",
             }
@@ -220,51 +260,53 @@ class ImageInstallOptions(ImageUpgradeCommon):
 
         self._build_payload()
 
-        timeout = self.timeout
-        sleep_time = 5
-        self.result_current["success"] = False
+        # pylint: disable=no-member
+        self.rest_send.path = self.ep_install_options.path
+        self.rest_send.verb = self.ep_install_options.verb
+        self.rest_send.payload = self.payload
+        self.rest_send.commit()
 
-        while timeout > 0 and self.result_current.get("success") is False:
-            msg = f"Calling dcnm_send: verb {self.verb} path {self.path} payload: "
-            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+        self._response_data = self.rest_send.response_current.get("DATA", {})
+        # pylint: enable=no-member
 
-            response = dcnm_send(
-                self.ansible_module, self.verb, self.path, data=json.dumps(self.payload)
-            )
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.response_data: {json.dumps(self.response_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
-            self.properties["response_data"] = response.get("DATA", {})
-            self.result_current = self._handle_response(response, self.verb)
-            self.response_current = copy.deepcopy(response)
-
-            if self.result_current.get("success") is False and self.unit_test is False:
-                time.sleep(sleep_time)
-            timeout -= sleep_time
-
-        if self.result_current["success"] is False:
+        # pylint: disable=no-member
+        if self.rest_send.result_current["success"] is False:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retrieving install-options from "
-            msg += f"the controller. Controller response: {self.response_current}. "
+            msg += f"the controller. Controller response: {self.rest_send.response_current}. "
             if self.response_data.get("error", None) is None:
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                raise ControllerResponseError(msg)
             if "does not have package to continue" in self.response_data.get(
                 "error", ""
             ):
                 msg += f"Possible cause: Image policy {self.policy_name} does not have "
                 msg += "a package defined, and package_install is set to "
                 msg += f"True in the playbook for device {self.serial_number}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ControllerResponseError(msg)
+        # pylint: enable=no-member
 
-        self.response = copy.deepcopy(self.response_current)
         if self.response_data.get("compatibilityStatusList") is None:
             self.compatibility_status = {}
         else:
             self.compatibility_status = self.response_data.get(
                 "compatibilityStatusList", [{}]
             )[0]
+        # epldModules is handled in the epld_modules.getter property
 
     def _build_payload(self) -> None:
         """
+        ### Summary
+        Build the payload for the install-options request.
+
+        ### Raises
+        None
+
+        ### Payload structure
+        ```json
         {
             "devices": [
                 {
@@ -276,8 +318,9 @@ class ImageInstallOptions(ImageUpgradeCommon):
             "epld": false,
             "packageInstall": false
         }
+        ```
         """
-        self.payload: Dict[str, Any] = {}
+        self.payload: dict = {}
         self.payload["devices"] = []
         devices = {}
         devices["serialNumber"] = self.serial_number
@@ -291,15 +334,28 @@ class ImageInstallOptions(ImageUpgradeCommon):
         self.log.debug(msg)
 
     def _get(self, item):
-        return self.make_boolean(self.make_none(self.response_data.get(item)))
+        """
+        ### Summary
+        Return items from self.response_data.
+
+        ### Raises
+        None
+        """
+        return self.conversion.make_boolean(
+            self.conversion.make_none(self.response_data.get(item))
+        )
 
     # Mandatory properties
     @property
     def policy_name(self):
         """
+        ### Summary
         Set the policy_name of the policy to query.
+
+        ### Raises
+        ``TypeError``: if value is not a string.
         """
-        return self.properties.get("policy_name")
+        return self._policy_name
 
     @policy_name.setter
     def policy_name(self, value):
@@ -307,249 +363,317 @@ class ImageInstallOptions(ImageUpgradeCommon):
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.policy_name must be a string. Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["policy_name"] = value
+            raise TypeError(msg)
+        self._policy_name = value
 
     @property
     def serial_number(self):
         """
+        ### Summary
         Set the serial_number of the device to query.
+
+        ### Raises
+        None
         """
-        return self.properties.get("serial_number")
+        return self._serial_number
 
     @serial_number.setter
     def serial_number(self, value):
-        self.properties["serial_number"] = value
+        self._serial_number = value
 
     # Optional properties
-
     @property
     def issu(self):
         """
+        ### Summary
         Enable (True) or disable (False) issu compatibility check.
-        Valid values:
-            True - Enable issu compatibility check
-            False - Disable issu compatibility check
-        Default: True
+
+        ### Raises
+        ``TypeError``: if value is not a boolean.
+
+        ### Valid values
+
+        -   True - Enable issu compatibility check
+        -   False - Disable issu compatibility check
+
+        ### Default value
+        True
         """
-        return self.properties.get("issu")
+        return self._issu
 
     @issu.setter
     def issu(self, value):
         method_name = inspect.stack()[0][3]
-        value = self.make_boolean(value)
+        value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"issu must be a boolean value. Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["issu"] = value
+            raise TypeError(msg)
+        self._issu = value
 
     @property
     def epld(self):
         """
+        ### Summary
         Enable (True) or disable (False) epld compatibility check.
 
-        Valid values:
-            True - Enable epld compatibility check
-            False - Disable epld compatibility check
-        Default: False
+        ### Raises
+        ``TypeError`` if value is not a boolean.
+
+        ### Valid values
+
+        -   True - Enable epld compatibility check
+        -   False - Disable epld compatibility check
+
+        ### Default value
+        False
         """
-        return self.properties.get("epld")
+        return self._epld
 
     @epld.setter
     def epld(self, value):
         method_name = inspect.stack()[0][3]
-        value = self.make_boolean(value)
+        value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"epld must be a boolean value. Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["epld"] = value
+            raise TypeError(msg)
+        self._epld = value
 
     @property
     def package_install(self):
         """
+        ### Summary
         Enable (True) or disable (False) package_install compatibility check.
-        Valid values:
-            True - Enable package_install compatibility check
-            False - Disable package_install compatibility check
-        Default: False
+
+        ### Raises
+        ``TypeError`` if value is not a boolean.
+
+        ### Valid values
+
+        -   True - Enable package_install compatibility check
+        -   False - Disable package_install compatibility check
+
+        ### Default value
+        False
         """
-        return self.properties.get("package_install")
+        return self._package_install
 
     @package_install.setter
     def package_install(self, value):
         method_name = inspect.stack()[0][3]
-        value = self.make_boolean(value)
+        value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "package_install must be a boolean value. "
             msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["package_install"] = value
+            raise TypeError(msg)
+        self._package_install = value
 
     # Getter properties
     @property
     def comp_disp(self):
         """
-        Return the compDisp (CLI output from show install all status)
-        of the install-options response, if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the compDisp (CLI output from show install all status)
+            of the install-options response, if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("compDisp")
 
     @property
     def device_name(self):
         """
-        Return the deviceName of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the deviceName of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("deviceName")
 
     @property
     def epld_modules(self):
         """
-        Return the epldModules of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
 
-        epldModules will be "null" if self.epld is False.
-        _get will convert to NoneType in this case.
+        -   Return the epldModules of the install-options response,
+            if it exists.
+        -   Return None otherwise.
+
+        ### Notes
+        -   epldModules will be "null" if self.epld is False.
+        -   _get() will convert to NoneType in this case.
         """
         return self._get("epldModules")
 
     @property
     def err_message(self):
         """
-        Return the errMessage of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the errMessage of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self._get("errMessage")
 
     @property
     def install_option(self):
         """
-        Return the installOption of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the installOption of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("installOption")
 
     @property
     def install_packages(self):
         """
-        Return the installPackages of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
 
-        NOTE:   yes, installPacakges is misspelled in the response in the
-                following versions (at least):
-                12.1.2e
-                12.1.3b
+        -   Return the installPackages of the install-options response,
+            if it exists.
+        -   Return None otherwise
+
+        ### NOTE
+        Yes, installPacakges is misspelled in the response in the following
+        controller versions (at least):
+
+        -   12.1.2e
+        -   12.1.3b
         """
         return self._get("installPacakges")
 
     @property
     def ip_address(self):
         """
-        Return the ipAddress of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ipAddress of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("ipAddress")
 
     @property
-    def response_data(self) -> Dict[str, Any]:
+    def response_data(self) -> dict:
         """
-        Return the DATA portion of the controller response.
-        Return empty dict otherwise
+        ### Summary
+
+        -   Return the DATA portion of the controller response.
+        -   Return empty dict otherwise.
         """
-        return self.properties.get("response_data", {})
+        return self._response_data
 
     @property
     def os_type(self):
         """
-        Return the osType of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the osType of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("osType")
 
     @property
     def platform(self):
         """
-        Return the platform of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the platform of the install-options response,
+            if it exists.
+        -   Return None otherwise
         """
         return self.compatibility_status.get("platform")
 
     @property
     def pre_issu_link(self):
         """
-        Return the preIssuLink of the install-options response, if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ``preIssuLink`` of the install-options response,
+            if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.compatibility_status.get("preIssuLink")
 
     @property
     def raw_data(self):
         """
-        Return the raw data of the install-options response, if it exists.
-        Alias for self.response_data
+        ### Summary
+
+        -   Return the raw data of the install-options response,
+            if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.response_data
 
     @property
     def raw_response(self):
         """
-        Return the raw response, if it exists.
-        Alias for self.response_current
+        ### Summary
+
+        -   Return the raw install-options response, if it exists.
+        -   Alias for self.rest_send.response_current
         """
-        return self.response_current
+        return self.rest_send.response_current  # pylint: disable=no-member
 
     @property
     def rep_status(self):
         """
-        Return the repStatus of the install-options response, if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ``repStatus`` of the install-options response,
+            if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.compatibility_status.get("repStatus")
 
     @property
     def status(self):
         """
-        Return the status of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ``status`` of the install-options response,
+            if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.compatibility_status.get("status")
 
     @property
     def timestamp(self):
         """
-        Return the timestamp of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ``timestamp`` of the install-options response,
+            if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.compatibility_status.get("timestamp")
 
     @property
     def version(self):
         """
-        Return the version of the install-options response,
-        if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ``version`` of the install-options response,
+            if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.compatibility_status.get("version")
 
     @property
     def version_check(self):
         """
-        Return the versionCheck (version check CLI output)
-        of the install-options response, if it exists.
-        Return None otherwise
+        ### Summary
+
+        -   Return the ``versionCheck`` (version check CLI output)
+            of the install-options response, if it exists.
+        -   Return ``None`` otherwise.
         """
         return self.compatibility_status.get("versionCheck")

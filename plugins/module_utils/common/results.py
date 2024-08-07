@@ -22,7 +22,6 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any, Dict
 
 
 class Results:
@@ -205,7 +204,7 @@ class Results:
         self._build_properties()
 
     def _build_properties(self):
-        self.properties: Dict[str, Any] = {}
+        self.properties: dict = {}
         self.properties["action"] = None
         self.properties["changed"] = set()
         self.properties["check_mode"] = False
@@ -237,7 +236,8 @@ class Results:
         msg += f"self.action: {self.action}, "
         msg += f"self.state: {self.state}, "
         msg += f"self.result_current: {self.result_current}, "
-        msg += f"self.diff: {self.diff}"
+        msg += f"self.diff: {self.diff}, "
+        msg += f"self.failed: {self.failed}"
         self.log.debug(msg)
 
         if self.check_mode is True:
@@ -297,8 +297,15 @@ class Results:
 
         if self.result_current.get("success") is True:
             self.failed = False
-        else:
+        elif self.result_current.get("success") is False:
             self.failed = True
+        else:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.result_current['success'] is not a boolean. "
+            msg += f"self.result_current: {self.result_current}. "
+            msg += "Setting self.failed to False."
+            self.log.debug(msg)
+            self.failed = False
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.diff: {json.dumps(self.diff, indent=4, sort_keys=True)}, "
@@ -360,7 +367,7 @@ class Results:
         self.final_result["metadata"] = self.metadata
 
     @property
-    def failed_result(self) -> Dict[str, Any]:
+    def failed_result(self) -> dict:
         """
         return a result for a failed task with no changes
         """
@@ -373,7 +380,7 @@ class Results:
         return result
 
     @property
-    def ok_result(self) -> Dict[str, Any]:
+    def ok_result(self) -> dict:
         """
         return a result for a successful task with no changes
         """
