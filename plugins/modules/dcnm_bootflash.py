@@ -396,45 +396,6 @@ class Deleted(Common):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def file_exists(self) -> bool:
-        """
-        ### Summary
-        -   Return True if the file exists on the switch.
-        -   Return False otherwise.
-
-        ### Raises
-        None
-
-        ### Notes
-        -   We currently support only files in the root directory of the
-            partition.  This is because the NDFC API does not support
-            listing files within a directory.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"ENTERED {self.class_name}.{method_name}"
-        self.log.debug(msg)
-
-        self.bootflash_info.filter_filename = self.target_to_params.filename
-        self.bootflash_info.filter_filepath = self.target_to_params.filepath
-        self.bootflash_info.filter_partition = self.target_to_params.partition
-        self.bootflash_info.filter_supervisor = self.target_to_params.supervisor
-        self.bootflash_info.filter_switch = self.ip_address
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"filename: {self.target_to_params.filename}, "
-        msg += f"filepath: {self.target_to_params.filepath}, "
-        msg += f"ip_address: {self.ip_address}, "
-        msg += f"partition: {self.target_to_params.partition}, "
-        msg += f"supervisor: {self.target_to_params.supervisor} "
-
-        if self.bootflash_info.filename is None:
-            msg += "not found in bootflash_info."
-            self.log.debug(msg)
-            return False
-        msg += "found in bootflash_info."
-        self.log.debug(msg)
-        return True
-
     def commit(self) -> None:
         """
         ### Summary
@@ -501,6 +462,11 @@ class Deleted(Common):
                 self.bootflash_files.ip_address = ip_address
                 self.bootflash_files.partition = self.target_to_params.partition
                 self.bootflash_files.supervisor = self.target_to_params.supervisor
+                # we want to use the target as the diff, rather than the
+                # payload, because it contains more/better information than
+                # the payload. See BootflashFiles() class docstring and
+                # BootflashFiles().target property docstring.
+                self.bootflash_files.target = target
                 self.bootflash_files.add_file()
 
         self.bootflash_files.commit()

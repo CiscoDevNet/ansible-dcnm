@@ -80,6 +80,8 @@ class BootflashFiles:
     instance.filepath = "bootflash:/mydir"
     instance.ip_address = "192.168.1.1"
     instance.partition = "bootflash:"
+    # optional
+    # instance.target = target_dict # see target property for details
     instance.add_file()
     instance.commit()
     ```
@@ -113,6 +115,12 @@ class BootflashFiles:
 
         self.action = "bootflash_delete"
         self.conversion = ConversionUtils()
+        # If the optional @target property is set, target will be added
+        # to self.diff dictionary and self.diff will be used for the results
+        # diff.  Otherwise the payload will be used for the results diff.
+        # self.diff, if used, is keyed on switch ip_address and is updated
+        # in self.update_diff().
+        self.diff = {}
         self.ep_bootflash_info = EpBootflashFiles()
 
         self.ok_to_delete_files_reason = None
@@ -127,6 +135,7 @@ class BootflashFiles:
         self._results = None
         self._supervisor = None
         self._switch_details = None
+        self._target = None
 
         self.switch_details_refreshed = False
 
@@ -279,8 +288,16 @@ class BootflashFiles:
                 "RESULT_CODE": 200,
             }
 
-        self.results.diff_current = copy.deepcopy(self.payload)
+        # We want to use self.diff only if it contains all the files
+        # present in the payload.  If not, we will use the payload.
+        if self.use_diff() is True:
+            self.results.diff_current = copy.deepcopy(self.diff)
+        else:
+            self.results.diff_current = copy.deepcopy(self.payload)
         self.results.register_task_result()
+
+    def use_diff(self):
+        return True
 
     def validate_prerequisites_for_add_file(self):
         """
@@ -313,6 +330,87 @@ class BootflashFiles:
         if not self.switch_details:
             raise_exception("switch_details")
 
+    def file_exists_in_payload(self):
+        """
+            "deleteFiles": [
+                {
+                    "files": [
+                        {
+                            "bootflashType": "active",
+                            "fileName": "bar.txt",
+                            "filePath": "bootflash:"
+                        }
+                    ],
+                    "partition": "bootflash:",
+                    "serialNumber": "FOX2109PGCS"
+                },
+                {
+                    "files": [
+                        {
+                            "bootflashType": "active",
+                            "fileName": "black.txt",
+                            "filePath": "bootflash:"
+                        }
+                    ],
+                    "partition": "bootflash:",
+                    "serialNumber": "FOX2109PGD0"
+                }
+            ]
+        """
+        file_found = False
+        for item in self.payload["deleteFiles"]:
+            serial_number = item.get("serialNumber")
+            partition = item.get("partition")
+            msg = f"serial_number: {serial_number}, partition: {partition}"
+            self.log.debug(msg)
+            msg = f"in.serial_number: {self.ip_address_to_serial_number(self.ip_address)}, "
+            msg += f"in.partition: {self.partition}"
+            self.log.debug(msg)
+            if serial_number != self.ip_address_to_serial_number(self.ip_address):
+                continue
+            if partition != self.partition:
+                continue
+            file_found = True
+        return file_found
+
+    def add_file_to_existing_payload(self):
+        for item in self.payload["deleteFiles"]:
+            serial_number = item.get("serialNumber")
+            partition = item.get("partition")
+            if serial_number != self.ip_address_to_serial_number(self.ip_address):
+                continue
+            if partition != self.partition:
+                continue
+            files = item.get("files")
+            for file in files:
+                if file.get("fileName") == self.filename:
+                    return
+            files.append(
+                {
+                    "bootflashType": self.supervisor,
+                    "fileName": self.filename,
+                    "filePath": self.filepath,
+                }
+            )
+            item.update({"files": files})
+
+    def add_file_to_payload(self):
+        if not self.file_exists_in_payload():
+            add_payload = {
+                "serialNumber": self.ip_address_to_serial_number(self.ip_address),
+                "partition": self.partition,
+                "files": [
+                    {
+                        "bootflashType": self.supervisor,
+                        "fileName": self.filename,
+                        "filePath": self.filepath,
+                    }
+                ],
+            }
+            self.payload["deleteFiles"].append(add_payload)
+        else:
+            self.add_file_to_existing_payload()
+
     def add_file(self):
         """
         ### Summary
@@ -328,19 +426,26 @@ class BootflashFiles:
             msg += f"Reason: {self.ok_to_delete_files_reason}."
             raise ValueError(msg)
 
-        add_payload = {
-            "serialNumber": self.ip_address_to_serial_number(self.ip_address),
-            "partition": self.partition,
-            "files": [
-                {
-                    "bootflashType": self.supervisor,
-                    "fileName": self.filename,
-                    "filePath": self.filepath,
-                }
-            ],
-        }
+        self.add_file_to_payload()
+        self.update_diff()
 
-        self.payload["deleteFiles"].append(add_payload)
+
+    def update_diff(self):
+        """
+        ### Summary
+        Update the diff with the target.
+
+        ### Raises
+        None
+        """
+        if self.target is None:
+            return
+        ip_address = self.target.get("ip_address")
+        if ip_address is None:
+            return
+        if ip_address not in self.diff:
+            self.diff[ip_address] = []
+        self.diff[ip_address].append(self.target)
 
     @property
     def filepath(self):
@@ -505,3 +610,52 @@ class BootflashFiles:
         if _class_have != _class_need:
             raise TypeError(msg)
         self._switch_details = value
+
+    @property
+    def target(self):
+        """
+        ### Summary
+        Optional.  ``target`` is a dictionary that, if provided,
+        will be used to set the diff passed to Results.  If this
+        is not present, then the diff will be set to the payload
+        of the delete request.
+
+        ``target`` is appended to a list of targets in
+        ``BootflashFiles().add_file()``, so must be passed for each file
+        to be deleted.  See Usage example in the class docstring.
+
+        ### ``target`` Structure
+        ```json
+        {
+            "date": "2023-09-19 22:20:07",
+            "device_name": "cvd-1212-spine",
+            "filepath": "bootflash:/n9000-epld.10.2.5.M.img",
+            "ip_address": "192.168.1.1",
+            "serial_number": "BDY3814QDD0",
+            "size": "218233885",
+            "supervisor": "active"
+        }
+        ```
+
+        ### Raises
+        None
+
+        ### Associated key
+        None
+
+        ### Notes
+        1.  Since (at least with the dcnm_bootflash module) the
+            user references switches using ip_address, and the NDFC
+            bootflash-files payload includes only serialNumber, it
+            is good to use target as the diff since it contains the
+            ip_address and serial_number (as well as the size, date
+            etc, which are potential more useful than the info in the 
+            payload).
+        """
+        return self._target
+
+    @target.setter
+    def target(self, value):
+        # TODO: Add validation for target
+        self._target = value
+

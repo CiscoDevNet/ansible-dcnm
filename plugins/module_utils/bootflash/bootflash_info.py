@@ -467,7 +467,7 @@ class BootflashInfo:
         if value not in self.valid_supervisor:
             msg = f"{self.class_name}.filter_supervisor.setter: "
             msg += f"value {value} is not a valid value for supervisor. "
-            msg += f"Valid values: {self.valid_supervisor}."
+            msg += f"Valid values: {','.join(self.valid_supervisor)}."
             raise ValueError(msg)
         self._filter_supervisor = value
 
