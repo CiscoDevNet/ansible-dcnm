@@ -111,12 +111,19 @@ class FileInfoToTarget:
         """
         ### Summary
         Given ``file_info``, which is the information for a single file from
-        the bootflash-info endpoint response, build a ``target`` dictionary.
+        the bootflash-info endpoint response, build a ``target`` dictionary
+        containing:
 
-        1.  Build a Posix path ``filepath`` from the ``file_info`` dictionary.
-        2.  Add ``bootflash_type`` value as the value for
-            ``self.target.supervisor``.
-        3. Add ip_address and serial_number to the target dictionary.
+        1.  A Posix path ``filepath`` from the ``file_info`` dictionary.
+        2.  Rename ``bootflash_type`` to ``supervisor`` in the target
+            dictionary.
+        3.  Convert the ``date`` value to a more easily digestable format
+            (YYYY-MM-DD HH:MM:SS).
+        4.  Rename ipAddr to ip_address and strip the leading space that
+            NDFC adds.
+        5.  Rename serialNumber to serial_number and add to the target
+            dictionary.
+        6.  Add size to the target dictionary.
 
         ### Raises
         -   ``ValueError`` if:
@@ -140,7 +147,7 @@ class FileInfoToTarget:
         ### ``target`` Structure
         ```json
         {
-            "date":
+            "date": "2023-09-19 22:20:07",
             "device_name": "cvd-1212-spine",
             "filepath": "bootflash:/n9000-epld.10.2.5.M.img",
             "ip_address": "192.168.1.1",
