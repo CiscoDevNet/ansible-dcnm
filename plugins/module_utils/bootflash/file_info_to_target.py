@@ -49,10 +49,13 @@ class FileInfoToTarget:
     ### ``target`` Structure
     ```json
     {
+        "date": "2023-09-19 22:20:07",
+        "device_name": "cvd-1212-spine",
         "filepath": "bootflash:/n9000-epld.10.2.5.M.img",
+        "ip_address": "192.168.1.1",
+        "serial_number": "BDY3814QDD0",
+        "size": "218233885",
         "supervisor": "active"
-        "ip_address": "192.168.1.1"
-        "serial_number": "BDY3814QDD0"
     }
     ```
 
@@ -77,10 +80,13 @@ class FileInfoToTarget:
     ### Output
     ```json
     {
+        "date": "2023-09-19 22:20:07",
+        "device_name": "cvd-1212-spine",
         "filepath": "bootflash:/n9000-epld.10.2.5.M.img",
+        "ip_address": "192.168.1.1",
+        "serial_number": "BDY3814QDD0",
+        "size": "218233885",
         "supervisor": "active"
-        "ip_address": "192.168.1.1"
-        "serial_number": "BDY3814QDD0"
     }
     ```
     """
