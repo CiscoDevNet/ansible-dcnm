@@ -188,10 +188,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_fil
     BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.target_to_params import \
-    TargetToParams
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.file_info_to_target import \
     FileInfoToTarget
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.target_to_params import \
+    TargetToParams
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -426,7 +426,7 @@ class Deleted(Common):
         self.bootflash_files.rest_send = self.rest_send
         self.bootflash_files.switch_details = SwitchDetails()
         self.bootflash_files.switch_details.results = Results()
-        
+
         # matches is a dictionary keyed on switch ip address.
         # Value is a list of matches (files to be deleted).
         # {
@@ -450,7 +450,7 @@ class Deleted(Common):
 
             for target in switch["targets"]:
                 self.bootflash_info.filter_filepath = target.get("filepath")
-                self.bootflash_info.filter_supervisor = target.get("supervisor")                
+                self.bootflash_info.filter_supervisor = target.get("supervisor")
                 matches[switch["ip_address"]].extend(self.bootflash_info.matches)
 
         for ip_address in matches:
@@ -557,7 +557,7 @@ class Query(Common):
 
             for target in switch["targets"]:
                 self.bootflash_info.filter_filepath = target.get("filepath")
-                self.bootflash_info.filter_supervisor = target.get("supervisor")                
+                self.bootflash_info.filter_supervisor = target.get("supervisor")
                 diff_current[switch["ip_address"]].extend(self.bootflash_info.matches)
 
             result_current[switch["ip_address"]] = self.bootflash_info.result_dict
