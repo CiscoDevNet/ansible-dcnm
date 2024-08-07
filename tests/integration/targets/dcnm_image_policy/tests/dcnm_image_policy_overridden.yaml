@@ -3,13 +3,13 @@
 ################################################################################
 #
 # Recent run times (MM:SS.ms):
-# 00.27.549
-# 00.27.943
-
+# 00:22.116
+# 00:21.854
+#
 ################################################################################
 # STEPS
 ################################################################################
-
+#
 # SETUP
 # 1. The following images must already be uploaded to the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
@@ -32,11 +32,11 @@
 # CLEANUP
 #
 # 6. Delete the image policies created in the test
-
+#
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-
+#
 # 1. The following images must already be uploaded to the controller
 #    See vars: section below
 #    - nxos_image_1
@@ -50,7 +50,7 @@
 #
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_image_policy_overridden
 #   fabric_name: f1
 #   username: admin
 #   password: "foobar"
@@ -64,14 +64,14 @@
 #   leaf4: 172.22.150.109
 #   # for dcnm_image_policy role
 #   image_policy_1: "KR5M"
-#   image_policy_2: "NR3F"
+#   image_policy_2: "NR1F"
 #   epld_image_1: n9000-epld.10.2.5.M.img
 #   epld_image_2: n9000-epld.10.3.1.F.img
 #   nxos_image_1: n9000-dk9.10.2.5.M.bin
 #   nxos_image_2: n9000-dk9.10.3.1.F.bin
 #   nxos_release_1: 10.2.5_nxos64-cs_64bit
 #   nxos_release_2: 10.3.1_nxos64-cs_64bit
-
+#
 ################################################################################
 # SETUP
 ################################################################################
@@ -110,8 +110,8 @@
 #                 "epldImgName": "n9000-epld.10.3.1.F.img",
 #                 "nxosVersion": "10.3.1_nxos64-cs_64bit",
 #                 "platform": "N9K",
-#                 "policyDescr": "NR3F",
-#                 "policyName": "NR3F",
+#                 "policyDescr": "NR1F",
+#                 "policyName": "NR1F",
 #                 "policyType": "PLATFORM",
 #                 "sequence_number": 2
 #             }
@@ -133,18 +133,6 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": {
-#                     "lastOperDataObject": [],
-#                     "message": "",
-#                     "status": "SUCCESS"
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "GET",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 0
-#             },
-#             {
 #                 "DATA": "Policy created successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
@@ -162,11 +150,6 @@
 #             }
 #         ],
 #         "result": [
-#             {
-#                 "found": true,
-#                 "sequence_number": 0,
-#                 "success": true
-#             },
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -221,16 +204,33 @@
     - result.diff[1].platform == "N9K"
     - result.diff[0].policyType == "PLATFORM"
     - result.diff[1].policyType == "PLATFORM"
-    - (result.response | length) == 3
+    - result.diff[0].sequence_number == 1
+    - result.diff[1].sequence_number == 2
+    - (result.metadata | length) == 2
+    - result.metadata[0].action == "create"
+    - result.metadata[0].check_mode == false
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "merged"
+    - result.metadata[1].action == "create"
+    - result.metadata[1].check_mode == false
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "merged"
+    - (result.response | length) == 2
     - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
+    - result.response[0].METHOD == "POST"
     - result.response[0].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
     - result.response[1].MESSAGE == "OK"
     - result.response[1].METHOD == "POST"
     - result.response[1].RETURN_CODE == 200
-    - result.response[2].MESSAGE == "OK"
-    - result.response[2].METHOD == "POST"
-    - result.response[2].RETURN_CODE == 200
+    - result.response[1].sequence_number == 2
+    - (result.result | length) == 2
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true
+    - result.result[1].changed == true
+    - result.result[1].sequence_number == 2
+    - result.result[1].success == true
 
 ################################################################################
 # OVERRIDDEN - TEST - override image_policy_1 which will delete image_policy_2
@@ -242,7 +242,7 @@
 #         "diff": [
 #             {
 #                 "policyNames": [
-#                     "NR3F"
+#                     "NR1F"
 #                 ],
 #                 "sequence_number": 1
 #             },
@@ -280,90 +280,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": {
-#                     "lastOperDataObject": [
-#                         {
-#                             "agnostic": false,
-#                             "epldImgName": "n9000-epld.10.2.5.M.img",
-#                             "fabricPolicyName": null,
-#                             "imageName": "nxos64-cs.10.2.5.M.bin",
-#                             "imagePresent": "Present",
-#                             "nxosVersion": "10.2.5_nxos64-cs_64bit",
-#                             "packageName": "",
-#                             "platform": "N9K/N3K",
-#                             "platformPolicies": "",
-#                             "policyDescr": "KR5M",
-#                             "policyName": "KR5M",
-#                             "policyType": "PLATFORM",
-#                             "ref_count": 0,
-#                             "role": null,
-#                             "rpmimages": null,
-#                             "unInstall": false
-#                         },
-#                         {
-#                             "agnostic": false,
-#                             "epldImgName": "n9000-epld.10.3.1.F.img",
-#                             "fabricPolicyName": null,
-#                             "imageName": "nxos64-cs.10.3.1.F.bin",
-#                             "imagePresent": "Present",
-#                             "nxosVersion": "10.3.1_nxos64-cs_64bit",
-#                             "packageName": "",
-#                             "platform": "N9K/N3K",
-#                             "platformPolicies": "",
-#                             "policyDescr": "NR3F",
-#                             "policyName": "NR3F",
-#                             "policyType": "PLATFORM",
-#                             "ref_count": 0,
-#                             "role": null,
-#                             "rpmimages": null,
-#                             "unInstall": false
-#                         }
-#                     ],
-#                     "message": "",
-#                     "status": "SUCCESS"
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "GET",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 0
-#             },
-#             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 1
-#             },
-#             {
-#                 "DATA": {
-#                     "lastOperDataObject": [
-#                         {
-#                             "agnostic": false,
-#                             "epldImgName": "n9000-epld.10.2.5.M.img",
-#                             "fabricPolicyName": null,
-#                             "imageName": "nxos64-cs.10.2.5.M.bin",
-#                             "imagePresent": "Present",
-#                             "nxosVersion": "10.2.5_nxos64-cs_64bit",
-#                             "packageName": "",
-#                             "platform": "N9K/N3K",
-#                             "platformPolicies": "",
-#                             "policyDescr": "KR5M",
-#                             "policyName": "KR5M",
-#                             "policyType": "PLATFORM",
-#                             "ref_count": 0,
-#                             "role": null,
-#                             "rpmimages": null,
-#                             "unInstall": false
-#                         }
-#                     ],
-#                     "message": "",
-#                     "status": "SUCCESS"
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "GET",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
@@ -378,17 +298,7 @@
 #         ],
 #         "result": [
 #             {
-#                 "found": true,
-#                 "sequence_number": 0,
-#                 "success": true
-#             },
-#             {
 #                 "changed": true,
-#                 "sequence_number": 1,
-#                 "success": true
-#             },
-#             {
-#                 "found": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             },
@@ -422,6 +332,7 @@
     - result.failed == false
     - (result.diff | length) == 2
     - image_policy_2 in result.diff[0].policyNames
+    - result.diff[0].sequence_number == 1
     - result.diff[1].agnostic == false
     - result.diff[1].policyName == image_policy_1
     - result.diff[1].policyDescr == image_policy_1 + " overridden"
@@ -429,6 +340,7 @@
     - result.diff[1].nxosVersion == nxos_release_1
     - result.diff[1].platform == "N9K"
     - result.diff[1].policyType == "PLATFORM"
+    - result.diff[1].sequence_number == 2
     - (result.metadata | length) == 2
     - result.metadata[0].action == "delete"
     - result.metadata[1].action == "update"
@@ -438,42 +350,58 @@
     - result.metadata[1].check_mode == False
     - result.metadata[0].sequence_number == 1
     - result.metadata[1].sequence_number == 2
-    - (result.response | length) == 4
+    - (result.response | length) == 2
     - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
+    - result.response[0].METHOD == "DELETE"
     - result.response[0].RETURN_CODE == 200
     - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "DELETE"
+    - result.response[1].METHOD == "POST"
     - result.response[1].RETURN_CODE == 200
-    - result.response[2].MESSAGE == "OK"
-    - result.response[2].METHOD == "GET"
-    - result.response[2].RETURN_CODE == 200
-    - result.response[3].MESSAGE == "OK"
-    - result.response[3].METHOD == "POST"
-    - result.response[3].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
+    - result.response[1].sequence_number == 2
+    - (result.result | length) == 2
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true
+    - result.result[1].changed == true
+    - result.result[1].sequence_number == 2
+    - result.result[1].success == true
 
 ################################################################################
-# OVERRIDDEN - CLEANUP - Delete image policies and verify
+# OVERRIDDEN - TEST - query image policies and verify results
 ################################################################################
 # Expected result
-# ok: [dcnm] => {
+# ok: [172.22.150.244] => {
 #     "result": {
-#         "changed": true,
+#         "changed": false,
 #         "diff": [
 #             {
-#                 "policyNames": [
-#                     "KR5M"
-#                 ],
-#                 "sequence_number": 1
+#                 "agnostic": false,
+#                 "epldImgName": "n9000-epld.10.2.5.M.img",
+#                 "fabricPolicyName": null,
+#                 "imageName": "nxos64-cs.10.2.5.M.bin",
+#                 "imagePresent": "Present",
+#                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
+#                 "packageName": "",
+#                 "platform": "N9K/N3K",
+#                 "platformPolicies": "",
+#                 "policyDescr": "KR5M overridden",
+#                 "policyName": "KR5M",
+#                 "policyType": "PLATFORM",
+#                 "ref_count": 0,
+#                 "role": null,
+#                 "rpmimages": null,
+#                 "sequence_number": 1,
+#                 "unInstall": false
 #             }
 #         ],
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "query",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
-#                 "state": "deleted"
+#                 "state": "query"
 #             }
 #         ],
 #         "response": [
@@ -506,8 +434,84 @@
 #                 "METHOD": "GET",
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policies",
 #                 "RETURN_CODE": 200,
-#                 "sequence_number": 0
-#             },
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+
+- name: OVERRIDDEN - TEST - query image policies and verify results
+  cisco.dcnm.dcnm_image_policy:
+    state: query
+    config:
+    - name: "{{ image_policy_1 }}"
+    - name: "{{ image_policy_2 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == false
+    - result.failed == false
+    - (result.diff | length) == 1
+    - result.diff[0].agnostic == false
+    - result.diff[0].policyName == image_policy_1
+    - result.diff[0].policyDescr == image_policy_1 + " overridden"
+    - result.diff[0].epldImgName == epld_image_1
+    - result.diff[0].nxosVersion == nxos_release_1
+    - result.diff[0].platform == "N9K/N3K"
+    - result.diff[0].policyType == "PLATFORM"
+    - result.diff[0].ref_count == 0
+    - result.diff[0].sequence_number == 1
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "query"
+    - result.metadata[0].check_mode == false
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "query"
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "GET"
+    - result.response[0].RETURN_CODE == 200
+    - (result.result | length) == 1
+    - result.result[0].found == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true
+
+################################################################################
+# OVERRIDDEN - CLEANUP - Delete image policies and verify
+################################################################################
+# Expected result
+# ok: [dcnm] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "policyNames": [
+#                     "KR5M"
+#                 ],
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
 #             {
 #                 "DATA": "Selected policy(s) deleted successfully.",
 #                 "MESSAGE": "OK",
@@ -518,11 +522,6 @@
 #             }
 #         ],
 #         "result": [
-#             {
-#                 "found": true,
-#                 "sequence_number": 0,
-#                 "success": true
-#             },
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
@@ -547,17 +546,20 @@
     - result.changed == true
     - result.failed == false
     - (result.diff | length) == 1
+    - result.diff[0].sequence_number == 1
     - image_policy_1 in result.diff[0].policyNames
     - image_policy_2 not in result.diff[0].policyNames
-    - (result.response | length) == 2
-    - result.response[0].MESSAGE == "OK"
-    - result.response[0].METHOD == "GET"
-    - result.response[0].RETURN_CODE == 200
-    - result.response[1].MESSAGE == "OK"
-    - result.response[1].METHOD == "DELETE"
-    - result.response[1].RETURN_CODE == 200
     - (result.metadata | length) == 1
     - result.metadata[0].action == "delete"
-    - result.metadata[0].check_mode == False
+    - result.metadata[0].check_mode == false
     - result.metadata[0].sequence_number == 1
     - result.metadata[0].state == "deleted"
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "DELETE"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true

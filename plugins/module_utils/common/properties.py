@@ -37,6 +37,64 @@ class Properties:
     -   ``rest_send``: Set and return nn instance of the ``RestSend`` class.
     -   ``results``: Set and return an instance of the ``Results`` class.
     """
+    @property
+    def params(self):
+        """
+        ### Summary
+        Expects value to be a dictionary containing, at mimimum, the keys
+        ``state`` and ``check_mode``.
+
+        ### Raises
+        -   setter: ``ValueError`` if value is not a dict.
+        -   setter: ``ValueError`` if value["state"] is missing.
+        -   setter: ``ValueError`` if value["state"] is not a valid state.
+        -   setter: ``ValueError`` if value["check_mode"] is missing.
+
+        ### Valid values
+
+        #### ``state``
+        -   deleted
+        -   merged
+        -   overridden
+        -   query
+        -   replaced
+
+        #### ``check_mode``
+        -   ``False`` - The Ansible module should make requested changes.
+        -   ``True``  - The Ansible module should not make requested changed
+            and should only report what changes it would make if ``check_mode``
+            was ``False``.
+
+        ### Details
+        -   Example Valid params:
+                -   ``{"state": "deleted", "check_mode": False}``
+                -   ``{"state": "merged", "check_mode": False}``
+                -   ``{"state": "overridden", "check_mode": False}``
+                -   ``{"state": "query", "check_mode": False}``
+                -   ``{"state": "replaced", "check_mode": False}``
+        -   getter: return the params
+        -   setter: set the params
+        """
+        return self._params
+
+    @params.setter
+    def params(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params must be a dictionary. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            raise TypeError(msg)
+        if value.get("state", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params.state is required but missing."
+            raise ValueError(msg)
+        if value.get("check_mode", None) is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params.check_mode is required but missing."
+            raise ValueError(msg)
+        self._params = value
 
     @property
     def rest_send(self):
@@ -105,6 +163,14 @@ class Properties:
         if _class_have != _class_need:
             raise TypeError(msg)
         self._results = value
+
+    def add_params(self):
+        """
+        ### Summary
+        Class decorator method to set the ``params`` property.
+        """
+        self.params = Properties.params
+        return self
 
     def add_rest_send(self):
         """
