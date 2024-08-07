@@ -322,6 +322,15 @@ class BootflashInfo:
             raise ValueError(msg)
 
     def match_filter_filepath(self, target):
+        """
+        ### Summary
+        -   Return True if the target's ``filepath`` matches
+            ``filter_filepath``.
+        -   Return False otherwise.
+
+        ### Raises
+        None
+        """
         if not self.filter_filepath:
             return False
         posix = PurePosixPath(target.get("filepath"))
