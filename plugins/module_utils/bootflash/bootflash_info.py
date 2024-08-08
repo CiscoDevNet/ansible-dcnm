@@ -35,6 +35,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 
 
+@Properties.add_rest_send
 @Properties.add_results
 class BootflashInfo:
     """
@@ -176,7 +177,7 @@ class BootflashInfo:
     def __init__(self):
         self.class_name = self.__class__.__name__
 
-        self.action = "bootflash_query"
+        self.action = "bootflash_info"
         self.bootflash_data_map = {}
         self.conversion = ConversionUtils()
         self.ep_bootflash_discovery = EpBootflashDiscovery()
@@ -184,7 +185,7 @@ class BootflashInfo:
         self.file_info_to_target = FileInfoToTarget()
         self.partitions = []
         self.info_dict = {}
-        self.matches = []
+        self._matches = []
 
         # Used to collect individual responses and results for each
         # switch in self.switches.  Keyed on switch ip_address.
@@ -193,6 +194,7 @@ class BootflashInfo:
         self.response_dict = {}
         self.result_dict = {}
 
+        self._rest_send = None
         self._results = None
         self._switch_details = None
         self._switches = None
