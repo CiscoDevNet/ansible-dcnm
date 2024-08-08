@@ -105,7 +105,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "bootflash_query",
+#                 "action": "bootflash_info",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "query"
@@ -1059,7 +1059,7 @@
     - response0_message
     - response0_method
     - (result.metadata | length) == 1
-    - result.metadata[0].action == "bootflash_query"
+    - result.metadata[0].action == "bootflash_info"
     - result.metadata[0].check_mode == False
     - result.metadata[0].sequence_number == 1
     - result.metadata[0].state == "query"
