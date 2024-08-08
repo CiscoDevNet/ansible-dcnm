@@ -22,16 +22,14 @@ from datetime import datetime
 from pathlib import PurePosixPath
 
 
-class FileInfoToTarget:
+class ConvertFileInfoToTarget:
     """
     ### Summary
-    Build a target dictionary from a ``file_info`` dictionary.
-
-    Convert ``file_info`` into ``Target Structure``.
+    Build a ``target`` dictionary from a ``file_info`` dictionary.
 
     ### Raises
 
-    ### ``file_info`` (from bootflash-info endpoint response)
+    ### ``file_info`` Dictionary (from bootflash-info endpoint response)
     ```json
     {
         "bootflash_type": "active",
@@ -46,7 +44,7 @@ class FileInfoToTarget:
     }
     ```
 
-    ### ``target`` Structure
+    ### ``target`` Dictionary
     ```json
     {
         "date": "2023-09-19 22:20:07",
@@ -61,7 +59,7 @@ class FileInfoToTarget:
 
     ### Usage
     ```python
-    instance = FileInfoToTarget()
+    instance = ConvertFileInfoToTarget()
     instance.file_info = {
         "bootflash_type": "active",
         "date": "Sep 19 22:20:07 2023",
@@ -93,8 +91,9 @@ class FileInfoToTarget:
 
     def __init__(self) -> None:
         self.class_name = self.__class__.__name__
-
+        self.action = "convert_file_info_to_target"
         self.timestamp_format = "%b %d %H:%M:%S %Y"
+
         self._file_info = None
         self._filename = None
         self._filepath = None
@@ -104,7 +103,7 @@ class FileInfoToTarget:
         self._target = None
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED FileInfoToTarget(): "
+        msg = "ENTERED ConvertFileInfoToTarget(): "
         self.log.debug(msg)
 
     def commit(self) -> None:

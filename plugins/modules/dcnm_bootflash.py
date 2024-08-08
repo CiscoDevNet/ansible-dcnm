@@ -188,10 +188,10 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_fil
     BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.file_info_to_target import \
-    FileInfoToTarget
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.target_to_params import \
-    TargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
+    ConvertFileInfoToTarget
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
+    ConvertTargetToParams
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -271,11 +271,11 @@ class Common:
 
         self.bootflash_info = BootflashInfo()
         self.ip_address = None
-        self.file_info_to_target = FileInfoToTarget()
+        self.convert_file_info_to_target = ConvertFileInfoToTarget()
+        self.convert_target_to_params = ConvertTargetToParams()
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
-        self.target_to_params = TargetToParams()
         self.want = []
 
         msg = f"ENTERED Common().{method_name}: "
@@ -390,11 +390,96 @@ class Deleted(Common):
             raise ValueError(msg) from error
 
         self.bootflash_files = BootflashFiles()
+        self.files_to_delete = {}
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
+
+    def populate_files_to_delete(self, switch) -> None:
+        """
+        ### Summary
+        Populate the ``files_to_delete`` dictionary with files
+        the user intends to delete.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -    ``supervisor`` is not one of:
+                    -   active
+                    -   standby
+
+        ### ``files_to_delete`` Structure
+        files_to_delete is a dictionary containing
+        -   key: switch ip address.
+        -   value: a list of dictionaries containing the files to delete.
+
+        ### ``files_to_delete`` Example
+        ```json
+        {
+            "172.22.150.112": [
+                {
+                    "date": "2024-08-05 19:23:24",
+                    "device_name": "cvd-1211-spine",
+                    "filepath": "bootflash:/foo.txt",
+                    "ip_address": "172.22.150.112",
+                    "serial_number": "FOX2109PGCS",
+                    "size": "2",
+                    "supervisor": "active"
+                }
+            ]
+        }
+        ```
+        """
+        method_name = inspect.stack()[0][3]
+        self.bootflash_info.filter_switch = switch["ip_address"]
+        if switch["ip_address"] not in self.files_to_delete:
+            self.files_to_delete[switch["ip_address"]] = []
+
+        for target in switch["targets"]:
+            self.bootflash_info.filter_filepath = target.get("filepath")
+            try:
+                self.bootflash_info.filter_supervisor = target.get("supervisor")
+            except ValueError as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Error assigning BootflashInfo.filter_supervisor. "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
+            self.files_to_delete[switch["ip_address"]].extend(
+                self.bootflash_info.matches
+            )
+
+    def update_bootflash_files(self, ip_address, target) -> None:
+        """
+        ### Summary
+        Add the file associated with ``ip_address`` and ``target`` to an
+        internal list maintained by BootflashFiles().
+
+        ### Raises
+        -    ``TypeError`` if:
+                -   ``target`` is not a dictionary.
+        -    ``ValueError`` if:
+                -   ``BootflashFiles().add_file`` raises ``ValueError``.
+        """
+        self.convert_target_to_params.target = target
+        self.convert_target_to_params.commit()
+        self.bootflash_files.filename = self.convert_target_to_params.filename
+        self.bootflash_files.filepath = self.convert_target_to_params.filepath
+        self.bootflash_files.ip_address = ip_address
+        self.bootflash_files.partition = self.convert_target_to_params.partition
+        self.bootflash_files.supervisor = self.convert_target_to_params.supervisor
+        # we want to use the target as the diff, rather than the
+        # payload, because it contains better information than
+        # the payload. See BootflashFiles() class docstring and
+        # BootflashFiles().target property docstring.
+        self.bootflash_files.target = target
+        try:
+            self.bootflash_files.add_file()
+        except ValueError as error:
+            msg = f"{self.class_name}.{inspect.stack()[0][3]}: "
+            msg += "Error adding file to bootflash_files. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
     def commit(self) -> None:
         """
@@ -409,17 +494,22 @@ class Deleted(Common):
         -   TypeError
         -   ValueError
         """
+        # Populate self.switches
         self.get_want()
+
+        # Prepare BootflashInfo()
         self.bootflash_info.results = Results()
         self.bootflash_info.rest_send = self.rest_send  # pylint: disable=no-member
         self.bootflash_info.switch_details = SwitchDetails()
 
+        # Retrieve bootflash contents for the user's switches.
         switch_list = []
         for switch in self.switches:
             switch_list.append(switch["ip_address"])
         self.bootflash_info.switches = switch_list
         self.bootflash_info.refresh()
 
+        # Prepare BootflashFiles()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
         self.bootflash_files.results = self.results
@@ -427,48 +517,15 @@ class Deleted(Common):
         self.bootflash_files.switch_details = SwitchDetails()
         self.bootflash_files.switch_details.results = Results()
 
-        # matches is a dictionary keyed on switch ip address.
-        # Value is a list of matches (files to be deleted).
-        # {
-        #     "172.22.150.112": [
-        #         {
-        #             "date": "2024-08-05 19:23:24",
-        #             "device_name": "cvd-1211-spine",
-        #             "filepath": "bootflash:/foo.txt",
-        #             "ip_address": "172.22.150.112",
-        #             "serial_number": "FOX2109PGCS",
-        #             "size": "2",
-        #             "supervisor": "active"
-        #         }
-        #     ]
-        # {
-        matches = {}
+        # Update BootflashFiles() with the files to delete
+        self.files_to_delete = {}
         for switch in self.switches:
-            self.bootflash_info.filter_switch = switch["ip_address"]
-            if switch["ip_address"] not in matches:
-                matches[switch["ip_address"]] = []
+            self.populate_files_to_delete(switch)
+        for ip_address, targets in self.files_to_delete.items():
+            for target in targets:
+                self.update_bootflash_files(ip_address, target)
 
-            for target in switch["targets"]:
-                self.bootflash_info.filter_filepath = target.get("filepath")
-                self.bootflash_info.filter_supervisor = target.get("supervisor")
-                matches[switch["ip_address"]].extend(self.bootflash_info.matches)
-
-        for ip_address in matches:
-            for target in matches[ip_address]:
-                self.target_to_params.target = target
-                self.target_to_params.commit()
-                self.bootflash_files.filename = self.target_to_params.filename
-                self.bootflash_files.filepath = self.target_to_params.filepath
-                self.bootflash_files.ip_address = ip_address
-                self.bootflash_files.partition = self.target_to_params.partition
-                self.bootflash_files.supervisor = self.target_to_params.supervisor
-                # we want to use the target as the diff, rather than the
-                # payload, because it contains more/better information than
-                # the payload. See BootflashFiles() class docstring and
-                # BootflashFiles().target property docstring.
-                self.bootflash_files.target = target
-                self.bootflash_files.add_file()
-
+        # Delete the files
         self.bootflash_files.commit()
 
 
@@ -523,45 +580,44 @@ class Query(Common):
         self.results.state = self.state
         self.results.check_mode = self.check_mode
 
+        # Populate and validate self.switches
         self.get_want()
 
         if len(self.switches) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "No switches to query."
+            self.log.debug(msg)
             return
 
+        # Prepare BootflashInfo()
         self.bootflash_info.results = self.results
         self.bootflash_info.rest_send = self.rest_send
         self.bootflash_info.switch_details = SwitchDetails()
 
+        # Retrieve bootflash contents for the user's switches.
         switches_to_query = []
         for switch in self.switches:
             switches_to_query.append(switch["ip_address"])
         self.bootflash_info.switches = switches_to_query
         self.bootflash_info.refresh()
 
+        # Update results (result and response)
         self.results.response_current = self.bootflash_info.response_dict
         self.results.result_current = self.bootflash_info.result_dict
 
-        result_current = {}
-        response_current = {}
+        # Update results (diff)
+        # Use the file info from the controller as the diff.
         diff_current = {}
         for switch in self.switches:
-            self.bootflash_info.filter_switch = switch["ip_address"]
-            if switch["ip_address"] not in result_current:
-                result_current[switch["ip_address"]] = []
-            if switch["ip_address"] not in response_current:
-                response_current[switch["ip_address"]] = []
-            if switch["ip_address"] not in diff_current:
-                diff_current[switch["ip_address"]] = []
+            ip_address = switch.get("ip_address")
+            self.bootflash_info.filter_switch = ip_address
+            if ip_address not in diff_current:
+                diff_current[ip_address] = []
 
             for target in switch["targets"]:
                 self.bootflash_info.filter_filepath = target.get("filepath")
                 self.bootflash_info.filter_supervisor = target.get("supervisor")
-                diff_current[switch["ip_address"]].extend(self.bootflash_info.matches)
-
-            result_current[switch["ip_address"]] = self.bootflash_info.result_dict
-            response_current[switch["ip_address"]] = self.bootflash_info.response_dict
+                diff_current[ip_address].extend(self.bootflash_info.matches)
 
         self.results.diff_current = diff_current
         self.results.register_task_result()

@@ -20,7 +20,7 @@ import inspect
 import logging
 
 
-class TargetToParams:
+class ConvertTargetToParams:
     """
     ### Summary
     Parse ``target`` into its consituent API parameters.
@@ -33,8 +33,9 @@ class TargetToParams:
 
     def __init__(self) -> None:
         self.class_name = self.__class__.__name__
-
+        self.action = "convert_target_to_params"
         self.committed = False
+
         self._filename = None
         self._filepath = None
         self._target = None
@@ -42,7 +43,7 @@ class TargetToParams:
         self._supervisor = None
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED TargetToParams(): "
+        msg = "ENTERED ConvertTargetToParams(): "
         self.log.debug(msg)
 
     def commit(self):

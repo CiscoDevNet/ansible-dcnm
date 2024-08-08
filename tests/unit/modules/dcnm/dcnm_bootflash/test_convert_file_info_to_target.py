@@ -25,16 +25,16 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
-    BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
+    ConvertFileInfoToTarget
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import \
     does_not_raise
 
 
-def test_bootflash_info_00000() -> None:
+def test_convert_file_info_to_target_00000() -> None:
     """
     ### Classes and Methods
-    - BootflashInfo()
+    - ConvertFileInfoToTarget()
         - __init__()
 
     ### Summary
@@ -45,28 +45,15 @@ def test_bootflash_info_00000() -> None:
     -   Exceptions are not not raised.
     """
     with does_not_raise():
-        instance = BootflashInfo()
-    assert instance.action == "bootflash_info"
-    assert instance.class_name == "BootflashInfo"
-    assert instance.conversion.class_name == "ConversionUtils"
-    assert instance.ep_bootflash_discovery.class_name == "EpBootflashDiscovery"
-    assert instance.ep_bootflash_info.class_name == "EpBootflashInfo"
-    assert instance.file_info_to_target.class_name == "FileInfoToTarget"
-    assert instance.partitions == []
-    assert instance.info_dict == {}
-    assert instance._matches == []
+        instance = ConvertFileInfoToTarget()
+    assert instance.action == "convert_file_info_to_target"
+    assert instance.class_name == "ConvertFileInfoToTarget"
 
-    assert instance.diff_dict == {}
-    assert instance.response_dict == {}
-    assert instance.result_dict == {}
-
-    assert instance._rest_send is None
-    assert instance._results is None
-    assert instance.switch_details is None
-    assert instance.switches is None
-
-    assert instance.filter_filepath is None
-    assert instance.filter_supervisor is None
-    assert instance.filter_switch is None
-
-    assert instance.valid_supervisor == ["active", "standby"]
+    assert instance._file_info is None
+    assert instance._filename is None
+    assert instance._filepath is None
+    assert instance._ip_address is None
+    assert instance._serial_number is None
+    assert instance._supervisor is None
+    assert instance._target is None
+    assert instance.timestamp_format == "%b %d %H:%M:%S %Y"

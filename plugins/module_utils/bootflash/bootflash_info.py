@@ -21,8 +21,8 @@ import inspect
 import logging
 from pathlib import PurePosixPath
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.file_info_to_target import \
-    FileInfoToTarget
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
+    ConvertFileInfoToTarget
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.discovery.discovery import \
     EpBootflashDiscovery
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
@@ -180,9 +180,9 @@ class BootflashInfo:
         self.action = "bootflash_info"
         self.bootflash_data_map = {}
         self.conversion = ConversionUtils()
+        self.convert_file_info_to_target = ConvertFileInfoToTarget()
         self.ep_bootflash_discovery = EpBootflashDiscovery()
         self.ep_bootflash_info = EpBootflashInfo()
-        self.file_info_to_target = FileInfoToTarget()
         self.partitions = []
         self.info_dict = {}
         self._matches = []
@@ -396,9 +396,9 @@ class BootflashInfo:
 
         for partition in self.bootflash_data_map:
             for file_info in self.bootflash_data_map[partition]:
-                self.file_info_to_target.file_info = file_info
-                self.file_info_to_target.commit()
-                target = self.file_info_to_target.target
+                self.convert_file_info_to_target.file_info = file_info
+                self.convert_file_info_to_target.commit()
+                target = self.convert_file_info_to_target.target
                 if not self.match_filter_switch(target):
                     continue
                 if not self.match_filter_filepath(target):
