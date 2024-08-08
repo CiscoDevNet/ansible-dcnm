@@ -460,7 +460,8 @@ class BootflashFiles:
         Add a file to the payload.
 
         ### Raises
-        None
+        -   ``ValueError`` if:
+                -   The switch does not allow file deletion.
         """
         self.validate_prerequisites_for_add_file()
 
@@ -680,7 +681,8 @@ class BootflashFiles:
         ```
 
         ### Raises
-        None
+        -   ``TypeError`` if:
+                -   target is not a dictionary.
 
         ### Associated key
         None
@@ -698,5 +700,10 @@ class BootflashFiles:
 
     @target.setter
     def target(self, value):
-        # TODO: Add validation for target
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "target must be a dictionary. "
+            msg += f"Got type {type(value).__name__} for value {value}."
+            raise TypeError(msg)
         self._target = value
