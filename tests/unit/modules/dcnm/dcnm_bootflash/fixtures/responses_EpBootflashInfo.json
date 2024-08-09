@@ -365,5 +365,44 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
         "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00210a": {
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1212-spine",
+                    "freeSpace": 10630565888,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 11054587904
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
     }
 }

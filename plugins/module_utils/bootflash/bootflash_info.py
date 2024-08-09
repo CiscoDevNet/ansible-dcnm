@@ -183,7 +183,6 @@ class BootflashInfo:
         self.convert_file_info_to_target = ConvertFileInfoToTarget()
         self.ep_bootflash_discovery = EpBootflashDiscovery()
         self.ep_bootflash_info = EpBootflashInfo()
-        self.partitions = []
         self.info_dict = {}
         self._matches = []
 
@@ -277,14 +276,19 @@ class BootflashInfo:
         ### Raises
         None
         """
+        method_name = inspect.stack()[0][3]
         self.info_dict = {}
         self.response_dict = {}
         self.result_dict = {}
         for switch in self.switches:
             self.switch_details.filter = switch
-            serial_number = self.switch_details.serial_number
-            if serial_number is None:
-                continue
+            try:
+                serial_number = self.switch_details.serial_number
+            except ValueError as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"serial_number not found for switch {switch}. "
+                msg += f"Error detail {error}"
+                raise ValueError(msg) from error
 
             # rediscover bootflash contents for the switch
             self.ep_bootflash_discovery.serial_number = serial_number
@@ -307,7 +311,8 @@ class BootflashInfo:
     def validate_prerequisites_for_build_matches(self):
         """
         ### Summary
-        Verify that mandatory prerequisites are met before calling _get()
+        Verify that mandatory prerequisites are met before calling
+        ``build_matches()``.
 
         ### Raises
         -   ``ValueError`` if:
@@ -500,26 +505,6 @@ class BootflashInfo:
         return self.info_dict
 
     @property
-    def ip_address(self):
-        """
-        ### Summary
-        Return the current ``ip_address``.
-
-        ``ip_address`` is the ip address associated with the device that hosts
-        the ``filename`` that was matched.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``ipAddr``
-
-        ### Example value
-        ``192.168.1.2``
-        """
-        return self._get("ipAddr").strip()
-
-    @property
     def matches(self):
         """
         ### Summary
@@ -555,88 +540,6 @@ class BootflashInfo:
     @matches.setter
     def matches(self, value):
         self._matches = value
-
-    @property
-    def name(self):
-        """
-        ### Summary
-        Return the current ``name``.
-
-        ``name`` is the device name on which the file matching
-        ``filter_switch`` + ``filter_file`` resides.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``name``
-
-        ### Example value
-        ``bootflash:``
-        """
-        return self._get("name")
-
-    @property
-    def supervisor(self):
-        """
-        ### Summary
-        Return the state of the ``supervisor`` card on which ``filename``
-        resides.
-
-        ``supervisor`` is either "active" or "standby" and represents the
-        status of the supervisor on which the ``filename`` resides.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``bootflash_type``
-
-        ### Example value
-        -   ``active``
-        -   ``standby``
-        """
-        return self._get("bootflash_type")
-
-    @property
-    def serial_number(self):
-        """
-        ### Summary
-        Return the current ``serial_number``.
-
-        ``serial_number`` is the serial number of the device on which
-        the file matching ``filter_switch`` + ``filter_file`` resides.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``serialNumber``
-
-        ### Example value
-        ``ABC1234567``
-        """
-        return self._get("serialNumber")
-
-    @property
-    def size(self):
-        """
-        ### Summary
-        Return the current ``size``.
-
-        ``size`` is the file size in bytes of the file matching
-        ``filter_switch`` + ``filter_file``.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``size``
-
-        ### Example value
-        ``218233885``
-        """
-        return self._get("size")
 
     @property
     def switch_details(self):

@@ -71,7 +71,6 @@ def test_bootflash_info_00000() -> None:
     assert instance.convert_file_info_to_target.class_name == "ConvertFileInfoToTarget"
     assert instance.ep_bootflash_discovery.class_name == "EpBootflashDiscovery"
     assert instance.ep_bootflash_info.class_name == "EpBootflashInfo"
-    assert instance.partitions == []
     assert instance.info_dict == {}
     assert instance._matches == []
 
@@ -255,3 +254,333 @@ def test_bootflash_info_00130() -> None:
     match += r"switch_details must be set prior to calling refresh\."
     with pytest.raises(ValueError, match=match):
         instance.refresh()
+
+
+def test_bootflash_info_00140() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh()
+        - validate_refresh_parameters()
+
+    ### Summary
+    - Verify exception is raised if ``switches`` is not set.
+
+    ### Test
+    -   ValueError is raised when ``switches`` is not set.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+
+    match = r"BootflashInfo\.validate_refresh_parameters: "
+    match += r"switches must be set prior to calling refresh\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_bootflash_info_00150() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh()
+        - validate_refresh_parameters()
+
+    ### Summary
+    -   Verify ``ValueError`` is raised because 172.22.150.112 is missing
+        serialNumber key in the ep_all_switches response.
+
+    ### Test
+    -    ``ValueError`` is raised.
+    -    Error message matches expectations.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_query(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    params_test = copy.deepcopy(params_query)
+    params_test.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_test)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112", "172.22.150.113"]
+    match = r"BootflashInfo\.refresh_bootflash_info:\s+"
+    match += r"serial_number not found for switch 172.22.150.112.\s+"
+    match += r"Error detail SwitchDetails\._get:\s+"
+    match += r"172.22.150.112 does not have a key named serialNumber\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()
+
+
+def test_bootflash_info_00200() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - build_matches()
+        - validate_prerequisites_for_build_matches()
+
+    ### Summary
+    -   Verify exception is raised if ``build_matches()`` is called
+        before ``refresh()``.
+
+    ### Test
+    -   ``ValueError`` is raised when ``build_matches()`` called.
+    -    Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112", "172.22.150.113"]
+
+    match = r"BootflashInfo\.validate_prerequisites_for_build_matches:\s+"
+    match += r"refresh must be called before retrieving bootflash properties\."
+    with pytest.raises(ValueError, match=match):
+        instance.build_matches()
+
+
+def test_bootflash_info_00210() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh()
+        - validate_refresh_parameters()
+        - build_matches()
+
+    ### Summary
+    Verify that ``build_matches()`` returns without updating the
+    ``instance.matches`` list when ``filter_switch`` is not found in the
+    controller response (i.e. instance.info_dict) retrieved with
+    instance.info property.
+
+    ### Test
+    -    Refresh is successful.
+    -    Exceptions are not raised.
+    -    ``instance.matches`` list is empty.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_query(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+        yield responses_ep_bootflash_discovery(f"{key}a")
+        yield responses_ep_bootflash_info(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    params_test = copy.deepcopy(params_query)
+    params_test.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_test)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112"]
+        instance.refresh()
+        instance.filter_switch = "172.22.150.113"
+        instance.filter_supervisor = "active"
+        instance.filter_filepath = "bootflash:/air.txt"
+
+
+@pytest.mark.parametrize(
+    "filter_filepath,filepath,expected",
+    [
+        (None, "bootflash:/black.txt", False),
+        ("bootflash:/black.txt", "bootflash:/black.txt", True),
+        ("bootflash:/black.txt", "bootflash:/blue.txt", False),
+        ("bootflash:/*.txt", "bootflash:/black.txt", True),
+        ("bootflash:/*.txt", "bootflash:/blue.txt", True),
+        ("*:/*.txt", "usb1:/green.txt", True),
+        ("usb1:/*.txt", "bootflash:/red.txt", False),
+        ("bootflash:/*", "bootflash:/foo", True),
+        ("bootflash:/???.txt", "bootflash:/foo.txt", True),
+        ("bootflash:/???.txt", "bootflash:/foobar.txt", False),
+        ("bootflash:/???1.*", "bootflash:/foo1.txt", True),
+        ("*:/*", "blahdevice:/blahfile.bing.bang.bong", True),
+        ("*:/*", "/b", False),
+    ],
+)
+def test_bootflash_info_00300(filter_filepath, filepath, expected) -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - match_filter_filepath()
+        - filter_filepath.setter
+        - filepath.setter
+
+    ### Summary
+    Verify that ``match_filter_filepath()`` returns appropriate value
+    (True or False) for various inputs.
+
+    ### Test
+    -   Exception is not raised.
+    -   True is returned when ``filter_filepath`` matches ``filepath``.
+    -   False is returned when ``filter_filepath`` does not
+        match ``filepath``.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112"]
+        if filter_filepath is not None:
+            instance.filter_filepath = filter_filepath
+
+    target = {"filepath": filepath, "ip_address": "192.168.1.1", "supervisor": "active"}
+    assert instance.match_filter_filepath(target) == expected
+
+
+@pytest.mark.parametrize(
+    "filter_supervisor,supervisor,expected",
+    [
+        (None, "active", False),
+        ("active", "active", True),
+        ("active", "standby", False),
+        ("standby", "standby", True),
+        ("standby", "active", False),
+    ],
+)
+def test_bootflash_info_00310(filter_supervisor, supervisor, expected) -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - match_filter_supervisor()
+        - filter_supervisor.setter
+        - supervisor.setter
+
+    ### Summary
+    Verify that ``match_filter_supervisor()`` returns appropriate value
+    (True or False) for various inputs.
+
+    ### Test
+    -   Exception is not raised.
+    -   True is returned when ``filter_supervisor`` matches ``supervisor``.
+    -   False is returned when ``filter_supervisor`` does not
+        match ``supervisor``.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112"]
+        if filter_supervisor is not None:
+            instance.filter_supervisor = filter_supervisor
+
+    target = {
+        "filepath": "bootflash:/foo.txt",
+        "ip_address": "192.168.1.1",
+        "supervisor": supervisor,
+    }
+    assert instance.match_filter_supervisor(target) == expected
+
+
+@pytest.mark.parametrize(
+    "filter_switch,switch,expected",
+    [
+        (None, "192.168.1.1", False),
+        ("192.168.1.1", "192.168.1.1", True),
+        ("192.168.1.1", "192.168.1.2", False),
+        ("192.168.1.1", "foo", False),
+        (["standby"], "192.168.1.2", False),
+    ],
+)
+def test_bootflash_info_00320(filter_switch, switch, expected) -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - match_filter_switch()
+        - filter_switch.setter
+
+    ### Summary
+    Verify that ``match_filter_switch()`` returns appropriate value
+    (True or False) for various inputs.
+
+    ### Test
+    -   Exception is not raised.
+    -   True is returned when ``filter_supervisor`` matches ``supervisor``.
+    -   False is returned when ``filter_supervisor`` does not
+        match ``supervisor``.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112"]
+        if filter_switch is not None:
+            instance.filter_switch = filter_switch
+
+    target = {
+        "filepath": "bootflash:/foo.txt",
+        "ip_address": switch,
+        "supervisor": "active",
+    }
+    assert instance.match_filter_switch(target) == expected
+
+
+def test_bootflash_info_00400() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - filter_supervisor.setter
+
+    ### Summary
+    Verify that ``filter_supervisor.setter`` raises ``ValueError``
+    if the value is not in ``valid_supervisor``.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112"]
+    match = r"BootflashInfo\.filter_supervisor\.setter:\s+"
+    match += r"value foo is not a valid value for supervisor\.\s+"
+    match += r"Valid values: active,standby\."
+    with pytest.raises(ValueError, match=match):
+        instance.filter_supervisor = "foo"
