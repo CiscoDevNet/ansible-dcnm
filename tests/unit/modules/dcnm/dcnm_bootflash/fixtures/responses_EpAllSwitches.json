@@ -1,0 +1,37 @@
+{
+    "TEST_NOTES": [
+        "Mocked SwitchDetails() responses for tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_bootflash_info_00100a": {
+        "DATA": [
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.112",
+                "logicalName": "cvd-1211-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGCS",
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            },
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.113",
+                "logicalName": "cvd-1212-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGD0",
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    }
+}

@@ -1,0 +1,22 @@
+{
+    "TEST_NOTES": [
+        "Mocked playbook configurations for query-state tests.",
+        "tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_dcnm_bootflash_00100a": {
+        "targets": [
+            {
+                "filepath": "bootflash:/foo.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "192.168.1.2"
+            },
+            {
+                "ip_address": "192.168.1.3"
+            }
+        ]
+    }
+}
