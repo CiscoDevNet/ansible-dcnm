@@ -422,6 +422,72 @@ def test_bootflash_info_00210() -> None:
     assert instance.matches == []
 
 
+def test_bootflash_info_00220() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh()
+        - validate_refresh_parameters()
+        - build_matches()
+
+    ### Summary
+    Verify that when ``filter_supervisor`` is set, but does not match any
+    items in the info_dict, ``build_matches()`` does not update the
+    matches list.
+
+    ### Test
+    -    Refresh is successful.
+    -    Exceptions are not raised.
+    -    ``instance.matches`` list is empty.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_query(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+        yield responses_ep_bootflash_discovery(f"{key}a")
+        yield responses_ep_bootflash_info(f"{key}a")
+        yield responses_ep_bootflash_discovery(f"{key}b")
+        yield responses_ep_bootflash_info(f"{key}b")
+
+    gen_responses = ResponseGenerator(responses())
+
+    params_test = copy.deepcopy(params_query)
+    params_test.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_test)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112", "172.22.150.113"]
+        instance.refresh()
+    with does_not_raise():
+        instance.filter_switch = "172.22.150.112"
+        instance.filter_supervisor = "standby"
+        instance.filter_filepath = "bootflash:/*.txt"
+    assert len(instance.matches) == 0
+    with does_not_raise():
+        instance.filter_switch = "172.22.150.113"
+        instance.filter_supervisor = "standby"
+        instance.filter_filepath = "bootflash:/*.txt"
+    assert len(instance.matches) == 0
+
+
 @pytest.mark.parametrize(
     "filter_filepath,filepath,expected",
     [

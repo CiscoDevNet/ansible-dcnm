@@ -404,8 +404,8 @@ class BootflashInfo:
                 self.convert_file_info_to_target.file_info = file_info
                 self.convert_file_info_to_target.commit()
                 target = self.convert_file_info_to_target.target
-                if not self.match_filter_switch(target):
-                    continue
+                # no need to test match_filter_switch since we have
+                # already filtered on the switch above.
                 if not self.match_filter_filepath(target):
                     continue
                 if not self.match_filter_supervisor(target):
