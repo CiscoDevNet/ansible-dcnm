@@ -419,6 +419,7 @@ def test_bootflash_info_00210() -> None:
         instance.filter_switch = "172.22.150.113"
         instance.filter_supervisor = "active"
         instance.filter_filepath = "bootflash:/air.txt"
+    assert instance.matches == []
 
 
 @pytest.mark.parametrize(
