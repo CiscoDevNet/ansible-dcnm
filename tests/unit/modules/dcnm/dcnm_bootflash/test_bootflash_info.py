@@ -25,8 +25,13 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+    SwitchDetails
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import \
     does_not_raise
 
@@ -70,3 +75,28 @@ def test_bootflash_info_00000() -> None:
     assert instance.filter_switch is None
 
     assert instance.valid_supervisor == ["active", "standby"]
+
+
+def test_bootflash_info_00110() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh()
+        - validate_refresh_parameters()
+
+    ### Summary
+    - Verify exception is raised if rest_send is not set.
+
+    ### Test
+    -   ValueError is raised when rest_send is not set.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["192.168.1.1"]
+
+    match = r"BootflashInfo\.validate_refresh_parameters: "
+    match += r"rest_send must be set prior to calling refresh\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh()

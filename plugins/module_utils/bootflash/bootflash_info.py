@@ -228,7 +228,7 @@ class BootflashInfo:
         def raise_value_error_if_not_set(property_name):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{property_name} must be set prior to calling refresh."
-            raise ValueError()
+            raise ValueError(msg)
 
         if self.rest_send is None:
             raise_value_error_if_not_set("rest_send")
@@ -670,14 +670,23 @@ class BootflashInfo:
     def switches(self):
         """
         ### Summary
-        return the switches list
+        A list of switch ip addresses.
 
         ### Raises
-        -   ``TypeError`` if:
-                -   switches is not a list.
-                -   switches contains anything other than strings.
-        -   ``ValueError`` if:
-                -   switches list is empty.
+        - ``TypeError`` if:
+            - switches is not a list.
+            - switches contains anything other than strings.
+        -  ``ValueError`` if:
+            - switches list is empty.
+
+        ### Example
+
+        ```python
+
+        instance = BootflashInfo()
+        instance.switches = ["192.168.1.1", "192.168.1.2"]
+        switches = instance.switches
+        ```
         """
         return self._switches
 
