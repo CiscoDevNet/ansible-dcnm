@@ -63,5 +63,18 @@
                 "ip_address": "172.22.150.113"
             }
         ]
+    },
+    "test_bootflash_info_00230a": {
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            }
+        ]
     }
 }

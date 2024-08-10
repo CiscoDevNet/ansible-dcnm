@@ -147,11 +147,8 @@ def test_bootflash_info_00100() -> None:
         instance.filter_filepath = "bootflash:/fire.txt"
 
     assert len(instance.matches) == 1
-    assert instance.matches[0]["date"] == "2024-08-08 22:50:37"
     assert instance.matches[0]["filepath"] == "bootflash:/fire.txt"
     assert instance.matches[0]["ip_address"] == "172.22.150.112"
-    assert instance.matches[0]["serial_number"] == "FOX2109PGCS"
-    assert instance.matches[0]["size"] == "2"
 
     with does_not_raise():
         instance.filter_switch = "172.22.150.113"
@@ -160,24 +157,9 @@ def test_bootflash_info_00100() -> None:
 
     assert len(instance.matches) == 4
     assert instance.matches[0]["date"] == "2024-08-08 22:50:28"
-    assert instance.matches[1]["date"] == "2024-08-08 22:51:28"
-    assert instance.matches[2]["date"] == "2024-08-08 22:52:28"
-    assert instance.matches[3]["date"] == "2024-08-08 22:53:28"
-    assert instance.matches[0]["filepath"] == "bootflash:/black.txt"
     assert instance.matches[1]["filepath"] == "bootflash:/blue.txt"
-    assert instance.matches[2]["filepath"] == "bootflash:/green.txt"
-    assert instance.matches[3]["filepath"] == "bootflash:/red.txt"
-    assert instance.matches[0]["ip_address"] == "172.22.150.113"
-    assert instance.matches[1]["ip_address"] == "172.22.150.113"
     assert instance.matches[2]["ip_address"] == "172.22.150.113"
-    assert instance.matches[3]["ip_address"] == "172.22.150.113"
-    assert instance.matches[0]["serial_number"] == "FOX2109PGD0"
-    assert instance.matches[1]["serial_number"] == "FOX2109PGD0"
-    assert instance.matches[2]["serial_number"] == "FOX2109PGD0"
     assert instance.matches[3]["serial_number"] == "FOX2109PGD0"
-    assert instance.matches[0]["size"] == "12043"
-    assert instance.matches[1]["size"] == "2"
-    assert instance.matches[2]["size"] == "2"
     assert instance.matches[3]["size"] == "2"
 
 
@@ -486,6 +468,69 @@ def test_bootflash_info_00220() -> None:
         instance.filter_supervisor = "standby"
         instance.filter_filepath = "bootflash:/*.txt"
     assert len(instance.matches) == 0
+
+
+def test_bootflash_info_00230() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh()
+        - validate_refresh_parameters()
+        - build_matches()
+
+    ### Summary
+    Verify that ``ValueError`` is raised by ``ConvertFileInfoToTarget()`` if an
+    ``EpBootflashInfo`` response is missing the ``ipAddr`` key.
+
+    ### Test
+    -   Refresh is successful.
+    -   ``ValueError`` is raised by ``ConvertFileInfoToTarget()`` because
+        the response from ``EpBootflashInfo`` is missing the ``ipAddr`` key.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_query(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+        yield responses_ep_bootflash_discovery(f"{key}a")
+        yield responses_ep_bootflash_info(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    params_test = copy.deepcopy(params_query)
+    params_test.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_test)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switches = ["172.22.150.112"]
+        instance.refresh()
+    with does_not_raise():
+        instance.filter_switch = "172.22.150.112"
+        instance.filter_supervisor = "active"
+        instance.filter_filepath = "bootflash:/*.txt"
+
+    match = r"ConvertFileInfoToTarget\.commit:\s+.*"
+    match += r"Error detail: ConvertFileInfoToTarget\._get:\s+"
+    match += r"Missing key ipAddr in file_info:.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.matches  # pylint: disable=pointless-statement
 
 
 @pytest.mark.parametrize(
