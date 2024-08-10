@@ -696,3 +696,59 @@ def test_bootflash_info_00400() -> None:
     match += r"Valid values: active,standby\."
     with pytest.raises(ValueError, match=match):
         instance.filter_supervisor = "foo"
+
+
+def test_bootflash_info_00500() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - switch_details.setter
+
+    ### Summary
+    Verify that ``switch_details.setter`` raises ``TypeError``
+    if the value is not an instance if ``SwitchDetails()``
+    and the value is not a class instance.
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switches = ["172.22.150.112"]
+    match = r"BootflashInfo.switch_details:\s+"
+    match += r"value must be an instance of SwitchDetails\.\s+"
+    match += r"Got value foo of type str\.\s+"
+    match += r"Error detail: 'str' object has no attribute 'class_name'\."
+    with pytest.raises(TypeError, match=match):
+        instance.switch_details = "foo"
+
+
+def test_bootflash_info_00510() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - switch_details.setter
+
+    ### Summary
+    Verify that ``switch_details.setter`` raises ``TypeError``
+    if the value is not an instance if ``SwitchDetails()``
+    and the value is a class instance with ``class_name``
+    attribute.
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+        instance.switches = ["172.22.150.112"]
+    match = r"BootflashInfo.switch_details:\s+"
+    match += r"value must be an instance of SwitchDetails\.\s+"
+    match += r"Got value .* of type Results\."
+    with pytest.raises(TypeError, match=match):
+        instance.switch_details = Results()
