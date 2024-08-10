@@ -414,9 +414,9 @@ class BootflashInfo:
 
         diff = {}
         for match in self._matches:
+            # convert_file_info_to_target() ensures that match contains
+            # ip_address.
             ip_address = match.get("ip_address", None)
-            if ip_address is None:
-                continue
             if ip_address not in diff:
                 diff[ip_address] = []
             diff[ip_address].append(match)
@@ -517,29 +517,31 @@ class BootflashInfo:
         None
 
         ### Example value
-        The leading space in ipAddr's value is stripped in build_matches()
-        so you won't have to worry about it.
+        The leading space with ipAddr's value in pre-3.2.1e Nexus Dashboard responses
+        is stripped in build_matches() so you won't have to worry about it.
 
-        ```json
-        {
-            "bootflash_type": "active",
-            "date": "Sep 19 22:20:07 2023",
-            "deviceName": "cvd-1212-spine",
-            "fileName": "n9000-epld.10.2.5.M.img",
-            "filePath": "bootflash:",
-            "ipAddr": "172.22.150.113",
-            "name": "bootflash:",
-            "serialNumber": "BDY3814QDD0",
-            "size": "218233885"
-        }
+        ```python
+        matches = [
+            {
+                "bootflash_type": "active",
+                "date": "Sep 19 22:20:07 2023",
+                "deviceName": "cvd-1212-spine",
+                "fileName": "n9000-epld.10.2.5.M.img",
+                "filePath": "bootflash:",
+                "ipAddr": "172.22.150.113",
+                "name": "bootflash:",
+                "serialNumber": "BDY3814QDD0",
+                "size": "218233885"
+            }
+        ]
         ```
         """
         self.build_matches()
         return self._matches
 
-    @matches.setter
-    def matches(self, value):
-        self._matches = value
+    # @matches.setter
+    # def matches(self, value):
+    #     self._matches = value
 
     @property
     def switch_details(self):
@@ -548,7 +550,8 @@ class BootflashInfo:
         Return the switch_details instance
 
         ### Raises
-        -   ``TypeError`` if switch_details is not an instance of SwitchDetails
+        -   ``TypeError`` if ``switch_details`` is not an instance of
+            ``SwitchDetails()``.
         """
         return self._switch_details
 
