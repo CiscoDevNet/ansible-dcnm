@@ -603,18 +603,18 @@ class BootflashInfo:
             msg = f"{self.class_name}.{method_name}: "
             msg += "switches must be a list. "
             msg += f"got {type(value).__name__} for "
-            msg += f"value {value}"
+            msg += f"value {value}."
             raise TypeError(msg)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "switches must be a list of at least one ip address. "
+            msg += "switches must be a list with at least one ip address. "
             msg += f"got {value}."
             raise ValueError(msg)
         for item in value:
             if not isinstance(item, str):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "switches must be a list of ip addresses. "
-                msg += f"got {type(item).__name__} for "
-                msg += f"value {item}"
+                msg += f"got type {type(item).__name__} for "
+                msg += f"value {item}."
                 raise TypeError(msg)
         self._switches = value

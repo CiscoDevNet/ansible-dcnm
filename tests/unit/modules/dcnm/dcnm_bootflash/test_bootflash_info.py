@@ -752,3 +752,77 @@ def test_bootflash_info_00510() -> None:
     match += r"Got value .* of type Results\."
     with pytest.raises(TypeError, match=match):
         instance.switch_details = Results()
+
+
+def test_bootflash_info_00600() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - switches.setter
+
+    ### Summary
+    Verify that ``switches.setter`` raises ``TypeError``
+    if the value is not a list
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+    match = r"BootflashInfo\.switches:\s+"
+    match += r"switches must be a list\. got str for value foo\."
+    with pytest.raises(TypeError, match=match):
+        instance.switches = "foo"
+
+
+def test_bootflash_info_00610() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - switches.setter
+
+    ### Summary
+    Verify that ``switches.setter`` raises ``ValueError``
+    if the value is an empty list.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+    match = r"BootflashInfo.switches:\s+"
+    match += r"switches must be a list with at least one ip address\.\s+"
+    match += r"got \[\]\."
+    with pytest.raises(ValueError, match=match):
+        instance.switches = []
+
+
+def test_bootflash_info_00620() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - switches.setter
+
+    ### Summary
+    Verify that ``switches.setter`` raises ``TypeError``
+    if the value is a list containing a non-string.
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashInfo()
+        instance.rest_send = RestSend({})
+        instance.results = Results()
+    match = r"BootflashInfo\.switches:\s+"
+    match += r"switches must be a list of ip addresses\.\s+"
+    match += r"got type int for value 10\."
+    with pytest.raises(TypeError, match=match):
+        instance.switches = ["192.168.1.1", 10]
