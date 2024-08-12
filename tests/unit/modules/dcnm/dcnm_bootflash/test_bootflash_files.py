@@ -28,6 +28,7 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 
+import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
     BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
@@ -95,10 +96,10 @@ def test_bootflash_files_00100() -> None:
     - Verify commit happy path.
 
     ### Test
-    -    Add two files, one for each of two switches, to be deleted.
-    -    commit is successful.
-    -    Exceptions are not raised.
-    -    Responses match expectations.
+    -   Add two files, one for each of two switches, to be deleted.
+    -   commit is successful.
+    -   Exceptions are not raised.
+    -   Responses match expectations.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}"
@@ -170,3 +171,84 @@ def test_bootflash_files_00100() -> None:
     assert instance.results.result == [
         {"success": True, "changed": True, "sequence_number": 1}
     ]
+
+
+@pytest.mark.parametrize(
+    "key_responses_ep_all_switches, reason",
+    [
+        ("a", "migration"),
+        ("b", "inconsistent"),
+    ],
+)
+def test_bootflash_files_00200(key_responses_ep_all_switches, reason) -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - add_file()
+
+    ### Summary
+    Verify add_file() raises ValueError if switch mode is either
+    "migration" or "inconsistent".
+
+    ### Test
+    -   Call add_file() for switch that does not support file deletion
+        due to being in migration (key == a) or inconsistent (key == b)
+        mode.
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_deleted(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def yield_targets():
+        yield targets(f"{key}a")
+
+    gen_targets = ResponseGenerator(yield_targets())
+
+    derived_key = f"{key}{key_responses_ep_all_switches}"
+
+    def responses():
+        yield responses_ep_all_switches(derived_key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    params = copy.deepcopy(params_deleted)
+    params.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+
+        convert_target = ConvertTargetToParams()
+        convert_target.target = gen_targets.next
+        convert_target.commit()
+
+        instance.filepath = convert_target.filepath
+        instance.filename = convert_target.filename
+        instance.ip_address = "172.22.150.112"
+        instance.partition = convert_target.partition
+        instance.supervisor = convert_target.supervisor
+        instance.target = convert_target.target
+
+    match = r"BootflashFiles\.add_file:\s+"
+    match += r"Cannot delete files on switch 172\.22\.150\.112\.\s+"
+    match += rf"Reason: switch mode is {reason}\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()

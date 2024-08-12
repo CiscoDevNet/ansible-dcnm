@@ -454,10 +454,12 @@ class BootflashFiles:
         -   ``ValueError`` if:
                 -   The switch does not allow file deletion.
         """
+        method_name = inspect.stack()[0][3]
         self.validate_prerequisites_for_add_file()
 
         if not self.ok_to_delete_files(self.ip_address):
-            msg = f"Cannot delete files on switch {self.ip_address}. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Cannot delete files on switch {self.ip_address}. "
             msg += f"Reason: {self.ok_to_delete_files_reason}."
             raise ValueError(msg)
 
