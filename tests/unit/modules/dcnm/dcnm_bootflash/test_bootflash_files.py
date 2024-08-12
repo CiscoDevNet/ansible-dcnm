@@ -252,3 +252,57 @@ def test_bootflash_files_00200(key_responses_ep_all_switches, reason) -> None:
     match += rf"Reason: switch mode is {reason}\."
     with pytest.raises(ValueError, match=match):
         instance.add_file()
+
+
+def test_bootflash_files_00300() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh_switch_details()
+
+    ### Summary
+    Verify ``refresh_switch_details()`` raises ``ValueError`` if
+    ``switch_details`` is not set.
+
+    ### Test
+    -   Call ``instance.refresh_switch_details()`` without having set
+        ``BootflashFiles().switch_details``.
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = RestSend(params_deleted)
+
+    match = r"BootflashFiles\.refresh_switch_details:\s+"
+    match += r"switch_details must be set before calling\s+"
+    match += r"refresh_switch_details\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh_switch_details()
+
+
+def test_bootflash_files_00310() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - refresh_switch_details()
+
+    ### Summary
+    Verify ``refresh_switch_details()`` raises ``ValueError`` if
+    ``rest_send`` is not set.
+
+    ### Test
+    -   Call ``instance.refresh_switch_details()`` without having set
+        ``BootflashFiles().rest_send``.
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.switch_details = SwitchDetails()
+
+    match = r"BootflashFiles\.refresh_switch_details:\s+"
+    match += r"rest_send must be set before calling\s+"
+    match += r"refresh_switch_details\."
+    with pytest.raises(ValueError, match=match):
+        instance.refresh_switch_details()
