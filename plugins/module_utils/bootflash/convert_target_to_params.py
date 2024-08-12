@@ -29,6 +29,21 @@ class ConvertTargetToParams:
     -   ``ValueError`` if:
         -   ``filepath`` is not set in the target dict.
         -   ``supervisor`` is not set in the target dict.
+
+    ### Usage
+    ```python
+    target = {
+        "filepath": "bootflash:/myDir/foo.txt",
+        "supervisor": "active"
+    }
+    instance = ConvertTargetToParams()
+    instance.target = target
+    instance.commit()
+    print(instance.partition)  # bootflash:
+    print(instance.filepath)   # bootflash:/myDir/
+    print(instance.filename)   # foo.txt
+    print(instance.supervisor) # active
+    ```
     """
 
     def __init__(self) -> None:
