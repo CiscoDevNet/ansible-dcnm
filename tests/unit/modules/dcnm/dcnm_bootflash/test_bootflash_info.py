@@ -45,8 +45,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details i
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_deleted, configs_query, does_not_raise,
-    params_deleted, params_query, responses_ep_all_switches,
+    MockAnsibleModule, configs_query, does_not_raise,
+    params_query, responses_ep_all_switches,
     responses_ep_bootflash_discovery, responses_ep_bootflash_info)
 
 
@@ -111,7 +111,6 @@ def test_bootflash_info_00100() -> None:
 
     def configs():
         yield configs_query(f"{key}a")
-
     gen_configs = ResponseGenerator(configs())
 
     def responses():
@@ -120,16 +119,15 @@ def test_bootflash_info_00100() -> None:
         yield responses_ep_bootflash_info(f"{key}a")
         yield responses_ep_bootflash_discovery(f"{key}b")
         yield responses_ep_bootflash_info(f"{key}b")
-
     gen_responses = ResponseGenerator(responses())
 
-    params_test = copy.deepcopy(params_query)
-    params_test.update({"config": gen_configs.next})
+    params = copy.deepcopy(params_query)
+    params.update({"config": gen_configs.next})
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
     sender.gen = gen_responses
-    rest_send = RestSend(params_test)
+    rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
@@ -291,13 +289,13 @@ def test_bootflash_info_00150() -> None:
 
     gen_responses = ResponseGenerator(responses())
 
-    params_test = copy.deepcopy(params_query)
-    params_test.update({"config": gen_configs.next})
+    params = copy.deepcopy(params_query)
+    params.update({"config": gen_configs.next})
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
     sender.gen = gen_responses
-    rest_send = RestSend(params_test)
+    rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
@@ -379,13 +377,13 @@ def test_bootflash_info_00210() -> None:
 
     gen_responses = ResponseGenerator(responses())
 
-    params_test = copy.deepcopy(params_query)
-    params_test.update({"config": gen_configs.next})
+    params = copy.deepcopy(params_query)
+    params.update({"config": gen_configs.next})
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
     sender.gen = gen_responses
-    rest_send = RestSend(params_test)
+    rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
@@ -439,13 +437,13 @@ def test_bootflash_info_00220() -> None:
 
     gen_responses = ResponseGenerator(responses())
 
-    params_test = copy.deepcopy(params_query)
-    params_test.update({"config": gen_configs.next})
+    params = copy.deepcopy(params_query)
+    params.update({"config": gen_configs.next})
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
     sender.gen = gen_responses
-    rest_send = RestSend(params_test)
+    rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
@@ -502,13 +500,13 @@ def test_bootflash_info_00230() -> None:
 
     gen_responses = ResponseGenerator(responses())
 
-    params_test = copy.deepcopy(params_query)
-    params_test.update({"config": gen_configs.next})
+    params = copy.deepcopy(params_query)
+    params.update({"config": gen_configs.next})
 
     sender = Sender()
     sender.ansible_module = MockAnsibleModule()
     sender.gen = gen_responses
-    rest_send = RestSend(params_test)
+    rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
