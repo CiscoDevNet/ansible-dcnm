@@ -188,8 +188,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_fil
     BootflashFiles
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_info import \
     BootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
-    ConvertFileInfoToTarget
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
     ConvertTargetToParams
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
@@ -271,7 +269,6 @@ class Common:
 
         self.bootflash_info = BootflashInfo()
         self.ip_address = None
-        self.convert_file_info_to_target = ConvertFileInfoToTarget()
         self.convert_target_to_params = ConvertTargetToParams()
         self.results = Results()
         self.results.state = self.state
@@ -452,8 +449,8 @@ class Deleted(Common):
     def update_bootflash_files(self, ip_address, target) -> None:
         """
         ### Summary
-        Add the file associated with ``ip_address`` and ``target`` to an
-        internal list maintained by BootflashFiles().
+        Call ``BootflashFiles().add_file()`` to add the file associated with
+        ``ip_address`` and ``target`` to the list of files to be deleted.
 
         ### Raises
         -    ``TypeError`` if:
