@@ -138,11 +138,11 @@ def test_convert_file_info_to_target_00120() -> None:
         instance = ConvertFileInfoToTarget()
         instance.file_info = file_info(f"{key}")
 
+    # Depending on the version of PurePosixPath, the Error detail may vary.
     match = r"ConvertFileInfoToTarget.commit:\s+"
     match += r"Could not build PosixPath from name and filename\.\s+"
     match += r"name: 10, filename: foo\.\s+"
-    match += r"Error detail: argument should be a str or an os\.PathLike\s+"
-    match += r"object where __fspath__ returns a str, not 'int'"
+    match += r"Error detail:.*"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
