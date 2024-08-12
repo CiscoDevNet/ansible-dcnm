@@ -70,12 +70,15 @@ def test_convert_file_info_to_target_00100() -> None:
         - commit()
 
     ### Summary
-    - Verify commit() happy path.
-    - Given a  target dict is returned.
+    -   Verify commit() happy path.
+    -   Given a file_info dict, verify that a properly-constructed
+        target dict is built and that individual getter properties return
+        expected values.
 
     ### Test
-    -   Given a property-constructed target dict.
     -   Exceptions are not not raised.
+    -   target dict is built as expected.
+    -   Individual getter properties return expected values.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -103,11 +106,11 @@ def test_convert_file_info_to_target_00110() -> None:
         - commit()
 
     ### Summary
-    -   Verify commit() raises exception when commit() is called without
-        setting file_info.
+    -   Verify ``commit()`` raises exception when called without first
+        setting ``file_info``.
 
     ### Test
-    -   ValueError is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
     with does_not_raise():
@@ -125,10 +128,11 @@ def test_convert_file_info_to_target_00120() -> None:
         - commit()
 
     ### Summary
-    -   Verify commit() raises exception when PurePosixPath raises exception.
+    -   Verify ``commit()`` raises ``ValueError`` when ``PurePosixPath``
+        raises ``TypeError``.
 
     ### Test
-    -   ValueError is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
     method_name = inspect.stack()[0][3]
@@ -154,10 +158,11 @@ def test_convert_file_info_to_target_00130() -> None:
         - commit()
 
     ### Summary
-    -   Verify commit() raises exception when filepath does not contain ":/".
+    -   Verify ``commit()`` raises ``ValueError`` when filepath does not
+        contain ":/".
 
     ### Test
-    -   ValueError is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
     method_name = inspect.stack()[0][3]
@@ -182,10 +187,11 @@ def test_convert_file_info_to_target_00200() -> None:
         - date
 
     ### Summary
-    -   Verify exception is raised if file_info has not been set.
+    -   Verify ``ValueError`` is raised if ``file_info`` has not been set
+        before accessing getter properties, like ``date``.
 
     ### Test
-    -   ValueError is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
     with does_not_raise():
@@ -204,11 +210,11 @@ def test_convert_file_info_to_target_00210() -> None:
         - date
 
     ### Summary
-    -   Verify exception is raised if date cannot convert file_info.date to
-        ``YYYY-MM-DD HH-MM-SS`` format.
+    -   Verify ``ValueError`` is raised if date cannot convert file_info.date
+        to ``YYYY-MM-DD HH-MM-SS`` format.
 
     ### Test
-    -   ValueError is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
     method_name = inspect.stack()[0][3]
@@ -236,10 +242,11 @@ def test_convert_file_info_to_target_00300() -> None:
         - target
 
     ### Summary
-    -   Verify exception is raised if target is accessed before calling commit.
+    -   Verify ``ValueError`` is raised if ``target`` is accessed before
+        calling commit.
 
     ### Test
-    -   ValueError is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
     with does_not_raise():

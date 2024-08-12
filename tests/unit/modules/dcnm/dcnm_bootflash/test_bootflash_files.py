@@ -47,7 +47,7 @@ from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils 
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
     MockAnsibleModule, configs_deleted, does_not_raise, params_deleted,
     payloads_bootflash_files, responses_ep_all_switches,
-    responses_ep_bootflash_files, targets_bootflash_files)
+    responses_ep_bootflash_files, targets)
 
 
 def test_bootflash_files_00000() -> None:
@@ -108,11 +108,11 @@ def test_bootflash_files_00100() -> None:
 
     gen_configs = ResponseGenerator(configs())
 
-    def targets():
-        yield targets_bootflash_files(f"{key}a")
-        yield targets_bootflash_files(f"{key}b")
+    def yield_targets():
+        yield targets(f"{key}a")
+        yield targets(f"{key}b")
 
-    gen_targets = ResponseGenerator(targets())
+    gen_targets = ResponseGenerator(yield_targets())
 
     def responses():
         yield responses_ep_all_switches(f"{key}a")

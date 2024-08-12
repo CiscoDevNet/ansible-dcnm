@@ -25,10 +25,13 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
+import pytest
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
     ConvertTargetToParams
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import \
-    does_not_raise
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
+    does_not_raise, targets)
 
 
 def test_convert_target_to_params_00000() -> None:
@@ -55,3 +58,292 @@ def test_convert_target_to_params_00000() -> None:
     assert instance._partition is None
     assert instance._supervisor is None
     assert instance.committed is False
+
+
+def test_convert_target_to_params_00100() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - commit()
+
+    ### Summary
+    - Verify commit() happy path.
+    - File located in top-level (root) of bootflash.
+
+    ### Test
+    -   Given a property-constructed target dict, getter properties are set
+        to expected values.
+    -   Exceptions are not not raised.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+        instance.target = targets(f"{key}")
+        instance.commit()
+
+    assert instance.target == targets(f"{key}")
+    assert instance.filename == "air.txt"
+    assert instance.filepath == "bootflash:"
+    assert instance.partition == "bootflash:"
+    assert instance.supervisor == "active"
+
+
+def test_convert_target_to_params_00110() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - commit()
+
+    ### Summary
+    - Verify commit() happy path.
+    - File located in directory on bootflash.
+
+    ### Test
+    -   Given a property-constructed target dict, getter properties are set
+        to expected values.
+    -   Exceptions are not not raised.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+        instance.target = targets(f"{key}")
+        instance.commit()
+
+    assert instance.target == targets(f"{key}")
+    assert instance.filename == "air.txt"
+    assert instance.filepath == "bootflash:/foo/"
+    assert instance.partition == "bootflash:"
+    assert instance.supervisor == "active"
+
+
+def test_convert_target_to_params_00120() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - commit()
+
+    ### Summary
+    Verify ``ValueError`` is raised when commit() is called prior to setting
+    ``target``.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+
+    match = r"ConvertTargetToParams\.commit:\s+"
+    match += r"target must be set before calling commit\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_target_to_params_00200() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - commit()
+        - parse_target()
+
+    ### Summary
+    Verify ``parse_target()`` raises ``ValueError`` if ``target`` is missing
+    ``filepath`` key.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+        instance.target = targets(f"{key}")
+
+    match = r"ConvertTargetToParams\.parse_target:\s+"
+    match += r"Expected filepath in target dict. Got.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_target_to_params_00210() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - commit()
+        - parse_target()
+
+    ### Summary
+    Verify ``parse_target()`` raises ``ValueError`` if ``target`` is missing
+    ``supervisor`` key.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+        instance.target = targets(f"{key}")
+
+    match = r"ConvertTargetToParams\.parse_target:\s+"
+    match += r"Expected supervisor in target dict. Got.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_target_to_params_00300() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - filename
+
+    ### Summary
+    Verify ``filename`` raises ``ValueError`` if accessed before ``commit()``
+    is called.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+
+    match = r"ConvertTargetToParams.filename:\s+"
+    match += r"commit\(\) must be called before accessing filename\."
+    with pytest.raises(ValueError, match=match):
+        instance.filename  # pylint: disable=pointless-statement
+
+
+def test_convert_target_to_params_00400() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - filepath
+
+    ### Summary
+    Verify ``filepath`` raises ``ValueError`` if accessed before ``commit()``
+    is called.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+
+    match = r"ConvertTargetToParams.filepath:\s+"
+    match += r"commit\(\) must be called before accessing filepath\."
+    with pytest.raises(ValueError, match=match):
+        instance.filepath  # pylint: disable=pointless-statement
+
+
+def test_convert_target_to_params_00500() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - partition
+
+    ### Summary
+    Verify ``partition`` raises ``ValueError`` if accessed before ``commit()``
+    is called.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+
+    match = r"ConvertTargetToParams.partition:\s+"
+    match += r"commit\(\) must be called before accessing partition\."
+    with pytest.raises(ValueError, match=match):
+        instance.partition  # pylint: disable=pointless-statement
+
+
+def test_convert_target_to_params_00510() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - partition
+
+    ### Summary
+    Verify ``partition`` raises ``ValueError`` passed a value not ending in ":".
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+        instance.target = targets(f"{key}")
+
+    match = r"ConvertTargetToParams\.partition:\s+"
+    match += r"Invalid partition: bootflash\.\s+"
+    match += r"Expected partition to end with a colon."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_target_to_params_00600() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - supervisor
+
+    ### Summary
+    Verify ``supervisor`` raises ``ValueError`` if accessed before ``commit()``
+    is called.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+
+    match = r"ConvertTargetToParams.supervisor:\s+"
+    match += r"commit\(\) must be called before accessing supervisor\."
+    with pytest.raises(ValueError, match=match):
+        instance.supervisor  # pylint: disable=pointless-statement
+
+
+def test_convert_target_to_params_00610() -> None:
+    """
+    ### Classes and Methods
+    - ConvertTargetToParams()
+        - supervisor
+
+    ### Summary
+    Verify ``supervisor`` raises ``ValueError`` if not valid (i.e. not one of
+    "active" or "standby").
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertTargetToParams()
+        instance.target = targets(f"{key}")
+
+    match = r"ConvertTargetToParams\.supervisor:\s+"
+    match += r"Invalid supervisor: bad_supervisor_value\.\s+"
+    match += r"Expected one of: active,standby\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()

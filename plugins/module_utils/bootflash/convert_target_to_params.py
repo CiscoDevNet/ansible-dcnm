@@ -32,6 +32,7 @@ class ConvertTargetToParams:
 
     ### Usage
     ```python
+    # Example 1, file in directory.
     target = {
         "filepath": "bootflash:/myDir/foo.txt",
         "supervisor": "active"
@@ -43,6 +44,19 @@ class ConvertTargetToParams:
     print(instance.filepath)   # bootflash:/myDir/
     print(instance.filename)   # foo.txt
     print(instance.supervisor) # active
+
+    # Example 2, file in root of bootflash partition.
+    target = {
+        "filepath": "bootflash:/foo.txt",
+        "supervisor": "active"
+    }
+    instance.target = target
+    instance.commit()
+    print(instance.partition)  # bootflash:
+    print(instance.filepath)   # bootflash:
+    print(instance.filename)   # foo.txt
+    print(instance.supervisor) # active
+
     ```
     """
 
@@ -50,6 +64,7 @@ class ConvertTargetToParams:
         self.class_name = self.__class__.__name__
         self.action = "convert_target_to_params"
         self.committed = False
+        self.valid_supervisor = ["active", "standby"]
 
         self._filename = None
         self._filepath = None
@@ -103,13 +118,13 @@ class ConvertTargetToParams:
 
         ### Notes
         -   While this method is written to support files in directories, the
-            NDFC API does not support listing files within a directory.
-            Hence, we currently support only files in the root directory of
-            the partition.
-        -   If the file is located in the root directory of the of the
-            partition, the filepath MUST NOT have a trailing slash.
-            i.e. filepath == "bootflash:/" will NOT match.  It MUST
-            be "bootflash:".
+            NDFC API does not support listing files within a directory. Hence,
+            we currently support only files in the root directory of the
+            partition.
+        -   If the file is located in the root directory of the partition,
+            the filepath MUST NOT have a trailing slash.
+            i.e. filepath == "bootflash:/" will NOT match.  It MUST be
+            "bootflash:".
         -   If the file is located in a directory, the filepath MUST
             have a trailing slash.  i.e. filepath == "bootflash:/myDir"
             will NOT match since NDFC is not smart enough to add the
@@ -125,11 +140,11 @@ class ConvertTargetToParams:
 
         if self.target.get("filepath", None) is None:
             msg = "Expected filepath in target dict. "
-            msg += f"Got {self.target}"
+            msg += f"Got {self.target}."
             raise_error(msg)
         if self.target.get("supervisor", None) is None:
             msg = "Expected supervisor in target dict. "
-            msg += f"Got {self.target}"
+            msg += f"Got {self.target}."
             raise_error(msg)
 
         parts = self.target.get("filepath").split("/")
@@ -229,6 +244,12 @@ class ConvertTargetToParams:
 
     @partition.setter
     def partition(self, value):
+        method_name = inspect.stack()[0][3]
+        if not str(value).endswith(":"):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid partition: {value}. "
+            msg += "Expected partition to end with a colon."
+            raise ValueError(msg)
         self._partition = value
 
     @property
@@ -252,4 +273,10 @@ class ConvertTargetToParams:
 
     @supervisor.setter
     def supervisor(self, value):
+        method_name = inspect.stack()[0][3]
+        if value not in self.valid_supervisor:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid supervisor: {value}. "
+            msg += f"Expected one of: {','.join(self.valid_supervisor)}."
+            raise ValueError(msg)
         self._supervisor = value

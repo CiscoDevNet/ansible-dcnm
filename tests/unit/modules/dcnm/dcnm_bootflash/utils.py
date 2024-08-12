@@ -185,11 +185,11 @@ def responses_ep_bootflash_info(key: str) -> dict:
     return data
 
 
-def targets_bootflash_files(key: str) -> dict:
+def targets(key: str) -> dict:
     """
     Return target dictionaries for BootflashFiles unit tests.
     """
-    data_file = "targets_BootflashFiles"
+    data_file = "targets"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

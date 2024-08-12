@@ -1,6 +1,6 @@
 {
     "TEST_NOTES": [
-        "Target dictionaries used for ConvertFileInfoToTarget() unit test asserts.",
+        "target dictionaries used for ConvertFileInfoToTarget() unit test asserts.",
         "tests/unit/modules/dcnm/dcnm_bootflash/test_convert_file_info_to_target.py"
     ],
     "test_convert_file_info_to_target_00100a": {
