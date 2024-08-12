@@ -125,21 +125,11 @@ def configs_query(key: str) -> dict:
     return data
 
 
-def payloads_deleted(key: str) -> dict:
+def payloads_bootflash_files(key: str) -> dict:
     """
-    Return payloads for Deleted
+    Return payloads for BootflashFiles()
     """
-    data_file = "payloads_Deleted"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def payloads_query(key: str) -> dict:
-    """
-    Return payloads for Query
-    """
-    data_file = "payloads_Query"
+    data_file = "payloads_BootflashFiles"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -165,6 +155,16 @@ def responses_ep_bootflash_discovery(key: str) -> dict:
     return data
 
 
+def responses_ep_bootflash_files(key: str) -> dict:
+    """
+    Return EpBootflashFiles() responses.
+    """
+    data_file = "responses_EpBootflashFiles"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def responses_ep_bootflash_info(key: str) -> dict:
     """
     Return EpBootflashInfo() responses.
@@ -175,71 +175,11 @@ def responses_ep_bootflash_info(key: str) -> dict:
     return data
 
 
-def responses_deleted(key: str) -> dict:
+def targets_bootflash_files(key: str) -> dict:
     """
-    Return responses for Deleted
+    Return target dictionaries for BootflashFiles unit tests.
     """
-    data_file = "responses_Deleted"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def responses_query(key: str) -> dict:
-    """
-    Return responses for Query
-    """
-    data_file = "responses_Query"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def responses_response_handler(key: str) -> dict:
-    """
-    Return responses for ResponseHandler
-    """
-    data_file = "responses_ResponseHandler"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def results_deleted(key: str) -> dict:
-    """
-    Return results for Deleted
-    """
-    data_file = "results_Deleted"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def results_query(key: str) -> dict:
-    """
-    Return results for Query
-    """
-    data_file = "results_Query"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def rest_send_response_current(key: str) -> dict:
-    """
-    Mocked return values for RestSend().response_current property
-    """
-    data_file = "response_current_RestSend"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def rest_send_result_current(key: str) -> dict:
-    """
-    Mocked return values for RestSend().result_current property
-    """
-    data_file = "result_current_RestSend"
+    data_file = "targets_BootflashFiles"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

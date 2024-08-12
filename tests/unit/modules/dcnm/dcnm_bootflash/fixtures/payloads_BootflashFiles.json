@@ -1,0 +1,32 @@
+{
+    "TEST_NOTES": [
+        "Payloads for BootflashFiles() unit test asserts.",
+        "tests/unit/modules/dcnm/dcnm_bootflash/bootflash_files.py"
+    ],
+    "test_bootflash_files_00100a": {
+        "deleteFiles": [
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGCS"
+            },
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGD0"
+            }
+        ]
+    }
+}

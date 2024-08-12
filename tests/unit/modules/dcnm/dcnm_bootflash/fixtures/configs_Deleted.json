@@ -1,0 +1,22 @@
+{
+    "TEST_NOTES": [
+        "Mocked playbook configurations for BootflashFiles() unit tests.",
+        "tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_bootflash_files_00100a": {
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            },
+            {
+                "ip_address": "172.22.150.112"
+            }
+        ]
+    }
+}

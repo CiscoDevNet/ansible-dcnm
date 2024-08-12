@@ -25,10 +25,29 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import copy
+import inspect
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
     BootflashFiles
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import \
-    does_not_raise
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
+    ConvertTargetToParams
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+    SwitchDetails
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
+    MockAnsibleModule, configs_deleted, does_not_raise, params_deleted,
+    payloads_bootflash_files, responses_ep_all_switches,
+    responses_ep_bootflash_files, targets_bootflash_files)
 
 
 def test_bootflash_files_00000() -> None:
@@ -63,3 +82,91 @@ def test_bootflash_files_00000() -> None:
     assert instance.supervisor is None
     assert instance.switch_details is None
     assert instance.target is None
+
+
+def test_bootflash_files_00100() -> None:
+    """
+    ### Classes and Methods
+    - BootflashInfo()
+        - commit()
+        - validate_commit_parameters()
+
+    ### Summary
+    - Verify commit happy path.
+
+    ### Test
+    -    Add two files, one for each of two switches, to be deleted.
+    -    commit is successful.
+    -    Exceptions are not raised.
+    -    Responses match expectations.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    def configs():
+        yield configs_deleted(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def targets():
+        yield targets_bootflash_files(f"{key}a")
+        yield targets_bootflash_files(f"{key}b")
+
+    gen_targets = ResponseGenerator(targets())
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+        yield responses_ep_bootflash_files(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    params = copy.deepcopy(params_deleted)
+    params.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+
+        convert_target = ConvertTargetToParams()
+        convert_target.target = gen_targets.next
+        convert_target.commit()
+
+        instance.filepath = convert_target.filepath
+        instance.filename = convert_target.filename
+        instance.ip_address = "172.22.150.112"
+        instance.partition = convert_target.partition
+        instance.supervisor = convert_target.supervisor
+        instance.target = convert_target.target
+        instance.add_file()
+
+        convert_target = ConvertTargetToParams()
+        convert_target.target = gen_targets.next
+        convert_target.commit()
+
+        instance.filepath = convert_target.filepath
+        instance.filename = convert_target.filename
+        instance.ip_address = "172.22.150.113"
+        instance.partition = convert_target.partition
+        instance.supervisor = convert_target.supervisor
+        instance.target = convert_target.target
+        instance.add_file()
+
+        instance.commit()
+
+    assert instance.payload == payloads_bootflash_files(f"{key}a")
+    assert instance.results.response_current["RETURN_CODE"] == 200
+    assert instance.results.result == [
+        {"success": True, "changed": True, "sequence_number": 1}
+    ]
