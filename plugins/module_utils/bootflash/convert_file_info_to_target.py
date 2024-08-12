@@ -106,6 +106,25 @@ class ConvertFileInfoToTarget:
         msg = "ENTERED ConvertFileInfoToTarget(): "
         self.log.debug(msg)
 
+    def validate_commit_parameters(self) -> None:
+        """
+        ### Summary
+        Validate that the parameters required to build the target dictionary
+        are present.
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``file_info`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+
+        def raise_error(msg):
+            raise ValueError(f"{self.class_name}.{method_name}: {msg}")
+
+        if self.file_info is None:
+            msg = "file_info must be set before calling commit()."
+            raise_error(msg)
+
     def commit(self) -> None:
         """
         ### Summary
@@ -126,6 +145,7 @@ class ConvertFileInfoToTarget:
 
         ### Raises
         -   ``ValueError`` if:
+            -   ``file_info`` is not set.
             -   ``target`` cannot be built from ``file_info``.
 
         ### ``file_info`` (from bootflash-info endpoint response)
@@ -158,16 +178,23 @@ class ConvertFileInfoToTarget:
 
         """
         method_name = inspect.stack()[0][3]
+        self.validate_commit_parameters()
 
         def raise_error(msg):
             raise ValueError(f"{self.class_name}.{method_name}: {msg}")
 
         try:
             posixpath = PurePosixPath(self.name, self.filename)
-        except TypeError as error:
-            msg = "Could not build PosixPath from filepath and filename. "
-            msg += f"filepath: {self.filepath}, filename: {self.filename}. "
+        except (TypeError, ValueError) as error:
+            msg = "Could not build PosixPath from name and filename. "
+            msg += f"name: {self.name}, filename: {self.filename}. "
             msg += f"Error detail: {error}"
+            raise_error(msg)
+
+        if ":/" not in str(posixpath):
+            msg = f"Invalid filepath {str(posixpath)} constructed from "
+            msg += f"name: {self.name}, filename: {self.filename}. "
+            msg += "Missing ':/' in the path."
             raise_error(msg)
 
         try:
@@ -268,9 +295,9 @@ class ConvertFileInfoToTarget:
             _date = datetime.strptime(self._get("date"), self.timestamp_format)
         except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg = "Could not convert date to datetime object. "
+            msg += "Could not convert date to datetime object. "
             msg += f"date: {self._get('date')}. "
-            msg += f"Error detail: {error}"
+            msg += f"Error detail: {error}."
             raise ValueError(msg) from error
         return _date
 

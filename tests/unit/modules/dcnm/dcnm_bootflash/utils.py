@@ -125,6 +125,16 @@ def configs_query(key: str) -> dict:
     return data
 
 
+def file_info(key: str) -> dict:
+    """
+    Return file_info for ConvertFileInfoToTarget().file_info.setter
+    """
+    data_file = "file_info_ConvertFileInfoToTarget"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
 def payloads_bootflash_files(key: str) -> dict:
     """
     Return payloads for BootflashFiles()
@@ -180,6 +190,16 @@ def targets_bootflash_files(key: str) -> dict:
     Return target dictionaries for BootflashFiles unit tests.
     """
     data_file = "targets_BootflashFiles"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def targets_convert_file_info_to_target(key: str) -> dict:
+    """
+    Return target dictionaries used for ConvertFileInfoToTarget unit test asserts.
+    """
+    data_file = "targets_ConvertFileInfoToTarget"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

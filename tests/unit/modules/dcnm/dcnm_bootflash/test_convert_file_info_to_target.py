@@ -25,10 +25,14 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
+from datetime import datetime
+
+import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
     ConvertFileInfoToTarget
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_maintenance_mode.utils import \
-    does_not_raise
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
+    does_not_raise, file_info, targets_convert_file_info_to_target)
 
 
 def test_convert_file_info_to_target_00000() -> None:
@@ -57,3 +61,192 @@ def test_convert_file_info_to_target_00000() -> None:
     assert instance._supervisor is None
     assert instance._target is None
     assert instance.timestamp_format == "%b %d %H:%M:%S %Y"
+
+
+def test_convert_file_info_to_target_00100() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - commit()
+
+    ### Summary
+    - Verify commit() happy path.
+    - Given a  target dict is returned.
+
+    ### Test
+    -   Given a property-constructed target dict.
+    -   Exceptions are not not raised.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+        instance.file_info = file_info(f"{key}")
+        instance.commit()
+
+    assert instance.target == targets_convert_file_info_to_target(key)
+    assert instance.date == datetime(2023, 9, 19, 22, 20, 7)
+    assert instance.device_name == "cvd-1212-spine"
+    assert instance.filepath == "bootflash:"
+    assert instance.ip_address == "192.168.1.1"
+    assert instance.name == "bootflash:"
+    assert instance.size == "218233885"
+    assert instance.serial_number == "BDY3814QDD0"
+    assert instance.supervisor == "active"
+
+
+def test_convert_file_info_to_target_00110() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - commit()
+
+    ### Summary
+    -   Verify commit() raises exception when commit() is called without
+        setting file_info.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+    match = r"ConvertFileInfoToTarget\.validate_commit_parameters:\s+"
+    match += r"file_info must be set before calling commit\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_file_info_to_target_00120() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - commit()
+
+    ### Summary
+    -   Verify commit() raises exception when PurePosixPath raises exception.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+        instance.file_info = file_info(f"{key}")
+
+    match = r"ConvertFileInfoToTarget.commit:\s+"
+    match += r"Could not build PosixPath from name and filename\.\s+"
+    match += r"name: 10, filename: foo\.\s+"
+    match += r"Error detail: argument should be a str or an os\.PathLike\s+"
+    match += r"object where __fspath__ returns a str, not 'int'"
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_file_info_to_target_00130() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - commit()
+
+    ### Summary
+    -   Verify commit() raises exception when filepath does not contain ":/".
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+        instance.file_info = file_info(f"{key}")
+
+    match = r"ConvertFileInfoToTarget.commit:\s+"
+    match += r"Invalid filepath bootflash\/foo constructed from\s+"
+    match += r"name: bootflash, filename: foo\.\s+"
+    match += r"Missing ':\/' in the path\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_convert_file_info_to_target_00200() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - date
+
+    ### Summary
+    -   Verify exception is raised if file_info has not been set.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+
+    match = r"ConvertFileInfoToTarget\._get:\s+"
+    match += r"file_info must be set before calling ``_get\(\)``\."
+    with pytest.raises(ValueError, match=match):
+        instance.date  # pylint: disable=pointless-statement
+
+
+def test_convert_file_info_to_target_00210() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - date
+
+    ### Summary
+    -   Verify exception is raised if date cannot convert file_info.date to
+        ``YYYY-MM-DD HH-MM-SS`` format.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+
+    match = r"ConvertFileInfoToTarget.date:\s+"
+    match += r"Could not convert date to datetime object\.\s+"
+    match += r"date: Sep 19 22:20:07 202\.\s+"
+    match += r"Error detail:\s+"
+    match += (
+        r"time data 'Sep 19 22:20:07 202' does not match format '%b %d %H:%M:%S %Y'\."
+    )
+    with pytest.raises(ValueError, match=match):
+        instance.file_info = file_info(f"{key}")
+        instance.date  # pylint: disable=pointless-statement
+
+
+def test_convert_file_info_to_target_00300() -> None:
+    """
+    ### Classes and Methods
+    - ConvertFileInfoToTarget()
+        - target
+
+    ### Summary
+    -   Verify exception is raised if target is accessed before calling commit.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = ConvertFileInfoToTarget()
+
+    match = r"ConvertFileInfoToTarget.target:\s+"
+    match += r"target has not been built\.\s+"
+    match += r"Call commit\(\) before accessing\."
+    with pytest.raises(ValueError, match=match):
+        instance.target  # pylint: disable=pointless-statement
