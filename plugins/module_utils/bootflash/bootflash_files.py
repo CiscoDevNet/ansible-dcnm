@@ -125,6 +125,7 @@ class BootflashFiles:
 
         self.ok_to_delete_files_reason = None
         self.payload = {"deleteFiles": []}
+        self.switch_details_refreshed = False
 
         self._filename = None
         self._filepath = None
@@ -136,8 +137,6 @@ class BootflashFiles:
         self._supervisor = None
         self._switch_details = None
         self._target = None
-
-        self.switch_details_refreshed = False
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED BootflashQuery(): "
@@ -288,16 +287,8 @@ class BootflashFiles:
                 "RESULT_CODE": 200,
             }
 
-        # We want to use self.diff only if it contains all the files
-        # present in the payload.  If not, we will use the payload.
-        if self.use_diff() is True:
-            self.results.diff_current = copy.deepcopy(self.diff)
-        else:
-            self.results.diff_current = copy.deepcopy(self.payload)
+        self.results.diff_current = copy.deepcopy(self.diff)
         self.results.register_task_result()
-
-    def use_diff(self):
-        return True
 
     def validate_prerequisites_for_add_file(self):
         """
