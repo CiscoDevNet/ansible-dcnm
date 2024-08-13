@@ -11,7 +11,7 @@
         "filepath": "bootflash:/air.txt",
         "supervisor": "active"
     },
-    "test_bootflash_files_00200a": {
+    "test_bootflash_files_00220a": {
         "filepath": "bootflash:/black.txt",
         "supervisor": "active"
     },

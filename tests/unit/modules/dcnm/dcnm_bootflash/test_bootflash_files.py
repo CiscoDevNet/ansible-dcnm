@@ -88,7 +88,7 @@ def test_bootflash_files_00000() -> None:
 def test_bootflash_files_00100() -> None:
     """
     ### Classes and Methods
-    - BootflashInfo()
+    - BootflashFiles()
         - commit()
         - validate_commit_parameters()
 
@@ -173,6 +173,224 @@ def test_bootflash_files_00100() -> None:
     ]
 
 
+def test_bootflash_files_00110() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - commit()
+        - validate_commit_parameters()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``rest_send`` is not set before
+    calling commit.
+
+    ### Test
+    -   ValueError is raised by validate_commit_parameters().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+
+    match = r"BootflashFiles.validate_commit_parameters:\s+"
+    match += r"rest_send must be set before calling commit\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_bootflash_files_00120() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - commit()
+        - validate_commit_parameters()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``results`` is not set before
+    calling commit.
+
+    ### Test
+    -   ValueError is raised by validate_commit_parameters().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = RestSend(params_deleted)
+        instance.switch_details = SwitchDetails()
+
+    match = r"BootflashFiles.validate_commit_parameters:\s+"
+    match += r"results must be set before calling commit\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_bootflash_files_00130() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - commit()
+        - validate_commit_parameters()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``switch_details`` is not set before
+    calling commit.
+
+    ### Test
+    -   ValueError is raised by validate_commit_parameters().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+
+    match = r"BootflashFiles.validate_commit_parameters:\s+"
+    match += r"switch_details must be set before calling commit\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.commit()
+
+
+def test_bootflash_files_00200() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+
+    ### Summary
+    Verify that add_file(), when called twice with the same ip_address,
+    and partition, adds the second file to the payload under the same
+    serial number (yes, serial number since ip_address is converted to
+    serial number when the payload is built) and partition as the
+    first file.
+
+    ### Setup
+    -   Call add_file() twice with same ip_address and partition.
+
+    ### Test
+    -   The second file is added to the payload under the same
+        serial number and partition.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_all_switches(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_deleted)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+
+        instance.filepath = "bootflash:/air.txt"
+        instance.filename = "air.txt"
+        instance.ip_address = "172.22.150.112"
+        instance.partition = "bootflash:"
+        instance.supervisor = "active"
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.add_file()
+
+        instance.filepath = "bootflash:/earth.txt"
+        instance.filename = "earth.txt"
+        instance.ip_address = "172.22.150.112"
+        instance.partition = "bootflash:"
+        instance.supervisor = "active"
+        instance.target = {"filepath": "bootflash/earth.txt", "supervisor": "active"}
+        instance.add_file()
+
+    assert instance.payload == payloads_bootflash_files(key)
+
+
+def test_bootflash_files_00210() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+
+    ### Summary
+    Verify that add_file(), when called twice with a differnt ip_address,
+    and partition, adds the second file under the different
+    serial number (yes, serial number since ip_address is converted to
+    serial number when the payload is built) and partition.
+
+    ### Setup
+    -   Call add_file() twice with different ip_address and partition.
+    -   Call add_file() a third time with the same ip_address and partition
+        as the second call, and with the same filename.  This will not
+        change the payload since it is rejected in
+        ``add_file_to_existing_payload()``.
+
+    ### Test
+    -   The second file is added to the payload under a different serial
+        number and partition.
+    -   The third (duplicate) file is not added to the payload.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_all_switches(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_deleted)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+
+        instance.filepath = "bootflash:/air.txt"
+        instance.filename = "air.txt"
+        instance.ip_address = "172.22.150.112"
+        instance.partition = "bootflash:"
+        instance.supervisor = "active"
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.add_file()
+
+        instance.filepath = "bootflash:/earth.txt"
+        instance.filename = "earth.txt"
+        instance.ip_address = "172.22.150.113"
+        instance.partition = "bootflash:"
+        instance.supervisor = "active"
+        instance.target = {"filepath": "bootflash/earth.txt", "supervisor": "active"}
+        instance.add_file()
+
+        # Try to add the same file again.  This will not change the payload since
+        # it is rejected in add_file_to_existing_payload().
+        instance.filepath = "bootflash:/earth.txt"
+        instance.filename = "earth.txt"
+        instance.ip_address = "172.22.150.113"
+        instance.partition = "bootflash:"
+        instance.supervisor = "active"
+        instance.target = {"filepath": "bootflash/earth.txt", "supervisor": "active"}
+        instance.add_file()
+
+    assert instance.payload == payloads_bootflash_files(key)
+
+
 @pytest.mark.parametrize(
     "key_responses_ep_all_switches, reason",
     [
@@ -180,10 +398,10 @@ def test_bootflash_files_00100() -> None:
         ("b", "inconsistent"),
     ],
 )
-def test_bootflash_files_00200(key_responses_ep_all_switches, reason) -> None:
+def test_bootflash_files_00220(key_responses_ep_all_switches, reason) -> None:
     """
     ### Classes and Methods
-    - BootflashInfo()
+    - BootflashFiles()
         - add_file()
 
     ### Summary
@@ -254,10 +472,196 @@ def test_bootflash_files_00200(key_responses_ep_all_switches, reason) -> None:
         instance.add_file()
 
 
+def test_bootflash_files_00230() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+        - validate_prerequisites_for_add_file()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``filename`` is not set before
+    calling add_file().
+
+    ### Test
+    -   ValueError is raised by validate_prerequisites_for_add_file().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.filepath = "bootflash:/air.txt"
+        instance.ip_address = "192.168.1.1"
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+        instance.supervisor = "active"
+        instance.switch_details = SwitchDetails()
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+
+    match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
+    match += r"filename must be set before calling add_file\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()
+
+
+def test_bootflash_files_00240() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+        - validate_prerequisites_for_add_file()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``filepath`` is not set before
+    calling add_file().
+
+    ### Test
+    -   ValueError is raised by validate_prerequisites_for_add_file().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.filename = "air.txt"
+        instance.ip_address = "192.168.1.1"
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+        instance.supervisor = "active"
+        instance.switch_details = SwitchDetails()
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+
+    match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
+    match += r"filepath must be set before calling add_file\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()
+
+
+def test_bootflash_files_00250() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+        - validate_prerequisites_for_add_file()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``ip_address`` is not set before
+    calling add_file().
+
+    ### Test
+    -   ValueError is raised by validate_prerequisites_for_add_file().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.filename = "air.txt"
+        instance.filepath = "bootflash:/air.txt"
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+        instance.supervisor = "active"
+        instance.switch_details = SwitchDetails()
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+
+    match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
+    match += r"ip_address must be set before calling add_file\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()
+
+
+def test_bootflash_files_00260() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+        - validate_prerequisites_for_add_file()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``supervisor`` is not set before
+    calling add_file().
+
+    ### Test
+    -   ValueError is raised by validate_prerequisites_for_add_file().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.filename = "air.txt"
+        instance.filepath = "bootflash:/air.txt"
+        instance.ip_address = "192.168.1.1"
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+
+    match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
+    match += r"supervisor must be set before calling add_file\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()
+
+
+def test_bootflash_files_00270() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+        - validate_prerequisites_for_add_file()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``switch_details`` is not set before
+    calling add_file().
+
+    ### Test
+    -   ValueError is raised by validate_prerequisites_for_add_file().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.filename = "air.txt"
+        instance.filepath = "bootflash:/air.txt"
+        instance.ip_address = "192.168.1.1"
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+        instance.supervisor = "active"
+        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+
+    match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
+    match += r"switch_details must be set before calling add_file\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()
+
+
+def test_bootflash_files_00280() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - add_file()
+        - validate_prerequisites_for_add_file()
+
+    ### Summary
+    Verify ``ValueError`` is raised if ``target`` is not set before
+    calling add_file().
+
+    ### Test
+    -   ValueError is raised by validate_prerequisites_for_add_file().
+    -   Error message matches expectation.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.filename = "air.txt"
+        instance.filepath = "bootflash:/air.txt"
+        instance.ip_address = "192.168.1.1"
+        instance.rest_send = RestSend(params_deleted)
+        instance.results = Results()
+        instance.supervisor = "active"
+        instance.switch_details = SwitchDetails()
+
+    match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
+    match += r"target must be set before calling add_file\(\)\."
+    with pytest.raises(ValueError, match=match):
+        instance.add_file()
+
+
 def test_bootflash_files_00300() -> None:
     """
     ### Classes and Methods
-    - BootflashInfo()
+    - BootflashFiles()
         - refresh_switch_details()
 
     ### Summary
@@ -284,7 +688,7 @@ def test_bootflash_files_00300() -> None:
 def test_bootflash_files_00310() -> None:
     """
     ### Classes and Methods
-    - BootflashInfo()
+    - BootflashFiles()
         - refresh_switch_details()
 
     ### Summary
@@ -306,3 +710,200 @@ def test_bootflash_files_00310() -> None:
     match += r"refresh_switch_details\."
     with pytest.raises(ValueError, match=match):
         instance.refresh_switch_details()
+
+
+def test_bootflash_files_00400() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - ip_address_to_serial_number()
+
+    ### Summary
+    Verify ``ip_address_to_serial_number()`` raises ``ValueError`` if
+    ``switch_details`` raises TypeError or ValueError when
+    ``switch_details.serial_number`` is accessed.
+
+    ### Test
+    -   ``EpAllSwitches`` response is modified such that the ``serialNumber``
+        key is missing.
+    -   ``ip_address_to_serial_number()`` raises ``ValueError``.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def configs():
+        yield configs_deleted(f"{key}a")
+
+    gen_configs = ResponseGenerator(configs())
+
+    def responses():
+        yield responses_ep_all_switches(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    params = copy.deepcopy(params_deleted)
+    params.update({"config": gen_configs.next})
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+
+    match = r"BootflashFiles\.ip_address_to_serial_number:\s+"
+    match += r"SwitchDetails\._get: 172\.22\.150\.112 does not have\s+"
+    match += r"a key named serialNumber\."
+    with pytest.raises(ValueError, match=match):
+        instance.ip_address_to_serial_number("172.22.150.112")
+
+
+def test_bootflash_files_00500() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - delete_files()
+
+    ### Summary
+    Verify ``delete_files`` generates a synthetic response when there are no
+    files to delete.
+
+    ### Test
+    -   delete_files() is called directly.
+    -   Since the payload is initialized in ``BootflashFiles().__init__()``
+        with an empty list, there are no files to delete when
+        ``delete_files()`` is called.
+    -   assert that the response and result are as expected.
+    """
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    rest_send = RestSend(params_deleted)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+        instance.delete_files()
+
+    assert instance.results.response_current["RETURN_CODE"] == 200
+    assert instance.results.response_current["MESSAGE"] == "No files to delete."
+    assert instance.results.result == [
+        {"success": True, "changed": False, "sequence_number": 1}
+    ]
+
+
+def test_bootflash_files_00600() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - partition_and_serial_number_exist_in_payload()
+
+    ### Summary
+    Verify ``partition_and_serial_number_exist_in_payload`` returns False
+    if self.partition does not match the partition in the payload.
+
+    ### Setup
+    -   BootflashFiles().payload is set to include a file on partition
+        bootflash: on switch with ip_address 172.22.150.112.
+    -   BootflashFiles().partition is set to usb1:
+    -   BootflashFiles().ip_address is set to 172.22.150.112.
+
+    ### Test
+    -   Verify that ``partition_and_serial_number_exist_in_payload()``
+        returns False.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_all_switches(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_deleted)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+        instance.payload = payloads_bootflash_files(key)
+        instance.ip_address = "172.22.150.112"
+        instance.partition = "usb1:"
+
+    assert instance.partition_and_serial_number_exist_in_payload() is False
+
+
+def test_bootflash_files_00610() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - partition_and_serial_number_exist_in_payload()
+
+    ### Summary
+    Verify ``partition_and_serial_number_exist_in_payload`` returns True
+    if a file in the payload matches the filters ``ip_address`` and
+    ``partition``.
+
+    ### Setup
+    -   BootflashFiles().payload is set to include a file on partition
+        bootflash: on switch with ip_address 172.22.150.112.
+    -   BootflashFiles().partition is set to bootflash:
+    -   BootflashFiles().ip_address is set to 172.22.150.112.
+
+    ### Test
+    -   Verify that partition_and_serial_number_exist_in_payload()
+        returns True.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_all_switches(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params_deleted)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = BootflashFiles()
+        instance.rest_send = rest_send
+        instance.results = Results()
+        instance.switch_details = SwitchDetails()
+        instance.switch_details.results = Results()
+        instance.payload = payloads_bootflash_files(key)
+        instance.ip_address = "172.22.150.112"
+        instance.partition = "bootflash:"
+
+    assert instance.partition_and_serial_number_exist_in_payload() is True

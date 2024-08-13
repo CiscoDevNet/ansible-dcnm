@@ -115,10 +115,7 @@ class BootflashFiles:
 
         self.action = "bootflash_delete"
         self.conversion = ConversionUtils()
-        # If the optional @target property is set, target will be added
-        # to self.diff dictionary and self.diff will be used for the results
-        # diff.  Otherwise the payload will be used for the results diff.
-        # self.diff, if used, is keyed on switch ip_address and is updated
+        # self.diff is keyed on switch ip_address and is updated
         # in self.update_diff().
         self.diff = {}
         self.ep_bootflash_files = EpBootflashFiles()
@@ -187,11 +184,9 @@ class BootflashFiles:
         self.switch_details.filter = ip_address
         try:
             serial_number = self.switch_details.serial_number
-        except TypeError as error:
+        except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "switch_details.refresh() must be called before calling "
-            msg += f"{method_name}. "
-            msg += f"Error detail: {error}."
+            msg += f"{error}"
             raise ValueError(msg) from error
         return serial_number
 
@@ -281,10 +276,10 @@ class BootflashFiles:
             )
             self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         else:
-            self.results.result_current = {"success": True, "found": False}
+            self.results.result_current = {"success": True, "changed": False}
             self.results.response_current = {
                 "MESSAGE": "No files to delete.",
-                "RESULT_CODE": 200,
+                "RETURN_CODE": 200,
             }
 
         self.results.diff_current = copy.deepcopy(self.diff)
@@ -302,6 +297,7 @@ class BootflashFiles:
                 -   ``ip_address`` is not set.
                 -   ``supervisor`` is not set.
                 -   ``switch_details`` is not set.
+                -   ``target`` is not set.
         """
         method_name = inspect.stack()[0][3]
 
@@ -320,9 +316,21 @@ class BootflashFiles:
             raise_exception("supervisor")
         if not self.switch_details:
             raise_exception("switch_details")
+        if not self.target:
+            raise_exception("target")
 
-    def file_exists_in_payload(self):
+    def partition_and_serial_number_exist_in_payload(self):
         """
+        ### Summary
+        -   Return True if the partition and serialNumber associated with the
+            file exist in the payload.
+        -   Return False otherwise.
+
+        ### Raises
+        None
+
+        ### payload Structure
+
         "deleteFiles": [
             {
                 "files": [
@@ -348,7 +356,7 @@ class BootflashFiles:
             }
         ]
         """
-        file_found = False
+        found = False
         for item in self.payload["deleteFiles"]:
             serial_number = item.get("serialNumber")
             partition = item.get("partition")
@@ -356,9 +364,9 @@ class BootflashFiles:
                 continue
             if partition != self.partition:
                 continue
-            file_found = True
+            found = True
             break
-        return file_found
+        return found
 
     def add_file_to_existing_payload(self):
         """
@@ -429,7 +437,7 @@ class BootflashFiles:
         ### Raises
         None
         """
-        if not self.file_exists_in_payload():
+        if not self.partition_and_serial_number_exist_in_payload():
             add_payload = {
                 "serialNumber": self.ip_address_to_serial_number(self.ip_address),
                 "partition": self.partition,
@@ -651,10 +659,8 @@ class BootflashFiles:
     def target(self):
         """
         ### Summary
-        Optional.  ``target`` is a dictionary that, if provided,
-        will be used to set the diff passed to Results.  If this
-        is not present, then the diff will be set to the payload
-        of the delete request.
+        ``target`` is a dictionary that is used to set the diff passed to
+        Results.
 
         ``target`` is appended to a list of targets in
         ``BootflashFiles().add_file()``, so must be passed for each file
@@ -683,11 +689,11 @@ class BootflashFiles:
         ### Notes
         1.  Since (at least with the dcnm_bootflash module) the
             user references switches using ip_address, and the NDFC
-            bootflash-files payload includes only serialNumber, it
-            is good to use target as the diff since it contains the
+            bootflash-files payload includes only serialNumber, we
+            decided to use target as the diff since it contains the
             ip_address and serial_number (as well as the size, date
-            etc, which are potential more useful than the info in the
-            payload).
+            etc, which are potentially more useful than the info in
+            the payload.
         """
         return self._target
 

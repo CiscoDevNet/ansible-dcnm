@@ -39,7 +39,65 @@
     },
     "test_bootflash_files_00200a": {
         "TEST_NOTES": [
-            "1x switch with systemMode == maintenance."
+            "1x switch with systemMode == Normal, ip_address == 172.22.150.112, and serialNumber == FOX2109PGCS."
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.112",
+                "logicalName": "cvd-1211-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGCS",
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_files_00210a": {
+        "TEST_NOTES": [
+            "2x switches, both with systemMode == normal."
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.112",
+                "logicalName": "cvd-1211-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGCS",
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            },
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.113",
+                "logicalName": "cvd-1212-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGD0",
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_files_00220a": {
+        "TEST_NOTES": [
+            "1x switch with systemMode == Migration."
         ],
         "DATA": [
             {
@@ -60,9 +118,9 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
         "RETURN_CODE": 200
     },
-    "test_bootflash_files_00200b": {
+    "test_bootflash_files_00220b": {
         "TEST_NOTES": [
-            "1x switch with systemMode == inconsistent."
+            "1x switch with systemMode == Inconsistent."
         ],
         "DATA": [
             {
@@ -76,6 +134,74 @@
                 "serialNumber": "FOX2109PGCS",
                 "switchRole": "spine",
                 "systemMode": "Inconsistent"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_files_00400a": {
+        "TEST_NOTES": [
+            "1x switch missing serialNumber."
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.112",
+                "logicalName": "cvd-1211-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_files_00600a": {
+        "TEST_NOTES": [
+            "1x switch with ip_address == 172.22.150.112 and serialNumber == FOX2109PGCS."
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.112",
+                "logicalName": "cvd-1211-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGCS",
+                "switchRole": "spine",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_files_00610a": {
+        "TEST_NOTES": [
+            "1x switch with ip_address == 172.22.150.112 and serialNumber == FOX2109PGCS."
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_EVPN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "172.22.150.112",
+                "logicalName": "cvd-1211-spine",
+                "mode": "Normal",
+                "model": "N9K-C9504",
+                "monitorMode": null,
+                "serialNumber": "FOX2109PGCS",
+                "switchRole": "spine",
+                "systemMode": "Normal"
             }
         ],
         "MESSAGE": "OK",
