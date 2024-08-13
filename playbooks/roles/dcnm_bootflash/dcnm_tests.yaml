@@ -12,7 +12,8 @@
   connection: ansible.netcommon.httpapi
 
   vars:
-    # testcase: dcnm_bootflash_deleted
+    # testcase: dcnm_bootflash_deleted_specific
+    # testcase: dcnm_bootflash_deleted_wildcard
     # testcase: dcnm_bootflash_query
     switch_username: admin
     switch_password: "foobar"
@@ -28,6 +29,14 @@
     nxos_image_2: n9000-dk9.10.3.1.F.bin
     nxos_release_1: 10.2.5_nxos64-cs_64bit
     nxos_release_2: 10.3.1_nxos64-cs_64bit
+    spine1_file1: air.ndfc_ut
+    spine1_file2: earth.ndfc_ut
+    spine1_file3: fire.ndfc_ut
+    spine1_file4: water.ndfc_ut
+    spine2_file1: black.ndfc_ut
+    spine2_file2: blue.ndfc_ut
+    spine2_file3: green.ndfc_ut
+    spine2_file4: red.ndfc_ut
 
   roles:
     - dcnm_bootflash

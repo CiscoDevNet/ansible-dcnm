@@ -32,7 +32,7 @@
 #       which includes inventory entries for spine1 and spine2 and change to
 #       match your setup.
 # TEST
-# 3. Ensure dcnm_tests.yaml has uncommented
+# 3. Ensure dcnm_tests.yaml has uncommented the following:
 #    testcase: dcnm_bootflash_deleted
 # 4. Ensure all other testcase fields are commented.
 # 5. Run the role with the following command:
@@ -62,7 +62,7 @@
 #   spine2_file2: blue.ndfc_ut
 #   spine2_file3: green.ndfc_ut
 #   spine2_file4: red.ndfc_ut
-
+#
 ################################################################################
 # QUERY - TEST - Query files
 ################################################################################
