@@ -1,0 +1,24 @@
+---
+- gather_facts: false
+  hosts:
+    - spine1
+  tasks:
+    - name: SETUP - Create ndfc_ut files on spine1
+      cisco.nxos.nxos_command:
+        commands:
+          - echo 1 > bootflash:/air.ndfc_ut
+          - echo 1 > bootflash:/earth.ndfc_ut
+          - echo 1 > bootflash:/fire.ndfc_ut
+          - echo 1 > bootflash:/water.ndfc_ut
+
+- gather_facts: false
+  hosts:
+    - spine2
+  tasks:
+    - name: SETUP - Create ndfc_ut files on spine2
+      cisco.nxos.nxos_command:
+        commands:
+          - echo 1 > bootflash:/black.ndfc_ut
+          - echo 1 > bootflash:/blue.ndfc_ut
+          - echo 1 > bootflash:/green.ndfc_ut
+          - echo 1 > bootflash:/red.ndfc_ut
