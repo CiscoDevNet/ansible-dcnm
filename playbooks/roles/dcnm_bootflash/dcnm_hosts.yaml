@@ -13,8 +13,15 @@ all:
       hosts:
         dcnm-instance.example.com:
     nxos:
-      hosts:
-        n9k-hosta.example.com:
-           ansible_connection: ansible.netcommon.network_cli
-           ansible_network_os: cisco.nxos.nxos
-           ansible_ssh_port: 22
+      vars:
+        ansible_connection: ansible.netcommon.network_cli
+        ansible_network_os: cisco.nxos.nxos 
+        ansible_become: true
+        ansible_become_method: enable
+      children:
+        spine1:
+          hosts:
+            192.168.1.1
+        spine2:
+          hosts:
+            192.168.1.2
