@@ -31,6 +31,23 @@
             }
         ]
     },
+    "test_bootflash_deleted_02000a": {
+        "TEST_NOTES": [
+            "Negative test.",
+            "supervisor value is invalid."
+        ],
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "foo"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            }
+        ]
+    },
     "test_bootflash_files_00100a": {
         "targets": [
             {

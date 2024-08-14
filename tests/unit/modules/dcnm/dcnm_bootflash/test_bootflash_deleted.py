@@ -173,3 +173,39 @@ def test_bootflash_deleted_01000() -> None:
     assert instance.results.response[0]["RETURN_CODE"] == 200
     assert instance.results.result[0]["success"] is True
     assert instance.results.result[0]["changed"] is True
+
+
+def test_bootflash_deleted_02000() -> None:
+    """
+    ### Classes and Methods
+    - Deleted()
+        - populate_files_to_delete()
+
+    ### Summary
+    -   ``Deleted().populate_files_to_delete()`` sad path.
+    -   BootflashInfo().filter_supervisor raises ValueError.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    params = copy.deepcopy(params_deleted)
+    params["config"] = configs_deleted(f"{key}a")
+
+    switch = {
+        "ip_address": params["config"]["switches"][0]["ip_address"],
+        "targets": params["config"]["targets"],
+    }
+    with does_not_raise():
+        instance = Deleted(params)
+    match = r"Deleted\.populate_files_to_delete:\s+"
+    match += r"Error assigning BootflashInfo\.filter_supervisor\.\s+"
+    match += r"Error detail:\s+"
+    match += r"BootflashInfo\.filter_supervisor.setter:\s+"
+    match += r"value foo is not a valid value for supervisor\.\s+"
+    match += r"Valid values: active,standby\."
+    with pytest.raises(ValueError, match=match):
+        instance.populate_files_to_delete(switch)
