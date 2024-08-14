@@ -3,6 +3,34 @@
         "Mocked playbook configurations for BootflashFiles() unit tests.",
         "tests/unit/modules/dcnm/dcnm_bootflash"
     ],
+    "test_bootflash_deleted_00010a": {
+        "TEST_NOTES": [
+            "Negative test.",
+            "targets is not a list."
+        ],
+        "targets": "NOT_A_LIST",
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            }
+        ]
+    },
+    "test_bootflash_deleted_01000a": {
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            },
+            {
+                "ip_address": "172.22.150.113"
+            }
+        ]
+    },
     "test_bootflash_files_00100a": {
         "targets": [
             {

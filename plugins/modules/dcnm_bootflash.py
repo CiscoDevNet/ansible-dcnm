@@ -375,7 +375,7 @@ class Common:
                     msg = "Expected supervisor in target dict. "
                     msg += f"Got {target}."
                     raise_value_error(msg)
-            self.want.append(switch)
+            self.want.append(copy.deepcopy(switch))
 
 
 class Deleted(Common):
