@@ -997,7 +997,7 @@ def test_bootflash_files_00800() -> None:
 
     match = r"BootflashFiles.target:\s+"
     match += r"target must be a dictionary\. Got type str for value foo\."
-    with pytest.raises(ValueError, match=match):
+    with pytest.raises(TypeError, match=match):
         instance.target = "foo"
 
 
@@ -1011,11 +1011,11 @@ def test_bootflash_files_00810(parameter) -> None:
         - target.setter
 
     ### Summary
-    Verify ``target.setter`` raises ``TypeError`` if passed a value
-    that is not a dictionary.
+    Verify ``target.setter`` raises ``ValueError`` if passed a dictionary
+    that is missing a mandatory parameter.
 
     ### Test
-    -   ``TypeError`` is raised.
+    -   ``ValueError`` is raised.
     -   Error message matches expectations.
     """
     method_name = inspect.stack()[0][3]

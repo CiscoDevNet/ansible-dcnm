@@ -666,7 +666,9 @@ class BootflashFiles:
 
         ### Raises
         -   ``TypeError`` if:
-                -   target is not a dictionary.
+                -   ``target`` is not a dictionary.
+        -   ``ValueError`` if:
+                -   ``target`` is missing a mandatory key.
 
         ### Associated key
         None
@@ -692,16 +694,14 @@ class BootflashFiles:
     def target(self, value):
         method_name = inspect.stack()[0][3]
 
-        def raise_exception(message):
-            msg = f"{self.class_name}.{method_name}: {message}"
-            raise ValueError(f"{msg}")
+        msg = f"{self.class_name}.{method_name}: "
 
         if not isinstance(value, dict):
-            msg = "target must be a dictionary. "
+            msg += "target must be a dictionary. "
             msg += f"Got type {type(value).__name__} for value {value}."
-            raise_exception(msg)
+            raise TypeError(msg)
         for key in self.mandatory_target_keys:
             if value.get(key) is None:
-                msg = f"{key} key missing from value {value}."
-                raise_exception(msg)
+                msg += f"{key} key missing from value {value}."
+                raise ValueError(msg)
         self._target = value
