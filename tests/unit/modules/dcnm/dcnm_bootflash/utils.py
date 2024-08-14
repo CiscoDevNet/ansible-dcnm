@@ -29,7 +29,10 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.fixtu
 
 params_query = {
     "state": "query",
-    "config": {"switches": [{"ip_address": "192.168.1.2"}]},
+    "config": {
+        "switches": [{"ip_address": "192.168.1.2"}],
+        "targets": [{"filepath": "bootflash:/testfile", "supervisor": "active"}],
+    },
     "check_mode": False,
 }
 

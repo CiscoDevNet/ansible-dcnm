@@ -3,7 +3,7 @@
         "Mocked playbook configurations for query-state tests.",
         "tests/unit/modules/dcnm/dcnm_bootflash"
     ],
-    "test_dcnm_bootflash_00100a": {
+    "test_bootflash_common_00200a": {
         "targets": [
             {
                 "filepath": "bootflash:/foo.txt",
@@ -13,9 +13,87 @@
         "switches": [
             {
                 "ip_address": "192.168.1.2"
-            },
+            }
+        ]
+    },
+    "test_bootflash_common_00210a": {
+        "TEST_NOTES": [
+            "Negative test.",
+            "switches[0].ip_address is misspelled."
+        ],
+        "targets": [
             {
-                "ip_address": "192.168.1.3"
+                "filepath": "bootflash:/foo.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address_misspelled": "192.168.1.2"
+            }
+        ]
+    },
+    "test_bootflash_common_00220a": {
+        "TEST_NOTES": [
+            "Negative test.",
+            "switches[0].targets is not a list."
+        ],
+        "targets": [
+            {
+                "filepath": "bootflash:/foo.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "targets": "NOT_A_LIST"
+            }
+        ]
+    },
+    "test_bootflash_common_00230a": {
+        "TEST_NOTES": [
+            "Negative test.",
+            "switches[0].targets.filepath is misspelled."
+        ],
+        "targets": [
+            {
+                "filepath": "bootflash:/foo.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "targets": [
+                    {
+                        "filepath_misspelled": "bootflash:/foo.txt",
+                        "supervisor": "active"
+                    }
+                ]
+            }
+        ]
+    },
+    "test_bootflash_common_00240a": {
+        "TEST_NOTES": [
+            "Negative test.",
+            "switches[0].targets.supervisor is misspelled."
+        ],
+        "targets": [
+            {
+                "filepath": "bootflash:/foo.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "192.168.1.2",
+                "targets": [
+                    {
+                        "filepath": "bootflash:/foo.txt",
+                        "supervisor_misspelled": "active"
+                    }
+                ]
             }
         ]
     },

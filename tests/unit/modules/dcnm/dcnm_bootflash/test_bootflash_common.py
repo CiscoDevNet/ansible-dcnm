@@ -25,35 +25,14 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-# TODO: Add imports as needed
 import copy
+import inspect
 
-# import inspect
 import pytest
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import \
     Common
-# from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
-#     BootflashFiles
-# from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
-#     ConvertTargetToParams
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-#     ResponseHandler
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-#     RestSend
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-#     Results
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-#     Sender
-# from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-#     SwitchDetails
-# from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-#     ResponseGenerator
-# from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-#     MockAnsibleModule, configs_deleted, does_not_raise, params_deleted,
-#     payloads_bootflash_files, responses_ep_all_switches,
-#     responses_ep_bootflash_files, targets)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    does_not_raise, params_deleted)
+    configs_query, does_not_raise, params_deleted, params_query)
 
 
 def test_bootflash_common_00000() -> None:
@@ -292,13 +271,150 @@ def test_bootflash_common_00200() -> None:
     -   instance.want matches expectation.
     -   Exceptions are not not raised.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    params = copy.deepcopy(params_query)
+    params["config"] = configs_query(key)
     with does_not_raise():
-        instance = Common(params_deleted)
+        instance = Common(params)
         instance.get_want()
-    # print(f"instance.want: {instance.want}")
     assert instance.want == [
         {
             "ip_address": "192.168.1.2",
-            "targets": [{"filepath": "bootflash:/testfile", "supervisor": "active"}],
+            "targets": [{"filepath": "bootflash:/foo.txt", "supervisor": "active"}],
         }
     ]
+
+
+def test_bootflash_common_00210() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - get_want()
+
+    ### Summary
+    Verify ``get_want()`` behavior when a dictionary in the switches
+    list is missing the ``ip_address`` parameter.
+
+    ### Setup
+    -   ``configs_query`` contains ``switches[0].ip_address_misspelled``
+        rather than the expected ``switches[0].ip_address``.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    params = copy.deepcopy(params_query)
+    params["config"] = configs_query(key)
+    with does_not_raise():
+        instance = Common(params)
+    match = r"Common.get_want:\s+"
+    match += r"Expected ip_address in switch dict\.\s+"
+    match += r"Got.*ip_address_misspelled.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.get_want()
+
+
+def test_bootflash_common_00220() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - get_want()
+
+    ### Summary
+    Verify ``get_want()`` behavior when a switch in config.switches contains
+    an invalid ``targets`` parameter value.
+
+    ### Setup
+    -   ``configs_query`` contains a switch with local ``targets`` parameter,
+        and that parameter is a string rather than a list, i.e.
+        switches[0].targets = "NOT_A_LIST".
+
+    ### Test
+    -   TypeError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    params = copy.deepcopy(params_query)
+    params["config"] = configs_query(key)
+    with does_not_raise():
+        instance = Common(params)
+    match = r"Common.get_want:\s+"
+    match += r"Expected list of dictionaries for switch\['targets'\]\.\s+"
+    match += r"Got str\."
+    with pytest.raises(TypeError, match=match):
+        instance.get_want()
+
+
+def test_bootflash_common_00230() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - get_want()
+
+    ### Summary
+    Verify ``get_want()`` behavior when a switch in config.switches contains
+    a ``targets`` parameter value that is missing the ``filepath`` key.
+
+    ### Setup
+    -   ``configs_query`` contains a switch with local ``targets`` parameter,
+        and that parameter is a list, but a dictionary in the list has
+        misspelled ``filepath`` as ``filepath_misspelled`` i.e.
+        ``switches[0].targets[0].filepath_misspelled``.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    params = copy.deepcopy(params_query)
+    params["config"] = configs_query(key)
+    with does_not_raise():
+        instance = Common(params)
+    match = r"Common.get_want:\s+"
+    match += r"Expected filepath in target dict\.\s+"
+    match += r"Got.*filepath_misspelled.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.get_want()
+
+
+def test_bootflash_common_00240() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - get_want()
+
+    ### Summary
+    Verify ``get_want()`` behavior when a switch in config.switches contains
+    a ``targets`` parameter value that is missing the ``supervisor`` key.
+
+    ### Setup
+    -   ``configs_query`` contains a switch with local ``targets`` parameter,
+        and that parameter is a list of dict, but a dictionary in the list has
+        misspelled ``supervisor`` as ``supervisor_misspelled`` i.e.
+        ``switches[0].targets[0].supervisor_misspelled``.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    params = copy.deepcopy(params_query)
+    params["config"] = configs_query(key)
+    with does_not_raise():
+        instance = Common(params)
+    match = r"Common.get_want:\s+"
+    match += r"Expected supervisor in target dict\.\s+"
+    match += r"Got.*supervisor_misspelled.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.get_want()
