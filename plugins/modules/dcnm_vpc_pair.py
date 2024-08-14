@@ -49,6 +49,7 @@ options:
       - A list of dictionaries containing VPC switch pair information
     type: list
     elements: dict
+    default: []
     suboptions:
       peerOneId:
         description:
@@ -397,10 +398,7 @@ EXAMPLES = """
 #   manually running cg_run.py script to generate it again
 #
 
-import time
-import json
 import copy
-import ipaddress
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
@@ -410,7 +408,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_ip_sn_dict,
     get_fabric_inventory_details,
     get_fabric_details,
-    dcnm_get_ip_addr_info,
     dcnm_get_template_specs,
     dcnm_update_arg_specs,
 )
@@ -440,10 +437,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_vpc_p
     dcnm_vpc_pair_utils_get_delete_list,
     dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs,
     dcnm_vpc_pair_utils_validate_devices,
-    dcnm_vpc_pair_utils_check_if_meta,
 )
-
-from datetime import datetime
 
 
 # Resource Class object which includes all the required methods and data to configure and maintain Vpc_pair
