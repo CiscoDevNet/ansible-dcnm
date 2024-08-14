@@ -100,7 +100,6 @@ class BootflashFiles:
                     {
                         "filePath": "bootflash:",
                         "fileName": "20210922_230124_poap_3543_init.log",
-                        "fileSize": "1335985152",
                         "bootflashType": "active"
                     }
                 ]
@@ -121,12 +120,17 @@ class BootflashFiles:
         self.ep_bootflash_files = EpBootflashFiles()
 
         self.ok_to_delete_files_reason = None
+        self.mandatory_target_keys = [
+            "filepath",
+            "ip_address",
+            "serial_number",
+            "supervisor",
+        ]
         self.payload = {"deleteFiles": []}
         self.switch_details_refreshed = False
 
         self._filename = None
         self._filepath = None
-        self._filesize = None
         self._ip_address = None
         self._partition = None
         self._rest_send = None
@@ -477,16 +481,18 @@ class BootflashFiles:
     def update_diff(self):
         """
         ### Summary
-        Update the diff with the target.
+        Update ``diff`` with ``target``.
 
         ### Raises
         None
+
+        ### Notes
+        -   ``target`` has already been validated to be set (not None) in
+            ``validate_prerequisites_for_add_file()``.
+        -   ``target`` has already been validated to be a dictionary and to
+            contain ``ip_address`` in ``target.setter``.
         """
-        if self.target is None:
-            return
         ip_address = self.target.get("ip_address")
-        if ip_address is None:
-            return
         if ip_address not in self.diff:
             self.diff[ip_address] = []
         self.diff[ip_address].append(self.target)
@@ -537,27 +543,6 @@ class BootflashFiles:
     @filename.setter
     def filename(self, value):
         self._filename = value
-
-    @property
-    def filesize(self):
-        """
-        ### Summary
-        The file size, in bytes, of ``filename``.
-
-        ### Raises
-        None
-
-        ### Associated key
-        ``fileSize``
-
-        ### Example value
-        ``218233885``
-        """
-        return self._filesize
-
-    @filesize.setter
-    def filesize(self, value):
-        self._filesize = value
 
     @property
     def ip_address(self):
@@ -690,19 +675,33 @@ class BootflashFiles:
         1.  Since (at least with the dcnm_bootflash module) the
             user references switches using ip_address, and the NDFC
             bootflash-files payload includes only serialNumber, we
-            decided to use target as the diff since it contains the
+            decided to use ``target`` as the diff since it contains the
             ip_address and serial_number (as well as the size, date
             etc, which are potentially more useful than the info in
             the payload.
+        2.  ``BootflashFiles()`` requires that the ``ip_address`` key
+            be present in target, since it uses ``ip_address`` as the key
+            for the diff.  Of the other fields, we also require that filepath,
+            serial_number and supervisor are present since they add value
+            to the diff.  The other fields shown above SHOULD be included
+            but their absence will not raise an error.
         """
         return self._target
 
     @target.setter
     def target(self, value):
         method_name = inspect.stack()[0][3]
+
+        def raise_exception(message):
+            msg = f"{self.class_name}.{method_name}: {message}"
+            raise ValueError(f"{msg}")
+
         if not isinstance(value, dict):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "target must be a dictionary. "
+            msg = "target must be a dictionary. "
             msg += f"Got type {type(value).__name__} for value {value}."
-            raise TypeError(msg)
+            raise_exception(msg)
+        for key in self.mandatory_target_keys:
+            if value.get(key) is None:
+                msg = f"{key} key missing from value {value}."
+                raise_exception(msg)
         self._target = value

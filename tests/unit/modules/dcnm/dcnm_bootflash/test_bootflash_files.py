@@ -71,11 +71,16 @@ def test_bootflash_files_00000() -> None:
     assert instance.conversion.class_name == "ConversionUtils"
     assert instance.diff == {}  # pylint: disable=use-implicit-booleaness-not-comparison
     assert instance.ep_bootflash_files.class_name == "EpBootflashFiles"
+    assert instance.mandatory_target_keys == [
+        "filepath",
+        "ip_address",
+        "serial_number",
+        "supervisor",
+    ]
     assert instance.ok_to_delete_files_reason is None
     assert instance.payload == {"deleteFiles": []}
     assert instance.filename is None
     assert instance.filepath is None
-    assert instance.filesize is None
     assert instance.ip_address is None
     assert instance.partition is None
     assert instance._rest_send is None
@@ -272,10 +277,10 @@ def test_bootflash_files_00200() -> None:
         serial number and partition.
     """
     method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
+    key = f"{method_name}"
 
     def responses():
-        yield responses_ep_all_switches(key)
+        yield responses_ep_all_switches(f"{key}a")
 
     gen_responses = ResponseGenerator(responses())
 
@@ -300,7 +305,7 @@ def test_bootflash_files_00200() -> None:
         instance.ip_address = "172.22.150.112"
         instance.partition = "bootflash:"
         instance.supervisor = "active"
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(f"{key}a")
         instance.add_file()
 
         instance.filepath = "bootflash:/earth.txt"
@@ -308,10 +313,10 @@ def test_bootflash_files_00200() -> None:
         instance.ip_address = "172.22.150.112"
         instance.partition = "bootflash:"
         instance.supervisor = "active"
-        instance.target = {"filepath": "bootflash/earth.txt", "supervisor": "active"}
+        instance.target = targets(f"{key}b")
         instance.add_file()
 
-    assert instance.payload == payloads_bootflash_files(key)
+    assert instance.payload == payloads_bootflash_files(f"{key}a")
 
 
 def test_bootflash_files_00210() -> None:
@@ -321,7 +326,7 @@ def test_bootflash_files_00210() -> None:
         - add_file()
 
     ### Summary
-    Verify that add_file(), when called twice with a differnt ip_address,
+    Verify that add_file(), when called twice with a different ip_address,
     and partition, adds the second file under the different
     serial number (yes, serial number since ip_address is converted to
     serial number when the payload is built) and partition.
@@ -339,10 +344,10 @@ def test_bootflash_files_00210() -> None:
     -   The third (duplicate) file is not added to the payload.
     """
     method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
+    key = f"{method_name}"
 
     def responses():
-        yield responses_ep_all_switches(key)
+        yield responses_ep_all_switches(f"{key}a")
 
     gen_responses = ResponseGenerator(responses())
 
@@ -367,28 +372,28 @@ def test_bootflash_files_00210() -> None:
         instance.ip_address = "172.22.150.112"
         instance.partition = "bootflash:"
         instance.supervisor = "active"
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(f"{key}a")
         instance.add_file()
 
-        instance.filepath = "bootflash:/earth.txt"
-        instance.filename = "earth.txt"
+        instance.filepath = "bootflash:/black.txt"
+        instance.filename = "black.txt"
         instance.ip_address = "172.22.150.113"
         instance.partition = "bootflash:"
         instance.supervisor = "active"
-        instance.target = {"filepath": "bootflash/earth.txt", "supervisor": "active"}
+        instance.target = targets(f"{key}b")
         instance.add_file()
 
         # Try to add the same file again.  This will not change the payload since
         # it is rejected in add_file_to_existing_payload().
-        instance.filepath = "bootflash:/earth.txt"
-        instance.filename = "earth.txt"
+        instance.filepath = "bootflash:/black.txt"
+        instance.filename = "black.txt"
         instance.ip_address = "172.22.150.113"
         instance.partition = "bootflash:"
         instance.supervisor = "active"
-        instance.target = {"filepath": "bootflash/earth.txt", "supervisor": "active"}
+        instance.target = targets(f"{key}b")
         instance.add_file()
 
-    assert instance.payload == payloads_bootflash_files(key)
+    assert instance.payload == payloads_bootflash_files(f"{key}a")
 
 
 @pytest.mark.parametrize(
@@ -487,6 +492,9 @@ def test_bootflash_files_00230() -> None:
     -   ValueError is raised by validate_prerequisites_for_add_file().
     -   Error message matches expectation.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = BootflashFiles()
         instance.filepath = "bootflash:/air.txt"
@@ -495,7 +503,7 @@ def test_bootflash_files_00230() -> None:
         instance.results = Results()
         instance.supervisor = "active"
         instance.switch_details = SwitchDetails()
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(key)
 
     match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
     match += r"filename must be set before calling add_file\(\)\."
@@ -518,6 +526,9 @@ def test_bootflash_files_00240() -> None:
     -   ValueError is raised by validate_prerequisites_for_add_file().
     -   Error message matches expectation.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = BootflashFiles()
         instance.filename = "air.txt"
@@ -526,7 +537,7 @@ def test_bootflash_files_00240() -> None:
         instance.results = Results()
         instance.supervisor = "active"
         instance.switch_details = SwitchDetails()
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(key)
 
     match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
     match += r"filepath must be set before calling add_file\(\)\."
@@ -549,6 +560,9 @@ def test_bootflash_files_00250() -> None:
     -   ValueError is raised by validate_prerequisites_for_add_file().
     -   Error message matches expectation.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = BootflashFiles()
         instance.filename = "air.txt"
@@ -557,7 +571,7 @@ def test_bootflash_files_00250() -> None:
         instance.results = Results()
         instance.supervisor = "active"
         instance.switch_details = SwitchDetails()
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(key)
 
     match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
     match += r"ip_address must be set before calling add_file\(\)\."
@@ -580,6 +594,9 @@ def test_bootflash_files_00260() -> None:
     -   ValueError is raised by validate_prerequisites_for_add_file().
     -   Error message matches expectation.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = BootflashFiles()
         instance.filename = "air.txt"
@@ -588,7 +605,7 @@ def test_bootflash_files_00260() -> None:
         instance.rest_send = RestSend(params_deleted)
         instance.results = Results()
         instance.switch_details = SwitchDetails()
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(key)
 
     match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
     match += r"supervisor must be set before calling add_file\(\)\."
@@ -611,6 +628,9 @@ def test_bootflash_files_00270() -> None:
     -   ValueError is raised by validate_prerequisites_for_add_file().
     -   Error message matches expectation.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
     with does_not_raise():
         instance = BootflashFiles()
         instance.filename = "air.txt"
@@ -619,7 +639,7 @@ def test_bootflash_files_00270() -> None:
         instance.rest_send = RestSend(params_deleted)
         instance.results = Results()
         instance.supervisor = "active"
-        instance.target = {"filepath": "bootflash/air.txt", "supervisor": "active"}
+        instance.target = targets(key)
 
     match = r"BootflashFiles.validate_prerequisites_for_add_file:\s+"
     match += r"switch_details must be set before calling add_file\(\)\."
@@ -907,3 +927,107 @@ def test_bootflash_files_00610() -> None:
         instance.partition = "bootflash:"
 
     assert instance.partition_and_serial_number_exist_in_payload() is True
+
+
+def test_bootflash_files_00700() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - switch_details.setter
+
+    ### Summary
+    Verify ``switch_details.setter`` raises ``TypeError`` if passed a string
+    (i.e. not a class instance and not an instance of ``SwitchDetails()``).
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+
+    match = r"BootflashFiles.switch_details:\s+"
+    match += r"value must be an instance of SwitchDetails\.\s+"
+    match += r"Got value foo of type str\.\s+"
+    match += r"Error detail: 'str' object has no attribute 'class_name'\."
+    with pytest.raises(TypeError, match=match):
+        instance.switch_details = "foo"
+
+
+def test_bootflash_files_00710() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - switch_details.setter
+
+    ### Summary
+    Verify ``switch_details.setter`` raises ``TypeError`` if passed
+    a class instance other than ``SwitchDetails()``.
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+
+    match = r"BootflashFiles.switch_details:\s+"
+    match += r"value must be an instance of SwitchDetails\.\s+"
+    match += r"Got value .* of type Results\."
+    with pytest.raises(TypeError, match=match):
+        instance.switch_details = Results()
+
+
+def test_bootflash_files_00800() -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - target.setter
+
+    ### Summary
+    Verify ``target.setter`` raises ``TypeError`` if passed a value
+    that is not a dictionary.
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    with does_not_raise():
+        instance = BootflashFiles()
+
+    match = r"BootflashFiles.target:\s+"
+    match += r"target must be a dictionary\. Got type str for value foo\."
+    with pytest.raises(ValueError, match=match):
+        instance.target = "foo"
+
+
+@pytest.mark.parametrize(
+    "parameter", ["filepath", "ip_address", "serial_number", "supervisor"]
+)
+def test_bootflash_files_00810(parameter) -> None:
+    """
+    ### Classes and Methods
+    - BootflashFiles()
+        - target.setter
+
+    ### Summary
+    Verify ``target.setter`` raises ``TypeError`` if passed a value
+    that is not a dictionary.
+
+    ### Test
+    -   ``TypeError`` is raised.
+    -   Error message matches expectations.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    target = targets(key)
+    target.pop(parameter)
+
+    with does_not_raise():
+        instance = BootflashFiles()
+
+    match = r"BootflashFiles.target:\s+"
+    match += rf"{parameter} key missing from value.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.target = target

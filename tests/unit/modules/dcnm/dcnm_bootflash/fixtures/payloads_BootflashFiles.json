@@ -68,8 +68,8 @@
                 "files": [
                     {
                         "bootflashType": "active",
-                        "fileName": "earth.txt",
-                        "filePath": "bootflash:/earth.txt"
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:/black.txt"
                     }
                 ]
             }
