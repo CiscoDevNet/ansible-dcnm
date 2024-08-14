@@ -232,14 +232,19 @@ class Common:
 
         self.check_mode = self.params.get("check_mode", None)
         if self.check_mode is None:
-            msg = "check_mode is required."
+            msg = "params is missing mandatory key: check_mode."
+            raise_error(msg)
+
+        if self.check_mode not in [True, False]:
+            msg = "check_mode must be True or False. "
+            msg += f"Got {self.check_mode}."
             raise_error(msg)
 
         self._valid_states = ["deleted", "query"]
 
         self.state = self.params.get("state", None)
         if self.state is None:
-            msg = "params is missing state parameter."
+            msg = "params is missing mandatory key: state."
             raise_error(msg)
         if self.state not in self._valid_states:
             msg = f"Invalid state: {self.state}. "
@@ -249,20 +254,32 @@ class Common:
         self.config = self.params.get("config", None)
         if not isinstance(self.config, dict):
             msg = "Expected dict for config. "
-            msg += f"Got {type(self.config).__name__}"
+            msg += f"Got {type(self.config).__name__}."
             raise_error(msg)
 
-        self.targets = self.config.get("targets", [])
+        self.targets = self.config.get("targets", None)
         if not isinstance(self.targets, list):
-            msg = "Expected list of dict for self.targets. "
-            msg += f"Got {type(self.targets).__name__}"
+            msg = "Expected list of dict for params.config.targets. "
+            msg += f"Got {type(self.targets).__name__}."
             raise_error(msg)
 
-        self.switches = self.config.get("switches", [])
+        for item in self.targets:
+            if not isinstance(item, dict):
+                msg = "Expected list of dict for params.config.targets. "
+                msg += f"Got list element of type {type(item).__name__}."
+                raise_error(msg)
+
+        self.switches = self.config.get("switches", None)
         if not isinstance(self.switches, list):
-            msg = "Expected list of dict for self.switches. "
-            msg += f"Got {type(self.switches).__name__}"
+            msg = "Expected list of dict for params.config.switches. "
+            msg += f"Got {type(self.switches).__name__}."
             raise_error(msg)
+
+        for item in self.switches:
+            if not isinstance(item, dict):
+                msg = "Expected list of dict for params.config.switches. "
+                msg += f"Got list element of type {type(item).__name__}."
+                raise_error(msg)
 
         self._rest_send = None
 
@@ -314,12 +331,10 @@ class Common:
                 "targets": [
                     {
                         "filepath": "bootflash:/foo.txt",
-                        "match": "exact",
                         "supervisor": "active"
                     },
                     {
                         "filepath": "bar",
-                        "match": "contains",
                         "supervisor": "standby"
                     }
                 ]
@@ -356,8 +371,6 @@ class Common:
                     msg = "Expected filepath in target dict. "
                     msg += f"Got {target}"
                     raise_value_error(msg)
-                if target.get("match", None) is None:
-                    target["match"] = "exact"
                 if target.get("supervisor", None) is None:
                     target["supervisor"] = "active"
             self.want.append(switch)

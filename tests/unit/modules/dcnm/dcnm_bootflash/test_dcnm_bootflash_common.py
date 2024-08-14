@@ -16,7 +16,7 @@
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 # Due to the above, we also need to disable unused-import
 # Also, fixtures need to use *args to match the signature of the function they are mocking
-# pylint: disable=unused-import, protected-access, use-implicit-booleaness-not-comparison
+# pylint: disable=unused-import, protected-access, use-implicit-booleaness-not-comparison, unused-variable
 
 from __future__ import absolute_import, division, print_function
 
@@ -26,9 +26,10 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 # TODO: Add imports as needed
-# import copy
+import copy
+
 # import inspect
-# import pytest
+import pytest
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import \
     Common
 # from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.bootflash_files import \
@@ -62,6 +63,7 @@ def test_bootflash_common_00000() -> None:
         - __init__()
 
     ### Summary
+    __init__() happy path with minimal config.
     - Verify class attributes are initialized to expected values.
 
     ### Test
@@ -73,7 +75,7 @@ def test_bootflash_common_00000() -> None:
     assert instance.bootflash_info.class_name == "BootflashInfo"
     assert instance.params == params_deleted
     assert instance.check_mode is False
-    assert instance.config == {"switches": [{"ip_address": "192.168.1.2"}]}
+    assert instance.config == params_deleted.get("config")
     assert instance.convert_target_to_params.class_name == "ConvertTargetToParams"
     assert instance._rest_send is None
     assert instance.results.class_name == "Results"
@@ -81,12 +83,203 @@ def test_bootflash_common_00000() -> None:
     assert instance.results.state == "deleted"
     assert instance.state == "deleted"
     assert instance.switches == [{"ip_address": "192.168.1.2"}]
-    assert instance.targets == []
+    assert instance.targets == params_deleted.get("config", {}).get("targets", [])
     assert instance.want == []
     assert instance._valid_states == ["deleted", "query"]
 
 
-def test_bootflash_common_00100() -> None:
+def test_bootflash_common_00010() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` is missing ``check_mode`` key.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params.pop("check_mode")
+    match = r"Common\.__init__:\s+"
+    match += r"params is missing mandatory key: check_mode\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00020() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` contains invalid value for ``check_mode``.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["check_mode"] = "foo"
+    match = r"Common\.__init__:\s+"
+    match += r"check_mode must be True or False\. Got foo\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00030() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` is missing ``state`` key.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params.pop("state")
+    match = r"Common\.__init__:\s+"
+    match += r"params is missing mandatory key: state\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00040() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` contains invalid ``state`` key.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["state"] = "foo"
+    match = r"Common.__init__:\s+"
+    match += r"Invalid state: foo\. Expected one of: deleted,query\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00050() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` contains invalid ``config`` key.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["config"] = "foo"
+    match = r"Common.__init__:\s+"
+    match += r"Expected dict for config\. Got str\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00060() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` ``targets`` key is not a list.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["config"]["targets"] = "foo"
+    match = r"Common.__init__:\s+"
+    match += r"Expected list of dict for params\.config\.targets\. Got str\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00070() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` ``targets`` key is not a list of dict.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["config"]["targets"] = ["foo"]
+    match = r"Common.__init__:\s+"
+    match += r"Expected list of dict for params\.config\.targets\.\s+"
+    match += r"Got list element of type str\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00080() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params.config.switches`` is not a list.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["config"]["switches"] = "foo"
+    match = r"Common.__init__:\s+"
+    match += r"Expected list of dict for params\.config\.switches\. Got str\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00090() -> None:
+    """
+    ### Classes and Methods
+    - Common()
+        - __init__()
+
+    ### Summary
+    ``params`` ``switches`` key is not a list of dict.
+
+    ### Test
+    -   ``ValueError`` is raised.
+    -   Error message matches expectation.
+    """
+    params = copy.deepcopy(params_deleted)
+    params["config"]["switches"] = ["foo"]
+    match = r"Common.__init__:\s+"
+    match += r"Expected list of dict for params\.config\.switches\.\s+"
+    match += r"Got list element of type str\."
+    with pytest.raises(ValueError, match=match):
+        instance = Common(params)
+
+
+def test_bootflash_common_00200() -> None:
     """
     ### Classes and Methods
     - Common()
@@ -102,4 +295,10 @@ def test_bootflash_common_00100() -> None:
     with does_not_raise():
         instance = Common(params_deleted)
         instance.get_want()
-    assert instance.want == [{"ip_address": "192.168.1.2", "targets": []}]
+    # print(f"instance.want: {instance.want}")
+    assert instance.want == [
+        {
+            "ip_address": "192.168.1.2",
+            "targets": [{"filepath": "bootflash:/testfile", "supervisor": "active"}],
+        }
+    ]

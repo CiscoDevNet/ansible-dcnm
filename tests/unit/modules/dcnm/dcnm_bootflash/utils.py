@@ -36,7 +36,10 @@ params_query = {
 
 params_deleted = {
     "state": "deleted",
-    "config": {"switches": [{"ip_address": "192.168.1.2"}]},
+    "config": {
+        "switches": [{"ip_address": "192.168.1.2"}],
+        "targets": [{"filepath": "bootflash:/testfile", "supervisor": "active"}],
+    },
     "check_mode": False,
 }
 
