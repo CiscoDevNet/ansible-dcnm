@@ -356,23 +356,25 @@ class Common:
         for switch in self.switches:
             if switch.get("ip_address", None) is None:
                 msg = "Expected ip_address in switch dict. "
-                msg += f"Got {switch}"
+                msg += f"Got {switch}."
                 raise_value_error(msg)
 
             if switch.get("targets", None) is None:
                 switch["targets"] = self.targets
             if not isinstance(switch["targets"], list):
                 msg = "Expected list of dictionaries for switch['targets']. "
-                msg += f"Got {type(switch['targets']).__name__}"
+                msg += f"Got {type(switch['targets']).__name__}."
                 raise_type_error(msg)
 
             for target in switch["targets"]:
                 if target.get("filepath", None) is None:
                     msg = "Expected filepath in target dict. "
-                    msg += f"Got {target}"
+                    msg += f"Got {target}."
                     raise_value_error(msg)
                 if target.get("supervisor", None) is None:
-                    target["supervisor"] = "active"
+                    msg = "Expected supervisor in target dict. "
+                    msg += f"Got {target}."
+                    raise_value_error(msg)
             self.want.append(switch)
 
 
@@ -657,7 +659,7 @@ def main():
     try:
         log = Log()
         log.commit()
-    except ValueError as error:
+    except (TypeError, ValueError) as error:
         ansible_module.fail_json(str(error))
 
     sender = Sender()
