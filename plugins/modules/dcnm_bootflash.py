@@ -236,7 +236,6 @@ class Common:
             raise_error(msg)
 
         self._valid_states = ["deleted", "query"]
-        self._states_require_config = {"deleted", "query"}
 
         self.state = self.params.get("state", None)
         if self.state is None:
@@ -268,7 +267,6 @@ class Common:
         self._rest_send = None
 
         self.bootflash_info = BootflashInfo()
-        self.ip_address = None
         self.convert_target_to_params = ConvertTargetToParams()
         self.results = Results()
         self.results.state = self.state
