@@ -102,7 +102,8 @@ def test_bootflash_query_00010() -> None:
     match = r"Query\.__init__:\s+"
     match += r"Error during super\(\)\.__init__\(\)\.\s+"
     match += r"Error detail: Query\.__init__:\s+"
-    match += r"Expected list of dict for params\.config\.targets\. Got str\."
+    match += r"Expected list of dict for params\.config\.targets\.\s+"
+    match += r"Got list element of type str\."
     with pytest.raises(ValueError, match=match):
         instance = Query(params)
 
@@ -173,3 +174,50 @@ def test_bootflash_query_01000() -> None:
     assert instance.results.result[0]["172.22.150.112"]["found"] is True
     assert instance.results.result[0]["172.22.150.113"]["success"] is True
     assert instance.results.result[0]["172.22.150.113"]["found"] is True
+
+
+def test_bootflash_query_01010() -> None:
+    """
+    ### Classes and Methods
+    - Query()
+        - commit()
+
+    ### Summary
+    -   ``Query().commit()`` happy path with no switches.
+    -   config.targets contains one entry.
+    -   config.switches contains no entries.
+
+    ### Test
+    -   No exceptions are raised.
+    -   asserts are successful.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    params = copy.deepcopy(params_query)
+    params["config"] = configs_query(f"{key}a")
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = Query(params)
+        instance.rest_send = rest_send
+        instance.commit()
+
+    assert len(instance.results.diff) == 1
+    assert instance.results.diff[0]["sequence_number"] == 1
+    assert instance.results.metadata[0]["action"] == "bootflash_info"
+    assert instance.results.metadata[0]["check_mode"] is False
+    assert instance.results.metadata[0]["sequence_number"] == 1
+    assert instance.results.metadata[0]["state"] == "query"
+    assert instance.results.response[0]["0.0.0.0"]["MESSAGE"] == "OK"
+    assert instance.results.response[0]["0.0.0.0"]["DATA"] == "No switches to query."
+    assert instance.results.response[0]["0.0.0.0"]["RETURN_CODE"] == 200
+    assert instance.results.result[0]["0.0.0.0"]["success"] is True
+    assert instance.results.result[0]["0.0.0.0"]["found"] is False

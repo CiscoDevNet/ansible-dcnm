@@ -158,9 +158,9 @@
     "test_bootflash_query_00010a": {
         "TEST_NOTES": [
             "Negative test.",
-            "targets is not a list."
+            "targets is a list of non-dict."
         ],
-        "targets": "NOT_A_LIST",
+        "targets": ["NOT_A_DICT"],
         "switches": [
             {
                 "ip_address": "172.22.150.112"
@@ -182,5 +182,14 @@
                 "ip_address": "172.22.150.113"
             }
         ]
+    },
+    "test_bootflash_query_01010a": {
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": []
     }
 }

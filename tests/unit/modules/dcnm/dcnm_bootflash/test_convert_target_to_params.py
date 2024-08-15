@@ -26,8 +26,8 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
-import pytest
 
+import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_target_to_params import \
     ConvertTargetToParams
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
@@ -134,9 +134,6 @@ def test_convert_target_to_params_00120() -> None:
     -   ``ValueError`` is raised.
     -   Error message matches expectation.
     """
-    method_name = inspect.stack()[0][3]
-    key = f"{method_name}a"
-
     with does_not_raise():
         instance = ConvertTargetToParams()
 

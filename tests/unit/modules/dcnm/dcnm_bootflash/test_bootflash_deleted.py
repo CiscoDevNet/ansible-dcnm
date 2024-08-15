@@ -109,7 +109,8 @@ def test_bootflash_deleted_00010() -> None:
     match = r"Deleted\.__init__:\s+"
     match += r"Error during super\(\)\.__init__\(\)\.\s+"
     match += r"Error detail: Deleted\.__init__:\s+"
-    match += r"Expected list of dict for params\.config\.targets\. Got str\."
+    match += r"Expected list of dict for params\.config\.targets\.\s+"
+    match += r"Got list element of type str\."
     with pytest.raises(ValueError, match=match):
         instance = Deleted(params)
 

@@ -45,9 +45,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details i
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_query, does_not_raise,
-    params_query, responses_ep_all_switches,
-    responses_ep_bootflash_discovery, responses_ep_bootflash_info)
+    MockAnsibleModule, configs_query, does_not_raise, params_query,
+    responses_ep_all_switches, responses_ep_bootflash_discovery,
+    responses_ep_bootflash_info)
 
 
 def test_bootflash_info_00000() -> None:
@@ -111,6 +111,7 @@ def test_bootflash_info_00100() -> None:
 
     def configs():
         yield configs_query(f"{key}a")
+
     gen_configs = ResponseGenerator(configs())
 
     def responses():
@@ -119,6 +120,7 @@ def test_bootflash_info_00100() -> None:
         yield responses_ep_bootflash_info(f"{key}a")
         yield responses_ep_bootflash_discovery(f"{key}b")
         yield responses_ep_bootflash_info(f"{key}b")
+
     gen_responses = ResponseGenerator(responses())
 
     params = copy.deepcopy(params_query)

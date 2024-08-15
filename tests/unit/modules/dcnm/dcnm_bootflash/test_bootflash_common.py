@@ -179,18 +179,17 @@ def test_bootflash_common_00060() -> None:
         - __init__()
 
     ### Summary
-    ``params`` ``targets`` key is not a list.
+    ``params.config.targets`` is missing.
 
     ### Test
-    -   ``ValueError`` is raised.
-    -   Error message matches expectation.
+    -   ``ValueError`` is not raised.
+    -   ``targets`` is initialized to an empty list.
     """
     params = copy.deepcopy(params_deleted)
-    params["config"]["targets"] = "foo"
-    match = r"Common.__init__:\s+"
-    match += r"Expected list of dict for params\.config\.targets\. Got str\."
-    with pytest.raises(ValueError, match=match):
+    params["config"].pop("targets")
+    with does_not_raise():
         instance = Common(params)
+    assert instance.targets == []
 
 
 def test_bootflash_common_00070() -> None:

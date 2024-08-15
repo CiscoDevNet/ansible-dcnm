@@ -180,7 +180,6 @@ EXAMPLES = """
 
 import copy
 import inspect
-import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
@@ -206,13 +205,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details i
     SwitchDetails
 
 
-def json_pretty(msg):
-    """
-    Return a pretty-printed JSON string for logging messages
-    """
-    return json.dumps(msg, indent=4, sort_keys=True)
-
-
 @Properties.add_rest_send
 class Common:
     """
@@ -224,6 +216,15 @@ class Common:
         method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        # Initialize the Results() object temporarily here
+        # in case we hit any errors below.  We will reinitialize
+        # below after we are sure we have valid params.  This is
+        # to avoid Results() being null in main() if we hit an
+        # error here.
+        self.results = Results()
+        self.results.state = "query"
+        self.results.check_mode = False
 
         self.params = params
 
@@ -259,15 +260,14 @@ class Common:
 
         self.targets = self.config.get("targets", None)
         if not isinstance(self.targets, list):
-            msg = "Expected list of dict for params.config.targets. "
-            msg += f"Got {type(self.targets).__name__}."
-            raise_error(msg)
+            self.targets = []
 
-        for item in self.targets:
-            if not isinstance(item, dict):
-                msg = "Expected list of dict for params.config.targets. "
-                msg += f"Got list element of type {type(item).__name__}."
-                raise_error(msg)
+        if len(self.targets) > 0:
+            for item in self.targets:
+                if not isinstance(item, dict):
+                    msg = "Expected list of dict for params.config.targets. "
+                    msg += f"Got list element of type {type(item).__name__}."
+                    raise_error(msg)
 
         self.switches = self.config.get("switches", None)
         if not isinstance(self.switches, list):
@@ -567,6 +567,10 @@ class Query(Common):
 
     def __init__(self, params):
         self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        self.action = "bootflash_info"
         method_name = inspect.stack()[0][3]
 
         try:
@@ -581,6 +585,28 @@ class Query(Common):
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
+
+    def register_null_result(self) -> None:
+        """
+        ### Summary
+        Register a null result when there are no switches to query.
+
+        ### Raises
+        None
+        """
+        response_dict = {}
+        response_dict["0.0.0.0"] = {}
+        response_dict["0.0.0.0"]["DATA"] = "No switches to query."
+        response_dict["0.0.0.0"]["MESSAGE"] = "OK"
+        response_dict["0.0.0.0"]["RETURN_CODE"] = 200
+        result_dict = {}
+        result_dict["0.0.0.0"] = {}
+        result_dict["0.0.0.0"]["found"] = False
+        result_dict["0.0.0.0"]["success"] = True
+        self.results.response_current = response_dict
+        self.results.result_current = result_dict
+        self.results.action = self.action
+        self.results.register_task_result()
 
     def commit(self) -> None:
         """
@@ -613,6 +639,7 @@ class Query(Common):
             msg = f"{self.class_name}.{method_name}: "
             msg += "No switches to query."
             self.log.debug(msg)
+            self.register_null_result()
             return
 
         # Prepare BootflashInfo()
@@ -678,6 +705,8 @@ def main():
     except (TypeError, ValueError) as error:
         ansible_module.fail_json(str(error))
 
+    log_main = logging.getLogger(f"dcnm.main")
+
     sender = Sender()
     sender.ansible_module = ansible_module
     rest_send = RestSend(params)
@@ -704,7 +733,6 @@ def main():
         msg = "Module failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
-
 
 if __name__ == "__main__":
     main()
