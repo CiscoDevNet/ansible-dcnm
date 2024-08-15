@@ -1,0 +1,274 @@
+################################################################################
+# RUNTIME
+################################################################################
+#
+# Recent run times (MM:SS.ms):
+# 00:34.523
+#
+################################################################################
+# SETUP
+################################################################################
+#
+# 1. Two switches are required for this test; spine1 and spine2.
+# 2. Files must be created on bootflash manually as NDFC does not
+#    provide a quick way to create files on bootflash. To create
+#    the files manually, we have two choices.
+#    A. Do the following directly on the switches:
+#       - On spine1, create a file named foo.txt
+#         switch# echo 1 > air.ndfc_ut
+#         switch# echo 1 > earth.ndfc_ut
+#         switch# echo 1 > fire.ndfc_ut
+#         switch# echo 1 > water.ndfc_ut
+#       - On spine2, create a file named bar.txt
+#         switch# echo 1 > black.ndfc_ut
+#         switch# echo 1 > blue.ndfc_ut
+#         switch# echo 1 > green.ndfc_ut
+#         switch# echo 1 > red.ndfc_ut
+#    B. Or, use the following playbook:
+#       ./playbooks/dcnm_bootflash/create_files.yaml
+#       This uses the cisco.nxos.nxos_command module to create the files.
+#       See the example inventory file in playbooks/roles/dcnm_bootflash/dcnm_hosts.yaml
+#       which includes inventory entries for spine1 and spine2 and change to
+#       match your setup.
+# TEST
+# 3. Ensure dcnm_tests.yaml has uncommented the following:
+#    testcase: dcnm_bootflash_deleted
+# 4. Ensure all other testcase fields are commented.
+# 5. Run the role with the following command:
+#    ansible-playbook dcnm_tests.yaml -i dcnm_hosts.yaml
+#
+# CLEANUP
+# 6. No cleanup required
+#
+################################################################################
+# REQUIREMENTS
+################################################################################
+#
+# Example vars for dcnm_bootflash integration tests.
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml
+#
+# vars:
+#   testcase: dcnm_bootflash_query
+#   username: admin
+#   password: "foobar"
+#   switch_username: admin
+#   switch_password: "foobar"
+#   spine1_file1: air.ndfc_ut
+#   spine1_file2: earth.ndfc_ut
+#   spine1_file3: fire.ndfc_ut
+#   spine1_file4: water.ndfc_ut
+#   spine2_file1: black.ndfc_ut
+#   spine2_file2: blue.ndfc_ut
+#   spine2_file3: green.ndfc_ut
+#   spine2_file4: red.ndfc_ut
+#
+################################################################################
+# QUERY - TEST - Query files
+################################################################################
+# Expected result
+# Objects removed from response for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "172.22.150.112": [
+#                     {
+#                         "bootflash_type": "active",
+#                         "date": "Aug 03 01:37:06 2024",
+#                         "deviceName": "cvd-1211-spine",
+#                         "fileName": "air.txt",
+#                         "filePath": "bootflash:",
+#                         "ipAddr": "172.22.150.112",
+#                         "name": "bootflash:",
+#                         "serialNumber": "FOX2109PGCS",
+#                         "size": "4"
+#                     }
+#                 ],
+#                 "172.22.150.113": [
+#                     {
+#                         "bootflash_type": "active",
+#                         "date": "Aug 03 01:38:10 2024",
+#                         "deviceName": "cvd-1212-spine",
+#                         "fileName": "black.txt",
+#                         "filePath": "bootflash:",
+#                         "ipAddr": "172.22.150.113",
+#                         "name": "bootflash:",
+#                         "serialNumber": "FOX2109PGD0",
+#                         "size": "4"
+#                     }
+#                 ],
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "bootflash_info",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "query"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "172.22.150.112": {
+#                     "DATA": {
+#                         "bootFlashDataMap": {
+#                             "bootflash:": [
+#                                {
+#                                    "bootflash_type": "active",
+#                                    "date": "Aug 12 23:17:57 2024",
+#                                    "deviceName": "cvd-1211-spine",
+#                                    "fileName": "air.ndfc_ut",
+#                                    "filePath": "bootflash:",
+#                                    "ipAddr": " 172.22.150.112",
+#                                    "name": "bootflash:",
+#                                    "serialNumber": "FOX2109PGCS",
+#                                    "size": "2"
+#                                }
+#                             ]
+#                         },
+#                         "bootFlashSpaceMap": {
+#                             "bootflash:": {
+#                                 "bootflash_type": "active",
+#                                 "deviceName": "cvd-1211-spine",
+#                                 "freeSpace": 12995145728,
+#                                 "ipAddr": " 172.22.150.112",
+#                                 "name": "bootflash:",
+#                                 "serialNumber": "FOX2109PGCS",
+#                                 "totalSpace": 21685153792,
+#                                 "usedSpace": 8690008064
+#                             }
+#                         },
+#                         "partitions": [
+#                             "bootflash:"
+#                         ],
+#                         "requiredSpace": "NA"
+#                     },
+#                     "MESSAGE": "OK",
+#                     "METHOD": "GET",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+#                     "RETURN_CODE": 200
+#                 },
+#                 "172.22.150.113": {
+#                     "DATA": {
+#                         "bootFlashDataMap": {
+#                             "bootflash:": [
+#                                 {
+#                                     "bootflash_type": "active",
+#                                     "date": "Jul 07 01:20:21 2024",
+#                                     "deviceName": "cvd-1212-spine",
+#                                    "fileName": "black.ndfc_ut",
+#                                     "filePath": "bootflash:.rpmstore/",
+#                                     "ipAddr": " 172.22.150.113",
+#                                     "name": "bootflash:",
+#                                     "serialNumber": "FOX2109PGD0",
+#                                     "size": "2"
+#                                 }
+#                             ]
+#                         },
+#                         "bootFlashSpaceMap": {
+#                             "bootflash:": {
+#                                 "bootflash_type": "active",
+#                                 "deviceName": "cvd-1212-spine",
+#                                 "freeSpace": 10630582272,
+#                                 "ipAddr": " 172.22.150.113",
+#                                 "name": "bootflash:",
+#                                 "serialNumber": "FOX2109PGD0",
+#                                 "totalSpace": 21685153792,
+#                                 "usedSpace": 11054571520
+#                             }
+#                         },
+#                         "partitions": [
+#                             "bootflash:"
+#                         ],
+#                         "requiredSpace": "NA"
+#                     },
+#                     "MESSAGE": "OK",
+#                     "METHOD": "GET",
+#                     "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+#                     "RETURN_CODE": 200
+#                 },
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "172.22.150.112": {
+#                     "found": true,
+#                     "success": true
+#                 },
+#                 "172.22.150.113": {
+#                     "found": true,
+#                     "success": true
+#                 },
+#                 "sequence_number": 1
+#             }
+#         ]
+#     }
+# }
+
+- name: QUERY - TEST - Query specfic ndfc_ut files on specific partitions of active supervisor
+  cisco.dcnm.dcnm_bootflash:
+      state: query
+      config:
+        switches:
+          - ip_address: "{{ spine1 }}"
+            targets:
+              - filepath: "bootflash:/{{ spine1_file2 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ spine1_file3 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ spine1_file4 }}"
+                supervisor: active
+          - ip_address: "{{ spine2 }}"
+            targets:
+              - filepath: "bootflash:/{{ spine2_file2 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ spine2_file3 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ spine2_file4 }}"
+                supervisor: active
+  register: result
+
+- debug:
+    var: result
+
+- name: Prepare assert values for specific query
+  set_fact:
+    spine1_filepath1: "bootflash:/{{ spine1_file2 }}"
+    spine1_filepath2: "bootflash:/{{ spine1_file3 }}"
+    spine1_filepath3: "bootflash:/{{ spine1_file4 }}"
+    spine2_filepath1: "bootflash:/{{ spine2_file2 }}"
+    spine2_filepath2: "bootflash:/{{ spine2_file3 }}"
+    spine2_filepath3: "bootflash:/{{ spine2_file4 }}"
+
+- assert:
+    that:
+    - result.diff[0][spine1][0].filepath == spine1_filepath1
+    - result.diff[0][spine1][1].filepath == spine1_filepath2
+    - result.diff[0][spine1][2].filepath == spine1_filepath3
+    - result.diff[0][spine2][0].filepath == spine2_filepath1
+    - result.diff[0][spine2][1].filepath == spine2_filepath2
+    - result.diff[0][spine2][2].filepath == spine2_filepath3
+    - result.changed == false
+    - result.failed == false
+    - (result.diff | length) == 1
+    - (result.response | length) == 1
+    - result.response[0][spine1].RETURN_CODE == 200
+    - result.response[0][spine2].RETURN_CODE == 200
+    - result.response[0][spine1].MESSAGE == "OK"
+    - result.response[0][spine2].MESSAGE == "OK"
+    - result.response[0][spine1].METHOD == "GET"
+    - result.response[0][spine2].METHOD == "GET"
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "bootflash_info"
+    - result.metadata[0].check_mode == false
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "query"
+    - (result.result | length) == 1
+    - result.result[0][spine1].found == true
+    - result.result[0][spine2].found == true
+    - result.result[0][spine1].success == true
+    - result.result[0][spine2].success == true

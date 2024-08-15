@@ -14,7 +14,8 @@
   vars:
     # testcase: dcnm_bootflash_deleted_specific
     # testcase: dcnm_bootflash_deleted_wildcard
-    # testcase: dcnm_bootflash_query
+    # testcase: dcnm_bootflash_query_specific
+    # testcase: dcnm_bootflash_query_wildcard
     switch_username: admin
     switch_password: "foobar"
     spine1: 192.168.1.2
