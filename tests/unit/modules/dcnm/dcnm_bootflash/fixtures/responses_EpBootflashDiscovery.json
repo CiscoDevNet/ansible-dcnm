@@ -57,5 +57,19 @@
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/discovery/bootflash-discovery?serialNumber=FOX2109PGCS",
         "RETURN_CODE": 200
+    },
+    "test_bootflash_query_01000a": {
+        "DATA": "ok",
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/discovery/bootflash-discovery?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_query_01000b": {
+        "DATA": "ok",
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/discovery/bootflash-discovery?serialNumber=FOX2109PGD0",
+        "RETURN_CODE": 200
     }
 }
