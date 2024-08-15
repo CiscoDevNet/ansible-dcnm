@@ -203,7 +203,7 @@
 - debug:
     var: result
 
-- name: Prepare assert values for wildcard query
+- name: Prepare assert values filepath deletion
   set_fact:
     spine1_filepath1: "bootflash:/{{ spine1_file1 }}"
     spine1_filepath2: "bootflash:/{{ spine1_file2 }}"
@@ -247,7 +247,6 @@
 #         "changed": false,
 #         "diff": [
 #             {
-#                 "deleteFiles": [],
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -263,13 +262,13 @@
 #         "response": [
 #             {
 #                 "MESSAGE": "No files to delete.",
-#                 "RESULT_CODE": 200,
+#                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "result": [
 #             {
-#                 "found": false,
+#                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
@@ -299,9 +298,9 @@
     - result.metadata[0].state == "deleted"
     - (result.response | length) == 1
     - result.response[0].MESSAGE == "No files to delete."
-    - result.response[0].RESULT_CODE == 200
+    - result.response[0].RETURN_CODE == 200
     - result.response[0].sequence_number == 1
     - (result.result | length) == 1
-    - result.result[0].found == false
+    - result.result[0].changed == false
     - result.result[0].success == true
     - result.result[0].sequence_number == 1
