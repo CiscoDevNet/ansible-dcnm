@@ -705,8 +705,6 @@ def main():
     except (TypeError, ValueError) as error:
         ansible_module.fail_json(str(error))
 
-    log_main = logging.getLogger(f"dcnm.main")
-
     sender = Sender()
     sender.ansible_module = ansible_module
     rest_send = RestSend(params)
@@ -733,6 +731,7 @@ def main():
         msg = "Module failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+
 
 if __name__ == "__main__":
     main()
