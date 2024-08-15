@@ -236,9 +236,9 @@ def test_bootflash_deleted_03000(missing_param) -> None:
         that raises a different error.
     """
     target = {
+        "filepath": "bootflash:/foo.txt",
         "ip_address": "192.168.1.1",
         "supervisor": "active",
-        "filepath": "bootflash:/foo.txt",
     }
     with does_not_raise():
         instance = Deleted(params_deleted)
@@ -271,10 +271,7 @@ def test_bootflash_deleted_03100() -> None:
     -   ValueError is raised.
     -   Error message matches expectation.
     """
-    target = {
-        "supervisor": "active",
-        "filepath": "bootflash:/foo.txt",
-    }
+    target = {"filepath": "bootflash:/foo.txt", "supervisor": "active"}
     with does_not_raise():
         instance = Deleted(params_deleted)
 
@@ -285,3 +282,131 @@ def test_bootflash_deleted_03100() -> None:
     match += r"ip_address key missing from value .*\."
     with pytest.raises(ValueError, match=match):
         instance.update_bootflash_files("192.168.1.1", target)
+
+
+def test_bootflash_deleted_03200() -> None:
+    """
+    ### Classes and Methods
+    - Deleted()
+        - update_bootflash_files()
+
+    ### Summary
+    -   ``Deleted().update_bootflash_files()`` sad path.
+    -   BootflashFiles().add_file() raises ValueError
+        because target switch mode is "Migration".
+
+    ### Setup
+    -   A valid ``target`` is manually constructed.
+    -   ``responses_ep_all_switches`` returns a switch in "Migration" mode.
+
+    ### Test
+    -   update_bootflash_files() re-raises ``ValueError``
+        raised by ``BootflashFiles().add_file()``.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    params = copy.deepcopy(params_deleted)
+    params["config"] = configs_deleted(f"{key}a")
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    target = {
+        "filepath": "bootflash:/foo.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active",
+    }
+
+    with does_not_raise():
+        instance = Deleted(params)
+        instance.rest_send = rest_send
+        instance.bootflash_files.switch_details = SwitchDetails()
+        instance.bootflash_files.rest_send = rest_send
+        instance.bootflash_files.switch_details.results = Results()
+    match = r"Deleted\.update_bootflash_files:\s+"
+    match += r"Error adding file to bootflash_files\.\s+"
+    match += r"Error detail:\s+"
+    match += r"BootflashFiles\.add_file:\s+"
+    match += r"Cannot delete files on switch 172\.22\.150\.112\.\s+"
+    match += r"Reason: switch mode is migration."
+
+    with pytest.raises(ValueError, match=match):
+        instance.update_bootflash_files("172.22.150.112", target)
+
+
+def test_bootflash_deleted_03210() -> None:
+    """
+    ### Classes and Methods
+    - Deleted()
+        - update_bootflash_files()
+
+    ### Summary
+    -   ``Deleted().update_bootflash_files()`` sad path.
+    -   BootflashFiles().add_file() raises ValueError
+        because target switch mode is "Inconsistent".
+
+    ### Setup
+    -   A valid ``target`` is manually constructed.
+    -   ``responses_ep_all_switches`` returns a switch in "Inconsistent" mode.
+
+    ### Test
+    -   update_bootflash_files() re-raises ``ValueError``
+        raised by ``BootflashFiles().add_file()``.
+    -   Error message matches expectation.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}"
+
+    params = copy.deepcopy(params_deleted)
+    params["config"] = configs_deleted(f"{key}a")
+
+    def responses():
+        yield responses_ep_all_switches(f"{key}a")
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    target = {
+        "filepath": "bootflash:/foo.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active",
+    }
+
+    with does_not_raise():
+        instance = Deleted(params)
+        instance.rest_send = rest_send
+        instance.bootflash_files.switch_details = SwitchDetails()
+        instance.bootflash_files.rest_send = rest_send
+        instance.bootflash_files.switch_details.results = Results()
+    match = r"Deleted\.update_bootflash_files:\s+"
+    match += r"Error adding file to bootflash_files\.\s+"
+    match += r"Error detail:\s+"
+    match += r"BootflashFiles\.add_file:\s+"
+    match += r"Cannot delete files on switch 172\.22\.150\.112\.\s+"
+    match += r"Reason: switch mode is inconsistent."
+
+    with pytest.raises(ValueError, match=match):
+        instance.update_bootflash_files("172.22.150.112", target)

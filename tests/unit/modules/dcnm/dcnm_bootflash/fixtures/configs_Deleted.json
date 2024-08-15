@@ -48,6 +48,38 @@
             }
         ]
     },
+    "test_bootflash_deleted_03200a": {
+        "TEST_NOTES": [
+            "Valid config."
+        ],
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            }
+        ]
+    },
+    "test_bootflash_deleted_03210a": {
+        "TEST_NOTES": [
+            "Valid config."
+        ],
+        "targets": [
+            {
+                "filepath": "bootflash:/*.txt",
+                "supervisor": "active"
+            }
+        ],
+        "switches": [
+            {
+                "ip_address": "172.22.150.112"
+            }
+        ]
+    },
     "test_bootflash_files_00100a": {
         "targets": [
             {
