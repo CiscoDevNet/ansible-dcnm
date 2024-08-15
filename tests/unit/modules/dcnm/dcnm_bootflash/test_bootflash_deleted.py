@@ -209,3 +209,79 @@ def test_bootflash_deleted_02000() -> None:
     match += r"Valid values: active,standby\."
     with pytest.raises(ValueError, match=match):
         instance.populate_files_to_delete(switch)
+
+
+@pytest.mark.parametrize("missing_param", ["filepath", "supervisor"])
+def test_bootflash_deleted_03000(missing_param) -> None:
+    """
+    ### Classes and Methods
+    - Deleted()
+        - update_bootflash_files()
+
+    ### Summary
+    -   ``Deleted().update_bootflash_files()`` sad path.
+    -   ConvertTargetToParams().parse_target raises ValueError
+        because target is missing a mandatory key.
+
+    ### Setup
+    -   target is manually constructed and target.pop() is used
+        to remove mandatory keys.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+
+    ### Notes
+    1.  We test ip_address parameter in test_bootflash_deleted_03100, since
+        that raises a different error.
+    """
+    target = {
+        "ip_address": "192.168.1.1",
+        "supervisor": "active",
+        "filepath": "bootflash:/foo.txt",
+    }
+    with does_not_raise():
+        instance = Deleted(params_deleted)
+
+    target.pop(missing_param)
+    match = r"Deleted\.update_bootflash_files:\s+"
+    match += r"Error converting target to params\.\s+"
+    match += r"Error detail:\s+"
+    match += r"ConvertTargetToParams\.parse_target:\s+"
+    match += rf"Expected {missing_param} in target dict\. Got.*\."
+    with pytest.raises(ValueError, match=match):
+        instance.update_bootflash_files("192.168.1.1", target)
+
+
+def test_bootflash_deleted_03100() -> None:
+    """
+    ### Classes and Methods
+    - Deleted()
+        - update_bootflash_files()
+
+    ### Summary
+    -   ``Deleted().update_bootflash_files()`` sad path.
+    -   ConvertTargetToParams().parse_target raises ValueError
+        because target is missing a mandatory key.
+
+    ### Setup
+    -   target is manually constructed without ip_address key.
+
+    ### Test
+    -   ValueError is raised.
+    -   Error message matches expectation.
+    """
+    target = {
+        "supervisor": "active",
+        "filepath": "bootflash:/foo.txt",
+    }
+    with does_not_raise():
+        instance = Deleted(params_deleted)
+
+    match = r"Deleted\.update_bootflash_files:\s+"
+    match += r"Error assigning BootflashFiles properties\.\s+"
+    match += r"Error detail:\s+"
+    match += r"BootflashFiles\.target:\s+"
+    match += r"ip_address key missing from value .*\."
+    with pytest.raises(ValueError, match=match):
+        instance.update_bootflash_files("192.168.1.1", target)

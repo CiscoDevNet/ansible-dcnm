@@ -471,18 +471,34 @@ class Deleted(Common):
         -    ``ValueError`` if:
                 -   ``BootflashFiles().add_file`` raises ``ValueError``.
         """
-        self.convert_target_to_params.target = target
-        self.convert_target_to_params.commit()
-        self.bootflash_files.filename = self.convert_target_to_params.filename
-        self.bootflash_files.filepath = self.convert_target_to_params.filepath
-        self.bootflash_files.ip_address = ip_address
-        self.bootflash_files.partition = self.convert_target_to_params.partition
-        self.bootflash_files.supervisor = self.convert_target_to_params.supervisor
-        # we want to use the target as the diff, rather than the
-        # payload, because it contains better information than
-        # the payload. See BootflashFiles() class docstring and
-        # BootflashFiles().target property docstring.
-        self.bootflash_files.target = target
+        method_name = inspect.stack()[0][3]
+
+        try:
+            self.convert_target_to_params.target = target
+            self.convert_target_to_params.commit()
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error converting target to params. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+        try:
+            self.bootflash_files.filename = self.convert_target_to_params.filename
+            self.bootflash_files.filepath = self.convert_target_to_params.filepath
+            self.bootflash_files.ip_address = ip_address
+            self.bootflash_files.partition = self.convert_target_to_params.partition
+            self.bootflash_files.supervisor = self.convert_target_to_params.supervisor
+            # we want to use the target as the diff, rather than the
+            # payload, because it contains better information than
+            # the payload. See BootflashFiles() class docstring and
+            # BootflashFiles().target property docstring.
+            self.bootflash_files.target = target
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Error assigning BootflashFiles properties. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
         try:
             self.bootflash_files.add_file()
         except ValueError as error:
