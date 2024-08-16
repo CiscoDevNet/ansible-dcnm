@@ -1,24 +1,28 @@
 ---
 - gather_facts: false
   hosts:
-    - spine1
+    - switch1
   tasks:
-    - name: SETUP - Create ndfc_ut files on spine1
+    - name: Load nxos_vars
+      ansible.builtin.include_vars: nxos_vars.yaml
+    - name: SETUP - Create files on {{ switch1 }}
       cisco.nxos.nxos_command:
         commands:
-          - echo 1 > bootflash:/{{ switch1_file1 }}
-          - echo 1 > bootflash:/{{ switch1_file2 }}
-          - echo 1 > bootflash:/{{ switch1_file3 }}
-          - echo 1 > bootflash:/{{ switch1_file4 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file1 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file2 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file3 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file4 }}
 
 - gather_facts: false
   hosts:
-    - spine2
+    - switch2
   tasks:
-    - name: SETUP - Create ndfc_ut files on spine2
+    - name: Load nxos_vars
+      ansible.builtin.include_vars: nxos_vars.yaml
+    - name: SETUP - Create files on {{ switch2 }}
       cisco.nxos.nxos_command:
         commands:
-          - echo 1 > bootflash:/{{ switch2_file1 }}
-          - echo 1 > bootflash:/{{ switch2_file2 }}
-          - echo 1 > bootflash:/{{ switch2_file3 }}
-          - echo 1 > bootflash:/{{ switch2_file4 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file1 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file2 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file3 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file4 }}
