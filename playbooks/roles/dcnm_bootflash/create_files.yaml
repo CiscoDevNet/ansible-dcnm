@@ -6,10 +6,10 @@
     - name: SETUP - Create ndfc_ut files on spine1
       cisco.nxos.nxos_command:
         commands:
-          - echo 1 > bootflash:/air.ndfc_ut
-          - echo 1 > bootflash:/earth.ndfc_ut
-          - echo 1 > bootflash:/fire.ndfc_ut
-          - echo 1 > bootflash:/water.ndfc_ut
+          - echo 1 > bootflash:/{{ switch1_file1 }}
+          - echo 1 > bootflash:/{{ switch1_file2 }}
+          - echo 1 > bootflash:/{{ switch1_file3 }}
+          - echo 1 > bootflash:/{{ switch1_file4 }}
 
 - gather_facts: false
   hosts:
@@ -18,7 +18,7 @@
     - name: SETUP - Create ndfc_ut files on spine2
       cisco.nxos.nxos_command:
         commands:
-          - echo 1 > bootflash:/black.ndfc_ut
-          - echo 1 > bootflash:/blue.ndfc_ut
-          - echo 1 > bootflash:/green.ndfc_ut
-          - echo 1 > bootflash:/red.ndfc_ut
+          - echo 1 > bootflash:/{{ switch2_file1 }}
+          - echo 1 > bootflash:/{{ switch2_file2 }}
+          - echo 1 > bootflash:/{{ switch2_file3 }}
+          - echo 1 > bootflash:/{{ switch2_file4 }}

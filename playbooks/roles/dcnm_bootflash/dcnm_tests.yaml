@@ -2,7 +2,7 @@
 # This playbook can be used to execute integration tests for
 # the role located in:
 #
-# tests/integration/targets/dcnm_image_policy
+# tests/integration/targets/dcnm_bootflash
 #
 # Modify the hosts and vars sections with details for your testing
 # setup and uncomment the testcase you want to run.
@@ -17,27 +17,21 @@
     # testcase: dcnm_bootflash_query_specific
     # testcase: dcnm_bootflash_query_wildcard
     switch_username: admin
-    switch_password: "foobar"
-    spine1: 192.168.1.2
-    spine2: 192.168.1.3
-    leaf1: 192.168.1.4
-    leaf2: 192.168.1.5
-    leaf3: 192.168.1.6
-    leaf4: 192.168.1.7
-    epld_image_1: n9000-epld.10.2.5.M.img
-    epld_image_2: n9000-epld.10.3.1.F.img
-    nxos_image_1: n9000-dk9.10.2.5.M.bin
-    nxos_image_2: n9000-dk9.10.3.1.F.bin
-    nxos_release_1: 10.2.5_nxos64-cs_64bit
-    nxos_release_2: 10.3.1_nxos64-cs_64bit
-    spine1_file1: air.ndfc_ut
-    spine1_file2: earth.ndfc_ut
-    spine1_file3: fire.ndfc_ut
-    spine1_file4: water.ndfc_ut
-    spine2_file1: black.ndfc_ut
-    spine2_file2: blue.ndfc_ut
-    spine2_file3: green.ndfc_ut
-    spine2_file4: red.ndfc_ut
+    switch_password: "password-secret"
+    switch1: 192.168.1.2
+    switch2: 192.168.1.3
+    # The vars below are included in the role's defaults/main.yaml
+    # If it is desired to override the defaults, uncomment and
+    # modify these.
+    # switch1_file1: air.ndfc_ut
+    # switch1_file2: earth.ndfc_ut
+    # switch1_file3: fire.ndfc_ut
+    # switch1_file4: water.ndfc_ut
+    # switch2_file1: black.ndfc_ut
+    # switch2_file2: blue.ndfc_ut
+    # switch2_file3: green.ndfc_ut
+    # switch2_file4: red.ndfc_ut
+    # wildcard_filepath: "*:/*.ndfc_ut"
 
   roles:
     - dcnm_bootflash
