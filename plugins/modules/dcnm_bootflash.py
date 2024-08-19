@@ -133,8 +133,11 @@ EXAMPLES = """
 # Delete two files from switch 192.168.1.1 and switch 192.168.1.2:
 #   - foo.txt on the active supervisor's bootflash: device.
 #   - bar.txt on the standby supervisor's bootflash: device.
-# Delete one file from switch 192.168.1.3:
-#   - baz.txt on the standby supervisor's bootflash: device.
+# Delete potentially multiple files from switch 192.168.1.3:
+#   - All txt files on the standby supervisor's bootflash: device
+#     that match the pattern 202401??.txt, e.g. 220240123.txt.
+# Delete potentially multiple files from switch 192.168.1.4:
+#   - All txt files on all flash devices on active supervisor.
 
 - name: Delete files
   cisco.dcnm.dcnm_bootflash:
@@ -150,8 +153,12 @@ EXAMPLES = """
         - ip_address: 192.168.1.2
         - ip_address: 192.168.1.3
           targets:
-            - filepath: bootflash:/baz.txt
+            - filepath: bootflash:/202401??.txt
               supervisor: standby
+        - ip_address: 192.168.1.4
+          targets:
+            - filepath: *:/*.txt
+              supervisor: active
   register: result
 - name: print result
   ansible.builtin.debug:
