@@ -135,7 +135,7 @@ EXAMPLES = """
 #   - bar.txt on the standby supervisor's bootflash: device.
 # Delete potentially multiple files from switch 192.168.1.3:
 #   - All txt files on the standby supervisor's bootflash: device
-#     that match the pattern 202401??.txt, e.g. 220240123.txt.
+#     that match the pattern 202401??.txt, e.g. 20240123.txt.
 # Delete potentially multiple files from switch 192.168.1.4:
 #   - All txt files on all flash devices on active supervisor.
 
