@@ -157,7 +157,7 @@ EXAMPLES = """
               supervisor: standby
         - ip_address: 192.168.1.4
           targets:
-            - filepath: *:/*.txt
+            - filepath: "*:/*.txt"
               supervisor: active
   register: result
 - name: print result
