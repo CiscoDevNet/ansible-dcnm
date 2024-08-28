@@ -484,7 +484,7 @@ Examples
 
                   - name: POLICY-105105  # This must be a valid POLICY ID
                     create_additional_policy: false  # Do not create a policy if it already exists
-                  - ip: "{{ ansible_switch2 }}"
+              - ip: "{{ ansible_switch2 }}"
 
     # DELETE POLICY
 
