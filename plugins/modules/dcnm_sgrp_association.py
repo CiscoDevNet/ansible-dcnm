@@ -1012,16 +1012,27 @@ def main():
 
     state = module.params["state"]
 
-    dcnm_sgrp_association.log.debug(
-        f"######################### BEGIN STATE = {0} ##########################\n".format(state)
-    )
-
     # Initialize the logger
     try:
+        # Set the following to True if logging is required
+        enable_logging = False 
         logger = Log()
+        
+        if enable_logging is True:                                                                                
+            collection_path = (                                                                                   
+                "/Users/mmudigon/Desktop/Ansible/collections/ansible_collections/cisco/dcnm"                                  
+            )                                                                                                     
+            config_file = (                                                                                       
+                f"{collection_path}/plugins/module_utils/common/logging_config.json"                              
+            )                                                                                                     
+            logger.config = config_file     
         logger.commit()
     except ValueError as error:
         module.fail_json(msg=str(error))
+
+    dcnm_sgrp_association.log.debug(
+        f"######################### BEGIN STATE = {0} ##########################\n".format(state)
+    )
 
     # Initialize the Sender object
     sender = Sender()
