@@ -534,7 +534,9 @@ class DcnmSgrpAssociation:
             )
 
             self.log.info(
-                f"Compare Want and Have: Return Code = {0}, Reasons = {1}, Have = {2}\n".format(rc, reasons, have)
+                f"Compare Want and Have: Return Code = {0}, Reasons = {1}, Have = {2}\n".format(
+                    rc, reasons, have
+                )
             )
 
             if rc == "DCNM_SGRP_ASSOCIATION_CREATE":
@@ -931,8 +933,9 @@ class DcnmSgrpAssociation:
         )
 
         self.log.debug(
-            f"Flags: CR = {0}, DL = {1}, MO = {2}, DP = {3}\n".
-            format(create_flag, delete_flag, modify_flag, deploy_flag)
+            f"Flags: CR = {0}, DL = {1}, MO = {2}, DP = {3}\n".format(
+                create_flag, delete_flag, modify_flag, deploy_flag
+            )
         )
 
         self.result["changed"] = (
@@ -1015,23 +1018,21 @@ def main():
     # Initialize the logger
     try:
         # Set the following to True if logging is required
-        enable_logging = False 
+        enable_logging = False
         logger = Log()
-        
-        if enable_logging is True:                                                                                
-            collection_path = (                                                                                   
-                "/Users/mmudigon/Desktop/Ansible/collections/ansible_collections/cisco/dcnm"                                  
-            )                                                                                                     
-            config_file = (                                                                                       
-                f"{collection_path}/plugins/module_utils/common/logging_config.json"                              
-            )                                                                                                     
-            logger.config = config_file     
+
+        if enable_logging is True:
+            collection_path = "/Users/mmudigon/Desktop/Ansible/collections/ansible_collections/cisco/dcnm"
+            config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+            logger.config = config_file
         logger.commit()
     except ValueError as error:
         module.fail_json(msg=str(error))
 
     dcnm_sgrp_association.log.debug(
-        f"######################### BEGIN STATE = {0} ##########################\n".format(state)
+        f"######################### BEGIN STATE = {0} ##########################\n".format(
+            state
+        )
     )
 
     # Initialize the Sender object
@@ -1066,7 +1067,9 @@ def main():
         f"Config Info = {0}\n".format(dcnm_sgrp_association.config)
     )
     dcnm_sgrp_association.log.info(
-        f"Validated Security Group Association Info = {0}\n".format(dcnm_sgrp_association.sgrp_association_info)
+        f"Validated Security Group Association Info = {0}\n".format(
+            dcnm_sgrp_association.sgrp_association_info
+        )
     )
 
     if (
@@ -1095,7 +1098,9 @@ def main():
         )
 
         dcnm_sgrp_association.log.info(
-            f"Security Groups Info = {0}\n".format(dcnm_sgrp_association.sgrp_info)
+            f"Security Groups Info = {0}\n".format(
+                dcnm_sgrp_association.sgrp_info
+            )
         )
     if (module.params["state"] == "merged") or (
         module.params["state"] == "replaced"
@@ -1126,7 +1131,9 @@ def main():
         f"Deploy Info = {0}\n".format(dcnm_sgrp_association.diff_deploy)
     )
     dcnm_sgrp_association.log.info(
-        f"Delete Deploy Info = {0}\n".format(dcnm_sgrp_association.diff_delete_deploy)
+        f"Delete Deploy Info = {0}\n".format(
+            dcnm_sgrp_association.diff_delete_deploy
+        )
     )
 
     dcnm_sgrp_association.result["diff"] = dcnm_sgrp_association.changed_dict
@@ -1151,7 +1158,9 @@ def main():
     dcnm_sgrp_association.dcnm_sgrp_association_send_message_to_dcnm()
 
     dcnm_sgrp_association.log.debug(
-        f"######################### END STATE = {0} ##########################\n".format(state)
+        f"######################### END STATE = {0} ##########################\n".format(
+            state
+        )
     )
 
     module.exit_json(**dcnm_sgrp_association.result)
