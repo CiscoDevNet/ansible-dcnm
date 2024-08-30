@@ -12,8 +12,10 @@ This collection is intended for use with the following release versions:
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.9.10**.
+This collection has been tested against following Ansible versions: **>=2.15.0**.
 
+For collections that support Ansible 2.9, please ensure you update your `network_os` to use the
+fully qualified collection name (for example, `cisco.ios.ios`).
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
 PEP440 is the schema used to describe the versions of Ansible.
@@ -39,6 +41,7 @@ Name | Description
 [cisco.dcnm.dcnm_interface](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_interface_module.rst)|DCNM Ansible Module for managing interfaces.
 [cisco.dcnm.dcnm_inventory](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_inventory_module.rst)|Add and remove Switches from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_links](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_links_module.rst)|DCNM ansible module for managing Links.
+[cisco.dcnm.dcnm_maintenance_mode](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_maintenance_mode_module.rst)|Manage Maintenance Mode Configuration of NX-OS Switches.
 [cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_policy_module.rst)|DCNM Ansible Module for managing policies.
 [cisco.dcnm.dcnm_resource_manager](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_resource_manager_module.rst)|DCNM ansible module for managing resources.
@@ -46,6 +49,7 @@ Name | Description
 [cisco.dcnm.dcnm_service_node](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_node_module.rst)|Create/Modify/Delete service node based on type and attached interfaces from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_service_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_policy_module.rst)|DCNM ansible module for managing service policies.
 [cisco.dcnm.dcnm_service_route_peering](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_route_peering_module.rst)|DCNM Ansible Module for managing Service Route Peerings.
+[cisco.dcnm.dcnm_sgrp_association](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_sgrp_association_module.rst)|DCNM Ansible Module for managing Security Groups Associatons.
 [cisco.dcnm.dcnm_template](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_template_module.rst)|DCNM Ansible Module for managing templates.
 [cisco.dcnm.dcnm_vpc_pair](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vpc_pair_module.rst)|DCNM Ansible Module for managing VPC switch pairs required for VPC interfaces.
 [cisco.dcnm.dcnm_vrf](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_vrf_module.rst)|Add and remove VRFs from a DCNM managed VXLAN fabric.
