@@ -317,7 +317,7 @@ import copy
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import (
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import (
     Log,
 )
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import (
@@ -1019,7 +1019,7 @@ def main():
     try:
         # Set the following to True if logging is required
         enable_logging = False
-        logger = Log()
+        logger = Log(module)
 
         if enable_logging is True:
             collection_path = "/Users/mmudigon/Desktop/Ansible/collections/ansible_collections/cisco/dcnm"
