@@ -26,8 +26,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtem
     EpTemplates
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class TemplateGetAll:
     """
     Retrieve a list of all templates from the controller.
@@ -62,13 +66,10 @@ class TemplateGetAll:
         self.result = []
         self.result_current = {}
 
-        self._init_properties()
+        self._rest_send = None
+        self._results = None
 
-    def _init_properties(self) -> None:
-        self._properties = {}
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
-        self._properties["templates"] = None
+        self._templates = None
 
     def refresh(self):
         """
@@ -77,6 +78,7 @@ class TemplateGetAll:
         - raise ``ValueError`` if self.rest_send is not set.
         - raise ``ControllerResponseError`` if RETURN_CODE != 200.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
         if self.rest_send is None:
@@ -114,67 +116,11 @@ class TemplateGetAll:
         self.templates = copy.deepcopy(templates)
 
     @property
-    def rest_send(self):
-        """
-        -   getter: Return an instance of the RestSend class.
-        -   setter: Set an instance of the RestSend class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of RestSend.
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of RestSend. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        _class_name = None
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            self.log.debug(msg)
-            raise TypeError(msg) from error
-        if _class_name != "RestSend":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self._properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        -   getter: Return an instance of the Results class.
-        -   setter: Set an instance of the Results class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of Results.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of Results. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        _class_name = None
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            self.log.debug(msg)
-            raise TypeError(msg) from error
-        if _class_name != "Results":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self._properties["results"] = value
-
-    @property
     def templates(self) -> dict:
         """
         Return the templates retrieved from the controller.
         """
-        return self._properties["templates"]
+        return self._templates
 
     @templates.setter
     def templates(self, value) -> None:
@@ -184,4 +130,4 @@ class TemplateGetAll:
             msg += "templates must be an instance of dict."
             self.log.debug(msg)
             raise TypeError(msg)
-        self._properties["templates"] = value
+        self._templates = value

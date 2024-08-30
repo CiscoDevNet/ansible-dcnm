@@ -130,7 +130,7 @@ class MaintenanceModeInfo:
 
         self.params = params
         self.conversion = ConversionUtils()
-        self.fabric_details = FabricDetailsByName(self.params)
+        self.fabric_details = FabricDetailsByName()
         self.switch_details = SwitchDetails()
 
         self._config = None

@@ -25,10 +25,16 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabri
     EpFabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class FabricConfigDeploy:
     """
     # Initiate a fabric config-deploy operation on the controller.
@@ -38,15 +44,25 @@ class FabricConfigDeploy:
     -   Update FabricConfigDeploy().results to reflect success/failure of
         the operation on the controller.
 
-    ## Usage (where params is AnsibleModule.params)
+    ## Usage
 
     ```python
-    config_deploy = FabricConfigDeploy(params)
-    config_deploy.rest_send = RestSend()
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    results = Results()
+
+    config_deploy = FabricConfigDeploy()
+    config_deploy.rest_send = rest_send
     config_deploy.payload = payload # a valid payload dictionary
-    config_deploy.fabric_details = FabricDetailsByName(params)
+    config_deploy.fabric_details = FabricDetailsByName()
     config_deploy.fabric_summary = FabricSummary(params)
-    config_deploy.results = Results()
+    config_deploy.results = results
     try:
         config_deploy.commit()
     except ValueError as error:
@@ -54,54 +70,33 @@ class FabricConfigDeploy:
     ```
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.params = params
         self.action = "config_deploy"
         self.cannot_deploy_fabric_reason = ""
         self.config_deploy_failed = False
-        self.fabric_can_be_deployed = False
-
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory check_mode parameter."
-            raise ValueError(msg)
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory state parameter."
-            raise ValueError(msg)
-
         self.config_deploy_result: dict[str, bool] = {}
-
-        self.path = None
-        self.verb = None
-        self._init_properties()
 
         self.conversion = ConversionUtils()
         self.ep_config_deploy = EpFabricConfigDeploy()
 
-        msg = "ENTERED FabricConfigDeploy(): "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
-        self.log.debug(msg)
+        self.fabric_can_be_deployed = False
+        self._fabric_details = None
+        self._fabric_name = None
+        self._fabric_summary = None
+        self._payload = None
+        self._rest_send = None
+        self._results = None
 
-    def _init_properties(self):
-        self._properties = {}
-        self._properties["fabric_details"] = None
-        self._properties["fabric_name"] = None
-        self._properties["fabric_summary"] = None
-        self._properties["payload"] = None
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
+        msg = "ENTERED FabricConfigDeploy():"
+        self.log.debug(msg)
 
     def _can_fabric_be_deployed(self) -> None:
         """
+        ### Summary
         -   Set self.fabric_can_be_deployed to True if the fabric configuration
             can be deployed.
         -   Set self.fabric_can_be_deployed to False otherwise.
@@ -112,7 +107,8 @@ class FabricConfigDeploy:
 
         deploy = self.payload.get("DEPLOY", None)
         if deploy is False or deploy is None:
-            msg = f"Fabric {self.fabric_name} DEPLOY is False or None. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} DEPLOY is False or None. "
             msg += "Skipping config-deploy."
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
@@ -123,7 +119,8 @@ class FabricConfigDeploy:
         try:
             self.fabric_summary.fabric_name = self.fabric_name
         except ValueError as error:
-            msg = f"Fabric {self.fabric_name} is invalid. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} is invalid. "
             msg += "Cannot deploy fabric. "
             msg += f"Error detail: {error}"
             self.log.debug(msg)
@@ -138,6 +135,7 @@ class FabricConfigDeploy:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error during FabricSummary().refresh(). "
             msg += f"Error detail: {error}"
+            self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
             self.config_deploy_failed = True
@@ -153,11 +151,13 @@ class FabricConfigDeploy:
             return
 
         try:
+            self.fabric_details.results = Results()
             self.fabric_details.refresh()
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error during FabricDetailsByName().refresh(). "
             msg += f"Error detail: {error}"
+            self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
             self.fabric_can_be_deployed = False
             self.config_deploy_failed = True
@@ -166,7 +166,8 @@ class FabricConfigDeploy:
         self.fabric_details.filter = self.fabric_name
 
         if self.fabric_details.deployment_freeze is True:
-            msg = f"Fabric {self.fabric_name} DEPLOYMENT_FREEZE == True. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} DEPLOYMENT_FREEZE == True. "
             msg += "Cannot deploy a fabric with deployment freeze enabled."
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
@@ -175,7 +176,8 @@ class FabricConfigDeploy:
             return
 
         if self.fabric_details.is_read_only is True:
-            msg = f"Fabric {self.fabric_name} IS_READ_ONLY == True. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {self.fabric_name} IS_READ_ONLY == True. "
             msg += "Cannot deploy a read only fabric."
             self.log.debug(msg)
             self.cannot_deploy_fabric_reason = msg
@@ -193,6 +195,7 @@ class FabricConfigDeploy:
         -   Raise ``ValueError`` if FabricConfigDeploy().results is not set.
         -   Raise ``ValueError`` if the endpoint assignment fails.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
         if self.fabric_details is None:
@@ -233,8 +236,8 @@ class FabricConfigDeploy:
         if self.fabric_can_be_deployed is False:
             self.results.diff_current = {}
             self.results.action = self.action
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.state = self.rest_send.state
             self.results.response_current = {
                 "RETURN_CODE": 200,
                 "MESSAGE": self.cannot_deploy_fabric_reason,
@@ -248,15 +251,12 @@ class FabricConfigDeploy:
 
         try:
             self.ep_config_deploy.fabric_name = self.fabric_name
-            self.path = self.ep_config_deploy.path
-            self.verb = self.ep_config_deploy.verb
+            self.rest_send.path = self.ep_config_deploy.path
+            self.rest_send.verb = self.ep_config_deploy.verb
+            self.rest_send.payload = None
+            self.rest_send.commit()
         except ValueError as error:
             raise ValueError(error) from error
-
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.payload = None
-        self.rest_send.commit()
 
         result = self.rest_send.result_current["success"]
         self.config_deploy_result[self.fabric_name] = result
@@ -269,8 +269,8 @@ class FabricConfigDeploy:
             }
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
@@ -280,7 +280,7 @@ class FabricConfigDeploy:
         """
         The name of the fabric to config-save.
         """
-        return self._properties["fabric_name"]
+        return self._fabric_name
 
     @fabric_name.setter
     def fabric_name(self, value):
@@ -288,7 +288,7 @@ class FabricConfigDeploy:
             self.conversion.validate_fabric_name(value)
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
-        self._properties["fabric_name"] = value
+        self._fabric_name = value
 
     @property
     def fabric_details(self):
@@ -298,7 +298,7 @@ class FabricConfigDeploy:
         -   setter: Raise ``TypeError`` if the value is not an
             instance of FabricDetailsByName.
         """
-        return self._properties["fabric_details"]
+        return self._fabric_details
 
     @fabric_details.setter
     def fabric_details(self, value):
@@ -314,7 +314,7 @@ class FabricConfigDeploy:
             msg += f"Got {class_name}."
             self.log.debug(msg)
             raise TypeError(msg)
-        self._properties["fabric_details"] = value
+        self._fabric_details = value
 
     @property
     def fabric_summary(self):
@@ -324,7 +324,7 @@ class FabricConfigDeploy:
         -   setter: Raise ``TypeError`` if the value is not an
             instance of FabricSummary.
         """
-        return self._properties["fabric_summary"]
+        return self._fabric_summary
 
     @fabric_summary.setter
     def fabric_summary(self, value):
@@ -340,7 +340,7 @@ class FabricConfigDeploy:
             msg += f"Got {class_name}."
             self.log.debug(msg)
             raise TypeError(msg)
-        self._properties["fabric_summary"] = value
+        self._fabric_summary = value
 
     @property
     def payload(self):
@@ -349,7 +349,7 @@ class FabricConfigDeploy:
         -   Raise ``ValueError`` if the value is not a dictionary.
         -   Raise ``ValueError`` the payload is missing FABRIC_NAME key.
         """
-        return self._properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
@@ -369,58 +369,4 @@ class FabricConfigDeploy:
             self.fabric_name = value["FABRIC_NAME"]
         except ValueError as error:
             raise ValueError(error) from error
-        self._properties["payload"] = value
-
-    @property
-    def rest_send(self):
-        """
-        -   getter: Return an instance of the RestSend class.
-        -   setter: Set an instance of the RestSend class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of RestSend.
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_name = None
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of RestSend. "
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_name != "RestSend":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self._properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        -   getter: Return an instance of the Results class.
-        -   setter: Set an instance of the Results class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of Results.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of Results. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        _class_name = None
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            self.log.debug(msg)
-            raise TypeError(msg) from error
-        if _class_name != "Results":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self._properties["results"] = value
+        self._payload = value

@@ -18,22 +18,12 @@
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
 #    - fabric_name_1
 #    - fabric_type_1  # VXLAN_EVPN
-#    - fabric_name_2
-#    - fabric_type_2  # VXLAN_EVPN_MSD
-#    - fabric_name_3
-#    - fabric_type_3  # LAN_CLASSIC
 # 2. Delete fabrics under test, if they exist
 #    - fabric_name_1
-#    - fabric_name_2
-#    - fabric_name_3
 # TEST
 # 3. Create fabrics and verify result
 #    - fabric_name_1
-#    - fabric_name_2
-#    - fabric_name_3
-# 4. Delete fabric_name_1 and fabric_name_2. Verify result
-# 5. Delete fabric_name_3. Verify result
-# 6. Delete fabric_name_3 again to verify idempotence.
+# 4. Delete fabric_name_1. Verify result
 # CLEANUP
 # 7. No cleanup required
 ################################################################################
@@ -49,13 +39,9 @@
 # Example vars:
 #
 # vars:
-#   testcase: dcnm_fabric_deleted_basic
+#   testcase: dcnm_fabric_deleted_basic_vxlan
 #   fabric_name_1: VXLAN_EVPN_Fabric
 #   fabric_type_1: VXLAN_EVPN
-#   fabric_name_2: VXLAN_EVPN_MSD_Fabric
-#   fabric_type_2: VXLAN_EVPN_MSD
-#   fabric_name_3: LAN_CLASSIC_Fabric
-#   fabric_type_3: LAN_CLASSIC
 ################################################################################
 # SETUP
 ################################################################################
@@ -64,8 +50,6 @@
     state: deleted
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
 - debug:
     var: result
@@ -83,36 +67,14 @@
 #                 "BGP_AS": "65535.65534",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
-#             },
-#             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
-#                 "sequence_number": 2
-#             },
-#             {
-#                 "BOOTSTRAP_ENABLE": false,
-#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
-#                 "IS_READ_ONLY": false,
-#                 "sequence_number": 3
 #             }
 #         ],
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
-#                 "state": "merged"
-#             },
-#             {
-#                 "action": "create",
-#                 "check_mode": false,
-#                 "sequence_number": 2,
-#                 "state": "merged"
-#             },
-#             {
-#                 "action": "create",
-#                 "check_mode": false,
-#                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
 #         ],
@@ -129,48 +91,12 @@
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
-#             },
-#             {
-#                 "DATA": {
-#                     "nvPairs": {
-#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
-#                     }
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric/MSD_Fabric",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 2
-#             },
-#             {
-#                 "DATA": {
-#                     "nvPairs": {
-#                         "BOOTSTRAP_ENABLE": "false",
-#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
-#                         "IS_READ_ONLY": "false",
-#                     }
-#                 },
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 3
 #             }
 #         ],
 #         "result": [
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
-#                 "success": true
-#             },
-#             {
-#                 "changed": true,
-#                 "sequence_number": 2,
-#                 "success": true
-#             },
-#             {
-#                 "changed": true,
-#                 "sequence_number": 3,
 #                 "success": true
 #             }
 #         ]
@@ -185,14 +111,6 @@
         FABRIC_TYPE: "{{ fabric_type_1 }}"
         BGP_AS: "65535.65534"
         DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-        FABRIC_TYPE: "{{ fabric_type_2 }}"
-        DEPLOY: true
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
-        FABRIC_TYPE: "{{ fabric_type_3 }}"
-        BOOTSTRAP_ENABLE: false
-        IS_READ_ONLY: false
-        DEPLOY: true
   register: result
 - debug:
     var: result
@@ -200,31 +118,17 @@
     that:
       - result.changed == true
       - result.failed == false
-      - (result.diff | length) == 3
+      - (result.diff | length) == 1
       - result.diff[0].BGP_AS == "65535.65534"
       - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].sequence_number == 1
-      - result.diff[1].FABRIC_NAME == fabric_name_2
-      - result.diff[1].sequence_number == 2
-      - result.diff[2].FABRIC_NAME == fabric_name_3
-      - result.diff[2].sequence_number == 3
-      - result.diff[2].BOOTSTRAP_ENABLE == false
-      - result.diff[2].IS_READ_ONLY == false
-      - (result.response | length) == 3
+      - (result.response | length) == 1
       - result.response[0].sequence_number == 1
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
-      - result.response[1].sequence_number == 2
-      - result.response[1].MESSAGE == "OK"
-      - result.response[1].METHOD == "POST"
-      - result.response[1].RETURN_CODE == 200
-      - result.response[2].sequence_number == 3
-      - result.response[2].MESSAGE == "OK"
-      - result.response[2].METHOD == "POST"
-      - result.response[2].RETURN_CODE == 200
 ###############################################################################################
-# DELETED - TEST - Delete first two fabrics (fabric_name_1, fabric_name_2) and verify
+# DELETED - TEST - Delete fabric_name_1 and verify
 ###############################################################################################
 # Expected result
 # ok: [ndfc1] => {
@@ -234,24 +138,14 @@
 #             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
-#             },
-#             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
-#                 "sequence_number": 2
 #             }
 #         ],
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
-#                 "state": "deleted"
-#             },
-#             {
-#                 "action": "delete",
-#                 "check_mode": false,
-#                 "sequence_number": 2,
 #                 "state": "deleted"
 #             }
 #         ],
@@ -263,120 +157,23 @@
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
-#             },
-#             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_MSD_Fabric' is deleted successfully!",
-#                 "MESSAGE": "OK",
-#                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 2
 #             }
 #         ],
 #         "result": [
 #             {
 #                 "changed": true,
 #                 "sequence_number": 1,
-#                 "success": true
-#             },
-#             {
-#                 "changed": true,
-#                 "sequence_number": 2,
 #                 "success": true
 #             }
 #         ]
 #     }
 # }
 ###############################################################################################
-- name: DELETED - TEST - Delete first two fabrics (fabric_name_1, fabric_name_2) and verify
-  cisco.dcnm.dcnm_fabric:
-    state: deleted
-    config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-      - FABRIC_NAME: "{{ fabric_name_2 }}"
-  register: result
-- debug:
-    var: result
-- assert:
-    that:
-      - result.changed == true
-      - result.failed == false
-      - (result.diff | length) == 2
-      - result.diff[0].FABRIC_NAME == fabric_name_1
-      - result.diff[1].FABRIC_NAME == fabric_name_2
-      - result.diff[0].sequence_number == 1
-      - result.diff[1].sequence_number == 2
-      - (result.metadata | length) == 2
-      - result.metadata[0].action == "fabric_delete"
-      - result.metadata[0].check_mode == False
-      - result.metadata[0].sequence_number == 1
-      - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "fabric_delete"
-      - result.metadata[1].check_mode == False
-      - result.metadata[1].sequence_number == 2
-      - result.metadata[1].state == "deleted"
-      - (result.response | length) == 2
-      - result.response[0].MESSAGE == "OK"
-      - result.response[0].METHOD == "DELETE"
-      - result.response[0].RETURN_CODE == 200
-      - result.response[0].sequence_number == 1
-      - result.response[1].MESSAGE == "OK"
-      - result.response[1].METHOD == "DELETE"
-      - result.response[1].RETURN_CODE == 200
-      - result.response[1].sequence_number == 2
-      - result.result[0].changed == true
-      - result.result[0].success == true
-      - result.result[0].sequence_number == 1
-      - result.result[1].changed == true
-      - result.result[1].success == true
-      - result.result[1].sequence_number == 2
-################################################################################
-# DELETED - TEST - Delete third fabric (fabric_name_3) and verify
-################################################################################
-# Expected result
-# ok: [ndfc1] => {
-#     "result": {
-#         "changed": true,
-#         "diff": [
-#             {
-#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
-#                 "sequence_number": 1
-#             }
-#         ],
-#         "failed": false,
-#         "metadata": [
-#             {
-#                 "action": "delete",
-#                 "check_mode": false,
-#                 "sequence_number": 1,
-#                 "state": "deleted"
-#             }
-#         ],
-#         "response": [
-#             {
-#                 "DATA": "Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
-#                 "MESSAGE": "OK",
-#                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric",
-#                 "RETURN_CODE": 200,
-#                 "sequence_number": 1
-#             }
-#         ],
-#         "result": [
-#             {
-#                 "changed": true,
-#                 "sequence_number": 1,
-#                 "success": true
-#             }
-#         ]
-#     }
-# }
-################################################################################
-- name: DELETED - TEST - Delete third fabric (fabric_name_3) and verify
+- name: DELETED - TEST - Delete fabric_name_1 and verify
   cisco.dcnm.dcnm_fabric: &fabric_deleted
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_3 }}"
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
   register: result
 - debug:
     var: result
@@ -385,7 +182,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_3
+      - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_delete"
@@ -401,7 +198,7 @@
       - result.result[0].success == true
       - result.result[0].sequence_number == 1
 ################################################################################
-# DELETED - TEST - Delete third fabric (fabric_name_3) idempotence
+# DELETED - TEST - Delete fabric_name_1 idempotence
 ################################################################################
 # Expected result
 # ok: [ndfc1] => {
@@ -415,7 +212,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
@@ -438,7 +235,7 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - TEST - Delete third fabric (fabric_name_3) idempotence
+- name: DELETED - TEST - Delete fabric_name_1 idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
 - debug:

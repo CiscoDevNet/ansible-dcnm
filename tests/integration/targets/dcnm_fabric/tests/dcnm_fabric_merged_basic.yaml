@@ -22,35 +22,40 @@
 #    - fabric_type_2  # VXLAN_EVPN_MSD
 #    - fabric_name_3
 #    - fabric_type_3  # LAN_CLASSIC
-# 3. Delete fabrics under test, if they exist
+# 2. Delete fabrics under test, if they exist
 #    - fabric_name_1
 #    - fabric_name_2
 #    - fabric_name_3
 ################################################################################
 # TEST
 ################################################################################
-# 4. Create fabrics and verify result
+# 3. Create fabrics and verify result
 #    - fabric_name_1
 #    - fabric_name_1
 #    - fabric_name_1
-# 5. Merge additional configs into fabric_1 and fabric_2 and verify result
-# 6. Merge additional config into fabric_3 and verify result
+# 4. Merge additional configs into fabric_1 and fabric_2 and verify result
+# 5. Merge additional config into fabric_3 and verify result
 ################################################################################
 # CLEANUP
 ################################################################################
-# 7. Delete fabrics under test
+# 6. Delete fabrics under test
 #    - fabric_name_1
 #    - fabric_name_1
 #    - fabric_name_1
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-# Example vars for dcnm_image_policy integration tests
-# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
 #
 # vars:
-#   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_fabric_merged_basic
 #   fabric_name_1: VXLAN_EVPN_Fabric
 #   fabric_type_1: VXLAN_EVPN
 #   fabric_name_2: VXLAN_EVPN_MSD_Fabric
@@ -99,19 +104,19 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 3,
 #                 "state": "merged"
@@ -211,11 +216,11 @@
       - result.diff[2].sequence_number == 3
       - result.diff[2].BOOTSTRAP_ENABLE == false
       - result.diff[2].IS_READ_ONLY == false
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "create"
+      - result.metadata[1].action == "fabric_create"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -246,6 +251,7 @@
 #                 "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "REPLICATION_MODE": "Ingress",
+#                 "SITE_ID": "65000",
 #                 "sequence_number": 1
 #             },
 #             {
@@ -269,13 +275,13 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             },
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "merged"
@@ -312,6 +318,7 @@
 #                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                         "REPLICATION_MODE": "Ingress",
+#                         "SITE_ID": "65000",
 #                         "UNDERLAY_IS_V6": "false",
 #                     }
 #                 },
@@ -396,9 +403,10 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
         FABRIC_TYPE: "{{ fabric_type_1 }}"
-        BGP_AS: 65535
         ANYCAST_GW_MAC: aaaabbbbcccc
+        BGP_AS: 65535
         REPLICATION_MODE: Ingress
+        SITE_ID: 65000
         UNDERLAY_IS_V6: false
         DEPLOY: false
       - FABRIC_NAME: "{{ fabric_name_2 }}"
@@ -415,16 +423,17 @@
       - (result.diff | length) == 6
       - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.diff[0].SITE_ID == "65000"
       - result.diff[0].sequence_number == 1
       - result.diff[1].FABRIC_NAME == fabric_name_2
       - result.diff[1].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "update"
+      - result.metadata[1].action == "fabric_update"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -450,7 +459,9 @@
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
+      - result.response[0].DATA.nvPairs.SITE_ID == "65000"
       - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
       - result.response[1].sequence_number == 2
@@ -515,7 +526,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -602,7 +613,7 @@
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -644,7 +655,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "update",
+#                 "action": "fabric_update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -679,7 +690,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -715,19 +726,19 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             },
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "deleted"
 #             },
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 3,
 #                 "state": "deleted"
@@ -801,15 +812,15 @@
       - result.diff[2].FABRIC_NAME == fabric_name_3
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "delete"
+      - result.metadata[1].action == "fabric_delete"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "deleted"
-      - result.metadata[2].action == "delete"
+      - result.metadata[2].action == "fabric_delete"
       - result.metadata[2].check_mode == False
       - result.metadata[2].sequence_number == 3
       - result.metadata[2].state == "deleted"

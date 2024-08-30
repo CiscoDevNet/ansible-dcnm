@@ -25,8 +25,12 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabri
     EpFabricConfigSave
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class FabricConfigSave:
     """
     # Initiate a fabric config-save operation on the controller.
@@ -36,13 +40,23 @@ class FabricConfigSave:
     -   Update FabricConfigSave().results to reflect success/failure of
         the operation on the controller.
 
-    ## Usage (where params is AnsibleModule.params)
+    ## Usage:
 
     ```python
-    config_save = FabricConfigSave(params)
-    config_save.rest_send = RestSend()
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    results = Results()
+
+    config_save = FabricConfigSave()
+    config_save.rest_send = rest_send
     config_deploy.payload = payload # a valid payload dictionary
-    config_save.results = Results()
+    config_save.results = results
     try:
         config_save.commit()
     except ValueError as error:
@@ -50,49 +64,27 @@ class FabricConfigSave:
     ```
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.params = params
         self.action = "config_save"
         self.cannot_save_fabric_reason = ""
         self.config_save_failed = False
         self.fabric_can_be_saved = False
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory check_mode parameter."
-            raise ValueError(msg)
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "params is missing mandatory state parameter."
-            raise ValueError(msg)
-
         self.config_save_result: dict[str, bool] = {}
-
-        self.path = None
-        self.verb = None
-        self._init_properties()
 
         self.conversion = ConversionUtils()
         self.ep_config_save = EpFabricConfigSave()
+        self._fabric_name = None
+        self._payload = None
+        self._rest_send = None
+        self._results = None
 
-        msg = "ENTERED FabricConfigSave(): "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricConfigSave()"
         self.log.debug(msg)
-
-    def _init_properties(self):
-        self._properties = {}
-        self._properties["fabric_name"] = None
-        self._properties["payload"] = None
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
 
     def _can_fabric_be_saved(self) -> None:
         """
@@ -119,6 +111,7 @@ class FabricConfigSave:
         -   Raise ``ValueError`` if the endpoint assignment fails.
         """
         method_name = inspect.stack()[0][3]
+        # pylint: disable=no-member
 
         if self.payload is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -141,8 +134,8 @@ class FabricConfigSave:
         if self.fabric_can_be_saved is False:
             self.results.diff_current = {}
             self.results.action = self.action
-            self.results.check_mode = self.check_mode
-            self.results.state = self.state
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.state = self.rest_send.state
             self.results.response_current = {
                 "RETURN_CODE": 200,
                 "MESSAGE": self.cannot_save_fabric_reason,
@@ -156,15 +149,12 @@ class FabricConfigSave:
 
         try:
             self.ep_config_save.fabric_name = self.fabric_name
-            self.path = self.ep_config_save.path
-            self.verb = self.ep_config_save.verb
+            self.rest_send.path = self.ep_config_save.path
+            self.rest_send.verb = self.ep_config_save.verb
+            self.rest_send.payload = None
+            self.rest_send.commit()
         except ValueError as error:
             raise ValueError(error) from error
-
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.payload = None
-        self.rest_send.commit()
 
         result = self.rest_send.result_current["success"]
         self.config_save_result[self.fabric_name] = result
@@ -177,8 +167,8 @@ class FabricConfigSave:
             }
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
@@ -188,7 +178,7 @@ class FabricConfigSave:
         """
         The name of the fabric to config-save.
         """
-        return self._properties["fabric_name"]
+        return self._fabric_name
 
     @fabric_name.setter
     def fabric_name(self, value):
@@ -196,7 +186,7 @@ class FabricConfigSave:
             self.conversion.validate_fabric_name(value)
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
-        self._properties["fabric_name"] = value
+        self._fabric_name = value
 
     @property
     def payload(self):
@@ -205,7 +195,7 @@ class FabricConfigSave:
         -   Raise ``ValueError`` if the value is not a dictionary.
         -   Raise ``ValueError`` the payload is missing FABRIC_NAME key.
         """
-        return self._properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
@@ -225,58 +215,4 @@ class FabricConfigSave:
             self.fabric_name = value["FABRIC_NAME"]
         except ValueError as error:
             raise ValueError(error) from error
-        self._properties["payload"] = value
-
-    @property
-    def rest_send(self):
-        """
-        -   getter: Return an instance of the RestSend class.
-        -   setter: Set an instance of the RestSend class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of RestSend.
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_name = None
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of RestSend. "
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_name != "RestSend":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self._properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        -   getter: Return an instance of the Results class.
-        -   setter: Set an instance of the Results class.
-        -   setter: Raise ``TypeError`` if the value is not an
-            instance of Results.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of Results. "
-        msg += f"Got value {value} of type {type(value).__name__}."
-        _class_name = None
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f" Error detail: {error}."
-            self.log.debug(msg)
-            raise TypeError(msg) from error
-        if _class_name != "Results":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self._properties["results"] = value
+        self._payload = value

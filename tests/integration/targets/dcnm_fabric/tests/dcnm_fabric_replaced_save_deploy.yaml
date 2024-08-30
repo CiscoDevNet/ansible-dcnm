@@ -44,13 +44,17 @@
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-# Example vars for dcnm_fabric integration tests
-# Add fabric and leaf vars to cisco/dcnm/playbooks/dcnm_tests.yaml
-# Add nxos_username and nxos_password vars to cisco/dcnm/playbooks/dcnm_hosts.yaml
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
 #
 # vars:
-#   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_fabric_replaced_save_deploy
 #   fabric_name_1: VXLAN_EVPN_Fabric
 #   fabric_type_1: VXLAN_EVPN
 #   fabric_name_3: LAN_CLASSIC_Fabric
@@ -171,6 +175,7 @@
         BGP_AS: 65535
         ANYCAST_GW_MAC: aaaabbbbcccc
         REPLICATION_MODE: Ingress
+        SITE_ID: 65000
         UNDERLAY_IS_V6: false
         DEPLOY: true
       - FABRIC_NAME: "{{ fabric_name_3 }}"
@@ -192,6 +197,7 @@
       - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.diff[0].REPLICATION_MODE == "Ingress"
+      - result.diff[0].SITE_ID == 65000
       - result.diff[0].UNDERLAY_IS_V6 == false
       - result.diff[1].FABRIC_NAME == fabric_name_3
       - result.diff[1].sequence_number == 2
@@ -199,11 +205,11 @@
       - result.diff[1].IS_READ_ONLY == false
       - result.diff[1].SUBINTERFACE_RANGE == "2-100"
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "create"
+      - result.metadata[1].action == "fabric_create"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -212,10 +218,20 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
+      - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
+      - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
+      - result.response[0].DATA.nvPairs.SITE_ID == "65000"
+      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[1].sequence_number == 2
       - result.response[1].MESSAGE == "OK"
       - result.response[1].METHOD == "POST"
       - result.response[1].RETURN_CODE == 200
+      - result.response[1].DATA.nvPairs.BOOTSTRAP_ENABLE == "false"
+      - result.response[1].DATA.nvPairs.FABRIC_NAME == fabric_name_3
+      - result.response[1].DATA.nvPairs.IS_READ_ONLY == "false"
+      - result.response[1].DATA.nvPairs.SUBINTERFACE_RANGE == "2-100"
       - (result.result | length) == 2
       - result.result[0].changed == true
       - result.result[0].success == true
@@ -394,7 +410,7 @@
       - result.diff[2].FABRIC_NAME == fabric_name_1
       - result.diff[2].config_deploy == "OK"
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "replace"
+      - result.metadata[0].action == "fabric_replace"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "replaced"
@@ -412,8 +428,10 @@
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "2020.0000.00aa"
+      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Multicast"
+      - result.response[0].DATA.nvPairs.SITE_ID == "65535"
       - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[1].sequence_number == 2
       - result.response[1].DATA.status == 'Config save is completed'
@@ -581,7 +599,7 @@
       - result.diff[2].FABRIC_NAME == fabric_name_3
       - result.diff[2].config_deploy == "OK"
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "replace"
+      - result.metadata[0].action == "fabric_replace"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "replaced"
@@ -675,7 +693,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "replace"
+      - result.metadata[0].action == "fabric_replace"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "replaced"
@@ -740,7 +758,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "replace"
+      - result.metadata[0].action == "fabric_replace"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "replaced"
@@ -873,11 +891,11 @@
       - result.diff[1].FABRIC_NAME == fabric_name_3
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "delete"
+      - result.metadata[1].action == "fabric_delete"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "deleted"

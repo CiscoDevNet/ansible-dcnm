@@ -22,6 +22,8 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
     FabricConfigDeploy
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
@@ -30,45 +32,34 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types imp
     FabricTypes
 
 
+@Properties.add_rest_send
+@Properties.add_results
 class FabricCommon:
     """
+    ### Summary
     Common methods used by the other classes supporting
     the dcnm_fabric module
 
-    Usage (where params is AnsibleModule.params)
+    ### Usage
 
     class MyClass(FabricCommon):
-        def __init__(self, params):
-            super().__init__(params)
+        def __init__(self):
+            super().__init__()
         ...
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.params = params
+        self.action = None
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "check_mode is required"
-            raise ValueError(msg)
-
-        self.state = self.params.get("state", None)
-        if self.state is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "state is required"
-            raise ValueError(msg)
-
         self.conversion = ConversionUtils()
-        self.config_save = FabricConfigSave(params)
-        self.config_deploy = FabricConfigDeploy(params)
+        self.config_save = FabricConfigSave()
+        self.config_deploy = FabricConfigDeploy()
         self.fabric_types = FabricTypes()
 
-        msg = "ENTERED FabricCommon(): "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricCommon()"
         self.log.debug(msg)
 
         # key: fabric_name, value: boolean
@@ -105,19 +96,13 @@ class FabricCommon:
         self.path = None
         self.verb = None
 
-        self._init_properties()
-        self._init_key_translations()
+        self._fabric_details = None
+        self._fabric_summary = None
+        self._fabric_type = "VXLAN_EVPN"
+        self._rest_send = None
+        self._results = None
 
-    def _init_properties(self) -> None:
-        """
-        Initialize the properties dictionary.
-        """
-        self._properties: dict = {}
-        self._properties["fabric_details"] = None
-        self._properties["fabric_summary"] = None
-        self._properties["fabric_type"] = "VXLAN_EVPN"
-        self._properties["rest_send"] = None
-        self._properties["results"] = None
+        self._init_key_translations()
 
     def _init_key_translations(self):
         """
@@ -166,6 +151,7 @@ class FabricCommon:
             return
 
         self.config_save.payload = payload
+        # pylint: disable=no-member
         self.config_save.rest_send = self.rest_send
         self.config_save.results = self.results
         try:
@@ -196,6 +182,7 @@ class FabricCommon:
             self.config_deploy.fabric_details = self.fabric_details
             self.config_deploy.payload = payload
             self.config_deploy.fabric_summary = self.fabric_summary
+            # pylint: disable=no-member
             self.config_deploy.rest_send = self.rest_send
             self.config_deploy.results = self.results
         except TypeError as error:
@@ -240,6 +227,7 @@ class FabricCommon:
         try:
             mac_address = self.conversion.translate_mac_address(mac_address)
         except ValueError as error:
+            # pylint: disable=no-member
             self.results.failed = True
             self.results.changed = False
             self.results.register_task_result()
@@ -270,6 +258,7 @@ class FabricCommon:
             self._fixup_anycast_gw_mac()
             self._fixup_bgp_as()
         except ValueError as error:
+            # pylint: disable=no-member
             self.results.failed = True
             self.results.changed = False
             self.results.register_task_result()
@@ -324,7 +313,7 @@ class FabricCommon:
         - raise ``ValueError`` if the payload is missing mandatory keys
         """
         method_name = inspect.stack()[0][3]
-        if self.state not in {"merged", "replaced"}:
+        if self.action not in {"fabric_create", "fabric_replace", "fabric_update"}:
             return
         msg = f"{self.class_name}.{method_name}: "
         msg += f"payload: {payload}"
@@ -393,22 +382,22 @@ class FabricCommon:
         """
         An instance of the FabricDetails class.
         """
-        return self._properties["fabric_details"]
+        return self._fabric_details
 
     @fabric_details.setter
     def fabric_details(self, value):
-        self._properties["fabric_details"] = value
+        self._fabric_details = value
 
     @property
     def fabric_summary(self):
         """
         An instance of the FabricSummary class.
         """
-        return self._properties["fabric_summary"]
+        return self._fabric_summary
 
     @fabric_summary.setter
     def fabric_summary(self, value):
-        self._properties["fabric_summary"] = value
+        self._fabric_summary = value
 
     @property
     def fabric_type(self):
@@ -419,7 +408,7 @@ class FabricCommon:
 
         See ``FabricTypes().valid_fabric_types`` for valid values
         """
-        return self._properties["fabric_type"]
+        return self._fabric_type
 
     @fabric_type.setter
     def fabric_type(self, value):
@@ -430,26 +419,4 @@ class FabricCommon:
             msg += f"{self.fabric_types.valid_fabric_types}. "
             msg += f"Got {value}"
             raise ValueError(msg)
-        self._properties["fabric_type"] = value
-
-    @property
-    def rest_send(self):
-        """
-        An instance of the RestSend class.
-        """
-        return self._properties["rest_send"]
-
-    @rest_send.setter
-    def rest_send(self, value):
-        self._properties["rest_send"] = value
-
-    @property
-    def results(self):
-        """
-        An instance of the Results class.
-        """
-        return self._properties["results"]
-
-    @results.setter
-    def results(self, value):
-        self._properties["results"] = value
+        self._fabric_type = value

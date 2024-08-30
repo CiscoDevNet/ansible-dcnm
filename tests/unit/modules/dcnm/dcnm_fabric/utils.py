@@ -34,8 +34,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import (
     FabricCreate, FabricCreateBulk, FabricCreateCommon)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
     FabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import (
-    FabricDetails, FabricDetailsByName, FabricDetailsByNvPair)
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetails as FabricDetailsV2
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
@@ -121,10 +119,9 @@ class MockAnsibleModule:
 @pytest.fixture(name="fabric_common")
 def fabric_common_fixture():
     """
-    return instance of FabricCommon()
+    Return FabricCommon() instance.
     """
-    instance = MockAnsibleModule()
-    return FabricCommon(instance.params)
+    return FabricCommon()
 
 
 @pytest.fixture(name="fabric_config_deploy")
@@ -132,8 +129,7 @@ def fabric_config_deploy_fixture():
     """
     return instance of FabricConfigDeploy()
     """
-    instance = MockAnsibleModule()
-    return FabricConfigDeploy(instance.params)
+    return FabricConfigDeploy()
 
 
 @pytest.fixture(name="fabric_config_save")
@@ -141,143 +137,93 @@ def fabric_config_save_fixture():
     """
     return instance of FabricConfigSave()
     """
-    instance = MockAnsibleModule()
-    return FabricConfigSave(instance.params)
+    return FabricConfigSave()
 
 
 @pytest.fixture(name="fabric_create")
 def fabric_create_fixture():
     """
-    mock FabricCreate
+    Return FabricCreate() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricCreate(instance.params)
+    return FabricCreate()
 
 
 @pytest.fixture(name="fabric_create_bulk")
 def fabric_create_bulk_fixture():
     """
-    mock FabricCreateBulk
+    Return FabricCreateBulk() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricCreateBulk(instance.params)
+    return FabricCreateBulk()
 
 
 @pytest.fixture(name="fabric_create_common")
 def fabric_create_common_fixture():
     """
-    mock FabricCreateCommon
+    Return FabricCreateCommon() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricCreateCommon(instance.params)
+    return FabricCreateCommon()
 
 
 @pytest.fixture(name="fabric_delete")
 def fabric_delete_fixture():
     """
-    mock FabricDelete
+    Return FabricDelete() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "deleted"
-    return FabricDelete(instance.params)
-
-
-@pytest.fixture(name="fabric_details")
-def fabric_details_fixture():
-    """
-    mock FabricDetails
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetails(instance.params)
+    return FabricDelete()
 
 
 @pytest.fixture(name="fabric_details_v2")
 def fabric_details_v2_fixture():
     """
-    mock FabricDetails() v2
+    Return FabricDetails() v2 instance
     """
-    return FabricDetailsV2(params)
-
-
-@pytest.fixture(name="fabric_details_by_name")
-def fabric_details_by_name_fixture():
-    """
-    mock FabricDetailsByName
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetailsByName(instance.params)
+    return FabricDetailsV2()
 
 
 @pytest.fixture(name="fabric_details_by_name_v2")
 def fabric_details_by_name_v2_fixture():
     """
-    mock FabricDetailsByName version 2
+    Return FabricDetailsByName version 2 instance
     """
-    instance = MockAnsibleModule()
-    instance.state = "query"
-    instance.check_mode = False
-    return FabricDetailsByNameV2(instance.params)
-
-
-@pytest.fixture(name="fabric_details_by_nv_pair")
-def fabric_details_by_nv_pair_fixture():
-    """
-    mock FabricDetailsByNvPair
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetailsByNvPair(instance.params)
+    return FabricDetailsByNameV2()
 
 
 @pytest.fixture(name="fabric_details_by_nv_pair_v2")
 def fabric_details_by_nv_pair_v2_fixture():
     """
-    mock FabricDetailsByNvPair version 2
+    Return FabricDetailsByNvPair version 2 instance
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricDetailsByNvPairV2(instance.params)
+    return FabricDetailsByNvPairV2()
 
 
 @pytest.fixture(name="fabric_query")
 def fabric_query_fixture():
     """
-    mock FabricQuery
+    Return FabricQuery() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "query"
-    return FabricQuery(instance.params)
+    return FabricQuery()
 
 
 @pytest.fixture(name="fabric_replaced_bulk")
 def fabric_replaced_bulk_fixture():
     """
-    mock FabricReplacedBulk
+    Return FabricReplacedBulk() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "replaced"
-    return FabricReplacedBulk(instance.params)
+    return FabricReplacedBulk()
 
 
 @pytest.fixture(name="fabric_summary")
 def fabric_summary_fixture():
     """
-    mock FabricSummary
+    Return FabricSummary() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricSummary(instance.params)
+    return FabricSummary()
 
 
 @pytest.fixture(name="fabric_types")
 def fabric_types_fixture():
     """
-    mock FabricTypes
+    Return FabricTypes() instance.
     """
     return FabricTypes()
 
@@ -285,17 +231,15 @@ def fabric_types_fixture():
 @pytest.fixture(name="fabric_update_bulk")
 def fabric_update_bulk_fixture():
     """
-    mock FabricUpdateBulk
+    Return FabricUpdateBulk() instance.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return FabricUpdateBulk(instance.params)
+    return FabricUpdateBulk()
 
 
 @pytest.fixture(name="response_handler")
 def response_handler_fixture():
     """
-    mock ResponseHandler()
+    Return ResponseHandler() instance.
     """
     return ResponseHandler()
 
@@ -303,7 +247,7 @@ def response_handler_fixture():
 @pytest.fixture(name="template_get")
 def template_get_fixture():
     """
-    mock TemplateGet
+    Return TemplateGet() instance.
     """
     return TemplateGet()
 
@@ -311,7 +255,7 @@ def template_get_fixture():
 @pytest.fixture(name="template_get_all")
 def template_get_all_fixture():
     """
-    mock TemplateGetAll
+    Return TemplateGetAll() instance.
     """
     return TemplateGetAll()
 
@@ -424,21 +368,21 @@ def responses_config_save(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_config_deploy(key: str) -> dict[str, str]:
+def responses_ep_fabric_config_deploy(key: str) -> dict[str, str]:
     """
-    Return responses for FabricConfigDeploy() class
+    Return responses for EpFabricConfigDeploy() endpoint
     """
-    data_file = "responses_FabricConfigDeploy"
+    data_file = "responses_ep_fabric_config_deploy"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
 
 
-def responses_fabric_config_save(key: str) -> dict[str, str]:
+def responses_ep_fabric_config_save(key: str) -> dict[str, str]:
     """
-    Return responses for FabricConfigSave() class
+    Return responses for EpFabricConfigSave() endpoint.
     """
-    data_file = "responses_FabricConfigSave"
+    data_file = "responses_ep_fabric_config_save"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
@@ -484,16 +428,6 @@ def responses_fabric_delete(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_details(key: str) -> dict[str, str]:
-    """
-    Return responses for FabricDetails
-    """
-    data_file = "responses_FabricDetails"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
 def responses_fabric_details_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetails version 2
@@ -504,31 +438,11 @@ def responses_fabric_details_v2(key: str) -> dict[str, str]:
     return data
 
 
-def responses_fabric_details_by_name(key: str) -> dict[str, str]:
-    """
-    Return responses for FabricDetailsByName
-    """
-    data_file = "responses_FabricDetailsByName"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
 def responses_fabric_details_by_name_v2(key: str) -> dict[str, str]:
     """
     Return responses for FabricDetailsByName version 2
     """
     data_file = "responses_FabricDetailsByName_V2"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def responses_fabric_details_by_nv_pair(key: str) -> dict[str, str]:
-    """
-    Return responses for FabricDetailsByNvPair
-    """
-    data_file = "responses_FabricDetailsByNvPair"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

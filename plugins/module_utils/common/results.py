@@ -232,7 +232,9 @@ class Results:
         Return True if there were any changes
         Otherwise, return False
         """
-        msg = f"{self.class_name}.did_anything_change(): ENTERED: "
+        method_name = inspect.stack()[0][3]
+
+        msg = f"{self.class_name}.{method_name}: ENTERED: "
         msg += f"self.action: {self.action}, "
         msg += f"self.state: {self.state}, "
         msg += f"self.result_current: {self.result_current}, "
@@ -248,12 +250,17 @@ class Results:
             return True
         if self.result_current.get("changed", None) is False:
             return False
+        if "changed" not in self.result_current:
+            return False
         for diff in self.diff:
             something_changed = False
             test_diff = copy.deepcopy(diff)
             test_diff.pop("sequence_number", None)
             if len(test_diff) != 0:
                 something_changed = True
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"something_changed: {something_changed}"
+        self.log.debug(msg)
         return something_changed
 
     def register_task_result(self):

@@ -2,9 +2,9 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-# 00:03.60
+# 00:49.83
 ################################################################################
-# DESCRIPTION - BASIC FABRIC DELETED STATE TEST FOR IPFM
+# DESCRIPTION - BASIC FABRIC DELETED STATE TEST
 # 
 # Test basic deletion of fabrics verify results.
 # - Deletion of populated fabrics not tested here.
@@ -16,14 +16,14 @@
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_4
-#    - fabric_type_4  # VXLAN_EVPN_IPFM
+#    - fabric_name_2
+#    - fabric_type_2  # VXLAN_EVPN_MSD
 # 2. Delete fabrics under test, if they exist
-#    - fabric_name_4
+#    - fabric_name_2
 # TEST
 # 3. Create fabrics and verify result
-#    - fabric_name_4
-# 4. Delete fabric_name_4. Verify result
+#    - fabric_name_2
+# 4. Delete fabric_name_2. Verify result
 # CLEANUP
 # 7. No cleanup required
 ################################################################################
@@ -39,9 +39,9 @@
 # Example vars:
 #
 # vars:
-#   testcase: dcnm_fabric_deleted_basic_ipfm
-#   fabric_name_4: IPFM_Fabric
-#   fabric_type_4: IPFM
+#   testcase: dcnm_fabric_deleted_basic_msd
+#   fabric_name_2: VXLAN_EVPN_MSD_Fabric
+#   fabric_type_2: VXLAN_EVPN_MSD
 ################################################################################
 # SETUP
 ################################################################################
@@ -49,29 +49,29 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
   register: result
 - debug:
     var: result
 ################################################################################
-# DELETED - TEST - Create IPFM Fabric
+# DELETED - TEST - Create all supported fabric types
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
 # - Fabric global keys in DATA removed for brevity.
-# ok: [ndfc1] => {
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "create",
+#                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
@@ -81,12 +81,59 @@
 #             {
 #                 "DATA": {
 #                     "nvPairs": {
-#                         "FABRIC_NAME": "IPFM_Fabric"
-#                     }
+#                         "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                         "BGP_RP_ASN": "",
+#                         "BGW_ROUTING_TAG": "54321",
+#                         "BGW_ROUTING_TAG_PREV": "54321",
+#                         "BORDER_GWY_CONNECTIONS": "Manual",
+#                         "CLOUDSEC_ALGORITHM": "",
+#                         "CLOUDSEC_AUTOCONFIG": "false",
+#                         "CLOUDSEC_ENFORCEMENT": "",
+#                         "CLOUDSEC_KEY_STRING": "",
+#                         "CLOUDSEC_REPORT_TIMER": "",
+#                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                         "DCI_SUBNET_TARGET_MASK": "30",
+#                         "DCNM_ID": "",
+#                         "DELAY_RESTORE": "300",
+#                         "ENABLE_BGP_BFD": "",
+#                         "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": "",
+#                         "ENABLE_BGP_SEND_COMM": "",
+#                         "ENABLE_PVLAN": "false",
+#                         "ENABLE_PVLAN_PREV": "",
+#                         "ENABLE_RS_REDIST_DIRECT": "",
+#                         "EXT_FABRIC_TYPE": "",
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                         "FABRIC_TYPE": "MFD",
+#                         "FF": "MSD",
+#                         "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                         "L3_PARTITION_ID_RANGE": "50000-59000",
+#                         "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                         "MSO_CONTROLER_ID": "",
+#                         "MSO_SITE_GROUP_NAME": "",
+#                         "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                         "MS_IFC_BGP_AUTH_KEY_TYPE_PREV": "",
+#                         "MS_IFC_BGP_PASSWORD": "",
+#                         "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+#                         "MS_IFC_BGP_PASSWORD_ENABLE_PREV": "",
+#                         "MS_IFC_BGP_PASSWORD_PREV": "",
+#                         "MS_LOOPBACK_ID": "100",
+#                         "MS_UNDERLAY_AUTOCONFIG": "false",
+#                         "PREMSO_PARENT_FABRIC": "",
+#                         "RP_SERVER_IP": "",
+#                         "RS_ROUTING_TAG": "",
+#                         "TOR_AUTO_DEPLOY": "false",
+#                         "default_network": "Default_Network_Universal",
+#                         "default_pvlan_sec_network": "",
+#                         "default_vrf": "Default_VRF_Universal",
+#                         "enableScheduledBackup": "",
+#                         "network_extension_template": "Default_Network_Extension_Universal",
+#                         "scheduledTime": "",
+#                         "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                     },
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric/Easy_Fabric_IPFM",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric/MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -101,12 +148,12 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - SETUP - Create IPFM Fabric and verify
+- name: DELETED - SETUP - Create all supported fabric types
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
-        FABRIC_TYPE: "{{ fabric_type_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+        FABRIC_TYPE: "{{ fabric_type_2 }}"
         DEPLOY: true
   register: result
 - debug:
@@ -116,14 +163,15 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_4
+      - result.diff[0].FABRIC_NAME == fabric_name_2
+      - result.diff[0].sequence_number == 1
       - (result.response | length) == 1
       - result.response[0].sequence_number == 1
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
 ###############################################################################################
-# DELETED - TEST - Delete IPFM Fabric (fabric_name_4) and verify
+# DELETED - TEST - Delete fabric_name_2 and verify
 ###############################################################################################
 # Expected result
 # ok: [ndfc1] => {
@@ -131,14 +179,14 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "IPFM_Fabric",
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
 #                 "sequence_number": 1
 #             }
 #         ],
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
@@ -146,10 +194,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Fabric 'IPFM_Fabric' is deleted successfully!",
+#                 "DATA": "Fabric 'VXLAN_EVPN_MSD_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/IPFM_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -164,11 +212,11 @@
 #     }
 # }
 ###############################################################################################
-- name: DELETED - TEST - Delete IPFM fabric (fabric_name_4) and verify
+- name: DELETED - TEST - Delete fabric_name_2 and verify
   cisco.dcnm.dcnm_fabric: &fabric_deleted
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_4 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
   register: result
 - debug:
     var: result
@@ -177,7 +225,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_4
+      - result.diff[0].FABRIC_NAME == fabric_name_2
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_delete"
@@ -193,7 +241,7 @@
       - result.result[0].success == true
       - result.result[0].sequence_number == 1
 ################################################################################
-# DELETED - TEST - Delete IPFM Fabric (fabric_name_4) and verify idempotence
+# DELETED - TEST - Delete fabric_name_2 idempotence
 ################################################################################
 # Expected result
 # ok: [ndfc1] => {
@@ -207,7 +255,7 @@
 #         "failed": false,
 #         "metadata": [
 #             {
-#                 "action": "delete",
+#                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
@@ -230,7 +278,7 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - TEST - Delete IPFM Fabric (fabric_name_4) and verify idempotence
+- name: DELETED - TEST - Delete fabric_name_2 idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
 - debug:

@@ -11,7 +11,7 @@
             "FABRIC_TYPE": "VXLAN_EVPN"
         }
     ],
-    "test_fabric_replaced_bulk_00025a": [
+    "test_fabric_replaced_bulk_00024a": [
         {
             "BGP_AS": 65001,
             "DEPLOY": true,

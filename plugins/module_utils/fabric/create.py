@@ -38,10 +38,10 @@ class FabricCreateCommon(FabricCommon):
     - FabricCreateBulk
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action: str = "create"
+        self.action = "fabric_create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -57,19 +57,8 @@ class FabricCreateCommon(FabricCommon):
 
         self._payloads_to_commit: list = []
 
-        self._build_properties()
-
-        msg = "ENTERED FabricCreateCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricCreateCommon()"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        - Add properties specific to this class
-        - self._properties is initialized in FabricCommon
-        """
 
     def _build_payloads_to_commit(self) -> None:
         """
@@ -84,7 +73,7 @@ class FabricCreateCommon(FabricCommon):
         """
         self.fabric_details.refresh()
 
-        self._payloads_to_commit = []
+        self._payloads_to_commit: list = []
         for payload in self.payloads:
             if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
                 continue
@@ -135,8 +124,6 @@ class FabricCreateCommon(FabricCommon):
         NOTES:
         -   This overrides the parent class method.
         """
-        self.rest_send.check_mode = self.check_mode
-
         for payload in self._payloads_to_commit:
             try:
                 self._set_fabric_create_endpoint(payload)
@@ -151,6 +138,7 @@ class FabricCreateCommon(FabricCommon):
             # We don't want RestSend to retry on errors since the likelihood of a
             # timeout error when creating a fabric is low, and there are many cases
             # of permanent errors for which we don't want to retry.
+            # pylint: disable=no-member
             self.rest_send.timeout = 1
 
             self.rest_send.path = self.path
@@ -163,8 +151,8 @@ class FabricCreateCommon(FabricCommon):
             else:
                 self.results.diff_current = copy.deepcopy(payload)
             self.results.action = self.action
-            self.results.state = self.state
-            self.results.check_mode = self.check_mode
+            self.results.state = self.rest_send.state
+            self.results.check_mode = self.rest_send.check_mode
             self.results.response_current = copy.deepcopy(
                 self.rest_send.response_current
             )
@@ -185,7 +173,7 @@ class FabricCreateCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self._properties["payloads"]
+        return self._payloads
 
     @payloads.setter
     def payloads(self, value):
@@ -206,7 +194,7 @@ class FabricCreateCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(error) from error
-        self._properties["payloads"] = value
+        self._payloads = value
 
 
 class FabricCreateBulk(FabricCreateCommon):
@@ -250,21 +238,13 @@ class FabricCreateBulk(FabricCreateCommon):
     ```
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payloads = None
         self.log.debug("ENTERED FabricCreateBulk()")
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties dict is already initialized in the parent class
-        self._properties["payloads"] = None
 
     def commit(self):
         """
@@ -277,6 +257,7 @@ class FabricCreateBulk(FabricCreateCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit. "
@@ -315,21 +296,13 @@ class FabricCreate(FabricCreateCommon):
     -   FabricCreateBulk is used instead.
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payload = None
         self.log.debug("ENTERED FabricCreate()")
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # self._properties is already initialized in the parent class
-        self._properties["payload"] = None
 
     def commit(self):
         """
@@ -347,7 +320,7 @@ class FabricCreate(FabricCreateCommon):
             in FabricCreateCommom()
         """
         method_name = inspect.stack()[0][3]
-        if self.rest_send is None:
+        if self.rest_send is None:  # pylint: disable=no-member
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit. "
             raise ValueError(msg)
@@ -376,7 +349,7 @@ class FabricCreate(FabricCreateCommon):
         """
         Return a fabric create payload.
         """
-        return self._properties["payload"]
+        return self._payload
 
     @payload.setter
     def payload(self, value):
@@ -395,10 +368,10 @@ class FabricCreate(FabricCreateCommon):
             self._verify_payload(value)
         except ValueError as error:
             raise ValueError(error) from error
-        self._properties["payload"] = value
+        self._payload = value
         # payloads is also set to a list containing one payload.
         # commit() calls FabricCreateCommon()._build_payloads_to_commit(),
         # which expects a list of payloads.
         # FabricCreateCommon()._build_payloads_to_commit() verifies that
         # the fabric does not already exist on the controller.
-        self._properties["payloads"] = [value]
+        self._payloads = [value]
