@@ -1754,24 +1754,28 @@ options:
                         - One or Multiple Netflow Exporters
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_MONITOR_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Monitors
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_RECORD_LIST:
                         default: ''
                         description:
                         - One or Multiple Netflow Records
                         required: false
                         type: list
+                        elements: str
                     NETFLOW_SAMPLER_LIST:
                         default: ''
                         description:
                         - One or multiple netflow samplers. Applicable to N7K only
                         required: false
                         type: list
+                        elements: str
                     NXAPI_HTTPS_PORT:
                         default: 443
                         description:
