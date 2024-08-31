@@ -24,7 +24,7 @@ import logging
 
 class FabricTypes:
     """
-    Fabric type definitions the dcnm_fabric module.
+    Fabric type definitions for the dcnm_fabric module.
 
     Usage
 
@@ -65,13 +65,16 @@ class FabricTypes:
         This is the single place to add new fabric types.
 
         Initialize the following:
-        -   fabric_type_to_feature_name_map dict()
         -   fabric_type_to_template_name_map dict()
+        -   fabric_type_to_feature_name_map dict()
         -   _valid_fabric_types - Sorted list() of fabric types
-        -  _mandatory_payload_keys_all_fabrics list()
+        -  _mandatory_parameters_all_fabrics list()
+        -  _mandatory_parameters dict() keyed on fabric type
+            - Value is a list of mandatory parameters for the fabric type
         """
         self._fabric_type_to_template_name_map = {}
         self._fabric_type_to_template_name_map["IPFM"] = "Easy_Fabric_IPFM"
+        self._fabric_type_to_template_name_map["ISN"] = "External_Fabric"
         self._fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
         self._fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN_MSD"] = "MSD_Fabric"
@@ -80,6 +83,7 @@ class FabricTypes:
         # on the controller to enable the fabric type.
         self._fabric_type_to_feature_name_map = {}
         self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
+        self._fabric_type_to_feature_name_map["ISN"] = "vxlan"
         self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
@@ -94,17 +98,23 @@ class FabricTypes:
         self._mandatory_parameters["IPFM"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
+        self._mandatory_parameters["ISN"] = copy.copy(
+            self._mandatory_parameters_all_fabrics
+        )
         self._mandatory_parameters["LAN_CLASSIC"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
+        self._mandatory_parameters["ISN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN_MSD"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
 
+        self._mandatory_parameters["IPFM"].sort()
+        self._mandatory_parameters["ISN"].sort()
         self._mandatory_parameters["LAN_CLASSIC"].sort()
         self._mandatory_parameters["VXLAN_EVPN"].sort()
         self._mandatory_parameters["VXLAN_EVPN_MSD"].sort()
