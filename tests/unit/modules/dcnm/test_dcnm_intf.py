@@ -1187,6 +1187,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
+
+        if "_pc_merged_vlan_range_new" in self._testMethodName:
+            # No I/F exists case
+            playbook_pc_intf1 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.playbook_mock_vpc_resp,
+                playbook_pc_intf1,
+                playbook_have_all_data,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
         if "_pc_merged_policy_change" in self._testMethodName:
             playbook_pc_intf1 = self.payloads_data.get(
                 "pc_merged_trunk_payloads"
@@ -2700,6 +2718,45 @@ class TestDcnmIntfModule(TestDcnmModule):
                             "Port-channel301",
                             "Port-channel302",
                             "Port-channel303",
+                        ]
+                    ),
+                    True,
+                )
+
+    def test_dcnm_intf_pc_merged_vlan_range_new(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_pc_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_pc_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("pc_merged_vlan_range_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (
+                        intf["ifName"]
+                        in [
+                            "Port-channel300"
                         ]
                     ),
                     True,
