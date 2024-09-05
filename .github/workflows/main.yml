@@ -42,6 +42,7 @@ jobs:
       with:
         name: collection
         path: .cache/collection-tarballs
+        overwrite: true
 
 
   sanity:
