@@ -41,7 +41,7 @@ jobs:
       uses: actions/upload-artifact@v1
       with:
         name: collection
-        path: .cache/collection-tarballs
+        path: .cache/(v${{ matrix.ansible }})/collection-tarballs
 
 
   sanity:
