@@ -12,7 +12,7 @@ This collection is intended for use with the following release versions:
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against following Ansible versions: **>=2.9.10**.
+This collection has been tested against following Ansible versions: **>=2.15.0**.
 
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
@@ -32,6 +32,7 @@ Name | Description
 ### Modules
 Name | Description
 --- | ---
+[cisco.dcnm.dcnm_contracts](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_contracts_module.rst)|Configure Contracts for security groups in NDFC fabrics
 [cisco.dcnm.dcnm_fabric](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_fabric_module.rst)|Manage creation and configuration of NDFC fabrics.
 [cisco.dcnm.dcnm_image_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_policy_module.rst)|Image policy management for Nexus Dashboard Fabric Controller
 [cisco.dcnm.dcnm_image_upgrade](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upgrade_module.rst)|Image management for Nexus switches
@@ -41,6 +42,7 @@ Name | Description
 [cisco.dcnm.dcnm_links](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_links_module.rst)|DCNM ansible module for managing Links.
 [cisco.dcnm.dcnm_network](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_network_module.rst)|Add and remove Networks from a DCNM managed VXLAN fabric.
 [cisco.dcnm.dcnm_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_policy_module.rst)|DCNM Ansible Module for managing policies.
+[cisco.dcnm.dcnm_protocols](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_protocols_module.rst)|Configure Protocols for security contracts on NDFC fabrics
 [cisco.dcnm.dcnm_resource_manager](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_resource_manager_module.rst)|DCNM ansible module for managing resources.
 [cisco.dcnm.dcnm_rest](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_rest_module.rst)|Send REST API requests to DCNM controller.
 [cisco.dcnm.dcnm_service_node](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_service_node_module.rst)|Create/Modify/Delete service node based on type and attached interfaces from a DCNM managed VXLAN fabric.

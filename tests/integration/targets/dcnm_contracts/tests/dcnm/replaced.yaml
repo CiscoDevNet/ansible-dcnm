@@ -1,0 +1,164 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: REPLACED - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: REPLACED - setup - Clean up any existing contracts
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                REPLACED                  ##
+##############################################
+
+- name: REPLACED - Create one contract
+  cisco.dcnm.dcnm_contracts: &conf
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - contract_name: test
+      description: test
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: REPLACED - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: REPLACED - replace rules in contract
+  cisco.dcnm.dcnm_contracts: &conf1
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - contract_name: test
+      description: test
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].METHOD == "PUT"'
+    - 'result.response[0].DATA.name == "test"'
+
+- name: REPLACED - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: REPLACED - Create another contract
+  cisco.dcnm.dcnm_contracts: &conf2
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - contract_name: test1
+      description: test1
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test1"'
+
+- name: REPLACED - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf2
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: REPLACED - Contract query
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - "result.response | length == 2"
+
+- name: REPLACED - Contract delete config
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: REPLACED - Configure contract without mandatory param
+  cisco.dcnm.dcnm_contracts:
+    fabric: test_fab
+    state: replaced
+    config:
+    - contract_name: test2
+      description: test2
+      rules:
+      - direction: bidirectional
+        action: permit
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"protocol_name : Required parameter not found" in result.msg'
+
+- name: REPLACED - Contract delete
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: REPLACED - setup - remove any contracts
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted

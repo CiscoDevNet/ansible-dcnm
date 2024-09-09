@@ -1,0 +1,158 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: QUERY - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: QUERY - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                QUERY                     ##
+##############################################
+
+- name: QUERY - Create one protocol
+  cisco.dcnm.dcnm_protocols: &conf
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+  
+- name: QUERY - Protocol query with config
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].protocolName == "test"'
+    - "result.response | length == 1"
+
+- name: QUERY - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: QUERY - Create multiple protocols
+  cisco.dcnm.dcnm_protocols: &conf1
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+    - protocol_name: test1
+      description: test1
+      match:
+      - type: ipv6
+        protocol_options: "icmpv6"
+        dscp: 10
+    - protocol_name: test2
+      description: test2
+      match_all: True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+    - 'result.response[0].DATA.successList[1].name == "test1"'
+    - 'result.response[0].DATA.successList[2].name == "test2"'
+
+- name: QUERY - Protocol query with config
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].protocolName == "test"'
+    - "result.response | length == 1"
+
+- name: QUERY - Protocol query with no config
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"test" or "test1" or "test2" in result.response[0].protocolName'
+    - '"test" or "test1" or "test2" in result.response[1].protocolName'
+    - '"test" or "test1" or "test2" in result.response[2].protocolName'
+    - "result.response | length == 3"
+
+- name: QUERY - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: QUERY - Protocol query non existent config
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - "result.response | length == 0"
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: QUERY - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
