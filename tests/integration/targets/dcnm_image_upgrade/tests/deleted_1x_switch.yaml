@@ -1,0 +1,204 @@
+################################################################################
+# RUNTIME
+################################################################################
+
+# Recent run times (MM:SS.ms):
+# 13:32.03
+#
+################################################################################
+# STEPS
+################################################################################
+#
+# SETUP (these should be run prior to running this playbook)
+#  1. Run 00_setup_create_fabric.yaml
+#  2. Run 01_setup_add_switches_to_fabric 
+#  3. Run 02_setup_replace_image_policies
+# PRE_TEST (this playbook)
+#  4. DELETED - PRE_TEST - Upgrade all switches using global config.
+#  5. DELETED - PRE_TEST - Wait for controller response for all three switches.
+#  6. DELETED - TEST - Detach policies from two switches and verify.
+#  7. DELETED - TEST - Detach policies from remaining switch and verify.
+# CLEANUP
+#  8. Run 03_cleanup_remove_devices_from_fabric.yaml
+#  9. Run 04_cleanup_delete_image_policies.yaml
+# 10. Run 05_cleanup_delete_fabric.yaml
+#
+################################################################################
+# REQUIREMENTS
+################################################################################
+#
+# Example vars for dcnm_image_upgrade integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#    testcase: deleted_1x_switch
+#    fabric_name: LAN_Classic_Fabric
+#    switch_username: admin
+#    switch_password: "Cisco!2345"
+#    leaf1: 172.22.150.103
+#    leaf2: 172.22.150.104
+#    spine1: 172.22.150.113
+#    # for dcnm_image_policy and dcnm_image_upgrade roles
+#    image_policy_1: "KR5M"
+#    image_policy_2: "NR3F"
+#    # for dcnm_image_policy role
+#    epld_image_1: n9000-epld.10.2.5.M.img
+#    epld_image_2: n9000-epld.10.3.1.F.img
+#    nxos_image_1: n9000-dk9.10.2.5.M.bin
+#    nxos_image_2: n9000-dk9.10.3.1.F.bin
+#    nxos_release_1: 10.2.5_nxos64-cs_64bit
+#    nxos_release_2: 10.3.1_nxos64-cs_64bit
+#    # for dcnm_image_upgrade role
+#    fabric_name_1: "{{ fabric_name }}"
+#    ansible_switch_1: "{{ leaf1 }}"
+#    ansible_switch_2: "{{ leaf2 }}"
+#    ansible_switch_3: "{{ spine1 }}"
+#
+################################################################################
+# DELETED - PRE_TEST - Upgrade all switches using global_config
+#
+# NOTES:
+#   1. Depending on whether the switches are already at the desired version, the
+#      upgrade may not be performed.  Hence, we do not check for the upgrade
+#      status in this test.
+################################################################################
+
+- name: DELETED - PRE_TEST - Upgrade all switches using global config.
+  cisco.dcnm.dcnm_image_upgrade: &global_config
+    state: merged
+    config:
+        policy: "{{ image_policy_1 }}"
+        reboot: false
+        stage: true
+        validate: true
+        upgrade:
+            nxos: true
+            epld: false
+        options:
+            nxos:
+                mode: disruptive
+                bios_force: false
+            epld:
+                module: ALL
+                golden: false
+            reboot:
+                config_reload: false
+                write_erase: false
+            package:
+                install: false
+                uninstall: false
+        switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+  register: result
+
+- debug:
+    var: result
+
+################################################################################
+# DELETED - PRE_TEST - Wait for controller response for switch.
+################################################################################
+
+- name: DELETED - PRE_TEST - Wait for controller response for switch.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: query
+    config:
+        switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+  register: result
+  until:
+    - ansible_switch_1 in result.diff[0]
+  retries: 60
+  delay: 5
+  ignore_errors: yes
+
+################################################################################
+# DELETED - TEST - Detach policy from switch and verify.
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "172.22.150.103": {
+#                     "action": "image_policy_detach",
+#                     "device_name": "cvd-1312-leaf",
+#                     "ipv4_address": "172.22.150.103",
+#                     "platform": "N9K",
+#                     "policy_name": "NR2F",
+#                     "serial_number": "FDO211218GC"
+#                 },
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "image_policy_detach",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Successfully detach the policy from device.",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/detach-policy?serialNumber=FDO211218GC",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - TEST - Detach policy from switch and verify.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: deleted
+    config:
+      policy: "{{ image_policy_1 }}"
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0][ansible_switch_1]["action"] == "image_policy_detach"
+      - result.diff[0][ansible_switch_1]["policy_name"] == image_policy_1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0]["action"] == "image_policy_detach"
+      - result.metadata[0]["check_mode"] == false
+      - result.metadata[0]["state"] == "deleted"
+      - result.metadata[0]["sequence_number"] == 1
+      - (result.response | length) == 1
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA == "Successfully detach the policy from device."
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+
+################################################################################
+# CLEANUP
+################################################################################
+# Run 03_cleanup_remove_devices_from_fabric.yaml
+# Run 04_cleanup_delete_image_policies.yaml
+# Run 05_cleanup_delete_fabric.yaml
+################################################################################

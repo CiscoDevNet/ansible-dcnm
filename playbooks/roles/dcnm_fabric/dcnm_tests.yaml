@@ -1,8 +1,10 @@
 ---
 # This playbook can be used to execute integration tests for
-# the role located in:
+# the roles located in:
 #
-# Modify the vars section with details for testing setup.
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Modify the vars section with details for your testing setup.
 #
 # NOTES:
 # 1. For the IPFM test cases (dcnm_*_ipfm), ensure that the controller
@@ -17,17 +19,23 @@
   connection: ansible.netcommon.httpapi
 
   vars:
-    # This testcase field can run any test in the tests directory for the role
+    # Uncomment ONE of the following testcases
     # testcase: dcnm_fabric_deleted_basic
     # testcase: dcnm_fabric_deleted_basic_ipfm
+    # testcase: dcnm_fabric_deleted_basic_lan_classic
+    # testcase: dcnm_fabric_deleted_basic_msd
+    # testcase: dcnm_fabric_deleted_basic_vxlan
     # testcase: dcnm_fabric_merged_basic
     # testcase: dcnm_fabric_merged_basic_ipfm
     # testcase: dcnm_fabric_merged_save_deploy
     # testcase: dcnm_fabric_merged_save_deploy_ipfm
     # testcase: dcnm_fabric_replaced_basic
+    # testcase: dcnm_fabric_replaced_basic_vxlan
+    # testcase: dcnm_fabric_replaced_basic_vxlan_site_id
     # testcase: dcnm_fabric_replaced_basic_ipfm
     # testcase: dcnm_fabric_replaced_save_deploy
     # testcase: dcnm_fabric_replaced_save_deploy_ipfm
+    # testcase: dcnm_fabric_query_basic.yaml
     fabric_name_1: VXLAN_EVPN_Fabric
     fabric_type_1: VXLAN_EVPN
     fabric_name_2: VXLAN_EVPN_MSD_Fabric

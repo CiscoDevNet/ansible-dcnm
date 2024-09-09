@@ -47,10 +47,10 @@ class FabricReplacedCommon(FabricCommon):
     - FabricReplacedBulk
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "replace"
+        self.action = "fabric_replace"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -72,10 +72,7 @@ class FabricReplacedCommon(FabricCommon):
         # Populated in _fabric_needs_update_for_replaced_state()
         self._controller_config = {}
 
-        msg = "ENTERED FabricReplacedCommon(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricReplacedCommon()"
         self.log.debug(msg)
 
     def _translate_payload_for_comparison(self, payload: dict) -> dict:
@@ -124,19 +121,52 @@ class FabricReplacedCommon(FabricCommon):
             translated_payload[user_parameter] = user_value
         return copy.deepcopy(translated_payload)
 
+    def update_site_id(self, playbook, controller):
+        """
+        ### Summary
+        Special-case handling for fabric SITE_ID parameter update.
+
+        ### Raises
+        None
+
+        ### Discussion
+        -   If playbook.SITE_ID == controller.SITE_ID, no change is needed.
+            Return None.
+        -   If playbook.SITE_ID == controller.BGP_AS, no change is needed.
+            Return None.
+        -   If playbook.SITE_ID is not None and playbook.SITE_ID != BGP_AS,
+            update payload with playbook.SITE_ID.
+        -   If playbook.SITE_ID is None, and controller.SITE_ID != controller.BGP_AS,
+            update the payload with controller.BGP_AS.
+        -   Default return is None (don't add SITE_ID to payload).
+        """
+        bgp_as = self._controller_config.get("BGP_AS", None)
+        if playbook == controller:
+            return None
+        if playbook == bgp_as:
+            return None
+        if playbook is not None and playbook != bgp_as:
+            return {"SITE_ID": playbook}
+        if playbook is None and controller != bgp_as:
+            return {"SITE_ID": bgp_as}
+        return None
+
     def update_replaced_payload(self, parameter, playbook, controller, default):
         """
+        ### Summary
         Given a parameter, and the parameter's values from:
+
         -   playbook config
         -   controller fabric config
         -   default value from the template
 
         Return either:
+
         -   None if the parameter does not need to be updated.
         -   A dict with the parameter and playbook value if the parameter
             needs to be updated.
 
-        Usage:
+        ### Usage:
         ```python
         payload_to_send_to_controller = {}
         for parameter, controller in _controller_config.items():
@@ -147,9 +177,21 @@ class FabricReplacedCommon(FabricCommon):
                 continue
             payload_to_send_to_controller.update(result)
         ```
+
+        ### NOTES
+        -   Special-case SITE_ID.
+            -   The template default value is "", but the actual default value
+                is BGP_AS.
+        -   Explicitely skip ANYCAST_RP_IP_RANGE_INTERNAL.
+            -   It is an internal parameter, but is not specified as such in
+                the fabric template.
         """
+        if parameter == "ANYCAST_RP_IP_RANGE_INTERNAL":
+            return None
+        if parameter == "SITE_ID":
+            return self.update_site_id(playbook, controller)
         if playbook is None:
-            if controller != default:
+            if controller not in {default, ""}:
                 if default is None:
                     # The controller prefers empty string over null.
                     return {parameter: ""}
@@ -426,8 +468,6 @@ class FabricReplacedCommon(FabricCommon):
             -   ``FabricReplacedCommon()._config_save()``
             -   ``FabricReplacedCommon()._config_deploy()``
         """
-        self.rest_send.check_mode = self.check_mode
-
         try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
@@ -442,6 +482,7 @@ class FabricReplacedCommon(FabricCommon):
             except ValueError as error:
                 raise ValueError(error) from error
 
+        # pylint: disable=no-member
         # Skip config-save if prior actions encountered errors.
         if True in self.results.failed:
             return
@@ -507,6 +548,7 @@ class FabricReplacedCommon(FabricCommon):
         # We don't want RestSend to retry on errors since the likelihood of a
         # timeout error when updating a fabric is low, and there are many cases
         # of permanent errors for which we don't want to retry.
+        # pylint: disable=no-member
         self.rest_send.timeout = 1
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -522,8 +564,8 @@ class FabricReplacedCommon(FabricCommon):
             self.rest_send.result_current["success"]
         )
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
         self.results.result_current = copy.deepcopy(self.rest_send.result_current)
         self.results.register_task_result()
@@ -539,7 +581,7 @@ class FabricReplacedCommon(FabricCommon):
         - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
         - setter: raise ``ValueError`` if any payload is missing mandatory keys
         """
-        return self._properties["payloads"]
+        return self._payloads
 
     @payloads.setter
     def payloads(self, value):
@@ -555,7 +597,7 @@ class FabricReplacedCommon(FabricCommon):
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(error) from error
-        self._properties["payloads"] = value
+        self._payloads = value
 
 
 class FabricReplacedBulk(FabricReplacedCommon):
@@ -597,21 +639,14 @@ class FabricReplacedBulk(FabricReplacedCommon):
     ```
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self._payloads = None
+
         self.log.debug("ENTERED FabricReplacedBulk()")
-
-        self._build_properties()
-
-    def _build_properties(self):
-        """
-        Add properties specific to this class
-        """
-        # properties dict is already initialized in FabricCommon
-        self._properties["payloads"] = None
 
     def commit(self):
         """
@@ -640,14 +675,15 @@ class FabricReplacedBulk(FabricReplacedCommon):
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
 
         self.template_get.rest_send = self.rest_send
         try:

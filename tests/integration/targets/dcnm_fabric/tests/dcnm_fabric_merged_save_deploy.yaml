@@ -44,13 +44,17 @@
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-# Example vars for dcnm_fabric integration tests
-# Add fabric and leaf vars to cisco/dcnm/playbooks/dcnm_tests.yaml
-# Add nxos_username and nxos_password vars to cisco/dcnm/playbooks/dcnm_hosts.yaml
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
 #
 # vars:
-#   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_fabric_merged_save_deploy
 #   fabric_name_1: VXLAN_EVPN_Fabric
 #   fabric_type_1: VXLAN_EVPN
 #   fabric_name_3: LAN_CLASSIC_Fabric
@@ -184,11 +188,11 @@
       - result.diff[1].BOOTSTRAP_ENABLE == false
       - result.diff[1].IS_READ_ONLY == false
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "create"
+      - result.metadata[1].action == "fabric_create"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -462,11 +466,11 @@
       - result.diff[1].SUBINTERFACE_RANGE == "2-101"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "update"
+      - result.metadata[1].action == "fabric_update"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -592,7 +596,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -723,11 +727,11 @@
       - result.diff[1].FABRIC_NAME == fabric_name_3
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "delete"
+      - result.metadata[1].action == "fabric_delete"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "deleted"

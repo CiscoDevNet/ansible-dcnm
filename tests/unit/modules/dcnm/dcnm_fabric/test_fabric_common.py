@@ -60,46 +60,12 @@ def test_fabric_common_00010(fabric_common) -> None:
     with does_not_raise():
         instance = fabric_common
     assert instance.class_name == "FabricCommon"
-    assert instance.state == "merged"
-    assert instance.check_mode is False
 
-    assert instance._properties["fabric_details"] is None
-    assert instance._properties["fabric_summary"] is None
-    assert instance._properties["fabric_type"] == "VXLAN_EVPN"
-    assert instance._properties["rest_send"] is None
-    assert instance._properties["results"] is None
-
-
-def test_fabric_common_00011() -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-
-    Summary
-    - Verify ``ValueError`` is raised when check_mode is missing from params
-    """
-    params_test = copy.deepcopy(params)
-    params_test.pop("check_mode", None)
-    match = r"FabricCommon\.__init__\(\): check_mode is required"
-    with pytest.raises(ValueError, match=match):
-        FabricCommon(params_test)
-
-
-def test_fabric_common_00012() -> None:
-    """
-    Classes and Methods
-    - FabricCommon
-        - __init__()
-
-    Summary
-    - Verify ``ValueError`` is raised when state is missing from params
-    """
-    params_test = copy.deepcopy(params)
-    params_test.pop("state", None)
-    match = r"FabricCommon\.__init__\(\): state is required"
-    with pytest.raises(ValueError, match=match):
-        FabricCommon(params_test)
+    assert instance._fabric_details is None
+    assert instance._fabric_summary is None
+    assert instance._fabric_type == "VXLAN_EVPN"
+    assert instance._rest_send is None
+    assert instance._results is None
 
 
 def test_fabric_common_00020(fabric_common) -> None:
@@ -267,6 +233,7 @@ def test_fabric_common_00100(fabric_common) -> None:
     match += r"Playbook configuration for fabrics must be a dict\.\s+"
     match += r"Got type str, value NOT_A_DICT\."
     with pytest.raises(ValueError, match=match):
+        instance.action = "fabric_create"
         instance._verify_payload(payload)
 
 
@@ -298,6 +265,7 @@ def test_fabric_common_00110(fabric_common, mandatory_key) -> None:
 
     with does_not_raise():
         instance = fabric_common
+        instance.action = "fabric_create"
 
     match = r"FabricCommon\._verify_payload:\s+"
     match += r"Playbook configuration for fabric .* is missing mandatory\s+"
@@ -314,16 +282,17 @@ def test_fabric_common_00111(fabric_common) -> None:
         - _verify_payload()
 
     Summary
-    -   Verify FabricCommon()_verify_payload() returns if state != "merged".
+    -   Verify FabricCommon()_verify_payload() returns if action
+        is not one of "fabric_create" or "fabric_replace".
 
     NOTES:
-    -   Since state == "query", FabricCommon()._verify_payload() does not
+    -   Since action == "foo", FabricCommon()._verify_payload() does not
         reach its validation checks and so does not raise ``ValueError``
         when its input parameter is the wrong type (str vs dict).
     """
     with does_not_raise():
         instance = fabric_common
-        instance.state = "query"
+        instance.action = "foo"
         instance._verify_payload("NOT_A_DICT")
 
 
@@ -377,6 +346,7 @@ def test_fabric_common_00112(fabric_common, fabric_name, expected) -> None:
 
     with does_not_raise():
         instance = fabric_common
+        instance.action = "fabric_create"
         instance.results = Results()
     with expected:
         instance._verify_payload(payload)
@@ -418,6 +388,7 @@ def test_fabric_common_00113(fabric_common, fabric_type, expected) -> None:
 
     with does_not_raise():
         instance = fabric_common
+        instance.action = "fabric_create"
         instance.results = Results()
     with expected:
         instance._verify_payload(payload)

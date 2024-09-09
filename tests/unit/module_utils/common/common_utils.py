@@ -18,7 +18,6 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
@@ -27,6 +26,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_featu
     ControllerFeatures
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_version import \
     ControllerVersion
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
+    ImagePolicies
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.maintenance_mode import \
     MaintenanceMode
@@ -95,7 +96,7 @@ class ResponseGenerator:
         """
         return "response_generator"
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -123,7 +124,7 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -136,17 +137,25 @@ class MockAnsibleModule:
 @pytest.fixture(name="controller_features")
 def controller_features_fixture():
     """
-    return ControllerFeatures
+    return ControllerFeatures instance.
     """
-    return ControllerFeatures(params)
+    return ControllerFeatures()
 
 
 @pytest.fixture(name="controller_version")
 def controller_version_fixture():
     """
-    return ControllerVersion with mocked AnsibleModule
+    return ControllerVersion instance.
     """
-    return ControllerVersion(MockAnsibleModule)
+    return ControllerVersion()
+
+
+@pytest.fixture(name="image_policies")
+def image_policies_fixture():
+    """
+    Return ImagePolicies instance.
+    """
+    return ImagePolicies()
 
 
 @pytest.fixture(name="sender_dcnm")
@@ -237,7 +246,7 @@ def does_not_raise():
     yield
 
 
-def merge_dicts_data(key: str) -> Dict[str, str]:
+def merge_dicts_data(key: str) -> dict[str, str]:
     """
     Return data from merge_dicts.json for merge_dicts unit tests.
     """
@@ -247,7 +256,7 @@ def merge_dicts_data(key: str) -> Dict[str, str]:
     return data
 
 
-def merge_dicts_v2_data(key: str) -> Dict[str, str]:
+def merge_dicts_v2_data(key: str) -> dict[str, str]:
     """
     Return data from merge_dicts_v2.json for merge_dicts_v2 unit tests.
     """
@@ -257,7 +266,7 @@ def merge_dicts_v2_data(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_deploy_maintenance_mode(key: str) -> Dict[str, str]:
+def responses_deploy_maintenance_mode(key: str) -> dict[str, str]:
     """
     Return data in responses_DeployMaintenanceMode.json
     """
@@ -267,7 +276,7 @@ def responses_deploy_maintenance_mode(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_controller_features(key: str) -> Dict[str, str]:
+def responses_controller_features(key: str) -> dict[str, str]:
     """
     Return data in responses_ControllerFeatures.json
     """
@@ -276,17 +285,17 @@ def responses_controller_features(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_controller_version(key: str) -> Dict[str, str]:
+def responses_ep_version(key: str) -> dict[str, str]:
     """
-    Return data in responses_ControllerVersion.json
+    Return responses for endpoint EpVersion.
     """
-    response_file = "responses_ControllerVersion"
+    response_file = "responses_ep_version"
     response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
+    print(f"responses_ep_version: {key} : {response}")
     return response
 
 
-def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
+def responses_fabric_details_by_name(key: str) -> dict[str, str]:
     """
     Return data in responses_FabricDetailsByName.json
     """
@@ -296,7 +305,17 @@ def responses_fabric_details_by_name(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_maintenance_mode(key: str) -> Dict[str, str]:
+def responses_ep_policies(key: str) -> dict[str, str]:
+    """
+    Return controller responses for the EpPolicies() endpoint.
+    """
+    response_file = "responses_ep_policies"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_policies: {key} : {response}")
+    return response
+
+
+def responses_maintenance_mode(key: str) -> dict[str, str]:
     """
     Return data in responses_MaintenanceMode.json
     """
@@ -306,7 +325,7 @@ def responses_maintenance_mode(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_sender_dcnm(key: str) -> Dict[str, str]:
+def responses_sender_dcnm(key: str) -> dict[str, str]:
     """
     Return data in responses_SenderDcnm.json
     """
@@ -316,7 +335,7 @@ def responses_sender_dcnm(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_sender_file(key: str) -> Dict[str, str]:
+def responses_sender_file(key: str) -> dict[str, str]:
     """
     Return data in responses_SenderFile.json
     """
@@ -326,7 +345,7 @@ def responses_sender_file(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_switch_details(key: str) -> Dict[str, str]:
+def responses_switch_details(key: str) -> dict[str, str]:
     """
     Return data in responses_SwitchDetails.json
     """

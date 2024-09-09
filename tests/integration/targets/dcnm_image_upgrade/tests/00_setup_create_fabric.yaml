@@ -1,0 +1,111 @@
+################################################################################
+# TESTCASE:
+#
+# 00_setup_create_fabric
+#
+# Description:
+#
+# Create a VXLAN EVPN Fabric.
+#
+################################################################################
+#
+################################################################################
+# RUNTIME
+################################################################################
+#
+# Recent run times (MM:SS.ms):
+# 28:57.34
+#
+################################################################################
+# STEPS
+################################################################################
+#
+# SETUP
+# 1. Create LAN_Classic fabric with basic config.
+################################################################################
+# SETUP - Create VXLAN_EVPN_Fabric with basic config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "BOOTSTRAP_ENABLE": false,
+#                 "FABRIC_NAME": "LAN_Classic_Fabric",
+#                 "IS_READ_ONLY": false,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "FABRIC_NAME": "LAN_Classic_Fabric",
+#                         "IS_READ_ONLY": "false",
+#                     },
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/LAN_Classic_Fabric/LAN_Classic",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: SETUP - Create LAN_Classic fabric with basic config.
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: LAN_CLASSIC
+        BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].BOOTSTRAP_ENABLE == False
+      - result.diff[0].IS_READ_ONLY == False
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "create"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true

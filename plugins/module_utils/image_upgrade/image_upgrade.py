@@ -23,73 +23,103 @@ import inspect
 import json
 import logging
 from time import sleep
-from typing import Any, Dict, List, Set
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import \
+    EpUpgradeImage
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsByIpAddress
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
+    WaitForControllerDone
 
 
-class ImageUpgrade(ImageUpgradeCommon):
+@Properties.add_rest_send
+@Properties.add_results
+class ImageUpgrade:
     """
-    Endpoint:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image
-    Verb: POST
+    ### Summary
+    Upgrade the image on one or more switches.
 
-    Usage (where module is an instance of AnsibleModule):
 
-    upgrade = ImageUpgrade(module)
-    upgrade.devices = devices
+    ### Usage example
+    ```python
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    results = Results()
+
+    upgrade = ImageUpgrade()
+    upgrade.rest_send = rest_send
+    upgrade.results = results
+    upgrade.devices = devices # see Example devices structure below
     upgrade.commit()
     data = upgrade.data
+    ```
 
-    Where devices is a list of dict.  Example structure:
+    ### Endpoint:
+    -   path: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image
+    -   verb: POST
 
-        [
-            {
-                'policy': 'KR3F',
-                'ip_address': '172.22.150.102',
-                'policy_changed': False
-                'stage': False,
-                'validate': True,
-                'upgrade': {
-                    'nxos': True,
-                    'epld': False
-                },
-                'options': {
-                    'nxos': {
-                        'mode': 'non_disruptive'
-                        'bios_force': False
-                    },
-                    'epld': {
-                        'module': 'ALL',
-                        'golden': False
-                    },
-                    'reboot': {
-                        'config_reload': False,
-                        'write_erase': False
-                    },
-                    'package': {
-                        'install': False,
-                        'uninstall': False
-                    }
-                },
+    ### Example devices structure
+
+    ```python
+    devices = [
+        {
+            'policy': 'KR3F',
+            'ip_address': '172.22.150.102',
+            'policy_changed': False
+            'stage': False,
+            'validate': True,
+            'upgrade': {
+                'nxos': True,
+                'epld': False
             },
-            etc...
-        ]
+            'options': {
+                'nxos': {
+                    'mode': 'non_disruptive'
+                    'bios_force': False
+                },
+                'epld': {
+                    'module': 'ALL',
+                    'golden': False
+                },
+                'reboot': {
+                    'config_reload': False,
+                    'write_erase': False
+                },
+                'package': {
+                    'install': False,
+                    'uninstall': False
+                }
+            },
+        },
+        {
+            "etc...": "etc..."
+        }
+    ]
+    ```
 
-    Request body:
-        Yes, the keys below are misspelled in the request body:
-            pacakgeInstall
-            pacakgeUnInstall
+    ### Example request body
 
+    - Yes, the keys below are misspelled in the request body:
+        -   ``pacakgeInstall``
+        -   ``pacakgeUnInstall``
+
+        ```json
         {
             "devices": [
                 {
@@ -119,38 +149,49 @@ class ImageUpgrade(ImageUpgradeCommon):
             "pacakgeInstall": false,
             "pacakgeUnInstall": false
         }
-    Response bodies:
-        Responses are text, not JSON, and are returned immediately.
-        They do not contain useful information. We need to poll the controller
-        to determine when the upgrade is complete. Basically, we ignore
-        these responses in favor of the poll responses.
-        - If an action is in progress, text is returned:
-            "Action in progress for some of selected device(s).
-            Please try again after completing current action."
-        -   If an action is not in progress, text is returned:
-            "3"
+        ```
+
+    ### Response bodies
+    -   Responses are text, not JSON, and are returned immediately.
+    -   Responses do not contain useful information. We need to poll
+        the controller to determine when the upgrade is complete.
+        Basically, we ignore these responses in favor of the poll
+        responses.
+    -   If an action is in progress, text is returned:
+        ``Action in progress for some of selected device(s).
+        Please try again after completing current action.``
+    -   If an action is not in progress, text is returned:
+        ``3``
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImageUpgrade(): "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
-        self.install_options = ImageInstallOptions(self.ansible_module)
-        self.rest_send = RestSend(self.ansible_module)
-        self.issu_detail = SwitchIssuDetailsByIpAddress(self.ansible_module)
+        self.action = "image_upgrade"
+        self.diff: dict = {}
+        # Used in _wait_for_upgrade_to_complete()
         self.ipv4_done = set()
         self.ipv4_todo = set()
-        self.payload: Dict[str, Any] = {}
-        self.path = self.endpoints.image_upgrade.get("path")
-        self.verb = self.endpoints.image_upgrade.get("verb")
+        self.payload = None
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+
+        self.conversion = ConversionUtils()
+        self.ep_upgrade_image = EpUpgradeImage()
+        self.install_options = ImageInstallOptions()
+        self.issu_detail = SwitchIssuDetailsByIpAddress()
+        self.wait_for_controller_done = WaitForControllerDone()
+
+        self._rest_send = None
+        self._results = None
 
         self._init_properties()
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def _init_properties(self) -> None:
         """
@@ -163,26 +204,26 @@ class ImageUpgrade(ImageUpgradeCommon):
         # self.ip_addresses is used in:
         #   self._wait_for_current_actions_to_complete()
         #   self._wait_for_image_upgrade_to_complete()
-        self.ip_addresses: Set[str] = set()
-        # self.properties is already initialized in the parent class
-        self.properties["bios_force"] = False
-        self.properties["check_interval"] = 10  # seconds
-        self.properties["check_timeout"] = 1800  # seconds
-        self.properties["config_reload"] = False
-        self.properties["devices"] = None
-        self.properties["disruptive"] = True
-        self.properties["epld_golden"] = False
-        self.properties["epld_module"] = "ALL"
-        self.properties["epld_upgrade"] = False
-        self.properties["force_non_disruptive"] = False
-        self.properties["response_data"] = []
-        self.properties["non_disruptive"] = False
-        self.properties["package_install"] = False
-        self.properties["package_uninstall"] = False
-        self.properties["reboot"] = False
-        self.properties["write_erase"] = False
+        self.ip_addresses: set = set()
 
-        self.valid_nxos_mode: Set[str] = set()
+        self.properties = {}
+        self._bios_force = False
+        self._check_interval = 10  # seconds
+        self._check_timeout = 1800  # seconds
+        self._config_reload = False
+        self._devices = None
+        self._disruptive = True
+        self._epld_golden = False
+        self._epld_module = "ALL"
+        self._epld_upgrade = False
+        self._force_non_disruptive = False
+        self._non_disruptive = False
+        self._package_install = False
+        self._package_uninstall = False
+        self._reboot = False
+        self._write_erase = False
+
+        self.valid_nxos_mode: set = set()
         self.valid_nxos_mode.add("disruptive")
         self.valid_nxos_mode.add("non_disruptive")
         self.valid_nxos_mode.add("force_non_disruptive")
@@ -190,6 +231,37 @@ class ImageUpgrade(ImageUpgradeCommon):
     # We used to have a prune_devices() method here, but this
     # is now done in dcnm_image_upgrade.py.  Consider moving
     # that code here later.
+
+    def build_diff(self) -> None:
+        """
+        ### Summary
+        Build the diff of the image validate operation.
+
+        ### Raises
+        None
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.diff: dict = {}
+
+        for ipv4 in self.ipv4_done:
+            self.issu_detail.filter = ipv4
+
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["ip_address"] = self.issu_detail.ip_address
+            self.diff[ipv4]["logical_name"] = self.issu_detail.device_name
+            self.diff[ipv4]["policy_name"] = self.issu_detail.policy
+            self.diff[ipv4]["serial_number"] = self.issu_detail.serial_number
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.diff[{ipv4}]: "
+            msg += f"{json.dumps(self.diff[ipv4], indent=4)}"
+            self.log.debug(msg)
 
     def _validate_devices(self) -> None:
         """
@@ -201,13 +273,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}: "
         msg = f"self.devices: {json.dumps(self.devices, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if self.devices is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "call instance.devices before calling commit."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         self.issu_detail.refresh()
         for device in self.devices:
@@ -227,11 +300,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Build the request payload to upgrade the switches.
         """
-        # issu_detail.refresh() has already been called in _validate_devices()
-        # so no need to call it here.
-        msg = f"ENTERED _build_payload: device {device}"
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"device {device}"
         self.log.debug(msg)
 
+        # issu_detail.refresh() has already been called in _validate_devices()
+        # so no need to call it here.
         self.issu_detail.filter = device.get("ip_address")
 
         self.install_options.serial_number = self.issu_detail.serial_number
@@ -247,14 +323,14 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.install_options.refresh()
 
         # devices_to_upgrade must currently be a single device
-        devices_to_upgrade: List[dict] = []
+        devices_to_upgrade: list = []
 
-        payload_device: Dict[str, Any] = {}
+        payload_device: dict = {}
         payload_device["serialNumber"] = self.issu_detail.serial_number
         payload_device["policyName"] = device.get("policy")
         devices_to_upgrade.append(payload_device)
 
-        self.payload: Dict[str, Any] = {}
+        self.payload: dict = {}
         self.payload["devices"] = devices_to_upgrade
 
         self._build_payload_issu_upgrade(device)
@@ -272,15 +348,18 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         Build the issuUpgrade portion of the payload.
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         nxos_upgrade = device.get("upgrade").get("nxos")
-        nxos_upgrade = self.make_boolean(nxos_upgrade)
+        nxos_upgrade = self.conversion.make_boolean(nxos_upgrade)
         if not isinstance(nxos_upgrade, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "upgrade.nxos must be a boolean. "
             msg += f"Got {nxos_upgrade}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         self.payload["issuUpgrade"] = nxos_upgrade
 
     def _build_payload_issu_options_1(self, device) -> None:
@@ -288,6 +367,9 @@ class ImageUpgrade(ImageUpgradeCommon):
         Build the issuUpgradeOptions1 portion of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
         # nxos_mode: The choices for nxos_mode are mutually-exclusive.
         # If one is set to True, the others must be False.
@@ -303,7 +385,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "options.nxos.mode must be one of "
             msg += f"{sorted(self.valid_nxos_mode)}. "
             msg += f"Got {nxos_mode}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         verify_nxos_mode_list = []
         if nxos_mode == "non_disruptive":
@@ -322,13 +404,19 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         bios_force = device.get("options").get("nxos").get("bios_force")
-        bios_force = self.make_boolean(bios_force)
+        bios_force = self.conversion.make_boolean(bios_force)
         if not isinstance(bios_force, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.nxos.bios_force must be a boolean. "
             msg += f"Got {bios_force}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
         self.payload["issuUpgradeOptions2"] = {}
         self.payload["issuUpgradeOptions2"]["biosForce"] = bios_force
@@ -339,23 +427,26 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         epld_upgrade = device.get("upgrade").get("epld")
-        epld_upgrade = self.make_boolean(epld_upgrade)
+        epld_upgrade = self.conversion.make_boolean(epld_upgrade)
         if not isinstance(epld_upgrade, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "upgrade.epld must be a boolean. "
             msg += f"Got {epld_upgrade}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
         epld_module = device.get("options").get("epld").get("module")
         epld_golden = device.get("options").get("epld").get("golden")
 
-        epld_golden = self.make_boolean(epld_golden)
+        epld_golden = self.conversion.make_boolean(epld_golden)
         if not isinstance(epld_golden, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.epld.golden must be a boolean. "
             msg += f"Got {epld_golden}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
         if epld_golden is True and device.get("upgrade").get("nxos") is True:
             msg = f"{self.class_name}.{method_name}: "
@@ -364,16 +455,16 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "If options.epld.golden is True "
             msg += "all other upgrade options, e.g. upgrade.nxos, "
             msg += "must be False."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if epld_module != "ALL":
             try:
                 epld_module = int(epld_module)
-            except ValueError:
+            except ValueError as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "options.epld.module must either be 'ALL' "
                 msg += f"or an integer. Got {epld_module}."
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                raise ValueError(msg) from error
 
         self.payload["epldUpgrade"] = epld_upgrade
         self.payload["epldOptions"] = {}
@@ -385,14 +476,18 @@ class ImageUpgrade(ImageUpgradeCommon):
         Build the reboot portion of the payload.
         """
         method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         reboot = device.get("reboot")
 
-        reboot = self.make_boolean(reboot)
+        reboot = self.conversion.make_boolean(reboot)
         if not isinstance(reboot, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "reboot must be a boolean. "
             msg += f"Got {reboot}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         self.payload["reboot"] = reboot
 
     def _build_payload_reboot_options(self, device) -> None:
@@ -401,22 +496,25 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         config_reload = device.get("options").get("reboot").get("config_reload")
         write_erase = device.get("options").get("reboot").get("write_erase")
 
-        config_reload = self.make_boolean(config_reload)
+        config_reload = self.conversion.make_boolean(config_reload)
         if not isinstance(config_reload, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.config_reload must be a boolean. "
             msg += f"Got {config_reload}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
-        write_erase = self.make_boolean(write_erase)
+        write_erase = self.conversion.make_boolean(write_erase)
         if not isinstance(write_erase, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.reboot.write_erase must be a boolean. "
             msg += f"Got {write_erase}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
         self.payload["rebootOptions"] = {}
         self.payload["rebootOptions"]["configReload"] = config_reload
@@ -428,10 +526,13 @@ class ImageUpgrade(ImageUpgradeCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         package_install = device.get("options").get("package").get("install")
         package_uninstall = device.get("options").get("package").get("uninstall")
 
-        package_install = self.make_boolean(package_install)
+        package_install = self.conversion.make_boolean(package_install)
         if not isinstance(package_install, bool):
             # This code is never hit since ImageInstallOptions calls
             # fail_json on invalid options.package.install.
@@ -440,14 +541,14 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.install must be a boolean. "
             msg += f"Got {package_install}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
-        package_uninstall = self.make_boolean(package_uninstall)
+        package_uninstall = self.conversion.make_boolean(package_uninstall)
         if not isinstance(package_uninstall, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "options.package.uninstall must be a boolean. "
             msg += f"Got {package_uninstall}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
         # Yes, these keys are misspelled. The controller
         # wants them to be misspelled.  Need to keep an
@@ -455,219 +556,176 @@ class ImageUpgrade(ImageUpgradeCommon):
         self.payload["pacakgeInstall"] = package_install
         self.payload["pacakgeUnInstall"] = package_uninstall
 
-    def commit(self) -> None:
-        if self.check_mode is True:
-            self.commit_check_mode()
-        else:
-            self.commit_normal_mode()
-
-    def commit_check_mode(self) -> None:
+    def validate_commit_parameters(self):
         """
-        Simulate a commit of the image upgrade request to
-        the controller.
+        Verify mandatory parameters are set before calling commit.
         """
+        # pylint: disable=no-member
         method_name = inspect.stack()[0][3]
 
-        self._validate_devices()
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
 
-        self.rest_send.check_mode = True
-
-        for device in self.devices:
-            msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            self._build_payload(device)
-
-            msg = "Calling rest_send.commit(): "
-            msg += f"verb {self.verb}, path: {self.path} "
-            msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            self.rest_send.payload = self.payload
-            self.rest_send.commit()
-
-            msg = "DONE rest_send.commit()"
-            self.log.debug(msg)
-
-            self.response_current = {}
-            self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-            self.response_current["MESSAGE"] = "OK"
-            self.response_current["METHOD"] = self.verb
-            self.response_current["REQUEST_PATH"] = self.path
-            self.response_current["RETURN_CODE"] = 200
-            self.response = copy.deepcopy(self.response_current)
-
-            self.response_data = self.response_current.get("DATA")
-
-            self.result_current = self.rest_send._handle_response(self.response_current)
-            self.result = copy.deepcopy(self.result_current)
-
-            msg = "payload: "
-            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response: "
-            msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response_current: "
-            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response_data: "
-            msg += f"{self.response_data}"
-            self.log.debug(msg)
-
-            msg = "self.result: "
-            msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.result_current: "
-            msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            if not self.result_current["success"]:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"failed: {self.result_current}. "
-                msg += f"Controller response: {self.response_current}"
-                self.ansible_module.fail_json(msg, **self.failed_result)
-
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(self.payload)
-
-    def commit_normal_mode(self) -> None:
+    def commit(self) -> None:
         """
+        ### Summary
         Commit the image upgrade request to the controller and wait
         for the images to be upgraded.
+
+        ### Raises
+        -   ``ControllerResponseError`` if the controller returns a non-200
+            response.
+        -   ``ValueError`` if:
+                -   ``RestSend()`` raises a ``TypeError`` or ``ValueError``.
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
+        self.validate_commit_parameters()
+
+        # pylint: disable=no-member
+        self.issu_detail.rest_send = self.rest_send
+        self.install_options.rest_send = self.rest_send
+
+        self.install_options.results = self.results
+        # pylint: enable=no-member
+        # We don't want issu_detail results to show up in the user's result output.
+        self.issu_detail.results = Results()
+
         self._validate_devices()
-        self._wait_for_current_actions_to_complete()
+        self.wait_for_controller()
 
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-
-        if self.check_mode is True:
-            self.rest_send.check_mode = True
-        else:
-            self.rest_send.check_mode = False
-
+        self.saved_response_current = {}
+        self.saved_result_current = {}
         for device in self.devices:
-            msg = f"device: {json.dumps(device, indent=4, sort_keys=True)}"
+            ipv4 = device.get("ip_address")
+            if ipv4 not in self.saved_response_current:
+                self.saved_response_current[ipv4] = {}
+            if ipv4 not in self.saved_result_current:
+                self.saved_result_current[ipv4] = {}
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"device: {json.dumps(device, indent=4, sort_keys=True)}."
             self.log.debug(msg)
 
             self._build_payload(device)
 
-            msg = "Calling rest_send.commit(): "
-            msg += f"verb {self.verb}, path: {self.path} "
-            msg += f"payload: {json.dumps(self.payload, indent=4, sort_keys=True)}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Calling RestSend.commit(). "
+            msg += f"verb: {self.ep_upgrade_image.verb}, "
+            msg += f"path: {self.ep_upgrade_image.path}."
             self.log.debug(msg)
 
-            self.rest_send.payload = self.payload
-            self.rest_send.commit()
-
-            msg = "DONE rest_send.commit()"
-            self.log.debug(msg)
-
-            self.response = self.rest_send.response_current
-            self.response_current = self.rest_send.response_current
-            self.response_data = self.rest_send.response_current.get("DATA")
-
-            self.result = self.rest_send.result_current
-            self.result_current = self.rest_send.result_current
-
-            msg = "payload: "
-            msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response: "
-            msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response_current: "
-            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.response_data: "
-            msg += f"{self.response_data}"
-            self.log.debug(msg)
-
-            msg = "self.result: "
-            msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            msg = "self.result_current: "
-            msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            if not self.result_current["success"]:
+            # pylint: disable=no-member
+            try:
+                self.rest_send.path = self.ep_upgrade_image.path
+                self.rest_send.verb = self.ep_upgrade_image.verb
+                self.rest_send.payload = self.payload
+                self.rest_send.commit()
+            except (TypeError, ValueError) as error:
+                self.results.diff_current = {}
+                self.results.action = self.action
+                self.results.response_current = copy.deepcopy(
+                    self.rest_send.response_current
+                )
+                self.results.result_current = copy.deepcopy(
+                    self.rest_send.result_current
+                )
+                self.results.register_task_result()
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"failed: {self.result_current}. "
-                msg += f"Controller response: {self.response_current}"
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                msg += "Error while sending request. "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
 
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(self.payload)
+            self.saved_response_current[ipv4] = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.saved_result_current[ipv4] = copy.deepcopy(
+                self.rest_send.result_current
+            )
+
+            if not self.rest_send.result_current["success"]:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"failed: {self.rest_send.result_current}. "
+                msg += f"Controller response: {self.rest_send.response_current}"
+                self.results.register_task_result()
+                raise ControllerResponseError(msg)
 
         self._wait_for_image_upgrade_to_complete()
 
-    def _wait_for_current_actions_to_complete(self):
+        self.build_diff()
+        # pylint: disable=no-member
+        self.results.action = self.action
+        self.results.diff_current = copy.deepcopy(self.diff)
+        self.results.response_current = copy.deepcopy(self.saved_response_current)
+        self.results.result_current = copy.deepcopy(self.saved_result_current)
+        self.results.register_task_result()
+
+    def wait_for_controller(self):
         """
-        The controller will not upgrade an image if there are any actions
-        in progress.  Wait for all actions to complete before upgrading image.
-        Actions include image staging, image upgrade, and image validation.
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
         """
         method_name = inspect.stack()[0][3]
 
-        if self.unit_test is False:
-            # See unit test test_image_upgrade_upgrade_00205
-            self.ipv4_done = set()
-        self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        timeout = self.check_timeout
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
 
-        while self.ipv4_done != self.ipv4_todo and timeout > 0:
-            sleep(self.check_interval)
-            timeout -= self.check_interval
-            self.issu_detail.refresh()
-
-            for ipv4 in self.ip_addresses:
-                if ipv4 in self.ipv4_done:
-                    continue
-                self.issu_detail.filter = ipv4
-
-                if self.issu_detail.actions_in_progress is False:
-                    self.ipv4_done.add(ipv4)
-                    continue
-
-        if self.ipv4_done != self.ipv4_todo:
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.ip_addresses))
+            self.wait_for_controller_done.item_type = "ipv4_address"
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Timed out waiting for actions to complete. "
-            msg += "ipv4_done: "
-            msg += f"{','.join(sorted(self.ipv4_done))}, "
-            msg += "ipv4_todo: "
-            msg += f"{','.join(sorted(self.ipv4_todo))}. "
-            msg += "check the device(s) to determine the cause "
-            msg += "(e.g. show install all status)."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += f"Error {error}."
+            raise ValueError(msg) from error
 
     def _wait_for_image_upgrade_to_complete(self):
         """
+        ### Summary
         Wait for image upgrade to complete
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   The upgrade does not complete within ``check_timeout``
+                    seconds.
+                -   The upgrade fails for any device.
+
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"ENTERED: {self.class_name}.{method_name}."
+        self.log.debug(msg)
+
         self.ipv4_todo = set(copy.copy(self.ip_addresses))
-        if self.unit_test is False:
+        if self.rest_send.unit_test is False:  # pylint: disable=no-member
             # See unit test test_image_upgrade_upgrade_00240
             self.ipv4_done = set()
         timeout = self.check_timeout
 
         while self.ipv4_done != self.ipv4_todo and timeout > 0:
-            sleep(self.check_interval)
+            if self.rest_send.unit_test is False:  # pylint: disable=no-member
+                sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
 
@@ -692,16 +750,16 @@ class ImageUpgrade(ImageUpgradeCommon):
                     msg += "Operations > Image Management > Devices > View Details. "
                     msg += "And/or check the devices "
                     msg += "(e.g. show install all status)."
-                    self.ansible_module.fail_json(msg, **self.failed_result)
-
+                    raise ValueError(msg)
                 if upgrade_status == "Success":
                     self.ipv4_done.add(ipv4)
-                msg = f"seconds remaining {timeout}"
-                self.log.debug(msg)
-                msg = f"ipv4_done: {sorted(self.ipv4_done)}"
-                self.log.debug(msg)
-                msg = f"ipv4_todo: {sorted(self.ipv4_todo)}"
-                self.log.debug(msg)
+
+            msg = f"seconds remaining {timeout}"
+            self.log.debug(msg)
+            msg = f"ipv4_done: {sorted(self.ipv4_done)}"
+            self.log.debug(msg)
+            msg = f"ipv4_todo: {sorted(self.ipv4_todo)}"
+            self.log.debug(msg)
 
         if self.ipv4_done != self.ipv4_todo:
             msg = f"{self.class_name}.{method_name}: "
@@ -711,7 +769,7 @@ class ImageUpgrade(ImageUpgradeCommon):
             msg += "Operations > Image Management > Devices > View Details. "
             msg += "And/or check the device(s) "
             msg += "(e.g. show install all status)."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
     # setter properties
     @property
@@ -721,7 +779,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("bios_force")
+        return self._bios_force
 
     @bios_force.setter
     def bios_force(self, value):
@@ -729,8 +787,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.bios_force must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["bios_force"] = value
+            raise TypeError(msg)
+        self._bios_force = value
 
     @property
     def config_reload(self):
@@ -739,7 +797,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("config_reload")
+        return self._config_reload
 
     @config_reload.setter
     def config_reload(self, value):
@@ -747,11 +805,11 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.config_reload must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["config_reload"] = value
+            raise TypeError(msg)
+        self._config_reload = value
 
     @property
-    def devices(self) -> List[Dict]:
+    def devices(self) -> list:
         """
         Set the devices to upgrade.
 
@@ -763,30 +821,30 @@ class ImageUpgrade(ImageUpgradeCommon):
         ]
         Must be set before calling instance.commit()
         """
-        return self.properties.get("devices", [{}])
+        return self._devices
 
     @devices.setter
-    def devices(self, value: List[Dict]):
+    def devices(self, value: list):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.devices must be a python list of dict. "
             msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         for device in value:
             if not isinstance(device, dict):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "instance.devices must be a python list of dict. "
                 msg += f"Got {value}."
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                raise TypeError(msg)
             if "ip_address" not in device:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "instance.devices must be a python list of dict, "
                 msg += "where each dict contains the following keys: "
                 msg += "ip_address. "
                 msg += f"Got {value}."
-                self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["devices"] = value
+                raise ValueError(msg)
+        self._devices = value
 
     @property
     def disruptive(self):
@@ -795,7 +853,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("disruptive")
+        return self._disruptive
 
     @disruptive.setter
     def disruptive(self, value):
@@ -803,8 +861,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.disruptive must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["disruptive"] = value
+            raise TypeError(msg)
+        self._disruptive = value
 
     @property
     def epld_golden(self):
@@ -813,7 +871,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("epld_golden")
+        return self._epld_golden
 
     @epld_golden.setter
     def epld_golden(self, value):
@@ -821,8 +879,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_golden must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["epld_golden"] = value
+            raise TypeError(msg)
+        self._epld_golden = value
 
     @property
     def epld_upgrade(self):
@@ -831,7 +889,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("epld_upgrade")
+        return self._epld_upgrade
 
     @epld_upgrade.setter
     def epld_upgrade(self, value):
@@ -839,8 +897,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_upgrade must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["epld_upgrade"] = value
+            raise TypeError(msg)
+        self._epld_upgrade = value
 
     @property
     def epld_module(self):
@@ -851,7 +909,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         Valid values: integer or "ALL"
         Default: "ALL"
         """
-        return self.properties.get("epld_module")
+        return self._epld_module
 
     @epld_module.setter
     def epld_module(self, value):
@@ -867,8 +925,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, int) and value != "ALL":
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.epld_module must be an integer or 'ALL'"
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["epld_module"] = value
+            raise TypeError(msg)
+        self._epld_module = value
 
     @property
     def force_non_disruptive(self):
@@ -877,7 +935,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("force_non_disruptive")
+        return self._force_non_disruptive
 
     @force_non_disruptive.setter
     def force_non_disruptive(self, value):
@@ -885,8 +943,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.force_non_disruptive must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["force_non_disruptive"] = value
+            raise TypeError(msg)
+        self._force_non_disruptive = value
 
     @property
     def non_disruptive(self):
@@ -895,7 +953,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: True
         """
-        return self.properties.get("non_disruptive")
+        return self._non_disruptive
 
     @non_disruptive.setter
     def non_disruptive(self, value):
@@ -903,8 +961,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.non_disruptive must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["non_disruptive"] = value
+            raise TypeError(msg)
+        self._non_disruptive = value
 
     @property
     def package_install(self):
@@ -913,7 +971,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("package_install")
+        return self._package_install
 
     @package_install.setter
     def package_install(self, value):
@@ -921,8 +979,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.package_install must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["package_install"] = value
+            raise TypeError(msg)
+        self._package_install = value
 
     @property
     def package_uninstall(self):
@@ -931,7 +989,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("package_uninstall")
+        return self._package_uninstall
 
     @package_uninstall.setter
     def package_uninstall(self, value):
@@ -939,8 +997,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.package_uninstall must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["package_uninstall"] = value
+            raise TypeError(msg)
+        self._package_uninstall = value
 
     @property
     def reboot(self):
@@ -949,7 +1007,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("reboot")
+        return self._reboot
 
     @reboot.setter
     def reboot(self, value):
@@ -957,8 +1015,8 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.reboot must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["reboot"] = value
+            raise TypeError(msg)
+        self._reboot = value
 
     @property
     def write_erase(self):
@@ -967,7 +1025,7 @@ class ImageUpgrade(ImageUpgradeCommon):
 
         Default: False
         """
-        return self.properties.get("write_erase")
+        return self._write_erase
 
     @write_erase.setter
     def write_erase(self, value):
@@ -975,15 +1033,15 @@ class ImageUpgrade(ImageUpgradeCommon):
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.write_erase must be a boolean."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["write_erase"] = value
+            raise TypeError(msg)
+        self._write_erase = value
 
     @property
     def check_interval(self):
         """
         Return the image upgrade check interval in seconds
         """
-        return self.properties.get("check_interval")
+        return self._check_interval
 
     @check_interval.setter
     def check_interval(self, value):
@@ -993,17 +1051,17 @@ class ImageUpgrade(ImageUpgradeCommon):
         # isinstance(False, int) returns True, so we need first
         # to test for this and fail_json specifically for bool values.
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_interval"] = value
+            raise TypeError(msg)
+        self._check_interval = value
 
     @property
     def check_timeout(self):
         """
         Return the image upgrade check timeout in seconds
         """
-        return self.properties.get("check_timeout")
+        return self._check_timeout
 
     @check_timeout.setter
     def check_timeout(self, value):
@@ -1013,7 +1071,7 @@ class ImageUpgrade(ImageUpgradeCommon):
         # isinstance(False, int) returns True, so we need first
         # to test for this and fail_json specifically for bool values.
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_timeout"] = value
+            raise TypeError(msg)
+        self._check_timeout = value

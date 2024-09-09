@@ -4085,6 +4085,7 @@ class DcnmIntf:
                     == "DCNM_INTF_MATCH"
                 ):
                     continue
+
                 if uelem is not None:
                     # Before defaulting ethernet interfaces, check if they are
                     # member of any port-channel. If so, do not default that
@@ -4886,6 +4887,66 @@ class DcnmIntf:
             else:
                 self.result["changed"] = False
 
+    def dcnm_intf_get_xlated_object(self, cfg, key):
+
+        """
+        Routine to translate individual vlans like 45, 55 to 44-44 and 55-55 format
+
+        Parameters:
+            cfg (dict): Config element that includes the object idebtified by key to be translated
+            key (str): key identifying the object to be translated
+
+        Returns:
+            translated object
+        """
+
+        citems = cfg["profile"][key].split(",")
+
+        for index in range(len(citems)):
+            if (
+                (citems[index].lower() == "none")
+                or (citems[index].lower() == "all")
+                or ("-" in citems[index])
+            ):
+                continue
+
+            # Playbook config includes individual vlans in allowed_vlans object. Convert the elem to
+            # appropriate format i.e. vlaues in the form of 4, 7 to 4-4 and 7-7
+            citems[index] = citems[index].strip() + "-" + citems[index].strip()
+        return citems
+
+    def dcnm_intf_translate_allowed_vlans(self, cfg):
+
+        """
+        Routine to translate xxx_allowed_vlans object in the config. 'xxx_allowed_vlans' object will
+        allow only 'none', 'all', or 'vlan-ranges like 1-5' values. It does not allow individual
+        vlans to be included. To enable user to include individual vlans in the playbook config, this
+        routine tranlates the individual vlans like 3, 5 etc to 3-3 and 5-5 format.
+
+        Parameters:
+            cfg (dict): Config element that needs to be translated
+
+        Returns:
+            None
+        """
+
+        if cfg.get("profile", None) is None:
+            return
+
+        if cfg["profile"].get("allowed_vlans", None) is not None:
+            xlated_obj = self.dcnm_intf_get_xlated_object(cfg, "allowed_vlans")
+            cfg["profile"]["allowed_vlans"] = ",".join(xlated_obj)
+        if cfg["profile"].get("peer1_allowed_vlans", None) is not None:
+            xlated_obj = self.dcnm_intf_get_xlated_object(
+                cfg, "peer1_allowed_vlans"
+            )
+            cfg["profile"]["peer1_allowed_vlans"] = ",".join(xlated_obj)
+        if cfg["profile"].get("peer2_allowed_vlans", None) is not None:
+            xlated_obj = self.dcnm_intf_get_xlated_object(
+                cfg, "peer2_allowed_vlans"
+            )
+            cfg["profile"]["peer2_allowed_vlans"] = ",".join(xlated_obj)
+
     def dcnm_intf_update_inventory_data(self):
 
         """
@@ -5001,6 +5062,26 @@ class DcnmIntf:
                 else:
                     cfg["switch"].remove(sw_elem)
                 index = index + 1
+
+            # 'allowed-vlans' in the case of trunk interfaces accepts 'all', 'none' and 'vlan-ranges' which
+            # will be of the form 20-30 etc. There is not way to include individual vlans which are not contiguous.
+            # To include individual vlans like 3,6,20 etc. user must input them in the form 3-3, 6-6, 20-20 which is
+            # not very intuitive. To handle this scenario, we allow playbooks to include individual vlans and translate
+            # them here appropriately.
+
+            if cfg.get("profile", None) is not None:
+                if (
+                    (
+                        cfg["profile"].get("peer1_allowed_vlans", None)
+                        is not None
+                    )
+                    or (
+                        cfg["profile"].get("peer2_allowed_vlans", None)
+                        is not None
+                    )
+                    or (cfg["profile"].get("allowed_vlans", None) is not None)
+                ):
+                    self.dcnm_intf_translate_allowed_vlans(cfg)
 
 
 def main():

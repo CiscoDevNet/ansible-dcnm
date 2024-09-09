@@ -44,8 +44,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetails
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
@@ -68,38 +66,6 @@ def test_fabric_details_v2_00000(fabric_details_v2) -> None:
     assert instance.data == {}
     assert isinstance(instance.ep_fabrics, EpFabrics)
     assert isinstance(instance.conversion, ConversionUtils)
-
-
-def test_fabric_details_v2_00010() -> None:
-    """
-    ### Classes and Methods
-    - FabricDetails
-        - __init__()
-
-    ### Test
-    - ``ValueError`` is raised when ``params`` is missing key ``check_mode``.
-    """
-    match = r"FabricDetails\.__init__:\s+"
-    match += r"check_mode is missing from params\. params:.*\."
-    with pytest.raises(ValueError, match=match):
-        instance = FabricDetails({"state": "merged"})  # pylint: disable=unused-variable
-
-
-def test_fabric_details_v2_00020() -> None:
-    """
-    ### Classes and Methods
-    - FabricDetails
-        - __init__()
-
-    ### Test
-    - ``ValueError`` is raised when ``params`` is missing key ``state``.
-    """
-    match = r"FabricDetails\.__init__:\s+"
-    match += r"state is missing from params\. params:.*\."
-    with pytest.raises(ValueError, match=match):
-        instance = FabricDetails(  # pylint: disable=unused-variable
-            {"check_mode": False}
-        )
 
 
 def test_fabric_details_v2_00100(fabric_details_v2) -> None:
@@ -535,12 +501,22 @@ def test_fabric_details_v2_00170(fabric_details_v2, monkeypatch) -> None:
     """
 
     class MockEpFabrics:
+        """
+        Mock EpFabrics class
+        """
+
         @property
         def verb(self):
+            """
+            Mock verb property to raise TypeError
+            """
             raise TypeError("MockEpFabrics.bad_verb")
 
         @property
         def path(self):
+            """
+            Mock path property
+            """
             return "/path"
 
     with does_not_raise():

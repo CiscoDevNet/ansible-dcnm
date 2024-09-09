@@ -23,7 +23,6 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-import copy
 import inspect
 import logging
 
@@ -33,73 +32,105 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion impor
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
+@Properties.add_rest_send
 class ControllerFeatures:
     """
-    -   Return feature information from the Controller
-    -   Endpoint: /appcenter/cisco/ndfc/api/v1/fm/features
-    -   Usage (where params is AnsibleModule.params):
+    ### Summary
+    Return feature information from the Controller
+
+    ### Usage
 
     ```python
-        instance = ControllerFeatures(params)
-        instance.rest_send = RestSend(AnsibleModule)
-        # retrieves all feature information
-        try:
-            instance.refresh()
-        except ControllerResponseError as error:
-            # handle error
-        # filters the feature information
-        instance.filter = "pmn"
-        # retrieves the admin_state for feature pmn
-        pmn_admin_state = instance.admin_state
-        # retrieves the operational state for feature pmn
-        pmn_oper_state = instance.oper_state
-        # etc...
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(ansible_module.params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    instance = ControllerFeatures()
+    instance.rest_send = rest_send
+    # retrieves all feature information
+    try:
+        instance.refresh()
+    except ControllerResponseError as error:
+        # handle error
+    # filters the feature information
+    instance.filter = "pmn"
+    # retrieves the admin_state for feature pmn
+    pmn_admin_state = instance.admin_state
+    # retrieves the operational state for feature pmn
+    pmn_oper_state = instance.oper_state
+    # etc...
     ```
 
-    -   Retrievable properties for the filtered feature
-            -   admin_state - str
-                    -   "enabled"
-                    -   "disabled"
-            -   apidoc - list of dict
-                    -   [
-                            {
-                                "url": "https://path/to/api-docs",
-                                "subpath": "pmn",
-                                "schema": null
-                            }
-                        ]
-            -   description - str
-                    -   "Media Controller for IP Fabrics"
-            -   healthz - str
-                    -   "https://path/to/healthz"
-            -   hidden - bool
-                    -   True
-                    -   False
-            -   featureset - dict
-                    -   { "lan": { "default": false }}
-            -   name - str
-                    -   "IP Fabric for Media"
-            -   oper_state - str
-                    -   "started"
-                    -   "stopped"
-                    -   ""
-            -   predisablecheck - str
-                    -   "https://path/to/predisablecheck"
-            -   installed - str
-                    -   "2024-05-08 18:02:45.626691263 +0000 UTC"
-            -   kind - str
-                    -   "feature"
-            -   requires - list
-                    -   ["pmn-telemetry-mgmt", "pmn-telemetry-data"]
-            -   spec - str
-                    -   ""
-            -   ui - bool
-                    -   True
-                    -   False
+    ### Retrievable properties for the filtered feature
 
-    Response:
+    -   admin_state - str
+            -   "enabled"
+            -   "disabled"
+    -   apidoc, list of dict
+            -   ```json
+                [
+                    {
+                        "url": "https://path/to/api-docs",
+                        "subpath": "pmn",
+                        "schema": null
+                    }
+                ]
+                ```
+    -   description
+            -   "Media Controller for IP Fabrics"
+            -   str
+    -   healthz
+            -   "https://path/to/healthz"
+            -   str
+    -   hidden
+            -   True
+            -   False
+            -   bool
+    -   featureset
+            -   ```json
+                {
+                    "lan": {
+                        "default": false
+                    }
+                }
+                ```
+    -   name
+            -   "IP Fabric for Media"
+            -   str
+    -   oper_state
+            -   "started"
+            -   "stopped"
+            -   ""
+            -   str
+    -   predisablecheck
+            -   "https://path/to/predisablecheck"
+            -   str
+    -   installed
+            -   "2024-05-08 18:02:45.626691263 +0000 UTC"
+            -   str
+    -   kind
+            -   "feature"
+            -   str
+    -   requires
+            -   ```json
+                ["pmn-telemetry-mgmt", "pmn-telemetry-data"]
+                ```
+    -   spec
+            -   ""
+            -   str
+    -   ui
+            -   True
+            -   False
+            -   bool
+
+    ### Response
+    ```json
         {
             "status": "success",
             "data": {
@@ -125,32 +156,25 @@ class ControllerFeatures:
                 }
             }
         }
+    ```
+
+    ### Endpoint
+    /appcenter/cisco/ndfc/api/v1/fm/features
+
     """
 
-    def __init__(self, params):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.params = params
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.log.debug("ENTERED ControllerFeatures()")
 
-        self.check_mode = self.params.get("check_mode", None)
-        if self.check_mode is None:
-            msg = f"{self.class_name}.__init__(): "
-            msg += "check_mode is required."
-            raise ValueError(msg)
-
         self.conversion = ConversionUtils()
-        self.api_features = EpFeatures()
-        self._init_properties()
+        self.ep_features = EpFeatures()
 
-    def _init_properties(self):
-        self.properties = {}
-        self.properties["filter"] = None
-        self.properties["rest_send"] = None
-        self.properties["result"] = None
-        self.properties["response"] = None
-        self.properties["response_data"] = None
+        self._filter = None
+        self._rest_send = None
+        self._response_data = None
 
     def refresh(self):
         """
@@ -160,33 +184,31 @@ class ControllerFeatures:
         """
         method_name = inspect.stack()[0][3]
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.rest_send must be set "
             msg += "before calling refresh()."
             raise ValueError(msg)
 
-        self.rest_send.path = self.api_features.path
-        self.rest_send.verb = self.api_features.verb
+        self.rest_send.path = self.ep_features.path
+        self.rest_send.verb = self.ep_features.verb
 
         # Store the current value of check_mode, then disable
         # check_mode since ControllerFeatures() only reads data
         # from the controller.
         # Restore the value of check_mode after the commit.
-        current_check_mode = self.rest_send.check_mode
+        self.rest_send.save_settings()
         self.rest_send.check_mode = False
         self.rest_send.commit()
-        self.rest_send.check_mode = current_check_mode
+        self.rest_send.restore_settings()
 
-        self.properties["result"] = copy.deepcopy(self.rest_send.result_current)
-        if self.result["success"] is False:
+        if self.rest_send.result_current["success"] is False:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Bad controller response: {self.rest_send.response_current}"
             raise ControllerResponseError(msg)
 
-        self.properties["response"] = copy.deepcopy(self.rest_send.response_current)
-
-        self.properties["response_data"] = (
+        self._response_data = (
             self.rest_send.response_current.get("DATA", {})
             .get("data", {})
             .get("features", {})
@@ -247,11 +269,11 @@ class ControllerFeatures:
                             NX-OS and Other devices
 
         """
-        return self.properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._filter = value
 
     @property
     def oper_state(self):
@@ -266,49 +288,11 @@ class ControllerFeatures:
         return self._get("oper_state")
 
     @property
-    def response(self):
-        """
-        Return the GET response from the Controller
-        """
-        return self.properties.get("response")
-
-    @property
     def response_data(self):
         """
         Return the data retrieved from the request
         """
-        return self.properties.get("response_data")
-
-    @property
-    def rest_send(self):
-        """
-        -   An instance of the RestSend class.
-        -   Raise ``TypeError`` if the value is not an instance of RestSend.
-        """
-        return self.properties.get("rest_send")
-
-    @rest_send.setter
-    def rest_send(self, value):
-        method_name = inspect.stack()[0][3]
-        _class_name = None
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "value must be an instance of RestSend. "
-        try:
-            _class_name = value.class_name
-        except AttributeError as error:
-            msg += f"Error detail: {error}."
-            raise TypeError(msg) from error
-        if _class_name != "RestSend":
-            self.log.debug(msg)
-            raise TypeError(msg)
-        self.properties["rest_send"] = value
-
-    @property
-    def result(self):
-        """
-        Return the GET result from the Controller
-        """
-        return self.properties.get("result")
+        return self._response_data
 
     @property
     def started(self):

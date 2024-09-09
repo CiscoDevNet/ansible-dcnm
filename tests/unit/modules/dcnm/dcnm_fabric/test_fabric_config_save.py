@@ -32,26 +32,25 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricConfigSave
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
-    FabricConfigSave
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_config_save_fixture, params,
-    responses_fabric_config_save)
+    responses_ep_fabric_config_save)
 
 
 def test_fabric_config_save_00010(fabric_config_save) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricConfigSave
         - __init__()
 
@@ -63,51 +62,13 @@ def test_fabric_config_save_00010(fabric_config_save) -> None:
         instance = fabric_config_save
     assert instance.class_name == "FabricConfigSave"
     assert instance.action == "config_save"
-    assert instance.check_mode is False
     assert instance.config_save_result == {}
     assert instance.fabric_name is None
-    assert instance.path is None
     assert instance.payload is None
     assert instance.rest_send is None
     assert instance.results is None
-    assert instance.verb is None
-    assert instance.state == "merged"
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert isinstance(instance.ep_config_save, EpFabricConfigSave)
-
-
-def test_fabric_config_save_00011() -> None:
-    """
-    Classes and Methods
-    - FabricConfigSave
-        - __init__()
-
-    Summary
-    -   Verify FabricConfigSave().__init__() raises ``ValueError``
-        when check_mode is not set.
-    """
-    params = {"state": "merged"}
-    match = r"FabricConfigSave\.__init__\(\):\s+"
-    match += r"params is missing mandatory check_mode parameter\."
-    with pytest.raises(ValueError, match=match):
-        instance = FabricConfigSave(params)  # pylint: disable=unused-variable
-
-
-def test_fabric_config_save_00012() -> None:
-    """
-    Classes and Methods
-    - FabricConfigSave
-        - __init__()
-
-    Summary
-    -   Verify FabricConfigSave().__init__() raises ``ValueError``
-        when state is not set.
-    """
-    params = {"check_mode": False}
-    match = r"FabricConfigSave\.__init__\(\):\s+"
-    match += r"params is missing mandatory state parameter\."
-    with pytest.raises(ValueError, match=match):
-        instance = FabricConfigSave(params)  # pylint: disable=unused-variable
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance.ep_config_save.class_name == "EpFabricConfigSave"
 
 
 MATCH_00020a = r"ConversionUtils\.validate_fabric_name: "
@@ -181,7 +142,7 @@ MATCH_00030 += r"value must be an instance of RestSend\."
 @pytest.mark.parametrize(
     "value, does_raise, expected",
     [
-        (RestSend(MockAnsibleModule()), False, does_not_raise()),
+        (RestSend(params), False, does_not_raise()),
         (Results(), True, pytest.raises(TypeError, match=MATCH_00030)),
         (None, True, pytest.raises(TypeError, match=MATCH_00030)),
         ("foo", True, pytest.raises(TypeError, match=MATCH_00030)),
@@ -269,14 +230,28 @@ def test_fabric_config_save_00050(fabric_config_save) -> None:
     -   ValueError is raised because payload is not set before
         calling commit()
     """
+
+    def responses():
+        yield None
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = fabric_config_save
+        instance.rest_send = rest_send
+        instance.results = Results()
+
     match = r"FabricConfigSave\.commit: "
     match += r"FabricConfigSave\.payload must be set "
     match += r"before calling commit\."
 
-    with does_not_raise():
-        instance = fabric_config_save
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -296,14 +271,15 @@ def test_fabric_config_save_00060(fabric_config_save) -> None:
     -   ValueError is raised because rest_send is not set before
         calling commit()
     """
-    match = r"FabricConfigSave\.commit: "
-    match += r"FabricConfigSave\.rest_send must be set "
-    match += r"before calling commit\."
-
     with does_not_raise():
         instance = fabric_config_save
         instance.payload = {"FABRIC_NAME": "MyFabric"}
         instance.results = Results()
+
+    match = r"FabricConfigSave\.commit: "
+    match += r"FabricConfigSave\.rest_send must be set "
+    match += r"before calling commit\."
+
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -323,14 +299,15 @@ def test_fabric_config_save_00070(fabric_config_save) -> None:
     -   ValueError is raised because results is not set before
         calling commit()
     """
+    with does_not_raise():
+        instance = fabric_config_save
+        instance.payload = {"FABRIC_NAME": "MyFabric"}
+        instance.rest_send = RestSend(params)
+
     match = r"FabricConfigSave\.commit: "
     match += r"FabricConfigSave\.results must be set "
     match += r"before calling commit\."
 
-    with does_not_raise():
-        instance = fabric_config_save
-        instance.payload = {"FABRIC_NAME": "MyFabric"}
-        instance.rest_send = RestSend(MockAnsibleModule())
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -374,7 +351,7 @@ def test_fabric_config_save_00080(monkeypatch, fabric_config_save) -> None:
         instance = fabric_config_save
         monkeypatch.setattr(instance, "ep_config_save", MockEpFabricConfigSave())
         instance.payload = payload
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send = RestSend(params)
         instance.results = Results()
 
     match = r"mocked EpFabricConfigSave\(\)\.path getter exception"
@@ -382,9 +359,10 @@ def test_fabric_config_save_00080(monkeypatch, fabric_config_save) -> None:
         instance.commit()
 
 
-def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
+def test_fabric_config_save_00090(fabric_config_save) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricConfigSave
         - __init__()
         - fabric_names setter
@@ -392,16 +370,18 @@ def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
         - results setter
         - commit()
 
-    Summary
+    ### Summary
     -   Verify commit() "happy path" behavior.
 
-    Setup
+    ### Setup
+
     -   All properties are properly set prior to calling commit()
     -   RestSend() is patched with response containing:
         -   RETURN_CODE == 200
         -   MESSAGE == "OK"
 
-    Code Flow
+    ### Code Flow
+
     -   FabricConfigSave() is instantiated
     -   FabricConfigSave() properties are set
     -   FabricConfigSave.fabric_name is set "f1"
@@ -427,17 +407,17 @@ def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_config_save(key)
+        yield responses_ep_fabric_config_save(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     payload = {
         "FABRIC_NAME": "f1",
@@ -449,10 +429,8 @@ def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
     with does_not_raise():
         instance = fabric_config_save
         instance.payload = payload
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
         instance.commit()
@@ -481,7 +459,7 @@ def test_fabric_config_save_00090(monkeypatch, fabric_config_save) -> None:
     assert False not in instance.results.changed
 
 
-def test_fabric_config_save_00100(monkeypatch, fabric_config_save) -> None:
+def test_fabric_config_save_00100(fabric_config_save) -> None:
     """
     Classes and Methods
     - FabricConfigSave
@@ -529,17 +507,19 @@ def test_fabric_config_save_00100(monkeypatch, fabric_config_save) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_config_save(key)
+        yield responses_ep_fabric_config_save(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     payload = {
         "FABRIC_NAME": "f1",
@@ -551,12 +531,8 @@ def test_fabric_config_save_00100(monkeypatch, fabric_config_save) -> None:
     with does_not_raise():
         instance = fabric_config_save
         instance.payload = payload
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-        instance.rest_send.timeout = 1
+        instance.rest_send = rest_send
         instance.results = Results()
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     with does_not_raise():
         instance.commit()

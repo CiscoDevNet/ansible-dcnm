@@ -254,7 +254,9 @@ class RestSend:
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"check_mode: {self.check_mode}."
+        msg += f"check_mode: {self.check_mode}, "
+        msg += f"verb: {self.verb}, "
+        msg += f"path: {self.path}."
         self.log.debug(msg)
 
         try:
@@ -352,7 +354,6 @@ class RestSend:
 
         timeout = copy.copy(self.timeout)
 
-        success = False
         msg = f"{caller}: Entering commit loop. "
         msg += f"timeout: {timeout}, unit_test: {self.unit_test}."
         self.log.debug(msg)
@@ -361,10 +362,22 @@ class RestSend:
         self.sender.verb = self.verb
         if self.payload is not None:
             self.sender.payload = self.payload
+        success = False
         while timeout > 0 and success is False:
+            timeout -= self.send_interval
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += f"unit_test: {self.unit_test}. "
+            msg += f"Subtracted {self.send_interval} from timeout. "
+            msg += f"timeout: {timeout}, "
+            msg += f"success: {success}."
+            self.log.debug(msg)
+
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}.  "
-            msg += f"Calling sender.commit(): verb {self.verb}, path {self.path}"
+            msg += "Calling sender.commit(): "
+            msg += f"timeout {timeout}, success {success}, verb {self.verb}, path {self.path}."
+            self.log.debug(msg)
 
             try:
                 self.sender.commit()
@@ -382,26 +395,29 @@ class RestSend:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "Error building response/result. "
                 msg += f"Error detail: {error}"
+                self.log.debug(msg)
                 raise ValueError(msg) from error
 
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}.  "
+            msg += f"caller: {caller}. "
+            msg += f"timeout: {timeout}. "
             msg += f"result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}."
+            self.log.debug(msg)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += f"timeout: {timeout}. "
+            msg += "response_current: "
+            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}."
             self.log.debug(msg)
 
             success = self.result_current["success"]
             if success is False and self.unit_test is False:
                 sleep(self.send_interval)
-            timeout -= self.send_interval
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}.  "
-            msg += "response_current: "
-            msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}."
-            self.log.debug(msg)
 
         self.response = copy.deepcopy(self.response_current)
         self.result = copy.deepcopy(self.result_current)
+        self._payload = None
 
     @property
     def check_mode(self):

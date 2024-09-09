@@ -34,13 +34,17 @@
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-# Example vars for dcnm_image_policy integration tests
-# Add fabric and leaf vars to cisco/dcnm/playbooks/dcnm_tests.yaml
-# Add nxos_username and nxos_password vars to cisco/dcnm/playbooks/dcnm_hosts.yaml
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
 #
 # vars:
-#   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_fabric_merged_save_deploy_ipfm
 #   fabric_name_4: IPFM_Fabric
 #   fabric_type_4: IPFM
 #   leaf_1: 172.22.150.103
@@ -122,7 +126,7 @@
       - (result.diff | length) == 1
       - result.diff[0].FABRIC_NAME == fabric_name_4
       - result.diff[0].sequence_number == 1
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -277,7 +281,7 @@
       - result.diff[2].config_deploy == "OK"
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -365,7 +369,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -454,7 +458,7 @@
       - result.diff[0].FABRIC_NAME == fabric_name_4
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"

@@ -18,13 +18,10 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
-    ImagePolicyCommon
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import (
     ImagePolicyCreate, ImagePolicyCreateBulk)
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
@@ -39,6 +36,38 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update imp
     ImagePolicyUpdate, ImagePolicyUpdateBulk)
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
     load_fixture
+
+
+def get_state(action):
+    """
+    Return the state based on the action.
+    """
+    if action in ["create", "update"]:
+        state = "merged"
+    elif action == "delete":
+        state = "deleted"
+    elif action == "query":
+        state = "query"
+    elif action == "replace":
+        state = "replaced"
+    else:
+        state = "merged"
+    return state
+
+
+params = {
+    "state": "merged",
+    "check_mode": False,
+    "config": [
+        {
+            "name": "NR1F",
+            "agnostic": False,
+            "description": "NR1F",
+            "platform": "N9K",
+            "type": "PLATFORM",
+        }
+    ],
+}
 
 
 class GenerateResponses:
@@ -72,7 +101,7 @@ class GenerateResponses:
         """
         return next(self.gen)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -120,198 +149,111 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg, kwargs)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
-
-
-class MockImagePolicies:
-    """
-    Mock the ImagePolicies class to return various values for all_policies
-    """
-
-    def __init__(self, key: str) -> None:
-        self.key = key
-        self.properties = {}
-        self.properties["policy_name"] = None
-        self.properties["results"] = None
-
-    def refresh(self) -> None:
-        """
-        bypass dcnm_send
-        """
-
-    @property
-    def all_policies(self):
-        """
-        Mock the return value of all_policies
-        all_policies contains all image policies that exist on the controller
-        """
-        return image_policies_all_policies(self.key)
-
-    @property
-    def name(self):
-        """
-        Return the name of the policy matching self.policy_name,
-        if it exists.
-        Return None otherwise
-        """
-        try:
-            return (
-                image_policies_all_policies(self.key)
-                .get(self.policy_name, None)
-                .get("policyName")
-            )
-        except AttributeError:
-            return None
-
-    @property
-    def policy_name(self):
-        """
-        Set the name of the policy to query.
-
-        This must be set prior to accessing any other properties
-        """
-        return self.properties.get("policy_name")
-
-    @policy_name.setter
-    def policy_name(self, value):
-        self.properties["policy_name"] = value
-
-    @property
-    def ref_count(self):
-        """
-        Return the reference count of the policy matching self.policy_name,
-        if it exists.  The reference count is the number of switches using
-        this policy.
-        Return None otherwise
-        """
-        try:
-            return (
-                image_policies_all_policies(self.key)
-                .get(self.policy_name, None)
-                .get("ref_count")
-            )
-        except AttributeError:
-            return None
-
-    @property
-    def results(self):
-        """
-        An instance of the Results class.
-        """
-        return self.properties["results"]
-
-    @results.setter
-    def results(self, value):
-        self.properties["results"] = value
 
 
 # See the following for explanation of why fixtures are explicitely named
 # https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
 
 
-@pytest.fixture(name="image_policy_common")
-def image_policy_common_fixture():
-    """
-    mock ImagePolicyCommon
-    """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyCommon(instance)
-
-
 @pytest.fixture(name="image_policy_create")
 def image_policy_create_fixture():
     """
-    mock ImagePolicyCreate
+    Return ImagePolicyCreate with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyCreate(instance)
+    instance = ImagePolicyCreate()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_create_bulk")
 def image_policy_create_bulk_fixture():
     """
-    mock ImagePolicyCreateBulk
+    Return ImagePolicyCreateBulk with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyCreateBulk(instance)
+    instance = ImagePolicyCreateBulk()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_delete")
 def image_policy_delete_fixture():
     """
-    mock ImagePolicyDelete
+    Return ImagePolicyDelete with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "deleted"
-    return ImagePolicyDelete(instance)
+    instance = ImagePolicyDelete()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_query")
 def image_policy_query_fixture():
     """
-    mock ImagePolicyQuery
+    Return ImagePolicyQuery with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "query"
-    return ImagePolicyQuery(instance)
+    instance = ImagePolicyQuery()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_replace_bulk")
 def image_policy_replace_bulk_fixture():
     """
-    mock ImagePolicyReplaceBulk
+    Return ImagePolicyReplaceBulk with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "replaced"
-    return ImagePolicyReplaceBulk(instance)
+    instance = ImagePolicyReplaceBulk()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_update")
 def image_policy_update_fixture():
     """
-    mock ImagePolicyUpdate
+    Return ImagePolicyUpdate with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyUpdate(instance)
+    instance = ImagePolicyUpdate()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="image_policy_update_bulk")
 def image_policy_update_bulk_fixture():
     """
-    mock ImagePolicyUpdateBulk
+    Return ImagePolicyUpdateBulk with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return ImagePolicyUpdateBulk(instance)
+    instance = ImagePolicyUpdateBulk()
+    instance.params = params
+    params.update({"state": get_state(instance.action)})
+    return instance
 
 
 @pytest.fixture(name="config2payload")
 def config2payload_fixture():
     """
-    mock Config2Payload
-    Used in test_image_policy_payload.py
+    Return Config2Payload with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return Config2Payload(instance)
+    instance = Config2Payload()
+    instance.params = params
+    return instance
 
 
 @pytest.fixture(name="payload2config")
 def payload2config_fixture():
     """
-    mock Payload2Config
-    Used in test_image_policy_payload.py
+    Return Payload2Config with params set.
     """
-    instance = MockAnsibleModule()
-    instance.state = "merged"
-    return Payload2Config(instance)
+    instance = Payload2Config()
+    instance.params = params
+    return instance
 
 
 @contextmanager
@@ -322,7 +264,7 @@ def does_not_raise():
     yield
 
 
-def data_payload(key: str) -> Dict[str, str]:
+def data_payload(key: str) -> dict[str, str]:
     """
     Return data for unit tests of the Payload() class
     """
@@ -332,7 +274,47 @@ def data_payload(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_create(key: str) -> Dict[str, str]:
+def configs_config2payload(key: str) -> dict[str, str]:
+    """
+    Return configs for Config2Payload
+    """
+    data_file = "configs_Config2Payload"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def configs_payload2config(key: str) -> dict[str, str]:
+    """
+    Return configs for Payload2Config
+    """
+    data_file = "configs_Payload2Config"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_config2payload(key: str) -> dict[str, str]:
+    """
+    Return payloads for Config2Payload
+    """
+    data_file = "payloads_Config2Payload"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_payload2config(key: str) -> dict[str, str]:
+    """
+    Return payloads for Payload2Config
+    """
+    data_file = "payloads_Payload2Config"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def payloads_image_policy_create(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyCreate
     """
@@ -342,7 +324,7 @@ def payloads_image_policy_create(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
+def payloads_image_policy_create_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyCreateBulk
     """
@@ -352,7 +334,7 @@ def payloads_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+def payloads_image_policy_replace_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyReplaceBulk
     """
@@ -362,7 +344,7 @@ def payloads_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_update(key: str) -> Dict[str, str]:
+def payloads_image_policy_update(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyUpdate
     """
@@ -372,7 +354,7 @@ def payloads_image_policy_update(key: str) -> Dict[str, str]:
     return data
 
 
-def payloads_image_policy_update_bulk(key: str) -> Dict[str, str]:
+def payloads_image_policy_update_bulk(key: str) -> dict[str, str]:
     """
     Return payloads for ImagePolicyUpdateBulk
     """
@@ -382,28 +364,47 @@ def payloads_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policies(key: str) -> Dict[str, str]:
+def responses_ep_policies(key: str) -> dict[str, str]:
     """
-    Return responses for ImagePolicies
-    Used in MockImagePolicies
+    Return responses for EpPolicies() endpoint
     """
-    data_file = "responses_ImagePolicies"
+    data_file = "responses_EpPolicies"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
 
 
-def responses_image_policy_common(key: str) -> Dict[str, str]:
+def responses_ep_policy_create(key: str) -> dict[str, str]:
     """
-    Return responses for ImagePolicyCommon
+    Return responses for EpPolicyCreate() endpoint
     """
-    data_file = "responses_ImagePolicyCommon"
+    data_file = "responses_EpPolicyCreate"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
 
 
-def responses_image_policy_create(key: str) -> Dict[str, str]:
+def responses_ep_policy_delete(key: str) -> dict[str, str]:
+    """
+    Return responses for EpPolicyDelete() endpoint
+    """
+    data_file = "responses_EpPolicyDelete"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_ep_policy_edit(key: str) -> dict[str, str]:
+    """
+    Return responses for EpPolicyEdit() endpoint
+    """
+    data_file = "responses_EpPolicyEdit"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_image_policy_create(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyCreate
     """
@@ -413,7 +414,7 @@ def responses_image_policy_create(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
+def responses_image_policy_create_bulk(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyCreateBulk
     """
@@ -423,7 +424,7 @@ def responses_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_delete(key: str) -> Dict[str, str]:
+def responses_image_policy_delete(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyDelete
     """
@@ -433,7 +434,7 @@ def responses_image_policy_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+def responses_image_policy_replace_bulk(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyReplaceBulk
     """
@@ -443,7 +444,7 @@ def responses_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_update(key: str) -> Dict[str, str]:
+def responses_image_policy_update(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyUpdate
     """
@@ -453,7 +454,7 @@ def responses_image_policy_update(key: str) -> Dict[str, str]:
     return data
 
 
-def responses_image_policy_update_bulk(key: str) -> Dict[str, str]:
+def responses_image_policy_update_bulk(key: str) -> dict[str, str]:
     """
     Return responses for ImagePolicyUpdateBulk
     """
@@ -463,28 +464,7 @@ def responses_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policies(key: str) -> Dict[str, str]:
-    """
-    Return results for ImagePolicies
-    Used in MockImagePolicies
-    """
-    data_file = "results_ImagePolicies"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def results_image_policy_common(key: str) -> Dict[str, str]:
-    """
-    Return results for ImagePolicyCommon
-    """
-    data_file = "results_ImagePolicyCommon"
-    data = load_fixture(data_file).get(key)
-    print(f"{data_file}: {key} : {data}")
-    return data
-
-
-def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
+def results_image_policy_create_bulk(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyCreateBulk
     """
@@ -494,7 +474,7 @@ def results_image_policy_create_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_delete(key: str) -> Dict[str, str]:
+def results_image_policy_delete(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyDelete
     """
@@ -504,7 +484,7 @@ def results_image_policy_delete(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
+def results_image_policy_replace_bulk(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyReplaceBulk
     """
@@ -514,7 +494,7 @@ def results_image_policy_replace_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_task_result(key: str) -> Dict[str, str]:
+def results_image_policy_task_result(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyTaskResult
     """
@@ -524,7 +504,7 @@ def results_image_policy_task_result(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_update(key: str) -> Dict[str, str]:
+def results_image_policy_update(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyUpdate
     """
@@ -534,7 +514,7 @@ def results_image_policy_update(key: str) -> Dict[str, str]:
     return data
 
 
-def results_image_policy_update_bulk(key: str) -> Dict[str, str]:
+def results_image_policy_update_bulk(key: str) -> dict[str, str]:
     """
     Return results for ImagePolicyUpdateBulk
     """
@@ -544,7 +524,7 @@ def results_image_policy_update_bulk(key: str) -> Dict[str, str]:
     return data
 
 
-def image_policies_all_policies(key: str) -> Dict[str, str]:
+def image_policies_all_policies(key: str) -> dict[str, str]:
     """
     Return mocked return values for ImagePolicies().all_policies property
     """
@@ -554,7 +534,7 @@ def image_policies_all_policies(key: str) -> Dict[str, str]:
     return data
 
 
-def rest_send_response_current(key: str) -> Dict[str, str]:
+def rest_send_response_current(key: str) -> dict[str, str]:
     """
     Mocked return values for RestSend().response_current property
     """
@@ -564,7 +544,7 @@ def rest_send_response_current(key: str) -> Dict[str, str]:
     return data
 
 
-def rest_send_result_current(key: str) -> Dict[str, str]:
+def rest_send_result_current(key: str) -> dict[str, str]:
     """
     Mocked return values for RestSend().result_current property
     """
