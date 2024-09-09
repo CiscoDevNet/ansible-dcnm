@@ -1063,7 +1063,7 @@ def main():
     # Initialize the logger
     try:
         # Set the following to True if logging is required
-        enable_logging = True
+        enable_logging = False
         logger = Log(module)
 
         if enable_logging is True:
