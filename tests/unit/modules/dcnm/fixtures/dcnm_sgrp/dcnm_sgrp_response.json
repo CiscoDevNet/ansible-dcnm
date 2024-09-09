@@ -1,0 +1,47 @@
+{
+  "sgrp_all_resp":
+  {
+    "RETURN_CODE": 200,
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/security/fabrics/mmudigon-sgrp/groups",
+      "MESSAGE": "OK",
+      "DATA": [
+      ]
+  },
+
+    "sgrp_deploy_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/mmudigon-sgrp/config-deploy/FDO24020JMT?forceShowRun=false",
+      "MESSAGE": "OK",
+      "DATA": { "status": "Configuration deployment completed."}
+    },
+
+    "sgrp_create_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/security/fabrics/mmudigon-sgrp/groups",
+      "MESSAGE": "OK",
+      "DATA": {}
+    },
+
+    "sgrp_delete_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/security/fabrics/mmudigon-sgrp/groups/bulkDelete",
+      "MESSAGE": "OK",
+      "DATA": {}
+    },
+
+    "sgrp_assoc_modify_resp":
+    {
+      "RETURN_CODE": 200,
+      "METHOD": "PUT",
+      "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/security/fabrics/unit-test/contractAssociations",
+      "MESSAGE": "OK",
+      "DATA": {}
+    }
+}

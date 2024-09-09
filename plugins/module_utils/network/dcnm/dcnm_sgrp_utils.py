@@ -5,11 +5,11 @@ __metaclass__ = type
 import json
 import time
 import ipaddress
+import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
-    dcnm_get_ip_addr_info,
 )
 
 # Some of the key names used in playbook is different from what is expected in payload. Translate such keys
@@ -43,7 +43,6 @@ dcnm_sgrp_paths = {
     11: {},
     12: {
         "SGRP_GET_GROUP": "/appcenter/cisco/ndfc/api/v1/security/fabrics/{}/groups",
-        "SGRP_GET_GROUP_WITH_ID": "/appcenter/cisco/ndfc/api/v1/security/fabrics/{}/groups/{}",
         "SGRP_ALLOC_GROUP_ID": "/appcenter/cisco/ndfc/api/v1/security/fabrics/{}/groups/reservedId",
         "SGRP_CREATE_GROUP": "/appcenter/cisco/ndfc/api/v1/security/fabrics/{}/groups",
         "SGRP_UPDATE_GROUP": "/appcenter/cisco/ndfc/api/v1/security/fabrics/{}/groups",
@@ -55,6 +54,32 @@ dcnm_sgrp_paths = {
         "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
     },
 }
+
+
+class Paths:
+    def __init__(self):
+        self.class_name = self.__class__.__name__
+        self._version = None
+
+    @property
+    def version(self):
+        return self._version
+
+    @version.setter
+    def version(self, value):
+        self._version = value
+
+    def commit(self):
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        if self._version is None:
+            msg = f"{self.class_name}.commit(): "
+            msg += "version is not set, which is required."
+            raise ValueError(msg)
+
+        self.paths = dcnm_sgrp_utils_get_paths(self._version)
+        self.log.debug(f"Paths = {0}\n".format(self.paths))
 
 
 def dcnm_sgrp_utils_get_paths(version):
@@ -97,52 +122,6 @@ def dcnm_sgrp_utils_validate_devices(self, cfg):
             self.module.fail_json(msg=mesg)
 
 
-def dcnm_sgrp_utils_translate_config(self, cfg):
-
-    if cfg.get("peerOneId", "") != "":
-        cfg["peerOneId"] = dcnm_get_ip_addr_info(
-            self.module, cfg["peerOneId"], self.ip_sn, self.hn_sn
-        )
-    if cfg.get("peerTwoId", "") != "":
-        cfg["peerTwoId"] = dcnm_get_ip_addr_info(
-            self.module, cfg["peerTwoId"], self.ip_sn, self.hn_sn
-        )
-
-    # In the current implementation we are not supporting the following fields:
-    #  - clear_policy
-    #  - isVpcPlus
-    #  - isVTEPS
-    # But as per template these are mandatory paremeters. So we will default these values to False
-    # in the config.
-
-    if cfg.get("profile", None) is not None:
-        cfg["profile"]["clear_policy"] = False
-        cfg["profile"]["isVpcPlus"] = False
-        cfg["profile"]["isVTEPS"] = False
-
-
-def dcnm_sgrp_utils_update_have(self, have):
-
-    """
-    Routine to update vertain keys in the given 'have' object to be consistent with 'want.
-
-    Parameters:
-        have (dict): Existing VPC pair information
-
-    Returns:
-        None
-    """
-
-    # 'template' and 'nv_pairs' are the keys which are not consistent with what we have in 'want'. Change these keys
-    # appropriately.
-
-    templateName = have.pop("template")
-    nvPairs = have.pop("nv_pairs")
-
-    have["templateName"] = templateName
-    have["nvPairs"] = nvPairs
-
-
 def dcnm_sgrp_utils_get_all_sgrp_info(self):
 
     """
@@ -161,63 +140,7 @@ def dcnm_sgrp_utils_get_all_sgrp_info(self):
 
     resp = dcnm_send(self.module, "GET", path)
 
-    self.log_msg(f"GET ALL RESP = {resp}\n")
-
-    if (
-        resp
-        and (resp["RETURN_CODE"] == 200)
-        and (resp["MESSAGE"] == "OK")
-        and resp["DATA"]
-    ):
-        return resp["DATA"]
-    else:
-        return []
-
-
-def dcnm_sgrp_utils_get_sgrp_info_with_name(self, name):
-
-    """
-    Routine to get existing information from DCNM with name.
-
-    Parameters:
-        name (int): Security group name corresponding to the group
-
-    Returns:
-        resp["DATA"] (dict): Security group information that matches the name
-        [] otherwise
-    """
-
-    sgrp_info = dcnm_sgrp_utils_get_all_sgrp_info(self)
-
-    # Return a group whose group name matches the given name.
-    for sgrp in sgrp_info:
-        if sgrp["groupName"] == name:
-            self.log_msg(f"GET WITH NAME RESP = {sgrp}\n")
-            return sgrp
-    self.log_msg("GET WITH NAME RESP = []\n")
-    return []
-
-
-def dcnm_sgrp_utils_get_sgrp_info_from_dcnm(self, group_id):
-
-    """
-    Routine to get existing information from DCNM with group id.
-
-    Parameters:
-        group_id (int): Security group Id corresponding to the group
-
-    Returns:
-        resp["DATA"] (dict): Security group information obtained from the DCNM server if it exists
-        [] otherwise
-    """
-
-    # Get the Peer information first
-    path = self.paths["SGRP_GET_GROUP_WITH_ID"]
-    path = path.format(self.fabric, group_id)
-
-    resp = dcnm_send(self.module, "GET", path)
-
-    self.log_msg(f"GET WITH ID RESP = {resp}\n")
+    self.log.info("DCNM:Get All SGRP Resp = {0}\n".format(resp))
 
     if (
         resp
@@ -251,36 +174,26 @@ def dcnm_sgrp_utils_get_sgrp_info(self, wobj):
         [] otherwise
     """
 
-    # WANT objects may or may not include group ID. In case group ID is included in the wobj, then fetch the corresponding
-    # group based on the ID.
-    if wobj.get("groupId", 0) != 0:
-        sgrp = dcnm_sgrp_utils_get_sgrp_info_from_dcnm(self, wobj["groupId"])
+    if self.sgrp_list == []:
+        self.sgrp_list = dcnm_sgrp_utils_get_all_sgrp_info(self)
 
-        self.log_msg(f"GET(GID) RESP = {sgrp}\n")
-        # Check if the group names match. Otherwise it is an error
+    for sgrp in self.sgrp_list:
+        # Check if all the information match.
         if (
-            sgrp != []
-            and wobj.get("groupName", "") != ""
-            and sgrp["groupName"] != wobj["groupName"]
+            (
+                (wobj.get("groupName", None) is None)
+                or (sgrp["groupName"] == wobj["groupName"])
+            )
+            and (
+                (wobj.get("groupId", None) is None)
+                or (sgrp["groupId"] == wobj["groupId"])
+            )
         ):
-            return []
-        else:
             return sgrp
-    else:
-        # group ID is not included in the playbook. We will have to get all groups from the controller and match the same
-        # by name. Group Id will be allocated during creation.
-        return dcnm_sgrp_utils_get_sgrp_info_with_name(self, wobj["groupName"])
+    return []
 
 
-def dcnm_sgrp_utils_alloc_group_id(self):
-
-    path = self.paths["SGRP_GET_GROUP_ID"]
-    resp = dcnm_send(self.module, "GET", path)
-
-    self.log_msg(f"GROUP ID RESP = {resp}\n")
-
-
-def dcnm_sgrp_utils_get_payload_elem(self, key, sel_info):
+def dcnm_sgrp_utils_get_payload_selector_elem(self, sel_info):
 
     pl_sel_info = []
     for elem in sel_info:
@@ -298,8 +211,8 @@ def dcnm_sgrp_utils_get_sgrp_payload(self, sgrp_info):
 
     for key in sgrp_info:
         if key == "ip_selectors" or key == "network_selectors":
-            sel_info = dcnm_sgrp_utils_get_payload_elem(
-                self, key, sgrp_info[key]
+            sel_info = dcnm_sgrp_utils_get_payload_selector_elem(
+                self, sgrp_info[key]
             )
             sgrp_payload[xlate_key[key]] = sel_info
         else:
@@ -371,7 +284,7 @@ def dcnm_sgrp_utils_update_sgrp_information(self, want, have, cfg):
         if cfg.get(rev_xlate_key[key], None) is None:
             # The given key from want is not included in the playbook config. Copy the
             # information corresponding to the key from have
-            if key == "ipSelectors" or key == "networkSelectors" or key == "vmUuidSelectors":
+            if key in mergeable_fields:
                 want[key] = have.get(key, [])
             else:
                 want[key] = have.get(key, "")
@@ -490,7 +403,7 @@ def dcnm_sgrp_utils_compare_sgrp_objects(self, wobj, hobj):
     if mismatch_reasons != []:
         return "DCNM_SGRP_MERGE", mismatch_reasons, hobj
     else:
-        return "DCNM_SGRP_EXIST", [], []
+        return "DCNM_SGRP_EXIST", [], hobj
 
 
 def dcnm_sgrp_utils_compare_want_and_have(self, want):
@@ -601,8 +514,8 @@ def dcnm_sgrp_utils_process_delete_payloads(self):
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
 
-        self.log_msg(
-            f"DELETE, PATH = {path}, RESP = {resp}. PL = {json_payload}\n"
+        self.log.info(
+            "DCNM: Delete, Path = {0}, Resp = {1}. Payload = {2}\n".format(path, resp, json_payload)
         )
 
         if resp != []:
@@ -639,16 +552,16 @@ def dcnm_sgrp_utils_process_payloads_list(
     flag = False
 
     if command == "POST":
-        action = "CREATE"
+        action = "Create"
     elif command == "PUT":
-        action = "MODIFY"
+        action = "Modify"
 
     # Create the bulk objects first
     if payload_list[0]["bulk"] != []:
         json_payload = json.dumps(payload_list[0]["bulk"])
         resp = dcnm_send(self.module, command, path, json_payload)
 
-        self.log_msg(f"BULK {action} PL = {json_payload}, RESP = {resp}\n")
+        self.log.info("DCNM: Bulk {0} Payload = {1}, Resp = {2}\n".format(action, json_payload, resp))
 
         if resp != []:
             self.result["response"].append(resp)
@@ -665,7 +578,7 @@ def dcnm_sgrp_utils_process_payloads_list(
             # Allocate a groupId and then create the group.
             resp = dcnm_send(self.module, "GET", alloc_path)
 
-            self.log_msg(f"ALLOC RESP = {resp}\n")
+            self.log.info("DCNM: Alloc Group Id Resp = {0}\n".format(resp))
 
             if resp != []:
                 self.result["response"].append(resp)
@@ -675,12 +588,12 @@ def dcnm_sgrp_utils_process_payloads_list(
             else:
                 elem["groupId"] = resp["DATA"]["id"]
 
-        if action == "MODIFY":
+        if action == "Modify":
             json_payload = json.dumps(elem)
         else:
             json_payload = json.dumps([elem])
 
-        if action == "CREATE":
+        if action == "Create":
             resp = dcnm_send(self.module, command, path, json_payload)
         else:
             resp = dcnm_send(
@@ -690,8 +603,8 @@ def dcnm_sgrp_utils_process_payloads_list(
                 json_payload,
             )
 
-        self.log_msg(
-            f"INDIVIDUAL {action} PL = {json_payload}, RESP = {resp}\n"
+        self.log.info(
+            "DCNM: Individual {0} Payload = {1}, Resp = {2}\n".format(action, json_payload, resp)
         )
 
         if resp != []:
@@ -768,7 +681,7 @@ def dcnm_sgrp_utils_get_sync_status(self):
 
     resp = dcnm_send(self.module, "GET", path)
 
-    self.log_msg(f"GET SYNC STATUS RESP = {resp}\n")
+    self.log.info("DCNM: Get Sync Status Resp = {0}\n".format(resp))
 
     if resp and (resp["RETURN_CODE"] != 200):
         resp["CHANGED"] = self.changed_dict[0]
@@ -777,34 +690,6 @@ def dcnm_sgrp_utils_get_sync_status(self):
         for elem in resp["DATA"]:
             sync_info[elem["ipAddress"]] = elem["ccStatus"]
         return sync_info
-
-
-def dcnm_sgrp_utils_save_config_changes(self):
-
-    """
-    Routine to save configuration changes for the given fabric.
-
-    Parameters:
-        None
-
-    Returns:
-        None
-    """
-
-    resp = None
-
-    path = self.paths["SGRP_CFG_SAVE_GROUP"].format(self.fabric)
-
-    resp = dcnm_send(self.module, "POST", path)
-
-    self.log_msg(f"CONFG SAVE RESP = {resp}\n")
-
-    if resp != []:
-        self.result["response"].append(resp)
-
-    if resp and (resp["RETURN_CODE"] != 200):
-        resp["CHANGED"] = self.changed_dict[0]
-        self.module.fail_json(msg=resp)
 
 
 def dcnm_sgrp_utils_deploy_payload(self, deploy_info):
@@ -829,16 +714,16 @@ def dcnm_sgrp_utils_deploy_payload(self, deploy_info):
             self.fabric, ",".join(deploy_info.keys())
         )
         resp = dcnm_send(self.module, "POST", path)
-    elif self.deploy == "vrfs":
-        path = self.paths["SGRP_DEPLOY_GROUP_BY_VRFS"]
-        json_payload = json.dumps(deploy_info)
-        resp = dcnm_send(self.module, "POST", path, json_payload)
+#   elif self.deploy == "vrfs":
+#       path = self.paths["SGRP_DEPLOY_GROUP_BY_VRFS"]
+#       json_payload = json.dumps(deploy_info)
+#       resp = dcnm_send(self.module, "POST", path, json_payload)
 
     if resp != []:
         self.result["response"].append(resp)
 
-    self.log_msg(f"DEPLOY ELEM, PATH = {path},  RESP = {resp}\n")
-    self.log_msg(f"DEPLOY ELEM, PL = {json_payload}\n")
+    self.log.info("DCNM: Deploy Element, Path = {0},  RESP = {1}\n".format(path, resp))
+    self.log.info("Deploy Element, Payload = {0}\n".format(json_payload))
 
     if resp and (resp["RETURN_CODE"] != 200):
         resp["CHANGED"] = self.changed_dict[0]
@@ -847,11 +732,6 @@ def dcnm_sgrp_utils_deploy_payload(self, deploy_info):
         deploy_flag = True
 
     return deploy_flag, resp
-
-
-def dcnm_sgrp_utils_get_ip_addr(self, seq_no):
-
-    return self.sn_ip[seq_no]
 
 
 def dcnm_sgrp_utils_process_deploy_payloads(self, deploy_info):
@@ -919,15 +799,13 @@ def dcnm_sgrp_utils_get_delete_list(self):
 
     del_list = []
 
-    # Get all security group information present
-    sgrp_info = dcnm_sgrp_utils_get_all_sgrp_info(self)
-
-    if sgrp_info == []:
-        return []
+    if self.sgrp_list == []:
+        # Get all security group information present
+        self.sgrp_list = dcnm_sgrp_utils_get_all_sgrp_info(self)
 
     # If this info is not included in self.want, then go ahead and add it to del_list. Otherwise
     # ignore this pair, since new configuration is included for this pair in the playbook.
-    for sgrp in sgrp_info:
+    for sgrp in self.sgrp_list:
         # objects with groupType as "defaultgroup" cannot be deleted
         if sgrp["groupType"].lower() == "defaultgroup":
             continue
@@ -941,11 +819,12 @@ def dcnm_sgrp_utils_get_delete_list(self):
 
 def dcnm_sgrp_utils_get_all_filtered_sgrp_objects(self):
 
-    sgrp_list = dcnm_sgrp_utils_get_all_sgrp_info(self)
+    if self.sgrp_list == []:
+        self.sgrp_list = dcnm_sgrp_utils_get_all_sgrp_info(self)
 
     # If filters are provided, use the values to build the appropriate list.
     if self.sgrp_info == []:
-        return sgrp_list
+        return self.sgrp_list
     else:
         sgrp_filtered_list = []
 
@@ -954,11 +833,9 @@ def dcnm_sgrp_utils_get_all_filtered_sgrp_objects(self):
         for elem in self.sgrp_info:
             match_list = []
 
-            self.log_msg(f"Processing ELEM = {elem}\n")
-
             match = [
                 sgrp
-                for sgrp in sgrp_list
+                for sgrp in self.sgrp_list
                 if (
                     (
                         elem.get("group_id", None) is None
@@ -970,12 +847,12 @@ def dcnm_sgrp_utils_get_all_filtered_sgrp_objects(self):
                     )
                 )
             ]
-            self.log_msg(f"MATCH = {match}\n")
 
             if match == []:
                 continue
 
-            if match[0] not in sgrp_filtered_list:
-                sgrp_filtered_list.append(match[0])
+            for melem in match:
+                if melem not in sgrp_filtered_list:
+                    sgrp_filtered_list.append(melem)
 
     return sgrp_filtered_list

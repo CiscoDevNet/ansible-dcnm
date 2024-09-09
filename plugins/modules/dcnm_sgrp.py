@@ -327,21 +327,36 @@ EXAMPLES = """
     state: query
   register: result
 """
+
 import copy
+import logging
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import (
+    ResponseHandler,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import (
+    RestSend,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import (
+    Sender,
+)
+
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.common_utils import (
+    Version,
+    InventoryData,
+    FabricInfo,
+    SwitchInfo,
+)
+
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
     validate_list_of_dicts,
-    dcnm_version_supported,
-    get_ip_sn_dict,
-    get_fabric_inventory_details,
-    get_fabric_details,
     dcnm_get_ip_addr_info,
 )
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_sgrp_utils import (
-    dcnm_sgrp_utils_get_paths,
+    Paths,
     dcnm_sgrp_utils_check_if_meta,
     dcnm_sgrp_utils_get_sgrp_info,
     dcnm_sgrp_utils_get_sgrp_payload,
@@ -375,6 +390,11 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_sgrp_
 # Resource Class object which includes all the required methods and data to configure and maintain Security Groups.
 class DcnmSgrp:
     def __init__(self, module):
+
+        self.class_name = self.__class__.__name__
+
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
@@ -382,6 +402,7 @@ class DcnmSgrp:
         self.config = copy.deepcopy(module.params.get("config", []))
         self.sync_info = {}
         self.sgrp_info = []
+        self.sgrp_list = []
         self.want = []
         self.have = []
         self.diff_create = [{"bulk": [], "individual": []}]
@@ -391,13 +412,11 @@ class DcnmSgrp:
         self.diff_delete_deploy = {}
         self.monitoring = []
         self.meta_switches = []
-        self.arg_specs = {}
-        self.fd = None
         self.changed_dict = [
             {
                 "merged": [],
                 "deleted": [],
-                "delete_deploy": {},
+                "delete_deploy": [],
                 "modified": [],
                 "query": [],
                 "deploy": {},
@@ -406,18 +425,6 @@ class DcnmSgrp:
         ]
 
         self.result = dict(changed=False, diff=[], response=[])
-
-    def log_msg(self, msg):
-
-        if self.module._verbosity != 5:
-            return
-
-        if self.fd is None:
-            self.fd = open("dcnm_sgrp.log", "a+")
-        if self.fd is not None:
-            self.fd.write(msg)
-            self.fd.write("\n")
-            self.fd.flush()
 
     def dcnm_sgrp_merge_want_and_have_objects(self, want, have):
 
@@ -555,6 +562,8 @@ class DcnmSgrp:
             have = dcnm_sgrp_utils_get_sgrp_info(self, xelem)
 
             if have != []:
+                if elem.get("switch", None) is not None:
+                    have["switch"] = elem["switch"]
                 self.dcnm_sgrp_update_delete_payloads(have)
 
     def dcnm_sgrp_update_delete_payloads(self, have):
@@ -587,11 +596,6 @@ class DcnmSgrp:
             None
         """
 
-        bulk = False
-
-        if not self.want:
-            return
-
         for elem in self.want:
             groupId = elem.get("groupId", 0)
             if groupId == 0:
@@ -603,9 +607,8 @@ class DcnmSgrp:
                 self, elem
             )
 
-            self.log_msg(
-                f"Compare RC {rc}, REASONS = {reasons}, HAVE = {have}\n"
-            )
+            msg = f"Compare Want and Have: Return Code = {rc}, Reasons = {reasons}, Have = {have}\n"
+            self.log.info(msg)
 
             if rc == "DCNM_SGRP_CREATE":
                 # Object does not exists, create a new one. Security groups which include groupIds can be created in bulk.
@@ -668,10 +671,12 @@ class DcnmSgrp:
         for want in self.want:
 
             match_have = dcnm_sgrp_utils_get_matching_have(self, want)
-            match_cfg = dcnm_sgrp_utils_get_matching_cfg(self, want)
 
-            if match_cfg == []:
-                continue
+            if match_have != []:
+                match_cfg = dcnm_sgrp_utils_get_matching_cfg(self, want)
+
+                if match_cfg == []:
+                    continue
 
             for melem in match_have:
                 dcnm_sgrp_utils_update_sgrp_information(
@@ -690,10 +695,7 @@ class DcnmSgrp:
             None
         """
 
-        if [] is self.config:
-            return
-
-        if not self.sgrp_info:
+        if self.config == []:
             return
 
         for elem in self.sgrp_info:
@@ -727,6 +729,7 @@ class DcnmSgrp:
         for elem in self.want:
             have = dcnm_sgrp_utils_get_sgrp_info(self, elem)
             if (have != []) and (have not in self.have):
+                # If the given object already exist, update the group id here
                 elem["groupId"] = have["groupId"]
                 self.have.append(have)
 
@@ -745,8 +748,9 @@ class DcnmSgrp:
         """
 
         arg_spec = {
-            "group_name": {"type": "str", "default": ""},
-            "group_id": {"type": "int", "default": 0},
+            "group_name": {"type": "str"},
+            "group_id": {"type": "int"},
+            "switch": {"type": "list", "elements": "str"},
         }
 
         sgrp_info, invalid_params = validate_list_of_dicts(cfg, arg_spec)
@@ -883,7 +887,7 @@ class DcnmSgrp:
 
         return sgrp_payload
 
-    def dcnm_sgrp_update_inventory_data(self):
+    def dcnm_sgrp_update_switch_info(self):
 
         """
         Routine to update inventory data for all fabrics included in the playbook. This routine
@@ -896,72 +900,20 @@ class DcnmSgrp:
             None
         """
 
-        processed_fabrics = []
+        try:
+            switch_info = SwitchInfo()
+            switch_info.inventory_data = self.inventory_data
+            switch_info.fabric = self.fabric
+            switch_info.commit()
+        except ValueError as error:
+            self.module.fail_json(msg=f"{str(error)}")
 
-        # Soure fabric is already processed. Add it to processed list
-        processed_fabrics.append(self.fabric)
-
-        # Based on the updated inventory_data, update ip_sn, hn_sn and sn_hn objects
-        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
-        self.sn_hn = dict([(value, key) for key, value in self.hn_sn.items()])
-        self.sn_ip = dict([(value, key) for key, value in self.ip_sn.items()])
-
-        self.log_msg("INVENTORY DATA = {[{'IP': d['ipAddress'], \
-                                           'Sno': d['serialNumber'], \
-                                           'Logical Name': d['logicalName'], \
-                                           'Managable': d['managable'], \
-                                           'Role': d['switchRoleEnum']} \
-                                           for d in self.inventory_data.values()]}\n")
-        self.log_msg(
-            f"IP_SN = {self.ip_sn}, HN_SN = {self.hn_sn}, SN_IP = {self.sn_ip}\n"
-        )
-
-        # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
-        managable_ip = [
-            (key, self.inventory_data[key]["serialNumber"])
-            for key in self.inventory_data
-            if str(self.inventory_data[key]["managable"]).lower() == "true"
-        ]
-        managable_hosts = [
-            (
-                self.inventory_data[key]["logicalName"],
-                self.inventory_data[key]["serialNumber"],
-            )
-            for key in self.inventory_data
-            if str(self.inventory_data[key]["managable"]).lower() == "true"
-        ]
-        self.managable = dict(managable_ip + managable_hosts)
-
-        self.meta_switches = [
-            (
-                key,
-                self.inventory_data[key]["logicalName"],
-                self.inventory_data[key]["serialNumber"],
-            )
-            for key in self.inventory_data
-            if self.inventory_data[key]["switchRoleEnum"] is None
-        ]
-
-        # Get all fabrics which are in monitoring mode. Deploy must be avoided to all fabrics which are part of this list
-        for fabric in processed_fabrics:
-            path = self.paths["FABRIC_ACCESS_MODE"].format(fabric)
-            resp = dcnm_send(self.module, "GET", path)
-
-            self.log_msg(f"GET FABRIC ACCESS MODE RESP = {resp}\n")
-
-            if resp and resp["RETURN_CODE"] == 200:
-                if str(resp["DATA"]["readonly"]).lower() == "true":
-                    self.monitoring.append(fabric)
-
-        # Check if source fabric is in monitoring mode. If so return an error, since fabrics in monitoring mode do not allow
-        # create/modify/delete and deploy operations.
-        if self.fabric in self.monitoring:
-            self.module.fail_json(
-                msg="Error: Source Fabric '{0}' is in Monitoring mode, No changes are allowed on the fabric\n".format(
-                    self.fabric
-                )
-            )
-        self.log_msg(f"META = {self.meta_switches}\n")
+        self.managable = switch_info.managable
+        self.meta_switches = switch_info.meta_switches
+        self.ip_sn = switch_info.ip_sn
+        self.hn_sn = switch_info.hn_sn
+        self.sn_hn = switch_info.sn_hn
+        self.sn_ip = switch_info.sn_ip
 
     def dcnm_sgrp_translate_playbook_info(self, config, ip_sn, hn_sn):
 
@@ -1028,6 +980,9 @@ class DcnmSgrp:
             self, self.diff_deploy
         )
 
+        msg = f"Flags: CR = {create_flag}, DL = {delete_flag}, MO = {modify_flag}, DP = {deploy_flag}\n"
+        self.log.debug(msg)
+
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag or deploy_flag
         )
@@ -1044,13 +999,40 @@ class DcnmSgrp:
             None
         """
 
-        self.dcnm_version = dcnm_version_supported(self.module)
-        self.inventory_data = get_fabric_inventory_details(
-            self.module, self.fabric
-        )
+        try:
+            version = Version()
+            version.module = self.module
+            version.commit()
+            self.dcnm_version = version.dcnm_version
+        except ValueError as error:
+            self.module.fail_json(msg=f"{str(error)}")
 
-        self.fabric_info = get_fabric_details(self.module, self.fabric)
-        self.paths = dcnm_sgrp_utils_get_paths(self.dcnm_version)
+        try:
+            inv_data = InventoryData()
+            inv_data.module = self.module
+            inv_data.fabric = self.fabric
+            inv_data.commit()
+            self.inventory_data = inv_data.inventory_data
+        except ValueError as error:
+            self.module.fail_json(msg=f"{str(error)}")
+
+        try:
+            paths = Paths()
+            paths.version = self.dcnm_version
+            paths.commit()
+            self.paths = paths.paths
+        except ValueError as error:
+            self.module.fail_json(msg=f"{str(error)}")
+
+        try:
+            fabric_info = FabricInfo()
+            fabric_info.module = self.module
+            fabric_info.fabric = self.fabric
+            fabric_info.rest_send = self.rest_send
+            fabric_info.paths = self.paths
+            fabric_info.commit()
+        except ValueError as error:
+            self.module.fail_json(msg=f"{str(error)}")
 
 
 def main():
@@ -1066,9 +1048,7 @@ def main():
             choices=["merged", "deleted", "replaced", "overridden", "query"],
         ),
         deploy=dict(
-            type="str",
-            default="switches",
-            choices=["switches", "none"],
+            type="str", default="switches", choices=["switches", "none"]
         ),
     )
 
@@ -1078,10 +1058,34 @@ def main():
 
     dcnm_sgrp = DcnmSgrp(module)
 
+    state = module.params["state"]
+
+    # Initialize the logger
+    try:
+        # Set the following to True if logging is required
+        enable_logging = True
+        logger = Log(module)
+
+        if enable_logging is True:
+            collection_path = "/Users/mmudigon/Desktop/Ansible/collections/ansible_collections/cisco/dcnm"
+            config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
+            logger.config = config_file
+        logger.commit()
+    except ValueError as error:
+        module.fail_json(msg=str(error))
+
+    msg = f"######################### BEGIN STATE = {state} ##########################\n"
+    dcnm_sgrp.log.debug(msg)
+
+    # Initialize the Sender object
+    sender = Sender()
+    sender.ansible_module = module
+    dcnm_sgrp.rest_send = RestSend(module.params)
+    dcnm_sgrp.rest_send.response_handler = ResponseHandler()
+    dcnm_sgrp.rest_send.sender = sender
+
     # Fill up the version and fabric related details
     dcnm_sgrp.dcnm_sgrp_update_module_info()
-
-    state = module.params["state"]
 
     if [] is dcnm_sgrp.config:
         if state == "merged" or state == "replaced":
@@ -1091,19 +1095,18 @@ def main():
                 )
             )
 
-    dcnm_sgrp.log_msg(
-        f"######################### BEGIN STATE = {state} ##########################\n"
-    )
-
-    dcnm_sgrp.dcnm_sgrp_update_inventory_data()
+    dcnm_sgrp.dcnm_sgrp_update_switch_info()
 
     dcnm_sgrp.dcnm_sgrp_translate_playbook_info(
         dcnm_sgrp.config, dcnm_sgrp.ip_sn, dcnm_sgrp.hn_sn
     )
-
     dcnm_sgrp.dcnm_sgrp_validate_all_input()
 
-    dcnm_sgrp.log_msg(f"Security Group Info = {dcnm_sgrp.sgrp_info}\n")
+    msg = f"Config Info = {dcnm_sgrp.config}\n"
+    dcnm_sgrp.log.info(msg)
+
+    msg = f"Validated Security Group Association Info = {dcnm_sgrp.sgrp_info}\n"
+    dcnm_sgrp.log.info(msg)
 
     if (
         module.params["state"] != "query"
@@ -1111,10 +1114,13 @@ def main():
     ):
         dcnm_sgrp.dcnm_sgrp_get_want()
 
-        dcnm_sgrp.log_msg(f"WANT = {dcnm_sgrp.want}\n")
+        msg = f"Want = {dcnm_sgrp.want}\n"
+        dcnm_sgrp.log.info(msg)
+
         dcnm_sgrp.dcnm_sgrp_get_have()
 
-        dcnm_sgrp.log_msg(f"HAVE = {dcnm_sgrp.have}\n")
+        msg = f"Have = {dcnm_sgrp.have}\n"
+        dcnm_sgrp.log.info(msg)
 
         # self.want would have defaulted all optional objects not included in playbook. But the way
         # these objects are handled is different between 'merged' and 'replaced' states. For 'merged'
@@ -1122,7 +1128,8 @@ def main():
         # they must be purged or defaulted.
 
         dcnm_sgrp.dcnm_sgrp_update_want()
-        dcnm_sgrp.log_msg(f"Updated WANT = {dcnm_sgrp.want}\n")
+        msg = f"Updated Want = {dcnm_sgrp.want}\n"
+        dcnm_sgrp.log.info(msg)
 
     if (module.params["state"] == "merged") or (
         module.params["state"] == "replaced"
@@ -1138,11 +1145,20 @@ def main():
     if module.params["state"] == "query":
         dcnm_sgrp.dcnm_sgrp_get_diff_query()
 
-    dcnm_sgrp.log_msg(f"CREATE = {dcnm_sgrp.diff_create}\n")
-    dcnm_sgrp.log_msg(f"REPLACE = {dcnm_sgrp.diff_modify}\n")
-    dcnm_sgrp.log_msg(f"DELETE = {dcnm_sgrp.diff_delete}\n")
-    dcnm_sgrp.log_msg(f"DEPLOY = {dcnm_sgrp.diff_deploy}\n")
-    dcnm_sgrp.log_msg(f"DELETE DEPLOY = {dcnm_sgrp.diff_delete_deploy}\n")
+    msg = f"Create Info = {dcnm_sgrp.diff_create}\n"
+    dcnm_sgrp.log.info(msg)
+
+    msg = f"Replace Info = {dcnm_sgrp.diff_modify}\n"
+    dcnm_sgrp.log.info(msg)
+
+    msg = f"Delete Info = {dcnm_sgrp.diff_delete}\n"
+    dcnm_sgrp.log.info(msg)
+
+    msg = f"Deploy Info = {dcnm_sgrp.diff_deploy}\n"
+    dcnm_sgrp.log.info(msg)
+
+    msg = f"Delete Deploy Info = {dcnm_sgrp.diff_delete_deploy}\n"
+    dcnm_sgrp.log.info(msg)
 
     dcnm_sgrp.result["diff"] = dcnm_sgrp.changed_dict
     dcnm_sgrp.changed_dict[0]["debugs"].append(
@@ -1172,9 +1188,8 @@ def main():
 
     dcnm_sgrp.dcnm_sgrp_send_message_to_dcnm()
 
-    dcnm_sgrp.log_msg(
-        f"######################### END STATE = {state} ##########################\n"
-    )
+    msg = f"######################### END STATE = {state} ##########################\n"
+    dcnm_sgrp.log.debug(msg)
 
     module.exit_json(**dcnm_sgrp.result)
 

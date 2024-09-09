@@ -1,0 +1,141 @@
+{
+  "sgrp_1":
+  {
+    "group_id": 15001,
+    "group_name": "LSG_15001",
+    "ip_selectors": [
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.1.1.0/24",
+      "vrf_name": "VRF_15001"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "C001::/64",
+      "vrf_name": "VRF_15001"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.1.2.0/24",
+      "vrf_name": "VRF_15001"
+    }],
+    "network_selectors": [
+    {
+      "network": "Network_15001",
+      "vrf_name": "VRF_15001"
+    }],
+    "switch": ["172.31.217.103", "172.31.217.101"]
+  },
+
+    "sgrp_2":
+    {
+      "group_id": 15002,
+      "group_name": "LSG_15002",
+      "ip_selectors": [
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.2.1.0/24",
+        "vrf_name": "VRF_15002"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "C002::/64",
+        "vrf_name": "VRF_15002"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.2.2.0/24",
+        "vrf_name": "VRF_15002"
+      }],
+      "network_selectors": [
+      {
+        "network": "Network_15002",
+        "vrf_name": "VRF_15002"
+      }],
+      "switch": ["172.31.217.103", "172.31.217.101"]
+    },
+
+    "sgrp_3":
+    {
+      "group_id": 15003,
+      "group_name": "LSG_15003",
+      "ip_selectors": [
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.3.1.0/24",
+        "vrf_name": "VRF_15003"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "C003::/64",
+        "vrf_name": "VRF_15003"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.3.2.0/24",
+        "vrf_name": "VRF_15003"
+      }],
+      "network_selectors": [
+      {
+        "network": "Network_15003",
+        "vrf_name": "VRF_15003"
+      }],
+      "switch": ["172.31.217.103", "172.31.217.101"]
+    },
+
+    "sgrp_4":
+    {
+      "group_id": 15004,
+      "group_name": "LSG_15004",
+      "ip_selectors": [
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.4.1.0/24",
+        "vrf_name": "VRF_15004"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "C004::/64",
+        "vrf_name": "VRF_15004"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.4.2.0/24",
+        "vrf_name": "VRF_15004"
+      }],
+      "network_selectors": [
+      {
+        "network": "Network_15004",
+        "vrf_name": "VRF_15004"
+      }],
+      "switch": ["172.31.217.103", "172.31.217.101"]
+    },
+
+    "sgrp_5":
+    {
+      "group_id": 15005,
+      "group_name": "LSG_15005",
+      "ip_selectors": [
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.5.1.0/24",
+        "vrf_name": "VRF_15005"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "C005::/64",
+        "vrf_name": "VRF_15005"
+      },
+      {
+        "type": "Connected Endpoints",
+        "ip": "192.5.2.0/24",
+        "vrf_name": "VRF_15005"
+      }],
+      "network_selectors": [
+      {
+        "network": "Network_15005",
+        "vrf_name": "VRF_15005"
+      }],
+      "switch": ["172.31.217.103", "172.31.217.101"]
+    }
+}
