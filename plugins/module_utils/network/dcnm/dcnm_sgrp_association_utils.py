@@ -72,7 +72,9 @@ class Paths:
             raise ValueError(msg)
 
         self.paths = dcnm_sgrp_association_utils_get_paths(self._version)
-        self.log.debug(f"Paths = {0}\n".format(self.paths))
+
+        msg = f"Paths = {self.paths}\n"
+        self.log.debug(msg)
 
 
 def dcnm_sgrp_association_utils_get_all_sgrp_info(self):
@@ -92,7 +94,8 @@ def dcnm_sgrp_association_utils_get_all_sgrp_info(self):
 
     resp = dcnm_send(self.module, "GET", path)
 
-    self.log.info(f"DCNM:Get All Security Groups Resp = {resp}\n")
+    msg = f"DCNM:Get All Security Groups Resp = {resp}\n"
+    self.log.info(msg)
 
     if (
         resp
@@ -148,7 +151,8 @@ def dcnm_sgrp_association_utils_get_all_sgrp_association_info(self):
 
     resp = dcnm_send(self.module, "GET", path)
 
-    self.log.debug(f"DCNM:Get All SGRP Associations Resp = {0}\n".format(resp))
+    msg = f"DCNM:Get All SGRP Associations Resp = {resp}\n"
+    self.log.debug(msg)
 
     if (
         resp
@@ -520,9 +524,8 @@ def dcnm_sgrp_association_utils_process_delete_payloads(self):
 
         resp = dcnm_send(self.module, "POST", path, json_payload)
 
-        self.log.info(
-            f"DCNM:Delete Path = {path}, Resp = {resp}. Payload = {json_payload}\n"
-        )
+        msg = f"DCNM:Delete Path = {path}, Resp = {resp}, Payload = {json_payload}\n"
+        self.log.info(msg)
 
         if resp:
             self.result["response"].append(resp)
@@ -563,9 +566,9 @@ def dcnm_sgrp_association_utils_process_payloads_list(
         # Creates can happen in bulk.
         json_payload = json.dumps(payload_list)
         resp = dcnm_send(self.module, command, path, json_payload)
-        self.log.info(
-            f"DCNM:Create Path = {path}, Resp = {resp}, Payload - {json_payload}\n"
-        )
+
+        msg = f"DCNM:Create Path = {path}, Resp = {resp}, Payload - {json_payload}\n"
+        self.log.info(msg)
         if resp:
             self.result["response"].append(resp)
         if resp and resp.get("RETURN_CODE") != 200:
@@ -580,9 +583,9 @@ def dcnm_sgrp_association_utils_process_payloads_list(
             resp = dcnm_send(
                 self.module, command, path + "/" + str(uuid), json_payload
             )
-            self.log.info(
-                f"DCNM:Modify Path = {path}, Resp = {resp}, Payload = {json_payload}\n"
-            )
+
+            msg = f"DCNM:Modify Path = {path}, Resp = {resp}, Payload = {json_payload}\n"
+            self.log.info(msg)
 
             if resp:
                 self.result["response"].append(resp)
@@ -661,11 +664,15 @@ def dcnm_sgrp_association_utils_get_sync_status(self):
 
     resp = dcnm_send(self.module, "GET", path)
 
-    self.log.info(f"DCNM:Get Switch SYNC Status Resp = {resp}\n")
+    msg = f"DCNM:Get Switch SYNC Status Resp = {resp}\n"
+    self.log.info(msg)
+
     status_info = [
         {f"({d['ipAddress']} : {d['ccStatus']}"} for d in resp["DATA"]
     ]
-    self.log.info(f"Status Info = {status_info}\n")
+
+    msg = f"Status Info = {status_info}\n"
+    self.log.info(msg)
 
     if resp and (resp["RETURN_CODE"] != 200):
         resp["CHANGED"] = self.changed_dict[0]
@@ -706,8 +713,11 @@ def dcnm_sgrp_association_utils_deploy_payload(self, deploy_info):
     if resp:
         self.result["response"].append(resp)
 
-    self.log.info(f"DCNM:Deploy Element Path = {path},  Resp = {resp}\n")
-    self.log.info(f"Deploy Element Payload = {json_payload}\n")
+    msg = f"DCNM:Deploy Element Path = {path},  Resp = {resp}\n"
+    self.log.info(msg)
+
+    msg = f"Deploy Element Payload = {json_payload}\n"
+    self.log.info(msg)
 
     if resp and (resp["RETURN_CODE"] != 200):
         resp["CHANGED"] = self.changed_dict[0]

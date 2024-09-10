@@ -78,6 +78,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm impo
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import (
     AnsibleFailJson,
 )
+
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_sgrp_association import (
     DcnmSgrpAssociation,
 )
@@ -1999,7 +2000,7 @@ class TestDcnmSgrpAssociationModule(TestDcnmModule):
                 "deploy": 0,
             },
         )
-        assert len(result["diff"][0]["delete_deploy"]) == 4
+        assert len(result["diff"][0]["delete_deploy"]) == 2
 
     def test_dcnm_sgrp_association_delete_existing_with_mismatching_group_id(
         self
@@ -2268,7 +2269,7 @@ class TestDcnmSgrpAssociationModule(TestDcnmModule):
         set_module_args(
             dict(
                 deploy="switches",
-                state="merged",
+                state="replaced",
                 fabric="unit-test",
                 config=playbook_config,
             )
@@ -2950,7 +2951,6 @@ class TestDcnmSgrpAssociationModule(TestDcnmModule):
             "fabric_inventory_details_resp"
         )
         keys = list(modified_inv_detail_resp.keys())
-        print(f"KEYS = {keys}\n")
         modified_inv_detail_resp[keys[0]]["switchRoleEnum"] = None
         self.dcnm_mock_fabric_inv_details(modified_inv_detail_resp)
 

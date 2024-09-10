@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_sgrp_association
 short_description: DCNM Ansible Module for managing Security Groups Associatons.
-version_added: "3.5.0"
+version_added: "3.6.0"
 description:
     - "DCNM Ansible Module for managing Security Groups Associations."
 author: Mallik Mudigonda(@mmudigon)
@@ -491,6 +491,8 @@ class DcnmSgrpAssociation:
                 # is the contract_name to filter the output as required.
                 if elem.get("contract_name", None) is not None:
                     if have["contractName"] == elem["contract_name"]:
+                        if elem.get("switch", None) is not None:
+                            have["switch"] = elem["switch"]
                         self.dcnm_sgrp_association_update_delete_payloads(have)
                 else:
                     self.dcnm_sgrp_association_update_delete_payloads(have)
@@ -533,11 +535,8 @@ class DcnmSgrpAssociation:
                 self, elem
             )
 
-            self.log.info(
-                f"Compare Want and Have: Return Code = {0}, Reasons = {1}, Have = {2}\n".format(
-                    rc, reasons, have
-                )
-            )
+            msg = f"Compare Want and Have: Return Code = {rc}, Reasons = {reasons}, Have = {have}\n"
+            self.log.info(msg)
 
             if rc == "DCNM_SGRP_ASSOCIATION_CREATE":
                 # Object does not exists, create a new one.
@@ -692,6 +691,7 @@ class DcnmSgrpAssociation:
             "dst_group_name": {"type": "str"},
             "contract_name": {"type": "str"},
             "vrf_name": {"type": "str"},
+            "switch": {"type": "list", "elements": "str"},
         }
 
         sgrp_association_info, invalid_params = validate_list_of_dicts(
@@ -932,11 +932,8 @@ class DcnmSgrpAssociation:
             self, self.diff_deploy
         )
 
-        self.log.debug(
-            f"Flags: CR = {0}, DL = {1}, MO = {2}, DP = {3}\n".format(
-                create_flag, delete_flag, modify_flag, deploy_flag
-            )
-        )
+        msg = f"Flags: CR = {create_flag}, DL = {delete_flag}, MO = {modify_flag}, DP = {deploy_flag}\n"
+        self.log.debug(msg)
 
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag or deploy_flag
@@ -1029,11 +1026,8 @@ def main():
     except ValueError as error:
         module.fail_json(msg=str(error))
 
-    dcnm_sgrp_association.log.debug(
-        f"######################### BEGIN STATE = {0} ##########################\n".format(
-            state
-        )
-    )
+    msg = f"######################### BEGIN STATE = {state} ##########################\n"
+    dcnm_sgrp_association.log.debug(msg)
 
     # Initialize the Sender object
     sender = Sender()
@@ -1048,9 +1042,7 @@ def main():
     if dcnm_sgrp_association.config == []:
         if state == "merged" or state == "replaced":
             module.fail_json(
-                msg="'config' element is mandatory for state '{0}', given = '{1}'".format(
-                    state, dcnm_sgrp_association.config
-                )
+                msg=f"'config' element is mandatory for state '{state}', given = '{dcnm_sgrp_association.config}'"
             )
 
     dcnm_sgrp_association.dcnm_sgrp_association_update_switch_info()
@@ -1063,14 +1055,11 @@ def main():
 
     dcnm_sgrp_association.dcnm_sgrp_association_validate_all_input()
 
-    dcnm_sgrp_association.log.info(
-        f"Config Info = {0}\n".format(dcnm_sgrp_association.config)
-    )
-    dcnm_sgrp_association.log.info(
-        f"Validated Security Group Association Info = {0}\n".format(
-            dcnm_sgrp_association.sgrp_association_info
-        )
-    )
+    msg = f"Config Info = {dcnm_sgrp_association.config}\n"
+    dcnm_sgrp_association.log.info(msg)
+
+    msg = f"Validated Security Group Association Info = {dcnm_sgrp_association.sgrp_association_info}\n"
+    dcnm_sgrp_association.log.info(msg)
 
     if (
         module.params["state"] != "query"
@@ -1078,14 +1067,12 @@ def main():
     ):
         dcnm_sgrp_association.dcnm_sgrp_association_get_want()
 
-        dcnm_sgrp_association.log.info(
-            f"Want = {0}\n".format(dcnm_sgrp_association.want)
-        )
+        msg = f"Want = {dcnm_sgrp_association.want}\n"
+        dcnm_sgrp_association.log.info(msg)
         dcnm_sgrp_association.dcnm_sgrp_association_get_have()
 
-        dcnm_sgrp_association.log.info(
-            f"Have = {0}\n".format(dcnm_sgrp_association.have)
-        )
+        msg = f"Have = {dcnm_sgrp_association.have}\n"
+        dcnm_sgrp_association.log.info(msg)
 
         # self.want would have defaulted all optional objects not included in playbook. But the way
         # these objects are handled is different between 'merged' and 'replaced' states. For 'merged'
@@ -1093,15 +1080,13 @@ def main():
         # they must be purged or defaulted.
 
         dcnm_sgrp_association.dcnm_sgrp_association_update_want()
-        dcnm_sgrp_association.log.info(
-            f"Updated Want = {0}\n".format(dcnm_sgrp_association.want)
-        )
 
-        dcnm_sgrp_association.log.info(
-            f"Security Groups Info = {0}\n".format(
-                dcnm_sgrp_association.sgrp_info
-            )
-        )
+        msg = f"Updated Want = {dcnm_sgrp_association.want}\n"
+        dcnm_sgrp_association.log.info(msg)
+
+    msg = f"Security Groups Info = {dcnm_sgrp_association.sgrp_info}\n"
+    dcnm_sgrp_association.log.info(msg)
+
     if (module.params["state"] == "merged") or (
         module.params["state"] == "replaced"
     ):
@@ -1118,23 +1103,20 @@ def main():
     if module.params["state"] == "query":
         dcnm_sgrp_association.dcnm_sgrp_association_get_diff_query()
 
-    dcnm_sgrp_association.log.info(
-        f"Create Info = {0}\n".format(dcnm_sgrp_association.diff_create)
-    )
-    dcnm_sgrp_association.log.info(
-        f"Replace Info = {0}\n".format(dcnm_sgrp_association.diff_modify)
-    )
-    dcnm_sgrp_association.log.info(
-        f"Delete Info = {0}\n".format(dcnm_sgrp_association.diff_delete)
-    )
-    dcnm_sgrp_association.log.info(
-        f"Deploy Info = {0}\n".format(dcnm_sgrp_association.diff_deploy)
-    )
-    dcnm_sgrp_association.log.info(
-        f"Delete Deploy Info = {0}\n".format(
-            dcnm_sgrp_association.diff_delete_deploy
-        )
-    )
+    msg = f"Create Info = {dcnm_sgrp_association.diff_create}\n"
+    dcnm_sgrp_association.log.info(msg)
+
+    msg = f"Replace Info = {dcnm_sgrp_association.diff_modify}\n"
+    dcnm_sgrp_association.log.info(msg)
+
+    msg = f"Delete Info = {dcnm_sgrp_association.diff_delete}\n"
+    dcnm_sgrp_association.log.info(msg)
+
+    msg = f"Deploy Info = {dcnm_sgrp_association.diff_deploy}\n"
+    dcnm_sgrp_association.log.info(msg)
+
+    msg = f"Delete Deploy Info = {dcnm_sgrp_association.diff_delete_deploy}\n"
+    dcnm_sgrp_association.log.info(msg)
 
     dcnm_sgrp_association.result["diff"] = dcnm_sgrp_association.changed_dict
     dcnm_sgrp_association.changed_dict[0]["debugs"].append(
@@ -1157,11 +1139,8 @@ def main():
 
     dcnm_sgrp_association.dcnm_sgrp_association_send_message_to_dcnm()
 
-    dcnm_sgrp_association.log.debug(
-        f"######################### END STATE = {0} ##########################\n".format(
-            state
-        )
-    )
+    msg = f"######################### END STATE = {state} ##########################\n"
+    dcnm_sgrp_association.log.debug(state)
 
     module.exit_json(**dcnm_sgrp_association.result)
 

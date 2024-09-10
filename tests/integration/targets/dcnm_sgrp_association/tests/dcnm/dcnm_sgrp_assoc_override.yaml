@@ -126,7 +126,7 @@
 ##############################################
 
     - name: Override Security Group Association with existing config modified
-      cisco.dcnm.dcnm_sgrp_association:
+      cisco.dcnm.dcnm_sgrp_association: &sgrp_assoc_over
         fabric: "{{ ansible_it_fabric }}"
         deploy: switches                                    # choose from ["none", "switches"]
         state: overridden                                   # choose from [merged, replaced, deleted, overridden, query]
@@ -150,6 +150,23 @@
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
+
+##############################################
+##             OVERRIDE                     ##
+##############################################
+
+    - name: Override Security Group Association with existing config
+      cisco.dcnm.dcnm_sgrp_association: *sgrp_assoc_over
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
 
 ##############################################
 ##             OVERRIDE                     ##
