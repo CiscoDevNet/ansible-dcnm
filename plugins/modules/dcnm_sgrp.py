@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_sgrp
 short_description: DCNM Ansible Module for managing Security Groups.
-version_added: "3.5.0"
+version_added: "3.6.0"
 description:
     - "DCNM Ansible Module for managing Security Groups."
 author: Mallik Mudigonda(@mmudigon)
