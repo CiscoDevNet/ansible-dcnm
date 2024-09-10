@@ -1,0 +1,41 @@
+---
+- name: Remove all existing networks to start with a clean state
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  tags: sanity
+
+- name: Create vrfs required for this test and remove all other vrfs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vlan_id: 500
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+    - vrf_name: Tenant-1
+      vrf_id: 9008012
+      vlan_id: 501
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+    - vrf_name: Tenant-2
+      vrf_id: 9008013
+      vlan_id: 502
+      attach:
+      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ ansible_switch2 }}"
+      deploy: true
+  tags: sanity
+
+# - { include: dcnm.yaml, tags: ['dcnm'] }
+
+- name: Include the NDFCI tasks
+  ansible.builtin.include_tasks: dcnm.yaml
+  tags:
+    - dcnm

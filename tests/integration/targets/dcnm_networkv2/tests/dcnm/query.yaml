@@ -1,0 +1,417 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: Verify if fabric - Fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: Setup - Clean up any existing networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  register: result
+  until:
+    - "result.response | length == 0"
+  retries: 30
+  delay: 2
+
+- name: Create, Attach and Deploy Multiple Network with Single Switch Attach
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1501
+        tag: 14345
+        mtu: 1500
+        vlanName: "test-vlan"
+        intfDescription: "test-interface"
+        attach:
+          - attached: true
+            dot1QVlan: 1
+            extensionValues: ""
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ ansible_switch1 }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            untagged: false
+            vlan: 1501
+            deploy: True
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
+        attach:
+          - attached: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ ansible_switch2 }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            untagged: false
+            vlan: 151
+            deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+###############################################
+###                QUERY                     ##
+###############################################
+
+- name: QUERY - Query the Network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-1
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1501
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].Network.networkName == "ansible-net13"'
+    - 'result.response[0].Network.networkId | regex_search("700[2|5]", ignorecase=True)'
+    - 'result.response[0].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].Network.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName== "ansible-net13"'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName== "ansible-net13"'
+    - 'result.response[1].Network.networkName == "ansible-net12"'
+    - 'result.response[1].Network.networkId | regex_search("700[2|5]", ignorecase=True)'
+    - 'result.response[1].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].Network.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName== "ansible-net12"'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName== "ansible-net12"'
+
+- name: QUERY - Query the Network without the config element
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].Network.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].Network.networkId | regex_search("700[2|5]", ignorecase=True)'
+    - 'result.response[0].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].Network.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].Network.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].Network.networkId | regex_search("700[2|5]", ignorecase=True)'
+    - 'result.response[1].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].Network.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+
+
+- name: Delete all the networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  register: result
+
+- name: Query fabric state until all networks are deleted
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response | length == 0"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - 'result.response[3].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[1].MESSAGE == "OK"'
+    - 'result.response[2].MESSAGE == "OK"'
+    - 'result.response[3].MESSAGE == "OK"'
+    - 'result.response[3].METHOD == "DELETE"'
+    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: QUERY - Query the non available Network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+    - net_name: ansible-net13
+      vrf_name: Tenant-2
+      net_id: 7005
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.30.1/24'
+        vlanId: 1501
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7002
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response|length == 0'
+
+- name: Create a L2 only and L3 networks along with all dhcp, arp options
+  cisco.dcnm.dcnm_networkv2: &conf3
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - net_name: ansible-net13
+      net_id: 7009
+      vrf_name: NA
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.30.1/24'
+        tag: 14345
+        mtu: 2500
+        vlanId: 3509
+        isLayer2Only: True
+        suppressArp: True
+        intfDescription: "test interface"
+        vlanName: "testvlan"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
+        attach:
+          - attached: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ ansible_switch1 }}"
+            switchPorts: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+            torPorts: []
+            untagged: false
+            deploy: true
+    - net_name: ansible-net12
+      vrf_name: Tenant-2
+      net_id: 7010
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
+        vlanName: "testvlan1"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
+        attach:
+          - attached: true
+            dot1QVlan: 1
+            fabric: "{{ test_fabric }}"
+            instanceValues: ""
+            ipAddress: "{{ ansible_switch2 }}"
+            switchPorts: ["{{ ansible_sw2_int1 }}", "{{ ansible_sw2_int2 }}"]
+            untagged: false
+            vlan: 151
+            deploy: true
+  register: result
+
+- name: Query fabric state until networkStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.networkStatus is search('DEPLOYED')"
+    - "query_result.response[1].parent.networkStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[2].RETURN_CODE == 200'
+    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+
+- name: QUERY - Query the L2 and L3 Network
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+    - net_name: ansible-net13
+      net_id: 7009
+      vrf_name: NA
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.30.1/24'
+        tag: 14345
+        mtu: 2500
+        vlanId: 3509
+        isLayer2Only: True
+        suppressArp: True
+        intfDescription: "test interface"
+        vlanName: "testvlan"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
+    - net_name: ansible-net12
+      net_id: 7010
+      vrf_name: Tenant-2
+      net_template: Default_Network_Universal
+      net_extension_template: Default_Network_Extension_Universal
+      network_template_config:
+        gatewayIpAddress: '192.168.40.1/24'
+        vlanId: 151
+        tag: 14346
+        mtu: 1500
+        vlanName: "testvlan1"
+        dhcpServers: {"dhcpServers":[{"srvrAddr":"1.1.1.1", "srvrVrf":"vrf1"}, {"srvrAddr":"2.2.2.2", "srvrVrf":"vrf2"}]}
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].Network.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].Network.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
+    - 'result.response[0].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].Network.vrf == "NA"'
+    - 'result.response[0].Network.networkTemplateConfig.suppressArp == "true"'
+    - 'result.response[0].Network.networkTemplateConfig.isLayer2Only == "true"'
+    - 'result.response[0].Network.networkTemplateConfig.intfDescription == "test interface"'
+    - 'result.response[0].Network.networkTemplateConfig.vlanName == "testvlan"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].Network.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].Network.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
+    - 'result.response[1].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].Network.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
+    - 'result.response[1].Network.networkTemplateConfig.isLayer2Only == "false"'
+    - 'result.response[1].Network.networkTemplateConfig.vlanName == "testvlan1"'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+
+- name: QUERY - Query L2 and L3 the Network without the config element
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].Network.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].Network.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
+    - 'result.response[0].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[0].Network.vrf == "NA"'
+    - 'result.response[0].Network.networkTemplateConfig.suppressArp == "true"'
+    - 'result.response[0].Network.networkTemplateConfig.isLayer2Only == "true"'
+    - 'result.response[0].Network.networkTemplateConfig.intfDescription == "test interface"'
+    - 'result.response[0].Network.networkTemplateConfig.vlanName == "testvlan"'
+    - 'result.response[0].attach[0].isLanAttached== true'
+    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[0].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[0].attach[1].isLanAttached== false'
+    - 'result.response[0].attach[1].lanAttachState== "NA"'
+    - 'result.response[0].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].Network.networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].Network.networkId | regex_search("70[0|1][0|9]", ignorecase=True)'
+    - 'result.response[1].Network.networkTemplate == "Default_Network_Universal"'
+    - 'result.response[1].Network.vrf | regex_search("Tenant-[1|2]", ignorecase=True)'
+    - 'result.response[1].Network.networkTemplateConfig.isLayer2Only == "false"'
+    - 'result.response[1].Network.networkTemplateConfig.vlanName == "testvlan1"'
+    - 'result.response[1].attach[0].isLanAttached== true'
+    - 'result.response[1].attach[0].lanAttachState== "DEPLOYED"'
+    - 'result.response[1].attach[0].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+    - 'result.response[1].attach[1].isLanAttached== false'
+    - 'result.response[1].attach[1].lanAttachState== "NA"'
+    - 'result.response[1].attach[1].networkName | regex_search("ansible-net1[2|3]", ignorecase=True)'
+
+###############################################
+###                 CLEAN-UP                 ##
+###############################################
+
+- name: QUERY - setup - remove any networks
+  cisco.dcnm.dcnm_networkv2:
+    fabric: "{{ test_fabric }}"
+    state: deleted
