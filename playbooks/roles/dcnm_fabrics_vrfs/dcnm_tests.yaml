@@ -1,0 +1,28 @@
+---
+# This playbook can be used to execute integration tests for
+# the roles located in:
+#
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Modify the vars section with details for your testing setup.
+#
+# NOTES:
+# 1. For the IPFM test cases (dcnm_*_ipfm), ensure that the controller
+#    is running in IPFM mode.  i.e. Ensure that 
+#    Fabric Controller -> Admin -> System Settings -> Feature Management
+#    "IP Fabric for Media" is checked.
+# 2. For all other test cases, ensure that
+#    Fabric Controller -> Admin -> System Settings -> Feature Management
+#    "Fabric Builder" is checked.
+- hosts: dcnm
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # Uncomment ONE of the following testcases
+    testcase: dcnm_fabrics_vrfs_query.yaml
+    fabric_name: f1
+    vrf_name: v1
+
+  roles:
+    - dcnm_fabrics_vrfs

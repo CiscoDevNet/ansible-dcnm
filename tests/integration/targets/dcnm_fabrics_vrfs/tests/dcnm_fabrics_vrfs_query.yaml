@@ -1,0 +1,77 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 00:77.09
+################################################################################
+# DESCRIPTION - BASIC FABRIC QUERY STATE TEST
+#
+# Test basic query of fabric configurations and verify results.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+################################################################################
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_name_1
+#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_2
+#    - fabric_type_2  # VXLAN_EVPN_MSD
+#    - fabric_name_3
+#    - fabric_type_3  # LAN_CLASSIC
+# 2. Delete fabrics under test, if they exist
+#    - fabric_name_1
+#    - fabric_name_2
+#    - fabric_name_3
+################################################################################
+# TEST
+################################################################################
+# 3. Create fabrics and verify result
+#    - fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
+#
+# 4. Query fabric configurations and verify results
+################################################################################
+# CLEANUP
+################################################################################
+# 6. Delete fabrics under test
+#    - fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_query_basic
+#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_2: VXLAN_EVPN_MSD_Fabric
+#   fabric_type_2: VXLAN_EVPN_MSD
+#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_type_3: LAN_CLASSIC
+
+################################################################################
+# QUERY - Query the fabrics_vrfs
+################################################################################
+
+- name: QUERY - TEST - Query the fabrics_vrfs
+  cisco.dcnm.dcnm_fabrics_vrfs:
+    state: query
+    config:
+      - fabric_name: "{{ fabric_name }}"
+        vrf_name: "{{ vrf_name }}"
+  register: result
+- debug:
+    var: result
+
