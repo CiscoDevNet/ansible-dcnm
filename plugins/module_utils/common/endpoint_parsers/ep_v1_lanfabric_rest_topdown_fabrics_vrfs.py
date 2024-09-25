@@ -154,9 +154,17 @@ class TopdownFabricsVrfs:
             raise ValueError(error) from error
 
         self.data = {}
-        if self.rest_send.response_current.get("DATA") is None:
-            # The DATA key should always be present. We should never hit this.
-            return
+        response_data = self.rest_send.response_current.get("DATA")
+        if type(response_data) != type([]):
+            # If type(DATA) is not a list, an error occurred.
+            # Most likely, the fabric does not exist and it's a 400
+            # bad request.
+            return_code = self.rest_send.response_current.get("RETURN_CODE")
+            request_path = self.rest_send.response_current.get("REQUEST_PATH")
+            message = response_data.get("message")
+            msg = f"Got RETURN_CODE {return_code} with message {message} "
+            msg += f"for request {request_path}"
+            raise ValueError(msg)
         for item in self.rest_send.response_current.get("DATA", {}):
             vrf_name = item.get("vrfName", None)
             if vrf_name is None:

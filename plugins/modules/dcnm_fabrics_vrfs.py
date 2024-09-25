@@ -296,7 +296,7 @@ class Query(Common):
             self.get_have_nv()
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Error while retrieving switch information "
+            msg += "Error while retrieving fabric vrf information "
             msg += "from the controller. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
