@@ -25,7 +25,7 @@ short_description: Query Fabrics VRFs of NX-OS Switches.
 version_added: "3.5.0"
 author: Allen Robel (@quantumonion)
 description:
-- Enable Maintenance or Normal Mode.
+- Query VRFs within a fabric.
 options:
     state:
         choices:
@@ -36,7 +36,7 @@ options:
         type: str
     config:
         description:
-        - A dictionary containing the fabrics vrfs configuration.
+        - A dictionary containing the query parameters.
         type: dict
         required: true
         suboptions:
@@ -50,10 +50,8 @@ options:
 
 EXAMPLES = """
 
-# Enable maintenance mode on all switches.
-# Do not deploy the configuration on any switch.
-
-- name: Configure switch mode
+# Query vrfs in fabric f1.
+- name: Query vrfs in fabric f1
   cisco.dcnm.dcnm_fabrics_vrfs:
     state: query
     config:

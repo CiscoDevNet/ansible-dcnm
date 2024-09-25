@@ -157,7 +157,7 @@ class TopdownFabricsVrfs:
         if self.rest_send.response_current.get("DATA") is None:
             # The DATA key should always be present. We should never hit this.
             return
-        for item in self.rest_send.response_current.get("DATA"):
+        for item in self.rest_send.response_current.get("DATA", {}):
             vrf_name = item.get("vrfName", None)
             if vrf_name is None:
                 continue
