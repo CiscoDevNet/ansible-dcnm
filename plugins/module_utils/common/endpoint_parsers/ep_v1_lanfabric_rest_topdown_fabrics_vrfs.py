@@ -60,6 +60,8 @@ class TopdownFabricsVrfs:
 
         self._rest_send = None
         self._results = None
+        self._result_code = None
+        self._result_message = None
 
     def register_result(self):
         """
@@ -76,7 +78,7 @@ class TopdownFabricsVrfs:
             self.results.action = self.action
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
-            if self.results.response_current.get("RETURN_CODE") == 200:
+            if self.results.response_current.get("RETURN_CODE") in [200, 400]:
                 self.results.failed = False
             else:
                 self.results.failed = True
@@ -155,26 +157,21 @@ class TopdownFabricsVrfs:
 
         self.data = {}
         response_data = self.rest_send.response_current.get("DATA")
-        if type(response_data) != type([]):
-            # If type(DATA) is not a list, an error occurred.
-            # Most likely, the fabric does not exist and it's a 400
-            # bad request.
-            return_code = self.rest_send.response_current.get("RETURN_CODE")
-            request_path = self.rest_send.response_current.get("REQUEST_PATH")
-            message = response_data.get("message")
-            msg = f"Got RETURN_CODE {return_code} with message {message} "
-            msg += f"for request {request_path}"
+        self._result_code = self.rest_send.response_current.get("RETURN_CODE")
+        if self.result_code == 400:
+            # The fabric does not exist.
+            self._result_message = response_data.get("message")
+            self.data = {}
+        elif self.result_code == 200:
+            for item in self.rest_send.response_current.get("DATA", {}):
+                vrf_name = item.get("vrfName", None)
+                if vrf_name is None:
+                    continue
+                self.data[vrf_name] = item
+        else:
+            message = self.rest_send.response_current.get("MESSAGE")
+            msg = f"Got RETURN_CODE {self.result_code} with message {message}"
             raise ValueError(msg)
-        for item in self.rest_send.response_current.get("DATA", {}):
-            vrf_name = item.get("vrfName", None)
-            if vrf_name is None:
-                continue
-            self.data[vrf_name] = item
-
-        try:
-            self.register_result()
-        except ValueError as error:
-            raise ValueError(error) from error
 
         msg = f"{self.class_name}.{method_name}: calling self.rest_send.commit() DONE"
         self.log.debug(msg)
@@ -333,6 +330,19 @@ class TopdownFabricsVrfs:
             msg = f"Failed to retrieve {item}: Error detail: {error}"
             self.log.debug(msg)
             return None
+
+    @property
+    def result_code(self):
+        return self._result_code
+
+    @property
+    def result_message(self):
+        """
+        -   If the RETURN_CODE (self.result_code) == 400, result_message
+            will be DATA.message.
+        -   In all other cases result_message will be response.MESSAGE
+        """
+        return self._result_message
 
     @property
     def service_vrf_template(self):
@@ -662,7 +672,7 @@ class FabricsVrfsByName(TopdownFabricsVrfs):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"{self.class_name}.{method_name}: "
+        msg = f"ZZZ: {self.class_name}.{method_name}: "
         msg += f"instance.filter {self.filter} "
         self.log.debug(msg)
 
@@ -871,7 +881,7 @@ class FabricsVrfsByKeyValue(TopdownFabricsVrfs):
             self.results.diff = {}
             self.results.response = self.rest_send.response_current
             self.results.result = self.rest_send.result_current
-            self.results.failed = True
+            self.results.failed = False
             self.results.changed = False
             return
         for item, value in self.data.items():
