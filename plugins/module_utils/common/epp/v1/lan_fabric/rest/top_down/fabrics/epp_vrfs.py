@@ -35,7 +35,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties impor
 
 @Properties.add_rest_send
 @Properties.add_results
-class TopdownFabricsVrfs:
+class EppTopdownFabricsVrfs:
     """
     ### Summary
     Parent class for *FabricsVrfs() subclasses.
@@ -553,7 +553,7 @@ class TopdownFabricsVrfs:
             return None
 
 
-class FabricsVrfsByName(TopdownFabricsVrfs):
+class EppFabricsVrfsByName(EppTopdownFabricsVrfs):
     """
     ### Summary
     Retrieve fabrics vrfs details from the controller and provide
@@ -585,7 +585,7 @@ class FabricsVrfsByName(TopdownFabricsVrfs):
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = FabricsVrfsByName()
+    instance = EppFabricsVrfsByName()
     instance.rest_send = rest_send
     instance.results = Results()
     instance.refresh()
@@ -617,7 +617,7 @@ class FabricsVrfsByName(TopdownFabricsVrfs):
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = FabricsVrfsByName()
+    instance = EppFabricsVrfsByName()
     instance.fabric_name = "MyFabric"
     instance.rest_send = rest_send
     instance.results = Results()
@@ -634,7 +634,7 @@ class FabricsVrfsByName(TopdownFabricsVrfs):
         super().__init__()
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED FabricsVrfsByName()"
+        msg = "ENTERED EppFabricsVrfsByName()"
         self.log.debug(msg)
 
         self.data_subclass = {}
@@ -781,7 +781,7 @@ class FabricsVrfsByName(TopdownFabricsVrfs):
         self._filter = value
 
 
-class FabricsVrfsByKeyValue(TopdownFabricsVrfs):
+class EppFabricsVrfsByKeyValue(EppTopdownFabricsVrfs):
     """
     ### Summary
     Retrieve fabrics vrfs details from the controller filtered by nvPair key
@@ -814,7 +814,7 @@ class FabricsVrfsByKeyValue(TopdownFabricsVrfs):
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = FabricsVrfsByKeyValue()
+    instance = EppFabricsVrfsByKeyValue()
     instance.fabric_name = "MyFabric"
     instance.filter_key = "tenantName"
     instance.filter_value = "MyTenant"
@@ -829,7 +829,7 @@ class FabricsVrfsByKeyValue(TopdownFabricsVrfs):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED FabricsVrfsByKeyValue() "
+        msg = "ENTERED EppFabricsVrfsByKeyValue() "
         self.log.debug(msg)
 
         self.data_subclass = {}

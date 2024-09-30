@@ -86,8 +86,8 @@ import logging
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
     Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.endpoint_parsers.ep_v1_lanfabric_rest_topdown_fabrics_vrfs import \
-    FabricsVrfsByName, FabricsVrfsByKeyValue
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.v1.lan_fabric.rest.top_down.fabrics.epp_vrfs import \
+    EppFabricsVrfsByName
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
     Properties
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
@@ -258,12 +258,12 @@ class Query(Common):
         Build self.have, a dict containing the current mode of all switches.
 
         ### Raises
-        -   ``ValueError`` if FabricsVrfsInfo() raises ``ValueError``
+        -   ``ValueError`` if EppFabricsVrfsByName() raises ``ValueError``
         ```
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        self.get_vrf_info = FabricsVrfsByName()
+        self.get_vrf_info = EppFabricsVrfsByName()
         try:
             self.get_vrf_info.rest_send = self.rest_send
             self.get_vrf_info.results = self.results
