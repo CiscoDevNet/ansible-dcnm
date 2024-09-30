@@ -572,7 +572,7 @@ class EppFabricsVrfsByName(EppTopdownFabricsVrfs):
     ### Usage
 
     ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.endpoint_parsers.ep_v1_lanfabric_rest_topdown_fabrics_vrfs import FabricsVrfsByName
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.v1.lanfabric.rest.topdown.fabrics.epp_vrfs import EppFabricsVrfsByName
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
@@ -604,7 +604,7 @@ class EppFabricsVrfsByName(EppTopdownFabricsVrfs):
     Or:
 
     ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.endpoint_parsers.ep_v1_lanfabric_rest_topdown_fabrics_vrfs import FabricsVrfsByName
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.v1.lanfabric.rest.topdown.fabrics.epp_vrfs import EppFabricsVrfsByName
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
@@ -801,7 +801,7 @@ class EppFabricsVrfsByKeyValue(EppTopdownFabricsVrfs):
 
     ### Usage
     ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.endpoint_parsers.ep_v1_lanfabric_rest_topdown_fabrics_vrfs import FabricsVrfsByKeyValue
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.v1.lanfabric.rest.topdown.fabrics.epp_vrfs import EppFabricsVrfsByKeyValue
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender

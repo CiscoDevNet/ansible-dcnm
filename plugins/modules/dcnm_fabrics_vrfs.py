@@ -212,46 +212,6 @@ class Query(Common):
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def get_have_nv(self):
-        """
-        ### Summary
-        Build self.have, a dict containing the VRF info.
-
-        ### Raises
-        -   ``ValueError`` if FabricsVrfsByKeyValue() raises ``ValueError``
-        ```
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        self.get_vrf_info = FabricsVrfsByKeyValue()
-        try:
-            self.get_vrf_info.rest_send = self.rest_send
-            self.get_vrf_info.results = self.results
-            self.get_vrf_info.fabric_name = self.config["fabric_name"]
-            self.get_vrf_info.vrf_name = self.config["vrf_name"]
-            self.get_vrf_info.filter_key = "vrfId"
-            self.get_vrf_info.filter_value = 63031
-            self.get_vrf_info.refresh()
-            self.log.debug(f"default_sg_tag: {self.get_vrf_info.default_sg_tag}")
-            self.log.debug(f"enforce: {self.get_vrf_info.enforce}")
-            self.log.debug(f"fabric: {self.get_vrf_info.fabric}")
-            self.log.debug(f"hierarchical_key: {self.get_vrf_info.hierarchical_key}")
-            self.log.debug(f"item_id: {self.get_vrf_info.item_id}")
-            self.log.debug(f"service_vrf_template: {self.get_vrf_info.service_vrf_template}")
-            self.log.debug(f"source: {self.get_vrf_info.source}")
-            self.log.debug(f"tenant_name: {self.get_vrf_info.tenant_name}")
-            self.log.debug(f"vrf_id: {self.get_vrf_info.vrf_id}")
-            self.log.debug(f"vrf_name: {self.get_vrf_info.vrf_name}")
-            self.log.debug(f"vrf_status: {self.get_vrf_info.vrf_status}")
-            self.log.debug(f"vrf_extension_template: {self.get_vrf_info.vrf_extension_template}")
-            self.log.debug(f"vrf_template_config: {self.get_vrf_info.vrf_template_config}")
-        except (TypeError, ValueError) as error:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Error while retrieving VRF info. "
-            msg += f"Error detail: {error}"
-            raise ValueError(msg) from error
-        self.have = self.get_vrf_info.filtered_data
-
     def get_have(self):
         """
         ### Summary
@@ -316,7 +276,6 @@ class Query(Common):
 
         try:
             self.get_have()
-            #self.get_have_nv()
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += "Error while retrieving fabric vrf information "
@@ -337,10 +296,6 @@ class Query(Common):
             self.results.diff_current = self.have
         self.results.failed = False
         self.results.response_current = self.get_vrf_info.rest_send.response_current
-        # self.results.response_current = {"MESSAGE": "FabricsVrfInfo OK."}
-        # self.results.response_current.update({"METHOD": "NA"})
-        # self.results.response_current.update({"REQUEST_PATH": "NA"})
-        # self.results.response_current.update({"RETURN_CODE": 200})
         self.results.result_current = {"changed": False, "success": True}
         self.results.register_task_result()
 
