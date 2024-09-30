@@ -8,7 +8,6 @@
 # 
 # Test basic deletion of fabrics verify results.
 # - Deletion of populated fabrics not tested here.
-# - See dcnm_fabric_deleted_populated.yaml instead.
 ################################################################################
 ################################################################################
 # STEPS

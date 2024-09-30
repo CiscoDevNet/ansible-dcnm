@@ -1,0 +1,462 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 00:39.188
+# 00:32.893
+################################################################################
+# DESCRIPTION - BASIC FABRIC REPLACED STATE TEST for ISN
+#
+# Test basic replace of new fabric configurations and verify results.
+# - config-save and config-deploy not tested here.
+# - See dcnm_fabric_replaced_save_deploy_isn.yaml instead.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_name_5
+#    - fabric_type_5  # ISN
+# 3. Delete fabrics under test, if they exist
+#    - fabric_name_5
+# TEST
+# 4. Create fabrics with non-default configs and verify result
+#    - fabric_name_5
+# 5. Replace configs for fabric_5 verify result
+# CLEANUP
+# 7. Delete fabrics under test
+#    - fabric_name_5
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_replaced_basic_isn
+#   fabric_name_5: ISN_Fabric
+#   fabric_type_5: ISN
+################################################################################
+# REPLACED - SETUP - Delete fabrics
+################################################################################
+- name: REPLACED - SETUP - Delete fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
+  register: result
+- debug:
+    var: result
+################################################################################
+# REPLACED - TEST - Create ISN Fabric with non-default configs
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "BGP_AS": 65005,
+#                 "DCI_SUBNET_RANGE": "10.20.1.0/24",
+#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "LOOPBACK0_IP_RANGE": "10.2.0.0/22",
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "asn": "65005",
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-4",
+#                     "fabricName": "ISN_Fabric",
+#                     "fabricTechnology": "External",
+#                     "fabricTechnologyFriendly": "Custom",
+#                     "fabricType": "External",
+#                     "fabricTypeFriendly": "External",
+#                     "id": 4,
+#                     "nvPairs": {
+#                         "BGP_AS": "65005",
+#                         "DCI_SUBNET_RANGE": "10.20.1.0/24",
+#                         "FABRIC_NAME": "ISN_Fabric",
+#                         "FABRIC_TYPE": "External",
+#                         "LOOPBACK0_IP_RANGE": "10.2.0.0/22"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric/External_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Create ISN fabric with non-default config.
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
+        FABRIC_TYPE: "{{ fabric_type_5 }}"
+        BGP_AS: 65005
+        DCI_SUBNET_RANGE: "10.20.1.0/24"
+        LOOPBACK0_IP_RANGE: "10.2.0.0/22"
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].BGP_AS == 65005
+      - result.diff[0].FABRIC_NAME == "ISN_Fabric"
+      - result.diff[0].DCI_SUBNET_RANGE == "10.20.1.0/24"
+      - result.diff[0].LOOPBACK0_IP_RANGE == "10.2.0.0/22"
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_create"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA.nvPairs.BGP_AS == "65005"
+      - result.response[0].DATA.nvPairs.DCI_SUBNET_RANGE == "10.20.1.0/24"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_5
+      - result.response[0].DATA.nvPairs.FABRIC_TYPE == "External"
+      - result.response[0].DATA.nvPairs.LOOPBACK0_IP_RANGE == "10.2.0.0/22"
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+################################################################################
+# REPLACED - TEST - Replace configs for fabric_5 with default config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "LOOPBACK0_IP_RANGE": "10.1.0.0/22",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             },
+#             {
+#                 "action": "config_save",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "replaced"
+#             },
+#             {
+#                 "action": "config_deploy",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "asn": "65005",
+#                     "createdOn": 1725068607212,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-4",
+#                     "fabricName": "ISN_Fabric",
+#                     "fabricTechnology": "External",
+#                     "fabricTechnologyFriendly": "Custom",
+#                     "fabricType": "External",
+#                     "fabricTypeFriendly": "External",
+#                     "id": 4,
+#                     "modifiedOn": 1725068615299,
+#                     "nvPairs": {
+#                         "BGP_AS": "65005",
+#                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                         "FABRIC_NAME": "ISN_Fabric",
+#                         "FABRIC_TYPE": "External",
+#                         "LOOPBACK0_IP_RANGE": "10.1.0.0/22"
+#                     }
+#                 }
+#                 "MESSAGE": "OK",
+#                 "METHOD": "PUT",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric/External_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "MESSAGE": "Fabric ISN_Fabric DEPLOY is False or None. Skipping config-save.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "MESSAGE": "FabricConfigDeploy._can_fabric_be_deployed: Fabric ISN_Fabric DEPLOY is False or None. Skipping config-deploy.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace configs for fabric_5 with default config
+  cisco.dcnm.dcnm_fabric: &replace_fabric_5
+    state: replaced
+    config:
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
+        FABRIC_TYPE: "{{ fabric_type_5 }}"
+        BGP_AS: 65005
+        DEPLOY: false
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 3
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].DCI_SUBNET_RANGE == "10.10.1.0/24"
+      - result.diff[0].FABRIC_NAME == "ISN_Fabric"
+      - result.diff[0].LOOPBACK0_IP_RANGE == "10.1.0.0/22"
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].sequence_number == 3
+      - (result.metadata | length) == 3
+      - result.metadata[0].action == "fabric_replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - result.metadata[1].action == "config_save"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "replaced"
+      - result.metadata[2].action == "config_deploy"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "replaced"
+      - (result.response | length) == 3
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "PUT"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].DATA.nvPairs.BGP_AS == "65005"
+      - result.response[0].DATA.nvPairs.DCI_SUBNET_RANGE == "10.10.1.0/24"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_5
+      - result.response[0].DATA.nvPairs.FABRIC_TYPE == "External"
+      - result.response[0].DATA.nvPairs.LOOPBACK0_IP_RANGE == "10.1.0.0/22"
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE is match '.*Skipping config-save.*'
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE is match '.*Skipping config-deploy.*'
+      - result.response[2].RETURN_CODE == 200
+      - (result.result | length) == 3
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+################################################################################
+# REPLACED - TEST - Replace config for fabric_5 with default config omnipotence
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_replace",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "replaced"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to update for replaced state.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: REPLACED - TEST - Replace config for fabric_5 with default config omnipotence
+  cisco.dcnm.dcnm_fabric: *replace_fabric_5
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_replace"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "replaced"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "No fabrics to update for replaced state."
+      - result.response[0].RETURN_CODE == 200
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+################################################################################
+# REPLACED - CLEANUP - Delete the fabrics
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: MERGED - CLEANUP - Delete the fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].FABRIC_NAME == fabric_name_5
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].DATA is match '.*deleted successfully.*'
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
