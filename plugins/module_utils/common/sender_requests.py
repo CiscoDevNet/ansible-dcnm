@@ -194,13 +194,13 @@ class Sender:
             msg += "Not all mandatory parameters are set. "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
+        self.get_url()
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}.  "
         msg += f"Calling requests: verb {self.verb}, "
         msg += f"path {self.path}, "
         msg += f"url {self.url}, "
-        msg += f"headers {self.get_headers()}"
-        self.get_url()
+        # msg += f"headers {self.get_headers()}"
         if self.payload is None:
             self.log.debug(msg)
             response = requests.request(
@@ -259,6 +259,9 @@ class Sender:
             self.url = f"https://{self.get_host()}{self.path}"
         else:
             self.url = f"https://{self.get_host()}/{self.path}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Set url to {self.url}"
+        self.log.debug(msg)
 
     def add_history_rc(self, x):
         self._history_rc.appendleft(x)
@@ -276,11 +279,30 @@ class Sender:
         """
         Generate a response dictionary from the requests response object.
         """
+        method_name = inspect.stack()[0][3]
+        # set the token to the value of Set-Cookie in the
+        # response headers (if present)
+        token = response.headers.get("Set-Cookie", None)
+        if token is not None:
+            token = token.split("=")[1]
+            token = token.split(";")[0]
+            self.token = token
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Set new token to {self.token}"
+            self.log.debug(msg)
+
         response_dict = dict()
         self.return_code = response.status_code
         response_dict["RETURN_CODE"] = response.status_code
-        response_dict["DATA"] = json.loads(response.text)
+        try:
+            response_dict["DATA"] = json.loads(response.text)
+        except:
+            data = dict()
+            data["INVALID_JSON"] = response.text
+            response_dict["DATA"] = data
         response_dict["MESSAGE"] = response.reason
+        response_dict["METHOD"] = response.request.method
+        response_dict["REQUEST_PATH"] = response.url
         self.response = copy.deepcopy(response_dict)
 
     def login(self):
