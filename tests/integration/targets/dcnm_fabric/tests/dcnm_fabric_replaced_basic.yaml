@@ -84,11 +84,8 @@
 #                 "ADVERTISE_PIP_BGP": true,
 #                 "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
 #                 "BGP_AS": 65535,
-#                 "ENABLE_PVLAN": false,
-#                 "ENABLE_SGT": false,
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "REPLICATION_MODE": "Ingress",
-#                 "UNDERLAY_IS_V6": false,
 #                 "sequence_number": 1
 #             },
 #             {
@@ -133,11 +130,8 @@
 #                         "ADVERTISE_PIP_BGP": "true",
 #                         "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
 #                         "BGP_AS": "65535",
-#                         "ENABLE_PVLAN": "false",
-#                         "ENABLE_SGT": "false",
 #                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                         "REPLICATION_MODE": "Ingress",
-#                         "UNDERLAY_IS_V6": "false",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
@@ -205,10 +199,7 @@
         ADVERTISE_PIP_BGP: true
         ANYCAST_GW_MAC: 00:aa:bb:cc:dd:ee
         BGP_AS: 65535
-        ENABLE_PVLAN: false
-        ENABLE_SGT: false
         REPLICATION_MODE: Ingress
-        UNDERLAY_IS_V6: false
         DEPLOY: false
       - FABRIC_NAME: "{{ fabric_name_2 }}"
         FABRIC_TYPE: "{{ fabric_type_2 }}"
@@ -235,10 +226,7 @@
       - result.diff[0].sequence_number == 1
       - result.diff[0].ADVERTISE_PIP_BGP == true
       - result.diff[0].ANYCAST_GW_MAC == "00aa.bbcc.ddee"
-      - result.diff[0].ENABLE_PVLAN == false
-      - result.diff[0].ENABLE_SGT == false
       - result.diff[0].REPLICATION_MODE == "Ingress"
-      - result.diff[0].UNDERLAY_IS_V6 == false
       - result.diff[1].ANYCAST_GW_MAC == "00aa.bbcc.ddee"
       - result.diff[1].FABRIC_NAME == fabric_name_2
       - result.diff[1].sequence_number == 2
@@ -268,11 +256,8 @@
       - result.response[0].DATA.nvPairs.ADVERTISE_PIP_BGP == "true"
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "00aa.bbcc.ddee"
       - result.response[0].DATA.nvPairs.BGP_AS == "65535"
-      - result.response[0].DATA.nvPairs.ENABLE_PVLAN == "false"
-      - result.response[0].DATA.nvPairs.ENABLE_SGT == "false"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
-      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[1].sequence_number == 2
       - result.response[1].MESSAGE == "OK"
       - result.response[1].METHOD == "POST"
@@ -370,7 +355,6 @@
 #                         "ANYCAST_GW_MAC": "2020.0000.00aa",
 #                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                         "REPLICATION_MODE": "Multicast",
-#                         "UNDERLAY_IS_V6": "false",
 #                     }
 #                 }
 #                 "MESSAGE": "OK",
@@ -513,7 +497,6 @@
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "2020.0000.00aa"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Multicast"
-      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[1].sequence_number == 2
       - result.response[1].MESSAGE == "OK"
       - result.response[1].METHOD == "PUT"
