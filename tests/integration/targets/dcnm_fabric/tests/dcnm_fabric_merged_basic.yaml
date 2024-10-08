@@ -405,6 +405,8 @@
         FABRIC_TYPE: "{{ fabric_type_1 }}"
         ANYCAST_GW_MAC: aaaabbbbcccc
         BGP_AS: 65535
+        ENABLE_PVLAN: false
+        ENABLE_SGT: false
         REPLICATION_MODE: Ingress
         SITE_ID: 65000
         UNDERLAY_IS_V6: false
