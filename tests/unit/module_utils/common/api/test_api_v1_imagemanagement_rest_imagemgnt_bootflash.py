@@ -17,8 +17,8 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.imagemgnt import \
-    EpBootFlashInfo
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
+    EpBootflashInfo
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise
 
@@ -28,12 +28,13 @@ PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt"
 def test_ep_image_mgnt_00010():
     """
     ### Class
-    -   EpBootFlashInfo
+    -   EpBootflashInfo
 
     ### Summary
     -   Verify path and verb
     """
     with does_not_raise():
-        instance = EpBootFlashInfo()
-    assert instance.path == f"{PATH_PREFIX}/bootFlash/bootflash-info"
+        instance = EpBootflashInfo()
+        instance.serial_number = "1234567890"
+    assert instance.path == f"{PATH_PREFIX}/bootFlash/bootflash-info?serialNumber=1234567890"
     assert instance.verb == "GET"

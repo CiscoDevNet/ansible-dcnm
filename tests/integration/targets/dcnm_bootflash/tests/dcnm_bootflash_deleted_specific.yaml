@@ -1,0 +1,330 @@
+################################################################################
+# RUNTIME
+################################################################################
+#
+# Recent run times (MM:SS.ms):
+# 01:24.59
+#
+################################################################################
+# Description
+################################################################################
+#
+# Test deletion of files on bootflash using explicit file paths.
+#
+#################################################################################
+# SETUP
+################################################################################
+#
+# 1. Two switches are required for this test; switch1 and switch2.
+# 2. Files must be created on bootflash manually as NDFC does not
+#    provide a quick way to create files on bootflash. To create
+#    the files manually, we have two choices.
+#    A. Do the following directly on the switches:
+#       - On switch1, create a file named foo.txt
+#         switch# echo 1 > air.ndfc_ut
+#         switch# echo 1 > earth.ndfc_ut
+#         switch# echo 1 > fire.ndfc_ut
+#         switch# echo 1 > water.ndfc_ut
+#       - On switch2, create a file named bar.txt
+#         switch# echo 1 > black.ndfc_ut
+#         switch# echo 1 > blue.ndfc_ut
+#         switch# echo 1 > green.ndfc_ut
+#         switch# echo 1 > red.ndfc_ut
+#    B. Or, use the following playbook:
+#       ./playbooks/dcnm_bootflash/create_files.yaml
+#       This uses the cisco.nxos.nxos_command module to create the files.
+#       See the example inventory file in playbooks/roles/dcnm_bootflash/dcnm_hosts.yaml
+#       which includes inventory entries for switch1 and switch2 and change to
+#       match your setup.
+# TEST
+# 3. Ensure dcnm_tests.yaml has uncommented the following:
+#    testcase: dcnm_bootflash_deleted
+# 4. Ensure all other testcase fields are commented.
+# 5. Run the role with the following command:
+#    ansible-playbook dcnm_tests.yaml -i dcnm_hosts.yaml
+#
+# CLEANUP
+# 6. No cleanup required
+#
+################################################################################
+# REQUIREMENTS
+################################################################################
+#
+# Example vars for dcnm_bootflash integration tests.
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml
+# switchX_fileY vars are included in the role's defaults/main.yaml
+# so do not need to be added here unless you want to override them.
+# wildcard_filepath is also included in the role's defaults/main.yaml
+# so does not need to be added here unless you want to override it.
+#
+# vars:
+#   testcase: dcnm_bootflash_query
+#   username: admin
+#   password: "foobar"
+#   switch_username: admin
+#   switch_password: "foobar"
+#   switch1_file1: air.ndfc_ut
+#   switch1_file2: earth.ndfc_ut
+#   switch1_file3: fire.ndfc_ut
+#   switch1_file4: water.ndfc_ut
+#   switch2_file1: black.ndfc_ut
+#   switch2_file2: blue.ndfc_ut
+#   switch2_file3: green.ndfc_ut
+#   switch2_file4: red.ndfc_ut
+#   wildcard_filepath: "*:/*.ndfc_ut"
+#
+#################################################################################
+# DELETED - TEST - Delete files
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#            {
+#                "172.22.150.112": [
+#                    {
+#                        "date": "2024-08-13 01:00:25",
+#                        "device_name": "cvd-1211-spine",
+#                        "filepath": "bootflash:/air.ndfc_ut",
+#                        "ip_address": "172.22.150.112",
+#                        "serial_number": "FOX2109PGCS",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    },
+#                    {
+#                        "date": "2024-08-13 01:00:25",
+#                        "device_name": "cvd-1211-spine",
+#                        "filepath": "bootflash:/earth.ndfc_ut",
+#                        "ip_address": "172.22.150.112",
+#                        "serial_number": "FOX2109PGCS",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    },
+#                    {
+#                        "date": "2024-08-13 01:00:25",
+#                        "device_name": "cvd-1211-spine",
+#                        "filepath": "bootflash:/fire.ndfc_ut",
+#                        "ip_address": "172.22.150.112",
+#                        "serial_number": "FOX2109PGCS",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    },
+#                    {
+#                        "date": "2024-08-13 01:00:25",
+#                        "device_name": "cvd-1211-spine",
+#                        "filepath": "bootflash:/water.ndfc_ut",
+#                        "ip_address": "172.22.150.112",
+#                        "serial_number": "FOX2109PGCS",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    }
+#                ],
+#                "172.22.150.113": [
+#                    {
+#                        "date": "2024-08-13 01:01:14",
+#                        "device_name": "cvd-1212-spine",
+#                        "filepath": "bootflash:/black.ndfc_ut",
+#                        "ip_address": "172.22.150.113",
+#                        "serial_number": "FOX2109PGD0",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    },
+#                    {
+#                        "date": "2024-08-13 01:01:14",
+#                        "device_name": "cvd-1212-spine",
+#                        "filepath": "bootflash:/blue.ndfc_ut",
+#                        "ip_address": "172.22.150.113",
+#                        "serial_number": "FOX2109PGD0",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    },
+#                    {
+#                        "date": "2024-08-13 01:01:15",
+#                        "device_name": "cvd-1212-spine",
+#                        "filepath": "bootflash:/green.ndfc_ut",
+#                        "ip_address": "172.22.150.113",
+#                        "serial_number": "FOX2109PGD0",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    },
+#                    {
+#                        "date": "2024-08-13 01:01:15",
+#                        "device_name": "cvd-1212-spine",
+#                        "filepath": "bootflash:/red.ndfc_ut",
+#                        "ip_address": "172.22.150.113",
+#                        "serial_number": "FOX2109PGD0",
+#                        "size": "2",
+#                        "supervisor": "active"
+#                    }
+#                ],
+#                "sequence_number": 1
+#            }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "bootflash_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "File(s) Deleted Successfully. \nDeleted files:  [air.ndfc_ut, earth.ndfc_ut, water.ndfc_ut, fire.ndfc_ut][green.ndfc_ut, blue.ndfc_ut, black.ndfc_ut, red.ndfc_ut]",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+# DELETED - TEST - Delete files
+################################################################################
+
+- name: DELETED - TEST - Delete specific ndfc_ut files on active supervisor bootflash.
+  cisco.dcnm.dcnm_bootflash: &delete_files
+      state: deleted
+      config:
+        switches:
+          - ip_address: "{{ switch1 }}"
+            targets:
+              - filepath: "bootflash:/{{ switch1_file1 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ switch1_file2 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ switch1_file3 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ switch1_file4 }}"
+                supervisor: active
+          - ip_address: "{{ switch2 }}"
+            targets:
+              - filepath: "bootflash:/{{ switch2_file1 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ switch2_file2 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ switch2_file3 }}"
+                supervisor: active
+              - filepath: "bootflash:/{{ switch2_file4 }}"
+                supervisor: active
+  register: result
+
+- debug:
+    var: result
+
+- name: Prepare assert values filepath deletion
+  set_fact:
+    switch1_filepath1: "bootflash:/{{ switch1_file1 }}"
+    switch1_filepath2: "bootflash:/{{ switch1_file2 }}"
+    switch1_filepath3: "bootflash:/{{ switch1_file3 }}"
+    switch1_filepath4: "bootflash:/{{ switch1_file4 }}"
+    switch2_filepath1: "bootflash:/{{ switch2_file1 }}"
+    switch2_filepath2: "bootflash:/{{ switch2_file2 }}"
+    switch2_filepath3: "bootflash:/{{ switch2_file3 }}"
+    switch2_filepath4: "bootflash:/{{ switch2_file4 }}"
+
+- assert:
+    that:
+    - result.diff[0][switch1][0].filepath == switch1_filepath1
+    - result.diff[0][switch1][1].filepath == switch1_filepath2
+    - result.diff[0][switch1][2].filepath == switch1_filepath3
+    - result.diff[0][switch1][3].filepath == switch1_filepath4
+    - result.diff[0][switch2][0].filepath == switch2_filepath1
+    - result.diff[0][switch2][1].filepath == switch2_filepath2
+    - result.diff[0][switch2][2].filepath == switch2_filepath3
+    - result.diff[0][switch2][3].filepath == switch2_filepath4
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 1
+    - (result.diff[0] | length) == 3
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "DELETE"
+    - result.response[0].RETURN_CODE == 200
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "bootflash_delete"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "deleted"
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true
+
+################################################################################
+# DELETED - TEST - Delete files. Idempotence.
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "bootflash_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No files to delete.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+#################################################################################
+- name: DELETED - TEST - Delete specific ndfc_ut files on active supervisor bootflash. Idempotence.
+  cisco.dcnm.dcnm_bootflash: *delete_files
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == false
+    - result.failed == false
+    - (result.diff | length) == 1
+    - switch1 not in result.diff[0]
+    - switch2 not in result.diff[0]
+    - result.diff[0].sequence_number == 1
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "bootflash_delete"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "deleted"
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "No files to delete."
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
+    - (result.result | length) == 1
+    - result.result[0].changed == false
+    - result.result[0].success == true
+    - result.result[0].sequence_number == 1

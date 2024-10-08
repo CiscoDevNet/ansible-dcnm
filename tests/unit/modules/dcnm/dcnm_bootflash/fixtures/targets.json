@@ -1,0 +1,108 @@
+{
+    "TEST_NOTES": [
+        "Target dictionaries for dcnm_bootflash unit tests.",
+        "tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_bootflash_files_00100a": {
+        "filepath": "bootflash:/black.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00100b": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.113",
+        "serial_number": "FOX2109PGD0",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00200a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00200b": {
+        "filepath": "bootflash:/earth.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGD0",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00210a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00210b": {
+        "filepath": "bootflash:/black.txt",
+        "ip_address": "172.22.150.113",
+        "serial_number": "FOX2109PGD0",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00220a": {
+        "filepath": "bootflash:/black.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00230a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00240a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00250a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00260a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00270a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_bootflash_files_00810a": {
+        "filepath": "bootflash:/air.txt",
+        "ip_address": "172.22.150.112",
+        "serial_number": "FOX2109PGCS",
+        "supervisor": "active"
+    },
+    "test_convert_target_to_params_00100a": {
+        "filepath": "bootflash:/air.txt",
+        "supervisor": "active"
+    },
+    "test_convert_target_to_params_00110a": {
+        "filepath": "bootflash:/foo/air.txt",
+        "supervisor": "active"
+    },
+    "test_convert_target_to_params_00200a": {
+        "bad_file_path_key": "bootflash:/foo/air.txt",
+        "supervisor": "active"
+    },
+    "test_convert_target_to_params_00210a": {
+        "filepath": "bootflash:/air.txt",
+        "bad_supervisor_key": "active"
+    },
+    "test_convert_target_to_params_00510a": {
+        "filepath": "bootflash/air.txt",
+        "supervisor": "actove"
+    },
+    "test_convert_target_to_params_00610a": {
+        "filepath": "bootflash:/air.txt",
+        "supervisor": "bad_supervisor_value"
+    }
+}
