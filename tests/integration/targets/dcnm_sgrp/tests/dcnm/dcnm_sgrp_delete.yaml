@@ -1,0 +1,283 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_sgrp.log
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_sgrp:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+    deploy: switches                   # choose from ["none", "switches"]
+  register: result
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create Security Groups
+      cisco.dcnm.dcnm_sgrp: &sgrp_create
+        fabric: "{{ ansible_it_fabric }}"
+       #src_fabric: "{{ ansible_it_fabric }}"
+        deploy: switches                                    # choose from ["none", "switches"]
+        state: merged                                       # choose from [merged, replaced, deleted, overridden, query]
+        config:
+          - group_name: "LSG_15001"
+            group_id: 15001                                 # choose between [min:16, max:65535]
+            ip_selectors: 
+              - type: "Connected Endpoints"
+                vrf_name: MyVRF_50001
+                ip: 11.1.1.1/24
+              - type: "Connected Endpoints"
+                vrf_name: MyVRF_50001
+                ip: 2001::01/64
+              - type: "Connected Endpoints"
+                vrf_name: MyVRF_50001
+                ip: 11.3.3.1/24
+            network_selectors:
+              - vrf_name: MyVRF_50001
+                network: MyNetwork_30001
+            switch:
+              - "{{ ansible_switch1 }}"
+
+          - group_name: "LSG_15002"
+            group_id: 15002                                 # choose between [min:16, max:65535] 
+            ip_selectors: 
+              - type: "External Subnets"
+                vrf_name: MyVRF_50002
+                ip: 2002::01/64
+              - type: "Connected Endpoints"
+                vrf_name: MyVRF_50002
+                ip: 12.2.2.0/24
+              - type: "Connected Endpoints"
+                vrf_name: MyVRF_50002
+                ip: 12.3.3.0/24
+            network_selectors:
+              - vrf_name: MyVRF_50002
+                network: MyNetwork_30002
+            switch:
+              - "{{ ansible_switch1 }}"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+##############################################
+##            DELETE                        ##
+##############################################
+
+    - name: Delete security groups by ID
+      cisco.dcnm.dcnm_sgrp: &sgrp_delete_id
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+        deploy: switches                   # choose from ["none", "switches"]
+        config:
+          - group_id: 15001   
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+
+##############################################
+##              IDEMPOTENCE                 ##
+##############################################
+
+    - name: Delete Security Groups - Idempotence for group ID
+      cisco.dcnm.dcnm_sgrp: *sgrp_delete_id
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+##############################################
+##            DELETE                        ##
+##############################################
+
+    - name: Delete security groups by Name
+      cisco.dcnm.dcnm_sgrp: &sgrp_delete_name
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+        deploy: switches                   # choose from ["none", "switches"]
+        config:
+          - group_name: "LSG_15002"
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+
+##############################################
+##              IDEMPOTENCE                 ##
+##############################################
+
+    - name: Delete Security Groups - Idempotence for group name
+      cisco.dcnm.dcnm_sgrp: *sgrp_delete_name
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Create Security Groups - again
+      cisco.dcnm.dcnm_sgrp: *sgrp_create
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 2'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
+
+##############################################
+##            DELETE                        ##
+##############################################
+
+    - name: Delete security groups by Name and ID
+      cisco.dcnm.dcnm_sgrp:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+        deploy: switches                   # choose from ["none", "switches"]
+        config:
+          - group_name: "LSG_15002"
+            group_id: 15002
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == true'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 1'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+
+##############################################
+##            DELETE                        ##
+##############################################
+
+    - name: Delete security groups by Name and mismatching ID
+      cisco.dcnm.dcnm_sgrp:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+        deploy: switches                   # choose from ["none", "switches"]
+        config:
+          - group_name: "LSG_15001"
+            group_id: 16001
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+
+##############################################
+##            DELETE                        ##
+##############################################
+
+    - name: Delete security groups by ID and mismatching name
+      cisco.dcnm.dcnm_sgrp:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+        deploy: switches                   # choose from ["none", "switches"]
+        config:
+          - group_name: "LSG_16001"
+            group_id: 15001
+      register: result
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+
+##############################################
+##                CLEANUP                   ##
+##############################################
+
+  always:
+
+    - name: Delete all created security groups
+      cisco.dcnm.dcnm_sgrp:
+        fabric: "{{ ansible_it_fabric }}"
+        state: deleted                     # choose from [merged, replaced, deleted, overridden, query]
+        deploy: switches                   # choose from ["none", "switches"]
+      register: result
+      when: IT_CONTEXT is not defined
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+          - 'item["MESSAGE"] == "OK"'
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined

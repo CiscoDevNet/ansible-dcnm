@@ -1,0 +1,171 @@
+{
+  "sgrp_have_1":
+  {
+    "fabricName": "mmudigon-sgrp",
+    "groupId": 15001,
+    "groupName": "LSG_15001",
+    "groupType": "",
+    "ipSelectors": [
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.1.1.0/24",
+      "vrfName": "VRF_15001"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "C001::/64",
+      "vrfName": "VRF_15001"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.1.2.0/24",
+      "vrfName": "VRF_15001"
+    }],
+    "networkSelectors": [
+    {
+      "network": "Network_15001",
+      "vrfName": "VRF_15001"
+    }]
+  },
+
+  "sgrp_have_2":
+  {
+    "fabricName": "mmudigon-sgrp",
+    "groupId": 15002,
+    "groupName": "LSG_15002",
+    "groupType": "",
+    "ipSelectors": [
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.2.1.0/24",
+      "vrfName": "VRF_15002"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "C002::/64",
+      "vrfName": "VRF_15002"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.2.2.0/24",
+      "vrfName": "VRF_15002"
+    }],
+    "networkSelectors": [
+    {
+      "network": "Network_15002",
+      "vrfName": "VRF_15002"
+    }]
+  },
+
+  "sgrp_have_3":
+  {
+    "fabricName": "mmudigon-sgrp",
+    "groupId": 15003,
+    "groupName": "LSG_15003",
+    "groupType": "",
+    "ipSelectors": [
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.3.1.0/24",
+      "vrfName": "VRF_15003"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "C003::/64",
+      "vrfName": "VRF_15003"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.3.2.0/24",
+      "vrfName": "VRF_15003"
+    }],
+    "networkSelectors": [
+    {
+      "network": "Network_15003",
+      "vrfName": "VRF_15003"
+    }]
+  },
+
+  "sgrp_have_4":
+  {
+    "fabricName": "mmudigon-sgrp",
+    "groupId": 15004,
+    "groupName": "LSG_15004",
+    "groupType": "",
+    "ipSelectors": [
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.4.1.0/24",
+      "vrfName": "VRF_15004"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "C004::/64",
+      "vrfName": "VRF_15004"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.4.2.0/24",
+      "vrfName": "VRF_15004"
+    }],
+    "networkSelectors": [
+    {
+      "network": "Network_15004",
+      "vrfName": "VRF_15004"
+    }]
+  },
+
+  "sgrp_have_5":
+  {
+    "fabricName": "mmudigon-sgrp",
+    "groupId": 15005,
+    "groupName": "LSG_15005",
+    "groupType": "",
+    "ipSelectors": [
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.5.1.0/24",
+      "vrfName": "VRF_15005"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "C005::/64",
+      "vrfName": "VRF_15005"
+    },
+    {
+      "type": "Connected Endpoints",
+      "ip": "192.5.2.0/24",
+      "vrfName": "VRF_15005"
+    }],
+    "networkSelectors": [
+    {
+      "network": "Network_15005",
+      "vrfName": "VRF_15005"
+    }]
+  },
+
+  "sgrp_have_any":
+  {
+    "fabricName": "mmudigon-sgrp",
+    "groupId": 20000,
+    "groupName": "any",
+    "groupType": "defaultGroup",
+    "ipSelectors": [
+    ],
+    "networkSelectors": [
+    ]
+  },
+
+    "managable_switches":
+    {
+      "172.31.217.103": "FDO24020JMT",
+      "172.31.217.101": "FDO24020JMB",
+      "93180YC-FX3S-L1-S1": "FDO24020JMT",
+      "93180YC-FX3S-L2-S1": "FDO24020JMB"
+    },
+
+    "meta_switches": [
+      ["172.31.217.103", "93180YC-FX3S-L1-S1", "FDO24020JMT"],
+      ["172.31.217.101", "93180YC-FX3S-L2-S1", "FDO24020JMB"]
+    ]
+}
