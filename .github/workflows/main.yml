@@ -40,7 +40,7 @@ jobs:
     - name: Store migrated collection artifacts
       uses: actions/upload-artifact@v4.4.0
       with:
-        name: collection
+        name: collection_v${{ matrix.ansible }}
         path: .cache/v${{ matrix.ansible }}/collection-tarballs
         overwrite: true
 
@@ -69,7 +69,7 @@ jobs:
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
       with:
-        name: collection
+        name: collection_v${{ matrix.ansible }}
         path: .cache/v${{ matrix.ansible }}/collection-tarballs
 
     - name: Install the collection tarball
@@ -106,7 +106,7 @@ jobs:
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
       with:
-        name: collection
+        name: collection_v${{ matrix.ansible }}
         path: .cache/v${{ matrix.ansible }}/collection-tarballs
 
     - name: Install the collection tarball
