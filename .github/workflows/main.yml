@@ -35,13 +35,13 @@ jobs:
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
     - name: Build a DCNM collection tarball
-      run: ansible-galaxy collection build --output-path "${GITHUB_WORKSPACE}/.cache/collection-tarballs"
+      run: ansible-galaxy collection build --output-path "${GITHUB_WORKSPACE}/.cache/v${{ matrix.ansible }}/collection-tarballs"
 
     - name: Store migrated collection artifacts
       uses: actions/upload-artifact@v4.4.0
       with:
         name: collection
-        path: .cache/collection-tarballs
+        path: .cache/v${{ matrix.ansible }}/collection-tarballs
         overwrite: true
 
 
@@ -70,10 +70,10 @@ jobs:
       uses: actions/download-artifact@v4.1.7
       with:
         name: collection
-        path: .cache/collection-tarballs
+        path: .cache/v${{ matrix.ansible }}/collection-tarballs
 
     - name: Install the collection tarball
-      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+      run: ansible-galaxy collection install .cache/v${{ matrix.ansible }}/collection-tarballs/*.tar.gz
 
     - name: Run sanity tests
       run: ansible-test sanity --docker --python ${{matrix.python}} -v --color --truncate 0
@@ -107,10 +107,10 @@ jobs:
       uses: actions/download-artifact@v4.1.7
       with:
         name: collection
-        path: .cache/collection-tarballs
+        path: .cache/v${{ matrix.ansible }}/collection-tarballs
 
     - name: Install the collection tarball
-      run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
+      run: ansible-galaxy collection install .cache/v${{ matrix.ansible }}/collection-tarballs/*.tar.gz
 
     - name: Run DCNM Unit tests
       run: coverage run --source=. -m pytest tests/unit/. -vvvv
