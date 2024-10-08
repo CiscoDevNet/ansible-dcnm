@@ -1,0 +1,45 @@
+{
+    "protocols_cfg_00001":
+    {
+        "protocol_name": "test",
+        "description": "test",
+        "match": [
+            {
+                "type": "ip",
+                "protocol_options": "tcp",
+                "source_port_range": 10
+            }
+        ]
+    },
+
+    "protocols_cfg_00002":
+    {
+        "protocol_name": "test",
+        "description": "test",
+        "match": [
+            {
+                "type": "ip",
+                "protocol_options": "tcp",
+                "source_port_range": 10
+            },
+            {
+                "type": "ipv4",
+                "protocol_options": "icmp",
+                "dscp": 10
+            }
+        ]
+    },
+
+    "protocols_cfg_00003":
+    {
+        "protocol_name": "test",
+        "description": "test",
+        "match": [
+            {
+                "type": "ipv6",
+                "protocol_options": "tcp",
+                "source_port_range": 10
+            }
+        ]
+    }
+}

@@ -1,0 +1,171 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: OVERRIDE - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: OVERRIDE - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                OVERRIDE                  ##
+##############################################
+
+- name: OVERRIDE - Create one protocol
+  cisco.dcnm.dcnm_protocols: &conf
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: OVERRIDE - conf - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - override exiting match in protocol
+  cisco.dcnm.dcnm_protocols: &conf1
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "tcp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "icmp"
+        dscp: 10
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].METHOD == "PUT"'
+    - 'result.response[0].DATA.name == "test"'
+
+- name: OVERRIDE - conf - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - Create another protocol
+  cisco.dcnm.dcnm_protocols: &conf2
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - protocol_name: test1
+      description: test1
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 110
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 40
+        dscp: 32
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[1].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+    - 'result.response[1].DATA.successList[0].name == "test1"'
+
+- name: OVERRIDE - conf - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf2
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - Protocols query
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - "result.response | length == 1"
+
+- name: OVERRIDE - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: OVERRIDE - Create a protocol without mandatory fields
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - protocol_name: test1
+      description: test1
+      match:
+      - protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"type : Required parameter not found" in result.msg'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: OVERRIDE - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted

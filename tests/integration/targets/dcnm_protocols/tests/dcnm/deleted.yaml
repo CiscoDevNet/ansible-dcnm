@@ -1,0 +1,172 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: DELETED - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: DELETED - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                DELETED                   ##
+##############################################
+
+- name: DELETED - Create one protocol
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: DELETED - Protocol delete with config
+  cisco.dcnm.dcnm_protocols: &conf
+    fabric: "{{ test_fabric }}"
+    state: deleted
+    config:
+      - protocol_name: test
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: DELETED - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: DELETED - Create multiple protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+    - protocol_name: test1
+      description: test1
+      match:
+      - type: ipv6
+        protocol_options: "icmpv6"
+        dscp: 10
+    - protocol_name: test2
+      description: test2
+      match_all: True
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+    - 'result.response[0].DATA.successList[1].name == "test1"'
+    - 'result.response[0].DATA.successList[2].name == "test2"'
+
+- name: DELETED - Protocol delete one with config
+  cisco.dcnm.dcnm_protocols: &conf1
+    fabric: "{{ test_fabric }}"
+    state: deleted
+    config:
+      - protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: DELETED - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: DELETED - Protocol delete without config
+  cisco.dcnm.dcnm_protocols: &conf2
+    fabric: "{{ test_fabric }}"
+    state: deleted
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test1"'
+    - 'result.response[0].DATA.successList[1].name == "test2"'
+
+- name: DELETED - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf2
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: DELETED - Protocol delete non existent config
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+    config:
+      - protocol_name: test_ansible
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: DELETED - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
