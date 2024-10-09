@@ -22,33 +22,27 @@ import logging
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.config import Config
 
 
-class Federation(Config):
+class ClassEp(Config):
     """
-    ## Federation API enpoints - Api().Config().Federation()
+    ## API endpoints - Api().Config().ClassEp()
 
     ### Description
-    Common methods and properties for API Federation subclasses.
+    Common methods and properties for Api().Config().Class() subclasses.
 
     ### Path
-    ``/api/config/federation/``
+    ``/api/config/class``
+
+    ### Notes
+    1.  We could not use Class() as the class name since it's a
+        reserved Python name.
+    2.  Same goes for the directory name (class_ep vs class).
+        i.e. imports didn't work when we tried class as a directory name
+        or a file name.
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.config.Federation()")
-        self.federation = f"{self.config}/federation"
-
-
-class EpFederationMembers(Federation):
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
-        self._verb = "GET"
-        self._path = f"{self.federation}/members"
-        msg = "ENTERED api.config.federation."
-        msg += f"Federation.{self.class_name}"
-        self.log.debug(msg)
+        self.log.debug("ENTERED api.config.class_ep.ClassEp()")
+        self.class_ep = f"{self.config}/class"

@@ -19,36 +19,37 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.config import Config
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.federation.federation import Federation
 
 
-class Federation(Config):
+class Manager(Federation):
     """
-    ## Federation API enpoints - Api().Config().Federation()
+    ## Federation Manager API enpoints - Api().Config().Federation().Manager()
 
     ### Description
-    Common methods and properties for API Federation subclasses.
+    Common methods and properties for Federation Manager endpoint subclasses.
 
     ### Path
-    ``/api/config/federation/``
+    ``/api/config/federation/manager``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.config.Federation()")
-        self.federation = f"{self.config}/federation"
+        self.log.debug("ENTERED api.config.federation.manager.Manager()")
+        self.manager = f"{self.federation}/manager"
 
 
-class EpFederationMembers(Federation):
+class EpFederationManager(Manager):
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._verb = "GET"
-        self._path = f"{self.federation}/members"
-        msg = "ENTERED api.config.federation."
-        msg += f"Federation.{self.class_name}"
+        self._path = f"{self.manager}/mo"
+
+        msg = "ENTERED api.config.federation.manager."
+        msg += f"Manager.{self.class_name}"
         self.log.debug(msg)

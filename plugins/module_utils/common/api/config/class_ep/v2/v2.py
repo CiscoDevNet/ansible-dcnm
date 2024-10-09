@@ -19,36 +19,23 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.config import Config
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.class_ep.class_ep import ClassEp
 
 
-class Federation(Config):
+class V2(ClassEp):
     """
-    ## Federation API enpoints - Api().Config().Federation()
+    ## API endpoints - Api().Config().ClassEp().V2()
 
     ### Description
-    Common methods and properties for API Federation subclasses.
+    Common methods and properties for Api().Config().ClassEp().V2() subclasses.
 
     ### Path
-    ``/api/config/federation/``
+    ``/api/config/class/v2``
     """
 
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED api.config.Federation()")
-        self.federation = f"{self.config}/federation"
-
-
-class EpFederationMembers(Federation):
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
-        self._verb = "GET"
-        self._path = f"{self.federation}/members"
-        msg = "ENTERED api.config.federation."
-        msg += f"Federation.{self.class_name}"
-        self.log.debug(msg)
+        self.log.debug("ENTERED api.config.class_ep.v2.V2()")
+        self.v2 = f"{self.class_ep}/v2"
