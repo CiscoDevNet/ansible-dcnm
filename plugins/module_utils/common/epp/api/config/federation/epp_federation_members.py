@@ -27,6 +27,8 @@ import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.federation.federation import \
     EpFederationMembers
+# from ansible_collections.cisco.dcnm.plugins.module_utils.common.ep.nexus.api.federation.v4.members.members import \
+#     EpFederationMembers
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
     ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
@@ -91,7 +93,7 @@ class EppFederationMembers:
 
         self.data = {}
         self.conversion = ConversionUtils()
-        self.ep_federation_members = EpFederationMembers()
+        self.ep_federation_members_list = EpFederationMembers()
 
         self._rest_send = None
         self._results = None
@@ -172,8 +174,8 @@ class EppFederationMembers:
             raise ValueError(error) from error
 
         try:
-            self.rest_send.path = self.ep_federation_members.path
-            self.rest_send.verb = self.ep_federation_members.verb
+            self.rest_send.path = self.ep_federation_members_list.path
+            self.rest_send.verb = self.ep_federation_members_list.verb
 
             # We always want to get this endpoint's current state,
             # regardless of the current value of check_mode.
@@ -192,9 +194,12 @@ class EppFederationMembers:
         self.data = {}
         response_data = self.rest_send.response_current.get("DATA")
         self._result_code = self.rest_send.response_current.get("RETURN_CODE")
-        if self.result_code == 400:
+        if self.result_code in [400, 401]:
             # TODO: Verify 400 response
             self._result_message = response_data.get("message")
+            msg = f"Received result_code {self.result_code}. "
+            msg += f"Message: {self._result_message}"
+            self.log.debug(msg)
             self.data = {}
         elif self.result_code == 200:
             self.data = self.rest_send.response_current.get("DATA", {})
@@ -212,7 +217,7 @@ class EppFederationMembers:
         overridden in subclasses
         """
 
-    def _get_nv_pair(self, item):
+    def _get_cluster_info(self, item):
         """
         ### Summary
         overridden in subclasses
@@ -232,136 +237,6 @@ class EppFederationMembers:
         return self.data
 
     @property
-    def default_sg_tag(self):
-        """
-        ### Summary
-        -   Return the value of the ``defaultSGTag``
-            parameter from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-        - e.g. TODO: need example value
-        - None
-        """
-        item = "defaultSGTag"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def enforce(self):
-        """
-        ### Summary
-        -   Return the value of the ``enforce`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-        - e.g. MyFabric
-        - None
-        """
-        item = "enforce"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def fabric(self):
-        """
-        ### Summary
-        -   Return the value of the ``fabric`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-        - e.g. MyFabric
-        - None
-        """
-        item = "fabric"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def hierarchical_key(self):
-        """
-        ### Summary
-        -   Return the value of the ``hierarchicalKey`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. 7
-            - None
-        """
-        item = "hierarchicalKey"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def item_id(self):
-        """
-        ### Summary
-        -   Return the value of the ``id`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. 7
-            - None
-        """
-        item = "id"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
     def result_code(self):
         return self._result_code
 
@@ -374,213 +249,6 @@ class EppFederationMembers:
         """
         return self._result_message
 
-    @property
-    def service_vrf_template(self):
-        """
-        ### Summary
-        -   Return the value of the ``serviceVrfTemplate`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. "NA"
-            - None
-        """
-        item = "serviceVrfTemplate"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def source(self):
-        """
-        ### Summary
-        -   Return the value of the ``source`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. "NA"
-            - None
-        """
-        item = "source"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def tenant_name(self):
-        """
-        ### Summary
-        -   Return the value of the ``tenantName`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-        - e.g. MyTenant
-        - None
-        """
-        item = "tenantName"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def vrf_id(self):
-        """
-        ### Summary
-        -   Return the value of the ``vrfId`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. 63032
-            - None
-        """
-        item = "vrfId"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def vrf_name(self):
-        """
-        ### Summary
-        -   Return the value of the ``vrfName`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise.
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. MyVrf
-            - None
-        """
-        item = "vrfName"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def vrf_status(self):
-        """
-        ### Summary
-        -   Return the value of the ``vrfStatus`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. "NA"
-            - None
-        """
-        item = "vrfStatus"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def vrf_extension_template(self):
-        """
-        ### Summary
-        -   Return the value of the ``vrfExtensionTemplate`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. "NA"
-            - None
-        """
-        item = "vrfExtensionTemplate"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
-
-    @property
-    def vrf_template_config(self):
-        """
-        ### Summary
-        -   Return the value of the ``vrfTemplateConfig`` parameter
-            from the filtered response, if it exists.
-        -   Return None otherwise
-
-        ### Raises
-        None
-
-        ### Type
-        string
-
-        ### Returns
-            - e.g. "NA"
-            - None
-        """
-        item = "vrfTemplateConfig"
-        try:
-            return self._get_nv_pair(item)
-        except ValueError as error:
-            msg = f"Failed to retrieve {item}: Error detail: {error}"
-            self.log.debug(msg)
-            return None
 
 
 class EppFederationMemberByName(EppFederationMembers):
@@ -631,7 +299,7 @@ class EppFederationMemberByName(EppFederationMembers):
     Or:
 
     ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.api.config.federation import EppFederationMemberByName
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.api.config.federation.epp_federation_members import EppFederationMemberByName
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
@@ -681,12 +349,17 @@ class EppFederationMemberByName(EppFederationMembers):
             msg += f"Error detail: {error}."
             raise ValueError(msg) from error
 
-        self.data_subclass = copy.deepcopy(self.data)
+        # data_subclass is keyed on name
+        self.data_subclass = dict()
+        for item in self.data:
+            name = item.get("name")
+            if name is None:
+                continue
+            self.data_subclass[name] = copy.deepcopy(item)
 
     def _get(self, item):
         """
-        Retrieve the value of the top-level (non-nvPair) item for fabric_name
-        (anything not in the nvPairs dictionary).
+        Retrieve the value of top-level items.
 
         -   raise ``ValueError`` if ``self.filter`` has not been set.
         -   raise ``ValueError`` if ``self.filter`` (fabric_name) does not exist
@@ -703,13 +376,13 @@ class EppFederationMemberByName(EppFederationMembers):
 
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "set instance.filter to a fabric name "
+            msg += "set instance.filter to a federation member name "
             msg += f"before accessing property {item}."
             raise ValueError(msg)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_name {self.filter} does not exist on the controller."
+            msg += f"federation member name {self.filter} does not exist on the controller."
             raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
@@ -721,16 +394,16 @@ class EppFederationMemberByName(EppFederationMembers):
             self.conversion.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
-    def _get_nv_pair(self, item):
+    def _get_cluster_info(self, item):
         """
         ### Summary
-        Retrieve the value of the nvPair item for fabric_name.
+        Retrieve the value of the clusterInfo item for filter.
 
         ### Raises
         - ``ValueError`` if:
                 -   ``self.filter`` has not been set.
-                -   ``self.filter`` (fabric_name) does not exist on the controller.
-                -   ``item`` is not a valid property name for the fabric.
+                -   ``self.filter`` (federation cluster member name) does not exist on the controller.
+                -   ``item`` is not a valid property name in clusterInfo.
 
         ### See also
         ``self._get()``
@@ -743,20 +416,20 @@ class EppFederationMemberByName(EppFederationMembers):
 
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "set instance.filter to a fabric name "
+            msg += "set instance.filter to a federation member name "
             msg += f"before accessing property {item}."
             raise ValueError(msg)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_name {self.filter} "
+            msg += f"federation member name {self.filter} "
             msg += "does not exist on the controller."
             raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_name {self.filter} "
-            msg += f"unknown property name: {item}."
+            msg += f"federation member name {self.filter} "
+            msg += f"property name: {item} does not exist in clusterInfo."
             raise ValueError(msg)
 
         return self.conversion.make_none(
@@ -764,6 +437,42 @@ class EppFederationMemberByName(EppFederationMembers):
                 self.data_subclass[self.filter].get(item)
             )
         )
+
+    @property
+    def fed_uuid(self):
+        return self._get("fedUUID")
+
+    @property
+    def latitude(self):
+        return self._get("latitude")
+
+    @property
+    def longitude(self):
+        return self._get("longitude")
+
+    @property
+    def manager(self):
+        return self._get("manager")
+    
+    @property
+    def member_health(self):
+        return self._get("memberHealth")
+
+    @property
+    def schema_version(self):
+        return self._get("schemaversion")
+    
+    @property
+    def security_domains(self):
+        return self._get("securityDomains")
+
+    @property
+    def version(self):
+        return self._get("version")
+    
+    @property
+    def name(self):
+        return self._get("name")
 
     @property
     def filtered_data(self):
@@ -791,7 +500,7 @@ class EppFederationMemberByName(EppFederationMembers):
     def filter(self):
         """
         ### Summary
-        Set the fabric_name of the fabric to query.
+        Set the federation member name to query.
 
         ### Raises
         None
@@ -806,7 +515,7 @@ class EppFederationMemberByName(EppFederationMembers):
         self._filter = value
 
 
-class EppFabricsVrfsByKeyValue(EppTopdownFabricsVrfs):
+class EppFabricsVrfsByKeyValue(EppFederationMembers):
     """
     ### Summary
     Retrieve fabrics vrfs details from the controller filtered by nvPair key

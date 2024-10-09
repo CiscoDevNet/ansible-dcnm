@@ -60,4 +60,4 @@ class EpFederationMembers(Federation):
     def _build_properties(self):
         super()._build_properties()
         self._verb = "GET"
-        self._path = f"{self.federation}/members/"
+        self._path = f"{self.federation}/members"
