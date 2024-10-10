@@ -380,6 +380,16 @@ class EppSites:
 
     @property
     def result_code(self):
+        """
+        ### Summary
+        Return the result code in the response
+
+        ### Type
+        int
+
+        ### Example
+        200
+        """
         return self._result_code
 
     @property
@@ -492,7 +502,7 @@ class EppSitesByName(EppSites):
             raise ValueError(msg) from error
 
         # data_subclass is keyed on name
-        self.data_subclass = dict()
+        self.data_subclass = {}
         for item in self.data:
             name = item.get("name")
             if name is None:
@@ -521,7 +531,7 @@ class EppSitesByName(EppSites):
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"fabric name {self.filter} does not exist on the "
-            mst += "controller."
+            msg += "controller."
             raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
@@ -566,16 +576,16 @@ class EppSitesByName(EppSites):
                 -   ``self.filter`` has not been set.
                 -   ``self.filter`` (fabric name) does not exist on the controller.
                 -   ``item`` is not a valid property name in MATCH.propname.
-        
+
         ### Usage
         -   ``prop`` is a property in this class that returns a dictionary.
             Examples include: aci, annotation, cloud_aci, dcnm, fed_info.
-        
+
         ### Example
         ```python
         ### Return fedInfo.fedMemUUID
         fed_mem_uuid = self._get_dict_value_by_keyname(self.fed_info, "fedMemUUID")
-        ```        
+        ```
         """
         method_name = inspect.stack()[0][3]
 
@@ -590,16 +600,14 @@ class EppSitesByName(EppSites):
             msg += f"{self.filter}.dcnm.{item} does not exist."
             raise ValueError(msg)
 
-        return self.conversion.make_none(
-            self.conversion.make_boolean(value)
-        )
+        return self.conversion.make_none(self.conversion.make_boolean(value))
 
     @property
     def aci(self):
         """
         ### Summary
         Returns aci
-        
+
         ### Type
         dict
         """
@@ -707,7 +715,7 @@ class EppSitesByName(EppSites):
         """
         ### Summary
         Returns apps
-        
+
         ### Type
         list of dict
         """
@@ -718,17 +726,17 @@ class EppSitesByName(EppSites):
         """
         ### Summary
         Returns apps keyed on appName
-        
+
         ### Type
         dict
         """
-        apps = dict()
+        apps = {}
         if self._get("apps") is None:
             return {}
         for app in self._get("apps"):
             if app is None:
                 continue
-            app_name = app.get("appName") 
+            app_name = app.get("appName")
             if app_name is None:
                 continue
             apps[app_name] = copy.deepcopy(app)
@@ -1036,14 +1044,14 @@ class EppSitesByName(EppSites):
         ### Type
         dict
         """
-        switches_dict = dict()
+        switches_dict = {}
         switches = self._get_dict_value_by_keyname(self.dcnm, "switches")
         if switches is None:
             return switches_dict
         for switch in switches:
             if switch is None:
                 continue
-            switch_serial_number = switch.get("sn") 
+            switch_serial_number = switch.get("sn")
             if switch_serial_number is None:
                 continue
             switches_dict[switch_serial_number] = copy.deepcopy(switch)
@@ -1208,13 +1216,86 @@ class EppSitesByName(EppSites):
         return self._get("meta")
 
     @property
+    def meta_modified_timestamp(self):
+        """
+        ### Summary
+        Returns meta.modts
+
+        ### Type
+        str
+
+        ### Example
+        "2024-10-09T19:32:54.867207847Z"
+        """
+        return self._get_dict_value_by_keyname(self.meta, "modts")
+
+    @property
+    def meta_created_timestamp(self):
+        """
+        ### Summary
+        Returns meta.createts
+
+        ### Type
+        str
+
+        ### Example
+        "2024-10-09T19:32:54.499741517Z"
+        """
+        return self._get_dict_value_by_keyname(self.meta, "createts")
+
+    @property
+    def meta_dn(self):
+        """
+        ### Summary
+        Returns meta.dn
+
+        ### Type
+        str
+
+        ### Example
+        "ndsites/f2"
+        """
+        return self._get_dict_value_by_keyname(self.meta, "dn")
+
+    @property
+    def meta_type(self):
+        """
+        ### Summary
+        Returns meta.type
+
+        ### Type
+        str
+
+        ### Example
+        "ndsites"
+        """
+        return self._get_dict_value_by_keyname(self.meta, "type")
+
+    @property
+    def meta_version(self):
+        """
+        ### Summary
+        Returns meta.version
+
+        ### Type
+        str or None
+
+        ### Example
+        "0"
+        """
+        return self._get_dict_value_by_keyname(self.meta, "version")
+
+    @property
     def name(self):
         """
         ### Summary
         Returns name
 
         ### Type
-        str
+        str or None
+
+        ### Example
+        "f2"
         """
         return self._get("name")
 
@@ -1225,7 +1306,10 @@ class EppSitesByName(EppSites):
         Returns notifyReason
 
         ### Type
-        str
+        str or None
+
+        ### Example
+        None
         """
         return self._get("notifyReason")
 
@@ -1239,6 +1323,118 @@ class EppSitesByName(EppSites):
         dict
         """
         return self._get("nxos")
+
+    @property
+    def nxos_allow_ndi_config(self):
+        """
+        ### Summary
+        Returns nxos.allowNDIConfig
+
+        ### Type
+        bool
+
+        ### Example
+        True
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "allowNDIConfig")
+
+    @property
+    def nxos_dcnm_fabric_site_id(self):
+        """
+        ### Summary
+        Returns nxos.dcnmFabricSiteID
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "dcnmFabricSiteID")
+
+    @property
+    def nxos_fabric_name(self):
+        """
+        ### Summary
+        Returns nxos.fabricName
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "fabricName")
+
+    @property
+    def nxos_fabric_read_only(self):
+        """
+        ### Summary
+        Returns nxos.fabricReadOnly
+
+        ### Type
+        bool
+
+        ### Example
+        False
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "fabricReadOnly")
+
+    @property
+    def nxos_fabric_technology(self):
+        """
+        ### Summary
+        Returns nxos.fabricTechnology
+
+        ### Type
+        str or None
+
+        ### Example
+        "VxlanFabric"
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "fabricTechnology")
+
+    @property
+    def nxos_fabric_type(self):
+        """
+        ### Summary
+        Returns nxos.fabricType
+
+        ### Type
+        str or None
+
+        ### Example
+        "SwitchFabric"
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "fabricType")
+
+    @property
+    def nxos_health(self):
+        """
+        ### Summary
+        Returns nxos.health
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "health")
+
+    @property
+    def nxos_switches(self):
+        """
+        ### Summary
+        Returns nxos.switches
+
+        ### Type
+        list
+
+        ### Example
+        []
+        """
+        return self._get_dict_value_by_keyname(self.nxos, "switches")
 
     @property
     def polling_detection_done(self):
@@ -1272,7 +1468,7 @@ class EppSitesByName(EppSites):
         str
         """
         return self._get("schemaversion")
-    
+
     @property
     def security_domains(self):
         """
@@ -1324,7 +1520,48 @@ class EppSitesByName(EppSites):
         return self._get("siteReachabilty")
 
     @property
-    def site_ip_type(self):
+    def site_reachability_description(self):
+        """
+        ### Summary
+        Returns siteReachabilty.description
+
+        ### Type
+        str or None
+
+        ### Example
+        "NDFC Fabric on-boarded internally"
+        """
+        return self._get_dict_value_by_keyname(self.site_reachability, "description")
+
+    @property
+    def site_reachability_node_reachability(self):
+        """
+        ### Summary
+        Returns siteReachabilty.nodeReachability
+
+        ### Type
+        list of dict
+        """
+        return self._get_dict_value_by_keyname(
+            self.site_reachability, "nodeReachability"
+        )
+
+    @property
+    def site_reachability_state(self):
+        """
+        ### Summary
+        Returns siteReachabilty.state
+
+        ### Type
+        str or None
+
+        ### Example
+        "Up"
+        """
+        return self._get_dict_value_by_keyname(self.site_reachability, "state")
+
+    @property
+    def site_type(self):
         """
         ### Summary
         Returns siteType
