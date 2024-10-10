@@ -512,10 +512,6 @@ class EppSitesByName(EppSites):
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"ZZZ: {self.class_name}.{method_name}: "
-        msg += f"instance.filter {self.filter} "
-        self.log.debug(msg)
-
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a fabric name "
@@ -560,37 +556,38 @@ class EppSitesByName(EppSites):
             msg += "does not exist on the controller."
             raise ValueError(msg)
 
-    def _get_aci(self, item):
+    def _get_dict_value_by_keyname(self, prop, item):
         """
-        ### TODO: use @aci() property
- 
         ### Summary
-        Retrieve the value of MATCH.aci.item for filter.
+        Retrieve the value of MATCH.prop.item for filter.
 
         ### Raises
         - ``ValueError`` if:
                 -   ``self.filter`` has not been set.
                 -   ``self.filter`` (fabric name) does not exist on the controller.
-                -   ``item`` is not a valid property name in clusterInfo.
-
-        ### See also
-        ``self._get()``
+                -   ``item`` is not a valid property name in MATCH.propname.
+        
+        ### Usage
+        -   ``prop`` is a property in this class that returns a dictionary.
+            Examples include: aci, annotation, cloud_aci, dcnm, fed_info.
+        
+        ### Example
+        ```python
+        ### Return fedInfo.fedMemUUID
+        fed_mem_uuid = self._get_dict_value_by_keyname(self.fed_info, "fedMemUUID")
+        ```        
         """
         method_name = inspect.stack()[0][3]
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"instance.filter {self.filter} "
-        self.log.debug(msg)
 
         try:
             self.verify_filter(item)
         except ValueError as error:
             raise ValueError(error) from error
 
-        value = self.data_subclass.get(self.filter, {}).get("aci", {}).get(item)
+        value = prop.get(item)
         if value is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"{self.filter}.aci.{item} does not exist."
+            msg += f"{self.filter}.dcnm.{item} does not exist."
             raise ValueError(msg)
 
         return self.conversion.make_none(
@@ -617,7 +614,7 @@ class EppSitesByName(EppSites):
         ### Type
         str
         """
-        return self._get_aci("appUserName")
+        return self._get_dict_value_by_keyname(self.aci, "appUserName")
 
     @property
     def aci_inband_epg_dn(self):
@@ -628,7 +625,7 @@ class EppSitesByName(EppSites):
         ### Type
         str
         """
-        return self._get_aci("inbandEpgDN")
+        return self._get_dict_value_by_keyname(self.aci, "inbandEpgDN")
 
     @property
     def aci_switches(self):
@@ -639,7 +636,7 @@ class EppSitesByName(EppSites):
         ### Type
         list
         """
-        return self._get_aci("switches")
+        return self._get_dict_value_by_keyname(self.aci, "switches")
 
     @property
     def annotate_lock(self):
@@ -664,6 +661,48 @@ class EppSitesByName(EppSites):
         return self._get("annotation")
 
     @property
+    def annotation_default_site_grp(self):
+        """
+        ### Summary
+        Returns annotation.default-site-grp
+
+        ### Type
+        str
+
+        ### Example
+        "00000000-e404-4336-97cd-549f7095f3f4"
+        """
+        return self._get_dict_value_by_keyname(self.annotation, "default-site-grp")
+
+    @property
+    def annotation_ndfc_fabric_id(self):
+        """
+        ### Summary
+        Returns annotation.ndfcFabricId
+
+        ### Type
+        str
+
+        ### Example
+        "3"
+        """
+        return self._get_dict_value_by_keyname(self.annotation, "ndfcFabricId")
+
+    @property
+    def annotation_nx_cloud_capable(self):
+        """
+        ### Summary
+        Returns annotation.nxCloudCapable
+
+        ### Type
+        bool
+
+        ### Example
+        True
+        """
+        return self._get_dict_value_by_keyname(self.annotation, "nxCloudCapable")
+
+    @property
     def apps(self):
         """
         ### Summary
@@ -675,6 +714,27 @@ class EppSitesByName(EppSites):
         return self._get("apps")
 
     @property
+    def apps_by_app_name(self):
+        """
+        ### Summary
+        Returns apps keyed on appName
+        
+        ### Type
+        dict
+        """
+        apps = dict()
+        if self._get("apps") is None:
+            return {}
+        for app in self._get("apps"):
+            if app is None:
+                continue
+            app_name = app.get("appName") 
+            if app_name is None:
+                continue
+            apps[app_name] = copy.deepcopy(app)
+        return apps
+
+    @property
     def cloud_aci(self):
         """
         ### Summary
@@ -684,6 +744,146 @@ class EppSitesByName(EppSites):
         dict
         """
         return self._get("cloudAci")
+
+    @property
+    def cloud_aci_provider(self):
+        """
+        ### Summary
+        Returns cloudAci.provider
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "provider")
+
+    @property
+    def cloud_aci_region(self):
+        """
+        ### Summary
+        Returns cloudAci.region
+
+        ### Type
+        list
+
+        ### Example
+        []
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "region")
+
+    @property
+    def cloud_aci_region_count(self):
+        """
+        ### Summary
+        Returns cloudAci.regionCount
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "regionCount")
+
+    @property
+    def cloud_aci_region_name(self):
+        """
+        ### Summary
+        Returns cloudAci.regionName
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "regionName")
+
+    @property
+    def cloud_aci_router(self):
+        """
+        ### Summary
+        Returns cloudAci.router
+
+        ### Type
+        list
+
+        ### Example
+        []
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "router")
+
+    @property
+    def cloud_aci_router_count(self):
+        """
+        ### Summary
+        Returns cloudAci.routerCount
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "routerCount")
+
+    @property
+    def cloud_aci_virtnet(self):
+        """
+        ### Summary
+        Returns cloudAci.virtnet
+
+        ### Type
+        list
+
+        ### Example
+        []
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "virtnet")
+
+    @property
+    def cloud_aci_virtual_network_count(self):
+        """
+        ### Summary
+        Returns cloudAci.virtualNetworkCount
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "virtualNetworkCount")
+
+    @property
+    def cloud_aci_vpc(self):
+        """
+        ### Summary
+        Returns cloudAci.vpc
+
+        ### Type
+        list
+
+        ### Example
+        []
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "vpc")
+
+    @property
+    def cloud_aci_vpc_count(self):
+        """
+        ### Summary
+        Returns cloudAci.vpcCount
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.cloud_aci, "vpcCount")
 
     @property
     def controllers(self):
@@ -708,6 +908,162 @@ class EppSitesByName(EppSites):
         return self._get("dcnm")
 
     @property
+    def dcnm_fabric_site_id(self):
+        """
+        ### Summary
+        Returns dcnm.dcnmFabricSiteID
+
+        ### Type
+        str or None
+
+        ### Example
+        "65001"
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "dcnmFabricSiteID")
+
+    @property
+    def dcnm_fabric_name(self):
+        """
+        ### Summary
+        Returns dcnm.fabricName
+
+        ### Type
+        str or None
+
+        ### Example
+        "f1"
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "fabricName")
+
+    @property
+    def dcnm_fabric_read_only(self):
+        """
+        ### Summary
+        Returns dcnm.fabricReadOnly
+
+        ### Type
+        bool
+
+        ### Example
+        False
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "fabricReadOnly")
+
+    @property
+    def dcnm_fabric_technology(self):
+        """
+        ### Summary
+        Returns dcnm.fabricTechnology
+
+        ### Type
+        str or None
+
+        ### Example
+        "VxlanFabric"
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "fabricTechnology")
+
+    @property
+    def dcnm_fabric_type(self):
+        """
+        ### Summary
+        Returns dcnm.fabricType
+
+        ### Type
+        str or None
+
+        ### Example
+        "SwitchFabric"
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "fabricType")
+
+    @property
+    def dcnm_ha(self):
+        """
+        ### Summary
+        Returns dcnm.ha
+
+        ### Type
+        dict
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "ha")
+
+    @property
+    def dcnm_health(self):
+        """
+        ### Summary
+        Returns dcnm.health
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "health")
+
+    @property
+    def dcnm_login_domain(self):
+        """
+        ### Summary
+        Returns dcnm.loginDomain
+
+        ### Type
+        str or None
+
+        ### Example
+        "DefaultAuth"
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "loginDomain")
+
+    @property
+    def dcnm_switches(self):
+        """
+        ### Summary
+        Returns dcnm.switches
+
+        ### Type
+        list of dict
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "switches")
+
+    @property
+    def dcnm_switches_by_serial_number(self):
+        """
+        ### Summary
+        Returns dcnm_switches converted to dict and keyed on switch serial_number
+
+        ### Type
+        dict
+        """
+        switches_dict = dict()
+        switches = self._get_dict_value_by_keyname(self.dcnm, "switches")
+        if switches is None:
+            return switches_dict
+        for switch in switches:
+            if switch is None:
+                continue
+            switch_serial_number = switch.get("sn") 
+            if switch_serial_number is None:
+                continue
+            switches_dict[switch_serial_number] = copy.deepcopy(switch)
+        return copy.deepcopy(switches_dict)
+
+    @property
+    def dcnm_username(self):
+        """
+        ### Summary
+        Returns dcnm.username
+
+        ### Type
+        str or None
+
+        ### Example
+        None
+        """
+        return self._get_dict_value_by_keyname(self.dcnm, "username")
+
+    @property
     def disable_polling(self):
         """
         ### Summary
@@ -715,6 +1071,9 @@ class EppSitesByName(EppSites):
 
         ### Type
         bool
+
+        ### Example
+        False
         """
         return self._get("disablePolling")
 
@@ -725,7 +1084,10 @@ class EppSitesByName(EppSites):
         Returns disablePollingReason
 
         ### Type
-        str
+        str or None
+
+        ### Example
+        None
         """
         return self._get("disablePollingReason")
 
@@ -761,6 +1123,34 @@ class EppSitesByName(EppSites):
         dict
         """
         return self._get("fedInfo")
+
+    @property
+    def fed_info_fed_mem_uuid(self):
+        """
+        ### Summary
+        Returns fedInfo.fedMemUUID
+
+        ### Type
+        str or None
+
+        ### Example
+        "federation-nd1"
+        """
+        return self._get_dict_value_by_keyname(self.fed_info, "fedMemUUID")
+
+    @property
+    def fed_info_local(self):
+        """
+        ### Summary
+        Returns fedInfo.local
+
+        ### Type
+        bool
+
+        ### Example
+        True
+        """
+        return self._get_dict_value_by_keyname(self.fed_info, "local")
 
     @property
     def internal_onboard(self):
