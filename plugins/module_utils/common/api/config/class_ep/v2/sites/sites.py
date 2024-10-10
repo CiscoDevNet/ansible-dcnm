@@ -19,8 +19,8 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.\
-    class_ep.v2.v2 import V2
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.class_ep.v2.v2 import \
+    V2
 
 
 class EpSites(V2):

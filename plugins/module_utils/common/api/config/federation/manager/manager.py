@@ -19,7 +19,8 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.federation.federation import Federation
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.federation.federation import \
+    Federation
 
 
 class Manager(Federation):

@@ -19,8 +19,9 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import (
+    ConversionUtils,
+)
 
 
 class Api:

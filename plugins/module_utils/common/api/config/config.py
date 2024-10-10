@@ -19,7 +19,8 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.api_nd import ApiNd
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.api_nd import \
+    ApiNd
 
 
 class Config(ApiNd):

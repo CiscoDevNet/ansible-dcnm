@@ -19,8 +19,9 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import (
+    ConversionUtils,
+)
 
 
 class EpLogin:
@@ -55,6 +56,7 @@ class EpLogin:
     @property
     def domain(self):
         return self._domain
+
     @domain.setter
     def domain(self, value):
         self._domain = value
@@ -62,6 +64,7 @@ class EpLogin:
     @property
     def password(self):
         return self._password
+
     @password.setter
     def password(self, value):
         self._password = value
@@ -76,10 +79,10 @@ class EpLogin:
     @property
     def username(self):
         return self._username
+
     @username.setter
     def username(self, value):
         self._username = value
-
 
     @property
     def verb(self):
