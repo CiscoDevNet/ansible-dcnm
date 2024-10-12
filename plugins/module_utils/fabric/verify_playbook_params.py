@@ -213,6 +213,10 @@ class VerifyPlaybookParams:
         """
         method_name = inspect.stack()[0][3]
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"rule: {rule}"
+        self.log.debug(msg)
+
         parameter = rule.get("parameter", None)
         if parameter is None:
             msg = f"'parameter' not found in rule: {rule}"
@@ -233,10 +237,30 @@ class VerifyPlaybookParams:
             msg = f"'value' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter: {parameter} user_value: {user_value}, operator: {operator}, rule_value: {rule_value}"
+        self.log.debug(msg)
+
         # While eval() can be dangerous with unknown input, the input
         # we're feeding it is from a known source and has been pretty
         # heavily massaged before it gets here.
-        eval_string = f"user_value {operator} rule_value"
+        # eval_string = f"user_value {operator} rule_value"
+        if type(rule_value) != type(False):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"rule_value not boolean. Returning True for now..."
+            self.log.debug(msg)
+            return True
+        if user_value is None or user_value == "":
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"user_value is None or ''. Setting it to pass the eval"
+            self.log.debug(msg)
+            if operator == "==":
+                user_value = rule_value
+            else:
+                user_value = not rule_value
+        eval_string = f"{user_value} {operator} {rule_value}"
+        msg = f"{self.class_name}.{method_name}: eval_string {eval_string}"
+        self.log.debug(msg)
         result = eval(eval_string)  # pylint: disable=eval-used
 
         msg = f"{self.class_name}.{method_name}: "
@@ -410,30 +434,49 @@ class VerifyPlaybookParams:
         - Raise KeyError if playbook_param_is_valid() fails
         - Raise KeyError if default_param_is_valid() fails
         """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         decision_set = set()
         try:
             controller_is_valid = self.controller_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
+        msg = f"{self.class_name}.{method_name}: controller_is_valid: {controller_is_valid}"
+        self.log.debug(msg)
+
         try:
             playbook_is_valid = self.playbook_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
+
+        msg = f"{self.class_name}.{method_name}: playbook_is_valid: {playbook_is_valid}"
+        self.log.debug(msg)
 
         try:
             default_is_valid = self.default_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
+        msg = f"{self.class_name}.{method_name}: default_is_valid: {default_is_valid}"
+        self.log.debug(msg)
+
         if controller_is_valid is not None:
+            msg = f"{self.class_name}.{method_name}: add to decision set: controller_is_valid: {controller_is_valid}"
+            self.log.debug(msg)
             decision_set.add(controller_is_valid)
         if default_is_valid is not None:
+            msg = f"{self.class_name}.{method_name}: add to decision set: default_is_valid: {default_is_valid}"
+            self.log.debug(msg)
             decision_set.add(default_is_valid)
         if playbook_is_valid is not None:
+            msg = f"{self.class_name}.{method_name}: add to decision set: playbook_is_valid: {playbook_is_valid}"
+            self.log.debug(msg)
             decision_set.add(playbook_is_valid)
         # If playbook config is not valid, ignore all other results
-        if not playbook_is_valid:
+        if playbook_is_valid is False:
+            msg = f"{self.class_name}.{method_name}: playbook is invalid: {playbook_is_valid}. "
+            msg += f"Setting decision_set to False."
+            self.log.debug(msg)
             decision_set = {False}
 
         msg = f"parameter {self.parameter}, "
