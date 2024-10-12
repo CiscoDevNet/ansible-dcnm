@@ -26,7 +26,7 @@ import inspect
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.federation.manager.manager import \
-    EpFederationManager
+    EpFederationManagerGet
 # from ansible_collections.cisco.dcnm.plugins.module_utils.common.ep.nexus.api.federation.v4.members.members import \
 #     EpFederationMembers
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
@@ -37,7 +37,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties impor
 
 @Properties.add_rest_send
 @Properties.add_results
-class EppFederationManager:
+class EppFederationManagerGet:
     """
     ### Summary
     Retrieve federation manager details from the controller and provide
@@ -53,7 +53,8 @@ class EppFederationManager:
     ### Usage
 
     ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.api.config.federation import EppFederationManager
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.epp.api.config.federation.manager.epp_federation_manager import \
+        EppFederationManagerGet
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import Sender
@@ -66,7 +67,7 @@ class EppFederationManager:
     rest_send.sender = sender
     rest_send.response_handler = ResponseHandler()
 
-    instance = EppFederationManager()
+    instance = EppFederationManagerGet()
     instance.rest_send = rest_send
     instance.results = Results()
     instance.refresh()
@@ -101,12 +102,12 @@ class EppFederationManager:
         self.action = "federation_manager"
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED EppFederationManager()"
+        msg = "ENTERED EppFederationManagerGet()"
         self.log.debug(msg)
 
         self.data = {}
         self.conversion = ConversionUtils()
-        self.ep_federation_manager = EpFederationManager()
+        self.ep_federation_manager = EpFederationManagerGet()
 
         self._rest_send = None
         self._results = None

@@ -42,7 +42,16 @@ class Manager(Federation):
         self.manager = f"{self.federation}/manager"
 
 
-class EpFederationManager(Manager):
+class EpFederationManagerGet(Manager):
+    """
+    ## Get Federation Manager - Api().Config().Federation().Manager().EpFederationManagerGet()
+
+    ### Description
+    Common methods and properties for Federation Manager endpoint subclasses.
+
+    ### Path
+    ``/api/config/federation/manager``
+    """
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
