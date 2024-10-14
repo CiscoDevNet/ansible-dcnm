@@ -219,30 +219,33 @@ class VerifyPlaybookParams:
 
         parameter = rule.get("parameter", None)
         if parameter is None:
-            msg = f"'parameter' not found in rule: {rule}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"'parameter' not found in rule: {rule}"
             raise KeyError(msg)
 
         user_value = rule.get("user_value", None)
         if user_value is None:
-            msg = f"'user_value' not found in parameter {parameter} rule: {rule}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"'user_value' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
         operator = rule.get("operator", None)
         if operator is None:
-            msg = f"'operator' not found in parameter {parameter} rule: {rule}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"'operator' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
         rule_value = rule.get("value", None)
         if rule_value is None:
-            msg = f"'value' not found in parameter {parameter} rule: {rule}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"'value' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
-        msg = f"ZZZZZZ: {self.class_name}.{method_name}: "
-        msg += f"parameter: {parameter} user_value: {user_value}, operator: {operator}, rule_value: {rule_value}"
-        self.log.debug(msg)
-
-        msg = f"ZZZZZZ: {self.class_name}.{method_name}: "
-        msg += f"rule_value: ({type(rule_value)}) ({rule_value})"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter: {parameter}, "
+        msg += f"user_value: {user_value}, "
+        msg += f"operator: {operator}, "
+        msg += f"rule_value: {rule_value}"
         self.log.debug(msg)
 
         if rule_value in [None, "", "null"]:
@@ -259,7 +262,8 @@ class VerifyPlaybookParams:
             else:
                 user_value = not rule_value
         eval_string = f"{user_value} {operator} {rule_value}"
-        msg = f"{self.class_name}.{method_name}: eval_string {eval_string}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"eval_string {eval_string}"
         self.log.debug(msg)
         # While eval() can be dangerous with unknown input, the input
         # we're feeding it is from a known source and has been pretty
