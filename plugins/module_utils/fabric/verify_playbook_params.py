@@ -255,12 +255,10 @@ class VerifyPlaybookParams:
             return True
         if user_value in [None, "", "null"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "user_value is None or ''. Setting it to pass the eval"
+            msg += f"playbook value for parameter {parameter} cannot be null"
             self.log.debug(msg)
-            if operator == "==":
-                user_value = rule_value
-            else:
-                user_value = not rule_value
+            raise ValueError(msg)
+
         eval_string = f"{user_value} {operator} {rule_value}"
         msg = f"{self.class_name}.{method_name}: "
         msg += f"eval_string {eval_string}"
