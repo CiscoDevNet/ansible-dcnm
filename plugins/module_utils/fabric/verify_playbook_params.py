@@ -237,22 +237,22 @@ class VerifyPlaybookParams:
             msg = f"'value' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
-        msg = f"{self.class_name}.{method_name}: "
+        msg = f"ZZZZZZ: {self.class_name}.{method_name}: "
         msg += f"parameter: {parameter} user_value: {user_value}, operator: {operator}, rule_value: {rule_value}"
         self.log.debug(msg)
 
-        # While eval() can be dangerous with unknown input, the input
-        # we're feeding it is from a known source and has been pretty
-        # heavily massaged before it gets here.
-        # eval_string = f"user_value {operator} rule_value"
-        if type(rule_value) != type(False):
+        msg = f"ZZZZZZ: {self.class_name}.{method_name}: "
+        msg += f"rule_value: ({type(rule_value)}) ({rule_value})"
+        self.log.debug(msg)
+
+        if rule_value in [None, "", "null"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"rule_value not boolean. Returning True for now..."
+            msg += "rule_value is None. Returning True."
             self.log.debug(msg)
             return True
-        if user_value is None or user_value == "":
+        if user_value in [None, "", "null"]:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"user_value is None or ''. Setting it to pass the eval"
+            msg += "user_value is None or ''. Setting it to pass the eval"
             self.log.debug(msg)
             if operator == "==":
                 user_value = rule_value
@@ -261,6 +261,9 @@ class VerifyPlaybookParams:
         eval_string = f"{user_value} {operator} {rule_value}"
         msg = f"{self.class_name}.{method_name}: eval_string {eval_string}"
         self.log.debug(msg)
+        # While eval() can be dangerous with unknown input, the input
+        # we're feeding it is from a known source and has been pretty
+        # heavily massaged before it gets here.
         result = eval(eval_string)  # pylint: disable=eval-used
 
         msg = f"{self.class_name}.{method_name}: "
@@ -475,7 +478,7 @@ class VerifyPlaybookParams:
         # If playbook config is not valid, ignore all other results
         if playbook_is_valid is False:
             msg = f"{self.class_name}.{method_name}: playbook is invalid: {playbook_is_valid}. "
-            msg += f"Setting decision_set to False."
+            msg += "Setting decision_set to False."
             self.log.debug(msg)
             decision_set = {False}
 
