@@ -2574,6 +2574,27 @@ EXAMPLES = """
 - debug:
     var: result
 
+# Setting skip_validation to True to bypass parameter validation in the module.
+# Note, this does not bypass parameter validation in NDFC.  skip_validation
+# can be useful to verify that the dcnm_fabric module's parameter validation
+# is disallowing parameter combinations that would also be disallowed by
+# NDFC.
+
+- name: Update fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    skip_validation: True
+    config:
+    -   FABRIC_NAME: VXLAN_Fabric
+        FABRIC_TYPE: VXLAN_EVPN
+        BGP_AS: 65000
+        ANYCAST_GW_MAC: 0001.aabb.ccdd
+        UNDERLAY_IS_V6: false
+        EXTRA_CONF_LEAF: |
+          interface Ethernet1/1-16
+            description managed by NDFC
+        DEPLOY: false
+
 # Use replaced state to return the fabrics to their default configurations.
 
 - name: Return fabrics to default configuration.
@@ -2619,6 +2640,31 @@ EXAMPLES = """
   register: result
 - debug:
     var: result
+
+# When skip_validation is False (the default), some error messages might be
+# misleading.  For example, with the playbook below, the error message
+# that follows should be interpreted as "ENABLE_PVLAN is mutually-exclusive
+# to ENABLE_SGT and should be removed from the playbook if ENABLE_SGT is set
+# to True."  In the NDFC GUI, if Security Groups is enabled, NDFC disables
+# the ability to modify the PVLAN option.  Hence, even a valid value for
+# ENABLE_PVLAN in the playbook will generate an error.
+
+```bash
+fatal: [ndfc1]: FAILED! => {"changed": false, "msg": "The following parameter(value) combination(s) are invalid and need to be reviewed: Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True. ENABLE_SGT valid values: [False, True]. ", "response": [{}], "result": [{}]}
+```
+
+```yaml
+    -   name: merged fabrics (dcnm_send)
+        cisco.dcnm.dcnm_fabric:
+            state: merged
+            skip_validation: false
+            config:
+            -   FABRIC_NAME: MyFabric
+                FABRIC_TYPE: VXLAN_EVPN
+                BGP_AS: 65001
+                ENABLE_SGT: true
+                ENABLE_PVLAN: false
+```
 
 """
 # pylint: disable=wrong-import-position
