@@ -1,0 +1,182 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: OVERRIDE - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: OVERRIDE - setup - Clean up any existing contracts
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                OVERRIDE                  ##
+##############################################
+
+- name: OVERRIDE - Create one contract
+  cisco.dcnm.dcnm_contracts: &conf
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - contract_name: test
+      description: test
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: OVERRIDE - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - Override rules in contract
+  cisco.dcnm.dcnm_contracts: &conf1
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - contract_name: test
+      description: test
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].METHOD == "PUT"'
+    - 'result.response[0].DATA.name == "test"'
+
+- name: OVERRIDE - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - Create another contract
+  cisco.dcnm.dcnm_contracts: &conf2
+    fabric: "{{ test_fabric }}"
+    state: overridden
+    config:
+    - contract_name: test1
+      description: test1
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[1].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[1].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+    - 'result.response[1].DATA.successList[0].name == "test1"'
+
+- name: OVERRIDE - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf2
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - Contract query
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - "result.response | length == 1"
+
+- name: OVERRIDE - Contract delete config
+  cisco.dcnm.dcnm_contracts: &conf3
+    fabric: "{{ test_fabric }}"
+    state: overridden
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+
+- name: OVERRIDE - Idempotence
+  cisco.dcnm.dcnm_contracts: *conf3
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: OVERRIDE - Configure contract without mandatory param
+  cisco.dcnm.dcnm_contracts:
+    fabric: test_fab
+    state: overridden
+    config:
+    - contract_name: test2
+      description: test2
+      rules:
+      - direction: bidirectional
+        action: permit
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"protocol_name : Required parameter not found" in result.msg'
+
+- name: OVERRIDE - Contract delete
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: OVERRIDE - setup - remove any contracts
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted

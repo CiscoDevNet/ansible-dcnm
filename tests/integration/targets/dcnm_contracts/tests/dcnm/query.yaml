@@ -1,0 +1,154 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: QUERY - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: QUERY - setup - Clean up any existing contracts
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                QUERY                     ##
+##############################################
+
+- name: QUERY - Create one contract
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - contract_name: test
+      description: test
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: QUERY - Contract query with config
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - contract_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].contractName == "test"'
+    - "result.response | length == 1"
+
+- name: QUERY - Contract delete
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: QUERY - Create multiple contract
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - contract_name: test
+      description: test
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+    - contract_name: test1
+      description: test1
+      rules:
+      - direction: bidirectional
+        action: permit
+        protocol_name: http
+      - direction: unidirectional
+        action: permit
+        protocol_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+    - 'result.response[0].DATA.successList[1].name == "test1"'
+
+- name: QUERY - Contract query with config
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - contract_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].contractName == "test"'
+    - "result.response | length == 1"
+
+- name: QUERY - Contract query with no config
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response[0].contractName == "test"'
+    - 'result.response[1].contractName == "test1"'
+    - "result.response | length == 2"
+
+- name: QUERY - Contract delete
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: QUERY - Contract query a non-existent contract
+  cisco.dcnm.dcnm_contracts:
+    fabric: "{{ test_fabric }}"
+    state: query
+    config:
+      - contract_name: test
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - "result.response | length == 0"
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: QUERY - setup - remove any contracts
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_fabric }}"
+    state: deleted
