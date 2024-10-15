@@ -37,6 +37,11 @@ options:
         description:
         - The state of the feature or object after module completion
         type: str
+    skip_validation:
+        default: false
+        description:
+        - Skip playbook parameter validation.  Useful for debugging.
+        type: bool
     config:
         description:
         - A list of fabric configuration dictionaries
