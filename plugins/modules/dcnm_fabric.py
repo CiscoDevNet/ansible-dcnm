@@ -3054,10 +3054,17 @@ class Merged(Common):
                 except TypeError as error:
                     raise ValueError(f"{error}") from error
 
-                try:
-                    self._verify_playbook_params.commit()
-                except ValueError as error:
-                    raise ValueError(f"{error}") from error
+                if self.params.get("skip_validation") is False:
+                    try:
+                        self._verify_playbook_params.commit()
+                    except ValueError as error:
+                        raise ValueError(f"{error}") from error
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += "skip_validation: "
+                    msg += f"{self.params.get('skip_validation')}, "
+                    msg += "skipping parameter validation."
+                    self.log.debug(msg)
 
                 self.need_create.append(want)
 
@@ -3068,10 +3075,17 @@ class Merged(Common):
                     self._verify_playbook_params.config_controller = nv_pairs
                 except TypeError as error:
                     raise ValueError(f"{error}") from error
-                try:
-                    self._verify_playbook_params.commit()
-                except (ValueError, KeyError) as error:
-                    raise ValueError(f"{error}") from error
+                if self.params.get("skip_validation") is False:
+                    try:
+                        self._verify_playbook_params.commit()
+                    except (ValueError, KeyError) as error:
+                        raise ValueError(f"{error}") from error
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += "skip_validation: "
+                    msg += f"{self.params.get('skip_validation')}, "
+                    msg += "skipping parameter validation."
+                    self.log.debug(msg)
 
                 self.need_update.append(want)
 
@@ -3424,6 +3438,11 @@ def main():
 
     argument_spec = {}
     argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
+    argument_spec["skip_validation"] = {
+        "required": False,
+        "type": "bool",
+        "default": False,
+    }
     argument_spec["state"] = {
         "default": "merged",
         "choices": ["deleted", "merged", "query", "replaced"],
