@@ -26,6 +26,6 @@
         ],
         "BGP_AS": "65001",
         "FABRIC_NAME": "f1",
-        "REPLICATION_MODE": "Ingress"
+        "V6_SUBNET_RANGE": "fd00::a04:0/112"
     }
 }
