@@ -259,7 +259,7 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        eval_string = f"{user_value} {operator} {rule_value}"
+        eval_string = f"user_value {operator} rule_value"
         msg = f"{self.class_name}.{method_name}: "
         msg += f"eval_string {eval_string}"
         self.log.debug(msg)
@@ -280,9 +280,15 @@ class VerifyPlaybookParams:
 
     def controller_param_is_valid(self, item) -> bool:
         """
-        -   Return None if the controller fabric config does not contain
-            the dependent parameter.  This removes the controller result
-            from consideration when determining parameter validity.
+        -   Return None in the following cases
+            -   The fabric does not exist on the controller.
+            -   The controller's value for the dependent parameter is None
+                (more accurately, "")
+            -   The controller fabric config does not contain the dependent
+                parameter (this is not likely)
+
+        Returning One removes the controller result from consideration
+        when determining parameter validity.
 
         -   Return the evaluated result (True or False) if the controller
             fabric config does contain the dependent parameter.  The
@@ -319,11 +325,24 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        user_value = self.conversion.make_boolean(
-            self.config_controller[rule_parameter]
+        controller_value = self.conversion.make_none(
+            self.conversion.make_boolean(self.config_controller[rule_parameter])
         )
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter {rule_parameter}, "
+        msg += f"controller_value: type {type(controller_value)}, "
+        msg += f"value {controller_value}"
+        self.log.debug(msg)
+
+        # If the controller value is None, remove it from consideration.
+        if controller_value is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Early return: {rule_parameter} is None.  Returning None."
+            self.log.debug(msg)
+            return None
         # update item with user's parameter value
-        item["user_value"] = user_value
+        item["user_value"] = controller_value
         try:
             return self.eval_parameter_rule(item)
         except KeyError as error:
@@ -338,7 +357,7 @@ class VerifyPlaybookParams:
             the dependent parameter.  The evaluated result is calculated
             from:
 
-        eval(playbook_param rule_operator rule_value)
+            eval(playbook_param rule_operator rule_value)
 
         -   raise KeyError if self.eval_parameter_rule() fails
         """
@@ -349,7 +368,7 @@ class VerifyPlaybookParams:
         rule_operator = item.get("operator", None)
 
         msg = f"{self.class_name}.{method_name}: "
-        msg = f"rule_parameter: {rule_parameter}, "
+        msg += f"rule_parameter: {rule_parameter}, "
         msg += f"rule_operator: {rule_operator}, "
         msg += f"rule_value: {rule_value}, "
         self.log.debug(msg)
@@ -362,10 +381,18 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        user_value = self.conversion.make_boolean(self.config_playbook[rule_parameter])
+        playbook_value = self.conversion.make_none(
+            self.conversion.make_boolean(self.config_playbook[rule_parameter])
+        )
 
-        # update item with user's parameter value
-        item["user_value"] = user_value
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter {rule_parameter}, "
+        msg += f"controller_value: type {type(playbook_value)}, "
+        msg += f"value {playbook_value}"
+        self.log.debug(msg)
+
+        # update item with playbook's parameter value
+        item["user_value"] = playbook_value
         try:
             return self.eval_parameter_rule(item)
         except KeyError as error:
@@ -414,8 +441,8 @@ class VerifyPlaybookParams:
 
         default_value = self._param_info.parameter(rule_parameter).get("default", None)
         if default_value is None:
-            msg = f"Early return: parameter: {rule_parameter} has no default value. "
-            msg += "Returning None."
+            msg = f"Early return: parameter: {rule_parameter} "
+            msg += "has no default value. Returning None."
             self.log.debug(msg)
             return None
 
@@ -429,6 +456,7 @@ class VerifyPlaybookParams:
 
     def update_decision_set(self, item) -> set:
         """
+        ### Summary
         Update the decision set with the aggregate of results from the
         - controller fabric configuration
         - playbook configuration
@@ -438,15 +466,40 @@ class VerifyPlaybookParams:
         - Raise KeyError if controller_param_is_valid() fails
         - Raise KeyError if playbook_param_is_valid() fails
         - Raise KeyError if default_param_is_valid() fails
+
+        ### item format
+        item is a dictionary with the following keys
+        - parameter: the parameter from the controller config, playbook, or template default
+        - operator: The rule operator e.g. "==", "!="
+        - value: The parameter's value in the controller config, playbook, or template default
+        - Example
+          ```json
+          {'parameter': 'UNDERLAY_IS_V6', 'operator': '!=', 'value': True}
+          ```
+
+        ### Notes
+        1. If all of the following return None, then we add True to the decision_set.
+           - controller_param_is_valid()
+           - playbook_param_is_valid()
+           - default_param_is_valid()
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         decision_set = set()
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"item {item}"
+        self.log.debug(msg)
+
+        parameter = item.get("parameter")
+
         try:
             controller_is_valid = self.controller_param_is_valid(item)
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-        msg = f"{self.class_name}.{method_name}: controller_is_valid: {controller_is_valid}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter: {parameter}, "
+        msg += f"controller_is_valid: {controller_is_valid}"
         self.log.debug(msg)
 
         try:
@@ -454,7 +507,9 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-        msg = f"{self.class_name}.{method_name}: playbook_is_valid: {playbook_is_valid}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter: {parameter}, "
+        msg += f"playbook_is_valid: {playbook_is_valid}"
         self.log.debug(msg)
 
         try:
@@ -462,27 +517,51 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-        msg = f"{self.class_name}.{method_name}: default_is_valid: {default_is_valid}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter: {parameter}, "
+        msg += f"default_is_valid: {default_is_valid}"
         self.log.debug(msg)
 
         if controller_is_valid is not None:
-            msg = f"{self.class_name}.{method_name}: add to decision set: controller_is_valid: {controller_is_valid}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter}, add to decision set: "
+            msg += f"controller_is_valid: {controller_is_valid}"
             self.log.debug(msg)
             decision_set.add(controller_is_valid)
         if default_is_valid is not None:
-            msg = f"{self.class_name}.{method_name}: add to decision set: default_is_valid: {default_is_valid}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter}, add to decision set: "
+            msg += f"default_is_valid: {default_is_valid}"
             self.log.debug(msg)
             decision_set.add(default_is_valid)
         if playbook_is_valid is not None:
-            msg = f"{self.class_name}.{method_name}: add to decision set: playbook_is_valid: {playbook_is_valid}"
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter}, add to decision set: "
+            msg += f"playbook_is_valid: {playbook_is_valid}"
             self.log.debug(msg)
             decision_set.add(playbook_is_valid)
+
         # If playbook config is not valid, ignore all other results
         if playbook_is_valid is False:
-            msg = f"{self.class_name}.{method_name}: playbook is invalid: {playbook_is_valid}. "
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter}, "
+            msg += f"playbook is invalid: {playbook_is_valid}. "
             msg += "Setting decision_set to False."
             self.log.debug(msg)
             decision_set = {False}
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"parameter: {parameter}, "
+        msg += f"decision_set: ({decision_set})"
+        self.log.debug(msg)
+
+        # If the decision_set is empty, add True.
+        if len(decision_set) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter}, "
+            msg += "decision_set is empty. Setting to True."
+            self.log.debug(msg)
+            decision_set = {True}
 
         msg = f"parameter {self.parameter}, "
         msg += f"item: {item}, "
@@ -590,11 +669,16 @@ class VerifyPlaybookParams:
         -   Raise ``KeyError`` if an error is encountered while updating
             the decision set.
         """
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         for item in param_rule.get("terms", {}).get("and"):
             try:
                 decision_set = self.update_decision_set(item)
             except KeyError as error:
                 raise KeyError(f"{error}") from error
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"decision_set: ({decision_set})"
+            self.log.debug(msg)
 
             # bad_params[fabric][param] = <list of bad_param dict>
             if True not in decision_set:
@@ -777,13 +861,25 @@ class VerifyPlaybookParams:
             "terms"
         )
         case_na_rule = "na" in param_rule.get("terms")
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"PRE_UPDATE: self.params_are_valid: {self.params_are_valid}"
+        self.log.debug(msg)
         try:
             if case_and_rule:
                 self.update_decision_set_for_and_rules(param_rule)
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"UPDATE_FOR_AND_RULES: parameter: {self.parameter} self.params_are_valid: {self.params_are_valid}"
+                self.log.debug(msg)
             elif case_or_rule:
                 self.update_decision_set_for_or_rules(param_rule)
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"UPDATE_FOR_OR_RULES: parameter: {self.parameter} self.params_are_valid: {self.params_are_valid}"
+                self.log.debug(msg)
             elif case_na_rule:
                 self.update_decision_set_for_na_rules(param_rule)
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"UPDATE_FOR_NA_RULES: parameter: {self.parameter} self.params_are_valid: {self.params_are_valid}"
+                self.log.debug(msg)
             else:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "TODO: Unhandled parameter rule: "
