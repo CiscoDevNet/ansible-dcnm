@@ -25,12 +25,9 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.login import \
-    EpLogin
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from ..api.login import EpLogin
+from ..conversion import ConversionUtils
+from ..properties import Properties
 
 
 @Properties.add_rest_send
