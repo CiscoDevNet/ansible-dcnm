@@ -23,12 +23,10 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricCreate
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
+from .common import FabricCommon
+from .fabric_types import FabricTypes
 
 
 class FabricCreateCommon(FabricCommon):

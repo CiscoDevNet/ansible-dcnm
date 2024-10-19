@@ -20,10 +20,8 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
+from ..common.results import Results
+from .common import FabricCommon
 
 
 class FabricQuery(FabricCommon):

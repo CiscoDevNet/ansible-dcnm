@@ -20,8 +20,7 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.rest import \
-    Rest
+from ..rest import Rest
 
 
 class PolicyMgnt(Rest):

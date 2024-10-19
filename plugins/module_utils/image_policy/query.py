@@ -20,8 +20,7 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from ..common.properties import Properties
 
 
 @Properties.add_params

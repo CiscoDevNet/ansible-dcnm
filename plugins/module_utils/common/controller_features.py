@@ -26,14 +26,10 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import \
-    EpFeatures
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from .api.v1.fm.fm import EpFeatures
+from .conversion import ConversionUtils
+from .exceptions import ControllerResponseError
+from .properties import Properties
 
 
 @Properties.add_rest_send

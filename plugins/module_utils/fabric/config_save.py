@@ -21,12 +21,10 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricConfigSave
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from ..common.conversion import ConversionUtils
+from ..common.properties import Properties
 
 
 @Properties.add_rest_send

@@ -407,44 +407,25 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
-    Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
-    MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
-    ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
-    ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_attach import \
-    ImagePolicyAttach
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_detach import \
-    ImagePolicyDetach
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
-    ImageStage
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
-    ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
-    ImageValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
-    ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.params_spec import \
-    ParamsSpec
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsByIpAddress
+from ..module_utils.common.image_policies import ImagePolicies
+from ..module_utils.common.log_v2 import Log
+from ..module_utils.common.merge_dicts_v2 import MergeDicts
+from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
+from ..module_utils.common.params_validate_v2 import ParamsValidate
+from ..module_utils.common.properties import Properties
+from ..module_utils.common.response_handler import ResponseHandler
+from ..module_utils.common.rest_send_v2 import RestSend
+from ..module_utils.common.results import Results
+from ..module_utils.common.sender_dcnm import Sender
+from ..module_utils.common.switch_details import SwitchDetails
+from ..module_utils.image_upgrade.image_policy_attach import ImagePolicyAttach
+from ..module_utils.image_upgrade.image_policy_detach import ImagePolicyDetach
+from ..module_utils.image_upgrade.image_stage import ImageStage
+from ..module_utils.image_upgrade.image_upgrade import ImageUpgrade
+from ..module_utils.image_upgrade.image_validate import ImageValidate
+from ..module_utils.image_upgrade.install_options import ImageInstallOptions
+from ..module_utils.image_upgrade.params_spec import ParamsSpec
+from ..module_utils.image_upgrade.switch_issu_details import SwitchIssuDetailsByIpAddress
 
 
 def json_pretty(msg):

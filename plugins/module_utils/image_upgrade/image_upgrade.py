@@ -24,22 +24,14 @@ import json
 import logging
 from time import sleep
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import \
-    EpUpgradeImage
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
-    ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsByIpAddress
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
-    WaitForControllerDone
+from ..common.api.v1.imagemanagement.rest.imageupgrade.imageupgrade import EpUpgradeImage
+from ..common.conversion import ConversionUtils
+from ..common.exceptions import ControllerResponseError
+from ..common.properties import Properties
+from ..common.results import Results
+from ..image_upgrade.install_options import ImageInstallOptions
+from .switch_issu_details import SwitchIssuDetailsByIpAddress
+from .wait_for_controller_done import WaitForControllerDone
 
 
 @Properties.add_rest_send

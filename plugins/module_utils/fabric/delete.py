@@ -20,18 +20,15 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
+from ..common.exceptions import ControllerResponseError
 # Import Results() only for the case where the user has not set Results()
 # prior to calling commit().  In this case, we instantiate Results()
 # in _validate_commit_parameters() so that we can register the failure
 # in commit().
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
+from ..common.results import Results
+from .common import FabricCommon
 
 
 class FabricDelete(FabricCommon):

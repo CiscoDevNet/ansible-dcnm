@@ -21,14 +21,11 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+from ..common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from ..common.conversion import ConversionUtils
+from ..common.exceptions import ControllerResponseError
+from ..common.properties import Properties
 
 
 @Properties.add_rest_send

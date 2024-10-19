@@ -20,16 +20,11 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_deploy import \
-    FabricConfigDeploy
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.config_save import \
-    FabricConfigSave
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
+from ..common.conversion import ConversionUtils
+from ..common.properties import Properties
+from .config_deploy import FabricConfigDeploy
+from .config_save import FabricConfigSave
+from .fabric_types import FabricTypes
 
 
 @Properties.add_rest_send

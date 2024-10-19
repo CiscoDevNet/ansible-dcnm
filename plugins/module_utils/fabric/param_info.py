@@ -22,8 +22,7 @@ import json
 import logging
 import re
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
+from ..common.conversion import ConversionUtils
 
 
 class ParamInfo:

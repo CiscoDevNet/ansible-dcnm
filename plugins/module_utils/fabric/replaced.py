@@ -23,22 +23,15 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
+from ..common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
     EpFabricUpdate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
-    ParamInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
-    RuleSet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
-    TemplateGet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
-    VerifyPlaybookParams
+from ..common.exceptions import ControllerResponseError
+from .common import FabricCommon
+from .fabric_types import FabricTypes
+from .param_info import ParamInfo
+from .ruleset import RuleSet
+from .template_get import TemplateGet
+from .verify_playbook_params import VerifyPlaybookParams
 
 
 class FabricReplacedCommon(FabricCommon):

@@ -23,8 +23,7 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ..network.dcnm.dcnm import dcnm_send
 
 
 class Sender:

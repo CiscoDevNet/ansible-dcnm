@@ -19,7 +19,7 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.ep.nexus.nexus import Nexus
+from ..nexus import Nexus
 
 
 class Api(Nexus):

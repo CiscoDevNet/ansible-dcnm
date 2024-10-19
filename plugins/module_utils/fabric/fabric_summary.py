@@ -23,16 +23,12 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.switches.switches import \
+from ..common.api.v1.lan_fabric.rest.control.switches.switches import \
     EpFabricSummary
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
+from ..common.conversion import ConversionUtils
+from ..common.exceptions import ControllerResponseError
+from ..common.results import Results
+from .common import FabricCommon
 
 
 class FabricSummary(FabricCommon):

@@ -201,26 +201,32 @@ class Sender:
         msg += f"path {self.path}, "
         msg += f"url {self.url}, "
         # msg += f"headers {self.get_headers()}"
-        if self.payload is None:
-            self.log.debug(msg)
-            response = requests.request(
-                self.verb, self.url, headers=self.get_headers(), verify=False
-            )
-        else:
-            msg_payload = copy.copy(self.payload)
-            if "userPasswd" in msg_payload:
-                msg_payload["userPasswd"] = "********"
-            msg += ", payload: "
-            msg += f"{json.dumps(msg_payload, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            response = requests.request(
-                self.verb,
-                self.url,
-                headers=self.get_headers(),
-                data=json.dumps(self.payload),
-                verify=False,
-            )
-            self._payload = None
+        try:
+            if self.payload is None:
+                self.log.debug(msg)
+                response = requests.request(
+                    self.verb, self.url, headers=self.get_headers(), verify=False
+                )
+            else:
+                msg_payload = copy.copy(self.payload)
+                if "userPasswd" in msg_payload:
+                    msg_payload["userPasswd"] = "********"
+                msg += ", payload: "
+                msg += f"{json.dumps(msg_payload, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+                response = requests.request(
+                    self.verb,
+                    self.url,
+                    headers=self.get_headers(),
+                    data=json.dumps(self.payload),
+                    verify=False,
+                )
+        except requests.exceptions.ConnectionError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg = "Error connecting to the controller. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+        self._payload = None
         self.gen_response(response)
 
     def get_headers(self):
