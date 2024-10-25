@@ -21,7 +21,7 @@ import inspect
 import logging
 
 from ..control import Control
-from plugins.module_utils.fabric.fabric_types import \
+from ........fabric.fabric_types import \
     FabricTypes
 
 

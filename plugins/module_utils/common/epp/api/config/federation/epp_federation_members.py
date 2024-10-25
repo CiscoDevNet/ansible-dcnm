@@ -25,13 +25,13 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.federation.federation import \
+from .....api.config.federation.federation import \
     EpFederationMembers
 # from ansible_collections.cisco.dcnm.plugins.module_utils.common.ep.nexus.api.federation.v4.members.members import \
 #     EpFederationMembers
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+from .....conversion import \
     ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+from .....properties import \
     Properties
 
 

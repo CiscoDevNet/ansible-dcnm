@@ -19,7 +19,7 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ...common.conversion import ConversionUtils
+from ..conversion import ConversionUtils
 
 
 class ApiNd:
