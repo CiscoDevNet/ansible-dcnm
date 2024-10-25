@@ -43,5 +43,5 @@ class EpFederationsList(V4):
         self.path = f"{self.v4}/federations"
         self.verb = "GET"
         msg = "ENTERED ep.nexus.api.federation.v4.federations."
-        msg += f"EpFederationsList()"
+        msg += "EpFederationsList()"
         self.log.debug(msg)

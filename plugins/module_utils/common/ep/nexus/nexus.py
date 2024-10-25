@@ -53,6 +53,7 @@ class Nexus:
         Return the endpoint path.
         """
         return self._path
+
     @path.setter
     def path(self, value):
         self._path = value
@@ -63,6 +64,7 @@ class Nexus:
         Return the endpoint verb.
         """
         return self._verb
+
     @verb.setter
     def verb(self, value):
         self._verb = value

@@ -2623,25 +2623,25 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ..module_utils.common.controller_features import ControllerFeatures
-from ..module_utils.common.exceptions import ControllerResponseError
-from ..module_utils.common.log_v2 import Log
-from ..module_utils.common.properties import Properties
-from ..module_utils.common.response_handler import ResponseHandler
-from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results import Results
-from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.fabric.common import FabricCommon
-from ..module_utils.fabric.create import FabricCreateBulk
-from ..module_utils.fabric.delete import FabricDelete
-from ..module_utils.fabric.fabric_details_v2 import FabricDetailsByName
-from ..module_utils.fabric.fabric_summary import FabricSummary
-from ..module_utils.fabric.fabric_types import FabricTypes
-from ..module_utils.fabric.query import FabricQuery
-from ..module_utils.fabric.replaced import FabricReplacedBulk
-from ..module_utils.fabric.template_get import TemplateGet
-from ..module_utils.fabric.update import FabricUpdateBulk
-from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
+from plugins.module_utils.common.controller_features import ControllerFeatures
+from plugins.module_utils.common.exceptions import ControllerResponseError
+from plugins.module_utils.common.log_v2 import Log
+from plugins.module_utils.common.properties import Properties
+from plugins.module_utils.common.response_handler import ResponseHandler
+from plugins.module_utils.common.rest_send_v2 import RestSend
+from plugins.module_utils.common.results import Results
+from plugins.module_utils.common.sender_dcnm import Sender
+from plugins.module_utils.fabric.common import FabricCommon
+from plugins.module_utils.fabric.create import FabricCreateBulk
+from plugins.module_utils.fabric.delete import FabricDelete
+from plugins.module_utils.fabric.fabric_details_v2 import FabricDetailsByName
+from plugins.module_utils.fabric.fabric_summary import FabricSummary
+from plugins.module_utils.fabric.fabric_types import FabricTypes
+from plugins.module_utils.fabric.query import FabricQuery
+from plugins.module_utils.fabric.replaced import FabricReplacedBulk
+from plugins.module_utils.fabric.template_get import TemplateGet
+from plugins.module_utils.fabric.update import FabricUpdateBulk
+from plugins.module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
 
 
 def json_pretty(msg):

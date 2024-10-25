@@ -148,17 +148,17 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ..module_utils.common.log_v2 import Log
-from ..module_utils.common.maintenance_mode import MaintenanceMode
-from ..module_utils.common.maintenance_mode_info import MaintenanceModeInfo
-from ..module_utils.common.merge_dicts_v2 import MergeDicts
-from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
-from ..module_utils.common.params_validate_v2 import ParamsValidate
-from ..module_utils.common.properties import Properties
-from ..module_utils.common.response_handler import ResponseHandler
-from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results import Results
-from ..module_utils.common.sender_dcnm import Sender
+from plugins.module_utils.common.log_v2 import Log
+from plugins.module_utils.common.maintenance_mode import MaintenanceMode
+from plugins.module_utils.common.maintenance_mode_info import MaintenanceModeInfo
+from plugins.module_utils.common.merge_dicts_v2 import MergeDicts
+from plugins.module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
+from plugins.module_utils.common.params_validate_v2 import ParamsValidate
+from plugins.module_utils.common.properties import Properties
+from plugins.module_utils.common.response_handler import ResponseHandler
+from plugins.module_utils.common.rest_send_v2 import RestSend
+from plugins.module_utils.common.results import Results
+from plugins.module_utils.common.sender_dcnm import Sender
 
 
 def json_pretty(msg):

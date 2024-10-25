@@ -21,7 +21,6 @@ __author__ = "Allen Robel"
 # Required for class decorators
 # pylint: disable=no-member
 
-import copy
 import inspect
 import logging
 
@@ -139,6 +138,7 @@ class EppLogin:
     @property
     def domain(self):
         return self._domain
+
     @domain.setter
     def domain(self, value):
         self._domain = value
@@ -146,6 +146,7 @@ class EppLogin:
     @property
     def password(self):
         return self._password
+
     @password.setter
     def password(self, value):
         self._password = value
@@ -157,6 +158,7 @@ class EppLogin:
     @property
     def username(self):
         return self._username
+
     @username.setter
     def username(self, value):
         self._username = value
@@ -227,4 +229,3 @@ class EppLogin:
 
         msg = f"{self.class_name}.{method_name}: calling self.rest_send.commit() DONE"
         self.log.debug(msg)
-

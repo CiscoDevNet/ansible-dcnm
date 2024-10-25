@@ -21,7 +21,6 @@ __author__ = "Allen Robel"
 # Required for class decorators
 # pylint: disable=no-member
 
-import copy
 import inspect
 import logging
 
@@ -265,7 +264,7 @@ class EppFederationManagerGet:
 
         if self.data.get("meta") is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"controller response does not contain DATA.meta object."
+            msg += "controller response does not contain DATA.meta object."
             raise ValueError(msg)
 
         if self.data.get("meta", {}).get(item) is None:
@@ -320,7 +319,7 @@ class EppFederationManagerGet:
     @property
     def schema_version(self):
         return self._get("schemaversion")
-    
+
     @property
     def security_domains(self):
         return self._get("securityDomains")

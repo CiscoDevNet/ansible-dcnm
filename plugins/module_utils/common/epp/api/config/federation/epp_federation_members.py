@@ -250,7 +250,6 @@ class EppFederationMembers:
         return self._result_message
 
 
-
 class EppFederationMemberByName(EppFederationMembers):
     """
     ### Summary
@@ -453,7 +452,7 @@ class EppFederationMemberByName(EppFederationMembers):
     @property
     def manager(self):
         return self._get("manager")
-    
+
     @property
     def member_health(self):
         return self._get("memberHealth")
@@ -461,7 +460,7 @@ class EppFederationMemberByName(EppFederationMembers):
     @property
     def schema_version(self):
         return self._get("schemaversion")
-    
+
     @property
     def security_domains(self):
         return self._get("securityDomains")
@@ -469,7 +468,7 @@ class EppFederationMemberByName(EppFederationMembers):
     @property
     def version(self):
         return self._get("version")
-    
+
     @property
     def name(self):
         return self._get("name")

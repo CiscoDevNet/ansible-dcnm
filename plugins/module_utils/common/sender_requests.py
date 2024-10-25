@@ -255,7 +255,7 @@ class Sender:
 
     def get_url(self):
         method_name = inspect.stack()[0][3]
-        if self.path == None:
+        if self.path is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "call Sender.path before calling "
             msg += f"{self.class_name}.commit()"
@@ -302,7 +302,7 @@ class Sender:
         response_dict["RETURN_CODE"] = response.status_code
         try:
             response_dict["DATA"] = json.loads(response.text)
-        except:
+        except json.JSONDecodeError:
             data = dict()
             data["INVALID_JSON"] = response.text
             response_dict["DATA"] = data
@@ -397,12 +397,12 @@ class Sender:
 
     @property
     def history_pretty_print(self):
-        print("")
-        print("History (last 50 calls, most recent on top)")
-        print("{:<11s} {:<70s}".format("RESULT_CODE", "Path"))
-        print("{:<11s} {:<70s}".format("-" * 11, "-" * 70))
+        self.log.debug("")
+        self.log.debug("History (last 50 calls, most recent on top)")
+        self.log.debug("{:<11s} {:<70s}".format("RESULT_CODE", "Path"))
+        self.log.debug("{:<11s} {:<70s}".format("-" * 11, "-" * 70))
         for rc, path in zip(self.history_rc, self.history_path):
-            print("{:<11d} {:<70s}".format(rc, path))
+            self.log.debug("{:<11d} {:<70s}".format(rc, path))
 
     @property
     def history_rc(self):
