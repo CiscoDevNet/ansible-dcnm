@@ -54,7 +54,7 @@ class Sender:
     """
     ### Summary
     An injected dependency for ``RestSend`` which implements the
-    ``sender`` interface.  Responses are retrieved using Python 
+    ``sender`` interface.  Responses are retrieved using Python
     requests library.
 
     ### Raises
@@ -100,7 +100,7 @@ class Sender:
     # sender.domain = "local"
     # If both ip4 and ip6 are set, ip4 is used.
     # sender.ip4 = "10.1.1.1"
-    # sender.ip6 = "2001:db8::1" 
+    # sender.ip6 = "2001:db8::1"
     # sender.password = "my_password"
     # sender.username = "my_username"
     sender.login()

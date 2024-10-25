@@ -274,7 +274,7 @@ class EppFederationManagerGet:
 
         return self.conversion.make_none(
             self.conversion.make_boolean(
-                 self.data.get("meta", {}).get(item)
+                self.data.get("meta", {}).get(item)
             )
         )
 
