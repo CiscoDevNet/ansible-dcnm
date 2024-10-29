@@ -75,11 +75,11 @@ class Sender:
     variables.  For example:
 
     ```bash
-    export NDFC_USERNAME="my_username"
-    export NDFC_PASSWORD="my_password"
-    export NDFC_DOMAIN="local"
-    export NDFC_IP4="10.1.1.1"
-    export NDFC_IP6="2001:db8::1"
+    export ND_USERNAME="my_username"
+    export ND_PASSWORD="my_password"
+    export ND_DOMAIN="local"
+    export ND_IP4="10.1.1.1"
+    export ND_IP6="2001:db8::1"
     ```
 
     Setting credentials through the following class properties overrides
@@ -121,23 +121,23 @@ class Sender:
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._domain = environ.get("NDFC_DOMAIN", "local")
+        self._domain = environ.get("ND_DOMAIN", "local")
         self._headers = None
         self._history_rc = deque(maxlen=50)
         self._history_path = deque(maxlen=50)
-        self._ip4 = environ.get("NDFC_IP4", None)
-        self._ip6 = environ.get("NDFC_IP6", None)
+        self._ip4 = environ.get("ND_IP4", None)
+        self._ip6 = environ.get("ND_IP6", None)
         self._jwttoken = None
         self._last_rc = None
         self._logged_in = False
-        self._password = environ.get("NDFC_PASSWORD", None)
+        self._password = environ.get("ND_PASSWORD", None)
         self._path = None
         self._payload = None
         self._rbac = None
         self._response = None
         self._token = None
         self._url = None
-        self._username = environ.get("NDFC_USERNAME", "admin")
+        self._username = environ.get("ND_USERNAME", "admin")
         self._verb = None
 
     def _verify_commit_parameters(self):
