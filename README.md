@@ -34,6 +34,7 @@ Name | Description
 ### Modules
 Name | Description
 --- | ---
+[cisco.dcnm.dcnm_bootflash](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_bootflash_module.rst)|Bootflash management for Nexus switches.
 [cisco.dcnm.dcnm_fabric](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_fabric_module.rst)|Manage creation and configuration of NDFC fabrics.
 [cisco.dcnm.dcnm_image_policy](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_policy_module.rst)|Image policy management for Nexus Dashboard Fabric Controller
 [cisco.dcnm.dcnm_image_upgrade](https://github.com/CiscoDevNet/ansible-dcnm/blob/main/docs/cisco.dcnm.dcnm_image_upgrade_module.rst)|Image management for Nexus switches
