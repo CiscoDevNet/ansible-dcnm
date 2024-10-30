@@ -1,0 +1,21 @@
+{
+    "TEST_NOTES": [
+        "Mocked EpBootflashFiles() responses for tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_bootflash_deleted_01000a": {
+        "DATA": "File(s) Deleted Successfully. \nDeleted files: [black.txt][air.txt]",
+        "MESSAGE": "OK",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "test_bootflash_files_00100a": {
+        "DATA": "File(s) Deleted Successfully. \nDeleted files: [black.txt][air.txt]",
+        "MESSAGE": "OK",
+        "METHOD": "DELETE",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-files",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    }
+}

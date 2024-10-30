@@ -16,6 +16,7 @@ plugins/modules/dcnm_vpc_pair.py validate-modules:missing-gplv3-license # GPLv3 
 plugins/modules/dcnm_image_upload.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_fabric.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_maintenance_mode.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_bootflash.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/modules/dcnm_rest.py import-2.6!skip
 plugins/modules/dcnm_rest.py import-2.7!skip
 plugins/httpapi/dcnm.py import-2.7!skip
