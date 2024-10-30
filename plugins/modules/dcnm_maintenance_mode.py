@@ -22,7 +22,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_maintenance_mode
 short_description: Manage Maintenance Mode Configuration of NX-OS Switches.
-version_added: "3.5.0"
+version_added: "3.6.0"
 author: Allen Robel (@quantumonion)
 description:
 - Enable Maintenance or Normal Mode.

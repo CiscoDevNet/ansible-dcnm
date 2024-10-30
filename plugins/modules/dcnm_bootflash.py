@@ -23,7 +23,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_bootflash
 short_description: Bootflash management for Nexus switches.
-version_added: "3.5.0"
+version_added: "3.6.0"
 description:
     - Delete, query bootflash files.
 author: Allen Robel (@quantumonion)

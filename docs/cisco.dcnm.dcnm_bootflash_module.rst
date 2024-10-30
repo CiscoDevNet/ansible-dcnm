@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_bootflash
 **Bootflash management for Nexus switches.**
 
 
-Version added: 3.5.0
+Version added: 3.6.0
 
 .. contents::
    :local:
