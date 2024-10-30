@@ -2,31 +2,31 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-# 00:78.47
+# 00:39.188
+# 00:32.893
 ################################################################################
-# DESCRIPTION - BASIC FABRIC REPLACED STATE TEST
+# DESCRIPTION - BASIC FABRIC REPLACED STATE TEST for ISN
 #
 # Test basic replace of new fabric configurations and verify results.
 # - config-save and config-deploy not tested here.
-# - See dcnm_fabric_replaced_save_deploy.yaml instead.
+# - See dcnm_fabric_replaced_save_deploy_isn.yaml instead.
 ################################################################################
 # STEPS
 ################################################################################
 # SETUP
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_5
+#    - fabric_type_5  # ISN
 # 3. Delete fabrics under test, if they exist
-#    - fabric_name_1
+#    - fabric_name_5
 # TEST
 # 4. Create fabrics with non-default configs and verify result
-#    - fabric_name_1
-# 5. Replace configs for fabric_1 and fabric_2 and verify result
-# 6. Replace config for fabric_3 and verify result
+#    - fabric_name_5
+# 5. Replace configs for fabric_5 verify result
 # CLEANUP
 # 7. Delete fabrics under test
-#    - fabric_name_1
+#    - fabric_name_5
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -40,9 +40,9 @@
 # Example vars:
 #
 # vars:
-#   testcase: dcnm_fabric_replaced_basic_vxlan
-#   fabric_name_1: VXLAN_EVPN_Fabric
-#   fabric_type_1: VXLAN_EVPN
+#   testcase: dcnm_fabric_replaced_basic_isn
+#   fabric_name_5: ISN_Fabric
+#   fabric_type_5: ISN
 ################################################################################
 # REPLACED - SETUP - Delete fabrics
 ################################################################################
@@ -50,26 +50,25 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
 - debug:
     var: result
 ################################################################################
-# REPLACED - TEST - Create fabric_name_1 with non-default config
+# REPLACED - TEST - Create ISN Fabric with non-default configs
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
 # - Fabric global keys in DATA removed for brevity.
-# ok: [ndfc1] => {
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "ADVERTISE_PIP_BGP": true,
-#                 "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
-#                 "BGP_AS": 65535,
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
-#                 "REPLICATION_MODE": "Ingress",
+#                 "BGP_AS": 65005,
+#                 "DCI_SUBNET_RANGE": "10.20.1.0/24",
+#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "LOOPBACK0_IP_RANGE": "10.2.0.0/22",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -80,22 +79,31 @@
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
-#             },
+#             }
 #         ],
 #         "response": [
 #             {
 #                 "DATA": {
+#                     "asn": "65005",
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-4",
+#                     "fabricName": "ISN_Fabric",
+#                     "fabricTechnology": "External",
+#                     "fabricTechnologyFriendly": "Custom",
+#                     "fabricType": "External",
+#                     "fabricTypeFriendly": "External",
+#                     "id": 4,
 #                     "nvPairs": {
-#                         "ADVERTISE_PIP_BGP": "true",
-#                         "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
-#                         "BGP_AS": "65535",
-#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
-#                         "REPLICATION_MODE": "Ingress",
+#                         "BGP_AS": "65005",
+#                         "DCI_SUBNET_RANGE": "10.20.1.0/24",
+#                         "FABRIC_NAME": "ISN_Fabric",
+#                         "FABRIC_TYPE": "External",
+#                         "LOOPBACK0_IP_RANGE": "10.2.0.0/22"
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
 #                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric/External_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -110,17 +118,16 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Create fabric_name_1 with non-default config
+- name: REPLACED - TEST - Create ISN fabric with non-default config.
   cisco.dcnm.dcnm_fabric:
     state: merged
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
-        ADVERTISE_PIP_BGP: true
-        ANYCAST_GW_MAC: 00:aa:bb:cc:dd:ee
-        BGP_AS: 65535
-        REPLICATION_MODE: Ingress
-        DEPLOY: false
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
+        FABRIC_TYPE: "{{ fabric_type_5 }}"
+        BGP_AS: 65005
+        DCI_SUBNET_RANGE: "10.20.1.0/24"
+        LOOPBACK0_IP_RANGE: "10.2.0.0/22"
+        DEPLOY: true
   register: result
 - debug:
     var: result
@@ -129,12 +136,11 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].BGP_AS == 65535
-      - result.diff[0].FABRIC_NAME == fabric_name_1
       - result.diff[0].sequence_number == 1
-      - result.diff[0].ADVERTISE_PIP_BGP == true
-      - result.diff[0].ANYCAST_GW_MAC == "00aa.bbcc.ddee"
-      - result.diff[0].REPLICATION_MODE == "Ingress"
+      - result.diff[0].BGP_AS == 65005
+      - result.diff[0].FABRIC_NAME == "ISN_Fabric"
+      - result.diff[0].DCI_SUBNET_RANGE == "10.20.1.0/24"
+      - result.diff[0].LOOPBACK0_IP_RANGE == "10.2.0.0/22"
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
@@ -145,13 +151,17 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "POST"
       - result.response[0].RETURN_CODE == 200
-      - result.response[0].DATA.nvPairs.ADVERTISE_PIP_BGP == "true"
-      - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "00aa.bbcc.ddee"
-      - result.response[0].DATA.nvPairs.BGP_AS == "65535"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
-      - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
+      - result.response[0].DATA.nvPairs.BGP_AS == "65005"
+      - result.response[0].DATA.nvPairs.DCI_SUBNET_RANGE == "10.20.1.0/24"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_5
+      - result.response[0].DATA.nvPairs.FABRIC_TYPE == "External"
+      - result.response[0].DATA.nvPairs.LOOPBACK0_IP_RANGE == "10.2.0.0/22"
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
 ################################################################################
-# REPLACED - TEST - Replace config for fabric_1 with default config
+# REPLACED - TEST - Replace configs for fabric_5 with default config
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -161,10 +171,9 @@
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "ADVERTISE_PIP_BGP": "false",
-#                 "ANYCAST_GW_MAC": "2020.0000.00aa",
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
-#                 "REPLICATION_MODE": "Multicast",
+#                 "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                 "FABRIC_NAME": "ISN_Fabric",
+#                 "LOOPBACK0_IP_RANGE": "10.1.0.0/22",
 #                 "sequence_number": 1
 #             },
 #             {
@@ -198,26 +207,38 @@
 #         "response": [
 #             {
 #                 "DATA": {
+#                     "asn": "65005",
+#                     "createdOn": 1725068607212,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-4",
+#                     "fabricName": "ISN_Fabric",
+#                     "fabricTechnology": "External",
+#                     "fabricTechnologyFriendly": "Custom",
+#                     "fabricType": "External",
+#                     "fabricTypeFriendly": "External",
+#                     "id": 4,
+#                     "modifiedOn": 1725068615299,
 #                     "nvPairs": {
-#                         "ADVERTISE_PIP_BGP": "false",
-#                         "ANYCAST_GW_MAC": "2020.0000.00aa",
-#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
-#                         "REPLICATION_MODE": "Multicast",
+#                         "BGP_AS": "65005",
+#                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                         "FABRIC_NAME": "ISN_Fabric",
+#                         "FABRIC_TYPE": "External",
+#                         "LOOPBACK0_IP_RANGE": "10.1.0.0/22"
 #                     }
-#                 },
+#                 }
 #                 "MESSAGE": "OK",
 #                 "METHOD": "PUT",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric/External_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             },
 #             {
-#                 "MESSAGE": "Fabric VXLAN_EVPN_Fabric DEPLOY is False or None. Skipping config-save.",
+#                 "MESSAGE": "Fabric ISN_Fabric DEPLOY is False or None. Skipping config-save.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 2
 #             },
 #             {
-#                 "MESSAGE": "FabricConfigDeploy._can_fabric_be_deployed: Fabric VXLAN_EVPN_Fabric DEPLOY is False or None. Skipping config-deploy.",
+#                 "MESSAGE": "FabricConfigDeploy._can_fabric_be_deployed: Fabric ISN_Fabric DEPLOY is False or None. Skipping config-deploy.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
@@ -242,13 +263,13 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Replace config for fabric_1 with default config
-  cisco.dcnm.dcnm_fabric: &replace_fabric_1
+- name: REPLACED - TEST - Replace configs for fabric_5 with default config
+  cisco.dcnm.dcnm_fabric: &replace_fabric_5
     state: replaced
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
-        FABRIC_TYPE: "{{ fabric_type_1 }}"
-        BGP_AS: 65535
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
+        FABRIC_TYPE: "{{ fabric_type_5 }}"
+        BGP_AS: 65005
         DEPLOY: false
   register: result
 - debug:
@@ -258,11 +279,10 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 3
-      - result.diff[0].ADVERTISE_PIP_BGP == "false"
-      - result.diff[0].ANYCAST_GW_MAC == "2020.0000.00aa"
-      - result.diff[0].FABRIC_NAME == fabric_name_1
-      - result.diff[0].REPLICATION_MODE == "Multicast"
       - result.diff[0].sequence_number == 1
+      - result.diff[0].DCI_SUBNET_RANGE == "10.10.1.0/24"
+      - result.diff[0].FABRIC_NAME == "ISN_Fabric"
+      - result.diff[0].LOOPBACK0_IP_RANGE == "10.1.0.0/22"
       - result.diff[1].sequence_number == 2
       - result.diff[2].sequence_number == 3
       - (result.metadata | length) == 3
@@ -283,16 +303,17 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
-      - result.response[0].DATA.nvPairs.ADVERTISE_PIP_BGP == "false"
-      - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "2020.0000.00aa"
-      - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
-      - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Multicast"
+      - result.response[0].DATA.nvPairs.BGP_AS == "65005"
+      - result.response[0].DATA.nvPairs.DCI_SUBNET_RANGE == "10.10.1.0/24"
+      - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_5
+      - result.response[0].DATA.nvPairs.FABRIC_TYPE == "External"
+      - result.response[0].DATA.nvPairs.LOOPBACK0_IP_RANGE == "10.1.0.0/22"
       - result.response[1].sequence_number == 2
-      - result.response[1].RETURN_CODE == 200
       - result.response[1].MESSAGE is match '.*Skipping config-save.*'
+      - result.response[1].RETURN_CODE == 200
       - result.response[2].sequence_number == 3
-      - result.response[2].RETURN_CODE == 200
       - result.response[2].MESSAGE is match '.*Skipping config-deploy.*'
+      - result.response[2].RETURN_CODE == 200
       - (result.result | length) == 3
       - result.result[0].changed == true
       - result.result[0].success == true
@@ -303,14 +324,13 @@
       - result.result[2].changed == true
       - result.result[2].success == true
       - result.result[2].sequence_number == 3
-
 ################################################################################
-# REPLACED - TEST - Replace config for fabric_1 with default config omnipotence
+# REPLACED - TEST - Replace config for fabric_5 with default config omnipotence
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
 # - Fabric global keys in DATA removed for brevity.
-# ok: [ndfc1] => {
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
 #         "diff": [
@@ -344,8 +364,8 @@
 #     }
 # }
 ################################################################################
-- name: REPLACED - TEST - Replace config for fabric_1 with default config - idempotence
-  cisco.dcnm.dcnm_fabric: *replace_fabric_1
+- name: REPLACED - TEST - Replace config for fabric_5 with default config omnipotence
+  cisco.dcnm.dcnm_fabric: *replace_fabric_5
   register: result
 - debug:
     var: result
@@ -372,12 +392,12 @@
 # REPLACED - CLEANUP - Delete the fabrics
 ################################################################################
 # Expected result
-# ok: [ndfc1] => {
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
 #         "diff": [
 #             {
-#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "FABRIC_NAME": "ISN_Fabric",
 #                 "sequence_number": 1
 #             }
 #         ],
@@ -392,10 +412,10 @@
 #         ],
 #         "response": [
 #             {
-#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "DATA": "Invalid JSON response: Fabric 'ISN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/ISN_Fabric",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
@@ -414,7 +434,7 @@
   cisco.dcnm.dcnm_fabric:
     state: deleted
     config:
-      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
 - debug:
     var: result
@@ -423,7 +443,7 @@
       - result.changed == true
       - result.failed == false
       - (result.diff | length) == 1
-      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].FABRIC_NAME == fabric_name_5
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
       - result.metadata[0].action == "fabric_delete"

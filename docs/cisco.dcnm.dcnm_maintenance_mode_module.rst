@@ -8,7 +8,7 @@ cisco.dcnm.dcnm_maintenance_mode
 **Manage Maintenance Mode Configuration of NX-OS Switches.**
 
 
-Version added: 3.6.0
+Version added: 3.5.0
 
 .. contents::
    :local:

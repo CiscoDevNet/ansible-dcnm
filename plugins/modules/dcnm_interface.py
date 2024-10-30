@@ -61,6 +61,16 @@ options:
        over this global flag.
     type: bool
     default: true
+  override_intf_types:
+    description:
+    - A list of interface types which will be deleted/defaulted in overridden/deleted state. If this list is empty, then during
+      overridden/deleted state, all interface types will be defaulted/deleted. If this list includes specific interface types,
+      then only those interface types that are included in the list will be deleted/defaulted.
+    type: list
+    required: false
+    elements: str
+    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex"]
+    default: []
   config:
     description:
     - A dictionary of interface operations
@@ -3978,6 +3988,7 @@ class DcnmIntf:
                 # the given switch may be part of a VPC pair. In that case we
                 # need to get interface information using one switch which returns interfaces
                 # from both the switches
+
                 if not any(
                     d.get("serialNo", None) == self.ip_sn[address]
                     for d in self.have_all
@@ -4005,6 +4016,27 @@ class DcnmIntf:
             name = have["ifName"]
             sno = have["serialNo"]
             fabric = have["fabricName"]
+
+            # Check if this interface type is to be overridden.
+            if self.module.params["override_intf_types"] != []:
+                # Check if it is SUBINTERFACE. For sub-interfaces ifType will be retuened as INTERFACE_ETHERNET. So
+                # for such interfaces, check if SUBINTERFACE is included in override list instead of have['ifType']
+                if (have["ifType"] == "INTERFACE_ETHERNET") and (
+                    (str(have["isPhysical"]).lower() == "none")
+                    or (str(have["isPhysical"]).lower() == "false")
+                ):
+                    # This is a SUBINTERFACE.
+                    if (
+                        "SUBINTERFACE"
+                        not in self.module.params["override_intf_types"]
+                    ):
+                        continue
+                else:
+                    if (
+                        have["ifType"]
+                        not in self.module.params["override_intf_types"]
+                    ):
+                        continue
 
             if (have["ifType"] == "INTERFACE_ETHERNET") and (
                 (str(have["isPhysical"]).lower() != "none")
@@ -4053,6 +4085,7 @@ class DcnmIntf:
                     == "DCNM_INTF_MATCH"
                 ):
                     continue
+
                 if uelem is not None:
                     # Before defaulting ethernet interfaces, check if they are
                     # member of any port-channel. If so, do not default that
@@ -4217,8 +4250,11 @@ class DcnmIntf:
                 delem["serialNumber"] = sno
                 delem["ifName"] = intf["ifName"]
                 delem["fabricName"] = self.fabric
-                self.diff_deploy.append(delem)
-                self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
+
+                # Deploy only if requested for
+                if str(deploy).lower() == "true":
+                    self.diff_deploy.append(delem)
+                    self.changed_dict[0]["deploy"].append(copy.deepcopy(delem))
 
         self.dcnm_intf_compare_want_and_have("overridden")
 
@@ -4843,13 +4879,73 @@ class DcnmIntf:
             self.module.params["state"] == "deleted"
         ):
             self.result["changed"] = (
-                delete or create or deploy or delete_deploy
+                delete or create or replace or deploy or delete_deploy
             )
         else:
             if delete or create or replace or deploy or delete_deploy:
                 self.result["changed"] = True
             else:
                 self.result["changed"] = False
+
+    def dcnm_intf_get_xlated_object(self, cfg, key):
+
+        """
+        Routine to translate individual vlans like 45, 55 to 44-44 and 55-55 format
+
+        Parameters:
+            cfg (dict): Config element that includes the object idebtified by key to be translated
+            key (str): key identifying the object to be translated
+
+        Returns:
+            translated object
+        """
+
+        citems = cfg["profile"][key].split(",")
+
+        for index in range(len(citems)):
+            if (
+                (citems[index].lower() == "none")
+                or (citems[index].lower() == "all")
+                or ("-" in citems[index])
+            ):
+                continue
+
+            # Playbook config includes individual vlans in allowed_vlans object. Convert the elem to
+            # appropriate format i.e. vlaues in the form of 4, 7 to 4-4 and 7-7
+            citems[index] = citems[index].strip() + "-" + citems[index].strip()
+        return citems
+
+    def dcnm_intf_translate_allowed_vlans(self, cfg):
+
+        """
+        Routine to translate xxx_allowed_vlans object in the config. 'xxx_allowed_vlans' object will
+        allow only 'none', 'all', or 'vlan-ranges like 1-5' values. It does not allow individual
+        vlans to be included. To enable user to include individual vlans in the playbook config, this
+        routine tranlates the individual vlans like 3, 5 etc to 3-3 and 5-5 format.
+
+        Parameters:
+            cfg (dict): Config element that needs to be translated
+
+        Returns:
+            None
+        """
+
+        if cfg.get("profile", None) is None:
+            return
+
+        if cfg["profile"].get("allowed_vlans", None) is not None:
+            xlated_obj = self.dcnm_intf_get_xlated_object(cfg, "allowed_vlans")
+            cfg["profile"]["allowed_vlans"] = ",".join(xlated_obj)
+        if cfg["profile"].get("peer1_allowed_vlans", None) is not None:
+            xlated_obj = self.dcnm_intf_get_xlated_object(
+                cfg, "peer1_allowed_vlans"
+            )
+            cfg["profile"]["peer1_allowed_vlans"] = ",".join(xlated_obj)
+        if cfg["profile"].get("peer2_allowed_vlans", None) is not None:
+            xlated_obj = self.dcnm_intf_get_xlated_object(
+                cfg, "peer2_allowed_vlans"
+            )
+            cfg["profile"]["peer2_allowed_vlans"] = ",".join(xlated_obj)
 
     def dcnm_intf_update_inventory_data(self):
 
@@ -4865,6 +4961,7 @@ class DcnmIntf:
         """
 
         inv_data = get_fabric_inventory_details(self.module, self.fabric)
+
         self.inventory_data.update(inv_data)
 
         if self.module.params["state"] != "query":
@@ -4938,6 +5035,13 @@ class DcnmIntf:
 
     def dcnm_translate_playbook_info(self, config, ip_sn, hn_sn):
 
+        # Transalte override_intf_types to proper types that can be directly used in overridden state.
+
+        for if_type in self.module.params["override_intf_types"][:]:
+            self.module.params["override_intf_types"].append(
+                self.int_types[if_type]
+            )
+            self.module.params["override_intf_types"].remove(if_type)
         for cfg in config:
             index = 0
             if cfg.get("switch", None) is None:
@@ -4959,6 +5063,26 @@ class DcnmIntf:
                     cfg["switch"].remove(sw_elem)
                 index = index + 1
 
+            # 'allowed-vlans' in the case of trunk interfaces accepts 'all', 'none' and 'vlan-ranges' which
+            # will be of the form 20-30 etc. There is not way to include individual vlans which are not contiguous.
+            # To include individual vlans like 3,6,20 etc. user must input them in the form 3-3, 6-6, 20-20 which is
+            # not very intuitive. To handle this scenario, we allow playbooks to include individual vlans and translate
+            # them here appropriately.
+
+            if cfg.get("profile", None) is not None:
+                if (
+                    (
+                        cfg["profile"].get("peer1_allowed_vlans", None)
+                        is not None
+                    )
+                    or (
+                        cfg["profile"].get("peer2_allowed_vlans", None)
+                        is not None
+                    )
+                    or (cfg["profile"].get("allowed_vlans", None) is not None)
+                ):
+                    self.dcnm_intf_translate_allowed_vlans(cfg)
+
 
 def main():
 
@@ -4971,6 +5095,22 @@ def main():
             type="str",
             default="merged",
             choices=["merged", "replaced", "overridden", "deleted", "query"],
+        ),
+        override_intf_types=dict(
+            required=False,
+            type="list",
+            elements="str",
+            choices=[
+                "pc",
+                "vpc",
+                "sub_int",
+                "lo",
+                "eth",
+                "svi",
+                "st_fex",
+                "aa_fex",
+            ],
+            default=[],
         ),
         check_deploy=dict(type="bool", default=False),
     )

@@ -319,7 +319,6 @@
 #                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                         "REPLICATION_MODE": "Ingress",
 #                         "SITE_ID": "65000",
-#                         "UNDERLAY_IS_V6": "false",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
@@ -407,7 +406,6 @@
         BGP_AS: 65535
         REPLICATION_MODE: Ingress
         SITE_ID: 65000
-        UNDERLAY_IS_V6: false
         DEPLOY: false
       - FABRIC_NAME: "{{ fabric_name_2 }}"
         FABRIC_TYPE: "{{ fabric_type_2 }}"
@@ -462,7 +460,6 @@
       - result.response[0].DATA.nvPairs.BGP_AS == "65535"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
       - result.response[0].DATA.nvPairs.SITE_ID == "65000"
-      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == "VXLAN_EVPN_Fabric"
       - result.response[1].sequence_number == 2
       - result.response[1].MESSAGE == "OK"
