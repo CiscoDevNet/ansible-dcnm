@@ -219,8 +219,10 @@ EXAMPLES = """
     state: 'query'
 """
 import copy
+import logging
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     validate_list_of_dicts,
     dcnm_version_supported,
@@ -253,6 +255,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_contr
 class DcnmContracts:
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
@@ -420,7 +424,8 @@ class DcnmContracts:
         for elem in self.want:
 
             rc, have = dcnm_contracts_utils_compare_want_and_have(self, elem)
-
+            msg = f"Compare Want and Have: Return Code = {rc},  Have = {have}\n"
+            self.log.info(msg)
             if rc == "NDFC_CONTRACTS_CREATE":
                 # Object does not exists, create a new one.
                 if elem not in self.diff_create:
@@ -646,6 +651,9 @@ class DcnmContracts:
         create_flag = dcnm_contracts_utils_process_create_payloads(self)
         modify_flag = dcnm_contracts_utils_process_modify_payloads(self)
 
+        msg = f"Flags: CR = {create_flag}, DL = {delete_flag}, MO = {modify_flag}\n"
+        self.log.debug(msg)
+
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag
         )
@@ -696,6 +704,16 @@ def main():
 
     state = module.params["state"]
 
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except ValueError as error:
+        ansible_module.fail_json(str(error))
+
+    msg = f"######################### BEGIN STATE = {state} ##########################\n"
+    dcnm_contracts.log.debug(msg)
+
     if [] is dcnm_contracts.config:
         if state == "merged" or state == "replaced":
             module.fail_json(
@@ -706,13 +724,28 @@ def main():
 
     dcnm_contracts.dcnm_contracts_validate_all_input()
 
+    msg = f"Config Info = {dcnm_contracts.config}\n"
+    dcnm_contracts.log.info(msg)
+
+    msg = f"Validated Security Group Association Info = {dcnm_contracts.contracts_info}\n"
+    dcnm_contracts.log.info(msg)
+
     if (
         module.params["state"] != "query" and
         module.params["state"] != "deleted"
     ):
         dcnm_contracts.dcnm_contracts_get_want()
 
+        msg = f"Want = {dcnm_contracts.want}\n"
+        dcnm_contracts.log.info(msg)
+
         dcnm_contracts.dcnm_contracts_get_have()
+
+        msg = f"Have = {dcnm_contracts.have}\n"
+        dcnm_contracts.log.info(msg)
+
+        msg = f"Updated Want = {dcnm_contracts.want}\n"
+        dcnm_contracts.log.info(msg)
 
         # self.want would have defaulted all optional objects not included in playbook. But the way
         # these objects are handled is different between 'merged' and 'replaced' states. For 'merged'
@@ -733,6 +766,16 @@ def main():
     if module.params["state"] == "query":
         dcnm_contracts.dcnm_contracts_get_diff_query()
 
+
+    msg = f"Create Info = {dcnm_contracts.diff_create}\n"
+    dcnm_contracts.log.info(msg)
+
+    msg = f"Replace Info = {dcnm_contracts.diff_modify}\n"
+    dcnm_contracts.log.info(msg)
+
+    msg = f"Delete Info = {dcnm_contracts.diff_delete}\n"
+    dcnm_contracts.log.info(msg)
+
     dcnm_contracts.result["diff"] = dcnm_contracts.changed_dict
 
     if dcnm_contracts.diff_create or dcnm_contracts.diff_delete or dcnm_contracts.diff_modify:
@@ -743,6 +786,9 @@ def main():
         module.exit_json(**dcnm_contracts.result)
 
     dcnm_contracts.dcnm_contracts_send_message_to_dcnm()
+
+    msg = f"######################### END STATE = {state} ##########################\n"
+    dcnm_contracts.log.debug(msg)
 
     module.exit_json(**dcnm_contracts.result)
 

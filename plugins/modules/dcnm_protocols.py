@@ -242,8 +242,10 @@ EXAMPLES = """
 """
 
 import copy
+import logging
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     validate_list_of_dicts,
     dcnm_version_supported,
@@ -277,6 +279,8 @@ class DcnmProtocols:
     def __init__(self, module):
         self.module = module
         self.params = module.params
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.fabric = module.params["fabric"]
         self.config = copy.deepcopy(module.params.get("config", []))
         self.protocols_info = []
@@ -441,6 +445,8 @@ class DcnmProtocols:
         for elem in self.want:
 
             rc, have = dcnm_protocols_utils_compare_want_and_have(self, elem)
+            msg = f"Compare Want and Have: Return Code = {rc}, Have = {have}\n"
+            self.log.info(msg)
 
             if rc == "NDFC_PROTOCOLS_CREATE":
                 # Object does not exists, create a new one.
@@ -713,6 +719,9 @@ class DcnmProtocols:
         create_flag = dcnm_protocols_utils_process_create_payloads(self)
         modify_flag = dcnm_protocols_utils_process_modify_payloads(self)
 
+        msg = f"Flags: CR = {create_flag}, DL = {delete_flag}, MO = {modify_flag}\n"
+        self.log.debug(msg)
+
         self.result["changed"] = (
             create_flag or modify_flag or delete_flag
         )
@@ -763,6 +772,16 @@ def main():
 
     state = module.params["state"]
 
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except ValueError as error:
+        ansible_module.fail_json(str(error))
+
+    msg = f"######################### BEGIN STATE = {state} ##########################\n"
+    dcnm_protocols.log.debug(msg)
+
     if [] is dcnm_protocols.config:
         if state == "merged" or state == "replaced":
             module.fail_json(
@@ -773,13 +792,25 @@ def main():
 
     dcnm_protocols.dcnm_protocols_validate_all_input()
 
+    msg = f"Config Info = {dcnm_protocols.config}\n"
+    dcnm_protocols.log.info(msg)
+
+    msg = f"Validated Security Group Association Info = {dcnm_protocols.protocols_info}\n"
+    dcnm_protocols.log.info(msg)
+
     if (
         module.params["state"] != "query" and
         module.params["state"] != "deleted"
     ):
         dcnm_protocols.dcnm_protocols_get_want()
 
+        msg = f"Want = {dcnm_protocols.want}\n"
+        dcnm_protocols.log.info(msg)
+
         dcnm_protocols.dcnm_protocols_get_have()
+
+        msg = f"Have = {dcnm_protocols.have}\n"
+        dcnm_protocols.log.info(msg)
 
         # self.want would have defaulted all optional objects not included in playbook. But the way
         # these objects are handled is different between 'merged' and 'replaced' states. For 'merged'
@@ -791,6 +822,9 @@ def main():
     ):
         dcnm_protocols.dcnm_protocols_get_diff_merge()
 
+        msg = f"Updated Want = {dcnm_protocols.want}\n"
+        dcnm_protocols.log.info(msg)
+
     if module.params["state"] == "deleted":
         dcnm_protocols.dcnm_protocols_get_diff_deleted()
 
@@ -799,6 +833,15 @@ def main():
 
     if module.params["state"] == "query":
         dcnm_protocols.dcnm_protocols_get_diff_query()
+
+    msg = f"Create Info = {dcnm_protocols.diff_create}\n"
+    dcnm_protocols.log.info(msg)
+
+    msg = f"Replace Info = {dcnm_protocols.diff_modify}\n"
+    dcnm_protocols.log.info(msg)
+
+    msg = f"Delete Info = {dcnm_protocols.diff_delete}\n"
+    dcnm_protocols.log.info(msg)
 
     dcnm_protocols.result["diff"] = dcnm_protocols.changed_dict
 
@@ -810,6 +853,9 @@ def main():
         module.exit_json(**dcnm_protocols.result)
 
     dcnm_protocols.dcnm_protocols_send_message_to_dcnm()
+
+    msg = f"######################### END STATE = {state} ##########################\n"
+    dcnm_protocols.log.debug(msg)
 
     module.exit_json(**dcnm_protocols.result)
 
