@@ -2323,6 +2323,9 @@ class DcnmNetwork:
 
                     if not network["DATA"]:
                         continue
+                    missing_network, not_ok = self.handle_response(network, "query_dcnm")
+                    if missing_network or not_ok:
+                        continue
 
                     net = network["DATA"]
                     if want_c["networkName"] == net["networkName"]:

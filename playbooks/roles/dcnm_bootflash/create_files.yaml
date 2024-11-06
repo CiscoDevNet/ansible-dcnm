@@ -1,0 +1,28 @@
+---
+- gather_facts: false
+  hosts:
+    - switch1
+  tasks:
+    - name: Load nxos_vars
+      ansible.builtin.include_vars: nxos_vars.yaml
+    - name: SETUP - Create files on {{ switch1 }}
+      cisco.nxos.nxos_command:
+        commands:
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file1 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file2 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file3 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch1_file4 }}
+
+- gather_facts: false
+  hosts:
+    - switch2
+  tasks:
+    - name: Load nxos_vars
+      ansible.builtin.include_vars: nxos_vars.yaml
+    - name: SETUP - Create files on {{ switch2 }}
+      cisco.nxos.nxos_command:
+        commands:
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file1 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file2 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file3 }}
+          - echo 1 > bootflash:/{{ nxos_vars.switch2_file4 }}
