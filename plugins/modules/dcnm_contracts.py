@@ -709,7 +709,7 @@ def main():
         log = Log()
         log.commit()
     except ValueError as error:
-        ansible_module.fail_json(str(error))
+        module.fail_json(str(error))
 
     msg = f"######################### BEGIN STATE = {state} ##########################\n"
     dcnm_contracts.log.debug(msg)
@@ -765,7 +765,6 @@ def main():
 
     if module.params["state"] == "query":
         dcnm_contracts.dcnm_contracts_get_diff_query()
-
 
     msg = f"Create Info = {dcnm_contracts.diff_create}\n"
     dcnm_contracts.log.info(msg)

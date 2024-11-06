@@ -777,7 +777,7 @@ def main():
         log = Log()
         log.commit()
     except ValueError as error:
-        ansible_module.fail_json(str(error))
+        module.fail_json(str(error))
 
     msg = f"######################### BEGIN STATE = {state} ##########################\n"
     dcnm_protocols.log.debug(msg)
