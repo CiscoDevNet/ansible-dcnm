@@ -759,8 +759,8 @@ class DcnmNetwork:
                             if bool(want["is_deploy"]):
                                 dep_net = True
 
-                        if bool(want["is_deploy"]) is not bool(have["is_deploy"]):
-                            if bool(want["is_deploy"]):
+                        if bool(want.get("is_deploy")) is not bool(have.get("is_deploy")):
+                            if bool(want.get("is_deploy")):
                                 dep_net = True
 
             if not found:
