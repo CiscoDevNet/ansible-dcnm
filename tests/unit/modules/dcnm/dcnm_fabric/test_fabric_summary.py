@@ -32,19 +32,15 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
-    MockAnsibleModule, ResponseGenerator, does_not_raise,
-    fabric_summary_fixture, responses_fabric_summary)
+    MockAnsibleModule, does_not_raise, fabric_summary_fixture,
+    responses_fabric_summary)
 
 
 def test_fabric_summary_00010(fabric_summary) -> None:
@@ -64,14 +60,14 @@ def test_fabric_summary_00010(fabric_summary) -> None:
     assert instance.class_name == "FabricSummary"
     assert instance.data is None
     assert instance.refreshed is False
-    assert isinstance(instance.endpoints, ApiEndpoints)
-    assert isinstance(instance.results, Results)
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert instance._properties["border_gateway_count"] == 0
-    assert instance._properties["device_count"] == 0
-    assert instance._properties["fabric_name"] is None
-    assert instance._properties["leaf_count"] == 0
-    assert instance._properties["spine_count"] == 0
+    assert instance.ep_fabric_summary.class_name == "EpFabricSummary"
+    assert instance.results.class_name == "Results"
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance._border_gateway_count == 0
+    assert instance._device_count == 0
+    assert instance._fabric_name is None
+    assert instance._leaf_count == 0
+    assert instance._spine_count == 0
 
 
 def test_fabric_summary_00030(fabric_summary) -> None:
@@ -158,13 +154,13 @@ def test_fabric_summary_00032(monkeypatch, fabric_summary) -> None:
 
     Summary
     -   Verify that FabricSummary()._set_fabric_summary_endpoint()
-        re-raises ``ValueError`` when ApiEndpoints() raises
+        re-raises ``ValueError`` when EpFabricSummary() raises
         ``ValueError``.
     """
 
-    class MockApiEndpoints:  # pylint: disable=too-few-public-methods
+    class MockEpFabricSummary:  # pylint: disable=too-few-public-methods
         """
-        Mock the ApiEndpoints.fabric_summary getter property to raise ``ValueError``.
+        Mock the EpFabricSummary.fabric_name getter property to raise ``ValueError``.
         """
 
         def validate_fabric_name(self, value="MyFabric"):
@@ -173,35 +169,26 @@ def test_fabric_summary_00032(monkeypatch, fabric_summary) -> None:
             """
 
         @property
-        def fabric_summary(self):
-            """
-            -   Mocked property getter.
-            -   Raise ``ValueError``.
-            """
-            raise ValueError("mocked ApiEndpoints().fabric_summary getter exception")
-
-        @property
         def fabric_name(self):
             """
             -   Mocked fabric_name property getter
             """
-            return self._fabric_name
 
         @fabric_name.setter
         def fabric_name(self, value):
             """
             -   Mocked fabric_name property setter
             """
-            self._fabric_name = value
+            msg = "mocked MockEpFabricSummary().fabric_name setter exception."
+            raise ValueError(msg)
 
-    PATCH_API_ENDPOINTS = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_API_ENDPOINTS += "module_utils.fabric.endpoints.ApiEndpoints.fabric_summary"
-
-    match = r"mocked ApiEndpoints\(\)\.fabric_summary getter exception"
+    match = r"Error retrieving fabric_summary endpoint\.\s+"
+    match += r"Detail: mocked MockEpFabricSummary\(\)\.fabric_name\s+"
+    match += r"setter exception\."
 
     with does_not_raise():
         instance = fabric_summary
-        monkeypatch.setattr(instance, "endpoints", MockApiEndpoints())
+        monkeypatch.setattr(instance, "ep_fabric_summary", MockEpFabricSummary())
         instance.fabric_name = "MyFabric"
         instance.rest_send = RestSend(MockAnsibleModule())
     with pytest.raises(ValueError, match=match):

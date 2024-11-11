@@ -24,7 +24,7 @@ import logging
 
 class FabricTypes:
     """
-    Fabric type definitions the dcnm_fabric module.
+    Fabric type definitions for the dcnm_fabric module.
 
     Usage
 
@@ -66,13 +66,27 @@ class FabricTypes:
 
         Initialize the following:
         -   fabric_type_to_template_name_map dict()
+        -   fabric_type_to_feature_name_map dict()
         -   _valid_fabric_types - Sorted list() of fabric types
-        -  _mandatory_payload_keys_all_fabrics list()
+        -  _mandatory_parameters_all_fabrics list()
+        -  _mandatory_parameters dict() keyed on fabric type
+            - Value is a list of mandatory parameters for the fabric type
         """
         self._fabric_type_to_template_name_map = {}
+        self._fabric_type_to_template_name_map["IPFM"] = "Easy_Fabric_IPFM"
+        self._fabric_type_to_template_name_map["ISN"] = "External_Fabric"
         self._fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
         self._fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN_MSD"] = "MSD_Fabric"
+
+        # Map fabric type to the feature name that must be running
+        # on the controller to enable the fabric type.
+        self._fabric_type_to_feature_name_map = {}
+        self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
+        self._fabric_type_to_feature_name_map["ISN"] = "vxlan"
+        self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
+        self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
+        self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
 
         self._valid_fabric_types = sorted(self._fabric_type_to_template_name_map.keys())
 
@@ -81,17 +95,26 @@ class FabricTypes:
         self._mandatory_parameters_all_fabrics.append("FABRIC_TYPE")
 
         self._mandatory_parameters = {}
+        self._mandatory_parameters["IPFM"] = copy.copy(
+            self._mandatory_parameters_all_fabrics
+        )
+        self._mandatory_parameters["ISN"] = copy.copy(
+            self._mandatory_parameters_all_fabrics
+        )
         self._mandatory_parameters["LAN_CLASSIC"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
+        self._mandatory_parameters["ISN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN_MSD"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
 
+        self._mandatory_parameters["IPFM"].sort()
+        self._mandatory_parameters["ISN"].sort()
         self._mandatory_parameters["LAN_CLASSIC"].sort()
         self._mandatory_parameters["VXLAN_EVPN"].sort()
         self._mandatory_parameters["VXLAN_EVPN_MSD"].sort()
@@ -128,6 +151,20 @@ class FabricTypes:
         self._properties["fabric_type"] = value
 
     @property
+    def feature_name(self):
+        """
+        -   getter: Return the feature name that must be enabled on the controller
+            for the currently-set fabric type.
+        -   getter: raise ``ValueError`` if FabricTypes().fabric_type is not set.
+        """
+        if self.fabric_type is None:
+            msg = f"{self.class_name}.feature_name: "
+            msg += f"Set {self.class_name}.fabric_type before accessing "
+            msg += f"{self.class_name}.feature_name"
+            raise ValueError(msg)
+        return self._fabric_type_to_feature_name_map[self.fabric_type]
+
+    @property
     def mandatory_parameters(self):
         """
         -   getter: Return the mandatory playbook parameters for the
@@ -161,3 +198,10 @@ class FabricTypes:
         Return a sorted list() of valid fabric types.
         """
         return self._properties["valid_fabric_types"]
+
+    @property
+    def valid_fabric_template_names(self):
+        """
+        Return a sorted list() of valid fabric template names.
+        """
+        return sorted(self._fabric_type_to_template_name_map.values())

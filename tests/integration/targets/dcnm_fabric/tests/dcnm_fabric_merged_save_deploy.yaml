@@ -44,18 +44,25 @@
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-# Example vars for dcnm_fabric integration tests
-# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
 #
 # vars:
-#   # This testcase field can run any test in the tests directory for the role
-#   testcase: deleted
+#   testcase: dcnm_fabric_merged_save_deploy
 #   fabric_name_1: VXLAN_EVPN_Fabric
 #   fabric_type_1: VXLAN_EVPN
 #   fabric_name_3: LAN_CLASSIC_Fabric
 #   fabric_type_3: LAN_CLASSIC
 #   leaf_1: 172.22.150.103
 #   leaf_2: 172.22.150.104
+#   nxos_username: admin
+#   nxos_password: mypassword
 ################################################################################
 # MERGED - SETUP - Delete fabrics
 ################################################################################
@@ -181,11 +188,11 @@
       - result.diff[1].BOOTSTRAP_ENABLE == false
       - result.diff[1].IS_READ_ONLY == false
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "create"
+      - result.metadata[0].action == "fabric_create"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "create"
+      - result.metadata[1].action == "fabric_create"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -215,8 +222,8 @@
     config:
       - seed_ip: "{{ leaf_1 }}"
         auth_proto: MD5
-        user_name: admin
-        password: Cisco!2345
+        user_name: "{{ nxos_username}}"
+        password: "{{ nxos_password }}"
         max_hops: 0
         role: leaf
         preserve_config: false
@@ -231,8 +238,8 @@
     config:
       - seed_ip: "{{ leaf_2 }}"
         auth_proto: MD5
-        user_name: admin
-        password: Cisco!2345
+        user_name: "{{ nxos_username}}"
+        password: "{{ nxos_password }}"
         max_hops: 0
         role: leaf
         # preserve_config must be True for LAN_CLASSIC
@@ -329,7 +336,6 @@
 #                         "ANYCAST_GW_MAC": "aaaa.bbbb.cccc",
 #                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                         "REPLICATION_MODE": "Ingress",
-#                         "UNDERLAY_IS_V6": "false",
 #                     }
 #                 },
 #                 "MESSAGE": "OK",
@@ -438,7 +444,6 @@
         BGP_AS: 65535
         ANYCAST_GW_MAC: aaaabbbbcccc
         REPLICATION_MODE: Ingress
-        UNDERLAY_IS_V6: false
         DEPLOY: true
       - FABRIC_NAME: "{{ fabric_name_3 }}"
         FABRIC_TYPE: "{{ fabric_type_3 }}"
@@ -459,11 +464,11 @@
       - result.diff[1].SUBINTERFACE_RANGE == "2-101"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 6
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
-      - result.metadata[1].action == "update"
+      - result.metadata[1].action == "fabric_update"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "merged"
@@ -490,7 +495,6 @@
       - result.response[0].RETURN_CODE == 200
       - result.response[0].DATA.nvPairs.ANYCAST_GW_MAC == "aaaa.bbbb.cccc"
       - result.response[0].DATA.nvPairs.REPLICATION_MODE == "Ingress"
-      - result.response[0].DATA.nvPairs.UNDERLAY_IS_V6 == "false"
       - result.response[0].DATA.nvPairs.FABRIC_NAME == fabric_name_1
       - result.response[1].sequence_number == 2
       - result.response[1].DATA.nvPairs.SUBINTERFACE_RANGE == "2-101"
@@ -589,7 +593,7 @@
       - (result.diff | length) == 1
       - result.diff[0].sequence_number == 1
       - (result.metadata | length) == 1
-      - result.metadata[0].action == "update"
+      - result.metadata[0].action == "fabric_update"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "merged"
@@ -720,11 +724,11 @@
       - result.diff[1].FABRIC_NAME == fabric_name_3
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
-      - result.metadata[0].action == "delete"
+      - result.metadata[0].action == "fabric_delete"
       - result.metadata[0].check_mode == False
       - result.metadata[0].sequence_number == 1
       - result.metadata[0].state == "deleted"
-      - result.metadata[1].action == "delete"
+      - result.metadata[1].action == "fabric_delete"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
       - result.metadata[1].state == "deleted"

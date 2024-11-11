@@ -29,14 +29,13 @@ __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import logging
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    does_not_raise, log_fixture, MockAnsibleModule)
+    MockAnsibleModule, does_not_raise, log_fixture)
 
 
 def test_log_00010(tmp_path, log) -> None:

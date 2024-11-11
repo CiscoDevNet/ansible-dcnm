@@ -22,31 +22,37 @@ import inspect
 import ipaddress
 import logging
 from collections.abc import MutableMapping as Map
-from typing import Any, List
 
 from ansible.module_utils.common import validation
 
 
 class ParamsValidate:
     """
+    ## DEPRECATED
+    Use ``ParamsValidate`` from ``params_validate_v2.py`` for all new development.
+
+    ### Summary
     Validate playbook parameters.
 
-    This expects the following:
-        1.  parameters: fully-merged dictionary of parameters
-        2.  params_spec: Dictionary that describes each parameter
+    ### Mandatory Properties
+        -   ``parameters``: fully-merged dictionary of parameters
+        -   ``params_spec``: Dictionary that describes each parameter
             in parameters
 
-    Usage (where ansible_module is an instance of AnsibleModule):
+    ### Usage
+
+    -   Ansible_module is an instance of AnsibleModule):
 
     Assume the following params_spec describing parameters
-    ip_address and foo.
-    ip_address is a required parameter of type ipv4.
-    foo is an optional parameter of type dict.
-    foo contains a parameter named bar that is an optional
-    parameter of type str with a default value of bingo.
-    bar can be assigned one of three values: bingo, bango, or bongo.
+    ``ip_address`` and ``foo``  .
+    -   ``ip_address`` is a required parameter of type ipv4.
+    -   ``foo`` is an optional parameter of type dict.
+    -   ``foo`` contains a parameter named ``bar`` that is an optional
+        parameter of type str with a default value of bingo.
+    -   ``bar`` can be assigned one of three values: bingo, bango, or bongo.
 
-    params_spec: Dict[str, Any] = {}
+    ```python
+    params_spec: dict = {}
     params_spec["ip_address"] = {}
     params_spec["ip_address"]["required"] = False
     params_spec["ip_address"]["type"] = "ipv4"
@@ -62,18 +68,25 @@ class ParamsValidate:
     params_spec["foo"]["baz"]["type"] = int
     params_spec["foo"]["baz"]["range_min"] = 0
     params_spec["foo"]["baz"]["range_max"] = 10
+    ```
 
     Which describes the following YAML:
 
+    ```yaml
     ip_address: 1.2.3.4
     foo:
         bar: bingo
         baz: 10
+    ```
 
+    ### Invocation
+
+    ```python
     validator = ParamsValidate(ansible_module)
     validator.parameters = ansible_module.params
     validator.params_spec = params_spec
     validator.commit()
+    ```
     """
 
     def __init__(self, ansible_module):
@@ -256,7 +269,7 @@ class ParamsValidate:
                     param,
                 )
 
-    def _verify_choices(self, choices: List[Any], value: Any, param: str) -> None:
+    def _verify_choices(self, choices: list, value, param: str) -> None:
         """
         Verify that value is one of the choices
         """
@@ -295,7 +308,7 @@ class ParamsValidate:
             msg += f"Got {value}"
             self.ansible_module.fail_json(msg)
 
-    def _verify_type(self, expected_type: str, params: Any, param: str) -> Any:
+    def _verify_type(self, expected_type: str, params, param: str):
         """
         Verify that value's type matches the expected type
         """
@@ -316,7 +329,7 @@ class ParamsValidate:
             self._invalid_type(expected_type, value, param, err)
             return value
 
-    def _ipaddress_guard(self, expected_type, value: Any, param: str) -> None:
+    def _ipaddress_guard(self, expected_type, value, param: str) -> None:
         """
         Guard against int and bool types for ipv4, ipv6, ipv4_subnet,
         and ipv6_subnet type.
@@ -343,7 +356,7 @@ class ParamsValidate:
         raise TypeError(f"{msg}")
 
     def _invalid_type(
-        self, expected_type: str, value: Any, param: str, error: str = ""
+        self, expected_type: str, value, param: str, error: str = ""
     ) -> None:
         """
         Calls fail_json when value's type does not match expected_type
@@ -357,8 +370,8 @@ class ParamsValidate:
         self.ansible_module.fail_json(msg)
 
     def _verify_multitype(  # pylint: disable=inconsistent-return-statements
-        self, spec: Any, params: Any, param: str
-    ) -> Any:
+        self, spec, params, param: str
+    ):
         """
         Verify that value's type matches one of the types in expected_types
 
@@ -413,7 +426,7 @@ class ParamsValidate:
         self.ansible_module.fail_json(msg)
 
     def _verify_preferred_type_param_spec_is_present(
-        self, spec: Any, param: str
+        self, spec, param: str
     ) -> None:
         """
         verify that spec contains the key 'preferred_type'
@@ -426,7 +439,7 @@ class ParamsValidate:
             self.ansible_module.fail_json(msg)
 
     def _verify_preferred_type_for_standard_types(
-        self, preferred_type: str, value: Any
+        self, preferred_type: str, value
     ) -> tuple:
         """
         If preferred_type is one of the standard python types
@@ -447,7 +460,7 @@ class ParamsValidate:
         return (False, value)
 
     def _verify_preferred_type_for_ipaddress_types(
-        self, preferred_type: str, value: Any
+        self, preferred_type: str, value
     ) -> tuple:
         """
         We can't use isinstance() to verify ipaddress types.
@@ -465,7 +478,7 @@ class ParamsValidate:
         return (False, value)
 
     @staticmethod
-    def _validate_ipv4_address(value: Any) -> Any:
+    def _validate_ipv4_address(value):
         """
         verify that value is an IPv4 address
         """
@@ -476,7 +489,7 @@ class ParamsValidate:
             raise ValueError(f"invalid IPv4 address: {err}") from err
 
     @staticmethod
-    def _validate_ipv4_subnet(value: Any) -> Any:
+    def _validate_ipv4_subnet(value):
         """
         verify that value is an IPv4 network
         """
@@ -487,7 +500,7 @@ class ParamsValidate:
             raise ValueError(f"invalid IPv4 network: {err}") from err
 
     @staticmethod
-    def _validate_ipv6_address(value: Any) -> Any:
+    def _validate_ipv6_address(value):
         """
         verify that value is an IPv6 address
         """
@@ -498,7 +511,7 @@ class ParamsValidate:
             raise ValueError(f"invalid IPv6 address: {err}") from err
 
     @staticmethod
-    def _validate_ipv6_subnet(value: Any) -> Any:
+    def _validate_ipv6_subnet(value):
         """
         verify that value is an IPv6 network
         """
@@ -509,7 +522,7 @@ class ParamsValidate:
             raise ValueError(f"invalid IPv6 network: {err}") from err
 
     @staticmethod
-    def _validate_set(value: Any) -> Any:
+    def _validate_set(value):
         """
         verify that value is a set
         """
@@ -518,7 +531,7 @@ class ParamsValidate:
         return value
 
     @staticmethod
-    def _validate_tuple(value: Any) -> Any:
+    def _validate_tuple(value):
         """
         verify that value is a tuple
         """

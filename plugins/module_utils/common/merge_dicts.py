@@ -22,11 +22,14 @@ import copy
 import inspect
 import logging
 from collections.abc import MutableMapping as Map
-from typing import Any, Dict
 
 
 class MergeDicts:
     """
+    ## DEPRECATED
+    Use ``MergeDicts`` from ``merge_dicts_v2.py`` for
+    all new development.
+
     Merge two dictionaries.
 
     Given two dictionaries, dict1 and dict2, merge them into a
@@ -74,9 +77,7 @@ class MergeDicts:
 
         self.properties["dict_merged"] = self.merge_dicts(self.dict1, self.dict2)
 
-    def merge_dicts(
-        self, dict1: Dict[Any, Any], dict2: Dict[Any, Any]
-    ) -> Dict[Any, Any]:
+    def merge_dicts(self, dict1: dict, dict2: dict) -> dict:
         """
         Merge dict2 into dict1 and return dict1.
         Keys in dict2 have precedence over keys in dict1.

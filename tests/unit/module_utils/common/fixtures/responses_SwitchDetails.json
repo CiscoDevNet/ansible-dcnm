@@ -1,0 +1,702 @@
+{
+    "test_maintenance_mode_info_00200a": {
+        "DATA": [
+            {
+                "activeSupSlot": 0,
+                "availPorts": 0,
+                "ccStatus": "NA",
+                "cfsSyslogStatus": 1,
+                "colDBId": 0,
+                "connUnitStatus": 0,
+                "consistencyState": false,
+                "contact": null,
+                "cpuUsage": 0,
+                "deviceType": "External",
+                "displayHdrs": null,
+                "displayValues": null,
+                "domain": null,
+                "domainID": 0,
+                "elementType": null,
+                "fabricId": 3,
+                "fabricName": "FOO",
+                "fabricTechnology": "LANClassic",
+                "fcoeEnabled": false,
+                "fex": false,
+                "fexMap": {},
+                "fid": 0,
+                "freezeMode": null,
+                "health": -1,
+                "hostName": "cvd-1314-leaf",
+                "index": 0,
+                "intentedpeerName": "",
+                "interfaces": null,
+                "ipAddress": "172.22.150.105",
+                "ipDomain": "",
+                "isEchSupport": false,
+                "isLan": false,
+                "isNonNexus": false,
+                "isPmCollect": false,
+                "isTrapDelayed": false,
+                "isVpcConfigured": false,
+                "is_smlic_enabled": false,
+                "keepAliveState": null,
+                "lastScanTime": 0,
+                "licenseDetail": null,
+                "licenseViolation": false,
+                "linkName": null,
+                "location": null,
+                "logicalName": "cvd-1314-leaf",
+                "managable": true,
+                "mds": false,
+                "membership": null,
+                "memoryUsage": 0,
+                "mgmtAddress": null,
+                "mode": "Normal",
+                "model": "N9K-C93180YC-EX",
+                "modelType": 0,
+                "moduleIndexOffset": 9999,
+                "modules": null,
+                "monitorMode": true,
+                "name": null,
+                "network": null,
+                "nonMdsModel": null,
+                "npvEnabled": false,
+                "numberOfPorts": 0,
+                "operMode": null,
+                "operStatus": "Minor",
+                "peer": null,
+                "peerSerialNumber": null,
+                "peerSwitchDbId": 0,
+                "peerlinkState": null,
+                "ports": 0,
+                "present": true,
+                "primaryIP": "",
+                "primarySwitchDbID": 0,
+                "principal": null,
+                "protoDiscSettings": null,
+                "recvIntf": null,
+                "release": "10.2(5)",
+                "role": null,
+                "sanAnalyticsCapable": false,
+                "scope": null,
+                "secondaryIP": "",
+                "secondarySwitchDbID": 0,
+                "sendIntf": null,
+                "serialNumber": "FDO211218FV",
+                "sourceInterface": "mgmt0",
+                "sourceVrf": "management",
+                "standbySupState": 0,
+                "status": "ok",
+                "swType": null,
+                "swUUID": "DCNM-UUID-132770",
+                "swUUIDId": 132770,
+                "swWwn": null,
+                "swWwnName": null,
+                "switchDbID": 502030,
+                "switchRole": "leaf",
+                "switchRoleEnum": "Leaf",
+                "sysDescr": "",
+                "systemMode": "Normal",
+                "uid": 0,
+                "unmanagableCause": "",
+                "upTime": 0,
+                "upTimeNumber": 0,
+                "upTimeStr": "98 days, 21:55:52",
+                "usedPorts": 0,
+                "username": null,
+                "vdcId": 0,
+                "vdcMac": null,
+                "vdcName": "",
+                "vendor": "Cisco",
+                "version": null,
+                "vpcDomain": 0,
+                "vrf": "management",
+                "vsanWwn": null,
+                "vsanWwnName": null,
+                "waitForSwitchModeChg": false,
+                "wwn": null
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00210a": {
+        "TEST_NOTES": [
+            "No switches exist on the controller",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00300a": {
+        "TEST_NOTES": [
+            "DATA does not contain ipAddress 192.168.1.2",
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.1",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.1",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00310a": {
+        "TEST_NOTES": [
+            "DATA contains 192.168.1.2, but serial number is null",
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: null",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": null,
+                "switchRole": "leaf",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00400a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00500a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00510a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: true",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": true,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00520a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: true",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Maintenance",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": true,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00600a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: LAN_Classic",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "LAN_Classic",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00700a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: LAN_Classic",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: null",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "LAN_Classic",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": null,
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00810a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: null",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": null,
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_00820a": {
+        "TEST_NOTES": [
+            "DATA[0] is missing the freezeMode key",
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: MISSING",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO211218FV",
+            "DATA[0].switchRole: null",
+            "DATA[0].systemMode: Normal",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": null,
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_maintenance_mode_info_01010a": {
+        "TEST_NOTES": [
+            "DATA[0].fabricName: VXLAN_Fabric",
+            "DATA[0].freezeMode: null",
+            "DATA[0].ipAddress: 192.168.1.2",
+            "DATA[0].mode: Normal",
+            "DATA[0].serialNumber: FDO123456FV",
+            "DATA[0].switchRole: leaf",
+            "DATA[0].systemMode: Maintenance",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00200a": {
+        "TEST_NOTES": [
+            "DATA contains two switches",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "hostName": null,
+                "ipAddress": "192.168.1.2",
+                "isNonNexus": false,
+                "logicalName": "cvd-1314-leaf",
+                "model": "N9K-C93180YC-EX",
+                "operStatus": "Minor",
+                "managable": true,
+                "mode": "Normal",
+                "release": "10.2(5)",
+                "serialNumber": "FDO123456FV",
+                "sourceInterface": "mgmt0",
+                "sourceVrf": "management",
+                "status": "ok",
+                "switchDbID": 123456,
+                "switchRole": "leaf",
+                "swUUID":"DCNM-UUID-7654321",
+                "swUUIDId": 7654321,
+                "systemMode": "Maintenance"
+            },
+            {
+                "fabricName": "LAN_Classic_Fabric",
+                "hostName": null,
+                "ipAddress": "192.168.2.2",
+                "isNonNexus": false,
+                "logicalName": "cvd-2314-spine",
+                "model": "N9K-C93180YC-FX",
+                "operStatus": "Major",
+                "managable": false,
+                "mode": "Normal",
+                "release": "10.2(4)",
+                "serialNumber": "FD6543210FV",
+                "sourceInterface": "Ethernet1/1",
+                "sourceVrf": "default",
+                "status": "ok",
+                "switchDbID": 654321,
+                "switchRole": "spine",
+                "swUUID":"DCNM-UUID-1234567",
+                "swUUIDId": 1234567,
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00300a": {
+        "TEST_NOTES": [
+            "RETURN_CODE: 500",
+            "MESSAGE: Internal server error"
+        ],
+        "DATA": [{}],
+        "MESSAGE": "Internal server error",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 500
+    },
+    "test_switch_details_00500a": {
+        "TEST_NOTES": [
+            "DATA[0] contains valid content",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00550a": {
+        "TEST_NOTES": [
+            "DATA[0] contains valid content",
+            "RETURN_CODE: 500",
+            "MESSAGE: NOK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "freezeMode": null,
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "switchRole": "leaf",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "NOK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 500
+    },
+    "test_switch_details_00700a": {
+        "TEST_NOTES": [
+            "DATA[0].mode is null",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": null,
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00710a": {
+        "TEST_NOTES": [
+            "DATA[0].system_mode is null",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "systemMode": null
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00720a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Migration",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Migration",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00730a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Maintenance",
+            "DATA[0].system_mode == Normal",
+            "mode != system_mode",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Maintenance",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00740a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Maintenance",
+            "DATA[0].system_mode == Maintenence",
+            "mode != system_mode",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Maintenance",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Maintenance"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00750a": {
+        "TEST_NOTES": [
+            "DATA[0].mode == Normal",
+            "DATA[0].system_mode == Normal",
+            "mode != system_mode",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "mode": "Normal",
+                "serialNumber": "FDO123456FV",
+                "systemMode": "Normal"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    },
+    "test_switch_details_00800a": {
+        "TEST_NOTES": [
+            "DATA[0].model == null",
+            "RETURN_CODE: 200",
+            "MESSAGE: OK"
+        ],
+        "DATA": [
+            {
+                "fabricName": "VXLAN_Fabric",
+                "ipAddress": "192.168.1.2",
+                "model": null,
+                "serialNumber": "FDO123456FV"
+            }
+        ],
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/inventory/allswitches",
+        "RETURN_CODE": 200
+    }
+}

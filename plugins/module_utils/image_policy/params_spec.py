@@ -19,107 +19,68 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
-from typing import Any, Dict
 
 
 class ParamsSpec:
     """
+    ### Summary
     Parameter specifications for the dcnm_image_policy module.
+
+    ### Raises
+    -   ``ValueError`` if params is not set before calling ``commit()``
     """
 
-    def __init__(self, ansible_module):
+    def __init__(self):
         self.class_name = self.__class__.__name__
-        self.ansible_module = ansible_module
-
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ParamsSpec()")
 
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
+        self.valid_states = set()
+        self.valid_states.add("deleted")
+        self.valid_states.add("merged")
+        self.valid_states.add("overridden")
+        self.valid_states.add("query")
+        self.valid_states.add("replaced")
+
+        self.log.debug("ENTERED ParamsSpec() v2")
 
     def commit(self):
         """
-        build the parameter specification based on the state
+        ### Summary
+        Build the parameter specification based on the state
+
+        ## Raises
+        -   ``ValueError`` if ``params`` is not set.
+
         """
         method_name = inspect.stack()[0][3]
 
-        if self.ansible_module.params["state"] is None:
-            self.ansible_module.fail_json(msg="state is None")
-
-        if self.ansible_module.params["state"] == "merged":
-            # self._build_params_spec_for_merged_state()
-            self._build_params_spec_for_merged_state_proposed()
-        elif self.ansible_module.params["state"] == "replaced":
-            self._build_params_spec_for_replaced_state()
-        elif self.ansible_module.params["state"] == "overridden":
-            self._build_params_spec_for_overridden_state()
-        elif self.ansible_module.params["state"] == "deleted":
-            self._build_params_spec_for_deleted_state()
-        elif self.ansible_module.params["state"] == "query":
-            self._build_params_spec_for_query_state()
-        else:
+        if self._params is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid state {self.ansible_module.params['state']}"
-            self.ansible_module.fail_json(msg)
+            msg += f"params must be set before calling {method_name}."
+            raise ValueError(msg)
+
+        if self.params["state"] == "deleted":
+            self._build_params_spec_for_deleted_state()
+        if self.params["state"] == "merged":
+            self._build_params_spec_for_merged_state()
+        if self.params["state"] == "overridden":
+            self._build_params_spec_for_overridden_state()
+        if self.params["state"] == "query":
+            self._build_params_spec_for_query_state()
+        if self.params["state"] == "replaced":
+            self._build_params_spec_for_replaced_state()
 
     def _build_params_spec_for_merged_state(self) -> None:
         """
-        Build the specs for the parameters expected when state == merged.
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``merged``.
 
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
+        ### Raises
+        None
         """
-        # print("Building params spec for merged state")
-        self._params_spec: Dict[str, Any] = {}
-
-        self._params_spec["agnostic"] = {}
-        self._params_spec["agnostic"]["required"] = False
-        self._params_spec["agnostic"]["type"] = "bool"
-        self._params_spec["agnostic"]["default"] = False
-
-        self._params_spec["description"] = {}
-        self._params_spec["description"]["default"] = ""
-        self._params_spec["description"]["required"] = False
-        self._params_spec["description"]["type"] = "str"
-
-        self._params_spec["disabled_rpm"] = {}
-        self._params_spec["disabled_rpm"]["default"] = ""
-        self._params_spec["disabled_rpm"]["required"] = False
-        self._params_spec["disabled_rpm"]["type"] = "str"
-
-        self._params_spec["epld_image"] = {}
-        self._params_spec["epld_image"]["default"] = ""
-        self._params_spec["epld_image"]["required"] = False
-        self._params_spec["epld_image"]["type"] = "str"
-
-        self._params_spec["name"] = {}
-        self._params_spec["name"]["required"] = True
-        self._params_spec["name"]["type"] = "str"
-
-        self._params_spec["platform"] = {}
-        self._params_spec["platform"]["required"] = True
-        self._params_spec["platform"]["type"] = "str"
-        self._params_spec["platform"]["choices"] = ["N9K", "N7K", "N77", "N6K", "N5K"]
-
-        self._params_spec["release"] = {}
-        self._params_spec["release"]["required"] = True
-        self._params_spec["release"]["type"] = "str"
-
-        self._params_spec["packages"] = {}
-        self._params_spec["packages"]["default"] = []
-        self._params_spec["packages"]["required"] = False
-        self._params_spec["packages"]["type"] = "list"
-
-    def _build_params_spec_for_merged_state_proposed(self) -> None:
-        """
-        Build the specs for the parameters expected when state == merged.
-
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
-        """
-        # print("Building params spec for merged state PROPOSED")
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
 
         self._params_spec["agnostic"] = {}
         self._params_spec["agnostic"]["default"] = False
@@ -170,20 +131,37 @@ class ParamsSpec:
         self._params_spec["type"]["type"] = "str"
 
     def _build_params_spec_for_overridden_state(self) -> None:
-        self._build_params_spec_for_merged_state_proposed()
+        """
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``overridden``.
+
+        ### Raises
+        None
+        """
+        self._build_params_spec_for_merged_state()
 
     def _build_params_spec_for_replaced_state(self) -> None:
-        self._build_params_spec_for_merged_state_proposed()
+        """
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``replaced``.
+
+        ### Raises
+        None
+        """
+        self._build_params_spec_for_merged_state()
 
     def _build_params_spec_for_deleted_state(self) -> None:
         """
-        Build the specs for the parameters expected when state == deleted.
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``deleted``.
 
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
+        ### Raises
+        None
         """
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
 
         self._params_spec["name"] = {}
         self._params_spec["name"]["required"] = True
@@ -191,24 +169,78 @@ class ParamsSpec:
 
     def _build_params_spec_for_query_state(self) -> None:
         """
-        Build the specs for the parameters expected when state == query.
+        ### Summary
+        Build the specs for the parameters expected when state is
+        ``query``.
 
-        Caller: _validate_configs()
-        Return: params_spec, a dictionary containing playbook
-                parameter specifications.
+        ### Raises
+        None
         """
-        self._params_spec: Dict[str, Any] = {}
+        self._params_spec: dict = {}
 
         self._params_spec["name"] = {}
         self._params_spec["name"]["required"] = True
         self._params_spec["name"]["type"] = "str"
 
     def _build_params_spec_for_replaced_state(self) -> None:
-        self._build_params_spec_for_merged_state_proposed()
+        self._build_params_spec_for_merged_state()
 
     @property
-    def params_spec(self) -> Dict[str, Any]:
+    def params(self) -> dict:
         """
-        return the parameter specification
+        ### Summary
+        Expects value to be a dictionary containing, at mimimum,
+        the key ``state`` with value of one of:
+        - deleted
+        - merged
+        - overridden
+        - query
+        - replaced
+
+        ### Raises
+        -   setter: ``ValueError`` if value is not a dict
+        -   setter: ``ValueError`` if value["state"] is missing
+        -   setter: ``ValueError`` if value["state"] is not a valid state
+
+        ### Details
+        -   Valid params:
+                -   ``{"state": "deleted"}``
+                -   ``{"state": "merged"}``
+                -   ``{"state": "overridden"}``
+                -   ``{"state": "query"}``
+                -   ``{"state": "replaced"}``
+        -   getter: return the params
+        -   setter: set the params
+        """
+        return self._params
+
+    @params.setter
+    def params(self, value: dict) -> None:
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, dict):
+            msg = f"{self.class_name}.{method_name}.setter: "
+            msg += "Invalid type. Expected dict but "
+            msg += f"got type {type(value).__name__}, "
+            msg += f"value {value}."
+            raise TypeError(msg)
+
+        if value.get("state", None) is None:
+            msg = f"{self.class_name}.{method_name}.setter: "
+            msg += "params.state is required but missing."
+            raise ValueError(msg)
+
+        if value["state"] not in self.valid_states:
+            msg = f"{self.class_name}.{method_name}.setter: "
+            msg += f"params.state is invalid: {value['state']}. "
+            msg += f"Expected one of {', '.join(self.valid_states)}."
+            raise ValueError(msg)
+
+        self._params = value
+
+    @property
+    def params_spec(self) -> dict:
+        """
+        ### Summary
+        Return the parameter specification
         """
         return self._params_spec

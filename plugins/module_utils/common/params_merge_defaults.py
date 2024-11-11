@@ -22,11 +22,14 @@ import copy
 import inspect
 import logging
 from collections.abc import MutableMapping as Map
-from typing import Any, Dict
 
 
 class ParamsMergeDefaults:
     """
+    ## DEPRECATED
+    Use ``ParamsMergeDefaults`` from ``params_merge_defaults_v2.py`` for
+    all new development.
+
     Merge default parameters into parameters.
 
     Given a parameter specification (params_spec) and a playbook config
@@ -71,9 +74,7 @@ class ParamsMergeDefaults:
         self.reserved_params.add("type")
         self.reserved_params.add("preferred_type")
 
-    def _merge_default_params(
-        self, spec: Dict[str, Any], params: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def _merge_default_params(self, spec: dict, params: dict) -> dict:
         """
         Merge default parameters into parameters.
 

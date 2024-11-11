@@ -1,0 +1,259 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 00:49.83
+################################################################################
+# DESCRIPTION - BASIC FABRIC DELETED STATE TEST
+# 
+# Test basic deletion of fabrics verify results.
+# - Deletion of populated fabrics not tested here.
+################################################################################
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_name_1
+#    - fabric_type_1  # VXLAN_EVPN
+# 2. Delete fabrics under test, if they exist
+#    - fabric_name_1
+# TEST
+# 3. Create fabrics and verify result
+#    - fabric_name_1
+# 4. Delete fabric_name_1. Verify result
+# CLEANUP
+# 7. No cleanup required
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_deleted_basic_vxlan
+#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_type_1: VXLAN_EVPN
+################################################################################
+# SETUP
+################################################################################
+- name: DELETED - SETUP - Delete fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+  register: result
+- debug:
+    var: result
+################################################################################
+# DELETED - TEST - Create all supported fabric types
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "BGP_AS": "65535.65534",
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BGP_AS": "65535.65534",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - SETUP - Create all supported fabric types
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
+        BGP_AS: "65535.65534"
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].BGP_AS == "65535.65534"
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+###############################################################################################
+# DELETED - TEST - Delete fabric_name_1 and verify
+###############################################################################################
+# Expected result
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+###############################################################################################
+- name: DELETED - TEST - Delete fabric_name_1 and verify
+  cisco.dcnm.dcnm_fabric: &fabric_deleted
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+################################################################################
+# DELETED - TEST - Delete fabric_name_1 idempotence
+################################################################################
+# Expected result
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to delete",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - TEST - Delete fabric_name_1 idempotence
+  cisco.dcnm.dcnm_fabric: *fabric_deleted
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No fabrics to delete"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1

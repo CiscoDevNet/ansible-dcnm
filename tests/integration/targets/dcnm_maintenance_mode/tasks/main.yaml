@@ -1,0 +1,2 @@
+---
+- { include_tasks: dcnm.yaml, tags: ['dcnm'] }

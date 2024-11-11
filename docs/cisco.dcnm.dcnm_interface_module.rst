@@ -65,6 +65,7 @@ Parameters
                     </div>
                 </td>
                 <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>A dictionary of interface operations</div>
@@ -2483,6 +2484,33 @@ Parameters
                 </td>
                 <td>
                         <div>Name of the target fabric for interface operations</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>override_intf_types</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>pc</li>
+                                    <li>vpc</li>
+                                    <li>sub_int</li>
+                                    <li>lo</li>
+                                    <li>eth</li>
+                                    <li>svi</li>
+                                    <li>st_fex</li>
+                                    <li>aa_fex</li>
+                        </ul>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
+                </td>
+                <td>
+                        <div>A list of interface types which will be deleted/defaulted in overridden/deleted state. If this list is empty, then during overridden/deleted state, all interface types will be defaulted/deleted. If this list includes specific interface types, then only those interface types that are included in the list will be deleted/defaulted.</div>
                 </td>
             </tr>
             <tr>

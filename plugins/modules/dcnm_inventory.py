@@ -309,19 +309,7 @@ EXAMPLES = """
     state: deleted # merged / deleted / overridden / query
     config:
     - seed_ip: 192.168.0.1
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: spine
-      preserve_config: False # boolean, default is  true
     - seed_ip: 192.168.0.2
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: switch_username
-      password: switch_password
-      max_hops: 0
-      role: leaf
-      preserve_config: False # boolean, default is  true
 
 # All the switches will be deleted in the existing fabric
 - name: Delete all the switches

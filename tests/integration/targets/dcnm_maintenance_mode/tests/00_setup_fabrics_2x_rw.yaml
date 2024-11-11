@@ -1,0 +1,123 @@
+---
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 00:49.83
+################################################################################
+# DESCRIPTION
+# Setup for dcnm_maintenance_mode integration tests using read-write fabrics.
+#
+# Create two read-write fabrics and add 1x switch to each.
+# - VXLAN_EVPN_Fabric with 1x leaf.
+# - LAN_CLASSIC_Fabric with 1x leaf.
+################################################################################
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_name_1
+#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_3
+#    - fabric_type_3  # LAN_Classic
+# 2. Create fabrics if they do not exist
+#    - fabric_name_1
+#    - fabric_name_3
+# 3. Add switch to fabric_name_1 if it doesn't exist.
+#    - leaf_1
+# 4. Add switch to fabric_name_3 if it doesn't exist.
+#    - leaf_2
+# CLEANUP
+# 5. See 00_cleanup.yaml
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Example vars for dcnm_maintenance_mode integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: merged_normal_to_maintenance
+#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_type_3: LAN_CLASSIC
+#   leaf_1: 172.22.150.103
+#   leaf_2: 172.22.150.104
+#   nxos_username: admin
+#   nxos_password: mypassword
+################################################################################
+# 00_SETUP - Create fabrics if they do not exist.
+################################################################################
+- name: 00_SETUP - Create fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
+        BGP_AS: "65535.65534"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+        FABRIC_TYPE: "{{ fabric_type_3 }}"
+        BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.failed == false
+
+- assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+################################################################################
+# 00_SETUP - Add one leaf switch to fabric_1
+################################################################################
+- name: Merge leaf_1 into fabric_1
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_1 }}"
+    state: merged
+    config:
+      - seed_ip: "{{ leaf_1 }}"
+        auth_proto: MD5
+        user_name: "{{ nxos_username}}"
+        password: "{{ nxos_password }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: false
+  register: result
+- debug:
+    var: result
+
+- assert:
+    that:
+      - 'result.failed == false'
+
+################################################################################
+# 00_SETUP - Add one leaf switch to fabric_3
+################################################################################
+- name: Merge leaf_2 into fabric_3
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ fabric_name_3 }}"
+    state: merged
+    config:
+      - seed_ip: "{{ leaf_2 }}"
+        auth_proto: MD5
+        user_name: "{{ nxos_username}}"
+        password: "{{ nxos_password }}"
+        max_hops: 0
+        role: leaf
+        # preserve_config must be True for LAN_CLASSIC
+        preserve_config: true
+  register: result
+- debug:
+    var: result
+
+- assert:
+    that:
+      - 'result.failed == false'

@@ -76,6 +76,148 @@ class TestDcnmIntfModule(TestDcnmModule):
 
     # -------------------------- GEN-FIXTURES --------------------------
 
+    def load_general_intf_fixtures(self):
+
+        if (
+            "test_dcnm_intf_override_pc_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_pc_intf_types_with_new_config"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.playbook_mock_vpc_resp,
+                [],
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_all_but_eth_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_svi_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_vpc_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_eth_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_sub_int_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+            ]
+
+        if (
+            "test_dcnm_intf_override_lo_intf_types_only"
+            in self._testMethodName
+        ):
+
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+            ]
+
     def load_multi_intf_fixtures(self):
 
         if "_multi_intf_merged_new" in self._testMethodName:
@@ -534,12 +676,24 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_svi_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -581,7 +735,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if "_aa_fex_merged_idempotent" in self._testMethodName:
-            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_aa_fex_intf1 = self.payloads_data.get(
+                "aa_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -597,7 +753,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if "_aa_fex_merged_existing" in self._testMethodName:
-            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_aa_fex_intf1 = self.payloads_data.get(
+                "aa_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -637,7 +795,9 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         # Use the same payloads that we use for creating new.
         if "_aa_fex_deleted_existing" in self._testMethodName:
-            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_aa_fex_intf1 = self.payloads_data.get(
+                "aa_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -665,7 +825,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if "_aa_fex_replaced_existing" in self._testMethodName:
-            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_aa_fex_intf1 = self.payloads_data.get(
+                "aa_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -682,9 +844,20 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_aa_fex_overridden_existing" in self._testMethodName:
 
-            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_aa_fex_intf1 = self.payloads_data.get(
+                "aa_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
+            )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
             )
 
             self.run_dcnm_send.side_effect = [
@@ -692,6 +865,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_vpc_resp,
                 playbook_aa_fex_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -713,9 +889,20 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_aa_fex_overridden_modify_existing" in self._testMethodName:
 
-            playbook_aa_fex_intf1 = self.payloads_data.get("aa_fex_merged_payloads_150")
+            playbook_aa_fex_intf1 = self.payloads_data.get(
+                "aa_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
+            )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
             )
 
             self.run_dcnm_send.side_effect = [
@@ -723,6 +910,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_vpc_resp,
                 playbook_aa_fex_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -764,7 +954,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if "_st_fex_merged_idempotent" in self._testMethodName:
-            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_st_fex_intf1 = self.payloads_data.get(
+                "st_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -780,7 +972,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             ]
 
         if "_st_fex_merged_existing" in self._testMethodName:
-            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_st_fex_intf1 = self.payloads_data.get(
+                "st_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -820,7 +1014,9 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         # Use the same payloads that we use for creating new.
         if "_st_fex_deleted_existing" in self._testMethodName:
-            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_st_fex_intf1 = self.payloads_data.get(
+                "st_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -847,7 +1043,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 playbook_st_fex_intf1,
             ]
         if "_st_fex_replaced_existing" in self._testMethodName:
-            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_st_fex_intf1 = self.payloads_data.get(
+                "st_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
@@ -864,9 +1062,20 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_st_fex_overridden_existing" in self._testMethodName:
 
-            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_st_fex_intf1 = self.payloads_data.get(
+                "st_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
+            )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
             )
 
             self.run_dcnm_send.side_effect = [
@@ -874,6 +1083,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_vpc_resp,
                 playbook_st_fex_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -895,9 +1107,20 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         if "_st_fex_overridden_modify_existing" in self._testMethodName:
 
-            playbook_st_fex_intf1 = self.payloads_data.get("st_fex_merged_payloads_150")
+            playbook_st_fex_intf1 = self.payloads_data.get(
+                "st_fex_merged_payloads_150"
+            )
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
+            )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
             )
 
             self.run_dcnm_send.side_effect = [
@@ -905,6 +1128,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_vpc_resp,
                 playbook_st_fex_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -961,6 +1187,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
+
+        if "_pc_merged_vlan_range_new" in self._testMethodName:
+            # No I/F exists case
+            playbook_pc_intf1 = []
+            playbook_have_all_data = self.have_all_payloads_data.get(
+                "payloads"
+            )
+
+            self.run_dcnm_send.side_effect = [
+                self.mock_monitor_false_resp,
+                self.playbook_mock_vpc_resp,
+                playbook_pc_intf1,
+                playbook_have_all_data,
+                playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+            ]
+
         if "_pc_merged_policy_change" in self._testMethodName:
             playbook_pc_intf1 = self.payloads_data.get(
                 "pc_merged_trunk_payloads"
@@ -1177,11 +1421,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_pc_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1430,11 +1687,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_eth_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1638,11 +1908,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_subint_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1818,12 +2101,25 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_lo_intf1,
                 playbook_lo_intf2,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1851,11 +2147,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "deployed_payloads"
             )
 
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_lo_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1880,11 +2189,24 @@ class TestDcnmIntfModule(TestDcnmModule):
                 "payloads"
             )
 
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_lo_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2049,6 +2371,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_deployed_data = self.have_all_payloads_data.get(
                 "deployed_payloads"
             )
+            eth_1_1_access_intf = self.have_all_payloads_data.get(
+                "eth_1_1_access_payload"
+            )
+            eth_1_2_access_intf = self.have_all_payloads_data.get(
+                "eth_1_2_access_payload"
+            )
+            eth_3_2_access_intf = self.have_all_payloads_data.get(
+                "eth_3_2_access_payload"
+            )
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
@@ -2056,6 +2387,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.playbook_mock_vpc_resp,
                 playbook_vpc_intf1,
                 playbook_have_all_data,
+                eth_1_1_access_intf,
+                eth_1_2_access_intf,
+                eth_3_2_access_intf,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -2121,6 +2455,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         # Load bunched interface configuration related side-effects
         self.load_bunched_intf_elems_fixtures()
 
+        # Load general side-effects
+        self.load_general_intf_fixtures()
+
         # Load missing elements interface configuration related side-effects
         self.load_type_missing_fixtures()
         self.load_missing_state_fixtures()
@@ -2145,8 +2482,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -2191,8 +2532,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -2246,8 +2591,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2291,8 +2640,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -2338,8 +2691,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2366,6 +2723,45 @@ class TestDcnmIntfModule(TestDcnmModule):
                     True,
                 )
 
+    def test_dcnm_intf_pc_merged_vlan_range_new(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_pc_configs")
+        self.payloads_data = loadPlaybookData("dcnm_intf_pc_payloads")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("pc_merged_vlan_range_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
+        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="merged",
+                fabric="test_fabric",
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+        self.assertEqual(len(result["diff"][0]["merged"]), 1)
+        for d in result["diff"][0]["merged"]:
+            for intf in d["interfaces"]:
+                self.assertEqual(
+                    (
+                        intf["ifName"]
+                        in [
+                            "Port-channel300"
+                        ]
+                    ),
+                    True,
+                )
+
     def test_dcnm_intf_pc_merged_idempotent(self):
 
         # load the json from playbooks
@@ -2383,8 +2779,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2413,8 +2813,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2441,8 +2845,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2479,12 +2887,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("pc_deleted_config_no_deploy")
+        self.playbook_config = self.config_data.get(
+            "pc_deleted_config_no_deploy"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2498,15 +2912,7 @@ class TestDcnmIntfModule(TestDcnmModule):
 
         self.assertEqual(len(result["diff"][0]["deleted"]), 1)
         for intf in result["diff"][0]["deleted"]:
-            self.assertEqual(
-                (
-                    intf["ifName"]
-                    in [
-                        "Port-channel300",
-                    ]
-                ),
-                True,
-            )
+            self.assertEqual((intf["ifName"] in ["Port-channel300"]), True)
         self.assertEqual(len(result["diff"][0]["delete_deploy"]), 0)
 
     def test_dcnm_intf_deleted_deploy(self):
@@ -2523,8 +2929,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2553,8 +2963,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2608,8 +3022,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2633,12 +3051,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
         ovr_if_names = ["port-channel300"]
 
         for intf in result["diff"][0]["deleted"]:
@@ -2674,8 +3087,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2705,8 +3122,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2748,8 +3169,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         for cfg in self.playbook_config:
@@ -2779,8 +3204,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2836,8 +3265,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2867,8 +3300,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2927,8 +3364,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -2961,8 +3402,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         for cfg in self.playbook_config:
@@ -2992,8 +3437,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3046,8 +3495,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3076,8 +3529,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3111,8 +3568,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3140,8 +3601,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3200,8 +3665,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3235,8 +3704,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3266,8 +3739,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         for cfg in self.playbook_config:
@@ -3297,8 +3774,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3346,8 +3827,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3379,8 +3864,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3439,8 +3928,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3498,8 +3991,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3559,8 +4056,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3593,8 +4094,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         for cfg in self.playbook_config:
@@ -3602,8 +4107,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -3630,8 +4139,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3662,8 +4175,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3723,8 +4240,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3749,12 +4270,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
         ovr_if_names = ["vpc750"]
 
         for intf in result["diff"][0]["deleted"]:
@@ -3788,8 +4304,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3822,8 +4342,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3852,8 +4376,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3885,8 +4413,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3916,8 +4448,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -3989,8 +4525,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4015,12 +4555,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
         ovr_if_names = ["vlan1010"]
 
         for intf in result["diff"][0]["deleted"]:
@@ -4054,8 +4589,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4088,8 +4627,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4112,12 +4655,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("aa_fex_merge_existing_config")
+        self.playbook_config = self.config_data.get(
+            "aa_fex_merge_existing_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4144,12 +4693,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("aa_fex_merge_multi_switches_config")
+        self.playbook_config = self.config_data.get(
+            "aa_fex_merge_multi_switches_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4182,8 +4737,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4215,8 +4774,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4244,8 +4807,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4295,12 +4862,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("aa_fex_overridden_new_config")
+        self.playbook_config = self.config_data.get(
+            "aa_fex_overridden_new_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4325,12 +4898,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
 
         ovr_if_names = ["vpc159"]
 
@@ -4359,12 +4927,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("aa_fex_overridden_modify_existing_config")
+        self.playbook_config = self.config_data.get(
+            "aa_fex_overridden_modify_existing_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4389,12 +4963,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
 
         ovr_if_names = ["vpc150"]
 
@@ -4429,8 +4998,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4463,8 +5036,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4487,12 +5064,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("st_fex_merge_existing_config")
+        self.playbook_config = self.config_data.get(
+            "st_fex_merge_existing_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4519,12 +5102,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("st_fex_merge_multi_switches_config")
+        self.playbook_config = self.config_data.get(
+            "st_fex_merge_multi_switches_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4557,8 +5146,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4590,8 +5183,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4619,8 +5216,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4668,12 +5269,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("st_fex_overridden_new_config")
+        self.playbook_config = self.config_data.get(
+            "st_fex_overridden_new_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4698,12 +5305,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
 
         ovr_if_names = ["port-channel159"]
 
@@ -4732,12 +5334,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("st_fex_overridden_modify_existing_config")
+        self.playbook_config = self.config_data.get(
+            "st_fex_overridden_modify_existing_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4762,12 +5370,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "vlan2001",
         ]
 
-        rep_if_names = [
-            "ethernet1/3.2",
-            "ethernet1/1",
-            "ethernet1/2",
-            "ethernet3/2",
-        ]
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
 
         ovr_if_names = ["port-channel150"]
 
@@ -4788,6 +5391,382 @@ class TestDcnmIntfModule(TestDcnmModule):
 
     # -------------------------- GENERAL --------------------------
 
+    def test_dcnm_intf_override_pc_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.payloads_data = []
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["pc"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+        ]
+        rep_if_names = []
+        ovr_if_names = []
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 4)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_pc_intf_types_with_new_config(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.payloads_data = []
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("pc_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["pc"],
+                deploy=False,
+                config=self.playbook_config,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+        ]
+        rep_if_names = []
+        ovr_if_names = ["port-channel900"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        for intf in result["diff"][0]["overridden"]:
+            self.assertEqual(
+                (intf["interfaces"][0]["ifName"].lower() in ovr_if_names), True
+            )
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 4)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 1)
+        self.assertEqual(len(result["diff"][0]["merged"]), 0)
+
+    def test_dcnm_intf_override_all_but_eth_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "override_all_but_eth_only_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["pc", "sub_int", "vpc", "lo", "svi"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        del_if_names = [
+            "port-channel301",
+            "port-channel302",
+            "port-channel303",
+            "port-channel300",
+            "ethernet1/3.2",
+            "loopback200",
+            "vpc300",
+            "vlan2001",
+        ]
+        rep_if_names = []
+        ovr_if_names = []
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 8)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_svi_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("override_svi_only_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["svi"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        del_if_names = ["vlan2001"]
+        ovr_if_names = []
+        rep_if_names = []
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_vpc_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("override_vpc_only_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["vpc"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        del_if_names = ["vpc300"]
+        ovr_if_names = []
+        rep_if_names = []
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_eth_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("override_eth_only_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["eth"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        ovr_if_names = []
+        del_if_names = []
+        rep_if_names = ["ethernet1/1", "ethernet1/2", "ethernet3/2"]
+
+        for intf in result["diff"][0]["replaced"]:
+            self.assertEqual(
+                (intf["interfaces"][0]["ifName"].lower() in rep_if_names), True
+            )
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_sub_int_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get(
+            "override_sub_int_only_config"
+        )
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["sub_int"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        rep_if_names = []
+        ovr_if_names = []
+        del_if_names = ["ethernet1/3.2"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
+    def test_dcnm_intf_override_lo_intf_types_only(self):
+
+        # load the json from playbooks
+        self.config_data = loadPlaybookData("dcnm_intf_common_configs")
+        self.have_all_payloads_data = loadPlaybookData(
+            "dcnm_intf_have_all_payloads"
+        )
+
+        # load required config data
+        self.playbook_config = self.config_data.get("override_lo_only_config")
+        self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
+        self.mock_ip_sn = self.config_data.get("mock_ip_sn")
+        self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
+        self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
+
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                override_intf_types=["lo"],
+                deploy=False,
+                config=[],
+            )
+        )
+        result = self.execute_module(changed=True, failed=False)
+
+        rep_if_names = []
+        ovr_if_names = []
+        del_if_names = ["loopback200"]
+
+        for intf in result["diff"][0]["deleted"]:
+            self.assertEqual((intf["ifName"].lower() in del_if_names), True)
+
+        self.assertEqual(len(result["diff"][0]["deleted"]), 1)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 0)
+        self.assertEqual(len(result["diff"][0]["overridden"]), 0)
+
     def test_dcnm_intf_gen_missing_ip_sn(self):
 
         # load the json from playbooks
@@ -4802,8 +5781,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = []
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         set_module_args(
             dict(
@@ -4834,8 +5817,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -4867,8 +5854,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -4917,8 +5908,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4949,8 +5944,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -4984,8 +5983,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
 
         set_module_args(
             dict(
@@ -5021,8 +6024,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -5056,8 +6063,12 @@ class TestDcnmIntfModule(TestDcnmModule):
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -5075,7 +6086,9 @@ class TestDcnmIntfModule(TestDcnmModule):
         except Exception as e:
             self.assertEqual(result, None)
             self.assertEqual(("is in Monitoring mode" in str(e)), True)
-            self.assertEqual(("No changes are allowed on the fabric" in str(e)), True)
+            self.assertEqual(
+                ("No changes are allowed on the fabric" in str(e)), True
+            )
 
     def test_dcnm_intf_merge_unmanagable_switch(self):
 
@@ -5087,12 +6100,18 @@ class TestDcnmIntfModule(TestDcnmModule):
         )
 
         # load required config data
-        self.playbook_config = self.config_data.get("pc_unmanagable_merged_config")
+        self.playbook_config = self.config_data.get(
+            "pc_unmanagable_merged_config"
+        )
         self.playbook_mock_succ_resp = self.config_data.get("mock_succ_resp")
         self.mock_ip_sn = self.config_data.get("mock_ip_sn")
         self.mock_fab_inv = self.config_data.get("mock_fab_inv_data")
-        self.mock_monitor_true_resp = self.config_data.get("mock_monitor_true_resp")
-        self.mock_monitor_false_resp = self.config_data.get("mock_monitor_false_resp")
+        self.mock_monitor_true_resp = self.config_data.get(
+            "mock_monitor_true_resp"
+        )
+        self.mock_monitor_false_resp = self.config_data.get(
+            "mock_monitor_false_resp"
+        )
         self.playbook_mock_vpc_resp = self.config_data.get("mock_vpc_resp")
 
         set_module_args(
@@ -5110,4 +6129,6 @@ class TestDcnmIntfModule(TestDcnmModule):
         except Exception as e:
             self.assertEqual(result, None)
             self.assertEqual(("are not managable in Fabric" in str(e)), True)
-            self.assertEqual(("No changes are allowed on these switches" in str(e)), True)
+            self.assertEqual(
+                ("No changes are allowed on these switches" in str(e)), True
+            )

@@ -8,6 +8,29 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.6.0`_
+=====================
+
+**Release Date:** ``2024-06-13``
+
+Added
+-----
+
+- The following new modules are included in this release
+    - ``dcnm_bootflash`` - Module for bootflash management for Nexus switches
+    - ``dcnm_maintenance_mode`` - Module for Maintentance Mode Configuration of Nexus switches
+
+- The following new features are added to existing modules in this release
+    - ``dcnm_policy`` - Flag to use the description parameter as the unique key for policy management
+    - ``dcnm_fabric`` - Added ISN Fabric Type Support
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/128
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/229
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/305
+
 `3.5.1`_
 =====================
 
@@ -482,6 +505,7 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.6.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.5.1...3.6.0
 .. _3.5.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.5.0...3.5.1
 .. _3.5.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.3...3.5.0
 .. _3.4.3: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.4.2...3.4.3

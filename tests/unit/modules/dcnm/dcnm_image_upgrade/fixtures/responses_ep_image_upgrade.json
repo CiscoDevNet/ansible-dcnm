@@ -1,0 +1,60 @@
+{
+    "test_image_upgrade_01010a": {
+        "DATA": 121,
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_upgrade_01020a": {
+        "DATA": 121,
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_upgrade_01030a": {
+        "DATA": 123,
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_upgrade_01050a": {
+        "DATA": 123,
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_upgrade_01060a": {
+        "DATA": 123,
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 200
+    },
+    "test_image_upgrade_02000a": {
+        "DATA": 123,
+        "MESSAGE": "Internal Server Error",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 500
+    },
+    "test_image_upgrade_0000XX": {
+        "DATA": {
+            "error": "Selected upgrade option is 'isGolden'. It does not allow when upgrade options selected more than one option. "
+        },
+        "MESSAGE": "Internal Server Error",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
+        "RETURN_CODE": 500,
+        "TEST_NOTES": [
+            "TODO: Add this test",
+            "Returned under the following conditions",
+            "upgrade.epld == True",
+            "upgrade.nxos == True",
+            "options.epld.golden == True"
+        ]
+    }
+}
