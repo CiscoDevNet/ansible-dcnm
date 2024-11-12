@@ -1,0 +1,126 @@
+{
+  "sgrp_assoc_have_1_2":
+  {
+    "uuid": "15001-15002",
+      "fabricName": "unit-test",
+      "vrfName": "VRF_12",
+      "srcGroupId": 15001,
+      "dstGroupId": 15002,
+      "srcGroupName": "LSG_15001",
+      "dstGroupName": "LSG_15002",
+      "contractName": "CONTRACT12",
+      "status": "PENDING"
+  },
+
+    "sgrp_assoc_have_1_3":
+    {
+      "uuid": "15001-15003",
+      "fabricName": "unit-test",
+      "vrfName": "VRF_13",
+      "srcGroupId": 15001,
+      "dstGroupId": 15003,
+      "srcGroupName": "LSG_15001",
+      "dstGroupName": "LSG_15003",
+      "contractName": "CONTRACT13",
+      "status": "PENDING"
+    },
+
+    "sgrp_assoc_have_1_4":
+    {
+      "uuid": "15001-15004",
+      "fabricName": "unit-test",
+      "vrfName": "VRF_14",
+      "srcGroupId": 15001,
+      "dstGroupId": 15004,
+      "srcGroupName": "LSG_15001",
+      "dstGroupName": "LSG_15004",
+      "contractName": "CONTRACT14",
+      "status": "PENDING"
+    },
+
+    "sgrp_assoc_have_2_3":
+    {
+      "uuid": "15002-15003",
+      "fabricName": "unit-test",
+      "vrfName": "VRF_23",
+      "srcGroupId": 15002,
+      "dstGroupId": 15003,
+      "srcGroupName": "LSG_15002",
+      "dstGroupName": "LSG_15003",
+      "contractName": "CONTRACT23",
+      "status": "PENDING"
+    },
+
+    "security_group_1":
+    {
+      "fabricName": "unit-test",
+      "groupId": 15001,
+      "groupName": "LSG_15001",
+      "groupType": "",
+      "ipSelectors": [
+      ],
+      "networkSelectors": [
+      ]
+    },
+
+    "security_group_2":
+    {
+      "fabricName": "unit-test",
+      "groupId": 15002,
+      "groupName": "LSG_15002",
+      "groupType": "",
+      "ipSelectors": [
+      ],
+      "networkSelectors": [
+      ]
+    },
+
+    "security_group_3":
+    {
+      "fabricName": "unit-test",
+      "groupId": 15003,
+      "groupName": "LSG_15003",
+      "groupType": "",
+      "ipSelectors": [
+      ],
+      "networkSelectors": [
+      ]
+    },
+
+    "security_group_4":
+    {
+      "fabricName": "unit-test",
+      "groupId": 15004,
+      "groupName": "LSG_15004",
+      "groupType": "",
+      "ipSelectors": [
+      ],
+      "networkSelectors": [
+      ]
+    },
+
+    "security_group_5":
+    {
+      "fabricName": "unit-test",
+      "groupId": 15005,
+      "groupName": "LSG_15005",
+      "groupType": "",
+      "ipSelectors": [
+      ],
+      "networkSelectors": [
+      ]
+    },
+
+    "managable_switches":
+    {
+      "172.31.217.103": "FDO24020JMT",
+      "172.31.217.101": "FDO24020JMB",
+      "93180YC-FX3S-L1-S1": "FDO24020JMT",
+      "93180YC-FX3S-L2-S1": "FDO24020JMB"
+    },
+
+    "meta_switches": [
+      ["172.31.217.103", "93180YC-FX3S-L1-S1", "FDO24020JMT"],
+      ["172.31.217.101", "93180YC-FX3S-L2-S1", "FDO24020JMB"]
+    ]
+}

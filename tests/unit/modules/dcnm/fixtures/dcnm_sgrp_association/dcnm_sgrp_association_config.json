@@ -1,0 +1,56 @@
+{
+  "sgrp_assoc_1_2":
+  {
+      "src_group_id": 15001,
+      "dst_group_id": 15002,
+      "src_group_name": "LSG_15001",
+      "dst_group_name": "LSG_15002",
+      "vrf_name": "VRF_12",
+      "contract_name": "CONTRACT12",
+      "switch": ["172.31.217.103", "172.31.217.101"]
+  },
+
+  "sgrp_assoc_1_3":
+  {
+      "src_group_id": 15001,
+      "dst_group_id": 15003,
+      "src_group_name": "LSG_15001",
+      "dst_group_name": "LSG_15003",
+      "vrf_name": "VRF_13",
+      "contract_name": "CONTRACT13",
+      "switch": ["172.31.217.103", "172.31.217.101"]
+  },
+
+  "sgrp_assoc_1_4":
+  {
+      "src_group_id": 15001,
+      "dst_group_id": 15004,
+      "src_group_name": "LSG_15001",
+      "dst_group_name": "LSG_15004",
+      "vrf_name": "VRF_14",
+      "contract_name": "CONTRACT14",
+      "switch": ["172.31.217.103", "172.31.217.101"]
+  },
+
+  "sgrp_assoc_2_3":
+  {
+      "src_group_id": 15002,
+      "dst_group_id": 15003,
+      "src_group_name": "LSG_15002",
+      "dst_group_name": "LSG_15003",
+      "vrf_name": "VRF_23",
+      "contract_name": "CONTRACT23",
+      "switch": ["172.31.217.103", "172.31.217.101"]
+  },
+
+  "sgrp_assoc_2_4":
+  {
+      "src_group_id": 15002,
+      "dst_group_id": 15004,
+      "src_group_name": "LSG_15002",
+      "dst_group_name": "LSG_15004",
+      "vrf_name": "VRF_24",
+      "contract_name": "CONTRACT24",
+      "switch": ["172.31.217.103", "172.31.217.101"]
+  }
+}
