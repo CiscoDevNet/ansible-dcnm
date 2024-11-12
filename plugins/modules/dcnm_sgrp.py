@@ -332,7 +332,7 @@ import copy
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log import Log
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import Log
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import (
     ResponseHandler,
 )
@@ -1060,19 +1060,12 @@ def main():
 
     state = module.params["state"]
 
-    # Initialize the logger
+    # Logging setup
     try:
-        # Set the following to True if logging is required
-        enable_logging = False
-        logger = Log(module)
-
-        if enable_logging is True:
-            collection_path = "/Users/mmudigon/Desktop/Ansible/collections/ansible_collections/cisco/dcnm"
-            config_file = f"{collection_path}/plugins/module_utils/common/logging_config.json"
-            logger.config = config_file
-        logger.commit()
+        log = Log()
+        log.commit()
     except ValueError as error:
-        module.fail_json(msg=str(error))
+        module.fail_json(str(error))
 
     msg = f"######################### BEGIN STATE = {state} ##########################\n"
     dcnm_sgrp.log.debug(msg)
