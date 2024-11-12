@@ -32,16 +32,10 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.switches.switches import \
-    EpFabricSummary
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
     ControllerResponseError
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
     RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
@@ -66,14 +60,14 @@ def test_fabric_summary_00010(fabric_summary) -> None:
     assert instance.class_name == "FabricSummary"
     assert instance.data is None
     assert instance.refreshed is False
-    assert isinstance(instance.ep_fabric_summary, EpFabricSummary)
-    assert isinstance(instance.results, Results)
-    assert isinstance(instance.conversion, ConversionUtils)
-    assert instance._properties["border_gateway_count"] == 0
-    assert instance._properties["device_count"] == 0
-    assert instance._properties["fabric_name"] is None
-    assert instance._properties["leaf_count"] == 0
-    assert instance._properties["spine_count"] == 0
+    assert instance.ep_fabric_summary.class_name == "EpFabricSummary"
+    assert instance.results.class_name == "Results"
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance._border_gateway_count == 0
+    assert instance._device_count == 0
+    assert instance._fabric_name is None
+    assert instance._leaf_count == 0
+    assert instance._spine_count == 0
 
 
 def test_fabric_summary_00030(fabric_summary) -> None:

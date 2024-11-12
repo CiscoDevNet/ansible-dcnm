@@ -26,583 +26,804 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from typing import Any, Dict
+import inspect
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    controller_version_fixture, responses_controller_version)
-
-PATCH_MODULE_UTILS = "ansible_collections.cisco.dcnm.plugins.module_utils."
-PATCH_COMMON = PATCH_MODULE_UTILS + "common."
-DCNM_SEND_VERSION = PATCH_COMMON + "controller_version.dcnm_send"
+    MockAnsibleModule, ResponseGenerator, controller_version_fixture,
+    does_not_raise, params, responses_ep_version)
 
 
-def test_common_version_00001(controller_version) -> None:
+def test_controller_version_00000(controller_version) -> None:
     """
-    Function
-    - __init__
+    ### Classes and Methods
 
-    Test
-    - Class properties are initialized to expected values
+    -   ``ControllerVersion()``
+            -   ``__init__``
+
+    ### Test
+    -   Class properties are initialized to expected values.
     """
     instance = controller_version
-    assert isinstance(instance.properties, dict)
-    assert instance.properties.get("response_data") is None
-    assert instance.properties.get("response") is None
-    assert instance.properties.get("result") is None
+    assert instance.class_name == "ControllerVersion"
+    assert instance.conversion.class_name == "ConversionUtils"
+    assert instance.ep_version.class_name == "EpVersion"
+    assert instance.response_data is None
+    assert instance.rest_send is None
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00002a", False),
-        ("test_common_version_00002b", True),
-        ("test_common_version_00002c", None),
+        ("test_controller_version_00100a", False),
+        ("test_controller_version_00100b", True),
+        ("test_controller_version_00100c", None),
     ],
 )
-def test_common_version_00002(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00100(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - dev
+    ### Classes and Methods
 
-    Test
-    - dev returns True when the controller is a development version
-    - dev returns False when the controller is not a development version
-    - dev returns None otherwise
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``dev``
+
+    ### Test
+
+    -   ``dev`` returns True when the controller is a development version.
+    -   ``dev`` returns False when the controller is not a development version.
+    -   ``dev`` returns None otherwise.
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.dev == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00003a", "EASYFABRIC"),
-        ("test_common_version_00003b", None),
+        ("test_controller_version_00110a", "EASYFABRIC"),
+        ("test_controller_version_00110b", None),
     ],
 )
-def test_common_version_00003(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00110(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - install
+    ### Classes and Methods
 
-    Test
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``install``
+
+    ### Test
+
     - install returns expected values
 
-    Description
+    ### Description
     install returns:
-    - Value of the "install" key in the controller response, if present
-    - None, if the "install" key is absent from the controller response
 
-    Expected results:
+    -   Value of the "install" key in the controller response, if present.
+    -   None, if the "install" key is absent from the controller response.
 
-    1. test_common_version_00003a == "EASYFABRIC"
-    2. test_common_version_00003b is None
+    ### Expected result
+
+    1. test_controller_version_00110a == "EASYFABRIC"
+    2. test_controller_version_00110b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.install == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00004a", True),
-        ("test_common_version_00004b", False),
-        ("test_common_version_00004c", None),
+        ("test_controller_version_00120a", True),
+        ("test_controller_version_00120b", False),
+        ("test_controller_version_00120c", None),
     ],
 )
-def test_common_version_00004(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00120(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - is_ha_enabled
+    ### Classes and Methods
 
-    Test
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``is_ha_enabled``
+
+    ### Test
+
     - is_ha_enabled returns expected values
 
-    Description
-    is_ha_enabled returns:
-    - True, if "isHaEnabled" key in the controller response == "true"
-    - False, if "isHaEnabled" key in the controller response == "false"
-    - None, if "isHaEnabled" key is absent from the controller response
+    ### Description
 
-    Expected results:
+    ``is_ha_enabled`` returns:
 
-    1. test_common_version_00004a is True
-    2. test_common_version_00004b is False
-    3. test_common_version_00004c is None
+    - True, if "isHaEnabled" key in the controller response == "true".
+    - False, if "isHaEnabled" key in the controller response == "false".
+    - None, if "isHaEnabled" key is absent from the controller response.
+
+    Expected result
+
+    1. test_controller_version_00120a is True
+    2. test_controller_version_00120b is False
+    3. test_controller_version_00120c is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.is_ha_enabled == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00005a", True),
-        ("test_common_version_00005b", False),
-        ("test_common_version_00005c", None),
+        ("test_controller_version_00130a", True),
+        ("test_controller_version_00130b", False),
+        ("test_controller_version_00130c", None),
     ],
 )
-def test_common_version_00005(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00130(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - is_media_controller
+    ### Classes and Methods
 
-    Test
-    - is_media_controller returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``is_media_controller``
 
-    Description
-    is_media_controller returns:
-    - True, if "isMediaController" key in the controller response == "true"
-    - False, if "isMediaController" key in the controller response == "false"
-    - None, if "isMediaController" key is absent from the controller response
+    ### Test
+    -   ``is_media_controller`` returns expected values.
 
-    Expected results:
+    ### Description
 
-    1. test_common_version_00005a is True
-    2. test_common_version_00005b is False
-    3. test_common_version_00005c is None
+    ``is_media_controller`` returns:
+
+    -   True, if "isMediaController" key in the controller response == "true".
+    -   False, if "isMediaController" key in the controller response == "false".
+    -   None, if "isMediaController" key is absent from the controller response.
+
+    ### Expected result
+
+    1.  test_controller_version_00130a is True.
+    2.  test_controller_version_00130b is False.
+    3.  test_controller_version_00130c is None.
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.is_media_controller == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00006a", True),
-        ("test_common_version_00006b", False),
-        ("test_common_version_00006c", None),
+        ("test_controller_version_00140a", True),
+        ("test_controller_version_00140b", False),
+        ("test_controller_version_00140c", None),
     ],
 )
-def test_common_version_00006(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00140(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - is_upgrade_inprogress
+    ### Classes and Methods
 
-    Test
-    - is_upgrade_inprogress returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``is_upgrade_inprogress``
 
-    Description
-    is_upgrade_inprogress returns:
-    - True, if "is_upgrade_inprogress" key in the controller response == "true"
-    - False, if "is_upgrade_inprogress" key in the controller response == "false"
-    - None, if "is_upgrade_inprogress" key is absent from the controller response
+    ### Test
+    - ``is_upgrade_inprogress`` returns expected values.
 
-    Expected results:
+    ### Description
 
-    1. test_common_version_00006a is True
-    2. test_common_version_00006b is False
-    3. test_common_version_00006c is None
+    ``is_upgrade_inprogress`` returns:
+    -   True, if "is_upgrade_inprogress" key in the controller
+        response == "true".
+    -   False, if "is_upgrade_inprogress" key in the controller
+        response == "false".
+    -   None, if "is_upgrade_inprogress" key is absent from the
+        controller response.
+
+    ### Expected results
+
+    1.  test_controller_version_00140a is True.
+    2.  test_controller_version_00140b is False.
+    3.  test_controller_version_00140c is None.
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.is_upgrade_inprogress == expected
 
 
-def test_common_version_00007(monkeypatch, controller_version) -> None:
+def test_controller_version_00150(controller_version) -> None:
     """
-    Function
-    - refresh
-    - response_data
+    ### Classes and Methods
 
-    Test
-    - response_data returns the "DATA" key in the controller response
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``response_data``
 
-    Description
-    response_data returns the "DATA" key in the controller response,
-    which is a dictionary of key-value pairs.
-    fail_json is called if the "DATA" key is absent.
+    ### Test
 
-    Expected results:
+    -   ``response_data`` returns the "DATA" key in the controller response.
 
-    1. test_common_version_00007a, ControllerVersion.response_data == type(dict)
+    ### Description
+
+    -   ``response_data`` returns the "DATA" key in the controller response,
+        which is a dictionary of key-value pairs.
+    -   ``ValueError`` is raised if the "DATA" key is absent.
+
+    ### Expected results
+
+    1.  test_controller_version_00150a
+        ControllerVersion.response_data == type(dict)
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        key = "test_common_version_00007a"
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert isinstance(instance.response_data, dict)
 
 
-def test_common_version_00008(monkeypatch, controller_version) -> None:
+def test_controller_version_00160(controller_version) -> None:
     """
-    Function
-    - refresh
+    ### Classes and Methods
 
-    Test
-    - fail_json is called because the "DATA" key is absent
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``response_data``
 
-    Description
-    response_data returns the "DATA" key in the controller response,
-    which is a dictionary of key-value pairs.
-    fail_json is called if the "DATA" key is absent.
+    ### Test
+
+    - ValueError is raised because the "DATA" key is absent
+
+    ### Description
+    -   ``response_data`` returns the "DATA" key in the controller response,
+        which is a dictionary of key-value pairs.
+    -   ``ValueError`` is raised if the "DATA" key is absent.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        key = "test_common_version_00008a"
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    with pytest.raises(AnsibleFailJson):
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+
+    match = r"ControllerVersion\.refresh\(\) failed:\s+"
+    match += r"response does not contain DATA key\.\s+"
+    match += r"Controller response:.*"
+
+    with pytest.raises(ValueError, match=match):
         instance.refresh()
 
 
-def test_common_version_00009(monkeypatch, controller_version) -> None:
+def test_controller_version_00170(controller_version) -> None:
     """
-    Function
-    - refresh
-    - result
+    ### Classes and Methods
 
-    Test
-    - result returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+    -   ``RestSend``
+            -   ``result_current``
 
-    Description
-    result returns the result of its superclass
-    method ImageUpgradeCommon._handle_response()
+    ### Test
+    -   RestSend.result_current returns expected values.
 
-    Expected results:
+    ### Expected results
 
     -   Since a 200 response with "message" key == "OK" is received
         we expect result to return {'found': True, 'success': True}
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        key = "test_common_version_00009a"
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
-    assert instance.result == {"found": True, "success": True}
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
+    assert instance.rest_send.result_current == {"found": True, "success": True}
 
 
-def test_common_version_00010(monkeypatch, controller_version) -> None:
+def test_controller_version_00180(controller_version) -> None:
     """
-    Function
-    - refresh
-    - result
+    ### Classes and Methods
 
-    Test
-    - result returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+    -   ``RestSend``
+            -   ``result_current``
 
-    Description
-    result returns the result of its superclass
-    method ImageUpgradeCommon._handle_response()
+    ### Test
+    -   RestSend.result_current returns expected values.
 
-    Expected results:
+    ### Expected results
 
     -   Since a 404 response with "message" key == "Not Found" is received
-        we expect result to return {'found': False, 'success': True}
+        ``ControllerResponseError`` is raised.
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        key = "test_common_version_00010a"
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    with pytest.raises(AnsibleFailJson):
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+
+    match = r"ControllerVersion\.refresh:\s+"
+    match += r"failed:.*"
+
+    with pytest.raises(ControllerResponseError, match=match):
         instance.refresh()
-    assert instance.result == {"found": False, "success": True}
+    assert instance.rest_send.result_current == {"found": False, "success": True}
 
 
-def test_common_version_00011(monkeypatch, controller_version) -> None:
+def test_controller_version_00190(controller_version) -> None:
     """
-    Function
-    - refresh
-    - result
+    ### Classes and Methods
 
-    Test
-    - result returns expected values
-    - fail_json is called
+    -   ``ControllerVersion()``
+            -   ``refresh``
+    -   ``RestSend``
+            -   ``result_current``
 
-    Description
-    result returns the result of its superclass
-    method ImageUpgradeCommon._handle_response()
+    ### Test
+    -   RestSend.result_current returns expected values.
 
-    Expected results:
+    ### Expected results
 
     -   Since a 500 response is received (MESSAGE key ignored)
         we expect result to return {'found': False, 'success': False}
     """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        key = "test_common_version_00011a"
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    with pytest.raises(AnsibleFailJson):
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+
+    match = r"ControllerVersion\.refresh:\s+"
+    match += r"failed:.*"
+
+    with pytest.raises(ControllerResponseError, match=match):
         instance.refresh()
-    assert instance.result == {"found": False, "success": False}
+    assert instance.rest_send.result_current == {"found": False, "success": False}
 
 
 @pytest.mark.parametrize(
     "key, expected",
-    [("test_common_version_00012a", "LAN"), ("test_common_version_00012b", None)],
+    [
+        ("test_controller_version_00200a", "LAN"),
+        ("test_controller_version_00200b", None),
+    ],
 )
-def test_common_version_00012(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00200(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - mode
+    ### Classes and Methods
 
-    Test
-    - mode returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``mode``
 
-    Description
-    mode returns:
-    - its value, if the "mode" key is present in the controller response
-    - None, if the "mode" key is absent from the controller response
+    ### Test
 
-    Expected results:
+    -   ``mode`` returns expected values.
 
-    1. test_common_version_00012a == "LAN"
-    2. test_common_version_00012b is None
+    ### Description
+    ``mode`` returns:
+
+    -   Its value, if the "mode" key is present in the controller response.
+    -   None, if the "mode" key is absent from the controller response.
+
+    ### Expected results
+
+    1. test_controller_version_00200a == "LAN"
+    2. test_controller_version_00200b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.mode == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00013a", "foo-uuid"),
-        ("test_common_version_00013b", None),
+        ("test_controller_version_00210a", "foo-uuid"),
+        ("test_controller_version_00210b", None),
     ],
 )
-def test_common_version_00013(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00210(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - uuid
+    ### Classes and Methods
 
-    Test
-    - uuid returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``uuid``
 
-    Description
+    ### Test
+
+    -   ``uuid`` returns expected values.
+
+    ### Description
+
     uuid returns:
-    - its value, if the "uuid" key is present in the controller response
-    - None, if the "uuid" key is absent from the controller response
 
-    Expected results:
+    -   Its value, if the "uuid" key is present in the controller response.
+    -   None, if the "uuid" key is absent from the controller response.
 
-    1. test_common_version_00013a == "foo-uuid"
-    2. test_common_version_00013b is None
+    ### Expected result
+
+    1. test_controller_version_00210a == "foo-uuid"
+    2. test_controller_version_00210b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.uuid == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00014a", "12.1.3b"),
-        ("test_common_version_00014b", None),
+        ("test_controller_version_00220a", "12.1.3b"),
+        ("test_controller_version_00220b", None),
     ],
 )
-def test_common_version_00014(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00220(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - version
+    ### Classes and Methods
 
-    Test
-    - version returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``version``
 
-    Description
-    mode returns:
-    - its value, if the "version" key is present in the controller response
-    - None, if the "version" key is absent from the controller response
+    ### Test
 
-    Expected results:
+    -   ``version`` returns expected values.
 
-    1. test_common_version_00014a == "12.1.3b"
-    2. test_common_version_00014b is None
+    ### Description
+    ``version`` returns:
+
+    -   Its value, if the "version" key is present in the controller response.
+    -   None, if the "version" key is absent from the controller response.
+
+    ### Expected result
+
+    1. test_controller_version_00220a == "12.1.3b"
+    2. test_controller_version_00220b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.version == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00015a", "12"),
-        ("test_common_version_00015b", None),
+        ("test_controller_version_00230a", "12"),
+        ("test_controller_version_00230b", None),
     ],
 )
-def test_common_version_00015(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00230(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - version_major
+    ### Classes and Methods
 
-    Test
-    - version_major returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``version_major``
 
-    Description
-    version_major returns the major version of the controller
+    ### Test
+    -   ``version_major`` returns expected values.
+
+    ### Description
+    ``version_major`` returns the major version of the controller.
     It derives this from the "version" key in the controller response
-    by splitting the string on "." and returning the first element
+    by splitting the string on "." and returning the first element.
 
-    Expected results:
+    ### Expected result
 
-    1. test_common_version_00015a == "12"
-    2. test_common_version_00015b is None
+    1. test_controller_version_00230a == "12"
+    2. test_controller_version_00230b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.version_major == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00016a", "1"),
-        ("test_common_version_00016b", None),
+        ("test_controller_version_00240a", "1"),
+        ("test_controller_version_00240b", None),
     ],
 )
-def test_common_version_00016(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00240(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - version_minor
+    ### Classes and Methods
 
-    Test
-    - version_minor returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``version_minor``
 
-    Description
-    version_minor returns the minor version of the controller
+    ### Test
+
+    -   ``version_minor`` returns expected values.
+
+    ### Description
+    ``version_minor`` returns the minor version of the controller.
     It derives this from the "version" key in the controller response
-    by splitting the string on "." and returning the second element
+    by splitting the string on "." and returning the second element.
 
-    Expected results:
+    ### Expected result
 
-    1. test_common_version_00016a == "1"
-    2. test_common_version_00016b is None
+    1. test_controller_version_00240a == "1"
+    2. test_controller_version_00240b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.version_minor == expected
 
 
 @pytest.mark.parametrize(
     "key, expected",
     [
-        ("test_common_version_00017a", "3b"),
-        ("test_common_version_00017b", None),
+        ("test_controller_version_00250a", "3b"),
+        ("test_controller_version_00250b", None),
     ],
 )
-def test_common_version_00017(monkeypatch, controller_version, key, expected) -> None:
+def test_controller_version_00250(controller_version, key, expected) -> None:
     """
-    Function
-    - refresh
-    - version_patch
+    ### Classes and Methods
 
-    Test
-    - version_patch returns expected values
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``version_patch``
 
-    Description
-    version_patch returns the patch version of the controller
+    ### Test
+
+    -   ``version_patch`` returns expected values.
+
+    ### Description
+    ``version_patch`` returns the patch version of the controller.
     It derives this from the "version" key in the controller response
-    by splitting the string on "." and returning the third element
+    by splitting the string on "." and returning the third element.
 
-    Expected results:
+    ### Expected result
 
-    1. test_common_version_00017a == "3b"
-    2. test_common_version_00017b is None
+    1. test_controller_version_00250a == "3b"
+    2. test_controller_version_00250b is None
     """
 
-    def mock_dcnm_send_version(*args) -> Dict[str, Any]:
-        return responses_controller_version(key)
+    def responses():
+        yield responses_ep_version(key)
 
-    monkeypatch.setattr(DCNM_SEND_VERSION, mock_dcnm_send_version)
+    gen_responses = ResponseGenerator(responses())
 
-    instance = controller_version
-    instance.refresh()
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
     assert instance.version_patch == expected

@@ -1,0 +1,103 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for endpoint EpPolicyEdit.",
+        "tests/unit/modules/dcnm/dcnm_image_policy/test_image_policy_update.py"
+    ],
+    "test_image_policy_replace_bulk_00030a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_replace_bulk_00032a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_replace_bulk_00035a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_replace_bulk_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_replace_bulk_00037a": {
+        "DATA": "Policy edited successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_replace_bulk_00037b": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_update_00030a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+   "test_image_policy_update_00035a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_update_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_update_bulk_00030a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_update_bulk_00032a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_update_bulk_00035a": {
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_update_bulk_00036a": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 500
+    },
+    "test_image_policy_update_bulk_00037a": {
+        "DATA": "Policy edited successfully.",
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 200
+    },
+    "test_image_policy_update_bulk_00037b": {
+        "DATA": "Internal server error.",
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/edit-policy",
+        "RETURN_CODE": 500
+    }
+}

@@ -78,9 +78,22 @@ class FabricSummary(FabricCommon):
     Usage:
 
     ```python
-    params = ansible_module.params
-    instance = FabricSummary(params)
-    instance.rest_send = RestSend(ansible_module)
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {
+        "check_mode": False,
+        "state": "merged"
+    }
+
+    sender = Sender()
+    sender.ansible_module = ansible_module
+
+    rest_send = RestSend(params)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+
+    instance = FabricSummary()
+    instance.rest_send = rest_send
     instance.fabric_name = "MyFabric"
     instance.refresh()
     fabric_summary = instance.data
@@ -89,8 +102,8 @@ class FabricSummary(FabricCommon):
     etc...
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
@@ -106,23 +119,14 @@ class FabricSummary(FabricCommon):
 
         self.results = Results()
 
-        self._build_properties()
+        self._border_gateway_count = 0
+        self._device_count = 0
+        self._fabric_name = None
+        self._leaf_count = 0
+        self._spine_count = 0
 
-        msg = "ENTERED FabricSummary(): "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode} "
+        msg = "ENTERED FabricSummary()"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        Initialize properties specific to this class.
-        """
-        # self._properties is already initialized in the parent class
-        self._properties["border_gateway_count"] = 0
-        self._properties["device_count"] = 0
-        self._properties["fabric_name"] = None
-        self._properties["leaf_count"] = 0
-        self._properties["spine_count"] = 0
 
     def _update_device_counts(self):
         """
@@ -137,14 +141,14 @@ class FabricSummary(FabricCommon):
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self._properties["border_gateway_count"] = self.data.get("switchRoles", {}).get(
+        self._border_gateway_count = self.data.get("switchRoles", {}).get(
             "border gateway", 0
         )
-        self._properties["leaf_count"] = self.data.get("switchRoles", {}).get("leaf", 0)
-        self._properties["spine_count"] = self.data.get("switchRoles", {}).get(
+        self._leaf_count = self.data.get("switchRoles", {}).get("leaf", 0)
+        self._spine_count = self.data.get("switchRoles", {}).get(
             "spine", 0
         )
-        self._properties["device_count"] = (
+        self._device_count = (
             self.leaf_count + self.spine_count + self.border_gateway_count
         )
 
@@ -155,6 +159,7 @@ class FabricSummary(FabricCommon):
         """
         try:
             self.ep_fabric_summary.fabric_name = self.fabric_name
+            # pylint: disable=no-member
             self.rest_send.path = self.ep_fabric_summary.path
             self.rest_send.verb = self.ep_fabric_summary.verb
         except ValueError as error:
@@ -170,6 +175,7 @@ class FabricSummary(FabricCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        # pylint: disable=no-member
         controller_return_code = self.rest_send.response_current.get(
             "RETURN_CODE", None
         )
@@ -208,6 +214,7 @@ class FabricSummary(FabricCommon):
             msg += f"{self.class_name}.refresh()."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Set {self.class_name}.rest_send prior to calling "
@@ -239,6 +246,7 @@ class FabricSummary(FabricCommon):
         self.results.result = self.rest_send.result_current
         self.results.register_task_result()
 
+        # pylint: enable=no-member
         try:
             self._verify_controller_response()
         except ControllerResponseError as error:
@@ -283,7 +291,7 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["border_gateway_count"]
+        return self._border_gateway_count
 
     @property
     def device_count(self) -> int:
@@ -296,7 +304,7 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["device_count"]
+        return self._device_count
 
     @property
     def fabric_is_empty(self) -> bool:
@@ -322,7 +330,7 @@ class FabricSummary(FabricCommon):
         -   setter: Raise ``ValueError`` if fabric_name is invalid (i.e.
             the controller would return an error due to invalid characters).
         """
-        return self._properties.get("fabric_name")
+        return self._fabric_name
 
     @fabric_name.setter
     def fabric_name(self, value: str):
@@ -330,7 +338,7 @@ class FabricSummary(FabricCommon):
             self.conversion.validate_fabric_name(value)
         except ValueError as error:
             raise ValueError(error) from error
-        self._properties["fabric_name"] = value
+        self._fabric_name = value
 
     @property
     def leaf_count(self) -> int:
@@ -343,7 +351,7 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["leaf_count"]
+        return self._leaf_count
 
     @property
     def spine_count(self) -> int:
@@ -356,4 +364,4 @@ class FabricSummary(FabricCommon):
             self.verify_refresh_has_been_called(method_name)
         except ValueError as error:
             raise ValueError(error) from error
-        return self._properties["spine_count"]
+        return self._spine_count

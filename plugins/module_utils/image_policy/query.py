@@ -20,59 +20,79 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.common import \
-    ImagePolicyCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
-class ImagePolicyQuery(ImagePolicyCommon):
+@Properties.add_params
+@Properties.add_results
+class ImagePolicyQuery:
     """
+    ### Summary
     Query image policies
 
-    Usage:
+    ### Raises
+    -   ``ValueError`` if:
+            -   params is not set.
+            -   policy_names is not set.
+            -   image_policies is not set.
+    -   ``TypeError`` if:
+            -   policy_names is not a list.
+            -   policy_names contains anything other than strings.
+            -   image_policies is not an instance of ImagePolicies.
 
-    instance = ImagePolicyQuery(ansible_module)
+    ### Usage
+    ```python
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(ansible_module.params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    results = Results()
+
+    image_policies = ImagePolicies()
+    image_policies.rest_send = rest_send
+    image_policies.results = results
+
+    instance = ImagePolicyQuery()
+    instance.image_policies = ImagePolicies()
+    instance.results = results
     instance.policy_names = ["IMAGE_POLICY_1", "IMAGE_POLICY_2"]
     instance.commit()
-    diff = instance.diff # contains the image policy information
-    result = instance.result # contains the result(s) of the query
-    response = instance.response # contains the response(s) from the controller
+    diff = instance.results.diff_current # contains the image policy information
+    result = instance.results.result_current # contains the result(s) of the query
+    response = instance.results.response_current # contains the response(s) from the controller
+    ```
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
 
-        self._policies_to_query = []
-        self._build_properties()
-        self._image_policies = ImagePolicies(self.ansible_module)
-        self._image_policies.results = Results()
-
         self.action = "query"
+        self._policies_to_query = []
+        self._policy_names = None
+        self._results = None
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         msg = "ENTERED ImagePolicyQuery(): "
         msg += f"action {self.action}, "
-        msg += f"check_mode {self.check_mode}, "
-        msg += f"state {self.state}"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        self.properties holds property values for the class
-        """
-        # self.properties is already set in the parent class
-        self.properties["policy_names"] = None
 
     @property
     def policy_names(self):
         """
+        ### Summary
         return the policy names
+
+        ### Raises
+        -   ``TypeError`` if:
+                -   policy_names is not a list.
+                -   policy_names contains anything other than strings.
+        -   ``ValueError`` if:
+                -   policy_names list is empty.
         """
-        return self.properties["policy_names"]
+        return self._policy_names
 
     @policy_names.setter
     def policy_names(self, value):
@@ -82,55 +102,88 @@ class ImagePolicyQuery(ImagePolicyCommon):
             msg += "policy_names must be a list. "
             msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
-            self.ansible_module.fail_json(msg)
+            raise TypeError(msg)
         if len(value) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_names must be a list of at least one string. "
             msg += f"got {value}."
-            self.ansible_module.fail_json(msg)
+            raise ValueError(msg)
         for item in value:
             if not isinstance(item, str):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "policy_names must be a list of strings. "
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
-                self.ansible_module.fail_json(msg)
-        self.properties["policy_names"] = value
+                raise TypeError(msg)
+        self._policy_names = value
 
+    # pylint: disable=no-member
     def commit(self):
         """
+        ### Summary
         query each of the image policies in self.policy_names
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   params is not set.
+                -   policy_names is not set.
+                -   image_policies is not set.
+
+        ### Notes
+        -   pylint: disable=no-member is needed due to the rest_send property
+            being dynamically created by the @Properties.add_results decorator.
         """
         method_name = inspect.stack()[0][3]
+        if self.params is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.policy_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "policy_names must be set prior to calling commit."
-            self.ansible_module.fail_json(msg, **self.results.failed_result)
+            raise ValueError(msg)
 
-        self._image_policies.refresh()
+        if self.image_policies is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "image_policies must be set to an instance of "
+            msg += "ImagePolicies() before calling commit."
+            raise ValueError(msg)
+
+        self.image_policies.refresh()
 
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.params.get("check_mode")
+        self.results.state = self.params.get("state", None)
 
-        if self._image_policies.results.result_current.get("success") is False:
+        if self.image_policies.results.result_current.get("success") is False:
             self.results.diff_current = {}
             self.results.failed = True
-            self.results.response_current = copy.deepcopy(self._image_policies.results.response_current)
-            self.results.result_current = copy.deepcopy(self._image_policies.results.result_current)
+            self.results.response_current = copy.deepcopy(
+                self.image_policies.results.response_current
+            )
+            self.results.result_current = copy.deepcopy(
+                self.image_policies.results.result_current
+            )
             self.results.register_task_result()
             return
 
         self.results.failed = False
         registered_a_result = False
         for policy_name in self.policy_names:
-            if policy_name not in self._image_policies.all_policies:
+            if policy_name not in self.image_policies.all_policies:
                 continue
-            self.results.diff_current = copy.deepcopy(self._image_policies.all_policies[policy_name])
-            self.results.response_current = copy.deepcopy(self._image_policies.results.response_current)
-            self.results.result_current = copy.deepcopy(self._image_policies.results.result_current)
-            self.results.register_task_result()
             registered_a_result = True
+            self.results.diff_current = copy.deepcopy(
+                self.image_policies.all_policies[policy_name]
+            )
+            self.results.response_current = copy.deepcopy(
+                self.image_policies.results.response_current
+            )
+            self.results.result_current = copy.deepcopy(
+                self.image_policies.results.result_current
+            )
+            self.results.register_task_result()
 
         if registered_a_result is False:
             self.results.failed = False
@@ -138,3 +191,31 @@ class ImagePolicyQuery(ImagePolicyCommon):
             # Avoid a failed result if none of the policies were found
             self.results.result_current = {"success": True}
             self.results.register_task_result()
+
+    @property
+    def image_policies(self):
+        """
+        ### Summary
+        Return the image_policies instance
+
+        ### Raises
+        -   ``TypeError`` if image_policies is not an instance of ImagePolicies
+        """
+        return self._image_policies
+
+    @image_policies.setter
+    def image_policies(self, value):
+        method_name = inspect.stack()[0][3]
+        _class_have = None
+        _class_need = "ImagePolicies"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value must be an instance of {_class_need}. "
+        msg += f"Got value {value} of type {type(value).__name__}."
+        try:
+            _class_have = value.class_name
+        except AttributeError as error:
+            msg += f" Error detail: {error}."
+            raise TypeError(msg) from error
+        if _class_have != _class_need:
+            raise TypeError(msg)
+        self._image_policies = value

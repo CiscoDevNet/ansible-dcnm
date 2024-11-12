@@ -23,88 +23,161 @@ import inspect
 import json
 import logging
 from time import sleep
-from typing import List, Set
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.stagingmanagement.stagingmanagement import \
+    EpImageValidate
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
+    Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
     SwitchIssuDetailsBySerialNumber
+from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
+    WaitForControllerDone
 
 
-class ImageValidate(ImageUpgradeCommon):
+@Properties.add_rest_send
+@Properties.add_results
+class ImageValidate:
     """
-    Endpoint:
-    /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
+    ### Summary
+    Validate an image on a switch.
 
-    Verb: POST
+    ### Endpoint
+    -   path: /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image
+    -   verb: POST
 
-    Usage (where module is an instance of AnsibleModule):
+    ### Usage example
 
-    instance = ImageValidate(module)
+    ```python
+    # params is typically obtained from ansible_module.params
+    # but can also be specified manually, like below.
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    results = Results()
+
+    instance = ImageValidate()
+    # mandatory parameters
+    instance.rest_send = rest_send
+    instance.results = results
     instance.serial_numbers = ["FDO211218HH", "FDO211218GC"]
-    # non_disruptive is optional
-    instance.non_disruptive = True
     instance.commit()
-    data = instance.response_data
+    ```
 
-    Request body:
+    ### Request body
+    ```json
     {
         "serialNum": ["FDO21120U5D"],
         "nonDisruptive":"true"
     }
+    ```
 
-    Response body when nonDisruptive is True:
-        [StageResponse [key=success, value=]]
+    ### Response body when nonDisruptive is True:
+    ```
+    [StageResponse [key=success, value=]]
+    ```
 
-    Response body when nonDisruptive is False:
-        [StageResponse [key=success, value=]]
+    ### Response body when nonDisruptive is False:
+    ```
+    [StageResponse [key=success, value=]]
+    ```
 
-    The response is not JSON, nor is it very useful.
-    Instead, we poll for validation status using
-    SwitchIssuDetailsBySerialNumber.
+    The response is not JSON, nor is it very useful. Instead, we poll for
+    validation status using ``SwitchIssuDetailsBySerialNumber``.
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        msg = "ENTERED ImageValidate() "
-        msg += f"check_mode {self.check_mode}"
+
+        self.action = "image_validate"
+        self.diff: dict = {}
+        self.payload = None
+        self.saved_response_current: dict = {}
+        self.saved_result_current: dict = {}
+        # _wait_for_image_validate_to_complete() populates these
+        self.serial_numbers_done: set = set()
+        self.serial_numbers_todo = set()
+
+        self.conversion = ConversionUtils()
+        self.ep_image_validate = EpImageValidate()
+        self.issu_detail = SwitchIssuDetailsBySerialNumber()
+        self.wait_for_controller_done = WaitForControllerDone()
+
+        self._check_interval = 10  # seconds
+        self._check_timeout = 1800  # seconds
+        self._non_disruptive = False
+        self._rest_send = None
+        self._results = None
+        self._serial_numbers = None
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-        self.endpoints = ApiEndpoints()
-        self.rest_send = RestSend(self.ansible_module)
+    def build_diff(self) -> None:
+        """
+        ### Summary
+        Build the diff of the image validate operation.
 
-        self.path = self.endpoints.image_validate.get("path")
-        self.verb = self.endpoints.image_validate.get("verb")
+        ### Raises
+        None
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        self.diff: dict = {}
+
+        for serial_number in self.serial_numbers_done:
+            self.issu_detail.filter = serial_number
+            ipv4 = self.issu_detail.ip_address
+
+            if ipv4 not in self.diff:
+                self.diff[ipv4] = {}
+
+            self.diff[ipv4]["action"] = self.action
+            self.diff[ipv4]["ip_address"] = self.issu_detail.ip_address
+            self.diff[ipv4]["logical_name"] = self.issu_detail.device_name
+            self.diff[ipv4]["policy_name"] = self.issu_detail.policy
+            self.diff[ipv4]["serial_number"] = serial_number
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.diff[{ipv4}]: "
+            msg += f"{json.dumps(self.diff[ipv4], indent=4)}"
+            self.log.debug(msg)
+
+    def build_payload(self) -> None:
+        """
+        Build the payload for the image validation request
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
+
         self.payload = {}
-        self.serial_numbers_done: Set[str] = set()
-
-        self._init_properties()
-        self.issu_detail = SwitchIssuDetailsBySerialNumber(self.ansible_module)
-
-    def _init_properties(self) -> None:
-        """
-        Initialize the properties dictionary
-        """
-
-        # self.properties is already initialized in the parent class
-        self.properties["check_interval"] = 10  # seconds
-        self.properties["check_timeout"] = 1800  # seconds
-        self.properties["non_disruptive"] = False
-        self.properties["serial_numbers"] = []
+        self.payload["serialNum"] = self.serial_numbers
+        self.payload["nonDisruptive"] = self.non_disruptive
 
     def prune_serial_numbers(self) -> None:
         """
         If the image is already validated on a switch, remove that switch's
         serial number from the list of serial numbers to validate.
         """
-        msg = f"ENTERED: self.serial_numbers {self.serial_numbers}"
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED: {self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers {self.serial_numbers}"
         self.log.debug(msg)
 
         self.issu_detail.refresh()
@@ -117,279 +190,222 @@ class ImageValidate(ImageUpgradeCommon):
         msg = f"DONE: self.serial_numbers {self.serial_numbers}"
         self.log.debug(msg)
 
+    def register_unchanged_result(self, response_message) -> None:
+        """
+        ### Summary
+        Register a successful unchanged result with the results object.
+        """
+        # pylint: disable=no-member
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
+        self.results.action = self.action
+        self.results.diff_current = {}
+        self.results.response_current = {"response": response_message}
+        self.results.result_current = {"success": True, "changed": False}
+        self.results.response_data = {"response": response_message}
+        self.results.register_task_result()
+
     def validate_serial_numbers(self) -> None:
         """
-        Log a warning if the validated state for any serial_number
-        is Failed.
+        ### Summary
+        Fail if "validated" is "Failed" for any serial number.
 
-        TODO:1  Need a way to compare current image_policy with the image
-                policy in the response
-        TODO:3  If validate == Failed, it may have been from the last operation.
-        TODO:3  We can't fail here based on this until we can verify the failure
-                is happening for the current image_policy.
-        TODO:3  Change this to a log message and update the unit test if we can't
-                verify the failure is happening for the current image_policy.
+        ### Raises
+        -   ``ControllerResponseError`` if:
+                -   "validated" is "Failed" for any serial_number.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers: {self.serial_numbers}"
+        self.log.debug(msg)
 
         self.issu_detail.refresh()
         for serial_number in self.serial_numbers:
             self.issu_detail.filter = serial_number
             if self.issu_detail.validated == "Failed":
-                msg = f"{self.class_name}.{self.method_name}: "
+                msg = f"{self.class_name}.{method_name}: "
                 msg += "image validation is failing for the following switch: "
                 msg += f"{self.issu_detail.device_name}, "
                 msg += f"{self.issu_detail.ip_address}, "
                 msg += f"{self.issu_detail.serial_number}. "
                 msg += "If this persists, check the switch connectivity to "
                 msg += "the controller and try again."
-                self.ansible_module.fail_json(msg, **self.failed_result)
+                raise ControllerResponseError(msg)
 
-    def build_payload(self) -> None:
+    def validate_commit_parameters(self) -> None:
         """
-        Build the payload for the image validation request
-        """
-        self.method_name = inspect.stack()[0][3]
+        ### Summary
+        Verify mandatory parameters are set before calling commit.
 
-        self.payload = {}
-        self.payload["serialNum"] = self.serial_numbers
-        self.payload["nonDisruptive"] = self.non_disruptive
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+                -   ``serial_numbers`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
+
+        # pylint: disable=no-member
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "rest_send must be set before calling commit()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "results must be set before calling commit()."
+            raise ValueError(msg)
+        # pylint: enable=no-member
+        if self.serial_numbers is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "serial_numbers must be set before calling commit()."
+            raise ValueError(msg)
 
     def commit(self) -> None:
-        if self.check_mode is True:
-            self.commit_check_mode()
-        else:
-            self.commit_normal_mode()
-
-    def commit_check_mode(self) -> None:
         """
-        Simulate a commit of the image validation request to the
-        controller.
-        """
-        method_name = inspect.stack()[0][3]
-
-        msg = f"ENTERED: self.serial_numbers: {self.serial_numbers}"
-        self.log.debug(msg)
-
-        if len(self.serial_numbers) == 0:
-            msg = "No serial numbers to validate."
-            self.response_current = {"response": msg}
-            self.result_current = {"success": True}
-            self.response_data = {"response": msg}
-            self.response = self.response_current
-            self.result = self.result_current
-            return
-
-        self.prune_serial_numbers()
-        self.validate_serial_numbers()
-
-        self.build_payload()
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.payload = self.payload
-
-        self.rest_send.check_mode = True
-
-        self.rest_send.commit()
-
-        self.response_current = {}
-        self.response_current["DATA"] = "[simulated-check-mode-response:Success]"
-        self.response_current["MESSAGE"] = "OK"
-        self.response_current["METHOD"] = self.verb
-        self.response_current["REQUEST_PATH"] = self.path
-        self.response_current["RETURN_CODE"] = 200
-        self.response = copy.deepcopy(self.response_current)
-
-        self.response_data = self.response_current.get("DATA")
-
-        self.result_current = self.rest_send._handle_response(self.response_current)
-        self.result = copy.deepcopy(self.result_current)
-
-        msg = "self.payload: "
-        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_data: "
-        msg += f"{self.response_data}"
-        self.log.debug(msg)
-
-        msg = "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if not self.result_current["success"]:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.response_current}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        for serial_number in self.serial_numbers:
-            self.issu_detail.filter = serial_number
-            diff = {}
-            diff["action"] = "validate"
-            diff["ip_address"] = self.issu_detail.ip_address
-            diff["logical_name"] = self.issu_detail.device_name
-            diff["policy"] = self.issu_detail.policy
-            diff["serial_number"] = serial_number
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(diff)
-
-        msg = "self.diff: "
-        msg += f"{json.dumps(self.diff, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-    def commit_normal_mode(self) -> None:
-        """
+        ### Summary
         Commit the image validation request to the controller and wait
         for the images to be validated.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+                -   ``serial_numbers`` is not set.
+        -   ``ControllerResponseError`` if:
+                -   The controller response is unsuccessful.
         """
         method_name = inspect.stack()[0][3]
 
-        msg = f"ENTERED: self.serial_numbers: {self.serial_numbers}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"self.serial_numbers: {self.serial_numbers}"
         self.log.debug(msg)
 
+        self.validate_commit_parameters()
+
         if len(self.serial_numbers) == 0:
-            msg = "No serial numbers to validate."
-            self.response_current = {"response": msg}
-            self.result_current = {"success": True}
-            self.response_data = {"response": msg}
-            self.response = self.response_current
-            self.result = self.result_current
+            msg = "No images to validate."
+            self.register_unchanged_result(msg)
             return
+
+        # pylint: disable=no-member
+        self.issu_detail.rest_send = self.rest_send
+        # pylint: enable=no-member
+        # We don't want the results to show up in the user's result output.
+        self.issu_detail.results = Results()
 
         self.prune_serial_numbers()
         self.validate_serial_numbers()
-        self._wait_for_current_actions_to_complete()
-
+        self.wait_for_controller()
         self.build_payload()
-        self.rest_send.verb = self.verb
-        self.rest_send.path = self.path
-        self.rest_send.payload = self.payload
 
-        if self.check_mode is True:
-            self.rest_send.check_mode = True
-        else:
-            self.rest_send.check_mode = False
-
-        self.rest_send.commit()
-
-        msg = f"self.rest_send.response_current: {self.rest_send.response_current}"
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling RestSend().commit()"
         self.log.debug(msg)
 
-        self.response_current = copy.deepcopy(self.rest_send.response_current)
-        self.response = copy.deepcopy(self.rest_send.response_current)
-        self.response_data = self.response_current.get("DATA", "No Stage DATA")
-
-        self.result_current = copy.deepcopy(self.rest_send.result_current)
-        self.result = copy.deepcopy(self.rest_send.result_current)
-
-        msg = "self.payload: "
-        msg += f"{json.dumps(self.payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response: "
-        msg += f"{json.dumps(self.response, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_current: "
-        msg += f"{json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.response_data: "
-        msg += f"{self.response_data}"
-        self.log.debug(msg)
-
-        msg = "self.result: "
-        msg += f"{json.dumps(self.result, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "self.result_current: "
-        msg += f"{json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if not self.result_current["success"]:
+        # pylint: disable=no-member
+        try:
+            self.rest_send.verb = self.ep_image_validate.verb
+            self.rest_send.path = self.ep_image_validate.path
+            self.rest_send.payload = self.payload
+            self.rest_send.commit()
+        except (TypeError, ValueError) as error:
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"failed: {self.result_current}. "
-            msg += f"Controller response: {self.response_current}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += "Error while sending request. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
 
-        self.properties["response_data"] = self.response
+        if not self.rest_send.result_current["success"]:
+            self.results.diff_current = {}
+            self.results.action = self.action
+            self.results.response_current = copy.deepcopy(
+                self.rest_send.response_current
+            )
+            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+            self.results.register_task_result()
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "failed. "
+            msg += f"Controller response: {self.rest_send.response_current}"
+            raise ControllerResponseError(msg)
+
+        # Save response_current and result_current so they aren't overwritten
+        # by _wait_for_image_validate_to_complete(), which needs to run
+        # before we can build the diff, since the diff is based on the
+        # serial_numbers_done set, which isn't populated until image
+        # validate is complete.
+        self.saved_response_current = copy.deepcopy(self.rest_send.response_current)
+        self.saved_result_current = copy.deepcopy(self.rest_send.result_current)
+
         self._wait_for_image_validate_to_complete()
 
-        for serial_number in self.serial_numbers_done:
-            self.issu_detail.filter = serial_number
-            diff = {}
-            diff["action"] = "validate"
-            diff["ip_address"] = self.issu_detail.ip_address
-            diff["logical_name"] = self.issu_detail.device_name
-            diff["policy"] = self.issu_detail.policy
-            diff["serial_number"] = serial_number
-            # See image_upgrade_common.py for the definition of self.diff
-            self.diff = copy.deepcopy(diff)
-        msg = f"self.diff: {json.dumps(self.diff, indent=4, sort_keys=True)}"
+        self.build_diff()
+        self.results.action = self.action
+        self.results.diff_current = copy.deepcopy(self.diff)
+        self.results.response_current = copy.deepcopy(self.saved_response_current)
+        self.results.result_current = copy.deepcopy(self.saved_result_current)
+        self.results.register_task_result()
+
+    def wait_for_controller(self):
+        """
+        ### Summary
+        Wait for any actions on the controller to complete.
+
+        ### Raises
+        -   ValueError: if:
+                -   ``items`` is not a set.
+                -   ``item_type`` is not a valid item type.
+                -   The action times out.
+        """
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
         self.log.debug(msg)
 
-    def _wait_for_current_actions_to_complete(self) -> None:
-        """
-        The controller will not validate an image if there are any actions in
-        progress.  Wait for all actions to complete before validating image.
-        Actions include image staging, image upgrade, and image validation.
-        """
-        self.method_name = inspect.stack()[0][3]
-
-        if self.unit_test is False:
-            self.serial_numbers_done: Set[str] = set()
-        serial_numbers_todo = set(copy.copy(self.serial_numbers))
-        timeout = self.check_timeout
-
-        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.unit_test is False:
-                sleep(self.check_interval)
-            timeout -= self.check_interval
-            self.issu_detail.refresh()
-
-            for serial_number in self.serial_numbers:
-                if serial_number in self.serial_numbers_done:
-                    continue
-
-                self.issu_detail.filter = serial_number
-
-                if self.issu_detail.actions_in_progress is False:
-                    self.serial_numbers_done.add(serial_number)
-
-        if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "Timed out waiting for actions to complete. "
-            msg += "serial_numbers_done: "
-            msg += f"{','.join(sorted(self.serial_numbers_done))}, "
-            msg += "serial_numbers_todo: "
-            msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+        try:
+            self.wait_for_controller_done.items = set(copy.copy(self.serial_numbers))
+            self.wait_for_controller_done.item_type = "serial_number"
+            self.wait_for_controller_done.rest_send = (
+                self.rest_send  # pylint: disable=no-member
+            )
+            self.wait_for_controller_done.commit()
+        except (TypeError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error {error}."
+            raise ValueError(msg) from error
 
     def _wait_for_image_validate_to_complete(self) -> None:
         """
-        Wait for image validation to complete
+        ### Summary
+        Wait for image validation to complete.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   The image validation does not complete within the timeout.
+                -   The image validation fails.
         """
-        self.method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = f"ENTERED {self.class_name}.{method_name}"
+        self.log.debug(msg)
 
         self.serial_numbers_done = set()
         timeout = self.check_timeout
-        serial_numbers_todo = set(copy.copy(self.serial_numbers))
+        self.serial_numbers_todo = set(copy.copy(self.serial_numbers))
 
-        while self.serial_numbers_done != serial_numbers_todo and timeout > 0:
-            if self.unit_test is False:
+        while self.serial_numbers_done != self.serial_numbers_todo and timeout > 0:
+            if self.rest_send.unit_test is False:  # pylint: disable=no-member
                 sleep(self.check_interval)
             timeout -= self.check_interval
             self.issu_detail.refresh()
@@ -406,7 +422,7 @@ class ImageValidate(ImageUpgradeCommon):
                 validated_status = self.issu_detail.validated
 
                 if validated_status == "Failed":
-                    msg = f"{self.class_name}.{self.method_name}: "
+                    msg = f"{self.class_name}.{method_name}: "
                     msg = f"Seconds remaining {timeout}: validate image "
                     msg += f"{validated_status} for "
                     msg += f"{device_name}, {ip_address}, {serial_number}, "
@@ -416,108 +432,145 @@ class ImageValidate(ImageUpgradeCommon):
                     msg += "check Operations > Image Management > "
                     msg += "Devices > View Details > Validate on the "
                     msg += "controller GUI for more details."
-                    self.ansible_module.fail_json(msg, **self.failed_result)
-
+                    raise ValueError(msg)
                 if validated_status == "Success":
                     self.serial_numbers_done.add(serial_number)
-                msg = f"seconds remaining {timeout}"
-                self.log.debug(msg)
-                msg = f"serial_numbers_todo: {sorted(serial_numbers_todo)}"
-                self.log.debug(msg)
-                msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
-                self.log.debug(msg)
 
-        if self.serial_numbers_done != serial_numbers_todo:
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"seconds remaining {timeout}"
+            self.log.debug(msg)
+            msg = f"serial_numbers_todo: {sorted(self.serial_numbers_todo)}"
+            self.log.debug(msg)
+            msg = f"serial_numbers_done: {sorted(self.serial_numbers_done)}"
+            self.log.debug(msg)
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Completed. "
+        msg += f"serial_numbers_done: {sorted(self.serial_numbers_done)}."
+        self.log.debug(msg)
+
+        if self.serial_numbers_done != self.serial_numbers_todo:
+            msg = f"{self.class_name}.{method_name}: "
             msg += "Timed out waiting for image validation to complete. "
             msg += "serial_numbers_done: "
             msg += f"{','.join(sorted(self.serial_numbers_done))}, "
             msg += "serial_numbers_todo: "
-            msg += f"{','.join(sorted(serial_numbers_todo))}"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += f"{','.join(sorted(self.serial_numbers_todo))}"
+            raise ValueError(msg)
 
     @property
-    def serial_numbers(self) -> List[str]:
+    def response_data(self) -> dict:
         """
-        Set the serial numbers of the switches to stage.
+        ### Summary
+        Return the DATA key of the controller response.
+        Obtained from self.rest_send.response_current.
 
-        This must be set before calling instance.commit()
+        commit must be called before accessing this property.
         """
-        return self.properties.get("serial_numbers", [])
+        # pylint: disable=no-member
+        return self.rest_send.response_current.get("DATA")
+
+    @property
+    def serial_numbers(self) -> list:
+        """
+        ### Summary
+        A ``list`` of switch serial numbers.  The image will be validated on
+        each switch in the list.
+
+        ``serial_numbers`` must be set before calling commit.
+
+        ### Raises
+        -   ``TypeError`` if value is not a list of serial numbers.
+        """
+        return self._serial_numbers
 
     @serial_numbers.setter
-    def serial_numbers(self, value: List[str]):
-        self.method_name = inspect.stack()[0][3]
-
+    def serial_numbers(self, value) -> None:
+        method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
-            msg = f"{self.class_name}.{self.method_name}: "
-            msg += "instance.serial_numbers must be a "
-            msg += "python list of switch serial numbers. "
-            msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
-
-        self.properties["serial_numbers"] = value
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "must be a python list of switch serial numbers."
+            raise TypeError(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "must be a python list of switch serial numbers."
+                raise TypeError(msg)
+        self._serial_numbers = value
 
     @property
-    def non_disruptive(self):
+    def non_disruptive(self) -> bool:
         """
+        ### Summary
         Set the non_disruptive flag to True or False.
+
+        ### Raises
+        -   ``TypeError`` if the value is not a boolean.
         """
-        return self.properties.get("non_disruptive")
+        return self._non_disruptive
 
     @non_disruptive.setter
-    def non_disruptive(self, value):
-        self.method_name = inspect.stack()[0][3]
+    def non_disruptive(self, value) -> None:
+        method_name = inspect.stack()[0][3]
 
-        value = self.make_boolean(value)
+        value = self.conversion.make_boolean(value)
         if not isinstance(value, bool):
-            msg = f"{self.class_name}.{self.method_name}: "
+            msg = f"{self.class_name}.{method_name}: "
             msg += "instance.non_disruptive must be a boolean. "
             msg += f"Got {value}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
 
-        self.properties["non_disruptive"] = value
+        self._non_disruptive = value
 
     @property
-    def check_interval(self):
+    def check_interval(self) -> int:
         """
-        Return the validate check interval in seconds
+        ### Summary
+        The validate check interval, in seconds.
+
+        ### Raises
+        -   ``TypeError`` if the value is not an integer.
+        -   ``ValueError`` if the value is less than zero.
         """
-        return self.properties.get("check_interval")
+        return self._check_interval
 
     @check_interval.setter
-    def check_interval(self, value):
+    def check_interval(self, value) -> None:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
         msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if value < 0:
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_interval"] = value
+            raise ValueError(msg)
+        self._check_interval = value
 
     @property
-    def check_timeout(self):
+    def check_timeout(self) -> int:
         """
-        Return the validate check timeout in seconds
+        ### Summary
+        The validate check timeout, in seconds.
+
+        ### Raises
+        -   ``TypeError`` if the value is not an integer.
+        -   ``ValueError`` if the value is less than zero.
         """
-        return self.properties.get("check_timeout")
+        return self._check_timeout
 
     @check_timeout.setter
-    def check_timeout(self, value):
+    def check_timeout(self, value) -> None:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         msg += "must be a positive integer or zero. "
         msg += f"Got value {value} of type {type(value)}."
         # isinstance(True, int) is True so we need to check for bool first
         if isinstance(value, bool):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if not isinstance(value, int):
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise TypeError(msg)
         if value < 0:
-            self.ansible_module.fail_json(msg, **self.failed_result)
-        self.properties["check_timeout"] = value
+            raise ValueError(msg)
+        self._check_timeout = value

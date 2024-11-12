@@ -19,28 +19,34 @@ __metaclass__ = type
 __author__ = "Allen Robel"
 
 import inspect
-import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.api_endpoints import \
-    ApiEndpoints
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.packagemgnt.packagemgnt import \
+    EpIssu
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
-class SwitchIssuDetails(ImageUpgradeCommon):
+@Properties.add_rest_send
+@Properties.add_results
+class SwitchIssuDetails:
     """
+    ### Summary
     Retrieve switch issu details from the controller and provide
-    property accessors for the switch attributes.
+    property getters for the switch attributes.
 
-    Usage: See subclasses.
+    ### Usage
+    See subclasses.
 
-    Endpoint:
+    ### Endpoint
+    ```
     /appcenter/cisco/ndfc/api/v1/imagemanagement/rest/packagemgnt/issu
+    ```
 
-    Response body:
+    ### Response body
+    ```json
     {
         "status": "SUCCESS",
         "lastOperDataObject": [
@@ -85,146 +91,208 @@ class SwitchIssuDetails(ImageUpgradeCommon):
             },
             {etc...}
         ]
+    }
+    ```
 
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED SwitchIssuDetails()")
 
-        self.endpoints = ApiEndpoints()
-        self._init_properties()
+        self.action = "switch_issu_details"
+        self.conversion = ConversionUtils()
+        self.ep_issu = EpIssu()
+        self.data = {}
+        self._action_keys = set()
+        self._action_keys.add("imageStaged")
+        self._action_keys.add("upgrade")
+        self._action_keys.add("validated")
 
-    def _init_properties(self):
-        # self.properties is already initialized in the parent class
-        # action_keys is used in subclasses to determine if any actions
-        # are in progress.
-        # Property actions_in_progress returns True if so, False otherwise
-        self.properties["action_keys"] = set()
-        self.properties["action_keys"].add("imageStaged")
-        self.properties["action_keys"].add("upgrade")
-        self.properties["action_keys"].add("validated")
+        self._rest_send = None
+        self._results = None
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
+
+    def validate_refresh_parameters(self) -> None:
+        """
+        ### Summary
+        Validate that mandatory parameters are set before calling refresh().
+
+        ### Raises
+        -   ``ValueError``if:
+                -   ``rest_send`` is not set.
+                -   ``results`` is not set.
+        """
+        method_name = inspect.stack()[0][3]
+        if self.rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{self.class_name}.rest_send must be set before calling "
+            msg += f"{self.class_name}.refresh()."
+            raise ValueError(msg)
+        if self.results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{self.class_name}.results must be set before calling "
+            msg += f"{self.class_name}.refresh()."
+            raise ValueError(msg)
 
     def refresh_super(self) -> None:
         """
+        ### Summary
         Refresh current issu details from the controller.
         """
         method_name = inspect.stack()[0][3]
 
-        path = self.endpoints.issu_info.get("path")
-        verb = self.endpoints.issu_info.get("verb")
-
-        msg = f"verb: {verb}, path {path}"
+        msg = f"ENTERED {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.response_current = dcnm_send(self.ansible_module, verb, path)
-        self.result_current = self._handle_response(self.response_current, verb)
+        try:
+            self.validate_refresh_parameters()
+        except ValueError as error:
+            raise ValueError(error) from error
 
-        msg = f"self.response_current: {json.dumps(self.response_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        try:
+            self.rest_send.path = self.ep_issu.path
+            self.rest_send.verb = self.ep_issu.verb
 
-        msg = f"self.result_current: {json.dumps(self.result_current, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+            # We always want to get the issu details from the controller,
+            # regardless of the current value of check_mode.
+            # We save the current check_mode and timeout settings, set
+            # rest_send.check_mode to False so the request will be sent
+            # to the controller, and then restore the original settings.
+
+            self.rest_send.save_settings()
+            self.rest_send.check_mode = False
+            self.rest_send.timeout = 1
+            self.rest_send.commit()
+            self.rest_send.restore_settings()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
+
+        self.data = self.rest_send.response_current.get("DATA", {}).get(
+            "lastOperDataObject", {}
+        )
+
+        diff = {}
+        for item in self.data:
+            ip_address = item.get("ipAddress")
+            if ip_address is None:
+                continue
+            diff[ip_address] = item
+
+        self.results.action = self.action
+        self.results.state = self.rest_send.state
+        # Set check_mode to True so that results.changed will be set to False
+        # (since we didn't make any changes).
+        self.results.check_mode = True
+        self.results.diff_current = diff
+        self.results.response_current = self.rest_send.response_current
+        self.results.result_current = self.rest_send.result_current
+        self.results.register_task_result()
 
         if (
-            self.result_current["success"] is False
-            or self.result_current["found"] is False
+            self.rest_send.result_current["success"] is False
+            or self.rest_send.result_current["found"] is False
         ):
             msg = f"{self.class_name}.{method_name}: "
             msg += "Bad result when retriving switch "
-            msg += "information from the controller"
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            msg += "ISSU details from the controller."
+            raise ValueError(msg)
 
-        data = self.response_current.get("DATA").get("lastOperDataObject")
-
-        if data is None:
+        if self.data is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
-        if len(data) == 0:
+        if len(self.data) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "The controller has no switch ISSU information."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
     @property
     def actions_in_progress(self):
         """
-        Return True if any actions are in progress
-        Return False otherwise
+        ### Summary
+        -   Return ``True`` if any actions are in progress.
+        -   Return ``False`` otherwise.
         """
-        for action_key in self.properties["action_keys"]:
+        for action_key in self._action_keys:
             if self._get(action_key) == "In-Progress":
                 return True
         return False
 
     def _get(self, item):
         """
+        ### Summary
         overridden in subclasses
         """
 
     @property
     def device_name(self):
         """
-        Return the deviceName of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``deviceName`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            device name, e.g. "cvd-1312-leaf"
-            None
+        ### Possible values
+            ``device name``, e.g. "cvd-1312-leaf"
+        -   ``None``
         """
         return self._get("deviceName")
 
     @property
     def eth_switch_id(self):
         """
-        Return the ethswitchid of the switch with
-        ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``ethswitchid`` of the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            integer
-            None
+        ### Possible values
+        -   ``int()``
+        -   ``None``
         """
         return self._get("ethswitchid")
 
     @property
     def fabric(self):
         """
-        Return the fabric of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``fabric`` name of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            fabric name, e.g. "myfabric"
-            None
+        ### Possible values
+        -   fabric name, e.g. ``myfabric``
+        -   ``None``
         """
         return self._get("fabric")
 
     @property
     def fcoe_enabled(self):
         """
-        Return whether FCOE is enabled on the switch with
-        ip_address, if it exists.
-        Return None otherwise
+        -   Return whether FCOE is enabled on the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            boolean (true/false)
-            None
+        ### Possible values
+        -   ``bool()`` (true/false)
+        -   ``None``
         """
-        return self.make_boolean(self._get("fcoEEnabled"))
+        return self.conversion.make_boolean(self._get("fcoEEnabled"))
 
     @property
     def group(self):
         """
-        Return the group of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``group`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            group name, e.g. "mygroup"
-            None
+        ### Possible values
+        -   group name, e.g. ``mygroup``
+        -   ``None``
         """
         return self._get("group")
 
@@ -233,673 +301,820 @@ class SwitchIssuDetails(ImageUpgradeCommon):
     # so we use switch_id instead
     def switch_id(self):
         """
-        Return the switch ID of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the switch ``id`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer
-            None
+        ### Possible values
+        -   ``int()``
+        -   ``None``
         """
         return self._get("id")
 
     @property
     def image_staged(self):
         """
-        Return the imageStaged of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``imageStaged`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Success
-            Failed
-            None
+        ### Possible values
+        -   ``Success``
+        -   ``Failed``
+        -   ``None``
         """
         return self._get("imageStaged")
 
     @property
     def image_staged_percent(self):
         """
-        Return the imageStagedPercent of the switch with
-        ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``imageStagedPercent`` of the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer in range 0-100
-            None
+        ### Possible values
+        -   ``int()`` in range ``0-100``
+        -   ``None``
         """
         return self._get("imageStagedPercent")
 
     @property
     def ip_address(self):
         """
-        Return the ipAddress of the switch, if it exists.
-        Return None otherwise
+        -   Return the ``ipAddress`` of the switch, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            switch IP address
-            None
+        ### Possible values
+        -   switch IP address, e.g. ``192.168.1.1``
+        -   ``None``
         """
         return self._get("ipAddress")
 
     @property
     def issu_allowed(self):
         """
-        Return the issuAllowed value of the switch with
-        ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``issuAllowed`` value of the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            ?? TODO:3 check this
-            ""
-            None
+        ### Possible values
+        -   ?? TODO:3 check this
+        -   ``None``
         """
         return self._get("issuAllowed")
 
     @property
     def last_upg_action(self):
         """
-        Return the last upgrade action performed on the switch
-        with ip_address, if it exists.
-        Return None otherwise
+        -   Return the last upgrade action performed on the switch
+            with ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            ?? TODO:3 check this
-            Never
-            None
+        ### Possible values
+        -   ?? TODO:3 check this
+        -   ``Never``
+        -   ``None``
         """
         return self._get("lastUpgAction")
 
     @property
     def mds(self):
         """
-        Return whether the switch with ip_address is an MSD, if it exists.
-        Return None otherwise
+        -   Return whether the switch with ``ip_address`` is an MDS,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Boolean (True or False)
-            None
+        ### Possible values
+        -   ``bool()`` (True or False)
+        -   ``None``
         """
-        return self.make_boolean(self._get("mds"))
+        return self.conversion.make_boolean(self._get("mds"))
 
     @property
     def mode(self):
         """
-        Return the ISSU mode of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the ISSU mode of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            "Normal"
-            None
+        ### Possible values
+        -   ``Normal``
+        -   ``None``
         """
         return self._get("mode")
 
     @property
     def model(self):
         """
-        Return the model of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the `model` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            model number e.g. "N9K-C93180YC-EX"
-            None
+        ### Possible values
+        -   model number e.g. ``N9K-C93180YC-EX``.
+        -   ``None``
         """
         return self._get("model")
 
     @property
     def model_type(self):
         """
-        Return the model type of the switch with
-        ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``modelType`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer
-            None
+        ### Possible values
+        -   ``int()``
+        -   ``None``
         """
         return self._get("modelType")
 
     @property
     def peer(self):
         """
-        Return the peer of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``peer`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            ?? TODO:3 check this
-            None
+        ### Possible values
+        -   ?? TODO:3 check this
+        -   ``None``
         """
         return self._get("peer")
 
     @property
     def platform(self):
         """
-        Return the platform of the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the ``platform`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            platform, e.g. "N9K"
-            None
+        ### Possible values
+        -   ``platform``, e.g. ``N9K``
+        -   ``None``
         """
         return self._get("platform")
 
     @property
     def policy(self):
         """
-        Return the policy attached to the switch with ip_address, if it exists.
-        Return None otherwise
+        -   Return the image ``policy`` attached to the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            policy name, e.g. "NR3F"
-            None
+        ### Possible values
+        -   ``policy``, e.g. ``NR3F``
+        -   ``None``
         """
         return self._get("policy")
 
     @property
     def reason(self):
         """
-        Return the reason (?) of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``reason`` (?) of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Compliance
-            Validate
-            Upgrade
-            None
+        ### Possible values
+        -   ``Compliance``
+        -   ``Validate``
+        -   ``Upgrade``
+        -   ``None``
         """
         return self._get("reason")
 
     @property
     def role(self):
         """
-        Return the role of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``role`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            switch role, e.g. "leaf"
-            None
+        ### Possible values
+        -   switch role, e.g. ``leaf``
+        -   ``None``
         """
         return self._get("role")
 
     @property
     def serial_number(self):
         """
-        Return the serialNumber of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``serialNumber`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            switch serial number, e.g. "AB1234567CD"
-            None
+        ### Possible values
+        -   switch serial number, e.g. ``AB1234567CD``
+        -   ``None``
         """
         return self._get("serialNumber")
 
     @property
     def status(self):
         """
-        Return the sync status of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the sync ``status`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Details: The sync status is the status of the switch with respect
-        to the image policy.  If the switch is in sync with the image policy,
-        the status is "In-Sync".  If the switch is out of sync with the image
-        policy, the status is "Out-Of-Sync".
+        ### Details
+        The sync status is the status of the switch with respect to the
+        image policy.  If the switch is in sync with the image policy,
+        the status is ``In-Sync``.  If the switch is out of sync with
+        the image policy, the status is ``Out-Of-Sync``.
 
-        Possible values:
-            "In-Sync"
-            "Out-Of-Sync"
-            None
+        ### Possible values
+        -   ``In-Sync``
+        -   ``Out-Of-Sync``
+        -   ``None``
         """
         return self._get("status")
 
     @property
     def status_percent(self):
         """
-        Return the upgrade (TODO:3 verify this) percentage completion
-        of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the upgrade (TODO:3 verify this) percentage completion
+            of the switch with ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer in range 0-100
-            None
+        ### Possible values
+        -   ``int()`` in range ``0-100``
+        -   ``None``
         """
         return self._get("statusPercent")
 
     @property
     def sys_name(self):
         """
-        Return the system name of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the system name of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            system name, e.g. "cvd-1312-leaf"
-            None
+        ### Possible values
+        -   ``system name``, e.g. ``cvd-1312-leaf``
+        -   ``None``
         """
         return self._get("sys_name")
 
     @property
     def system_mode(self):
         """
-        Return the system mode of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the system mode of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            "Maintenance" (TODO:3 verify this)
-            "Normal"
-            None
+        ### Possible values
+        -   ``Maintenance`` (TODO:3 verify this)
+        -   ``Normal``
+        -   ``None``
         """
         return self._get("systemMode")
 
     @property
     def upgrade(self):
         """
-        Return the upgrade status of the switch with ip_address,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``upgrade`` status of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Success
-            In-Progress
-            None
+        ### Possible values
+        -   ``Success``
+        -   ``In-Progress``
+        -   ``None``
         """
         return self._get("upgrade")
 
     @property
     def upg_groups(self):
         """
-        Return the upgGroups (upgrade groups) of the switch with ip_address,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``upgGroups`` (upgrade groups) of the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            upgrade group to which the switch belongs e.g. "LEAFS"
-            None
+        ### Possible values
+        -   upgrade group to which the switch belongs e.g. ``LEAFS``
+        -   ``None``
         """
         return self._get("upgGroups")
 
     @property
     def upgrade_percent(self):
         """
-        Return the upgrade percent complete of the switch
-        with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the upgrade percent complete of the switch with
+            ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer in range 0-100
-            None
+        ### Possible values
+        -   ``int()`` in range 0-100
+        -   ``None``
         """
         return self._get("upgradePercent")
 
     @property
     def validated(self):
         """
-        Return the validation status of the switch with ip_address,
-        if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``validated`` status of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Failed
-            Success
-            None
+        ### Possible values
+        -   ``Failed``
+        -   ``Success``
+        -   ``None``
         """
         return self._get("validated")
 
     @property
     def validated_percent(self):
         """
-        Return the validation percent complete of the switch
-        with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``validatedPercent`` complete of the switch
+            with ``ip_address``, if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer in range 0-100
-            None
+        ### Possible values
+        -   ``int()`` in range 0-100
+        -   ``None``
         """
         return self._get("validatedPercent")
 
     @property
     def vdc_id(self):
         """
-        Return the vdcId of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``vdcId`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer
-            None
+        ### Possible values
+        -   ''int()''
+        -   ``None``
         """
         return self._get("vdcId")
 
     @property
     def vdc_id2(self):
         """
-        Return the vdc_id of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``vdc_id`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            Integer (negative values are valid)
-            None
+        ### Possible values
+        -   ``int()`` (negative values are valid)
+        -   ``None``
         """
         return self._get("vdc_id")
 
     @property
     def version(self):
         """
-        Return the version of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``version`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            version, e.g. "10.3(2)"
-            None
+        ### Possible values
+        -   version, e.g. ``10.3(2)``
+        -   ``None``
         """
         return self._get("version")
 
     @property
     def vpc_peer(self):
         """
-        Return the vpcPeer of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``vpcPeer`` of the switch with ``ip_address``,
+            if it exists.  ``vpcPeer`` is the IP address of the switch's
+            VPC peer.
+        -   Return ``None`` otherwise.
 
-        Possible values:
-            vpc peer e.g.: 10.1.1.1
-            None
+        ### Possible values
+        -   vpc peer e.g.: ``10.1.1.1``
+        -   ``None``
         """
         return self._get("vpcPeer")
 
     @property
     def vpc_role(self):
         """
-        Return the vpcRole of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        -   Return the ``vpcRole`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        NOTE:   Two properties exist for vpc_role in the controller response.
-                vpc_role corresponds to vpcRole.
-        Possible values:
-            vpc role e.g.:
-                "primary"
-                "secondary"
-                "none" -> This will be translated to None
-                "none established" (TODO:3 verify this)
-                "primary, operational secondary" (TODO:3 verify this)
-            None
+        ### NOTES
+            -   Two properties exist for vpc_role in the controller response.
+                ``vpc_role`` corresponds to vpcRole.
+        ### Possible values
+        -   ``primary``
+        -   ``secondary``
+        -   ``none`
+                -   This will be translated to ``None``
+        -   ``none established``
+                -   TODO:3 verify this
+        -   ``primary, operational secondary``
+                -   TODO:3 verify this
+        -   ``None``
+                - python NoneType
         """
         return self._get("vpcRole")
 
     @property
     def vpc_role2(self):
         """
-        Return the vpc_role of the switch with ip_address, if it exists.
-        Return None otherwise
+        ### Summary
+        Return the ``vpc_role`` of the switch with ``ip_address``,
+            if it exists.
+        -   Return ``None`` otherwise.
 
-        NOTE:   Two properties exist for vpc_role in the controller response.
-                vpc_role2 corresponds to vpc_role.
-        Possible values:
-            vpc role e.g.:
-                "primary"
-                "secondary"
-                "none" -> This will be translated to None
-                "none established" (TODO:3 verify this)
-                "primary, operational secondary" (TODO:3 verify this)
-            None
+        ### Notes
+        -   Two properties exist for vpc_role in the controller response.
+            vpc_role2 corresponds to vpc_role.
+
+        ### Possible values
+        -   ``primary``
+        -   ``secondary``
+        -   ``none`
+                -   This will be translated to ``None``
+        -   ``none established``
+                -   TODO:3 verify this
+        -   ``primary, operational secondary``
+                -   TODO:3 verify this
+        -   ``None``
+                - python NoneType
         """
         return self._get("vpc_role")
 
 
 class SwitchIssuDetailsByIpAddress(SwitchIssuDetails):
     """
-    Retrieve switch issu details from the controller and provide
-    property accessors for the switch attributes retrieved by ip address.
+    ### Summary
+    Retrieve switch issu details from the controller and provide property
+    getters for the switch attributes retrieved by ip_address.
 
-    Usage (where module is an instance of AnsibleModule):
+    ### Raises
+    -   ``ValueError`` if:
+            -   ``filter`` is not set before accessing properties.
 
-    instance = SwitchIssuDetailsByIpAddress(module)
+    ### Usage
+
+    ```python
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+
+    rest_send = RestSend(params)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+
+    instance = SwitchIssuDetailsByIpAddress()
+    instance.rest_send = rest_send
+    instance.results = Results()
     instance.refresh()
     instance.filter = "10.1.1.1"
     image_staged = instance.image_staged
     image_upgraded = instance.image_upgraded
     serial_number = instance.serial_number
-    etc...
+    ### etc...
+    ```
 
     See SwitchIssuDetails for more details.
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED SwitchIssuDetailsByIpAddress()")
 
         self.data_subclass = {}
-        self.properties["filter"] = None
+        self._filter = None
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def refresh(self):
         """
-        Refresh ip_address current issu details from the controller
+        ### Summary
+        Refresh ip_address current issu details from the controller.
+
+        ### Raises
+        None
         """
         self.refresh_super()
+        method_name = inspect.stack()[0][3]
+        self.action = "switch_issu_details_by_ip_address"
+
         self.data_subclass = {}
-        for switch in self.response_current["DATA"]["lastOperDataObject"]:
+        for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["ipAddress"]] = switch
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
     def _get(self, item):
+        """
+        ### Summary
+        Return the value of the switch property matching self.filter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``filter`` is not set before accessing properties.
+                -   ``filter`` does not exist on the controller.
+                -   ``filter`` references an unknown property name.
+        """
         method_name = inspect.stack()[0][3]
 
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch ipAddress "
             msg += f"before accessing property {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist on the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
-        return self.make_none(
-            self.make_boolean(self.data_subclass[self.filter].get(item))
+        return self.conversion.make_none(
+            self.conversion.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     @property
     def filtered_data(self):
         """
-        Return a dictionary of the switch matching self.filter.
-        Return None if the switch does not exist on the controller.
+        ### Summary
+        -   Return a dictionary of the switch matching ``filter``.
+        -   Return ``None`` if the switch does not exist on the controller.
         """
         return self.data_subclass.get(self.filter)
 
     @property
     def filter(self):
         """
-        Set the ip_address of the switch to query.
+        ### Summary
+        Set the ``ipv4_address`` of the switch to query.
 
-        This needs to be set before accessing this class's properties.
+        ``filter`` needs to be set before accessing this class's properties.
         """
-        return self.properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._filter = value
 
 
 class SwitchIssuDetailsBySerialNumber(SwitchIssuDetails):
     """
-    Retrieve switch issu details from NDFC and provide property accessors
-    for the switch attributes retrieved by serial_number.
+    ### Summary
+    Retrieve switch issu details from the controller and provide property
+    getters for the switch attributes retrieved by serial_number.
 
-    Usage (where module is an instance of AnsibleModule):
+    ### Usage
 
-    instance = SwitchIssuDetailsBySerialNumber(module)
+    ```python
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+
+    rest_send = RestSend(params)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+
+    instance = SwitchIssuDetailsBySerialNumber()
+    instance.rest_send = rest_send
+    instance.results = Results()
     instance.refresh()
     instance.filter = "FDO211218GC"
-    instance.refresh()
     image_staged = instance.image_staged
     image_upgraded = instance.image_upgraded
     ip_address = instance.ip_address
-    etc...
-
+    # etc...
+    ```
     See SwitchIssuDetails for more details.
-
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
+        self.action = "switch_issu_details_by_serial_number"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED SwitchIssuDetailsBySerialNumber()")
 
         self.data_subclass = {}
-        self.properties["filter"] = None
+        self._filter = None
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def refresh(self):
         """
-        Refresh serial_number current issu details from NDFC
+        ### Summary
+        Refresh serial_number current issu details from the controller.
+
+        ### Raises
+        None
         """
         self.refresh_super()
+        method_name = inspect.stack()[0][3]
 
         self.data_subclass = {}
-        for switch in self.response_current["DATA"]["lastOperDataObject"]:
+        for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["serialNumber"]] = switch
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
     def _get(self, item):
+        """
+        ### Summary
+        Return the value of the switch property matching self.filter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``filter`` is not set before accessing properties.
+                -   ``filter`` does not exist on the controller.
+                -   ``filter`` references an unknown property name.
+        """
         method_name = inspect.stack()[0][3]
 
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch serialNumber "
             msg += f"before accessing property {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist "
             msg += "on the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
-        return self.make_none(
-            self.make_boolean(self.data_subclass[self.filter].get(item))
+        return self.conversion.make_none(
+            self.conversion.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     @property
     def filtered_data(self):
         """
-        Return a dictionary of the switch matching self.serial_number.
-        Return None if the switch does not exist on the controller.
+        ### Summary
+        -   Return a dictionary of the switch matching self.serial_number.
+        -   Return ``None`` if the switch does not exist on the controller.
+
+        ### Raises
+        None
         """
         return self.data_subclass.get(self.filter)
 
     @property
     def filter(self):
         """
+        ### Summary
         Set the serial_number of the switch to query.
 
-        This needs to be set before accessing this class's properties.
+        ``filter`` needs to be set before accessing this class's properties.
+
+        ### Raises
+        None
         """
-        return self.properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._filter = value
 
 
 class SwitchIssuDetailsByDeviceName(SwitchIssuDetails):
     """
-    Retrieve switch issu details from NDFC and provide property accessors
-    for the switch attributes retrieved by device_name.
+    ### Summary
+    Retrieve switch issu details from the controller and provide property
+    getters for the switch attributes retrieved by ``device_name``.
 
-    Usage (where module is an instance of AnsibleModule):
+    ### Raises
+    -   ``ValueError`` if:
+            -   ``filter`` is not set before calling refresh().
 
-    instance = SwitchIssuDetailsByDeviceName(module)
+    ### Usage
+
+    ```python
+    params = {"check_mode": False, "state": "merged"}
+    sender = Sender()
+    sender.ansible_module = ansible_module
+
+    rest_send = RestSend(params)
+    rest_send.sender = sender
+    rest_send.response_handler = ResponseHandler()
+
+    instance = SwitchIssuDetailsByDeviceName()
     instance.refresh()
     instance.filter = "leaf_1"
     image_staged = instance.image_staged
     image_upgraded = instance.image_upgraded
     ip_address = instance.ip_address
-    etc...
+    # etc...
+    ```
 
     See SwitchIssuDetails for more details.
-
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED SwitchIssuDetailsByDeviceName()")
+        method_name = inspect.stack()[0][3]
+        self.action = "switch_issu_details_by_device_name"
 
         self.data_subclass = {}
-        self.properties["filter"] = None
+        self._filter = None
+
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def refresh(self):
         """
-        Refresh device_name current issu details from NDFC
+        ### Summary
+        Refresh device_name current issu details from the controller.
+
+        ### Raises
+        None
         """
         self.refresh_super()
+        method_name = inspect.stack()[0][3]
+
         self.data_subclass = {}
-        for switch in self.response_current["DATA"]["lastOperDataObject"]:
+        for switch in self.rest_send.response_current["DATA"]["lastOperDataObject"]:
             self.data_subclass[switch["deviceName"]] = switch
 
-        msg = f"{self.class_name}.refresh(): self.data_subclass: "
-        msg += f"{json.dumps(self.data_subclass, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
     def _get(self, item):
+        """
+        ### Summary
+        Return the value of the switch property matching self.filter.
+
+        ### Raises
+        -   ``ValueError`` if:
+                -   ``filter`` is not set before accessing properties.
+                -   ``filter`` does not exist on the controller.
+                -   ``filter`` references an unknown property name.
+        """
         method_name = inspect.stack()[0][3]
 
         if self.filter is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a switch deviceName "
             msg += f"before accessing property {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if self.data_subclass.get(self.filter) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} does not exist "
             msg += "on the controller."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
         if self.data_subclass[self.filter].get(item) is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.filter} unknown property name: {item}."
-            self.ansible_module.fail_json(msg, **self.failed_result)
+            raise ValueError(msg)
 
-        return self.make_none(
-            self.make_boolean(self.data_subclass[self.filter].get(item))
+        return self.conversion.make_none(
+            self.conversion.make_boolean(self.data_subclass[self.filter].get(item))
         )
 
     @property
     def filtered_data(self):
         """
-        Return a dictionary of the switch matching self.filter.
-        Return None of the switch does not exist in NDFC.
+        ### Summary
+        -   Return a dictionary of the switch matching ``filter``.
+        -   Return ``None`` if the switch does not exist on the
+            controller.
         """
         return self.data_subclass.get(self.filter)
 
     @property
     def filter(self):
         """
+        ### Summary
         Set the device_name of the switch to query.
 
-        This needs to be set before accessing this class's properties.
+        ``filter`` needs to be set before accessing this class's properties.
         """
-        return self.properties.get("filter")
+        return self._filter
 
     @filter.setter
     def filter(self, value):
-        self.properties["filter"] = value
+        self._filter = value

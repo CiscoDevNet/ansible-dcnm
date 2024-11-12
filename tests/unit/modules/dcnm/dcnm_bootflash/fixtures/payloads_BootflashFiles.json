@@ -1,0 +1,108 @@
+{
+    "TEST_NOTES": [
+        "Payloads for BootflashFiles() unit test asserts.",
+        "tests/unit/modules/dcnm/dcnm_bootflash/bootflash_files.py"
+    ],
+    "test_bootflash_files_00100a": {
+        "deleteFiles": [
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGCS"
+            },
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGD0"
+            }
+        ]
+    },
+    "test_bootflash_files_00200a": {
+        "deleteFiles": [
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:/air.txt"
+                    },
+                    {
+                        "bootflashType": "active",
+                        "fileName": "earth.txt",
+                        "filePath": "bootflash:/earth.txt"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGCS"
+            }
+        ]
+    },
+    "test_bootflash_files_00210a": {
+        "deleteFiles": [
+            {
+                "serialNumber": "FOX2109PGCS",
+                "partition": "bootflash:",
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:/air.txt"
+                    }
+                ]
+            },
+            {
+                "serialNumber": "FOX2109PGD0",
+                "partition": "bootflash:",
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:/black.txt"
+                    }
+                ]
+            }
+        ]
+    },
+    "test_bootflash_files_00600a": {
+        "deleteFiles": [
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGCS"
+            }
+        ]
+    },
+    "test_bootflash_files_00610a": {
+        "deleteFiles": [
+            {
+                "files": [
+                    {
+                        "bootflashType": "active",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:"
+                    }
+                ],
+                "partition": "bootflash:",
+                "serialNumber": "FOX2109PGCS"
+            }
+        ]
+    }
+}

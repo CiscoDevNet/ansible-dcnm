@@ -11,45 +11,37 @@
 #
 # To minimize runtime, we use preserve_config: True during SETUP
 ################################################################################
-
+#
 ################################################################################
 # RUNTIME
 ################################################################################
-
+#
 # Recent run times (MM:SS.ms):
-# 29:49.15
-# 33:40.57
-# 28:58.18
-# 31:41.42
-# 31:28.12
-# 29:18.47
-# 28:57.34
-
+# 13:07.88
+# 14:02.90
+# 13:12.97
+#
 ################################################################################
 # STEPS
 ################################################################################
-
-# SETUP
-# 1. Create a fabric
-# 2. Merge switches into fabric
-# TEST
-# 3. Upgrade switches using global config and verify
-# 4. Wait for all switches to complete ISSU
-# 5. Test idempotence
+#
+# SETUP (these should be run prior to running this playbook)
+#  1. Run 00_setup_create_fabric.yaml
+#  2. Run 01_setup_add_switches_to_fabric 
+#  3. Run 02_setup_replace_image_policies
+# PRE_TEST (this playbook)
+#  4. MERGED - PRE_TEST - Upgrade all switches using global config.
+#  5. MERGED - PRE_TEST - Wait for controller response for all three switches.
+# TEST (this playbook)
+#  6. MERGED - TEST - global_config - test idempotence.
 # CLEANUP
-# 6. Remove devices from fabric
-
+#  7. Run 03_cleanup_remove_devices_from_fabric.yaml
+#  8. Run 04_cleanup_delete_image_policies.yaml
+#  9. Run 05_cleanup_delete_fabric.yaml
+#
 ################################################################################
 # REQUIREMENTS
 ################################################################################
-
-# 1. image policies are already configured on the controller:
-#   - KR5M (Kerry release maintenance 5)
-#   - NR3F (Niles release maintenance 3)
-#   The above include both NX-OS and EPLD images.
-#
-# TODO: Once dcnm_image_policy module is accepted, use that to
-#       configure the above policies.
 #
 # Example vars for dcnm_image_upgrade integration tests
 # Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
@@ -57,447 +49,228 @@
 # vars:
 #   # This testcase field can run any test in the tests directory for the role
 #   testcase: merged_global_config
-#   fabric_name: f1
-#   username: admin
-#   password: "foobar"
-#   switch_username: admin
-#   switch_password: "foobar"
-#   spine1: 172.22.150.114
-#   spine2: 172.22.150.115
-#   leaf1: 172.22.150.106
-#   leaf2: 172.22.150.107
-#   leaf3: 172.22.150.108
-#   leaf4: 172.22.150.109
-#   # for dcnm_image_upgrade role
-#   test_fabric: "{{ fabric_name }}"
-#   ansible_switch_1: "{{ leaf1 }}"
-#   ansible_switch_2: "{{ leaf2 }}"
-#   ansible_switch_3: "{{ spine1 }}"
-#   image_policy_1: "KR5M"
-#   image_policy_2: "NR3F"
-
+#    fabric_name: LAN_Classic_Fabric
+#    switch_username: admin
+#    switch_password: "Cisco!2345"
+#    leaf1: 192.168.1.2
+#    leaf2: 192.168.1.3
+#    spine1: 192.168.1.4
+#    # for dcnm_image_policy and dcnm_image_upgrade roles
+#    image_policy_1: "KR5M"
+#    image_policy_2: "NR3F"
+#    # for dcnm_image_policy role
+#    epld_image_1: n9000-epld.10.2.5.M.img
+#    epld_image_2: n9000-epld.10.3.1.F.img
+#    nxos_image_1: n9000-dk9.10.2.5.M.bin
+#    nxos_image_2: n9000-dk9.10.3.1.F.bin
+#    nxos_release_1: 10.2.5_nxos64-cs_64bit
+#    nxos_release_2: 10.3.1_nxos64-cs_64bit
+#    # for dcnm_image_upgrade role
+#    fabric_name_1: "{{ fabric_name }}"
+#    ansible_switch_1: "{{ leaf1 }}"
+#    ansible_switch_2: "{{ leaf2 }}"
+#    ansible_switch_3: "{{ spine1 }}"
+#
 ################################################################################
-# SETUP
+# MERGED - PRE_TEST - Detach image policies from all switches.
+# NOTES:
+#   1. Depending on whether the switches have policies attached, the
+#      detach operation may not be performed.  Hence, we simply print the 
+#      result and do not verify it.
 ################################################################################
 
-- set_fact:
-    rest_fabric_create: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_name }}"
-
-- name: MERGED - SETUP - Verify if fabric is deployed.
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: "{{ rest_fabric_create }}"
-  register: result
-
-- debug:
-    var: result
-
-- assert:
-    that:
-    - result.response.DATA != None
-
-- name: MERGED - SETUP - Clean up any existing devices
-  cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name }}"
+- name: MERGED - PRE_TEST - Detach image policies from all switches.
+  cisco.dcnm.dcnm_image_upgrade:
     state: deleted
-
-- name: MERGED - SETUP - Merge switches
-  cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name }}"
-    state: merged
     config:
-      - seed_ip: "{{ ansible_switch_1 }}"
-        auth_proto: MD5
-        user_name: "{{ switch_username }}"
-        password: "{{ switch_password }}"
-        max_hops: 0
-        role: leaf
-        preserve_config: False
-      - seed_ip: "{{ ansible_switch_2 }}"
-        auth_proto: MD5
-        user_name: "{{ switch_username }}"
-        password: "{{ switch_password }}"
-        max_hops: 0
-        role: leaf
-        preserve_config: False
-      - seed_ip: "{{ ansible_switch_3 }}"
-        auth_proto: MD5
-        user_name: "{{ switch_username }}"
-        password: "{{ switch_password }}"
-        max_hops: 0
-        role: spine
-        preserve_config: False
+      policy: "{{ image_policy_1 }}"
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
-
-- assert:
-    that:
-    - result.changed == true
-
-- assert:
-    that:
-    - item["RETURN_CODE"] == 200
-  loop: '{{ result.response }}'
+- debug:
+    var: result
 
 ################################################################################
-# MERGED - TEST - Upgrade all switches using global config
+# MERGED - TEST - Upgrade all switches using global config.
+# NOTES:
+#   1. Images may or may not be staged depending on the current state of the
+#      switches.  Test only that the upgrade operation is successful.
+#   2. Since we detached the image policies, image validation will be
+#      performed, so we do test for this. 
 ################################################################################
-# Expected result
-# ok: [dcnm] => {
-#     "result": {
-#         "changed": true,
-#         "diff": [
-#             {
-#                 "action": "attach",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "attach",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FDO211218AX"
-#             },
-#             {
-#                 "action": "attach",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy_name": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
-#             },
-#             {
-#                 "action": "stage",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "stage",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
-#             },
-#             {
-#                 "action": "stage",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218AX"
-#             },
-#             {
-#                 "action": "validate",
-#                 "ip_address": "172.22.150.106",
-#                 "logical_name": "cvd-2311-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218HB"
-#             },
-#             {
-#                 "action": "validate",
-#                 "ip_address": "172.22.150.114",
-#                 "logical_name": "cvd-2211-spine",
-#                 "policy": "KR5M",
-#                 "serial_number": "FOX2109PHDD"
-#             },
-#             {
-#                 "action": "validate",
-#                 "ip_address": "172.22.150.107",
-#                 "logical_name": "cvd-2312-leaf",
-#                 "policy": "KR5M",
-#                 "serial_number": "FDO211218AX"
-#             },
-#             {
-#                 "devices": [
-#                     {
-#                         "policyName": "KR5M",
-#                         "serialNumber": "FDO211218HB"
-#                     }
-#                 ],
-#                 "epldOptions": {
-#                     "golden": false,
-#                     "moduleNumber": "ALL"
-#                 },
-#                 "epldUpgrade": false,
-#                 "issuUpgrade": true,
-#                 "issuUpgradeOptions1": {
-#                     "disruptive": true,
-#                     "forceNonDisruptive": false,
-#                     "nonDisruptive": false
-#                 },
-#                 "issuUpgradeOptions2": {
-#                     "biosForce": false
-#                 },
-#                 "pacakgeInstall": false,
-#                 "pacakgeUnInstall": false,
-#                 "reboot": false,
-#                 "rebootOptions": {
-#                     "configReload": false,
-#                     "writeErase": false
-#                 }
-#             },
-#             {
-#                 "devices": [
-#                     {
-#                         "policyName": "KR5M",
-#                         "serialNumber": "FDO211218AX"
-#                     }
-#                 ],
-#                 "epldOptions": {
-#                     "golden": false,
-#                     "moduleNumber": "ALL"
-#                 },
-#                 "epldUpgrade": false,
-#                 "issuUpgrade": true,
-#                 "issuUpgradeOptions1": {
-#                     "disruptive": true,
-#                     "forceNonDisruptive": false,
-#                     "nonDisruptive": false
-#                 },
-#                 "issuUpgradeOptions2": {
-#                     "biosForce": false
-#                 },
-#                 "pacakgeInstall": false,
-#                 "pacakgeUnInstall": false,
-#                 "reboot": false,
-#                 "rebootOptions": {
-#                     "configReload": false,
-#                     "writeErase": false
-#                 }
-#             },
-#             {
-#                 "devices": [
-#                     {
-#                         "policyName": "KR5M",
-#                         "serialNumber": "FOX2109PHDD"
-#                     }
-#                 ],
-#                 "epldOptions": {
-#                     "golden": false,
-#                     "moduleNumber": "ALL"
-#                 },
-#                 "epldUpgrade": false,
-#                 "issuUpgrade": true,
-#                 "issuUpgradeOptions1": {
-#                     "disruptive": true,
-#                     "forceNonDisruptive": false,
-#                     "nonDisruptive": false
-#                 },
-#                 "issuUpgradeOptions2": {
-#                     "biosForce": false
-#                 },
-#                 "pacakgeInstall": false,
-#                 "pacakgeUnInstall": false,
-#                 "reboot": false,
-#                 "rebootOptions": {
-#                     "configReload": false,
-#                     "writeErase": false
-#                 }
-#             }
-#         ],
-#         "failed": false,
-#         "response": [
-#             {
-#                 "DATA": "[cvd-2311-leaf:Success] [cvd-2312-leaf:Success] [cvd-2211-spine:Success] ",
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/attach-policy",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": [
-#                     {
-#                         "key": "FDO211218AX",
-#                         "value": "No files to stage"
-#                     },
-#                     {
-#                         "key": "FDO211218HB",
-#                         "value": "No files to stage"
-#                     },
-#                     {
-#                         "key": "FOX2109PHDD",
-#                         "value": "No files to stage"
-#                     }
-#                 ],
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/stage-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": "[StageResponse [key=success, value=]]",
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/stagingmanagement/validate-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": 63,
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": 64,
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-#                 "RETURN_CODE": 200
-#             },
-#             {
-#                 "DATA": 65,
-#                 "MESSAGE": "OK",
-#                 "METHOD": "POST",
-#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupgrade/upgrade-image",
-#                 "RETURN_CODE": 200
-#             }
-#         ]
-#     }
-# }
-################################################################################
-- name: MERGED - SETUP - Upgrade all switches using global config
-  cisco.dcnm.dcnm_image_upgrade: &global_config
+
+- name: MERGED - TEST - Upgrade all switches using global config.
+  cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_1 }}"
-        reboot: false
-        stage: true
-        validate: true
-        upgrade:
-            nxos: true
-            epld: false
-        options:
-            nxos:
-                mode: disruptive
-                bios_force: false
-            epld:
-                module: ALL
-                golden: false
-            reboot:
-                config_reload: false
-                write_erase: false
-            package:
-                install: false
-                uninstall: false
-        switches:
-          - ip_address: "{{ ansible_switch_1 }}"
-          - ip_address: "{{ ansible_switch_2 }}"
-          - ip_address: "{{ ansible_switch_3 }}"
+      policy: "{{ image_policy_1 }}"
+      reboot: false
+      stage: true
+      validate: true
+      upgrade:
+        nxos: true
+        epld: false
+      options:
+        nxos:
+          mode: disruptive
+          bios_force: false
+        epld:
+          module: ALL
+          golden: false
+        reboot:
+          config_reload: false
+          write_erase: false
+        package:
+          install: false
+          uninstall: false
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
 - debug:
     var: result
 
-- assert:
-    that:
-    - result.changed == true
-    - result.failed == false
-    - result.diff[0].action == "attach"
-    - result.diff[1].action == "attach"
-    - result.diff[2].action == "attach"
-    - result.diff[0].policy_name == image_policy_1
-    - result.diff[1].policy_name == image_policy_1
-    - result.diff[2].policy_name == image_policy_1
-    - result.diff[3].action == "stage"
-    - result.diff[4].action == "stage"
-    - result.diff[5].action == "stage"
-    - result.diff[3].policy == image_policy_1
-    - result.diff[4].policy == image_policy_1
-    - result.diff[5].policy == image_policy_1
-    - result.diff[6].action == "validate"
-    - result.diff[7].action == "validate"
-    - result.diff[8].action == "validate"
-    - result.diff[6].policy == image_policy_1
-    - result.diff[7].policy == image_policy_1
-    - result.diff[8].policy == image_policy_1
-    - result.diff[9].devices[0].policyName == image_policy_1
-    - result.diff[10].devices[0].policyName == image_policy_1
-    - result.diff[11].devices[0].policyName == image_policy_1
-    - result.response[0].RETURN_CODE == 200
-    - result.response[1].RETURN_CODE == 200
-    - result.response[3].RETURN_CODE == 200
-    - result.response[4].RETURN_CODE == 200
-    - result.response[5].RETURN_CODE == 200
+################################################################################
+# MERGED - TEST - Wait for controller response for all three switches.
+################################################################################
 
-- name: MERGED - TEST - Wait for controller response for all three switches
+- name: MERGED - TEST - Wait for controller response for all three switches.
   cisco.dcnm.dcnm_image_upgrade:
     state: query
     config:
-        switches:
+      switches:
         - ip_address: "{{ ansible_switch_1 }}"
         - ip_address: "{{ ansible_switch_2 }}"
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
   until:
-    - result.diff[0].ipAddress == ansible_switch_1
-    - result.diff[1].ipAddress == ansible_switch_2
-    - result.diff[2].ipAddress == ansible_switch_3
+    - ansible_switch_1 in result.diff[0]
+    - ansible_switch_2 in result.diff[0]
+    - ansible_switch_3 in result.diff[0]
   retries: 60
   delay: 5
   ignore_errors: yes
 
 ################################################################################
-# MERGED - TEST - global_config - IDEMPOTENCE
+# MERGED - TEST - global_config - test idempotence.
 ################################################################################
 # Expected result
-# ok: [dcnm] => {
+# ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [],
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
 #         "failed": false,
-#         "response": []
+#         "metadata": [
+#             {
+#                 "action": "image_stage",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "image_validate",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "image_upgrade",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": [
+#                     {
+#                         "key": "ALL",
+#                         "value": "No images to stage."
+#                     }
+#                 ],
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "response": "No images to validate.",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": false,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "sequence_number": 3
+#             }
+#         ]
 #     }
 # }
 ################################################################################
 
-- name: MERGED - TEST - global_config - IDEMPOTENCE
+- name: MERGED - TEST - global_config - test idempotence.
   cisco.dcnm.dcnm_image_upgrade:
     state: merged
     config:
-        policy: "{{ image_policy_1}}"
-        reboot: false
-        stage: true
-        validate: true
-        upgrade:
-            nxos: true
-            epld: false
-        options:
-            nxos:
-                mode: disruptive
-                bios_force: false
-            epld:
-                module: ALL
-                golden: false
-            reboot:
-                config_reload: false
-                write_erase: false
-            package:
-                install: false
-                uninstall: false
-        switches:
-          - ip_address: "{{ ansible_switch_1 }}"
-          - ip_address: "{{ ansible_switch_2 }}"
-          - ip_address: "{{ ansible_switch_3 }}"
+      policy: "{{ image_policy_1}}"
+      reboot: false
+      stage: true
+      validate: true
+      upgrade:
+        nxos: true
+        epld: false
+      options:
+        nxos:
+          mode: disruptive
+          bios_force: false
+        epld:
+          module: ALL
+          golden: false
+        reboot:
+          config_reload: false
+          write_erase: false
+        package:
+          install: false
+          uninstall: false
+      switches:
+        - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
   register: result
-
 - debug:
     var: result
-
 - assert:
     that:
-    - result.changed == false
-    - result.failed == false
-    - (result.diff | length) == 0
-    - (result.response | length) == 0
+      - result.changed == false
+      - result.failed == false
 
 ################################################################################
-# CLEAN-UP
+# CLEANUP
 ################################################################################
-
-- name: MERGED - CLEANUP - Remove devices from fabric
-  cisco.dcnm.dcnm_inventory:
-    fabric: "{{ fabric_name }}"
-    state: deleted
+# Run 03_cleanup_remove_devices_from_fabric.yaml
+# Run 04_cleanup_delete_image_policies.yaml
+# Run 05_cleanup_delete_fabric.yaml
+################################################################################

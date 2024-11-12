@@ -18,38 +18,41 @@ __metaclass__ = type
 
 
 from contextlib import contextmanager
-from typing import Any, Dict
 
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
     AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
     ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_policy_action import \
-    ImagePolicyAction
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
+    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_stage import \
     ImageStage
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade import \
     ImageUpgrade
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_task_result import \
-    ImageUpgradeTaskResult
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_validate import \
     ImageValidate
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.install_options import \
     ImageInstallOptions
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_details import \
-    SwitchDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
     SwitchIssuDetailsByDeviceName, SwitchIssuDetailsByIpAddress,
     SwitchIssuDetailsBySerialNumber)
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_image_upgrade import \
-    ImageUpgradeTask
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_upgrade.fixture import \
     load_fixture
+
+params = {
+    "state": "merged",
+    "check_mode": False,
+    "config": [
+        {
+            "name": "NR1F",
+            "agnostic": False,
+            "description": "NR1F",
+            "platform": "N9K",
+            "type": "PLATFORM",
+        }
+    ],
+}
 
 
 class MockAnsibleModule:
@@ -74,7 +77,7 @@ class MockAnsibleModule:
         """
         raise AnsibleFailJson(msg, kwargs)
 
-    def public_method_for_pylint(self) -> Any:
+    def public_method_for_pylint(self):
         """
         Add one public method to appease pylint
         """
@@ -87,113 +90,73 @@ class MockAnsibleModule:
 @pytest.fixture(name="image_install_options")
 def image_install_options_fixture():
     """
-    mock ImageInstallOptions
+    Return ImageInstallOptions instance.
     """
-    return ImageInstallOptions(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policies")
-def image_policies_fixture():
-    """
-    mock ImagePolicies
-    """
-    return ImagePolicies(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_policy_action")
-def image_policy_action_fixture():
-    """
-    mock ImagePolicyAction
-    """
-    return ImagePolicyAction(MockAnsibleModule)
+    return ImageInstallOptions()
 
 
 @pytest.fixture(name="image_stage")
 def image_stage_fixture():
     """
-    mock ImageStage
+    Return ImageStage instance.
     """
-    return ImageStage(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_upgrade_common")
-def image_upgrade_common_fixture():
-    """
-    mock ImageUpgradeCommon
-    """
-    return ImageUpgradeCommon(MockAnsibleModule)
+    return ImageStage()
 
 
 @pytest.fixture(name="image_upgrade")
 def image_upgrade_fixture():
     """
-    mock ImageUpgrade
+    Return ImageUpgrade instance.
     """
-    return ImageUpgrade(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_upgrade_task")
-def image_upgrade_task_fixture():
-    """
-    mock ImageUpgradeTask
-    """
-    return ImageUpgradeTask(MockAnsibleModule)
-
-
-@pytest.fixture(name="image_upgrade_task_result")
-def image_upgrade_task_result_fixture():
-    """
-    mock ImageUpgradeTaskResult
-    """
-    return ImageUpgradeTaskResult(MockAnsibleModule)
+    return ImageUpgrade()
 
 
 @pytest.fixture(name="image_validate")
 def image_validate_fixture():
     """
-    mock ImageValidate
+    Return ImageValidate instance.
     """
-    return ImageValidate(MockAnsibleModule)
+    return ImageValidate()
 
 
 @pytest.fixture(name="params_validate")
 def params_validate_fixture():
     """
-    mock ParamsValidate
+    Return ParamsValidate instance.
     """
-    return ParamsValidate(MockAnsibleModule)
+    return ParamsValidate()
 
 
 @pytest.fixture(name="issu_details_by_device_name")
-def issu_details_by_device_name_fixture():
+def issu_details_by_device_name_fixture() -> SwitchIssuDetailsByDeviceName:
     """
-    mock SwitchIssuDetailsByDeviceName
+    Return SwitchIssuDetailsByDeviceName instance.
     """
-    return SwitchIssuDetailsByDeviceName(MockAnsibleModule)
+    return SwitchIssuDetailsByDeviceName()
 
 
 @pytest.fixture(name="issu_details_by_ip_address")
-def issu_details_by_ip_address_fixture():
+def issu_details_by_ip_address_fixture() -> SwitchIssuDetailsByIpAddress:
     """
-    mock SwitchIssuDetailsByIpAddress
+    Return SwitchIssuDetailsByIpAddress instance.
     """
-    return SwitchIssuDetailsByIpAddress(MockAnsibleModule)
+    return SwitchIssuDetailsByIpAddress()
 
 
 @pytest.fixture(name="issu_details_by_serial_number")
 def issu_details_by_serial_number_fixture() -> SwitchIssuDetailsBySerialNumber:
     """
-    mock SwitchIssuDetailsBySerialNumber
+    Return SwitchIssuDetailsBySerialNumber instance.
     """
-    return SwitchIssuDetailsBySerialNumber(MockAnsibleModule)
+    return SwitchIssuDetailsBySerialNumber()
 
 
 @pytest.fixture(name="switch_details")
 def switch_details_fixture():
     """
-    mock SwitchDetails
+    Return SwitchDetails instance.
     """
-    return SwitchDetails(MockAnsibleModule)
+    return SwitchDetails()
 
 
 @contextmanager
@@ -204,7 +167,7 @@ def does_not_raise():
     yield
 
 
-def load_playbook_config(key: str) -> Dict[str, str]:
+def load_playbook_config(key: str) -> dict[str, str]:
     """
     Return playbook configs for ImageUpgradeTask
     """
@@ -214,49 +177,90 @@ def load_playbook_config(key: str) -> Dict[str, str]:
     return playbook_config
 
 
-def payloads_image_upgrade(key: str) -> Dict[str, str]:
+def devices_image_upgrade(key: str) -> dict[str, str]:
     """
-    Return payloads for ImageUpgrade
+    Return data for the ImageUpgrade().devices property.
+    Used by test_image_upgrade.py
     """
-    payload_file = "image_upgrade_payloads_ImageUpgrade"
+    devices_file = "devices_image_upgrade"
+    devices = load_fixture(devices_file).get(key)
+    print(f"devices_image_upgrade: {key} : {devices}")
+    return devices
+
+
+def payloads_ep_image_upgrade(key: str) -> dict[str, str]:
+    """
+    Return payloads for EpImageUpgrade
+    """
+    payload_file = "payloads_ep_image_upgrade"
     payload = load_fixture(payload_file).get(key)
-    print(f"payload_data_image_upgrade: {key} : {payload}")
+    print(f"payloads_ep_image_upgrade: {key} : {payload}")
     return payload
 
 
-def responses_controller_version(key: str) -> Dict[str, str]:
+def responses_ep_image_stage(key: str) -> dict[str, str]:
     """
-    Return ControllerVersion controller responses
+    Return EpImageStage controller responses
     """
-    response_file = "image_upgrade_responses_ControllerVersion"
+    response_file = "responses_ep_image_stage"
     response = load_fixture(response_file).get(key)
-    print(f"responses_controller_version: {key} : {response}")
+    print(f"responses_ep_image_stage: {key} : {response}")
     return response
 
 
-def responses_image_install_options(key: str) -> Dict[str, str]:
+def responses_ep_image_upgrade(key: str) -> dict[str, str]:
     """
-    Return ImageInstallOptions controller responses
+    Return EpImageUpgrade responses
     """
-    response_file = "image_upgrade_responses_ImageInstallOptions"
+    response_file = "responses_ep_image_upgrade"
     response = load_fixture(response_file).get(key)
-    print(f"{key} : : {response}")
+    print(f"responses_ep_image_upgrade: {key} : {response}")
     return response
 
 
-def responses_image_policies(key: str) -> Dict[str, str]:
+def responses_ep_image_validate(key: str) -> dict[str, str]:
     """
-    Return ImagePolicies controller responses
+    Return EpImageValidate responses
     """
-    response_file = "image_upgrade_responses_ImagePolicies"
+    response_file = "responses_ep_image_validate"
     response = load_fixture(response_file).get(key)
-    print(f"responses_image_policies: {key} : {response}")
+    print(f"responses_ep_image_validate: {key} : {response}")
     return response
 
 
-def responses_image_policy_action(key: str) -> Dict[str, str]:
+def responses_ep_issu(key: str) -> dict[str, str]:
     """
-    Return ImagePolicyAction controller responses
+    Return EpIssu responses
+    """
+    response_file = "responses_ep_issu"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_issu: {key} : {response}")
+    return response
+
+
+def responses_ep_version(key: str) -> dict[str, str]:
+    """
+    Return EpVersion responses
+    """
+    response_file = "responses_ep_version"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_version: {key} : {response}")
+    return response
+
+
+def responses_ep_install_options(key: str) -> dict[str, str]:
+    """
+    Return EpInstallOptions responses
+    """
+    response_file = "responses_ep_install_options"
+    response = load_fixture(response_file).get(key)
+    print(f"responses_ep_install_options: {key} : {response}")
+    return response
+
+
+def responses_image_policy_action(key: str) -> dict[str, str]:
+    """
+    Return ImagePolicyAction responses
     """
     response_file = "image_upgrade_responses_ImagePolicyAction"
     response = load_fixture(response_file).get(key)
@@ -264,29 +268,9 @@ def responses_image_policy_action(key: str) -> Dict[str, str]:
     return response
 
 
-def responses_image_stage(key: str) -> Dict[str, str]:
+def responses_image_upgrade_common(key: str) -> dict[str, str]:
     """
-    Return ImageStage controller responses
-    """
-    response_file = "image_upgrade_responses_ImageStage"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_stage: {key} : {response}")
-    return response
-
-
-def responses_image_upgrade(key: str) -> Dict[str, str]:
-    """
-    Return ImageUpgrade controller responses
-    """
-    response_file = "image_upgrade_responses_ImageUpgrade"
-    response = load_fixture(response_file).get(key)
-    print(f"response_data_image_upgrade: {key} : {response}")
-    return response
-
-
-def responses_image_upgrade_common(key: str) -> Dict[str, str]:
-    """
-    Return ImageUpgradeCommon controller responses
+    Return ImageUpgradeCommon responses
     """
     response_file = "image_upgrade_responses_ImageUpgradeCommon"
     response = load_fixture(response_file).get(key)
@@ -295,31 +279,11 @@ def responses_image_upgrade_common(key: str) -> Dict[str, str]:
     return {"response": response, "verb": verb}
 
 
-def responses_image_validate(key: str) -> Dict[str, str]:
+def responses_switch_details(key: str) -> dict[str, str]:
     """
-    Return ImageValidate controller responses
-    """
-    response_file = "image_upgrade_responses_ImageValidate"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_image_validate: {key} : {response}")
-    return response
-
-
-def responses_switch_details(key: str) -> Dict[str, str]:
-    """
-    Return SwitchDetails controller responses
+    Return SwitchDetails responses
     """
     response_file = "image_upgrade_responses_SwitchDetails"
     response = load_fixture(response_file).get(key)
     print(f"responses_switch_details: {key} : {response}")
-    return response
-
-
-def responses_switch_issu_details(key: str) -> Dict[str, str]:
-    """
-    Return SwitchIssuDetails controller responses
-    """
-    response_file = "image_upgrade_responses_SwitchIssuDetails"
-    response = load_fixture(response_file).get(key)
-    print(f"responses_switch_issu_details: {key} : {response}")
     return response

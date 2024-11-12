@@ -32,53 +32,58 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
     RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details import \
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
     FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
     MockAnsibleModule, does_not_raise, fabric_create_bulk_fixture, params,
     payloads_fabric_create_bulk, responses_fabric_create_bulk,
-    responses_fabric_details_by_name, rest_send_response_current)
+    responses_fabric_details_by_name_v2, rest_send_response_current)
 
 
-def test_fabric_create_bulk_00010(fabric_create_bulk) -> None:
+def test_fabric_create_bulk_00000(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
     - FabricCreateBulk
         - __init__()
 
-    Test
+    ### Test
     - Class attributes are initialized to expected values
     - Exception is not raised
     """
     with does_not_raise():
         instance = fabric_create_bulk
-        instance.fabric_details = FabricDetailsByName(params)
+        instance.fabric_details = FabricDetailsByName()
     assert instance.class_name == "FabricCreateBulk"
-    assert instance.action == "create"
-    assert instance.state == "merged"
-    assert isinstance(instance.fabric_details, FabricDetailsByName)
+    assert instance.action == "fabric_create"
+    assert instance.fabric_details.class_name == "FabricDetailsByName"
 
 
 def test_fabric_create_bulk_00020(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
     - FabricCreateBulk
         - __init__()
 
-    Test
+    ### Test
     - payloads is set to expected value
-    - Exception is not raised
+    - Exception is not raised.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -92,7 +97,8 @@ def test_fabric_create_bulk_00020(fabric_create_bulk) -> None:
 
 def test_fabric_create_bulk_00021(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
@@ -100,17 +106,18 @@ def test_fabric_create_bulk_00021(fabric_create_bulk) -> None:
         - __init__()
         - payloads setter
 
-    Summary
+    ### Summary
     -   Verify ``ValueError`` is raised because payloads is not a list
     -   Verify ``instance.payloads`` is not modified, hence it retains its
         initial value of None
     """
-    match = r"FabricCreateBulk\.payloads: "
-    match += r"payloads must be a list of dict\."
-
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
+
+    match = r"FabricCreateBulk\.payloads: "
+    match += r"payloads must be a list of dict\."
+
     with pytest.raises(ValueError, match=match):
         instance.payloads = "NOT_A_LIST"
     assert instance.payloads is None
@@ -118,26 +125,28 @@ def test_fabric_create_bulk_00021(fabric_create_bulk) -> None:
 
 def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
     - FabricCreateBulk
         - __init__()
 
-    Summary
+    ### Summary
     -   Verify ``ValueError`` is raised because payloads is a list with
         a non-dict element
     -   Verify instance.payloads is not modified, hence it retains its
         initial value of None
     """
+    with does_not_raise():
+        instance = fabric_create_bulk
+        instance.results = Results()
+
     match = r"FabricCreateBulk._verify_payload: "
     match += r"Playbook configuration for fabrics must be a dict\.\s+"
     match += r"Got type int, value 1\."
 
-    with does_not_raise():
-        instance = fabric_create_bulk
-        instance.results = Results()
     with pytest.raises(ValueError, match=match):
         instance.payloads = [1, 2, 3]
     assert instance.payloads is None
@@ -145,7 +154,8 @@ def test_fabric_create_bulk_00022(fabric_create_bulk) -> None:
 
 def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
@@ -153,23 +163,24 @@ def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
         - __init__()
         - commit()
 
-    Summary
-    -   Verify behavior when payloads is not set prior to calling commit
+    ### Summary
+    Verify behavior when payloads is not set prior to calling commit.
 
-    Test
+    ### Test
     -   ``ValueError`` is raised because payloads is not set prior
         to calling commit
     -   instance.payloads is not modified, hence it retains its
         initial value of None
     """
-    match = r"FabricCreateBulk\.commit: "
-    match += r"payloads must be set prior to calling commit\."
-
     with does_not_raise():
         instance = fabric_create_bulk
         instance.results = Results()
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send = RestSend(params)
         instance.rest_send.unit_test = True
+
+    match = r"FabricCreateBulk\.commit: "
+    match += r"payloads must be set prior to calling commit\."
+
     with pytest.raises(ValueError, match=match):
         instance.commit()
     assert instance.payloads is None
@@ -177,27 +188,30 @@ def test_fabric_create_bulk_00023(fabric_create_bulk) -> None:
 
 def test_fabric_create_bulk_00024(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
     - FabricCreateBulk
         - __init__()
 
-    Summary
-    Verify behavior when payloads is set to an empty list
+    ### Summary
+    Verify behavior when ``payloads`` is set to an empty list.
 
-    Setup
-    -   FabricCreatebulk().payloads is set to an empty list
+    ### Setup
 
-    Test
+    -   ``payloads`` is set to an empty list.
+
+    ### Test
+
     -   Exception is not raised
-    -   payloads is set to an empty list
+    -   ``payloads`` is set to an empty list.
 
-    NOTES:
-    -   element_spec is configured such that AnsibleModule will raise an
-        exception when config is not a list of dict.  Hence, we do not test
-        instance.commit() here since it would never be reached.
+    ### NOTES
+    -   element_spec is configured such that an exception is raised when
+        config is not a list of dict.  Hence, we do not test ``commit``
+        here since it would never be reached.
     """
     with does_not_raise():
         instance = fabric_create_bulk
@@ -208,23 +222,24 @@ def test_fabric_create_bulk_00024(fabric_create_bulk) -> None:
 
 def test_fabric_create_bulk_00025(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCreateCommon
         - __init__()
         - payloads setter
     - FabricCreateBulk
         - __init__()
 
-    Summary
-    -   Verify behavior when payloads contains a dict with an unexpected
-        value for the FABRIC_TYPE key.
+    ### Summary
+    Verify behavior when payloads contains a dict with an unexpected
+    value for the FABRIC_TYPE key.
 
-    Setup
+    ### Setup
     -   FabricCreatebulk().payloads is set to contain a dict with FABRIC_TYPE
-        set to "INVALID_FABRIC_TYPE"
+        set to "INVALID_FABRIC_TYPE".
 
-    Test
-    -   ``ValueError`` is raised because the value of FABRIC_TYPE is invalid
+    ### Test
+    -   ``ValueError`` is raised because the value of FABRIC_TYPE is invalid.
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
@@ -232,57 +247,59 @@ def test_fabric_create_bulk_00025(fabric_create_bulk) -> None:
     with does_not_raise():
         instance = fabric_create_bulk
 
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.rest_send = RestSend(params)
         instance.fabric_details.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
+        instance.rest_send = RestSend(params)
         instance.rest_send.unit_test = True
-
         instance.results = Results()
 
     match = r"FabricCreateBulk\._verify_payload:\s+"
     match += r"Playbook configuration for fabric f1 contains an invalid\s+"
     match += r"FABRIC_TYPE \(INVALID_FABRIC_TYPE\)\.\s+"
     match += r"Valid values for FABRIC_TYPE:"
+
     with pytest.raises(ValueError, match=match):
         instance.payloads = payloads_fabric_create_bulk(key)
 
 
 def test_fabric_create_bulk_00026(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon
         - __init__()
         - payloads setter
     - FabricCreateBulk
         - __init__()
 
-    Summary
-    -   Verify behavior when rest_send is not set prior to calling commit
+    ### Summary
+    Verify behavior when ``rest_send`` is not set prior to calling ``commit``.
 
-    Test
+    ### Test
     -   ``ValueError`` is raised because rest_send is not set prior
         to calling commit
     """
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
+    with does_not_raise():
+        instance = fabric_create_bulk
+        instance.fabric_details = FabricDetailsByName()
+        instance.results = Results()
+        instance.payloads = payloads_fabric_create_bulk(key)
+
     match = r"FabricCreateBulk\.commit: "
     match += r"rest_send must be set prior to calling commit\."
 
-    with does_not_raise():
-        instance = fabric_create_bulk
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.results = Results()
-        instance.payloads = payloads_fabric_create_bulk(key)
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
-def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
+def test_fabric_create_bulk_00030(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -296,11 +313,12 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
         - __init__()
         - commit()
 
-    Summary
-    -   Verify behavior when user attempts to create a fabric and no fabrics
-        exist on the controller and the RestSend() RETURN_CODE is 200.
+    ### Summary
+    Verify behavior when user attempts to create a fabric and no fabrics
+    exist on the controller and the RestSend() RETURN_CODE is 200.
 
-    Code Flow
+    ### Code Flow
+
     -   FabricCreateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.
     -   FabricCreateBulk.commit() calls FabricCreate()._build_payloads_to_commit()
@@ -316,34 +334,29 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_create_bulk(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_create_bulk
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.results = Results()
+        instance.fabric_details.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
-        instance.fabric_details.rest_send.unit_test = True
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -359,7 +372,7 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     assert instance.results.diff[0].get("BGP_AS", None) == 65001
     assert instance.results.diff[0].get("FABRIC_NAME", None) == "f1"
 
-    assert instance.results.metadata[0].get("action", None) == "create"
+    assert instance.results.metadata[0].get("action", None) == "fabric_create"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
@@ -383,9 +396,10 @@ def test_fabric_create_bulk_00030(monkeypatch, fabric_create_bulk) -> None:
     assert False not in instance.results.changed
 
 
-def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
+def test_fabric_create_bulk_00031(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
     - FabricDetails()
@@ -401,15 +415,15 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
         - __init__()
         - commit()
 
-    Summary
-    -   Verify behavior when FabricCreateBulk() is used to create a fabric and
-        the fabric exists on the controller.
+    ### Summary
+    Verify behavior when FabricCreateBulk() is used to create a fabric and
+    the fabric exists on the controller.
 
-    Setup
+    ### Setup
     -   FabricDetails().refresh() is set to indicate that fabric f1 exists
         on the controller
 
-    Code Flow
+    ### Code Flow
     -   FabricCreateBulk.payloads is set to contain one payload for a fabric (f1)
         that already exists on the controller.
     -   FabricCreateBulk.commit() calls FabricCreate()._build_payloads_to_commit()
@@ -423,33 +437,29 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_create_bulk
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.results = Results()
+        instance.fabric_details.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
         instance.fabric_details.rest_send.unit_test = True
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
         instance.commit()
 
     assert instance._payloads_to_commit == []
@@ -459,9 +469,10 @@ def test_fabric_create_bulk_00031(monkeypatch, fabric_create_bulk) -> None:
     assert instance.results.result == []
 
 
-def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
+def test_fabric_create_bulk_00032(fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -475,15 +486,15 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
         - __init__()
         - commit()
 
-    Summary
-    -   Verify behavior when user attempts to create a fabric but the
-        controller RETURN_CODE is 500.
+    ### Summary
+    Verify behavior when user attempts to create a fabric but the
+    controller RETURN_CODE is 500.
 
-    Setup
+    ### Setup
     -   FabricDetails().refresh() is set to indicate that no fabrics exist on
         the controller
 
-    Code Flow
+    ### Code Flow
     -   FabricCreateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.
     -   FabricCreateBulk.commit() calls FabricCreate()._build_payloads_to_commit()
@@ -500,34 +511,29 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
         yield responses_fabric_create_bulk(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_create_bulk
-
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.results = Results()
+        instance.fabric_details.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
-    with does_not_raise():
         instance.commit()
 
     assert isinstance(instance.results.diff, list)
@@ -541,7 +547,7 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
 
-    assert instance.results.metadata[0].get("action", None) == "create"
+    assert instance.results.metadata[0].get("action", None) == "fabric_create"
     assert instance.results.metadata[0].get("check_mode", None) is False
     assert instance.results.metadata[0].get("sequence_number", None) == 1
     assert instance.results.metadata[0].get("state", None) == "merged"
@@ -564,7 +570,8 @@ def test_fabric_create_bulk_00032(monkeypatch, fabric_create_bulk) -> None:
 
 def test_fabric_create_bulk_00033(monkeypatch, fabric_create_bulk) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
+
     - FabricCommon()
         - __init__()
         - payloads setter
@@ -578,15 +585,16 @@ def test_fabric_create_bulk_00033(monkeypatch, fabric_create_bulk) -> None:
         - __init__()
         - commit()
 
-    Summary
-    -   Verify ``ValueError`` is raised when user attempts to create a fabric
-        but the payload contains ``ANYCAST_GW_MAC`` with a malformed mac address.
+    ### Summary
+    Verify ``ValueError`` is raised when user attempts to create a fabric
+    but the payload contains ``ANYCAST_GW_MAC`` with a malformed mac address.
 
-    Setup
+    ### Setup
+
     -   FabricDetails().refresh() is set to indicate that no fabrics exist on
         the controller
 
-    Code Flow
+    ### Code Flow
     -   FabricCreateBulk.payloads is set to contain one payload for a fabric (f1)
         that does not exist on the controller.  ``ANYCAST_GW_MAC`` in this payload
         has a malformed mac address.
@@ -605,32 +613,29 @@ def test_fabric_create_bulk_00033(monkeypatch, fabric_create_bulk) -> None:
     method_name = inspect.stack()[0][3]
     key = f"{method_name}a"
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
-
     def responses():
-        yield responses_fabric_details_by_name(key)
+        yield responses_fabric_details_by_name_v2(key)
 
-    gen = ResponseGenerator(responses())
+    gen_responses = ResponseGenerator(responses())
 
-    def mock_dcnm_send(*args, **kwargs):
-        item = gen.next
-        return item
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.unit_test = True
+    rest_send.timeout = 1
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = fabric_create_bulk
 
-        instance.fabric_details = FabricDetailsByName(params)
-        instance.fabric_details.rest_send = RestSend(MockAnsibleModule())
-        instance.fabric_details.rest_send.unit_test = True
-
-        instance.rest_send = RestSend(MockAnsibleModule())
-        instance.rest_send.unit_test = True
-
+        instance.fabric_details = FabricDetailsByName()
+        instance.fabric_details.results = Results()
+        instance.fabric_details.rest_send = rest_send
+        instance.rest_send = rest_send
         instance.results = Results()
         instance.payloads = payloads_fabric_create_bulk(key)
-
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
 
     match = r"FabricCreateBulk\._fixup_anycast_gw_mac: "
     match += "Error translating ANYCAST_GW_MAC for fabric f1, "

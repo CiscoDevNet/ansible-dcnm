@@ -19,17 +19,21 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
+import inspect
 import logging
 
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import \
     EpVersion
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.image_upgrade_common import \
-    ImageUpgradeCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
+    ConversionUtils
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
+    ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
+    Properties
 
 
-class ControllerVersion(ImageUpgradeCommon):
+@Properties.add_rest_send
+class ControllerVersion:
     """
     Return image version information from the Controller
 
@@ -38,7 +42,14 @@ class ControllerVersion(ImageUpgradeCommon):
 
     ### Usage (where module is an instance of AnsibleModule):
     ```python
-    instance = ControllerVersion(module)
+    sender = Sender()
+    sender.ansible_module = ansible_module
+    rest_send = RestSend(ansible_module.params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    instance = ControllerVersion()
+    instance.rest_send = rest_send
     instance.refresh()
     if instance.version == "12.1.2e":
         # do 12.1.2e stuff
@@ -61,44 +72,51 @@ class ControllerVersion(ImageUpgradeCommon):
     ```
     """
 
-    def __init__(self, ansible_module):
-        super().__init__(ansible_module)
+    def __init__(self):
         self.class_name = self.__class__.__name__
+        method_name = inspect.stack()[0][3]
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.log.debug("ENTERED ControllerVersion()")
 
+        self.conversion = ConversionUtils()
         self.ep_version = EpVersion()
-        self._init_properties()
+        self._response_data = None
+        self._rest_send = None
 
-    def _init_properties(self):
-        self.properties = {}
-        self.properties["data"] = None
-        self.properties["result"] = None
-        self.properties["response"] = None
+        msg = f"ENTERED {self.class_name}().{method_name}"
+        self.log.debug(msg)
 
     def refresh(self):
         """
         Refresh self.response_data with current version info from the Controller
         """
-        path = self.ep_version.path
-        verb = self.ep_version.verb
-        self.properties["response"] = dcnm_send(self.ansible_module, verb, path)
-        self.properties["result"] = self._handle_response(self.response, verb)
+        # pylint: disable=no-member
+        method_name = inspect.stack()[0][3]
+        self.rest_send.path = self.ep_version.path
+        self.rest_send.verb = self.ep_version.verb
+        self.rest_send.commit()
 
-        if self.result["success"] is False or self.result["found"] is False:
-            msg = f"{self.class_name}.refresh() failed: {self.result}"
-            self.ansible_module.fail_json(msg)
+        if self.rest_send.result_current["success"] is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"failed: {self.rest_send.result_current}"
+            raise ControllerResponseError(msg)
 
-        self.properties["response_data"] = self.response.get("DATA")
+        if self.rest_send.result_current["found"] is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"failed: {self.rest_send.result_current}"
+            raise ControllerResponseError(msg)
+
+        self._response_data = self.rest_send.response_current.get("DATA")
         if self.response_data is None:
             msg = f"{self.class_name}.refresh() failed: response "
             msg += "does not contain DATA key. Controller response: "
-            msg += f"{self.response}"
-            self.ansible_module.fail_json(msg)
+            msg += f"{self.rest_send.response_current}"
+            raise ValueError(msg)
 
     def _get(self, item):
-        return self.make_boolean(self.make_none(self.response_data.get(item)))
+        return self.conversion.make_none(
+            self.conversion.make_boolean(self.response_data.get(item))
+        )
 
     @property
     def dev(self):
@@ -139,7 +157,7 @@ class ControllerVersion(ImageUpgradeCommon):
             False
             None
         """
-        return self.make_boolean(self._get("isHaEnabled"))
+        return self._get("isHaEnabled")
 
     @property
     def is_media_controller(self):
@@ -153,7 +171,7 @@ class ControllerVersion(ImageUpgradeCommon):
             False
             None
         """
-        return self.make_boolean(self._get("isMediaController"))
+        return self._get("isMediaController")
 
     @property
     def is_upgrade_inprogress(self):
@@ -167,28 +185,14 @@ class ControllerVersion(ImageUpgradeCommon):
             False
             None
         """
-        return self.make_boolean(self._get("is_upgrade_inprogress"))
+        return self._get("is_upgrade_inprogress")
 
     @property
     def response_data(self):
         """
         Return the data retrieved from the request
         """
-        return self.properties.get("response_data")
-
-    @property
-    def result(self):
-        """
-        Return the GET result from the Controller
-        """
-        return self.properties.get("result")
-
-    @property
-    def response(self):
-        """
-        Return the GET response from the Controller
-        """
-        return self.properties.get("response")
+        return self._response_data
 
     @property
     def mode(self):

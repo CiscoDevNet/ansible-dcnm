@@ -1,0 +1,295 @@
+################################################################################
+# RUNTIME
+################################################################################
+
+# Recent run times (MM:SS.ms):
+# 00:18.960
+# 00:19.240
+# 00:18.836
+################################################################################
+# STEPS
+################################################################################
+#
+# WARNING!!! THIS TEST WILL DELETE ALL IMAGE POLICIES ON THE CONTROLLER.
+# DO NOT RUN THIS TEST ON A PRODUCTION CONTROLLER.
+#
+# SETUP
+# 1. The following images must already be uploaded to the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - nxos_image_1
+#    - nxos_image_2
+#    - epld_image_1
+#    - epld_image_2
+# 2. No need for fabric or switches
+# 3. Delete image policies under test, if they exist
+#    - image_policy_1
+#    - image_policy_2
+# TEST
+# 4. Create image policies and verify result
+#    - image_policy_1
+#    - image_policy_2
+# 5. Delete ALL image policies and verify result.
+# CLEANUP
+# 7. No cleanup required
+
+################################################################################
+# REQUIREMENTS
+################################################################################
+
+# 1. The following images must already be uploaded to the controller
+#    See vars: section below
+#    - nxos_image_1
+#    - nxos_image_2
+#    - epld_image_1
+#    - epld_image_2
+# 2. No need for fabric or switches
+#
+# Example vars for dcnm_image_policy integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: dcnm_image_policy_deleted_all_policies
+#   fabric_name: f1
+#   username: admin
+#   password: "foobar"
+#   switch_username: admin
+#   switch_password: "foobar"
+#   spine1: 172.22.150.114
+#   spine2: 172.22.150.115
+#   leaf1: 172.22.150.106
+#   leaf2: 172.22.150.107
+#   leaf3: 172.22.150.108
+#   leaf4: 172.22.150.109
+#   # for dcnm_image_policy role
+#   image_policy_1: "KR5M"
+#   image_policy_2: "NR1F"
+#   epld_image_1: n9000-epld.10.2.5.M.img
+#   epld_image_2: n9000-epld.10.3.1.F.img
+#   nxos_image_1: n9000-dk9.10.2.5.M.bin
+#   nxos_image_2: n9000-dk9.10.3.1.F.bin
+#   nxos_release_1: 10.2.5_nxos64-cs_64bit
+#   nxos_release_2: 10.3.1_nxos64-cs_64bit
+
+################################################################################
+# SETUP
+################################################################################
+
+- name: DELETED - SETUP - Delete image policies
+  cisco.dcnm.dcnm_image_policy:
+    state: deleted
+    config:
+    - name: "{{ image_policy_1 }}"
+    - name: "{{ image_policy_2 }}"
+  register: result
+
+- debug:
+    var: result
+################################################################################
+# DELETED - TEST - Create two image policies and verify
+################################################################################
+# Expected result
+# ok: [dcnm] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "agnostic": false,
+#                 "epldImgName": "n9000-epld.10.2.5.M.img",
+#                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
+#                 "platform": "N9K",
+#                 "policyDescr": "KR5M",
+#                 "policyName": "KR5M",
+#                 "policyType": "PLATFORM",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "agnostic": false,
+#                 "epldImgName": "n9000-epld.10.3.1.F.img",
+#                 "nxosVersion": "10.3.1_nxos64-cs_64bit",
+#                 "platform": "N9K",
+#                 "policyDescr": "NR1F",
+#                 "policyName": "NR1F",
+#                 "policyType": "PLATFORM",
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "create",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Policy created successfully.",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": "Policy created successfully.",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/platform-policy",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": true,
+#                 "sequence_number": 0,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+
+- name: DELETED - TEST - Create two image policies and verify
+  cisco.dcnm.dcnm_image_policy:
+    state: merged
+    config:
+    - name: "{{ image_policy_1 }}"
+      agnostic: false
+      description: "{{ image_policy_1 }}"
+      epld_image: "{{ epld_image_1 }}"
+      platform: N9K
+      release: "{{ nxos_release_1 }}"
+      type: PLATFORM
+    - name: "{{ image_policy_2 }}"
+      description: "{{ image_policy_2 }}"
+      platform: N9K
+      epld_image: "{{ epld_image_2 }}"
+      release: "{{ nxos_release_2 }}"
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 2
+    - result.diff[0].policyName == image_policy_1
+    - result.diff[0].policyDescr == image_policy_1
+    - result.diff[0].epldImgName == epld_image_1
+    - result.diff[0].nxosVersion == nxos_release_1
+    - result.diff[0].sequence_number == 1
+    - result.diff[1].policyName == image_policy_2
+    - result.diff[1].policyDescr == image_policy_2
+    - result.diff[1].epldImgName == epld_image_2
+    - result.diff[1].nxosVersion == nxos_release_2
+    - result.diff[1].sequence_number == 2
+    - (result.metadata | length) == 2
+    - result.metadata[0].action == "create"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "merged"
+    - result.metadata[1].action == "create"
+    - result.metadata[1].check_mode == False
+    - result.metadata[1].sequence_number == 2
+    - result.metadata[1].state == "merged"
+    - (result.response | length) == 2
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "POST"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[0].sequence_number == 1
+    - result.response[1].MESSAGE == "OK"
+    - result.response[1].METHOD == "POST"
+    - result.response[1].RETURN_CODE == 200
+    - result.response[1].sequence_number == 2
+
+################################################################################
+# DELETED - TEST - Delete all image policies and verify the result
+################################################################################
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "policyNames": [
+#                     "KR5M",
+#                     "NR1F"
+#                 ],
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Selected policy(s) deleted successfully.",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/policymgnt/policy",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+- name: DELETED - TEST - Delete all image policies and verify the result
+  cisco.dcnm.dcnm_image_policy:
+      state: deleted
+  register: result
+
+- debug:
+    var: result
+
+- assert:
+    that:
+    - result.changed == true
+    - result.failed == false
+    - (result.diff | length) == 1
+    - image_policy_1 in result.diff[0].policyNames
+    - image_policy_2 in result.diff[0].policyNames
+    - (result.response | length) == 1
+    - result.response[0].MESSAGE == "OK"
+    - result.response[0].METHOD == "DELETE"
+    - result.response[0].RETURN_CODE == 200
+    - (result.metadata | length) == 1
+    - result.metadata[0].action == "delete"
+    - result.metadata[0].check_mode == False
+    - result.metadata[0].sequence_number == 1
+    - result.metadata[0].state == "deleted"
+    - (result.result | length) == 1
+    - result.result[0].changed == true
+    - result.result[0].sequence_number == 1
+    - result.result[0].success == true

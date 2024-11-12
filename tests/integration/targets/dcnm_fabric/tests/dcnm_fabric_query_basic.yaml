@@ -1,0 +1,1385 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 00:77.09
+################################################################################
+# DESCRIPTION - BASIC FABRIC QUERY STATE TEST
+#
+# Test basic query of fabric configurations and verify results.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+################################################################################
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_name_1
+#    - fabric_type_1  # VXLAN_EVPN
+#    - fabric_name_2
+#    - fabric_type_2  # VXLAN_EVPN_MSD
+#    - fabric_name_3
+#    - fabric_type_3  # LAN_CLASSIC
+# 2. Delete fabrics under test, if they exist
+#    - fabric_name_1
+#    - fabric_name_2
+#    - fabric_name_3
+################################################################################
+# TEST
+################################################################################
+# 3. Create fabrics and verify result
+#    - fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
+#
+# 4. Query fabric configurations and verify results
+################################################################################
+# CLEANUP
+################################################################################
+# 6. Delete fabrics under test
+#    - fabric_name_1
+#    - fabric_name_1
+#    - fabric_name_1
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_query_basic
+#   fabric_name_1: VXLAN_EVPN_Fabric
+#   fabric_type_1: VXLAN_EVPN
+#   fabric_name_2: VXLAN_EVPN_MSD_Fabric
+#   fabric_type_2: VXLAN_EVPN_MSD
+#   fabric_name_3: LAN_CLASSIC_Fabric
+#   fabric_type_3: LAN_CLASSIC
+################################################################################
+# QUERY - SETUP - Delete fabrics
+################################################################################
+- name: QUERY - SETUP - Delete fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+  register: result
+- debug:
+    var: result
+################################################################################
+# QUERY - TEST - Create all supported fabric types with basic config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric global keys in DATA removed for brevity.
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "BGP_AS": 65535,
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "BOOTSTRAP_ENABLE": false,
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "IS_READ_ONLY": false,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_create",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "fabric_create",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "fabric_create",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BGP_AS": "65535",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric"
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric/Easy_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric/MSD_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "DATA": {
+#                     "nvPairs": {
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "IS_READ_ONLY": "false",
+#                     }
+#                 },
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric/LAN_Classic",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: QUERY - TEST - Create all supported fabric types with minimal config
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_type_1 }}"
+        BGP_AS: 65535
+        DEPLOY: true
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+        FABRIC_TYPE: "{{ fabric_type_2 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+        FABRIC_TYPE: "{{ fabric_type_3 }}"
+        BOOTSTRAP_ENABLE: false
+        IS_READ_ONLY: false
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 3
+      - result.diff[0].BGP_AS == 65535
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == fabric_name_2
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].FABRIC_NAME == fabric_name_3
+      - result.diff[2].sequence_number == 3
+      - result.diff[2].BOOTSTRAP_ENABLE == false
+      - result.diff[2].IS_READ_ONLY == false
+      - result.metadata[0].action == "fabric_create"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "fabric_create"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 3
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+################################################################################
+# QUERY - Query the fabrics
+################################################################################
+# Expected result
+# ok: [172.22.150.244] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "LAN_CLASSIC_Fabric": {
+#                     "createdOn": 1721954060733,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-4",
+#                     "fabricName": "LAN_CLASSIC_Fabric",
+#                     "fabricTechnology": "LANClassic",
+#                     "fabricTechnologyFriendly": "Classic LAN",
+#                     "fabricType": "External",
+#                     "fabricTypeFriendly": "External",
+#                     "id": 4,
+#                     "modifiedOn": 1721954061501,
+#                     "nvPairs": {
+#                         "AAA_REMOTE_IP_ENABLED": "false",
+#                         "AAA_SERVER_CONF": "",
+#                         "ALLOW_NXC": "true",
+#                         "ALLOW_NXC_PREV": "true",
+#                         "BOOTSTRAP_CONF": "",
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                         "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
+#                         "CDP_ENABLE": "false",
+#                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                         "DCI_SUBNET_TARGET_MASK": "30",
+#                         "DEPLOYMENT_FREEZE": "false",
+#                         "DHCP_ENABLE": "false",
+#                         "DHCP_END": "",
+#                         "DHCP_END_INTERNAL": "",
+#                         "DHCP_IPV6_ENABLE": "",
+#                         "DHCP_IPV6_ENABLE_INTERNAL": "",
+#                         "DHCP_START": "",
+#                         "DHCP_START_INTERNAL": "",
+#                         "DOMAIN_NAME_INTERNAL": "",
+#                         "ENABLE_AAA": "",
+#                         "ENABLE_NETFLOW": "false",
+#                         "ENABLE_NETFLOW_PREV": "false",
+#                         "ENABLE_NXAPI": "false",
+#                         "ENABLE_NXAPI_HTTP": "false",
+#                         "EXT_FABRIC_TYPE": "",
+#                         "FABRIC_FREEFORM": "",
+#                         "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                         "FABRIC_TECHNOLOGY": "LANClassic",
+#                         "FABRIC_TYPE": "External",
+#                         "FEATURE_PTP": "false",
+#                         "FEATURE_PTP_INTERNAL": "false",
+#                         "FF": "LANClassic",
+#                         "INBAND_ENABLE": "",
+#                         "INBAND_ENABLE_PREV": "",
+#                         "INBAND_MGMT": "false",
+#                         "INBAND_MGMT_PREV": "false",
+#                         "IS_READ_ONLY": "false",
+#                         "LOOPBACK0_IP_RANGE": "10.1.0.0/22",
+#                         "MGMT_GW": "",
+#                         "MGMT_GW_INTERNAL": "",
+#                         "MGMT_PREFIX": "",
+#                         "MGMT_PREFIX_INTERNAL": "",
+#                         "MGMT_V6PREFIX": "",
+#                         "MGMT_V6PREFIX_INTERNAL": "",
+#                         "MPLS_HANDOFF": "false",
+#                         "MPLS_LB_ID": "",
+#                         "MPLS_LOOPBACK_IP_RANGE": "",
+#                         "NETFLOW_EXPORTER_LIST": "",
+#                         "NETFLOW_MONITOR_LIST": "",
+#                         "NETFLOW_RECORD_LIST": "",
+#                         "NETFLOW_SAMPLER_LIST": "",
+#                         "NXAPI_HTTPS_PORT": "443",
+#                         "NXAPI_HTTP_PORT": "80",
+#                         "NXC_DEST_VRF": "",
+#                         "NXC_PROXY_PORT": "8080",
+#                         "NXC_PROXY_SERVER": "",
+#                         "NXC_SRC_INTF": "",
+#                         "OVERWRITE_GLOBAL_NXC": "false",
+#                         "PM_ENABLE": "false",
+#                         "PM_ENABLE_PREV": "false",
+#                         "POWER_REDUNDANCY_MODE": "ps-redundant",
+#                         "PTP_DOMAIN_ID": "",
+#                         "PTP_LB_ID": "",
+#                         "SNMP_SERVER_HOST_TRAP": "true",
+#                         "SUBINTERFACE_RANGE": "2-511",
+#                         "enableRealTimeBackup": "false",
+#                         "enableScheduledBackup": "false",
+#                         "scheduledTime": ""
+#                     },
+#                     "operStatus": "HEALTHY",
+#                     "provisionMode": "DCNMTopDown",
+#                     "replicationMode": "IngressReplication",
+#                     "templateName": "LAN_Classic"
+#                 },
+#                 "VXLAN_EVPN_Fabric": {
+#                     "asn": "65535",
+#                     "createdOn": 1721954053773,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-2",
+#                     "fabricName": "VXLAN_EVPN_Fabric",
+#                     "fabricTechnology": "VXLANFabric",
+#                     "fabricTechnologyFriendly": "VXLAN EVPN",
+#                     "fabricType": "Switch_Fabric",
+#                     "fabricTypeFriendly": "Switch Fabric",
+#                     "id": 2,
+#                     "modifiedOn": 1721954057503,
+#                     "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                     "networkTemplate": "Default_Network_Universal",
+#                     "nvPairs": {
+#                         "AAA_REMOTE_IP_ENABLED": "false",
+#                         "AAA_SERVER_CONF": "",
+#                         "ACTIVE_MIGRATION": "false",
+#                         "ADVERTISE_PIP_BGP": "false",
+#                         "ADVERTISE_PIP_ON_BORDER": "true",
+#                         "AGENT_INTF": "eth0",
+#                         "AI_ML_QOS_POLICY": "AI_Fabric_QOS_400G",
+#                         "ALLOW_NXC": "true",
+#                         "ALLOW_NXC_PREV": "true",
+#                         "ANYCAST_BGW_ADVERTISE_PIP": "false",
+#                         "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                         "ANYCAST_LB_ID": "",
+#                         "ANYCAST_RP_IP_RANGE": "10.254.254.0/24",
+#                         "ANYCAST_RP_IP_RANGE_INTERNAL": "",
+#                         "AUTO_SYMMETRIC_DEFAULT_VRF": "false",
+#                         "AUTO_SYMMETRIC_VRF_LITE": "false",
+#                         "AUTO_UNIQUE_VRF_LITE_IP_PREFIX": "false",
+#                         "AUTO_UNIQUE_VRF_LITE_IP_PREFIX_PREV": "false",
+#                         "AUTO_VRFLITE_IFC_DEFAULT_VRF": "false",
+#                         "BANNER": "",
+#                         "BFD_AUTH_ENABLE": "false",
+#                         "BFD_AUTH_KEY": "",
+#                         "BFD_AUTH_KEY_ID": "",
+#                         "BFD_ENABLE": "false",
+#                         "BFD_ENABLE_PREV": "",
+#                         "BFD_IBGP_ENABLE": "false",
+#                         "BFD_ISIS_ENABLE": "false",
+#                         "BFD_OSPF_ENABLE": "false",
+#                         "BFD_PIM_ENABLE": "false",
+#                         "BGP_AS": "65535",
+#                         "BGP_AS_PREV": "65535",
+#                         "BGP_AUTH_ENABLE": "false",
+#                         "BGP_AUTH_KEY": "",
+#                         "BGP_AUTH_KEY_TYPE": "3",
+#                         "BGP_LB_ID": "0",
+#                         "BOOTSTRAP_CONF": "",
+#                         "BOOTSTRAP_ENABLE": "false",
+#                         "BOOTSTRAP_ENABLE_PREV": "false",
+#                         "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                         "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
+#                         "BRFIELD_DEBUG_FLAG": "Disable",
+#                         "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
+#                         "BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS": "false",
+#                         "CDP_ENABLE": "false",
+#                         "COPP_POLICY": "strict",
+#                         "DCI_SUBNET_RANGE": "10.33.0.0/16",
+#                         "DCI_SUBNET_TARGET_MASK": "30",
+#                         "DEAFULT_QUEUING_POLICY_CLOUDSCALE": "queuing_policy_default_8q_cloudscale",
+#                         "DEAFULT_QUEUING_POLICY_OTHER": "queuing_policy_default_other",
+#                         "DEAFULT_QUEUING_POLICY_R_SERIES": "queuing_policy_default_r_series",
+#                         "DEFAULT_VRF_REDIS_BGP_RMAP": "",
+#                         "DEPLOYMENT_FREEZE": "false",
+#                         "DHCP_ENABLE": "false",
+#                         "DHCP_END": "",
+#                         "DHCP_END_INTERNAL": "",
+#                         "DHCP_IPV6_ENABLE": "",
+#                         "DHCP_IPV6_ENABLE_INTERNAL": "",
+#                         "DHCP_START": "",
+#                         "DHCP_START_INTERNAL": "",
+#                         "DNS_SERVER_IP_LIST": "",
+#                         "DNS_SERVER_VRF": "",
+#                         "DOMAIN_NAME_INTERNAL": "",
+#                         "ENABLE_AAA": "false",
+#                         "ENABLE_AGENT": "false",
+#                         "ENABLE_AI_ML_QOS_POLICY": "false",
+#                         "ENABLE_AI_ML_QOS_POLICY_FLAP": "false",
+#                         "ENABLE_DEFAULT_QUEUING_POLICY": "false",
+#                         "ENABLE_EVPN": "true",
+#                         "ENABLE_FABRIC_VPC_DOMAIN_ID": "false",
+#                         "ENABLE_FABRIC_VPC_DOMAIN_ID_PREV": "false",
+#                         "ENABLE_L3VNI_NO_VLAN": "false",
+#                         "ENABLE_MACSEC": "false",
+#                         "ENABLE_NETFLOW": "false",
+#                         "ENABLE_NETFLOW_PREV": "false",
+#                         "ENABLE_NGOAM": "true",
+#                         "ENABLE_NXAPI": "true",
+#                         "ENABLE_NXAPI_HTTP": "true",
+#                         "ENABLE_PBR": "false",
+#                         "ENABLE_PVLAN": "false",
+#                         "ENABLE_PVLAN_PREV": "false",
+#                         "ENABLE_SGT": "false",
+#                         "ENABLE_SGT_PREV": "false",
+#                         "ENABLE_TENANT_DHCP": "true",
+#                         "ENABLE_TRM": "false",
+#                         "ENABLE_VPC_PEER_LINK_NATIVE_VLAN": "false",
+#                         "ESR_OPTION": "PBR",
+#                         "EXTRA_CONF_INTRA_LINKS": "",
+#                         "EXTRA_CONF_LEAF": "",
+#                         "EXTRA_CONF_SPINE": "",
+#                         "EXTRA_CONF_TOR": "",
+#                         "EXT_FABRIC_TYPE": "",
+#                         "FABRIC_INTERFACE_TYPE": "p2p",
+#                         "FABRIC_MTU": "9216",
+#                         "FABRIC_MTU_PREV": "9216",
+#                         "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                         "FABRIC_TYPE": "Switch_Fabric",
+#                         "FABRIC_VPC_DOMAIN_ID": "",
+#                         "FABRIC_VPC_DOMAIN_ID_PREV": "",
+#                         "FABRIC_VPC_QOS": "false",
+#                         "FABRIC_VPC_QOS_POLICY_NAME": "spine_qos_for_fabric_vpc_peering",
+#                         "FEATURE_PTP": "false",
+#                         "FEATURE_PTP_INTERNAL": "false",
+#                         "FF": "Easy_Fabric",
+#                         "GRFIELD_DEBUG_FLAG": "Disable",
+#                         "HD_TIME": "180",
+#                         "HOST_INTF_ADMIN_STATE": "true",
+#                         "IBGP_PEER_TEMPLATE": "",
+#                         "IBGP_PEER_TEMPLATE_LEAF": "",
+#                         "INBAND_DHCP_SERVERS": "",
+#                         "INBAND_MGMT": "false",
+#                         "INBAND_MGMT_PREV": "false",
+#                         "ISIS_AREA_NUM": "0001",
+#                         "ISIS_AREA_NUM_PREV": "",
+#                         "ISIS_AUTH_ENABLE": "false",
+#                         "ISIS_AUTH_KEY": "",
+#                         "ISIS_AUTH_KEYCHAIN_KEY_ID": "",
+#                         "ISIS_AUTH_KEYCHAIN_NAME": "",
+#                         "ISIS_LEVEL": "level-2",
+#                         "ISIS_OVERLOAD_ELAPSE_TIME": "",
+#                         "ISIS_OVERLOAD_ENABLE": "",
+#                         "ISIS_P2P_ENABLE": "",
+#                         "L2_HOST_INTF_MTU": "9216",
+#                         "L2_HOST_INTF_MTU_PREV": "9216",
+#                         "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                         "L3VNI_MCAST_GROUP": "",
+#                         "L3_PARTITION_ID_RANGE": "50000-59000",
+#                         "LINK_STATE_ROUTING": "ospf",
+#                         "LINK_STATE_ROUTING_TAG": "UNDERLAY",
+#                         "LINK_STATE_ROUTING_TAG_PREV": "UNDERLAY",
+#                         "LOOPBACK0_IPV6_RANGE": "",
+#                         "LOOPBACK0_IP_RANGE": "10.2.0.0/22",
+#                         "LOOPBACK1_IPV6_RANGE": "",
+#                         "LOOPBACK1_IP_RANGE": "10.3.0.0/22",
+#                         "MACSEC_ALGORITHM": "",
+#                         "MACSEC_CIPHER_SUITE": "",
+#                         "MACSEC_FALLBACK_ALGORITHM": "",
+#                         "MACSEC_FALLBACK_KEY_STRING": "",
+#                         "MACSEC_KEY_STRING": "",
+#                         "MACSEC_REPORT_TIMER": "",
+#                         "MGMT_GW": "",
+#                         "MGMT_GW_INTERNAL": "",
+#                         "MGMT_PREFIX": "",
+#                         "MGMT_PREFIX_INTERNAL": "",
+#                         "MGMT_V6PREFIX": "",
+#                         "MGMT_V6PREFIX_INTERNAL": "",
+#                         "MPLS_HANDOFF": "false",
+#                         "MPLS_ISIS_AREA_NUM": "0001",
+#                         "MPLS_ISIS_AREA_NUM_PREV": "",
+#                         "MPLS_LB_ID": "",
+#                         "MPLS_LOOPBACK_IP_RANGE": "",
+#                         "MSO_CONNECTIVITY_DEPLOYED": "",
+#                         "MSO_CONTROLER_ID": "",
+#                         "MSO_SITE_GROUP_NAME": "",
+#                         "MSO_SITE_ID": "",
+#                         "MST_INSTANCE_RANGE": "",
+#                         "MULTICAST_GROUP_SUBNET": "239.1.1.0/25",
+#                         "NETFLOW_EXPORTER_LIST": "",
+#                         "NETFLOW_MONITOR_LIST": "",
+#                         "NETFLOW_RECORD_LIST": "",
+#                         "NETWORK_VLAN_RANGE": "2300-2999",
+#                         "NTP_SERVER_IP_LIST": "",
+#                         "NTP_SERVER_VRF": "",
+#                         "NVE_LB_ID": "1",
+#                         "NXAPI_HTTPS_PORT": "443",
+#                         "NXAPI_HTTP_PORT": "80",
+#                         "NXC_DEST_VRF": "",
+#                         "NXC_PROXY_PORT": "8080",
+#                         "NXC_PROXY_SERVER": "",
+#                         "NXC_SRC_INTF": "",
+#                         "OBJECT_TRACKING_NUMBER_RANGE": "100-299",
+#                         "OSPF_AREA_ID": "0.0.0.0",
+#                         "OSPF_AUTH_ENABLE": "false",
+#                         "OSPF_AUTH_KEY": "",
+#                         "OSPF_AUTH_KEY_ID": "",
+#                         "OVERLAY_MODE": "cli",
+#                         "OVERLAY_MODE_PREV": "cli",
+#                         "OVERWRITE_GLOBAL_NXC": "false",
+#                         "PER_VRF_LOOPBACK_AUTO_PROVISION": "false",
+#                         "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV": "false",
+#                         "PER_VRF_LOOPBACK_AUTO_PROVISION_V6": "false",
+#                         "PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV": "false",
+#                         "PER_VRF_LOOPBACK_IP_RANGE": "",
+#                         "PER_VRF_LOOPBACK_IP_RANGE_V6": "",
+#                         "PHANTOM_RP_LB_ID1": "",
+#                         "PHANTOM_RP_LB_ID2": "",
+#                         "PHANTOM_RP_LB_ID3": "",
+#                         "PHANTOM_RP_LB_ID4": "",
+#                         "PIM_HELLO_AUTH_ENABLE": "false",
+#                         "PIM_HELLO_AUTH_KEY": "",
+#                         "PM_ENABLE": "false",
+#                         "PM_ENABLE_PREV": "false",
+#                         "POWER_REDUNDANCY_MODE": "ps-redundant",
+#                         "PREMSO_PARENT_FABRIC": "",
+#                         "PTP_DOMAIN_ID": "",
+#                         "PTP_LB_ID": "",
+#                         "REPLICATION_MODE": "Multicast",
+#                         "ROUTER_ID_RANGE": "",
+#                         "ROUTE_MAP_SEQUENCE_NUMBER_RANGE": "1-65534",
+#                         "RP_COUNT": "2",
+#                         "RP_LB_ID": "254",
+#                         "RP_MODE": "asm",
+#                         "RR_COUNT": "2",
+#                         "SEED_SWITCH_CORE_INTERFACES": "",
+#                         "SERVICE_NETWORK_VLAN_RANGE": "3000-3199",
+#                         "SGT_ID_RANGE": "",
+#                         "SGT_NAME_PREFIX": "",
+#                         "SGT_PREPROVISION": "",
+#                         "SITE_ID": "65535",
+#                         "SLA_ID_RANGE": "10000-19999",
+#                         "SNMP_SERVER_HOST_TRAP": "true",
+#                         "SPINE_COUNT": "0",
+#                         "SPINE_SWITCH_CORE_INTERFACES": "",
+#                         "SSPINE_ADD_DEL_DEBUG_FLAG": "Disable",
+#                         "SSPINE_COUNT": "0",
+#                         "STATIC_UNDERLAY_IP_ALLOC": "false",
+#                         "STP_BRIDGE_PRIORITY": "",
+#                         "STP_ROOT_OPTION": "unmanaged",
+#                         "STP_VLAN_RANGE": "",
+#                         "STRICT_CC_MODE": "false",
+#                         "SUBINTERFACE_RANGE": "2-511",
+#                         "SUBNET_RANGE": "10.4.0.0/16",
+#                         "SUBNET_TARGET_MASK": "30",
+#                         "SYSLOG_SERVER_IP_LIST": "",
+#                         "SYSLOG_SERVER_VRF": "",
+#                         "SYSLOG_SEV": "",
+#                         "TCAM_ALLOCATION": "true",
+#                         "TOPDOWN_CONFIG_RM_TRACKING": "notstarted",
+#                         "UNDERLAY_IS_V6": "false",
+#                         "UNNUM_BOOTSTRAP_LB_ID": "",
+#                         "UNNUM_DHCP_END": "",
+#                         "UNNUM_DHCP_END_INTERNAL": "",
+#                         "UNNUM_DHCP_START": "",
+#                         "UNNUM_DHCP_START_INTERNAL": "",
+#                         "UPGRADE_FROM_VERSION": "",
+#                         "USE_LINK_LOCAL": "true",
+#                         "V6_SUBNET_RANGE": "",
+#                         "V6_SUBNET_TARGET_MASK": "126",
+#                         "VPC_AUTO_RECOVERY_TIME": "360",
+#                         "VPC_DELAY_RESTORE": "150",
+#                         "VPC_DELAY_RESTORE_TIME": "60",
+#                         "VPC_DOMAIN_ID_RANGE": "1-1000",
+#                         "VPC_ENABLE_IPv6_ND_SYNC": "true",
+#                         "VPC_PEER_KEEP_ALIVE_OPTION": "management",
+#                         "VPC_PEER_LINK_PO": "500",
+#                         "VPC_PEER_LINK_VLAN": "3600",
+#                         "VRF_LITE_AUTOCONFIG": "Manual",
+#                         "VRF_VLAN_RANGE": "2000-2299",
+#                         "abstract_anycast_rp": "anycast_rp",
+#                         "abstract_bgp": "base_bgp",
+#                         "abstract_bgp_neighbor": "evpn_bgp_rr_neighbor",
+#                         "abstract_bgp_rr": "evpn_bgp_rr",
+#                         "abstract_dhcp": "base_dhcp",
+#                         "abstract_extra_config_bootstrap": "extra_config_bootstrap_11_1",
+#                         "abstract_extra_config_leaf": "extra_config_leaf",
+#                         "abstract_extra_config_spine": "extra_config_spine",
+#                         "abstract_extra_config_tor": "extra_config_tor",
+#                         "abstract_feature_leaf": "base_feature_leaf_upg",
+#                         "abstract_feature_spine": "base_feature_spine_upg",
+#                         "abstract_isis": "base_isis_level2",
+#                         "abstract_isis_interface": "isis_interface",
+#                         "abstract_loopback_interface": "int_fabric_loopback_11_1",
+#                         "abstract_multicast": "base_multicast_11_1",
+#                         "abstract_ospf": "base_ospf",
+#                         "abstract_ospf_interface": "ospf_interface_11_1",
+#                         "abstract_pim_interface": "pim_interface",
+#                         "abstract_route_map": "route_map",
+#                         "abstract_routed_host": "int_routed_host",
+#                         "abstract_trunk_host": "int_trunk_host",
+#                         "abstract_vlan_interface": "int_fabric_vlan_11_1",
+#                         "abstract_vpc_domain": "base_vpc_domain_11_1",
+#                         "default_network": "Default_Network_Universal",
+#                         "default_pvlan_sec_network": "",
+#                         "default_vrf": "Default_VRF_Universal",
+#                         "enableRealTimeBackup": "",
+#                         "enableScheduledBackup": "",
+#                         "network_extension_template": "Default_Network_Extension_Universal",
+#                         "scheduledTime": "",
+#                         "temp_anycast_gateway": "anycast_gateway",
+#                         "temp_vpc_domain_mgmt": "vpc_domain_mgmt",
+#                         "temp_vpc_peer_link": "int_vpc_peer_link_po",
+#                         "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                     },
+#                     "operStatus": "HEALTHY",
+#                     "provisionMode": "DCNMTopDown",
+#                     "replicationMode": "Multicast",
+#                     "siteId": "65535",
+#                     "templateName": "Easy_Fabric",
+#                     "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                     "vrfTemplate": "Default_VRF_Universal"
+#                 },
+#                 "VXLAN_EVPN_MSD_Fabric": {
+#                     "createdOn": 1721954059451,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-3",
+#                     "fabricName": "VXLAN_EVPN_MSD_Fabric",
+#                     "fabricTechnology": "VXLANFabric",
+#                     "fabricTechnologyFriendly": "VXLAN EVPN",
+#                     "fabricType": "MFD",
+#                     "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+#                     "id": 3,
+#                     "modifiedOn": 1721954059701,
+#                     "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                     "networkTemplate": "Default_Network_Universal",
+#                     "nvPairs": {
+#                         "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                         "BGP_RP_ASN": "",
+#                         "BGW_ROUTING_TAG": "54321",
+#                         "BGW_ROUTING_TAG_PREV": "54321",
+#                         "BORDER_GWY_CONNECTIONS": "Manual",
+#                         "CLOUDSEC_ALGORITHM": "",
+#                         "CLOUDSEC_AUTOCONFIG": "false",
+#                         "CLOUDSEC_ENFORCEMENT": "",
+#                         "CLOUDSEC_KEY_STRING": "",
+#                         "CLOUDSEC_REPORT_TIMER": "",
+#                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                         "DCI_SUBNET_TARGET_MASK": "30",
+#                         "DCNM_ID": "",
+#                         "DELAY_RESTORE": "300",
+#                         "ENABLE_BGP_BFD": "",
+#                         "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": "",
+#                         "ENABLE_BGP_SEND_COMM": "",
+#                         "ENABLE_PVLAN": "false",
+#                         "ENABLE_PVLAN_PREV": "false",
+#                         "ENABLE_RS_REDIST_DIRECT": "",
+#                         "EXT_FABRIC_TYPE": "",
+#                         "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                         "FABRIC_TYPE": "MFD",
+#                         "FF": "MSD",
+#                         "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                         "L3_PARTITION_ID_RANGE": "50000-59000",
+#                         "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                         "MSO_CONTROLER_ID": "",
+#                         "MSO_SITE_GROUP_NAME": "",
+#                         "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                         "MS_IFC_BGP_AUTH_KEY_TYPE_PREV": "",
+#                         "MS_IFC_BGP_PASSWORD": "",
+#                         "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+#                         "MS_IFC_BGP_PASSWORD_ENABLE_PREV": "",
+#                         "MS_IFC_BGP_PASSWORD_PREV": "",
+#                         "MS_LOOPBACK_ID": "100",
+#                         "MS_UNDERLAY_AUTOCONFIG": "false",
+#                         "PREMSO_PARENT_FABRIC": "",
+#                         "RP_SERVER_IP": "",
+#                         "RS_ROUTING_TAG": "",
+#                         "TOR_AUTO_DEPLOY": "false",
+#                         "default_network": "Default_Network_Universal",
+#                         "default_pvlan_sec_network": "",
+#                         "default_vrf": "Default_VRF_Universal",
+#                         "enableScheduledBackup": "",
+#                         "network_extension_template": "Default_Network_Extension_Universal",
+#                         "scheduledTime": "",
+#                         "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                     },
+#                     "operStatus": "HEALTHY",
+#                     "provisionMode": "DCNMTopDown",
+#                     "replicationMode": "IngressReplication",
+#                     "templateName": "MSD_Fabric",
+#                     "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                     "vrfTemplate": "Default_VRF_Universal"
+#                 },
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_query",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "query"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": [
+#                     {
+#                         "createdOn": 1721954059451,
+#                         "deviceType": "n9k",
+#                         "fabricId": "FABRIC-3",
+#                         "fabricName": "VXLAN_EVPN_MSD_Fabric",
+#                         "fabricTechnology": "VXLANFabric",
+#                         "fabricTechnologyFriendly": "VXLAN EVPN",
+#                         "fabricType": "MFD",
+#                         "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+#                         "id": 3,
+#                         "modifiedOn": 1721954059701,
+#                         "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                         "networkTemplate": "Default_Network_Universal",
+#                         "nvPairs": {
+#                             "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                             "BGP_RP_ASN": "",
+#                             "BGW_ROUTING_TAG": "54321",
+#                             "BGW_ROUTING_TAG_PREV": "54321",
+#                             "BORDER_GWY_CONNECTIONS": "Manual",
+#                             "CLOUDSEC_ALGORITHM": "",
+#                             "CLOUDSEC_AUTOCONFIG": "false",
+#                             "CLOUDSEC_ENFORCEMENT": "",
+#                             "CLOUDSEC_KEY_STRING": "",
+#                             "CLOUDSEC_REPORT_TIMER": "",
+#                             "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                             "DCI_SUBNET_TARGET_MASK": "30",
+#                             "DCNM_ID": "",
+#                             "DELAY_RESTORE": "300",
+#                             "ENABLE_BGP_BFD": "",
+#                             "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": "",
+#                             "ENABLE_BGP_SEND_COMM": "",
+#                             "ENABLE_PVLAN": "false",
+#                             "ENABLE_PVLAN_PREV": "false",
+#                             "ENABLE_RS_REDIST_DIRECT": "",
+#                             "EXT_FABRIC_TYPE": "",
+#                             "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                             "FABRIC_TYPE": "MFD",
+#                             "FF": "MSD",
+#                             "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                             "L3_PARTITION_ID_RANGE": "50000-59000",
+#                             "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                             "MSO_CONTROLER_ID": "",
+#                             "MSO_SITE_GROUP_NAME": "",
+#                             "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                             "MS_IFC_BGP_AUTH_KEY_TYPE_PREV": "",
+#                             "MS_IFC_BGP_PASSWORD": "",
+#                             "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+#                             "MS_IFC_BGP_PASSWORD_ENABLE_PREV": "",
+#                             "MS_IFC_BGP_PASSWORD_PREV": "",
+#                             "MS_LOOPBACK_ID": "100",
+#                             "MS_UNDERLAY_AUTOCONFIG": "false",
+#                             "PREMSO_PARENT_FABRIC": "",
+#                             "RP_SERVER_IP": "",
+#                             "RS_ROUTING_TAG": "",
+#                             "TOR_AUTO_DEPLOY": "false",
+#                             "default_network": "Default_Network_Universal",
+#                             "default_pvlan_sec_network": "",
+#                             "default_vrf": "Default_VRF_Universal",
+#                             "enableScheduledBackup": "",
+#                             "network_extension_template": "Default_Network_Extension_Universal",
+#                             "scheduledTime": "",
+#                             "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                         },
+#                         "operStatus": "HEALTHY",
+#                         "provisionMode": "DCNMTopDown",
+#                         "replicationMode": "IngressReplication",
+#                         "templateName": "MSD_Fabric",
+#                         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                         "vrfTemplate": "Default_VRF_Universal"
+#                     },
+#                     {
+#                         "createdOn": 1721954060733,
+#                         "deviceType": "n9k",
+#                         "fabricId": "FABRIC-4",
+#                         "fabricName": "LAN_CLASSIC_Fabric",
+#                         "fabricTechnology": "LANClassic",
+#                         "fabricTechnologyFriendly": "Classic LAN",
+#                         "fabricType": "External",
+#                         "fabricTypeFriendly": "External",
+#                         "id": 4,
+#                         "modifiedOn": 1721954061501,
+#                         "nvPairs": {
+#                             "AAA_REMOTE_IP_ENABLED": "false",
+#                             "AAA_SERVER_CONF": "",
+#                             "ALLOW_NXC": "true",
+#                             "ALLOW_NXC_PREV": "true",
+#                             "BOOTSTRAP_CONF": "",
+#                             "BOOTSTRAP_ENABLE": "false",
+#                             "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                             "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
+#                             "CDP_ENABLE": "false",
+#                             "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                             "DCI_SUBNET_TARGET_MASK": "30",
+#                             "DEPLOYMENT_FREEZE": "false",
+#                             "DHCP_ENABLE": "false",
+#                             "DHCP_END": "",
+#                             "DHCP_END_INTERNAL": "",
+#                             "DHCP_IPV6_ENABLE": "",
+#                             "DHCP_IPV6_ENABLE_INTERNAL": "",
+#                             "DHCP_START": "",
+#                             "DHCP_START_INTERNAL": "",
+#                             "DOMAIN_NAME_INTERNAL": "",
+#                             "ENABLE_AAA": "",
+#                             "ENABLE_NETFLOW": "false",
+#                             "ENABLE_NETFLOW_PREV": "false",
+#                             "ENABLE_NXAPI": "false",
+#                             "ENABLE_NXAPI_HTTP": "false",
+#                             "EXT_FABRIC_TYPE": "",
+#                             "FABRIC_FREEFORM": "",
+#                             "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                             "FABRIC_TECHNOLOGY": "LANClassic",
+#                             "FABRIC_TYPE": "External",
+#                             "FEATURE_PTP": "false",
+#                             "FEATURE_PTP_INTERNAL": "false",
+#                             "FF": "LANClassic",
+#                             "INBAND_ENABLE": "",
+#                             "INBAND_ENABLE_PREV": "",
+#                             "INBAND_MGMT": "false",
+#                             "INBAND_MGMT_PREV": "false",
+#                             "IS_READ_ONLY": "false",
+#                             "LOOPBACK0_IP_RANGE": "10.1.0.0/22",
+#                             "MGMT_GW": "",
+#                             "MGMT_GW_INTERNAL": "",
+#                             "MGMT_PREFIX": "",
+#                             "MGMT_PREFIX_INTERNAL": "",
+#                             "MGMT_V6PREFIX": "",
+#                             "MGMT_V6PREFIX_INTERNAL": "",
+#                             "MPLS_HANDOFF": "false",
+#                             "MPLS_LB_ID": "",
+#                             "MPLS_LOOPBACK_IP_RANGE": "",
+#                             "NETFLOW_EXPORTER_LIST": "",
+#                             "NETFLOW_MONITOR_LIST": "",
+#                             "NETFLOW_RECORD_LIST": "",
+#                             "NETFLOW_SAMPLER_LIST": "",
+#                             "NXAPI_HTTPS_PORT": "443",
+#                             "NXAPI_HTTP_PORT": "80",
+#                             "NXC_DEST_VRF": "",
+#                             "NXC_PROXY_PORT": "8080",
+#                             "NXC_PROXY_SERVER": "",
+#                             "NXC_SRC_INTF": "",
+#                             "OVERWRITE_GLOBAL_NXC": "false",
+#                             "PM_ENABLE": "false",
+#                             "PM_ENABLE_PREV": "false",
+#                             "POWER_REDUNDANCY_MODE": "ps-redundant",
+#                             "PTP_DOMAIN_ID": "",
+#                             "PTP_LB_ID": "",
+#                             "SNMP_SERVER_HOST_TRAP": "true",
+#                             "SUBINTERFACE_RANGE": "2-511",
+#                             "enableRealTimeBackup": "false",
+#                             "enableScheduledBackup": "false",
+#                             "scheduledTime": ""
+#                         },
+#                         "operStatus": "HEALTHY",
+#                         "provisionMode": "DCNMTopDown",
+#                         "replicationMode": "IngressReplication",
+#                         "templateName": "LAN_Classic"
+#                     },
+#                     {
+#                         "asn": "65535",
+#                         "createdOn": 1721954053773,
+#                         "deviceType": "n9k",
+#                         "fabricId": "FABRIC-2",
+#                         "fabricName": "VXLAN_EVPN_Fabric",
+#                         "fabricTechnology": "VXLANFabric",
+#                         "fabricTechnologyFriendly": "VXLAN EVPN",
+#                         "fabricType": "Switch_Fabric",
+#                         "fabricTypeFriendly": "Switch Fabric",
+#                         "id": 2,
+#                         "modifiedOn": 1721954057503,
+#                         "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                         "networkTemplate": "Default_Network_Universal",
+#                         "nvPairs": {
+#                             "AAA_REMOTE_IP_ENABLED": "false",
+#                             "AAA_SERVER_CONF": "",
+#                             "ACTIVE_MIGRATION": "false",
+#                             "ADVERTISE_PIP_BGP": "false",
+#                             "ADVERTISE_PIP_ON_BORDER": "true",
+#                             "AGENT_INTF": "eth0",
+#                             "AI_ML_QOS_POLICY": "AI_Fabric_QOS_400G",
+#                             "ALLOW_NXC": "true",
+#                             "ALLOW_NXC_PREV": "true",
+#                             "ANYCAST_BGW_ADVERTISE_PIP": "false",
+#                             "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                             "ANYCAST_LB_ID": "",
+#                             "ANYCAST_RP_IP_RANGE": "10.254.254.0/24",
+#                             "ANYCAST_RP_IP_RANGE_INTERNAL": "",
+#                             "AUTO_SYMMETRIC_DEFAULT_VRF": "false",
+#                             "AUTO_SYMMETRIC_VRF_LITE": "false",
+#                             "AUTO_UNIQUE_VRF_LITE_IP_PREFIX": "false",
+#                             "AUTO_UNIQUE_VRF_LITE_IP_PREFIX_PREV": "false",
+#                             "AUTO_VRFLITE_IFC_DEFAULT_VRF": "false",
+#                             "BANNER": "",
+#                             "BFD_AUTH_ENABLE": "false",
+#                             "BFD_AUTH_KEY": "",
+#                             "BFD_AUTH_KEY_ID": "",
+#                             "BFD_ENABLE": "false",
+#                             "BFD_ENABLE_PREV": "",
+#                             "BFD_IBGP_ENABLE": "false",
+#                             "BFD_ISIS_ENABLE": "false",
+#                             "BFD_OSPF_ENABLE": "false",
+#                             "BFD_PIM_ENABLE": "false",
+#                             "BGP_AS": "65535",
+#                             "BGP_AS_PREV": "65535",
+#                             "BGP_AUTH_ENABLE": "false",
+#                             "BGP_AUTH_KEY": "",
+#                             "BGP_AUTH_KEY_TYPE": "3",
+#                             "BGP_LB_ID": "0",
+#                             "BOOTSTRAP_CONF": "",
+#                             "BOOTSTRAP_ENABLE": "false",
+#                             "BOOTSTRAP_ENABLE_PREV": "false",
+#                             "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                             "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
+#                             "BRFIELD_DEBUG_FLAG": "Disable",
+#                             "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
+#                             "BROWNFIELD_SKIP_OVERLAY_NETWORK_ATTACHMENTS": "false",
+#                             "CDP_ENABLE": "false",
+#                             "COPP_POLICY": "strict",
+#                             "DCI_SUBNET_RANGE": "10.33.0.0/16",
+#                             "DCI_SUBNET_TARGET_MASK": "30",
+#                             "DEAFULT_QUEUING_POLICY_CLOUDSCALE": "queuing_policy_default_8q_cloudscale",
+#                             "DEAFULT_QUEUING_POLICY_OTHER": "queuing_policy_default_other",
+#                             "DEAFULT_QUEUING_POLICY_R_SERIES": "queuing_policy_default_r_series",
+#                             "DEFAULT_VRF_REDIS_BGP_RMAP": "",
+#                             "DEPLOYMENT_FREEZE": "false",
+#                             "DHCP_ENABLE": "false",
+#                             "DHCP_END": "",
+#                             "DHCP_END_INTERNAL": "",
+#                             "DHCP_IPV6_ENABLE": "",
+#                             "DHCP_IPV6_ENABLE_INTERNAL": "",
+#                             "DHCP_START": "",
+#                             "DHCP_START_INTERNAL": "",
+#                             "DNS_SERVER_IP_LIST": "",
+#                             "DNS_SERVER_VRF": "",
+#                             "DOMAIN_NAME_INTERNAL": "",
+#                             "ENABLE_AAA": "false",
+#                             "ENABLE_AGENT": "false",
+#                             "ENABLE_AI_ML_QOS_POLICY": "false",
+#                             "ENABLE_AI_ML_QOS_POLICY_FLAP": "false",
+#                             "ENABLE_DEFAULT_QUEUING_POLICY": "false",
+#                             "ENABLE_EVPN": "true",
+#                             "ENABLE_FABRIC_VPC_DOMAIN_ID": "false",
+#                             "ENABLE_FABRIC_VPC_DOMAIN_ID_PREV": "false",
+#                             "ENABLE_L3VNI_NO_VLAN": "false",
+#                             "ENABLE_MACSEC": "false",
+#                             "ENABLE_NETFLOW": "false",
+#                             "ENABLE_NETFLOW_PREV": "false",
+#                             "ENABLE_NGOAM": "true",
+#                             "ENABLE_NXAPI": "true",
+#                             "ENABLE_NXAPI_HTTP": "true",
+#                             "ENABLE_PBR": "false",
+#                             "ENABLE_PVLAN": "false",
+#                             "ENABLE_PVLAN_PREV": "false",
+#                             "ENABLE_SGT": "false",
+#                             "ENABLE_SGT_PREV": "false",
+#                             "ENABLE_TENANT_DHCP": "true",
+#                             "ENABLE_TRM": "false",
+#                             "ENABLE_VPC_PEER_LINK_NATIVE_VLAN": "false",
+#                             "ESR_OPTION": "PBR",
+#                             "EXTRA_CONF_INTRA_LINKS": "",
+#                             "EXTRA_CONF_LEAF": "",
+#                             "EXTRA_CONF_SPINE": "",
+#                             "EXTRA_CONF_TOR": "",
+#                             "EXT_FABRIC_TYPE": "",
+#                             "FABRIC_INTERFACE_TYPE": "p2p",
+#                             "FABRIC_MTU": "9216",
+#                             "FABRIC_MTU_PREV": "9216",
+#                             "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                             "FABRIC_TYPE": "Switch_Fabric",
+#                             "FABRIC_VPC_DOMAIN_ID": "",
+#                             "FABRIC_VPC_DOMAIN_ID_PREV": "",
+#                             "FABRIC_VPC_QOS": "false",
+#                             "FABRIC_VPC_QOS_POLICY_NAME": "spine_qos_for_fabric_vpc_peering",
+#                             "FEATURE_PTP": "false",
+#                             "FEATURE_PTP_INTERNAL": "false",
+#                             "FF": "Easy_Fabric",
+#                             "GRFIELD_DEBUG_FLAG": "Disable",
+#                             "HD_TIME": "180",
+#                             "HOST_INTF_ADMIN_STATE": "true",
+#                             "IBGP_PEER_TEMPLATE": "",
+#                             "IBGP_PEER_TEMPLATE_LEAF": "",
+#                             "INBAND_DHCP_SERVERS": "",
+#                             "INBAND_MGMT": "false",
+#                             "INBAND_MGMT_PREV": "false",
+#                             "ISIS_AREA_NUM": "0001",
+#                             "ISIS_AREA_NUM_PREV": "",
+#                             "ISIS_AUTH_ENABLE": "false",
+#                             "ISIS_AUTH_KEY": "",
+#                             "ISIS_AUTH_KEYCHAIN_KEY_ID": "",
+#                             "ISIS_AUTH_KEYCHAIN_NAME": "",
+#                             "ISIS_LEVEL": "level-2",
+#                             "ISIS_OVERLOAD_ELAPSE_TIME": "",
+#                             "ISIS_OVERLOAD_ENABLE": "",
+#                             "ISIS_P2P_ENABLE": "",
+#                             "L2_HOST_INTF_MTU": "9216",
+#                             "L2_HOST_INTF_MTU_PREV": "9216",
+#                             "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                             "L3VNI_MCAST_GROUP": "",
+#                             "L3_PARTITION_ID_RANGE": "50000-59000",
+#                             "LINK_STATE_ROUTING": "ospf",
+#                             "LINK_STATE_ROUTING_TAG": "UNDERLAY",
+#                             "LINK_STATE_ROUTING_TAG_PREV": "UNDERLAY",
+#                             "LOOPBACK0_IPV6_RANGE": "",
+#                             "LOOPBACK0_IP_RANGE": "10.2.0.0/22",
+#                             "LOOPBACK1_IPV6_RANGE": "",
+#                             "LOOPBACK1_IP_RANGE": "10.3.0.0/22",
+#                             "MACSEC_ALGORITHM": "",
+#                             "MACSEC_CIPHER_SUITE": "",
+#                             "MACSEC_FALLBACK_ALGORITHM": "",
+#                             "MACSEC_FALLBACK_KEY_STRING": "",
+#                             "MACSEC_KEY_STRING": "",
+#                             "MACSEC_REPORT_TIMER": "",
+#                             "MGMT_GW": "",
+#                             "MGMT_GW_INTERNAL": "",
+#                             "MGMT_PREFIX": "",
+#                             "MGMT_PREFIX_INTERNAL": "",
+#                             "MGMT_V6PREFIX": "",
+#                             "MGMT_V6PREFIX_INTERNAL": "",
+#                             "MPLS_HANDOFF": "false",
+#                             "MPLS_ISIS_AREA_NUM": "0001",
+#                             "MPLS_ISIS_AREA_NUM_PREV": "",
+#                             "MPLS_LB_ID": "",
+#                             "MPLS_LOOPBACK_IP_RANGE": "",
+#                             "MSO_CONNECTIVITY_DEPLOYED": "",
+#                             "MSO_CONTROLER_ID": "",
+#                             "MSO_SITE_GROUP_NAME": "",
+#                             "MSO_SITE_ID": "",
+#                             "MST_INSTANCE_RANGE": "",
+#                             "MULTICAST_GROUP_SUBNET": "239.1.1.0/25",
+#                             "NETFLOW_EXPORTER_LIST": "",
+#                             "NETFLOW_MONITOR_LIST": "",
+#                             "NETFLOW_RECORD_LIST": "",
+#                             "NETWORK_VLAN_RANGE": "2300-2999",
+#                             "NTP_SERVER_IP_LIST": "",
+#                             "NTP_SERVER_VRF": "",
+#                             "NVE_LB_ID": "1",
+#                             "NXAPI_HTTPS_PORT": "443",
+#                             "NXAPI_HTTP_PORT": "80",
+#                             "NXC_DEST_VRF": "",
+#                             "NXC_PROXY_PORT": "8080",
+#                             "NXC_PROXY_SERVER": "",
+#                             "NXC_SRC_INTF": "",
+#                             "OBJECT_TRACKING_NUMBER_RANGE": "100-299",
+#                             "OSPF_AREA_ID": "0.0.0.0",
+#                             "OSPF_AUTH_ENABLE": "false",
+#                             "OSPF_AUTH_KEY": "",
+#                             "OSPF_AUTH_KEY_ID": "",
+#                             "OVERLAY_MODE": "cli",
+#                             "OVERLAY_MODE_PREV": "cli",
+#                             "OVERWRITE_GLOBAL_NXC": "false",
+#                             "PER_VRF_LOOPBACK_AUTO_PROVISION": "false",
+#                             "PER_VRF_LOOPBACK_AUTO_PROVISION_PREV": "false",
+#                             "PER_VRF_LOOPBACK_AUTO_PROVISION_V6": "false",
+#                             "PER_VRF_LOOPBACK_AUTO_PROVISION_V6_PREV": "false",
+#                             "PER_VRF_LOOPBACK_IP_RANGE": "",
+#                             "PER_VRF_LOOPBACK_IP_RANGE_V6": "",
+#                             "PHANTOM_RP_LB_ID1": "",
+#                             "PHANTOM_RP_LB_ID2": "",
+#                             "PHANTOM_RP_LB_ID3": "",
+#                             "PHANTOM_RP_LB_ID4": "",
+#                             "PIM_HELLO_AUTH_ENABLE": "false",
+#                             "PIM_HELLO_AUTH_KEY": "",
+#                             "PM_ENABLE": "false",
+#                             "PM_ENABLE_PREV": "false",
+#                             "POWER_REDUNDANCY_MODE": "ps-redundant",
+#                             "PREMSO_PARENT_FABRIC": "",
+#                             "PTP_DOMAIN_ID": "",
+#                             "PTP_LB_ID": "",
+#                             "REPLICATION_MODE": "Multicast",
+#                             "ROUTER_ID_RANGE": "",
+#                             "ROUTE_MAP_SEQUENCE_NUMBER_RANGE": "1-65534",
+#                             "RP_COUNT": "2",
+#                             "RP_LB_ID": "254",
+#                             "RP_MODE": "asm",
+#                             "RR_COUNT": "2",
+#                             "SEED_SWITCH_CORE_INTERFACES": "",
+#                             "SERVICE_NETWORK_VLAN_RANGE": "3000-3199",
+#                             "SGT_ID_RANGE": "",
+#                             "SGT_NAME_PREFIX": "",
+#                             "SGT_PREPROVISION": "",
+#                             "SITE_ID": "65535",
+#                             "SLA_ID_RANGE": "10000-19999",
+#                             "SNMP_SERVER_HOST_TRAP": "true",
+#                             "SPINE_COUNT": "0",
+#                             "SPINE_SWITCH_CORE_INTERFACES": "",
+#                             "SSPINE_ADD_DEL_DEBUG_FLAG": "Disable",
+#                             "SSPINE_COUNT": "0",
+#                             "STATIC_UNDERLAY_IP_ALLOC": "false",
+#                             "STP_BRIDGE_PRIORITY": "",
+#                             "STP_ROOT_OPTION": "unmanaged",
+#                             "STP_VLAN_RANGE": "",
+#                             "STRICT_CC_MODE": "false",
+#                             "SUBINTERFACE_RANGE": "2-511",
+#                             "SUBNET_RANGE": "10.4.0.0/16",
+#                             "SUBNET_TARGET_MASK": "30",
+#                             "SYSLOG_SERVER_IP_LIST": "",
+#                             "SYSLOG_SERVER_VRF": "",
+#                             "SYSLOG_SEV": "",
+#                             "TCAM_ALLOCATION": "true",
+#                             "TOPDOWN_CONFIG_RM_TRACKING": "notstarted",
+#                             "UNDERLAY_IS_V6": "false",
+#                             "UNNUM_BOOTSTRAP_LB_ID": "",
+#                             "UNNUM_DHCP_END": "",
+#                             "UNNUM_DHCP_END_INTERNAL": "",
+#                             "UNNUM_DHCP_START": "",
+#                             "UNNUM_DHCP_START_INTERNAL": "",
+#                             "UPGRADE_FROM_VERSION": "",
+#                             "USE_LINK_LOCAL": "true",
+#                             "V6_SUBNET_RANGE": "",
+#                             "V6_SUBNET_TARGET_MASK": "126",
+#                             "VPC_AUTO_RECOVERY_TIME": "360",
+#                             "VPC_DELAY_RESTORE": "150",
+#                             "VPC_DELAY_RESTORE_TIME": "60",
+#                             "VPC_DOMAIN_ID_RANGE": "1-1000",
+#                             "VPC_ENABLE_IPv6_ND_SYNC": "true",
+#                             "VPC_PEER_KEEP_ALIVE_OPTION": "management",
+#                             "VPC_PEER_LINK_PO": "500",
+#                             "VPC_PEER_LINK_VLAN": "3600",
+#                             "VRF_LITE_AUTOCONFIG": "Manual",
+#                             "VRF_VLAN_RANGE": "2000-2299",
+#                             "abstract_anycast_rp": "anycast_rp",
+#                             "abstract_bgp": "base_bgp",
+#                             "abstract_bgp_neighbor": "evpn_bgp_rr_neighbor",
+#                             "abstract_bgp_rr": "evpn_bgp_rr",
+#                             "abstract_dhcp": "base_dhcp",
+#                             "abstract_extra_config_bootstrap": "extra_config_bootstrap_11_1",
+#                             "abstract_extra_config_leaf": "extra_config_leaf",
+#                             "abstract_extra_config_spine": "extra_config_spine",
+#                             "abstract_extra_config_tor": "extra_config_tor",
+#                             "abstract_feature_leaf": "base_feature_leaf_upg",
+#                             "abstract_feature_spine": "base_feature_spine_upg",
+#                             "abstract_isis": "base_isis_level2",
+#                             "abstract_isis_interface": "isis_interface",
+#                             "abstract_loopback_interface": "int_fabric_loopback_11_1",
+#                             "abstract_multicast": "base_multicast_11_1",
+#                             "abstract_ospf": "base_ospf",
+#                             "abstract_ospf_interface": "ospf_interface_11_1",
+#                             "abstract_pim_interface": "pim_interface",
+#                             "abstract_route_map": "route_map",
+#                             "abstract_routed_host": "int_routed_host",
+#                             "abstract_trunk_host": "int_trunk_host",
+#                             "abstract_vlan_interface": "int_fabric_vlan_11_1",
+#                             "abstract_vpc_domain": "base_vpc_domain_11_1",
+#                             "default_network": "Default_Network_Universal",
+#                             "default_pvlan_sec_network": "",
+#                             "default_vrf": "Default_VRF_Universal",
+#                             "enableRealTimeBackup": "",
+#                             "enableScheduledBackup": "",
+#                             "network_extension_template": "Default_Network_Extension_Universal",
+#                             "scheduledTime": "",
+#                             "temp_anycast_gateway": "anycast_gateway",
+#                             "temp_vpc_domain_mgmt": "vpc_domain_mgmt",
+#                             "temp_vpc_peer_link": "int_vpc_peer_link_po",
+#                             "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                         },
+#                         "operStatus": "HEALTHY",
+#                         "provisionMode": "DCNMTopDown",
+#                         "replicationMode": "Multicast",
+#                         "siteId": "65535",
+#                         "templateName": "Easy_Fabric",
+#                         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                         "vrfTemplate": "Default_VRF_Universal"
+#                     }
+#                 ],
+#                 "MESSAGE": "OK",
+#                 "METHOD": "GET",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: QUERY - TEST - Query the fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: query
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - fabric_name_1 in result.diff[0]
+      - fabric_name_2 in result.diff[0]
+      - fabric_name_3 in result.diff[0]
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_query"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "query"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "GET"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.response[0].DATA | length) == 3
+      - result.result[0].found == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
+
+################################################################################
+# QUERY - CLEANUP - Delete the fabrics
+################################################################################
+# Expected result
+# ok: [ndfc1] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "FABRIC_NAME": "VXLAN_EVPN_MSD_Fabric",
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             },
+#             {
+#                 "action": "fabric_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "deleted"
+#             },
+#             {
+#                 "action": "fabric_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 3,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": "Fabric 'VXLAN_EVPN_MSD_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/VXLAN_EVPN_MSD_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             },
+#             {
+#                 "DATA": "Fabric 'LAN_CLASSIC_Fabric' is deleted successfully!",
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_Fabric",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 3
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 3,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: QUERY - CLEANUP - Delete the fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_name_1 }}"
+      - FABRIC_NAME: "{{ fabric_name_2 }}"
+      - FABRIC_NAME: "{{ fabric_name_3 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 3
+      - result.diff[0].FABRIC_NAME == fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == fabric_name_2
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].FABRIC_NAME == fabric_name_3
+      - result.diff[2].sequence_number == 3
+      - (result.metadata | length) == 3
+      - result.metadata[0].action == "fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "fabric_delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - result.metadata[2].action == "fabric_delete"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "deleted"
+      - (result.response | length) == 3
+      - result.response[0].DATA is match '.*deleted successfully.*'
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.response[1].DATA is match '.*deleted successfully.*'
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "DELETE"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[2].DATA is match '.*deleted successfully.*'
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "DELETE"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - (result.result | length) == 3
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3

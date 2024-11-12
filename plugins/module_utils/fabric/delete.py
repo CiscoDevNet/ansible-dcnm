@@ -69,37 +69,21 @@ class FabricDelete(FabricCommon):
     ansible_module.exit_json(**task.results.final_result)
     """
 
-    def __init__(self, params):
-        super().__init__(params)
+    def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "delete"
+        self.action = "fabric_delete"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._fabrics_to_delete = []
-        self._build_properties()
         self.ep_fabric_delete = EpFabricDelete()
+        self._fabric_names = None
 
         self._cannot_delete_fabric_reason = None
 
-        # path and verb cannot be defined here because endpoints.fabric name
-        # must be set first.  Set these to None here and define them later in
-        # the commit() method.
-        self.path = None
-        self.verb = None
-
-        msg = "ENTERED FabricDelete(): "
-        msg += f"action: {self.action}, "
-        msg += f"check_mode: {self.check_mode}, "
-        msg += f"state: {self.state}"
+        msg = "ENTERED FabricDelete()"
         self.log.debug(msg)
-
-    def _build_properties(self):
-        """
-        self._properties holds property values for the class
-        """
-        # self._properties is already set in the parent class
-        self._properties["fabric_names"] = None
 
     def _get_fabrics_to_delete(self) -> None:
         """
@@ -139,19 +123,6 @@ class FabricDelete(FabricCommon):
         msg += "empty. Remove all devices from the fabric and try again."
         raise ValueError(msg)
 
-    def _set_fabric_delete_endpoint(self, fabric_name) -> None:
-        """
-        - Set the fabric delete endpoint for fabric_name
-        - Raise ``ValueError`` if the endpoint assignment fails
-        """
-        try:
-            self.ep_fabric_delete.fabric_name = fabric_name
-        except (ValueError, TypeError) as error:
-            raise ValueError(error) from error
-
-        self.path = self.ep_fabric_delete.path
-        self.verb = self.ep_fabric_delete.verb
-
     def _validate_commit_parameters(self):
         """
         - validate the parameters for commit
@@ -159,22 +130,32 @@ class FabricDelete(FabricCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
+        if self.fabric_details is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_details must be set prior to calling commit."
+            raise ValueError(msg)
+
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
+        # pylint: disable=access-member-before-definition
+        # pylint: disable=attribute-defined-outside-init
         if self.results is None:
             # Instantiate Results() only to register the failure
             self.results = Results()
             msg = f"{self.class_name}.{method_name}: "
             msg += "results must be set prior to calling commit."
             raise ValueError(msg)
+        # pylint: enable=access-member-before-definition
+        # pylint: enable=attribute-defined-outside-init
 
     def commit(self):
         """
@@ -191,9 +172,10 @@ class FabricDelete(FabricCommon):
             self.register_result(None)
             raise ValueError(error) from error
 
+        # pylint: disable=no-member
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.state = self.rest_send.state
         self.results.diff_current = {}
 
         try:
@@ -235,9 +217,11 @@ class FabricDelete(FabricCommon):
         -   We don't want RestSend to retry on errors since the likelihood of a
             timeout error when deleting a fabric is low, and there are cases of
             permanent errors for which we don't want to retry.  Hence, we set
-            timeout to 1 second.
+            timeout to 1 second and restore the original timeout after the
+            requests are sent.
         """
-        self.rest_send.check_mode = self.check_mode
+        # pylint: disable=no-member
+        self.rest_send.save_settings()
         self.rest_send.timeout = 1
 
         for fabric_name in self._fabrics_to_delete:
@@ -248,20 +232,32 @@ class FabricDelete(FabricCommon):
                 self.results.failed = True
                 self.register_result(fabric_name)
                 raise ValueError(error) from error
+        self.rest_send.restore_settings()
+
+    def _set_fabric_delete_endpoint(self, fabric_name):
+        try:
+            self.ep_fabric_delete.fabric_name = fabric_name
+            # pylint: disable=no-member
+            self.rest_send.path = self.ep_fabric_delete.path
+            self.rest_send.verb = self.ep_fabric_delete.verb
+        except (ValueError, TypeError) as error:
+            raise ValueError(error) from error
 
     def _send_request(self, fabric_name):
         """
-        -   Send a delete request to the controller and register the result.
-        -   Raise ``ValueError`` if the fabric delete endpoint cannot be set
+        ### Summary
+        Send a delete request to the controller and register the result.
+
+        ### Raises
+            -   ``ValueError`` if the fabric delete endpoint cannot be set.
         """
+        # pylint: disable=no-member
         try:
             self._set_fabric_delete_endpoint(fabric_name)
-        except ValueError as error:
+            self.rest_send.commit()
+        except (ValueError, TypeError) as error:
             raise ValueError(error) from error
 
-        self.rest_send.path = self.path
-        self.rest_send.verb = self.verb
-        self.rest_send.commit()
         self.register_result(fabric_name)
 
     def register_result(self, fabric_name):
@@ -272,11 +268,16 @@ class FabricDelete(FabricCommon):
         -   If ``fabric_name`` is not ``None``, set the result to indicate
             the success or failure of the request.
         """
+        # pylint: disable=no-member
         self.results.action = self.action
-        self.results.check_mode = self.check_mode
-        self.results.state = self.state
+        if self.rest_send is not None:
+            self.results.check_mode = self.rest_send.check_mode
+            self.results.state = self.rest_send.state
+        else:
+            self.results.check_mode = False
+            self.results.state = "unknown"
 
-        if fabric_name is None:
+        if fabric_name is None or self.rest_send is None:
             self.results.diff_current = {}
             self.results.response_current = {}
             self.results.result_current = {"success": False, "changed": False}
@@ -309,7 +310,7 @@ class FabricDelete(FabricCommon):
         - setter: set list of fabric_names
         - setter: raise ``ValueError`` if ``value`` is not a ``list`` of ``str``
         """
-        return self._properties["fabric_names"]
+        return self._fabric_names
 
     @fabric_names.setter
     def fabric_names(self, value):
@@ -332,4 +333,4 @@ class FabricDelete(FabricCommon):
                 msg += f"got {type(item).__name__} for "
                 msg += f"value {item}"
                 raise ValueError(msg)
-        self._properties["fabric_names"] = value
+        self._fabric_names = value

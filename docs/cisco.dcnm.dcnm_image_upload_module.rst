@@ -45,6 +45,7 @@ Parameters
                     </div>
                 </td>
                 <td>
+                        <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
                 <td>
                         <div>A dictionary of images and other related information that is required to download the same.</div>

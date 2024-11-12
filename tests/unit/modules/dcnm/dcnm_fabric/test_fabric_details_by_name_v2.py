@@ -41,8 +41,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
     Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils import (
@@ -52,39 +50,34 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric.utils im
 PARAMS = {"state": "query", "check_mode": False}
 
 
-def test_fabric_details_by_name_v2_00000(monkeypatch) -> None:
+def test_fabric_details_by_name_v2_00000(fabric_details_by_name_v2) -> None:
     """
     ### Classes and Methods
     - FabricDetailsByName()
         - __init__()
 
     ### Summary
-    -   Verify that __init__ raises ``ValueError`` if ``super().__init__``
-        raises ``ValueError``
+    -   Verify instance attributes are set correctly.
 
     ### Setup - Code
     -   None
 
     ### Setup - Data
-    -   params is modified to remove ``check_mode``.
+    -   None
 
     ### Trigger
     -   FabricDetailsByName() is instantiated.
 
     ### Expected Result
-    -   FabricDetailsByName().__init__() raises ``ValueError`` because
-        FabricDetails().__init__() raises ``ValueError`` because params
-        is missing mandatory key ``check_mode``.
-    -   Error message matches expectation.
+    -   Instance attribute values are as expected.
+    -   No expections are raised.
     """
-    match = r"FabricDetailsByName\.__init__:\s+"
-    match += r"Failed in super\(\)\.__init__\(\)\.\s+"
-    match += r"Error detail: FabricDetailsByName\.__init__:\s+"
-    match += r"check_mode is missing from params\. params:.*"
-    params = copy.copy(PARAMS)
-    params.pop("check_mode", None)
-    with pytest.raises(ValueError, match=match):
-        FabricDetailsByName(params)  # pytest: disable=pointless-statement
+    with does_not_raise():
+        instance = fabric_details_by_name_v2
+    assert instance.rest_send is None
+    assert instance.results is None
+    assert instance.filter is None
+    assert instance.data_subclass == {}
 
 
 def test_fabric_details_by_name_v2_00200(fabric_details_by_name_v2) -> None:

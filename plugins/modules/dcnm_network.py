@@ -759,8 +759,8 @@ class DcnmNetwork:
                             if bool(want["is_deploy"]):
                                 dep_net = True
 
-                        if bool(want["is_deploy"]) is not bool(have["is_deploy"]):
-                            if bool(want["is_deploy"]):
+                        if bool(want.get("is_deploy")) is not bool(have.get("is_deploy")):
+                            if bool(want.get("is_deploy")):
                                 dep_net = True
 
             if not found:
@@ -2322,6 +2322,9 @@ class DcnmNetwork:
                     network = dcnm_send(self.module, method, path)
 
                     if not network["DATA"]:
+                        continue
+                    missing_network, not_ok = self.handle_response(network, "query_dcnm")
+                    if missing_network or not_ok:
                         continue
 
                     net = network["DATA"]

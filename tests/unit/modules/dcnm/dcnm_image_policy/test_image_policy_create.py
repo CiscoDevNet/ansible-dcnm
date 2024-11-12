@@ -29,45 +29,49 @@ __metaclass__ = type
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
-from typing import Any, Dict
+import inspect
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
+    ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
+    RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
     Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.endpoints import \
-    ApiEndpoints
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
+    Sender
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
+    ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.utils import (
-    MockImagePolicies, does_not_raise, image_policy_create_fixture,
-    payloads_image_policy_create, responses_image_policy_create,
+    MockAnsibleModule, does_not_raise, image_policy_create_fixture, params,
+    payloads_image_policy_create, responses_ep_policies,
+    responses_ep_policy_create, responses_image_policy_create,
     rest_send_result_current)
 
 
-def test_image_policy_create_00010(image_policy_create) -> None:
+def test_image_policy_create_00000(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__
     - ImagePolicyCreate
         - __init__
 
-    Summary
+    ### Summary
     Verify that __init__() sets class attributes to the expected values.
 
-    Test
+    ### Test
     - Class attributes initialized to expected values
-    - fail_json is not called
+    - Exceptions are not raised.
     """
     with does_not_raise():
         instance = image_policy_create
     assert instance.class_name == "ImagePolicyCreate"
     assert instance.action == "create"
-    assert instance.state == "merged"
-    assert instance.check_mode is False
-    assert isinstance(instance.endpoints, ApiEndpoints)
-    assert instance.path == ApiEndpoints().policy_create["path"]
-    assert instance.verb == ApiEndpoints().policy_create["verb"]
+    assert instance.params.get("state") == "merged"
+    assert instance.params.get("check_mode") is False
+    assert instance.endpoint.class_name == "EpPolicyCreate"
+    assert instance.endpoint.verb == "POST"
     assert instance._mandatory_payload_keys == {
         "nxosVersion",
         "policyName",
@@ -77,24 +81,25 @@ def test_image_policy_create_00010(image_policy_create) -> None:
     assert instance._payloads_to_commit == []
 
 
-def test_image_policy_create_00020(image_policy_create) -> None:
+def test_image_policy_create_00010(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__
     - ImagePolicyCreate
         - __init__
         - payload setter
 
-    Summary
+    ### Summary
     Verify that the payloads setter sets the payloads attribute
     to the expected value.
 
-    Test
+    ### Test
     - payload is set to expected value
-    - fail_json is not called
+    - Exceptions are not raised.
     """
-    key = "test_image_policy_create_00020a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
     with does_not_raise():
         instance = image_policy_create
@@ -104,30 +109,32 @@ def test_image_policy_create_00020(image_policy_create) -> None:
 
 def test_image_policy_create_00021(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__
     - ImagePolicyCreate
         - __init__
         - payload setter
 
-    Summary
-    Verify that the payload setter calls fail_json when payload is not a dict
+    ### Summary
+    Verify that the payload setter raises TypeError when payload is not a dict.
 
-    Setup
-    - payload is set to a list
+    ### Setup
+    - payload is set to a list.
 
-    Test
-    - fail_json is called because payload is not a dict
+    ### Test
+    ``TypeError`` is raised because payload is not a dict.
     """
-    key = "test_image_policy_create_00021a"
-    match = "ImagePolicyCreate._verify_payload: "
-    match += "payload must be a dict. Got type list"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    match = r"ImagePolicyCreate\.verify_payload:\s+"
+    match += r"payload must be a dict\. Got type list, value \[\]\."
 
     with does_not_raise():
         instance = image_policy_create
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(TypeError, match=match):
         instance.payload = payloads_image_policy_create(key)
     assert instance.payload is None
 
@@ -142,218 +149,227 @@ def test_image_policy_create_00021(image_policy_create) -> None:
 )
 def test_image_policy_create_00022(image_policy_create, key, match) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__
     - ImagePolicyCreate
         - __init__
         - payload setter
 
-    Summary
-    Verify that the payload setter calls fail_json when a payload is missing
-    a mandatory key
+    ### Summary
+    Verify that the payload setter raises ``ValueError`` when a payload is
+    missing a mandatory key.
 
-    Test
-    - fail_json is called because payload is missing a mandatory key
-    - instance.payload is not modified, hence it retains its initial value of None
+    ### Test
+    -   ``ValueError`` is raised because payload is missing a mandatory key.
+    -   ``instance.payload`` retains its initial value of None.
     """
     with does_not_raise():
         instance = image_policy_create
         instance.results = Results()
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.payload = payloads_image_policy_create(key)
     assert instance.payload is None
 
 
-def test_image_policy_create_00030(monkeypatch, image_policy_create) -> None:
+def test_image_policy_create_00030(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__()
-        - _build_payloads_to_commit()
+        - build_payloads_to_commit()
     - ImagePolicyCreate
         - __init__()
         - payload setter
 
-    Summary
+    ### Summary
     Verify behavior when the user sends an image create payload for an
     image policy that already exists on the controller.
 
-    Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
-        is mocked to indicate that two image policies (KR5M, NR3F) exist on the
-        controller.
+    ### Setup
+    -   EpPolicies endpoint response is mocked to indicate that two image
+        policies (KR5M, NR3F) exist on the controller.
     -   ImagePolicyCreate().payload is set to contain one payload (KR5M)
-        that is present in all_policies.
+        that is present on the controller.
 
-    Test
+    ### Test
     -   payloads_to_commit will an empty list because the payload in
         instance.payload exists on the controller.
+    -   ``commit`` returns without sending a request to create the image
+        policy.
+    -   Exceptions are not raised.
     """
-    key = "test_image_policy_create_00030a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    def payloads():
+        yield payloads_image_policy_create(key)
+
+    gen_payloads = ResponseGenerator(payloads())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_policy_create
         instance.results = Results()
-        instance.payload = payloads_image_policy_create(key)
-        monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-        instance._build_payloads_to_commit()
+        instance.rest_send = rest_send
+        instance.payload = gen_payloads.next
+        instance.commit()
     assert instance._payloads_to_commit == []
 
 
-def test_image_policy_create_00031(monkeypatch, image_policy_create) -> None:
+def test_image_policy_create_00031(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
         - __init__()
-        - _build_payloads_to_commit()
+        - build_payloads_to_commit()
     - ImagePolicyCreate
         - __init__()
         - payload setter
 
-    Summary
-    Verify that instance._build_payloads_to_commit() adds a payload to the
+    ### Summary
+    Verify that instance.build_payloads_to_commit() adds a payload to the
     payloads_to_commit list when a request is made to create an image policy
     that does not exist on the controller.
 
-    Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
-        is mocked to indicate that two image policies (KR5M, NR3F) exist on the
-        controller.
+    ### Setup
+    -   EpPolicies endpoint response is mocked to indicate that one image
+        policy (KR5M) exists on the controller.
     -   ImagePolicyCreate().payload is set to contain one payload containing
-        an image policy (FOO) that is not present in all_policies.
+        an image policy (FOO) that is not present on the controller.
 
-    Test
-    -   _payloads_to_commit will equal list(instance.payload) since none of the
-        image policies in instance.payloads exist on the controller.
+    ### Test
+    -   _payloads_to_commit will equal list(instance.payload) since none of
+        the image policies in instance.payloads exist on the controller.
+    -   Exceptions are not raised.
     """
-    key = "test_image_policy_create_00031a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+        yield responses_ep_policy_create(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    def payloads():
+        yield payloads_image_policy_create(key)
+
+    gen_payloads = ResponseGenerator(payloads())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_policy_create
         instance.results = Results()
-        instance.payload = payloads_image_policy_create(key)
-        monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-        instance._build_payloads_to_commit()
+        instance.rest_send = rest_send
+        instance.params = params
+        instance.payload = gen_payloads.next
+        instance.commit()
+
     assert len(instance._payloads_to_commit) == 1
     assert instance._payloads_to_commit == [payloads_image_policy_create(key)]
 
 
 def test_image_policy_create_00033(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreate
         - commit()
-        - fail_json
 
-    Summary
-    Verify that ImagePolicyCreate.commit() calls fail_json when
-    payload is None.
+    ### Summary
+    Verify that ImagePolicyCreate.commit() raises ValueError when payload
+    is not set.
 
-    Setup
-    -   ImagePolicyCreate().payload is not set
+    ### Setup
+    -   ImagePolicyCreate().payload is not set.
 
-    Test
-    -   fail_json is called because payload is None
+    ### Test
+    -   ``ValueError`` is raised because payload is not set.
     """
     with does_not_raise():
         instance = image_policy_create
         instance.results = Results()
 
     match = "ImagePolicyCreate.commit: payload must be set prior to calling commit."
-    with pytest.raises(AnsibleFailJson, match=match):
+    with pytest.raises(ValueError, match=match):
         instance.commit()
 
 
-def test_image_policy_create_00034(monkeypatch, image_policy_create) -> None:
+def test_image_policy_create_00035(image_policy_create) -> None:
     """
-    Classes and Methods
+    ### Classes and Methods
     - ImagePolicyCreateCommon
-        - __init__()
-        - _build_payloads_to_commit()
-    - ImagePolicyCreate
-        - __init__()
-        - payload setter
-        - commit()
-
-    Summary
-    Verify that ImagePolicyCreate.commit() works as expected when the image policy
-    already exists on the controller.  This is similar to test_image_policy_create_00030
-    but tests that the commit method returns when _payloads_to_commit is empty.
-
-    Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
-        is mocked to indicate that two image policies (KR5M, NR3F) exist on the
-        controller.
-    -   ImagePolicyCreate().payload is set to contain one payload (KR5M)
-        that is present in all_policies.
-
-    Test
-    -   payloads_to_commit will an empty list because all payloads in
-        instance.payloads exist on the controller.
-    -   commit will return without calling _send_payloads
-    -   fail_json is not called
-    """
-    key = "test_image_policy_create_00034a"
-
-    with does_not_raise():
-        instance = image_policy_create
-        instance.results = Results()
-        instance.payload = payloads_image_policy_create(key)
-        monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-        instance.commit()
-    assert instance._payloads_to_commit == []
-
-
-def test_image_policy_create_00035(monkeypatch, image_policy_create) -> None:
-    """
-    Classes and Methods
-    - ImagePolicyCreateCommon
-        - _build_payloads_to_commit()
-        - _send_payloads()
+        - build_payloads_to_commit()
+        - send_payloads()
     - ImagePolicyCreate
         - payload setter
         - commit()
 
-    Summary
-    Verify that ImagePolicyCreate.commit() behaves as expected when the
-    controller responds to an image policy create request with a 200 response.
+    ### Summary
+    Verify ImagePolicyCreate.commit() happy path.  Controller responds
+    to an image create request with a 200 response.
 
-    Setup
-    -   ImagePolicies().all_policies, called from instance._build_payloads_to_commit(),
-        is mocked to indicate that no policies exist on the controller.
-    -   ImagePolicyCreate().payload is set to contain one payload that
+    ### Setup
+    -   EpPolicies endpoint response contains DATA indicating no image policies
+        exist on the controller.
+    -   ImagePolicyCreateCommon().payloads is set to contain one payload that
         contains an image policy (FOO) which does not exist on the controller.
-    -   dcnm_send is mocked to return a successful (200) response.
+    -   EpPolicyCreate endpoint response contains a 200 response.
 
-    Test
-    -   commit calls _build_payloads_to_commit which returns one payload.
-    -   commit calls _send_payloads, which calls rest_send, which populates
+    ### Test
+    -   commit calls build_payloads_to_commit which returns one payload.
+    -   commit calls send_payloads, which calls rest_send, which populates
         diff_current with the payload due to result_current indicating
         success.
-    -   results.result_current is set to the expected value
-    -   results.diff_current is set to the expected value
-    -   results.response_current is set to the expected value
-    -   results.action is set to "create"
+    -   results.result_current is set to the expected value.
+    -   results.diff_current is set to the expected value.
+    -   results.response_current is set to the expected value.
+    -   results.action is set to "create".
     """
-    key = "test_image_policy_create_00035a"
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
 
-    def mock_dcnm_send(*args, **kwargs):
-        return responses_image_policy_create(key)
+    def responses():
+        yield responses_ep_policies(key)
+        yield responses_ep_policy_create(key)
 
-    PATCH_DCNM_SEND = "ansible_collections.cisco.dcnm.plugins."
-    PATCH_DCNM_SEND += "module_utils.common.rest_send.dcnm_send"
+    gen_responses = ResponseGenerator(responses())
 
-    monkeypatch.setattr(PATCH_DCNM_SEND, mock_dcnm_send)
+    def payloads():
+        yield payloads_image_policy_create(key)
+
+    gen_payloads = ResponseGenerator(payloads())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
 
     with does_not_raise():
         instance = image_policy_create
         instance.results = Results()
-
-    monkeypatch.setattr(instance, "_image_policies", MockImagePolicies(key))
-
-    with does_not_raise():
-        instance.payload = payloads_image_policy_create(key)
+        instance.rest_send = rest_send
+        instance.params = params
+        instance.payload = gen_payloads.next
         instance.commit()
 
     response_current = responses_image_policy_create(key)
@@ -375,6 +391,84 @@ def test_image_policy_create_00035(monkeypatch, image_policy_create) -> None:
     assert False not in instance.results.changed
     assert True in instance.results.changed
     assert len(instance.results.metadata) == 1
+    assert instance.results.metadata[0]["action"] == "create"
+    assert instance.results.metadata[0]["state"] == "merged"
+    assert instance.results.metadata[0]["sequence_number"] == 1
+
+
+def test_image_policy_create_00036(image_policy_create) -> None:
+    """
+    ### Classes and Methods
+    - ImagePolicyCreateCommon
+        - payloads setter
+        - build_payloads_to_commit()
+        - send_payloads()
+    - ImagePolicyCreate
+        - commit()
+
+    ### Summary
+    Verify ImagePolicyCreate.commit() sad path. Controller returns a 500
+    response to an image policy create request.
+
+    ### Setup
+    -   EpPolicies endpoint response contains DATA indicating no image policies
+        exist on the controller.
+    -   ImagePolicyCreate().payloads is set to contain one payload that
+        contains an image policy (FOO) which does not exist on the controller.
+    -   EpPolicyCreate endpoint response contains a 500 response.
+
+    ### Test
+    -   A sequence_number key is added to instance.results.response_current
+    -   instance.results.diff_current is set to a dict with only
+        the key "sequence_number", since no changes were made.
+    -   instance.results.failed set() contains True and does not contain False.
+    -   instance.results.changed set() contains False and does not contain True.
+    -   instance.results.metadata contains one dict.
+    -   The value of instance.results.metadata "action" is "create".
+    -   The value of instance.results.metadata "state" is "merged".
+    -   The value of instance.results.metadata "sequence_number" is 1.
+    """
+    method_name = inspect.stack()[0][3]
+    key = f"{method_name}a"
+
+    def responses():
+        yield responses_ep_policies(key)
+        yield responses_ep_policy_create(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    def payloads():
+        yield payloads_image_policy_create(key)
+
+    gen_payloads = ResponseGenerator(payloads())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+    rest_send.unit_test = True
+
+    with does_not_raise():
+        instance = image_policy_create
+        instance.results = Results()
+        instance.rest_send = rest_send
+        instance.params = params
+        instance.payload = gen_payloads.next
+        instance.commit()
+
+    response_current = responses_ep_policy_create(key)
+    response_current["sequence_number"] = 1
+    assert instance.results.response_current == response_current
+    assert instance.results.diff_current == {"sequence_number": 1}
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
+    assert True not in instance.results.changed
+    assert False in instance.results.changed
+    assert len(instance.results.metadata) == 1
+    assert len(instance.results.diff) == 1
+    assert instance.results.diff[0] == {"sequence_number": 1}
     assert instance.results.metadata[0]["action"] == "create"
     assert instance.results.metadata[0]["state"] == "merged"
     assert instance.results.metadata[0]["sequence_number"] == 1

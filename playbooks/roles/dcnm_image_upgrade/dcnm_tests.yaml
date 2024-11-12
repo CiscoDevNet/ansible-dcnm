@@ -1,0 +1,46 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_image_upgrade
+#
+# Modify the hosts and vars sections with details for your testing
+# setup and uncomment the testcase you want to run.
+#
+- hosts: dcnm
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # testcase: 00_setup_create_fabric
+    # testcase: 01_setup_add_switches_to_fabric
+    # testcase: 02_setup_replace_image_policies
+    # testcase: deleted
+    # testcase: deleted_1x_switch
+    # testcase: merged_global_config
+    # testcase: merged_override_global_config
+    # testcase: query
+    fabric_name: LAN_Classic_Fabric
+    switch_username: admin
+    switch_password: "{{ switch_password }}"
+    leaf1: 192.168.1.2
+    leaf2: 192.168.1.3
+    spine1: 192.168.1.4
+    # for dcnm_image_policy and dcnm_image_upgrade roles
+    image_policy_1: NR1F
+    image_policy_2: NR2F
+    # for dcnm_image_policy role
+    epld_image_1: n9000-epld.10.3.1.F.img
+    epld_image_2: n9000-epld.10.3.1.F.img
+    nxos_image_1: nxos64-cs.10.3.1.F.bin
+    nxos_image_2: nxos64-cs.10.3.2.F.bin
+    nxos_release_1: 10.3.1_nxos64-cs_64bit
+    nxos_release_2: 10.3.2_nxos64-cs_64bit
+    # for dcnm_image_upgrade role
+    fabric_name_1: "{{ fabric_name }}"
+    ansible_switch_1: "{{ leaf1 }}"
+    ansible_switch_2: "{{ leaf2 }}"
+    ansible_switch_3: "{{ spine1 }}"
+
+  roles:
+    - dcnm_image_upgrade

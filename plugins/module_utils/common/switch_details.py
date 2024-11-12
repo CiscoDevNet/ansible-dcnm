@@ -83,9 +83,6 @@ class SwitchDetails:
         self.action = "switch_details"
         self.conversion = ConversionUtils()
         self.ep_all_switches = EpAllSwitches()
-        self.path = self.ep_all_switches.path
-        self.verb = self.ep_all_switches.verb
-
         self._filter = None
         self._info = None
         self._rest_send = None
@@ -128,8 +125,8 @@ class SwitchDetails:
             # Regardless of ansible_module.check_mode, we need to get the
             # switch details. So, set check_mode to False.
             self.rest_send.check_mode = False
-            self.rest_send.verb = self.verb
-            self.rest_send.path = self.path
+            self.rest_send.path = self.ep_all_switches.path
+            self.rest_send.verb = self.ep_all_switches.verb
             self.rest_send.commit()
             self.rest_send.restore_settings()
         except (TypeError, ValueError) as error:
