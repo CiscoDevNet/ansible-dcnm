@@ -37,6 +37,11 @@ options:
         description:
         - The state of the feature or object after module completion
         type: str
+    skip_validation:
+        default: false
+        description:
+        - Skip playbook parameter validation.  Useful for debugging.
+        type: bool
     config:
         description:
         - A list of fabric configuration dictionaries
@@ -56,9 +61,11 @@ options:
                 type: str
             FABRIC_TYPE:
                 choices:
+                - IPFM
+                - ISN
+                - LAN_CLASSIC
                 - VXLAN_EVPN
                 - VXLAN_EVPN_MSD
-                - LAN_CLASSIC
                 description:
                 - The type of fabric.
                 required: true
@@ -1545,6 +1552,312 @@ options:
                         - Default Overlay VRF Template For Borders
                         required: false
                         type: str
+            ISN_FABRIC_PARAMETERS:
+                description:
+                - ISN (Inter-site Network) fabric specific parameters.
+                - Also known as Multi-Site External Network.
+                - The following parameters are specific to ISN fabrics.
+                - Network infrastructure attached to Border Gateways to interconnect VXLAN EVPN fabrics for Multi-Site and Multi-Cloud deployments.
+                - The indentation of these parameters is meant only to logically group them.
+                - They should be at the same YAML level as FABRIC_TYPE and FABRIC_NAME.
+                suboptions:
+                    AAA_REMOTE_IP_ENABLED:
+                        default: false
+                        description:
+                        - Enable only, when IP Authorization is enabled in the AAA Server
+                        required: false
+                        type: bool
+                    AAA_SERVER_CONF:
+                        default: ''
+                        description:
+                        - AAA Configurations
+                        required: false
+                        type: str
+                    BGP_AS:
+                        default: ''
+                        description:
+                        - 1-4294967295 | 1-65535.0-65535 It is a good practice to have a unique
+                            ASN for each Fabric.
+                        required: false
+                        type: str
+                    BOOTSTRAP_CONF:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_CONF_XE:
+                        default: ''
+                        description:
+                        - Additional CLIs required during device bootup/login e.g. AAA/Radius
+                        required: false
+                        type: str
+                    BOOTSTRAP_ENABLE:
+                        default: false
+                        description:
+                        - Automatic IP Assignment For POAP
+                        required: false
+                        type: bool
+                    BOOTSTRAP_MULTISUBNET:
+                        default: '#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix'
+                        description:
+                        - 'lines with # prefix are ignored here'
+                        required: false
+                        type: str
+                    CDP_ENABLE:
+                        default: false
+                        description:
+                        - Enable CDP on management interface
+                        required: false
+                        type: bool
+                    DHCP_ENABLE:
+                        default: false
+                        description:
+                        - Automatic IP Assignment For POAP From Local DHCP Server
+                        required: false
+                        type: bool
+                    DHCP_END:
+                        default: ''
+                        description:
+                        - End Address For Switch POAP
+                        required: false
+                        type: str
+                    DHCP_IPV6_ENABLE:
+                        choices:
+                        - DHCPv4
+                        - DHCPv6
+                        default: DHCPv4
+                        description:
+                        - No description available
+                        required: false
+                        type: str
+                    DHCP_START:
+                        default: ''
+                        description:
+                        - Start Address For Switch POAP
+                        required: false
+                        type: str
+                    DOMAIN_NAME:
+                        default: ''
+                        description:
+                        - Domain name for DHCP server PnP block
+                        required: false
+                        type: str
+                    ENABLE_AAA:
+                        default: false
+                        description:
+                        - Include AAA configs from Advanced tab during device bootup
+                        required: false
+                        type: bool
+                    ENABLE_NETFLOW:
+                        default: false
+                        description:
+                        - Enable Netflow on VTEPs
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI:
+                        default: false
+                        description:
+                        - Enable HTTPS NX-API
+                        required: false
+                        type: bool
+                    ENABLE_NXAPI_HTTP:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    ENABLE_RT_INTF_STATS:
+                        default: false
+                        description:
+                        - Valid for NX-OS only
+                        required: false
+                        type: bool
+                    FABRIC_FREEFORM:
+                        default: ''
+                        description:
+                        - Additional supported CLIs for all same OS (e.g. all NxOS or IOS-XE,
+                            etc) switches
+                        required: false
+                        type: str
+                    FABRIC_NAME:
+                        default: ''
+                        description:
+                        - Please provide the fabric name to create it (Max Size 64)
+                        required: false
+                        type: str
+                    FEATURE_PTP:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    INBAND_ENABLE:
+                        default: false
+                        description:
+                        - 'Enable POAP over Inband Interface (Pre-req: Inband Mgmt Knob should
+                            be Enabled)'
+                        required: false
+                        type: bool
+                    INBAND_MGMT:
+                        default: false
+                        description:
+                        - Import switches with inband connectivity
+                        required: false
+                        type: bool
+                    INTF_STAT_LOAD_INTERVAL:
+                        default: 10
+                        description:
+                        - 'Time in seconds '
+                        required: false
+                        type: int
+                    IS_READ_ONLY:
+                        default: true
+                        description:
+                        - If enabled, fabric is only monitored. No configuration will be deployed
+                        required: false
+                        type: bool
+                    MGMT_GW:
+                        default: ''
+                        description:
+                        - Default Gateway For Management VRF On The Switch
+                        required: false
+                        type: str
+                    MGMT_PREFIX:
+                        default: 24
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    MGMT_V6PREFIX:
+                        default: 64
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    MPLS_HANDOFF:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    MPLS_LB_ID:
+                        default: 101
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    MPLS_LOOPBACK_IP_RANGE:
+                        default: 10.102.0.0/25
+                        description:
+                        - MPLS Loopback IP Address Range
+                        required: false
+                        type: str
+                    NETFLOW_EXPORTER_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Exporters
+                        required: false
+                        type: list
+                        elements: str
+                    NETFLOW_MONITOR_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Monitors
+                        required: false
+                        type: list
+                        elements: str
+                    NETFLOW_RECORD_LIST:
+                        default: ''
+                        description:
+                        - One or Multiple Netflow Records
+                        required: false
+                        type: list
+                        elements: str
+                    NETFLOW_SAMPLER_LIST:
+                        default: ''
+                        description:
+                        - One or multiple netflow samplers. Applicable to N7K only
+                        required: false
+                        type: list
+                        elements: str
+                    NXAPI_HTTPS_PORT:
+                        default: 443
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    NXAPI_HTTP_PORT:
+                        default: 80
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    PM_ENABLE:
+                        default: false
+                        description:
+                        - No description available
+                        required: false
+                        type: bool
+                    PNP_ENABLE:
+                        default: false
+                        description:
+                        - Enable Plug n Play (Automatic IP Assignment) for Cat9K switches
+                        required: false
+                        type: bool
+                    POWER_REDUNDANCY_MODE:
+                        choices:
+                        - ps-redundant
+                        - combined
+                        - insrc-redundant
+                        default: ps-redundant
+                        description:
+                        - Default Power Supply Mode For Bootstrapped NX-OS Switches
+                        required: false
+                        type: str
+                    PTP_DOMAIN_ID:
+                        default: 0
+                        description:
+                        - 'Multiple Independent PTP Clocking Subdomains on a Single Network '
+                        required: false
+                        type: int
+                    PTP_LB_ID:
+                        default: 0
+                        description:
+                        - No description available
+                        required: false
+                        type: int
+                    SNMP_SERVER_HOST_TRAP:
+                        default: true
+                        description:
+                        - Configure NDFC as a receiver for SNMP traps
+                        required: false
+                        type: bool
+                    SUBINTERFACE_RANGE:
+                        default: 2-511
+                        description:
+                        - 'Per Border Dot1q Range For VRF Lite Connectivity '
+                        required: false
+                        type: str
+                    enableRealTimeBackup:
+                        default: ''
+                        description:
+                        - Backup hourly only if there is any config deployment since last
+                            backup
+                        required: false
+                        type: bool
+                    enableScheduledBackup:
+                        default: ''
+                        description:
+                        - Backup at the specified time
+                        required: false
+                        type: bool
+                    scheduledTime:
+                        default: ''
+                        description:
+                        - Time (UTC) in 24hr format. (00:00 to 23:59)
+                        required: false
+                        type: str
             IPFM_FABRIC_PARAMETERS:
                 description:
                 - IPFM (IP Fabric for Media) fabric specific parameters.
@@ -2261,6 +2574,27 @@ EXAMPLES = """
 - debug:
     var: result
 
+# Setting skip_validation to True to bypass parameter validation in the module.
+# Note, this does not bypass parameter validation in NDFC.  skip_validation
+# can be useful to verify that the dcnm_fabric module's parameter validation
+# is disallowing parameter combinations that would also be disallowed by
+# NDFC.
+
+- name: Update fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    skip_validation: True
+    config:
+    -   FABRIC_NAME: VXLAN_Fabric
+        FABRIC_TYPE: VXLAN_EVPN
+        BGP_AS: 65000
+        ANYCAST_GW_MAC: 0001.aabb.ccdd
+        UNDERLAY_IS_V6: false
+        EXTRA_CONF_LEAF: |
+          interface Ethernet1/1-16
+            description managed by NDFC
+        DEPLOY: false
+
 # Use replaced state to return the fabrics to their default configurations.
 
 - name: Return fabrics to default configuration.
@@ -2306,6 +2640,28 @@ EXAMPLES = """
   register: result
 - debug:
     var: result
+
+# When skip_validation is False (the default), some error messages might be
+# misleading.  For example, with the playbook below, the error message
+# that follows should be interpreted as "ENABLE_PVLAN is mutually-exclusive
+# to ENABLE_SGT and should be removed from the playbook if ENABLE_SGT is set
+# to True."  In the NDFC GUI, if Security Groups is enabled, NDFC disables
+# the ability to modify the PVLAN option.  Hence, even a valid value for
+# ENABLE_PVLAN in the playbook will generate an error.
+
+-   name: merge fabric MyFabric
+    cisco.dcnm.dcnm_fabric:
+        state: merged
+        skip_validation: false
+        config:
+        -   FABRIC_NAME: MyFabric
+            FABRIC_TYPE: VXLAN_EVPN
+            BGP_AS: 65001
+            ENABLE_SGT: true
+            ENABLE_PVLAN: false
+
+# Resulting error message (edited for brevity)
+# "The following parameter(value) combination(s) are invalid and need to be reviewed: Fabric: f3, ENABLE_PVLAN(False) requires ENABLE_SGT != True."
 
 """
 # pylint: disable=wrong-import-position
@@ -2746,10 +3102,17 @@ class Merged(Common):
                 except TypeError as error:
                     raise ValueError(f"{error}") from error
 
-                try:
-                    self._verify_playbook_params.commit()
-                except ValueError as error:
-                    raise ValueError(f"{error}") from error
+                if self.params.get("skip_validation") is False:
+                    try:
+                        self._verify_playbook_params.commit()
+                    except ValueError as error:
+                        raise ValueError(f"{error}") from error
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += "skip_validation: "
+                    msg += f"{self.params.get('skip_validation')}, "
+                    msg += "skipping parameter validation."
+                    self.log.debug(msg)
 
                 self.need_create.append(want)
 
@@ -2760,10 +3123,17 @@ class Merged(Common):
                     self._verify_playbook_params.config_controller = nv_pairs
                 except TypeError as error:
                     raise ValueError(f"{error}") from error
-                try:
-                    self._verify_playbook_params.commit()
-                except (ValueError, KeyError) as error:
-                    raise ValueError(f"{error}") from error
+                if self.params.get("skip_validation") is False:
+                    try:
+                        self._verify_playbook_params.commit()
+                    except (ValueError, KeyError) as error:
+                        raise ValueError(f"{error}") from error
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += "skip_validation: "
+                    msg += f"{self.params.get('skip_validation')}, "
+                    msg += "skipping parameter validation."
+                    self.log.debug(msg)
 
                 self.need_update.append(want)
 
@@ -3116,6 +3486,11 @@ def main():
 
     argument_spec = {}
     argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
+    argument_spec["skip_validation"] = {
+        "required": False,
+        "type": "bool",
+        "default": False,
+    }
     argument_spec["state"] = {
         "default": "merged",
         "choices": ["deleted", "merged", "query", "replaced"],

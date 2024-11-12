@@ -676,9 +676,13 @@ class DcnmVrf:
                             have_inst_values = ast.literal_eval(have["instanceValues"])
 
                             # update unsupported paramters using using have
+                            # Only need ipv4 or ipv6. Don't require both, but both can be supplied (as per the GUI)
                             want_inst_values.update({"loopbackId": have_inst_values["loopbackId"]})
-                            want_inst_values.update({"loopbackIpAddress": have_inst_values["loopbackIpAddress"]})
-                            want_inst_values.update({"loopbackIpV6Address": have_inst_values["loopbackIpV6Address"]})
+                            if "loopbackIpAddress" in have_inst_values:
+                                want_inst_values.update({"loopbackIpAddress": have_inst_values["loopbackIpAddress"]})
+                            if "loopbackIpV6Address" in have_inst_values:
+                                want_inst_values.update({"loopbackIpV6Address": have_inst_values["loopbackIpV6Address"]})
+
                             want.update({"instanceValues": json.dumps(want_inst_values)})
                         if (
                             want["extensionValues"] != ""

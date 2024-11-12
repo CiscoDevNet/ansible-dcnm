@@ -357,7 +357,8 @@ def test_verify_playbook_params_00070() -> None:
         instance.config_playbook = payloads_verify_playbook_params(key)
         instance.config_controller = None
     match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
-    match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
+    match += r"and need to be reviewed: "
+    match += r"Fabric: f1,\s+V6_SUBNET_RANGE"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
@@ -392,7 +393,8 @@ def test_verify_playbook_params_00080() -> None:
         instance.config_playbook = payloads_verify_playbook_params(key)
         instance.config_controller = nv_pairs_verify_playbook_params(key)
     match = r"The following parameter\(value\) combination\(s\) are invalid\s+"
-    match += r"and need to be reviewed: Fabric: f1,\s+REPLICATION_MODE"
+    match += r"and need to be reviewed: "
+    match += r"Fabric: f1,\s+V6_SUBNET_RANGE"
     with pytest.raises(ValueError, match=match):
         instance.commit()
 
