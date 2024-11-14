@@ -1193,6 +1193,32 @@
       }
     },
 
+    "vpc_pair_info_virtual_peer_link_resp":
+    {
+      "DATA": [{
+        "blockSelection": "False",
+        "currentPeer": "True",
+        "ethSwitchId": 178800,
+        "fabricName": "None",
+        "ipAddress": "172.31.217.103",
+        "lanId": 0,
+        "logicalName": "93180YC-FX3S-L1-S1",
+        "nxosVersion": "10.4(3)",
+        "platformType": "None",
+        "recommendationReason": "Switches have same role and support Virtual Fabric Peering",
+        "recommended": "True",
+        "serialNumber": "FDO24020JMT",
+        "useVirtualPeerlink": "False",
+        "uuid": "None",
+        "vdcId": 0,
+        "vdcName": "None"
+        }],
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/recommendation?serialNumber=FDO24020JMB&useVirtualPeerlink=true",
+      "RETURN_CODE": 200
+    },
+
     "vpc_pair_policy_resp_84":
     {
       "RETURN_CODE": 200,

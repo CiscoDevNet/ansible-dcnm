@@ -213,6 +213,7 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
     # Get useVirtualPeerlink information
     path = self.paths["VPC_PEER_LINK_GET_PATH"]
     path = path.format(peerOneId)
+
     resp = dcnm_send(self.module, "GET", path)
 
     if (
