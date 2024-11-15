@@ -1,0 +1,708 @@
+{
+    "TEST_NOTES": [
+        "Mocked EpBootflashInfo() responses for tests/unit/modules/dcnm/dcnm_bootflash"
+    ],
+    "test_bootflash_deleted_01000a": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.112",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1211-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_deleted_01000b": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.113",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Sep 12 02:55:23 2022",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1212-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.113",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGD0",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00100a": {
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:10:08 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "EASY-SW-RUNNING-CONFIG",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "4048"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:10:18 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "EASY_SW_INTF_BRIEF",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "5773"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "May 18 21:25:10 2023",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "INTF_BRIEF_CONFIG",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "5773"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "May 18 21:26:15 2023",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "MIN-EASY-SW-RUNNING-CONFIG",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "3795"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Oct 06 01:53:35 2023",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "bios_daemon.dbg",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "72300"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "earth.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:10:25 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "ef-minimum-config",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2794"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "fire.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Sep 19 22:19:55 2023",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "n9000-epld.10.2.5.M.img",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "218233885"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Sep 19 22:17:44 2023",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "nxos64-cs.10.2.5.M.bin",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "1943380992"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Dec 21 02:16:22 2022",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "nxos64-cs.10.3.2.F.bin",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2297351168"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "water.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1211-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00100b": {
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:11:22 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "EASY-SW-RUNNING-CONFIG",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "6258"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:11:32 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "EASY_SW_INTF_BRIEF",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "6072"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Apr 11 21:56:31 2022",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "INTF_BRIEF_CONFIG",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "6072"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Apr 11 21:58:09 2022",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "MIN-EASY-SW-RUNNING-CONFIG",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "3484"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Oct 06 01:53:26 2023",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "bios_daemon.dbg",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "58396"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:28 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "12043"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:51:28 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "blue.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:11:39 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "ef-minimum-config",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2767"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:52:28 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "green.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 06 17:14:09 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "log_profile.yaml",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2566"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Sep 19 22:20:07 2023",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "n9000-epld.10.2.5.M.img",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "218233885"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Nov 07 20:42:40 2023",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "n9000-epld.10.3.1.F.img",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "266383517"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Sep 19 22:17:57 2023",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "nxos64-cs.10.2.5.M.bin",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "1943380992"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Nov 07 20:41:41 2023",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "nxos64-cs.10.3.1.F.bin",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2077222400"
+                    },
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:53:28 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "red.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1212-spine",
+                    "freeSpace": 10630565888,
+                    "ipAddr": " 172.22.150.113",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGD0",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 11054587904
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00210a": {
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1212-spine",
+                    "freeSpace": 10630565888,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 11054587904
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00220a": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.112",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1211-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00220b": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.112",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:28 2024",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "12043"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1212-spine",
+                    "freeSpace": 10630565888,
+                    "ipAddr": " 172.22.150.113",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGD0",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 11054587904
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_info_00230a": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.112",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1211-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_query_01000a": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.112",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Aug 08 22:50:37 2024",
+                        "deviceName": "cvd-1211-spine",
+                        "fileName": "air.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.112",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGCS",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1211-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.112",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGCS",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGCS",
+        "RETURN_CODE": 200
+    },
+    "test_bootflash_query_01000b": {
+        "TEST_NOTES": [
+            "ipAddr is 172.22.150.113",
+            "bootflash_type is active"
+        ],
+        "DATA": {
+            "bootFlashDataMap": {
+                "bootflash:": [
+                    {
+                        "bootflash_type": "active",
+                        "date": "Sep 12 02:55:23 2022",
+                        "deviceName": "cvd-1212-spine",
+                        "fileName": "black.txt",
+                        "filePath": "bootflash:",
+                        "ipAddr": " 172.22.150.113",
+                        "name": "bootflash:",
+                        "serialNumber": "FOX2109PGD0",
+                        "size": "2"
+                    }
+                ]
+            },
+            "bootFlashSpaceMap": {
+                "bootflash:": {
+                    "bootflash_type": "active",
+                    "deviceName": "cvd-1212-spine",
+                    "freeSpace": 12995166208,
+                    "ipAddr": " 172.22.150.113",
+                    "name": "bootflash:",
+                    "serialNumber": "FOX2109PGD0",
+                    "totalSpace": 21685153792,
+                    "usedSpace": 8689987584
+                }
+            },
+            "partitions": [
+                "bootflash:"
+            ],
+            "requiredSpace": "NA"
+        },
+        "MESSAGE": "OK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imagemgnt/bootFlash/bootflash-info?serialNumber=FOX2109PGD0",
+        "RETURN_CODE": 200
+    }
+}

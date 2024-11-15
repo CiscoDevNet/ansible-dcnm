@@ -1,0 +1,27 @@
+all:
+  vars:
+    ansible_user: "admin"
+    ansible_password: "password-secret"
+    ansible_python_interpreter: python
+    ansible_httpapi_validate_certs: False
+    ansible_httpapi_use_ssl: True
+  children:
+    dcnm:
+      vars:
+        ansible_connection: ansible.netcommon.httpapi
+        ansible_network_os: cisco.dcnm.dcnm
+      hosts:
+        dcnm-instance.example.com
+    nxos:
+      vars:
+        ansible_connection: ansible.netcommon.network_cli
+        ansible_network_os: cisco.nxos.nxos 
+        ansible_become: true
+        ansible_become_method: enable
+      children:
+        switch1:
+          hosts:
+            192.168.1.1
+        switch2:
+          hosts:
+            192.168.1.2

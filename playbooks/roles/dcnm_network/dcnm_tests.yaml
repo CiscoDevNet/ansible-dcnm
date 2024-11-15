@@ -1,0 +1,35 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_network
+#
+# Modify the vars section with details for your testing setup.
+#
+# NOTES:
+# 1. Ensure that the switches defined by ansible_switch1 and ansible_switch2 are
+#    not vPC Pairs.
+- hosts: dcnm
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # Uncomment testcase to run a specific test
+    # testcase: replaced_net_all
+    test_fabric: nac-ndfc1
+    ansible_switch1: 192.168.1.1
+    ansible_switch2: 192.168.1.2
+    ansible_sw1_int1: Ethernet1/15
+    ansible_sw1_int2: Ethernet1/16
+    ansible_sw1_int3: Ethernet1/17
+    ansible_sw1_int4: Ethernet1/18
+    #---
+    ansible_sw2_int1: Ethernet1/15
+    ansible_sw2_int2: Ethernet1/16
+    ansible_sw2_int3: Ethernet1/17
+    ansible_sw2_int4: Ethernet1/18
+    ansible_sw2_int5: Ethernet1/19
+    ansible_sw2_int6: Ethernet1/20
+
+  roles:
+    - dcnm_network
