@@ -23,12 +23,15 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import \
-    EpFabricCreate
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import (
+    EpFabricCreate,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import (
+    FabricCommon,
+)
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import (
+    FabricTypes,
+)
 
 
 class FabricCreateCommon(FabricCommon):
@@ -112,6 +115,31 @@ class FabricCreateCommon(FabricCommon):
         self.path = self.ep_fabric_create.path
         self.verb = self.ep_fabric_create.verb
 
+    def _fixup_payload_ext_fabric_type(self, payload: dict) -> dict:
+        """
+        # Summary
+
+        If the payload contains an external fabric type (e.g ISN)
+        and does not contain the EXT_FABRIC_TYPE key, add this
+        key with the default value that NDFC GUI uses for displaying
+        the fabric type.
+
+        # Raises
+
+        None
+        """
+        self.log.debug(f"ZZZ: payload {json.dumps(payload, indent=4, sort_keys=True)}")
+        fabric_type = payload.get("FABRIC_TYPE")
+        if fabric_type not in self.fabric_types.external_fabric_types:
+            return payload
+        if "EXT_FABRIC_TYPE" in payload:
+            return payload
+        value = self.fabric_types.fabric_type_to_ext_fabric_type_map.get(fabric_type)
+        if value is None:
+            return payload
+        payload["EXT_FABRIC_TYPE"] = value
+        return payload
+
     def _send_payloads(self):
         """
         -   If ``check_mode`` is ``False``, send the payloads
@@ -125,6 +153,8 @@ class FabricCreateCommon(FabricCommon):
         -   This overrides the parent class method.
         """
         for payload in self._payloads_to_commit:
+            payload = self._fixup_payload_ext_fabric_type(payload)
+
             try:
                 self._set_fabric_create_endpoint(payload)
             except ValueError as error:
