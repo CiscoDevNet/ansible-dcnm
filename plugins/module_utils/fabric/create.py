@@ -115,7 +115,7 @@ class FabricCreateCommon(FabricCommon):
         self.path = self.ep_fabric_create.path
         self.verb = self.ep_fabric_create.verb
 
-    def _fixup_payload_ext_fabric_type(self, payload: dict) -> dict:
+    def _add_ext_fabric_type_to_payload(self, payload: dict) -> dict:
         """
         # Summary
 
@@ -128,7 +128,8 @@ class FabricCreateCommon(FabricCommon):
 
         None
         """
-        self.log.debug(f"ZZZ: payload {json.dumps(payload, indent=4, sort_keys=True)}")
+        method_name = inspect.stack()[0][3]
+
         fabric_type = payload.get("FABRIC_TYPE")
         if fabric_type not in self.fabric_types.external_fabric_types:
             return payload
@@ -138,6 +139,12 @@ class FabricCreateCommon(FabricCommon):
         if value is None:
             return payload
         payload["EXT_FABRIC_TYPE"] = value
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Added EXT_FABRIC_TYPE to payload. "
+        msg += f"fabric_type: {fabric_type}, "
+        msg += f"value: {value}"
+        self.log.debug(msg)
         return payload
 
     def _send_payloads(self):
@@ -153,7 +160,7 @@ class FabricCreateCommon(FabricCommon):
         -   This overrides the parent class method.
         """
         for payload in self._payloads_to_commit:
-            payload = self._fixup_payload_ext_fabric_type(payload)
+            payload = self._add_ext_fabric_type_to_payload(payload)
 
             try:
                 self._set_fabric_create_endpoint(payload)
