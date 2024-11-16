@@ -101,10 +101,12 @@ class FabricTypes:
 
         self._valid_fabric_types = sorted(self._fabric_type_to_template_name_map.keys())
 
-        # Adding self._external_fabric_types to be used in conjunction with
+        # self._external_fabric_types is used in conjunction with
         # self._fabric_type_to_ext_fabric_type_map.  This is used in (at least)
         # FabricCreateCommon() to determine if EXT_FABRIC_TYPE key needs to be
         # added to a payload.
+        #
+        # Exposed via property external_fabric_types
         self._external_fabric_types = set()
         self._external_fabric_types.add("ISN")
 
