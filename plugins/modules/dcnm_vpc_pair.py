@@ -436,7 +436,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm_vpc_p
     dcnm_vpc_pair_utils_get_sync_status,
     dcnm_vpc_pair_utils_get_delete_list,
     dcnm_vpc_pair_utils_get_all_filtered_vpc_pair_pairs,
-    dcnm_vpc_pair_utils_validate_devices,
 )
 
 
