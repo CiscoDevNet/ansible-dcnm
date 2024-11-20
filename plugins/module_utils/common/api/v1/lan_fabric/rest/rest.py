@@ -19,8 +19,7 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.lan_fabric import \
-    LanFabric
+from ..lan_fabric import LanFabric
 
 
 class Rest(LanFabric):

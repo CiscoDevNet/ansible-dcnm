@@ -22,12 +22,10 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.configtemplate.rest.config.templates.templates import \
+from ..common.api.v1.configtemplate.rest.config.templates.templates import \
     EpTemplates
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from ..common.exceptions import ControllerResponseError
+from ..common.properties import Properties
 
 
 @Properties.add_rest_send

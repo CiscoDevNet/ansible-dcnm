@@ -21,12 +21,10 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.packagemgnt.packagemgnt import \
+from ..common.api.v1.imagemanagement.rest.packagemgnt.packagemgnt import \
     EpIssu
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from ..common.conversion import ConversionUtils
+from ..common.properties import Properties
 
 
 @Properties.add_rest_send

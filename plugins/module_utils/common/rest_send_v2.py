@@ -25,8 +25,7 @@ import logging
 from time import sleep
 
 # Using only for its failed_result property
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
+from .results import Results
 
 
 class RestSend:

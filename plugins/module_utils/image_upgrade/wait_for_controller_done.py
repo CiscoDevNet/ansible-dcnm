@@ -23,13 +23,13 @@ import inspect
 import logging
 from time import sleep
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import (
-    SwitchIssuDetailsByDeviceName, SwitchIssuDetailsByIpAddress,
-    SwitchIssuDetailsBySerialNumber)
+from ..common.properties import Properties
+from ..common.results import Results
+from .switch_issu_details import (
+    SwitchIssuDetailsByDeviceName,
+    SwitchIssuDetailsByIpAddress,
+    SwitchIssuDetailsBySerialNumber
+)
 
 
 @Properties.add_rest_send

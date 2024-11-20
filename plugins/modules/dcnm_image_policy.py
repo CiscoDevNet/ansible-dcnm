@@ -258,40 +258,23 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
-    Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
-    MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_merge_defaults_v2 import \
-    ParamsMergeDefaults
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.params_validate_v2 import \
-    ParamsValidate
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.create import \
-    ImagePolicyCreateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.delete import \
-    ImagePolicyDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.params_spec import \
-    ParamsSpec
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.payload import \
-    Config2Payload
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.query import \
-    ImagePolicyQuery
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace import \
-    ImagePolicyReplaceBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import \
-    ImagePolicyUpdateBulk
+from ..module_utils.common.log_v2 import Log
+from ..module_utils.common.merge_dicts_v2 import MergeDicts
+from ..module_utils.common.params_merge_defaults_v2 import ParamsMergeDefaults
+from ..module_utils.common.params_validate_v2 import ParamsValidate
+from ..module_utils.common.properties import Properties
+from ..module_utils.common.response_handler import ResponseHandler
+from ..module_utils.common.rest_send_v2 import RestSend
+from ..module_utils.common.results import Results
+from ..module_utils.common.sender_dcnm import Sender
+from ..module_utils.image_policy.create import ImagePolicyCreateBulk
+from ..module_utils.image_policy.delete import ImagePolicyDelete
+from ..module_utils.image_policy.image_policies import ImagePolicies
+from ..module_utils.image_policy.params_spec import ParamsSpec
+from ..module_utils.image_policy.payload import Config2Payload
+from ..module_utils.image_policy.query import ImagePolicyQuery
+from ..module_utils.image_policy.replace import ImagePolicyReplaceBulk
+from ..module_utils.image_policy.update import ImagePolicyUpdateBulk
 
 
 def json_pretty(msg):

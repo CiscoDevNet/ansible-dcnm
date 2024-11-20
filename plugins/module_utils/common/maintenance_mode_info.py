@@ -23,16 +23,11 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
+from .conversion import ConversionUtils
+from .exceptions import ControllerResponseError
+from .properties import Properties
+from .switch_details import SwitchDetails
+from ..fabric.fabric_details_v2 import FabricDetailsByName
 
 
 @Properties.add_rest_send

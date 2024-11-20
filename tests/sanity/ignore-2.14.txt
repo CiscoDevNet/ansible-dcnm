@@ -21,3 +21,4 @@ plugins/modules/dcnm_bootflash.py validate-modules:missing-gplv3-license # GPLv3
 plugins/modules/dcnm_rest.py import-2.7!skip
 plugins/httpapi/dcnm.py import-3.9!skip
 plugins/httpapi/dcnm.py import-3.10!skip
+plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library

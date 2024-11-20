@@ -26,10 +26,8 @@ import re
 from time import sleep
 
 # Using only for its failed_result property
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import \
-    dcnm_send
+from .results import Results
+from ..network.dcnm.dcnm import dcnm_send
 
 
 class RestSend:

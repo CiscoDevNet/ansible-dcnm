@@ -25,3 +25,4 @@ plugins/httpapi/dcnm.py import-3.6!skip
 plugins/httpapi/dcnm.py import-3.7!skip
 plugins/httpapi/dcnm.py import-3.8!skip
 plugins/httpapi/dcnm.py import-3.9!skip
+plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
