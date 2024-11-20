@@ -65,41 +65,6 @@ def dcnm_vpc_pair_utils_validate_profile(self, profile, arg_spec):
     return vpc_pair_profile_info
 
 
-def dcnm_vpc_pair_utils_check_if_meta(self, dev):
-
-    for elem in self.meta_switches:
-        if dev in elem:
-            return True
-    return False
-
-
-def dcnm_vpc_pair_utils_validate_devices(self, cfg):
-
-    if (cfg.get("peerOneId", None) is not None) and (
-        cfg["peerOneId"] not in self.managable
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerOneId"])
-        self.module.fail_json(msg=mesg)
-
-    if (cfg.get("peerTwoId", None) is not None) and (
-        cfg["peerTwoId"] not in self.managable
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerTwoId"])
-        self.module.fail_json(msg=mesg)
-
-    if (cfg.get("peerOneId", None) is not None) and (
-        dcnm_vpc_pair_utils_check_if_meta(self, cfg["peerOneId"]) is True
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerOneId"])
-        self.module.fail_json(msg=mesg)
-
-    if (cfg.get("peerTwoId", None) is not None) and (
-        dcnm_vpc_pair_utils_check_if_meta(self, cfg["peerTwoId"]) is True
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerTwoId"])
-        self.module.fail_json(msg=mesg)
-
-
 def dcnm_vpc_pair_utils_translate_config(self, cfg):
 
     if cfg.get("peerOneId", "") != "":
