@@ -5023,13 +5023,6 @@ class DcnmIntf:
                     )
                 )
 
-            if ronly_sw_list:
-                self.module.fail_json(
-                    msg="Error: Switches {0} are not managable in Fabric '{1}', No changes are allowed on these switches\n".format(
-                        ronly_sw_list, self.fabric
-                    )
-                )
-
         # Based on the updated inventory_data, update ip_sn, hn_sn and sn_hn objects
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
 
