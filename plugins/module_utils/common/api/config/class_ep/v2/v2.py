@@ -19,8 +19,7 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.config.class_ep.class_ep import \
-    ClassEp
+from ..class_ep import ClassEp
 
 
 class V2(ClassEp):

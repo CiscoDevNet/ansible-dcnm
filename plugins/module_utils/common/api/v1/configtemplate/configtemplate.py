@@ -19,8 +19,7 @@ __author__ = "Allen Robel"
 
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.v1 import \
-    V1
+from ..v1 import V1
 
 
 class ConfigTemplate(V1):
