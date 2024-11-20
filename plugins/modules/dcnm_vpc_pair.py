@@ -1104,9 +1104,6 @@ class DcnmVpcPair:
             # Add other translations as required
             dcnm_vpc_pair_utils_translate_config(self, cfg)
 
-            # Check if the switches included in the config are Manageable.
-            dcnm_vpc_pair_utils_validate_devices(self, cfg)
-
     def dcnm_vpc_pair_fetch_template_details(self, template_info):
 
         """
