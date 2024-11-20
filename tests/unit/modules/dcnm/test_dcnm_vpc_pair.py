@@ -185,8 +185,10 @@ def test_dcnm_vpc_pair_00003(
 
     if tc_id < 7:
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_00003"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_00003"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_00003"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_00003"))
         )
@@ -250,22 +252,28 @@ def test_dcnm_vpc_pair_00004(
     resp = load_data("dcnm_vpc_pair_response")
 
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(
         copy.deepcopy(resp.get("vpc_pair_policy_resp_1"))
     )
 
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_2"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_2"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_2"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(
         copy.deepcopy(resp.get("vpc_pair_policy_resp_2"))
     )
 
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_3"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_3"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_3"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(
         copy.deepcopy(resp.get("vpc_pair_policy_resp_3"))
     )
@@ -341,12 +349,15 @@ def test_dcnm_vpc_pair_00005(
 
     if tc_id < 3:
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_2"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_2"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_3"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_3"))
     elif tc_id == 3:
         dcnm_send_side_effect.append([])
@@ -356,23 +367,29 @@ def test_dcnm_vpc_pair_00005(
         vpc_pair.vpc_pair_info[0]["peerOneId"] = "10.122.84.190"
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_2"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_2"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_3"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_3"))
     elif tc_id == 5:
         vpc_pair.vpc_pair_info[0]["peerTwoId"] = "10.122.84.190"
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_2"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_2"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_3"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_3"))
 
     update_delete_payloads_side_effect.append(
@@ -722,14 +739,18 @@ def test_dcnm_vpc_pair_00010(
     resp = load_data("dcnm_vpc_pair_response")
 
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(
         copy.deepcopy(resp.get("vpc_pair_policy_resp_1"))
     )
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_2"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_2"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_3"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_3"))
 
     mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
@@ -778,6 +799,7 @@ def test_dcnm_vpc_pair_00010_2(
     resp = load_data("dcnm_vpc_pair_response")
 
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
 
     mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
@@ -823,6 +845,7 @@ def test_dcnm_vpc_pair_00010_3(
     resp = load_data("dcnm_vpc_pair_response")
 
     dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_1"))
+    dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
     dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_1"))
 
     mock_dcnm_send = Mock(side_effect=dcnm_send_side_effect)
@@ -1912,10 +1935,13 @@ class TestDcnmVpcPairModule(TestDcnmModule):
 
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_84"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_sync_status_in_sync"))
@@ -2042,10 +2068,13 @@ class TestDcnmVpcPairModule(TestDcnmModule):
 
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_84"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_delete_succ_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_delete_succ_resp"))
@@ -2260,17 +2289,21 @@ class TestDcnmVpcPairModule(TestDcnmModule):
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
         dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_null_have"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_85"))
         )
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_86"))
         )
@@ -2389,21 +2422,27 @@ class TestDcnmVpcPairModule(TestDcnmModule):
 
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_84"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_84"))
         )
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_85"))
         )
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_86"))
         )
@@ -2507,21 +2546,27 @@ class TestDcnmVpcPairModule(TestDcnmModule):
 
         # dcnm_send() invoked from module_utils/dcnm_vpc_pair_utils.py
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_84"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_85"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(resp.get("vpc_pair_policy_resp_86"))
 
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_84"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_84"))
         )
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_85"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_85"))
         )
         dcnm_send_side_effect.append(resp.get("vpc_pair_info_resp_86"))
+        dcnm_send_side_effect.append(resp.get("vpc_pair_info_virtual_peer_link_resp"))
         dcnm_send_side_effect.append(
             copy.deepcopy(resp.get("vpc_pair_policy_resp_86"))
         )

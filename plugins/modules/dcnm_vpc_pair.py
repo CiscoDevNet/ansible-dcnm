@@ -909,7 +909,7 @@ class DcnmVpcPair:
             "peerOneId": {"required": "True", "type": "ipv4"},
             "peerTwoId": {"required": "True", "type": "ipv4"},
             "templateName": {"type": "str"},
-            "useVirtualPeerLink": {"type": "bool"},
+            "useVirtualPeerlink": {"type": "bool"},
             "profile": {"type": "dict"},
         }
 
