@@ -1,0 +1,44 @@
+{
+    "contracts_cfg_00001": 
+    {
+        "contract_name": "test",
+        "description": "test",
+        "rules": [
+            {
+                "direction": "bidirectional",
+                "action": "permit",
+                "protocol_name": "http"
+            }
+        ]
+    },
+
+    "contracts_cfg_00002": 
+    {
+        "contract_name": "test",
+        "description": "test",
+        "rules": [
+            {
+                "direction": "bidirectional",
+                "action": "permit",
+                "protocol_name": "http"
+            },
+            {
+                "direction": "bidirectional",
+                "action": "permit",
+                "protocol_name": "test1"
+            }
+        ]
+    },
+
+    "contracts_cfg_00003": {
+        "contract_name": "test",
+        "description": "test",
+        "rules": [
+            {
+                "direction": "bidirectional",
+                "action": "deny",
+                "protocol_name": "test"
+            }
+        ]
+    }
+}

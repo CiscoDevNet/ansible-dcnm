@@ -406,6 +406,7 @@ def test_log_v2_00250(tmp_path) -> None:
     match += r"Error detail: Unable to configure handler.*"
     with pytest.raises(ValueError, match=match):
         instance.commit()
+    del environ['NDFC_LOGGING_CONFIG']
 
 
 def test_log_v2_00300() -> None:

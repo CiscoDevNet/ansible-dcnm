@@ -1,0 +1,168 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+
+- name: REPLACED - Verify if fabric - Fabric1 is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - 'result.response.DATA != None'
+
+- name: REPLACED - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+##############################################
+##                REPLACED                  ##
+##############################################
+
+- name: REPLACED - Create one protocol
+  cisco.dcnm.dcnm_protocols: &conf
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test"'
+
+- name: REPLACED - conf - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: REPLACED - replaced exiting match in protocol
+  cisco.dcnm.dcnm_protocols: &conf1
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - protocol_name: test
+      description: test
+      match:
+      - type: ip
+        protocol_options: "tcp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "icmp"
+        dscp: 10
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].METHOD == "PUT"'
+    - 'result.response[0].DATA.name == "test"'
+
+- name: REPLACED - conf - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf1
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: REPLACED - Create another protocol
+  cisco.dcnm.dcnm_protocols: &conf2
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - protocol_name: test1
+      description: test1
+      match:
+      - type: ip
+        protocol_options: "udp"
+        source_port_range: 110
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 40
+        dscp: 32
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == true'
+    - 'result.response[0].RETURN_CODE == 200'
+    - 'result.response[0].MESSAGE == "OK"'
+    - 'result.response[0].DATA.successList[0].name == "test1"'
+
+- name: REPLACED - conf - Idempotence
+  cisco.dcnm.dcnm_protocols: *conf2
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+
+- name: REPLACED - Protocols query
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: result
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - "result.response | length == 2"
+
+- name: REPLACED - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
+
+- name: REPLACED - Create a protocol without mandatory fields
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: replaced
+    config:
+    - protocol_name: test1
+      description: test1
+      match:
+      - protocol_options: "udp"
+        source_port_range: 10
+      - type: ipv4
+        protocol_options: "tcp"
+        destination_port_range: 20
+        dscp: 10
+  register: result
+  ignore_errors: yes
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - '"type : Required parameter not found" in result.msg'
+
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: REPLACED - setup - Clean up any existing protocols
+  cisco.dcnm.dcnm_protocols:
+    fabric: "{{ test_fabric }}"
+    state: deleted
