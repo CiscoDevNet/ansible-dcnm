@@ -468,7 +468,7 @@ class FabricReplacedCommon(FabricCommon):
 
         for payload in self._payloads_to_commit:
             commit_payload = copy.deepcopy(payload)
-            if commit_payload.get("DEPLOY", None) is not None:
+            if "DEPLOY" in commit_payload:
                 commit_payload.pop("DEPLOY")
             try:
                 self._send_payload(commit_payload)
