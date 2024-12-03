@@ -697,16 +697,35 @@ class DcnmVrf:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
-    @staticmethod
-    def to_bool(key, dict_with_key):
+    def to_bool(self, key, dict_with_key):
+        """
+        # Summary
+
+        Given a dictionary and key, access dictionary[key] and
+        try to convert the value therein to a boolean.
+
+        -   If the value is a boolean, return a like boolean.
+        -   If the value is a boolean-like string (e.g. "false"
+            "True", etc), return the value converted to boolean.
+
+        ## Raises
+
+        -   Call fail_json() if the value is not convertable to boolean.
+        """
         value = dict_with_key.get(key)
-        try:
-            # TODO: Any string value e.g. "false" will return True here.
-            # We need to test for common bool-like strings e.g.:
-            #if value in ["false", False] return False
-            return bool(value)
-        except:
-            return value
+        if value in ["false", "False", False]:
+            return False
+        if value in ["true", "True", True]:
+            return True
+
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"caller: {caller}: "
+        msg = f"{str(value)} with type {type(value)} "
+        msg += "is not convertable to boolean"
+        self.module.fail_json(msg=msg)
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
