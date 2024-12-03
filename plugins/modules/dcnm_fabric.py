@@ -3032,7 +3032,7 @@ class Merged(Common):
             fabric_name = want.get("FABRIC_NAME", None)
             fabric_type = want.get("FABRIC_TYPE", None)
 
-            if self.features[fabric_type] is False:
+            if self.features.get("fabric_type") is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
@@ -3361,7 +3361,7 @@ class Replaced(Common):
                 self.need_create.append(want)
                 continue
 
-            if self.features[fabric_type] is False:
+            if self.features.get("fabric_type") is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
