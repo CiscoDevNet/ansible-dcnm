@@ -25,6 +25,8 @@
     leaf2: 192.168.1.5
     leaf3: 192.168.1.6
     leaf4: 192.168.1.7
+    install_package_1: cfg_cmp-0.3.1.0-1.x86_64.rpm
+    uninstall_package_1: mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000
     image_policy_1: "KR5M"
     image_policy_2: "NR3F"
     epld_image_1: n9000-epld.10.2.5.M.img

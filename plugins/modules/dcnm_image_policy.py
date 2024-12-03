@@ -592,7 +592,7 @@ class Overridden(Common):
             raise ValueError(msg) from error
 
         self.delete = ImagePolicyDelete()
-        self.merged = Merged(params)
+        self.replaced = Replaced(params)
 
         msg = f"ENTERED {self.class_name}().{method_name}: "
         msg += f"state: {self.state}, "
@@ -627,10 +627,10 @@ class Overridden(Common):
 
         self._delete_policies_not_in_want()
         # pylint: disable=attribute-defined-outside-init
-        self.merged.rest_send = self.rest_send
+        self.replaced.rest_send = self.rest_send
         # pylint: enable=attribute-defined-outside-init
-        self.merged.results = self.results
-        self.merged.commit()
+        self.replaced.results = self.results
+        self.replaced.commit()
 
     def _delete_policies_not_in_want(self) -> None:
         """
