@@ -1664,17 +1664,17 @@ class DcnmVrf:
         for have_a in self.have_attach:
             matching_vrf = (vrf for vrf in self.want_create if vrf["vrfName"] == have_a["vrfName"])
             found = next(matching_vrf, None)
-            to_del = []
+            detach_list = []
             if not found:
                 for item in have_a["lanAttachList"]:
                     if "isAttached" in item:
                         if item["isAttached"]:
                             del item["isAttached"]
                             item.update({"deployment": False})
-                            to_del.append(item)
+                            detach_list.append(item)
 
-                if to_del:
-                    have_a.update({"lanAttachList": to_del})
+                if detach_list:
+                    have_a.update({"lanAttachList": detach_list})
                     diff_detach.append(have_a)
                     all_vrfs += have_a["vrfName"] + ","
 
