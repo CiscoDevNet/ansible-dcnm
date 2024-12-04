@@ -1727,7 +1727,7 @@ class DcnmVrf:
         diff_deploy = self.diff_deploy
 
         for have_a in self.have_attach:
-            r_vrf_list = []
+            replace_vrf_list = []
             h_in_w = False
             for want_a in self.want_attach:
                 if have_a["vrfName"] == want_a["vrfName"]:
@@ -1751,7 +1751,7 @@ class DcnmVrf:
                             if "isAttached" in a_h:
                                 del a_h["isAttached"]
                             a_h.update({"deployment": False})
-                            r_vrf_list.append(a_h)
+                            replace_vrf_list.append(a_h)
                     break
 
             if not h_in_w:
@@ -1771,20 +1771,20 @@ class DcnmVrf:
                                 continue
                             del a_h["isAttached"]
                             a_h.update({"deployment": False})
-                            r_vrf_list.append(a_h)
+                            replace_vrf_list.append(a_h)
 
-            if r_vrf_list:
+            if replace_vrf_list:
                 in_diff = False
                 for d_attach in self.diff_attach:
                     if have_a["vrfName"] == d_attach["vrfName"]:
                         in_diff = True
-                        d_attach["lanAttachList"].extend(r_vrf_list)
+                        d_attach["lanAttachList"].extend(replace_vrf_list)
                         break
 
                 if not in_diff:
                     r_vrf_dict = {
                         "vrfName": have_a["vrfName"],
-                        "lanAttachList": r_vrf_list,
+                        "lanAttachList": replace_vrf_list,
                     }
                     diff_attach.append(r_vrf_dict)
                     all_vrfs += have_a["vrfName"] + ","
