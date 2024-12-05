@@ -566,6 +566,7 @@ import inspect
 import json
 import logging
 import re
+import sys
 import time
 
 from ansible.module_utils.basic import AnsibleModule
@@ -604,6 +605,8 @@ class DcnmVrf:
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.module = module
         self.params = module.params
@@ -651,9 +654,6 @@ class DcnmVrf:
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
-
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = f"{self.class_name}.__init__(): DONE"
         self.log.debug(msg)
@@ -3116,6 +3116,13 @@ class DcnmVrf:
 def main():
     """main entry point for module execution"""
 
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except (TypeError, ValueError) as error:
+        pass
+
     element_spec = dict(
         fabric=dict(required=True, type="str"),
         config=dict(required=False, type="list", elements="dict"),
@@ -3127,12 +3134,6 @@ def main():
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
 
-    # Logging setup
-    try:
-        log = Log()
-        log.commit()
-    except (TypeError, ValueError) as error:
-        module.fail_json(str(error))
 
     dcnm_vrf = DcnmVrf(module)
 
