@@ -647,7 +647,7 @@ class DcnmVrf:
         else:
             self.paths = self.dcnm_vrf_paths[self.dcnm_version]
 
-        self.result = dict(changed=False, diff=[], response=[])
+        self.result = {"changed": False, "diff": [], "response": []}
 
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
@@ -1878,14 +1878,11 @@ class DcnmVrf:
                         )
 
                         if missing_fabric or not_ok:
-                            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
-                            msg2 = (
-                                "Unable to generate vrfId for vrf: {0} "
-                                "under fabric: {1}".format(
-                                    want_c["vrfName"], self.fabric
-                                )
-                            )
-
+                            # arobel: TODO: Not covered by UT
+                            msg0 = f"{self.class_name}.{method_name}: "
+                            msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+                            msg2 = f"{msg0} Unable to generate vrfId for vrf "
+                            msg2 += f"{want_c['vrfName']} under fabric {self.fabric}"
                             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
                         if not vrf_id_obj["DATA"]:
@@ -1896,8 +1893,10 @@ class DcnmVrf:
                         elif self.dcnm_version >= 12:
                             vrf_id = vrf_id_obj["DATA"].get("l3vni")
                         else:
-                            msg = "Unsupported DCNM version: version {0}".format(
-                                self.dcnm_version
+                            # arobel: TODO: Not covered by UT
+                            msg = f"{self.class_name}.{method_name}: "
+                            msg += (
+                                f"Unsupported controller version: {self.dcnm_version}"
                             )
                             self.module.fail_json(msg)
 
@@ -1996,7 +1995,7 @@ class DcnmVrf:
                             break
 
                     if not vrf_id:
-                        # arobel: TODO: This is not covered in UT
+                        # arobel: TODO: Not covered by UT
                         msg = f"{self.class_name}.{method_name}: "
                         msg += f"Unable to generate vrfId for vrf: {want_c['vrfName']} "
                         msg += f"under fabric: {self.fabric}"
@@ -2009,6 +2008,7 @@ class DcnmVrf:
                     if self.module.check_mode:
                         continue
 
+                    # arobel: TODO: The below is not covered by UT
                     resp = dcnm_send(
                         self.module, method, create_path, json.dumps(want_c)
                     )
@@ -2295,8 +2295,10 @@ class DcnmVrf:
             return
 
         if missing_fabric or not_ok:
-            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
-            msg2 = "Unable to find VRFs under fabric: {0}".format(self.fabric)
+            # arobel: TODO: Not covered by UT
+            msg0 = f"{self.class_name}.{method_name}:"
+            msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+            msg2 = f"{msg0} Unable to find VRFs under fabric: {self.fabric}"
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
         if not vrf_objects["DATA"]:
@@ -2326,16 +2328,14 @@ class DcnmVrf:
                         )
 
                         if missing_fabric or not_ok:
-                            msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
-                            msg2 = (
-                                "Unable to find attachments for "
-                                "vrfs: {0} under fabric: {1}".format(
-                                    vrf["vrfName"], self.fabric
-                                )
+                            # arobel: TODO: Not covered by UT
+                            msg0 = f"{self.class_name}.{method_name}:"
+                            msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+                            msg2 = f"{msg0} Unable to find attachments for "
+                            msg2 += (
+                                f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
                             )
-
                             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-                            return
 
                         if not vrf_attach_objects["DATA"]:
                             return
@@ -2378,13 +2378,9 @@ class DcnmVrf:
                 missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
                 if missing_fabric or not_ok:
-                    msg1 = "Fabric {0} not present on DCNM".format(self.fabric)
-                    msg2 = (
-                        "Unable to find attachments for "
-                        "vrfs: {0} under fabric: {1}".format(
-                            vrf["vrfName"], self.fabric
-                        )
-                    )
+                    msg1 = f"Fabric {self.fabric} not present on DCNM"
+                    msg2 = "Unable to find attachments for "
+                    msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
 
                     self.module.fail_json(msg=msg1 if missing_fabric else msg2)
                     return
@@ -2422,7 +2418,7 @@ class DcnmVrf:
         method = "PUT"
         if self.diff_create_update:
             for vrf in self.diff_create_update:
-                update_path = path + "/{0}".format(vrf["vrfName"])
+                update_path = f"{path}/{vrf['vrfName']}"
                 resp = dcnm_send(self.module, method, update_path, json.dumps(vrf))
                 self.result["response"].append(resp)
                 fail, self.result["changed"] = self.handle_response(resp, "create")
@@ -2497,9 +2493,9 @@ class DcnmVrf:
                     self.failure(resp)
 
         if del_failure:
-            self.result["response"].append(
-                "Deletion of vrfs {0} has failed".format(del_failure[:-1])
-            )
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Deletion of vrfs {del_failure[:-1]} has failed"
+            self.result["response"].append(msg)
             self.module.fail_json(msg=self.result)
 
         method = "POST"
@@ -2514,11 +2510,10 @@ class DcnmVrf:
                     vlan_data = dcnm_send(self.module, "GET", vlan_path)
 
                     if vlan_data["RETURN_CODE"] != 200:
-                        self.module.fail_json(
-                            msg="Failure getting autogenerated vlan_id {0}".format(
-                                vlan_data
-                            )
-                        )
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Failure getting autogenerated vlan_id {vlan_data}"
+                        self.module.fail_json(msg=msg)
+
                     vlanId = vlan_data["DATA"]
 
                 t_conf = {
@@ -2784,7 +2779,7 @@ class DcnmVrf:
                                 break
                             if (
                                 atch["lanAttachState"] == "DEPLOYED"
-                                and atch["isLanAttached"] == True
+                                and atch["isLanAttached"] is True
                             ):
                                 vrf_name = atch.get("vrfName", "unknown")
                                 fabric_name = atch.get("fabricName", "unknown")
@@ -2819,7 +2814,7 @@ class DcnmVrf:
 
         state = self.params["state"]
 
-        if state == "merged" or state == "overridden" or state == "replaced":
+        if state in ("merged", "overridden", "replaced"):
 
             vrf_spec = dict(
                 vrf_name=dict(required=True, type="str", length_max=32),
@@ -2907,7 +2902,7 @@ class DcnmVrf:
                             if "ip_address" not in attach:
                                 msg = "ip_address is mandatory under attach parameters"
             else:
-                if state == "merged" or state == "replaced":
+                if state in ("merged", "replaced"):
                     msg = f"{self.class_name}.{method_name}: "
                     msg += f"config element is mandatory for {state} state"
 

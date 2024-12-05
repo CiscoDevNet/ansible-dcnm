@@ -1146,9 +1146,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(state="deleted", fabric="test_fabric", config=self.playbook_config)
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"]["response"][2], "Deletion of vrfs test_vrf_1 has failed"
-        )
+        msg = "DcnmVrf.push_to_remote: Deletion of vrfs test_vrf_1 has failed"
+        self.assertEqual(result["msg"]["response"][2], msg)
 
     def test_dcnm_vrf_query(self):
         set_module_args(
