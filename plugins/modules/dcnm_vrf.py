@@ -17,29 +17,8 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 __author__ = (
-    "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy"
+    "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy, Allen Robel"
 )
-
-# TODO: arobel: If Fabric -> Resources -> Per VRF Per VTEP Loopback IPv4 Auto-Provisioning
-# is enabled, and dcnm_vrf merged-state playbook is run, the following error is seen.
-# fatal: [172.22.150.244]: FAILED! =>
-# {
-#     "changed": false,
-#     "msg":
-#     {
-#      "DATA": {
-#         "Error": "Internal Server Error",
-#         "message": "per vrf level loopback is enabled and hence not allowed to clear the loopback ID  or IP",
-#         "path": "/rest/top-down/fabrics/MSD/vrfs/attachments",
-#         "status": "500",
-#         "timestamp": "2024-11-28 01:35:15.164"},
-#         "MESSAGE": "Internal Server Error",
-#         "METHOD": "POST",
-#         "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/MSD/vrfs/attachments",
-#         "RETURN_CODE": 500
-#        }
-#    }
-# }
 
 DOCUMENTATION = """
 ---
