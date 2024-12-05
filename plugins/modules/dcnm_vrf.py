@@ -659,9 +659,7 @@ class DcnmVrf:
         self.log.debug(msg)
 
     @staticmethod
-    def find_dict_in_list_by_key_value(
-        search: list, key: str, value: str
-    ) -> dict | None:
+    def find_dict_in_list_by_key_value(search: list, key: str, value: str):
         """
         # Summary
 
