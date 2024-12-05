@@ -566,7 +566,6 @@ import inspect
 import json
 import logging
 import re
-import sys
 import time
 
 from ansible.module_utils.basic import AnsibleModule
@@ -3133,7 +3132,6 @@ def main():
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
-
 
     dcnm_vrf = DcnmVrf(module)
 
