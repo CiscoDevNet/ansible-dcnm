@@ -593,16 +593,9 @@ import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_get_ip_addr_info,
-    dcnm_get_url,
-    dcnm_send,
-    dcnm_version_supported,
-    get_fabric_details,
-    get_fabric_inventory_details,
-    get_ip_sn_dict,
-    get_ip_sn_fabric_dict,
-    validate_list_of_dicts,
-)
+    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
+    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_ip_sn_fabric_dict, validate_list_of_dicts)
 
 # from ..module_utils.common.controller_version import ControllerVersion
 from ..module_utils.common.log_v2 import Log
@@ -687,6 +680,47 @@ class DcnmVrf:
 
         msg = f"{self.class_name}.__init__(): DONE"
         self.log.debug(msg)
+
+    @staticmethod
+    def find_dict_in_list_by_key_value(
+        search: list, key: str, value: str
+    ) -> dict | None:
+        """
+        # Summary
+
+        Find a dictionary in a list of dictionaries.
+
+
+        ## Raises
+
+        None
+
+        ## Parameters
+
+        -   search: A list of dict
+        -   key: The key to lookup in each dict
+        -   value: The desired matching value for key
+
+        ## Returns
+
+        Either the first matching dict or None
+
+        ## Usage
+
+        ```python
+        content = [{"foo": "bar"}, {"foo": "baz"}]
+
+        match = find_dict_in_list_by_key_value(search=content, key="foo", value="baz")
+        print(f"{match}")
+        # -> {"foo": "baz"}
+
+        match = find_dict_in_list_by_key_value(search=content, key="foo", value="bingo")
+        print(f"{match}")
+        # -> None
+        ```
+        """
+        match = (d for d in search if d[key] == value)
+        return next(match, None)
 
     def to_bool(self, key, dict_with_key):
         """
@@ -1451,14 +1485,22 @@ class DcnmVrf:
                         for ev in ext_values.get("VRF_LITE_CONN"):
                             ev_dict = copy.deepcopy(ev)
                             ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
-                            ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
+                            ev_dict.update(
+                                {"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"}
+                            )
 
                             if extension_values["VRF_LITE_CONN"]:
-                                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend([ev_dict])
+                                extension_values["VRF_LITE_CONN"][
+                                    "VRF_LITE_CONN"
+                                ].extend([ev_dict])
                             else:
-                                extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": [ev_dict]}
+                                extension_values["VRF_LITE_CONN"] = {
+                                    "VRF_LITE_CONN": [ev_dict]
+                                }
 
-                        extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+                        extension_values["VRF_LITE_CONN"] = json.dumps(
+                            extension_values["VRF_LITE_CONN"]
+                        )
 
                         ms_con = {}
                         ms_con["MULTISITE_CONN"] = []
@@ -1585,24 +1627,16 @@ class DcnmVrf:
         if self.config:
 
             for want_c in self.want_create:
-                if not next(
-                    (
-                        have_c
-                        for have_c in self.have_create
-                        if have_c["vrfName"] == want_c["vrfName"]
-                    ),
-                    None,
+
+                if not self.find_dict_in_list_by_key_value(
+                    search=self.have_create, key="vrfName", value=want_c["vrfName"]
                 ):
                     continue
+
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
-                have_a = next(
-                    (
-                        attach
-                        for attach in self.have_attach
-                        if attach["vrfName"] == want_c["vrfName"]
-                    ),
-                    None,
+                have_a = self.find_dict_in_list_by_key_value(
+                    search=self.have_attach, key="vrfName", value=want_c["vrfName"]
                 )
 
                 if not have_a:
@@ -1662,8 +1696,10 @@ class DcnmVrf:
         diff_undeploy = self.diff_undeploy
 
         for have_a in self.have_attach:
-            matching_vrf = (vrf for vrf in self.want_create if vrf["vrfName"] == have_a["vrfName"])
-            found = next(matching_vrf, None)
+            found = self.find_dict_in_list_by_key_value(
+                search=self.want_create, key="vrfName", value=have_a["vrfName"]
+            )
+
             detach_list = []
             if not found:
                 for item in have_a["lanAttachList"]:
@@ -1732,17 +1768,15 @@ class DcnmVrf:
             for want_a in self.want_attach:
                 if have_a["vrfName"] == want_a["vrfName"]:
                     h_in_w = True
-                    atch_h = have_a["lanAttachList"]
-                    atch_w = want_a.get("lanAttachList")
 
-                    for a_h in atch_h:
+                    for a_h in have_a["lanAttachList"]:
                         if "isAttached" in a_h:
                             if not a_h["isAttached"]:
                                 continue
                         a_match = False
 
-                        if atch_w:
-                            for a_w in atch_w:
+                        if want_a.get("lanAttachList"):
+                            for a_w in want_a.get("lanAttachList"):
                                 if a_h["serialNumber"] == a_w["serialNumber"]:
                                     # Have is already in diff, no need to continue looking for it.
                                     a_match = True
@@ -1755,14 +1789,10 @@ class DcnmVrf:
                     break
 
             if not h_in_w:
-                found = next(
-                    (
-                        vrf
-                        for vrf in self.want_create
-                        if vrf["vrfName"] == have_a["vrfName"]
-                    ),
-                    None,
+                found = self.find_dict_in_list_by_key_value(
+                    search=self.want_create, key="vrfName", value=have_a["vrfName"]
                 )
+
                 if found:
                     atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
@@ -2109,9 +2139,8 @@ class DcnmVrf:
 
         for want_d in diff_create:
 
-            found_a = next(
-                (vrf for vrf in diff_attach if vrf["vrfName"] == want_d["vrfName"]),
-                None,
+            found_a = self.find_dict_in_list_by_key_value(
+                search=diff_attach, key="vrfName", value=want_d["vrfName"]
             )
 
             found_c = want_d
