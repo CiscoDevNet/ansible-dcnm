@@ -917,11 +917,12 @@ class DcnmVrf:
                         attach_list.append(want)
                         if want["is_deploy"]:
                             deploy_vrf = True
-                except:
+                except KeyError as error:
                     msg = f"{self.class_name}.{method_name}: "
                     msg += "Unexpected values for "
                     msg += f"isAttached ({want.get('isAttached')}) "
-                    msg += f"and/or is_deploy ({want.get('is_deploy')})"
+                    msg += f"and/or is_deploy ({want.get('is_deploy')}) "
+                    msg += f"Details: {error}"
                     self.log.debug(msg)
                     self.module.fail_json(msg=msg)
 
@@ -1085,7 +1086,7 @@ class DcnmVrf:
         self.log.debug(msg)
         return attach
 
-    def dict_values_differ(self, want_template, have_template, skip_keys=[]) -> bool:
+    def dict_values_differ(self, want_template, have_template, skip_keys=None) -> bool:
         """
         # Summary
 
@@ -1097,6 +1098,9 @@ class DcnmVrf:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
+
+        if skip_keys is None:
+            skip_keys = []
 
         for key in want_template.keys():
             if key in skip_keys:
