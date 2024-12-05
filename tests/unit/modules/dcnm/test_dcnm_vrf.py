@@ -27,8 +27,6 @@ from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
 # from units.compat.mock import patch
 
 
-
-
 class TestDcnmVrfModule(TestDcnmModule):
 
     module = dcnm_vrf
