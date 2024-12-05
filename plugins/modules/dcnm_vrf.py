@@ -16,9 +16,7 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = (
-    "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy, Allen Robel"
-)
+__author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen Ramoorthy, Allen Robel"
 
 DOCUMENTATION = """
 ---
@@ -1107,8 +1105,9 @@ class DcnmVrf:
             have_value = str(have_template[key]).lower()
             if want_value != have_value:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"DIFFERS: key {key} want_value {want_value} != have_value {have_value}. "
-                msg += f"returning True"
+                msg += f"DIFFERS: key {key} "
+                msg += f"want_value {want_value} != have_value {have_value}. "
+                msg += "returning True"
                 self.log.debug(msg)
                 return True
         return False
@@ -1997,10 +1996,11 @@ class DcnmVrf:
                             break
 
                     if not vrf_id:
-                        self.module.fail_json(
-                            msg="Unable to generate vrfId for vrf: {0} "
-                            "under fabric: {1}".format(want_c["vrfName"], self.fabric)
-                        )
+                        # arobel: TODO: This is not covered in UT
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Unable to generate vrfId for vrf: {want_c['vrfName']} "
+                        msg += f"under fabric: {self.fabric}"
+                        self.module.fail_json(msg=msg)
 
                     create_path = self.paths["GET_VRF"].format(self.fabric)
 
@@ -2347,12 +2347,16 @@ class DcnmVrf:
                                 attach_list = vrf_attach["lanAttachList"]
 
                                 for attach in attach_list:
-                                    path = self.paths["GET_VRF_SWITCH"].format(
-                                        self.fabric,
-                                        attach["vrfName"],
-                                        attach["switchSerialNo"],
+                                    # copy attach and update it with the keys that
+                                    # get_vrf_lite_objects() expects.
+                                    attach_copy = copy.deepcopy(attach)
+                                    attach_copy.update({"fabric": self.fabric})
+                                    attach_copy.update(
+                                        {"serialNumber": attach["switchSerialNo"]}
                                     )
-                                    lite_objects = dcnm_send(self.module, method, path)
+                                    lite_objects = self.get_vrf_lite_objects(
+                                        attach_copy
+                                    )
                                     if not lite_objects.get("DATA"):
                                         return
                                     item["attach"].append(lite_objects.get("DATA")[0])
@@ -2394,11 +2398,13 @@ class DcnmVrf:
                     attach_list = vrf_attach["lanAttachList"]
 
                     for attach in attach_list:
-                        path = self.paths["GET_VRF_SWITCH"].format(
-                            self.fabric, attach["vrfName"], attach["switchSerialNo"]
-                        )
+                        # copy attach and update it with the keys that
+                        # get_vrf_lite_objects() expects.
+                        attach_copy = copy.deepcopy(attach)
+                        attach_copy.update({"fabric": self.fabric})
+                        attach_copy.update({"serialNumber": attach["switchSerialNo"]})
+                        lite_objects = self.get_vrf_lite_objects(attach_copy)
 
-                        lite_objects = dcnm_send(self.module, method, path)
                         if not lite_objects.get("DATA"):
                             return
                         item["attach"].append(lite_objects.get("DATA")[0])
@@ -2596,19 +2602,12 @@ class DcnmVrf:
                                 role = self.inventory_data[ip].get("switchRole")
                                 r = re.search(r"\bborder\b", role.lower())
                                 if not r:
-                                    msg = "VRF LITE cannot be attached to switch {0} with role {1}".format(
-                                        ip, role
-                                    )
+                                    msg = f"{self.class_name}.{method_name}: "
+                                    msg += "VRF LITE cannot be attached to "
+                                    msg += f"switch {ip} with role {role}"
                                     self.module.fail_json(msg=msg)
 
-                        """Get the IP/Interface that is connected to edge router can be get from below query"""
-                        method = "GET"
-                        path = self.paths["GET_VRF_SWITCH"].format(
-                            self.fabric, v_a["vrfName"], v_a["serialNumber"]
-                        )
-
-                        lite_objects = dcnm_send(self.module, method, path)
-
+                        lite_objects = self.get_vrf_lite_objects(v_a)
                         if not lite_objects.get("DATA"):
                             return
 
@@ -2703,10 +2702,11 @@ class DcnmVrf:
 
                         if ext_values is None:
                             for ip, ser in self.ip_sn.items():
+                                # arobel TODO: Not covered by UT
                                 if ser == v_a["serialNumber"]:
-                                    msg = "There is no VRF LITE capable interface on this switch {0}".format(
-                                        ip
-                                    )
+                                    msg = f"{self.class_name}.{method_name}: "
+                                    msg += "No VRF LITE capable interfaces found "
+                                    msg += f"on this switch {ip}"
                             self.module.fail_json(msg=msg)
                         else:
                             extension_values["VRF_LITE_CONN"] = json.dumps(
@@ -2793,11 +2793,11 @@ class DcnmVrf:
                                 vlan_id = atch.get("vlanId", "unknown")
                                 msg = f"{self.class_name}.{method_name}: "
                                 msg += f"Network attachments associated with vrf {vrf_name} "
-                                msg += f"must be removed (e.g. using the dcnm_network module) "
-                                msg += f"prior to deleting the vrf. "
+                                msg += "must be removed (e.g. using the dcnm_network module) "
+                                msg += "prior to deleting the vrf. "
                                 msg += f"Details: fabric_name: {fabric_name}, "
                                 msg += f"vrf_name: {vrf_name}. "
-                                msg += f"Network attachments found on "
+                                msg += "Network attachments found on "
                                 msg += f"switch_ip: {switch_ip}, "
                                 msg += f"switch_name: {switch_name}, "
                                 msg += f"vlan_id: {vlan_id}"
@@ -2908,9 +2908,8 @@ class DcnmVrf:
                                 msg = "ip_address is mandatory under attach parameters"
             else:
                 if state == "merged" or state == "replaced":
-                    msg = "config: element is mandatory for this state {0}".format(
-                        state
-                    )
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"config element is mandatory for {state} state"
 
             if msg:
                 self.module.fail_json(msg=msg)

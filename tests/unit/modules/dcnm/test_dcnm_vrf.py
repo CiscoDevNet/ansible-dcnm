@@ -1279,8 +1279,9 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_validation_no_config(self):
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True)
+        msg = "DcnmVrf.validate_input: config element is mandatory for merged state"
         self.assertEqual(
-            result["msg"], "config: element is mandatory for this state merged"
+            result["msg"], msg
         )
 
     def test_dcnm_vrf_12check_mode(self):
