@@ -751,7 +751,7 @@ class DcnmVrf:
                     if want["serialNumber"] == have["serialNumber"]:
                         # handle instanceValues first
                         want.update(
-                            {"freeformConfig": have["freeformConfig"]}
+                            {"freeformConfig": have.get("freeformConfig", "")}
                         )  # copy freeformConfig from have as module is not managing it
                         want_inst_values = {}
                         have_inst_values = {}
