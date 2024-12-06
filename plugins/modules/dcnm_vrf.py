@@ -726,6 +726,19 @@ class DcnmVrf:
         msg += "is not convertable to boolean"
         self.module.fail_json(msg=msg)
 
+    @staticmethod
+    def compare_properties(dict1, dict2, property_list):
+        """
+        Given two dictionaries and a list of keys:
+
+        - Return True if all property values match.
+        - Return False otherwise
+        """
+        for prop in property_list:
+            if dict1.get(prop) != dict2.get(prop):
+                return False
+        return True
+
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -803,6 +816,14 @@ class DcnmVrf:
                                 # this switch
                                 break
 
+                            vrf_lite_properties = [
+                                "DOT1Q_ID",
+                                "IP_MASK",
+                                "IPV6_MASK",
+                                "IPV6_NEIGHBOR",
+                                "NEIGHBOR_IP",
+                                "PEER_VRF_NAME",
+                            ]
                             for wlite in want_e["VRF_LITE_CONN"]:
                                 for hlite in have_e["VRF_LITE_CONN"]:
                                     found = False
@@ -811,41 +832,11 @@ class DcnmVrf:
                                         continue
                                     found = True
                                     interface_match = True
-                                    if wlite["DOT1Q_ID"]:
-                                        if wlite["DOT1Q_ID"] != hlite["DOT1Q_ID"]:
-                                            found = False
-                                            break
-
-                                    if wlite["IP_MASK"]:
-                                        if wlite["IP_MASK"] != hlite["IP_MASK"]:
-                                            found = False
-                                            break
-
-                                    if wlite["NEIGHBOR_IP"]:
-                                        if wlite["NEIGHBOR_IP"] != hlite["NEIGHBOR_IP"]:
-                                            found = False
-                                            break
-
-                                    if wlite["IPV6_MASK"]:
-                                        if wlite["IPV6_MASK"] != hlite["IPV6_MASK"]:
-                                            found = False
-                                            break
-
-                                    if wlite["IPV6_NEIGHBOR"]:
-                                        if (
-                                            wlite["IPV6_NEIGHBOR"]
-                                            != hlite["IPV6_NEIGHBOR"]
-                                        ):
-                                            found = False
-                                            break
-
-                                    if wlite["PEER_VRF_NAME"]:
-                                        if (
-                                            wlite["PEER_VRF_NAME"]
-                                            != hlite["PEER_VRF_NAME"]
-                                        ):
-                                            found = False
-                                            break
+                                    if not self.compare_properties(
+                                        wlite, hlite, vrf_lite_properties
+                                    ):
+                                        found = False
+                                        break
 
                                     if found:
                                         break
@@ -907,21 +898,12 @@ class DcnmVrf:
                         break
 
             if not found:
-                try:
-                    if want["isAttached"]:
-                        del want["isAttached"]
-                        want["deployment"] = True
-                        attach_list.append(want)
-                        if want["is_deploy"]:
-                            deploy_vrf = True
-                except KeyError as error:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += "Unexpected values for "
-                    msg += f"isAttached ({want.get('isAttached')}) "
-                    msg += f"and/or is_deploy ({want.get('is_deploy')}) "
-                    msg += f"Details: {error}"
-                    self.log.debug(msg)
-                    self.module.fail_json(msg=msg)
+                if self.to_bool("isAttached", want):
+                    del want["isAttached"]
+                    want["deployment"] = True
+                    attach_list.append(want)
+                    if self.to_bool("is_deploy", want):
+                        deploy_vrf = True
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"deploy_vrf: {deploy_vrf}, "
