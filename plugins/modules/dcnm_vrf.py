@@ -574,14 +574,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
     get_ip_sn_fabric_dict, validate_list_of_dicts)
 
-# from ..module_utils.common.controller_version import ControllerVersion
 from ..module_utils.common.log_v2 import Log
-
-# from ..module_utils.common.response_handler import ResponseHandler
-# from ..module_utils.common.rest_send_v2 import RestSend
-# from ..module_utils.common.results import Results
-# from ..module_utils.common.sender_dcnm import Sender
-# from ..module_utils.fabric.fabric_details_v2 import FabricDetailsByName
 
 
 class DcnmVrf:
@@ -3101,7 +3094,7 @@ def main():
     try:
         log = Log()
         log.commit()
-    except (TypeError, ValueError) as error:
+    except (TypeError, ValueError):
         pass
 
     element_spec = dict(
