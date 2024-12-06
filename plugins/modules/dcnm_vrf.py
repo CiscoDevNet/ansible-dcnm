@@ -954,7 +954,7 @@ class DcnmVrf:
 
         role = self.inventory_data[attach["ip_address"]].get("switchRole")
 
-        if role.lower() == "spine" or role.lower() == "super spine":
+        if role.lower() in ("spine", "super spine"):
             msg = f"VRFs cannot be attached to switch {attach['ip_address']} "
             msg += f"with role {role}"
             self.module.fail_json(msg=msg)
