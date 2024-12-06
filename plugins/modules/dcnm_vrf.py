@@ -1083,7 +1083,7 @@ class DcnmVrf:
         self.log.debug(msg)
         return attach
 
-    def dict_values_differ(self, want_template, have_template, skip_keys=None) -> bool:
+    def dict_values_differ(self, dict1, dict2, skip_keys=None) -> bool:
         """
         # Summary
 
@@ -1099,15 +1099,15 @@ class DcnmVrf:
         if skip_keys is None:
             skip_keys = []
 
-        for key in want_template.keys():
+        for key in dict1.keys():
             if key in skip_keys:
                 continue
-            want_value = str(want_template[key]).lower()
-            have_value = str(have_template[key]).lower()
-            if want_value != have_value:
+            dict1_value = str(dict1[key]).lower()
+            dict2_value = str(dict2[key]).lower()
+            if dict1_value != dict2_value:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += f"DIFFERS: key {key} "
-                msg += f"want_value {want_value} != have_value {have_value}. "
+                msg += f"Values differ: key {key} "
+                msg += f"dict1_value {dict1_value} != dict2_value {dict2_value}. "
                 msg += "returning True"
                 self.log.debug(msg)
                 return True
