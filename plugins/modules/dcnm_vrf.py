@@ -649,6 +649,7 @@ class DcnmVrf:
 
         self.vrf_lite_properties = [
             "DOT1Q_ID",
+            "IF_NAME",
             "IP_MASK",
             "IPV6_MASK",
             "IPV6_NEIGHBOR",
@@ -947,7 +948,7 @@ class DcnmVrf:
         self.log.debug(msg)
         return attach_list, deploy_vrf
 
-    def update_attach_params(self, attach, vrf_name, deploy, vlanId):
+    def update_attach_params(self, attach, vrf_name, deploy, vlan_id):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -992,70 +993,51 @@ class DcnmVrf:
                 self.module.fail_json(msg=msg)
 
             for item in attach["vrf_lite"]:
-                if (
-                    item["interface"]
-                    or item["dot1q"]
-                    or item["ipv4_addr"]
-                    or item["neighbor_ipv4"]
-                    or item["ipv6_addr"]
-                    or item["neighbor_ipv6"]
-                    or item["peer_vrf"]
-                ):
 
-                    # If the playbook contains vrf lite elements add the
-                    # extension values
-                    nbr_dict = {}
-                    if item["interface"]:
-                        nbr_dict["IF_NAME"] = item["interface"]
-                    else:
-                        nbr_dict["IF_NAME"] = ""
+                # If the playbook contains vrf lite elements add the
+                # extension values
+                nbr_dict = {}
+                for param in self.vrf_lite_properties:
+                    nbr_dict[param] = ""
 
-                    if item["dot1q"]:
-                        nbr_dict["DOT1Q_ID"] = str(item["dot1q"])
-                    else:
-                        nbr_dict["DOT1Q_ID"] = ""
+                if item["interface"]:
+                    nbr_dict["IF_NAME"] = item["interface"]
+                if item["dot1q"]:
+                    nbr_dict["DOT1Q_ID"] = str(item["dot1q"])
+                if item["ipv4_addr"]:
+                    nbr_dict["IP_MASK"] = item["ipv4_addr"]
+                if item["neighbor_ipv4"]:
+                    nbr_dict["NEIGHBOR_IP"] = item["neighbor_ipv4"]
+                if item["ipv6_addr"]:
+                    nbr_dict["IPV6_MASK"] = item["ipv6_addr"]
+                if item["neighbor_ipv6"]:
+                    nbr_dict["IPV6_NEIGHBOR"] = item["neighbor_ipv6"]
+                if item["peer_vrf"]:
+                    nbr_dict["PEER_VRF_NAME"] = item["peer_vrf"]
 
-                    if item["ipv4_addr"]:
-                        nbr_dict["IP_MASK"] = item["ipv4_addr"]
-                    else:
-                        nbr_dict["IP_MASK"] = ""
+                process_attachment = False
+                for key, value in nbr_dict.items():
+                    if value != "":
+                        process_attachment = True
+                if not process_attachment:
+                    continue
 
-                    if item["neighbor_ipv4"]:
-                        nbr_dict["NEIGHBOR_IP"] = item["neighbor_ipv4"]
-                    else:
-                        nbr_dict["NEIGHBOR_IP"] = ""
+                nbr_dict["VRF_LITE_JYTHON_TEMPLATE"] = "Ext_VRF_Lite_Jython"
 
-                    if item["ipv6_addr"]:
-                        nbr_dict["IPV6_MASK"] = item["ipv6_addr"]
-                    else:
-                        nbr_dict["IPV6_MASK"] = ""
+                msg = f"{self.class_name}.update_attach_params: "
+                msg += f"nbr_dict: {json.dumps(nbr_dict, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
 
-                    if item["neighbor_ipv6"]:
-                        nbr_dict["IPV6_NEIGHBOR"] = item["neighbor_ipv6"]
-                    else:
-                        nbr_dict["IPV6_NEIGHBOR"] = ""
+                vrflite_con = {}
+                vrflite_con["VRF_LITE_CONN"] = []
+                vrflite_con["VRF_LITE_CONN"].append(copy.deepcopy(nbr_dict))
 
-                    if item["peer_vrf"]:
-                        nbr_dict["PEER_VRF_NAME"] = item["peer_vrf"]
-                    else:
-                        nbr_dict["PEER_VRF_NAME"] = ""
-
-                    nbr_dict["VRF_LITE_JYTHON_TEMPLATE"] = "Ext_VRF_Lite_Jython"
-
-                    msg = f"{self.class_name}.update_attach_params: "
-                    msg += f"nbr_dict: {json.dumps(nbr_dict, indent=4, sort_keys=True)}"
-                    self.log.debug(msg)
-
-                    vrflite_con = {}
-                    vrflite_con["VRF_LITE_CONN"] = []
-                    vrflite_con["VRF_LITE_CONN"].append(copy.deepcopy(nbr_dict))
-
-                    if ext_values["VRF_LITE_CONN"]:
-                        ext_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(
-                            vrflite_con["VRF_LITE_CONN"]
-                        )
-                    else:
-                        ext_values["VRF_LITE_CONN"] = vrflite_con
+                if ext_values["VRF_LITE_CONN"]:
+                    ext_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(
+                        vrflite_con["VRF_LITE_CONN"]
+                    )
+                else:
+                    ext_values["VRF_LITE_CONN"] = vrflite_con
 
             ext_values["VRF_LITE_CONN"] = json.dumps(ext_values["VRF_LITE_CONN"])
 
@@ -1063,7 +1045,7 @@ class DcnmVrf:
 
         attach.update({"fabric": self.fabric})
         attach.update({"vrfName": vrf_name})
-        attach.update({"vlan": vlanId})
+        attach.update({"vlan": vlan_id})
         # This flag is not to be confused for deploy of attachment.
         # "deployment" should be set True for attaching an attachment
         # and set to False for detaching an attachment
@@ -1145,58 +1127,38 @@ class DcnmVrf:
         json_to_dict_want = json.loads(want["vrfTemplateConfig"])
         json_to_dict_have = json.loads(have["vrfTemplateConfig"])
 
-        vlanId_want = str(json_to_dict_want.get("vrfVlanId", ""))
+        # vlan_id_want drives the conditional below, so we cannot
+        # remove it here (as we did with the other params that are
+        # compared in the call to self.dict_values_differ())
+        vlan_id_want = str(json_to_dict_want.get("vrfVlanId", ""))
 
-        if vlanId_want != "0":
+        skip_keys = []
+        if vlan_id_want == "0":
+            skip_keys = ["vrfVlanId"]
+        templates_differ = self.dict_values_differ(
+            json_to_dict_want, json_to_dict_have, skip_keys=skip_keys
+        )
 
-            templates_differ = self.dict_values_differ(
-                json_to_dict_want, json_to_dict_have
-            )
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"templates_differ: {templates_differ}, vlan_id_want: {vlan_id_want}"
+        self.log.debug(msg)
 
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"templates_differ: {templates_differ}, vlanId_want: {vlanId_want}"
-            self.log.debug(msg)
+        if want["vrfId"] is not None and have["vrfId"] != want["vrfId"]:
+            msg = f"{self.class_name}.diff_for_create: "
+            msg += f"vrf_id for vrf {want['vrfName']} cannot be updated to "
+            msg += "a different value"
+            self.module.fail_json(msg=msg)
 
-            if want["vrfId"] is not None and have["vrfId"] != want["vrfId"]:
-                msg = f"{self.class_name}.diff_for_create: "
-                msg += f"vrf_id for vrf {want['vrfName']} cannot be updated to "
-                msg += "a different value"
-                self.module.fail_json(msg)
-
-            elif templates_differ:
-                conf_changed = True
-                if want["vrfId"] is None:
-                    # The vrf updates with missing vrfId will have to use existing
-                    # vrfId from the instance of the same vrf on DCNM.
-                    want["vrfId"] = have["vrfId"]
-                create = want
-
-            else:
-                pass
+        elif templates_differ:
+            conf_changed = True
+            if want["vrfId"] is None:
+                # The vrf updates with missing vrfId will have to use existing
+                # vrfId from the instance of the same vrf on DCNM.
+                want["vrfId"] = have["vrfId"]
+            create = want
 
         else:
-
-            # skip vrfVlanId when comparing
-            templates_differ = self.dict_values_differ(
-                json_to_dict_want, json_to_dict_have, skip_keys=["vrfVlanId"]
-            )
-
-            if want["vrfId"] is not None and have["vrfId"] != want["vrfId"]:
-                msg = f"{self.class_name}.diff_for_create: "
-                msg += f"vrf_id for vrf {want['vrfName']} cannot be updated to "
-                msg += "a different value"
-                self.module.fail_json(msg=msg)
-
-            elif templates_differ:
-                conf_changed = True
-                if want["vrfId"] is None:
-                    # The vrf updates with missing vrfId will have to use existing
-                    # vrfId from the instance of the same vrf on DCNM.
-                    want["vrfId"] = have["vrfId"]
-                create = want
-
-            else:
-                pass
+            pass
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"returning conf_changed: {conf_changed}, "
