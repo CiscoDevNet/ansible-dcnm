@@ -1087,7 +1087,7 @@ class DcnmVrf:
         """
         # Summary
 
-        Given a two dictionaries and, optionally, a list of keys to skip:
+        Given two dictionaries and, optionally, a list of keys to skip:
 
         -   Return True if the values for any (non-skipped) keys differs.
         -   Return False otherwise
