@@ -885,7 +885,9 @@ class DcnmVrf:
 
                                 if "isAttached" in want:
                                     msg = f"ZZZ: {self.class_name}.{method_name}: "
-                                    msg += f"isAttached in want. deleting want[isAttached]"
+                                    msg += (
+                                        f"isAttached in want. deleting want[isAttached]"
+                                    )
                                     self.log.debug(msg)
                                     del want["isAttached"]
 
@@ -1870,9 +1872,7 @@ class DcnmVrf:
             else:
                 vrf_id_obj = dcnm_send(self.module, method, path)
 
-            missing_fabric, not_ok = self.handle_response(
-                vrf_id_obj, "query_dcnm"
-            )
+            missing_fabric, not_ok = self.handle_response(vrf_id_obj, "query_dcnm")
 
             if missing_fabric or not_ok:
                 # arobel: TODO: Not covered by UT
@@ -1966,27 +1966,21 @@ class DcnmVrf:
                         "vrfName": want_c["vrfName"],
                         "vrfVlanId": json_to_dict.get("vrfVlanId"),
                         "vrfVlanName": json_to_dict.get("vrfVlanName"),
-                        "vrfIntfDescription": json_to_dict.get(
-                            "vrfIntfDescription"
-                        ),
+                        "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
                         "vrfDescription": json_to_dict.get("vrfDescription"),
                         "mtu": json_to_dict.get("mtu"),
                         "tag": json_to_dict.get("tag"),
                         "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
                         "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                         "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
-                        "ipv6LinkLocalFlag": json_to_dict.get(
-                            "ipv6LinkLocalFlag"
-                        ),
+                        "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
                         "trmEnabled": json_to_dict.get("trmEnabled"),
                         "isRPExternal": json_to_dict.get("isRPExternal"),
                         "rpAddress": json_to_dict.get("rpAddress"),
                         "loopbackNumber": json_to_dict.get("loopbackNumber"),
                         "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
                         "multicastGroup": json_to_dict.get("multicastGroup"),
-                        "trmBGWMSiteEnabled": json_to_dict.get(
-                            "trmBGWMSiteEnabled"
-                        ),
+                        "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
                         "advertiseHostRouteFlag": json_to_dict.get(
                             "advertiseHostRouteFlag"
                         ),
@@ -1997,15 +1991,11 @@ class DcnmVrf:
                             "configureStaticDefaultRouteFlag"
                         ),
                         "bgpPassword": json_to_dict.get("bgpPassword"),
-                        "bgpPasswordKeyType": json_to_dict.get(
-                            "bgpPasswordKeyType"
-                        ),
+                        "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
                     }
 
                     if self.dcnm_version > 11:
-                        template_conf.update(
-                            isRPAbsent=json_to_dict.get("isRPAbsent")
-                        )
+                        template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
                         template_conf.update(
                             ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW")
                         )
@@ -2016,14 +2006,10 @@ class DcnmVrf:
                             disableRtAuto=json_to_dict.get("disableRtAuto")
                         )
                         template_conf.update(
-                            routeTargetImport=json_to_dict.get(
-                                "routeTargetImport"
-                            )
+                            routeTargetImport=json_to_dict.get("routeTargetImport")
                         )
                         template_conf.update(
-                            routeTargetExport=json_to_dict.get(
-                                "routeTargetExport"
-                            )
+                            routeTargetExport=json_to_dict.get("routeTargetExport")
                         )
                         template_conf.update(
                             routeTargetImportEvpn=json_to_dict.get(
@@ -2046,9 +2032,7 @@ class DcnmVrf:
                             )
                         )
 
-                    want_c.update(
-                        {"vrfTemplateConfig": json.dumps(template_conf)}
-                    )
+                    want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
                     create_path = self.paths["GET_VRF"].format(self.fabric)
 
@@ -2118,7 +2102,9 @@ class DcnmVrf:
                         if deploy_vrf_bool is True:
                             deploy_vrf = want_a["vrfName"]
                     else:
-                        if deploy_vrf_bool or conf_changed.get(want_a["vrfName"], False):
+                        if deploy_vrf_bool or conf_changed.get(
+                            want_a["vrfName"], False
+                        ):
                             deploy_vrf = want_a["vrfName"]
 
             msg = f"{self.class_name}.{method_name}: "
@@ -2174,7 +2160,6 @@ class DcnmVrf:
 
         self.diff_merge_create(replace)
         self.diff_merge_attach(replace)
-
 
     def format_diff(self):
         method_name = inspect.stack()[0][3]
@@ -2534,9 +2519,7 @@ class DcnmVrf:
                 if "is_deploy" in v_a.keys():
                     del v_a["is_deploy"]
 
-        resp = dcnm_send(
-            self.module, "POST", detach_path, json.dumps(self.diff_detach)
-        )
+        resp = dcnm_send(self.module, "POST", detach_path, json.dumps(self.diff_detach))
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "attach")
         if fail:
@@ -2645,9 +2628,7 @@ class DcnmVrf:
                 "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
                 "multicastGroup": json_to_dict.get("multicastGroup"),
                 "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
-                "advertiseHostRouteFlag": json_to_dict.get(
-                    "advertiseHostRouteFlag"
-                ),
+                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
                 "advertiseDefaultRouteFlag": json_to_dict.get(
                     "advertiseDefaultRouteFlag"
                 ),
@@ -2663,12 +2644,8 @@ class DcnmVrf:
                 t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
                 t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
                 t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
-                t_conf.update(
-                    routeTargetImport=json_to_dict.get("routeTargetImport")
-                )
-                t_conf.update(
-                    routeTargetExport=json_to_dict.get("routeTargetExport")
-                )
+                t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
+                t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
                 t_conf.update(
                     routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn")
                 )
@@ -2692,7 +2669,7 @@ class DcnmVrf:
                     self.failed_to_rollback = True
                     return
                 self.failure(resp)
-    
+
     def push_diff_attach(self, is_rollback=False):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -2749,9 +2726,7 @@ class DcnmVrf:
                                 if item["dot1q"]:
                                     nbr_dict["DOT1Q_ID"] = str(item["dot1q"])
                                 else:
-                                    nbr_dict["DOT1Q_ID"] = str(
-                                        ext_values["DOT1Q_ID"]
-                                    )
+                                    nbr_dict["DOT1Q_ID"] = str(ext_values["DOT1Q_ID"])
 
                                 if item["ipv4_addr"]:
                                     nbr_dict["IP_MASK"] = item["ipv4_addr"]
@@ -2761,13 +2736,9 @@ class DcnmVrf:
                                 if item["neighbor_ipv4"]:
                                     nbr_dict["NEIGHBOR_IP"] = item["neighbor_ipv4"]
                                 else:
-                                    nbr_dict["NEIGHBOR_IP"] = ext_values[
-                                        "NEIGHBOR_IP"
-                                    ]
+                                    nbr_dict["NEIGHBOR_IP"] = ext_values["NEIGHBOR_IP"]
 
-                                nbr_dict["NEIGHBOR_ASN"] = ext_values[
-                                    "NEIGHBOR_ASN"
-                                ]
+                                nbr_dict["NEIGHBOR_ASN"] = ext_values["NEIGHBOR_ASN"]
 
                                 if item["ipv6_addr"]:
                                     nbr_dict["IPV6_MASK"] = item["ipv6_addr"]
@@ -2775,9 +2746,7 @@ class DcnmVrf:
                                     nbr_dict["IPV6_MASK"] = ext_values["IPV6_MASK"]
 
                                 if item["neighbor_ipv6"]:
-                                    nbr_dict["IPV6_NEIGHBOR"] = item[
-                                        "neighbor_ipv6"
-                                    ]
+                                    nbr_dict["IPV6_NEIGHBOR"] = item["neighbor_ipv6"]
                                 else:
                                     nbr_dict["IPV6_NEIGHBOR"] = ext_values[
                                         "IPV6_NEIGHBOR"
@@ -2811,9 +2780,7 @@ class DcnmVrf:
 
                                 ms_con = {}
                                 ms_con["MULTISITE_CONN"] = []
-                                extension_values["MULTISITE_CONN"] = json.dumps(
-                                    ms_con
-                                )
+                                extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
 
                                 del item
 
@@ -2829,9 +2796,9 @@ class DcnmVrf:
                         extension_values["VRF_LITE_CONN"] = json.dumps(
                             extension_values["VRF_LITE_CONN"]
                         )
-                        v_a["extensionValues"] = json.dumps(
-                            extension_values
-                        ).replace(" ", "")
+                        v_a["extensionValues"] = json.dumps(extension_values).replace(
+                            " ", ""
+                        )
                         if v_a.get("vrf_lite", None) is not None:
                             del v_a["vrf_lite"]
 
@@ -2848,9 +2815,7 @@ class DcnmVrf:
             for elem in self.diff_attach:
                 for node in elem["lanAttachList"]:
                     node["fabric"] = self.sn_fab[node["serialNumber"]]
-        resp = dcnm_send(
-            self.module, "POST", attach_path, json.dumps(self.diff_attach)
-        )
+        resp = dcnm_send(self.module, "POST", attach_path, json.dumps(self.diff_attach))
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "attach")
         if fail:
@@ -2869,9 +2834,7 @@ class DcnmVrf:
 
         path = self.paths["GET_VRF"].format(self.fabric)
         deploy_path = path + "/deployments"
-        resp = dcnm_send(
-            self.module, "POST", deploy_path, json.dumps(self.diff_deploy)
-        )
+        resp = dcnm_send(self.module, "POST", deploy_path, json.dumps(self.diff_deploy))
         self.result["response"].append(resp)
         fail, self.result["changed"] = self.handle_response(resp, "deploy")
         if fail:
@@ -2913,7 +2876,6 @@ class DcnmVrf:
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
-
 
         for vrf in self.diff_delete:
             ok_to_delete = False
@@ -2974,9 +2936,9 @@ class DcnmVrf:
         spec["export_evpn_rt"] = {"default": "", "type": "str"}
 
         if self.params["state"] in ("merged", "overridden", "replaced"):
-           spec["vrf_lite"] = {"type": "list"}
+            spec["vrf_lite"] = {"type": "list"}
         else:
-           spec["vrf_lite"] = {"default": [], "type": "list"}
+            spec["vrf_lite"] = {"default": [], "type": "list"}
 
         return copy.deepcopy(spec)
 
@@ -3016,20 +2978,34 @@ class DcnmVrf:
 
         spec["ipv6_linklocal_enable"] = {"default": True, "type": "bool"}
 
-        spec["loopback_route_tag"] = {"default": 12345, "range_max": 4294967295, "type": "int"}
-        spec["max_bgp_paths"] = {"default": 1, "range_max": 64, "range_min": 1, "type": "int"}
-        spec["max_ibgp_paths"] = {"default": 2, "range_max": 64, "range_min": 1, "type": "int"}
+        spec["loopback_route_tag"] = {
+            "default": 12345,
+            "range_max": 4294967295,
+            "type": "int",
+        }
+        spec["max_bgp_paths"] = {
+            "default": 1,
+            "range_max": 64,
+            "range_min": 1,
+            "type": "int",
+        }
+        spec["max_ibgp_paths"] = {
+            "default": 2,
+            "range_max": 64,
+            "range_min": 1,
+            "type": "int",
+        }
         spec["netflow_enable"] = {"default": False, "type": "bool"}
         spec["nf_monitor"] = {"default": "", "type": "str"}
 
         spec["no_rp"] = {"default": False, "type": "bool"}
         spec["overlay_mcast_group"] = {"default": "", "type": "str"}
 
-
-        spec["redist_direct_rmap"] = {"default": "FABRIC-RMAP-REDIST-SUBNET", "type": "str"}
+        spec["redist_direct_rmap"] = {
+            "default": "FABRIC-RMAP-REDIST-SUBNET",
+            "type": "str",
+        }
         spec["rp_address"] = {"default": "", "type": "str"}
-
-
         spec["rp_external"] = {"default": False, "type": "bool"}
         spec["rp_loopback_id"] = {"default": "", "range_max": 1023, "type": "int"}
 
@@ -3038,14 +3014,11 @@ class DcnmVrf:
         spec["source"] = {"default": None, "type": "str"}
         spec["static_default_route"] = {"default": True, "type": "bool"}
 
-
         spec["trm_bgw_msite"] = {"default": False, "type": "bool"}
 
         spec["trm_enable"] = {"default": False, "type": "bool"}
 
-
         spec["underlay_mcast_ip"] = {"default": "", "type": "str"}
-
 
         spec["vlan_id"] = {"range_max": 4094, "type": "int"}
         spec["vrf_description"] = {"default": "", "type": "str"}
@@ -3053,14 +3026,21 @@ class DcnmVrf:
         spec["vrf_id"] = {"range_max": 16777214, "type": "int"}
         spec["vrf_intf_desc"] = {"default": "", "type": "str"}
 
-        spec["vrf_int_mtu"] = {"default": 9216, "range_max": 9216, "range_min": 68, "type": "int"}
+        spec["vrf_int_mtu"] = {
+            "default": 9216,
+            "range_max": 9216,
+            "range_min": 68,
+            "type": "int",
+        }
 
         spec["vrf_name"] = {"length_max": 32, "required": True, "type": "str"}
         spec["vrf_template"] = {"default": "Default_VRF_Universal", "type": "str"}
-        spec["vrf_extension_template"] = {"default": "Default_VRF_Extension_Universal", "type": "str"}
+        spec["vrf_extension_template"] = {
+            "default": "Default_VRF_Extension_Universal",
+            "type": "str",
+        }
 
         spec["vrf_vlan_name"] = {"default": "", "type": "str"}
-
 
         if self.params["state"] in ("merged", "overridden", "replaced"):
             spec["deploy"] = {"default": True, "type": "bool"}
