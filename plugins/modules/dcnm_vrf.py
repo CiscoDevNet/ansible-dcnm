@@ -804,7 +804,7 @@ class DcnmVrf:
                         ):
 
                             msg = f"ZZZ: {self.class_name}.{method_name}: "
-                            msg += f"want[extensionValues] != '' and have[extensionValues] != ''"
+                            msg += "want[extensionValues] != '' and have[extensionValues] != ''"
                             self.log.debug(msg)
 
                             want_ext_values = want["extensionValues"]
@@ -853,7 +853,7 @@ class DcnmVrf:
                         ):
 
                             msg = f"ZZZ: {self.class_name}.{method_name}: "
-                            msg += f"want[extensionValues] != '' and have[extensionValues] == ''"
+                            msg += "want[extensionValues] != '' and have[extensionValues] == ''"
                             self.log.debug(msg)
 
                             found = False
@@ -862,7 +862,7 @@ class DcnmVrf:
                             and have["extensionValues"] != ""
                         ):
                             msg = f"ZZZ: {self.class_name}.{method_name}: "
-                            msg += f"want[extensionValues] == '' and have[extensionValues] != ''"
+                            msg += "want[extensionValues] == '' and have[extensionValues] != ''"
                             self.log.debug(msg)
 
                             if replace:
@@ -871,7 +871,7 @@ class DcnmVrf:
                                 found = True
                         else:
                             msg = f"ZZZ: {self.class_name}.{method_name}: "
-                            msg += f"in else"
+                            msg += "in else"
                             self.log.debug(msg)
 
                             found = True
@@ -885,9 +885,8 @@ class DcnmVrf:
 
                                 if "isAttached" in want:
                                     msg = f"ZZZ: {self.class_name}.{method_name}: "
-                                    msg += (
-                                        f"isAttached in want. deleting want[isAttached]"
-                                    )
+                                    msg += "isAttached in want. "
+                                    msg += "deleting want[isAttached]"
                                     self.log.debug(msg)
                                     del want["isAttached"]
 
@@ -895,7 +894,7 @@ class DcnmVrf:
                                 attach_list.append(want)
                                 if want_is_deploy is True:
                                     msg = f"ZZZ: {self.class_name}.{method_name}: "
-                                    msg += f"want_is_deploy is True. "
+                                    msg += "want_is_deploy is True. "
                                     msg += "deleting want[isAttached] "
                                     msg += "and setting deploy_vrf to True"
                                     self.log.debug(msg)
@@ -917,13 +916,13 @@ class DcnmVrf:
                             ):
                                 if want_is_deploy is True:
                                     msg = f"ZZZ: {self.class_name}.{method_name}: "
-                                    msg += f"setting deploy_vrf = True"
+                                    msg += "setting deploy_vrf = True"
                                     self.log.debug(msg)
                                     deploy_vrf = True
 
                         if self.dict_values_differ(want_inst_values, have_inst_values):
                             msg = f"ZZZ: {self.class_name}.{method_name}: "
-                            msg += f"dict values differ. Set found = False"
+                            msg += "dict values differ. Set found = False"
                             self.log.debug(msg)
 
                             found = False
@@ -1560,18 +1559,18 @@ class DcnmVrf:
 
             vrf_deploy = vrf.get("deploy", True)
             if vrf.get("vlan_id"):
-                vlanId = vrf.get("vlan_id")
+                vlan_id = vrf.get("vlan_id")
             else:
-                vlanId = 0
+                vlan_id = 0
 
-            want_create.append(self.update_create_params(vrf, vlanId))
+            want_create.append(self.update_create_params(vrf, vlan_id))
 
             if not vrf.get("attach"):
                 continue
             for attach in vrf["attach"]:
                 deploy = vrf_deploy
                 vrfs.append(
-                    self.update_attach_params(attach, vrf["vrf_name"], deploy, vlanId)
+                    self.update_attach_params(attach, vrf["vrf_name"], deploy, vlan_id)
                 )
 
             if vrfs:
@@ -1920,7 +1919,7 @@ class DcnmVrf:
                 if want_c["vrfName"] == have_c["vrfName"]:
                     vrf_found = True
                     msg = f"{self.class_name}.{method_name}: "
-                    msg += f"Calling diff_for_create with: "
+                    msg += "Calling diff_for_create with: "
                     msg += f"want_c: {json.dumps(want_c, indent=4, sort_keys=True)}, "
                     msg += f"have_c: {json.dumps(have_c, indent=4, sort_keys=True)}"
                     self.log.debug(msg)
@@ -1940,7 +1939,7 @@ class DcnmVrf:
 
                     if diff:
                         msg = f"{self.class_name}.{method_name}: "
-                        msg += f"Appending diff_create_update with "
+                        msg += "Appending diff_create_update with "
                         msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
                         self.log.debug(msg)
                         diff_create_update.append(diff)
@@ -2089,7 +2088,7 @@ class DcnmVrf:
                         want_a["lanAttachList"], have_a["lanAttachList"], replace
                     )
                     msg = f"{self.class_name}.{method_name}: "
-                    msg += f"self.diff_for_attach_deploy returned: "
+                    msg += "self.diff_for_attach_deploy returned: "
                     msg += f"deploy_vrf_bool: {deploy_vrf_bool}, "
                     msg += f"diff: {json.dumps(diff, indent=4, sort_keys=True)} "
                     self.log.debug(msg)
@@ -2143,7 +2142,7 @@ class DcnmVrf:
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"self.diff_deploy: "
+        msg += "self.diff_deploy: "
         msg += f"{json.dumps(self.diff_deploy, indent=4)}"
         self.log.debug(msg)
 
@@ -2478,6 +2477,11 @@ class DcnmVrf:
         self.query = query
 
     def push_diff_create_update(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_create_update to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2498,6 +2502,11 @@ class DcnmVrf:
                     self.failure(resp)
 
     def push_diff_detach(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_detach to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2529,6 +2538,11 @@ class DcnmVrf:
             self.failure(resp)
 
     def push_diff_undeploy(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_undeploy to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2551,6 +2565,11 @@ class DcnmVrf:
             self.failure(resp)
 
     def push_diff_delete(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_delete to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2584,6 +2603,11 @@ class DcnmVrf:
             self.module.fail_json(msg=self.result)
 
     def push_diff_create(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_create to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2595,9 +2619,9 @@ class DcnmVrf:
 
         for vrf in self.diff_create:
             json_to_dict = json.loads(vrf["vrfTemplateConfig"])
-            vlanId = json_to_dict.get("vrfVlanId", "0")
+            vlan_id = json_to_dict.get("vrfVlanId", "0")
 
-            if vlanId == 0:
+            if vlan_id == 0:
                 vlan_path = self.paths["GET_VLAN"].format(self.fabric)
                 vlan_data = dcnm_send(self.module, "GET", vlan_path)
 
@@ -2606,12 +2630,12 @@ class DcnmVrf:
                     msg += f"Failure getting autogenerated vlan_id {vlan_data}"
                     self.module.fail_json(msg=msg)
 
-                vlanId = vlan_data["DATA"]
+                vlan_id = vlan_data["DATA"]
 
             t_conf = {
                 "vrfSegmentId": vrf["vrfId"],
                 "vrfName": json_to_dict.get("vrfName", ""),
-                "vrfVlanId": vlanId,
+                "vrfVlanId": vlan_id,
                 "vrfVlanName": json_to_dict.get("vrfVlanName"),
                 "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
                 "vrfDescription": json_to_dict.get("vrfDescription"),
@@ -2671,6 +2695,11 @@ class DcnmVrf:
                 self.failure(resp)
 
     def push_diff_attach(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_attach to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2698,7 +2727,7 @@ class DcnmVrf:
                     lite_objects = self.get_vrf_lite_objects(v_a)
                     if not lite_objects.get("DATA"):
                         msg = f"{self.class_name}.{method_name}: "
-                        msg += f"Early return, no lite objects."
+                        msg += "Early return, no lite objects."
                         return
 
                     lite = lite_objects["DATA"][0]["switchDetailsList"][0][
@@ -2825,6 +2854,11 @@ class DcnmVrf:
             self.failure(resp)
 
     def push_diff_deploy(self, is_rollback=False):
+        """
+        # Summary
+
+        Send diff_deploy to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2844,6 +2878,11 @@ class DcnmVrf:
             self.failure(resp)
 
     def push_to_remote(self, is_rollback=False):
+        """
+        # Summary
+
+        Send all diffs to the controller
+        """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
@@ -2929,6 +2968,11 @@ class DcnmVrf:
                     self.diff_delete.update({vrf: "NA"})
 
     def attach_spec(self):
+        """
+        # Summary
+
+        Return the argument spec for network attachments
+        """
         spec = {}
         spec["deploy"] = {"default": True, "type": "bool"}
         spec["ip_address"] = {"required": True, "type": "str"}
@@ -2943,6 +2987,11 @@ class DcnmVrf:
         return copy.deepcopy(spec)
 
     def lite_spec(self):
+        """
+        # Summary
+
+        Return the argument spec for VRF LITE parameters
+        """
         spec = {}
         spec["dot1q"] = {"type": "int"}
         spec["ipv4_addr"] = {"type": "ipv4_subnet"}
@@ -2959,6 +3008,11 @@ class DcnmVrf:
         return copy.deepcopy(spec)
 
     def vrf_spec(self):
+        """
+        # Summary
+
+        Return the argument spec for VRF parameters
+        """
         spec = {}
         spec["adv_default_routes"] = {"default": True, "type": "bool"}
         spec["adv_host_routes"] = {"default": False, "type": "bool"}
