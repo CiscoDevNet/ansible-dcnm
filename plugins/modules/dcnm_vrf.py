@@ -986,7 +986,7 @@ class DcnmVrf:
                     nbr_dict["PEER_VRF_NAME"] = item["peer_vrf"]
 
                 process_attachment = False
-                for _, value in nbr_dict.items():
+                for value in nbr_dict.values():
                     if value != "":
                         process_attachment = True
                 if not process_attachment:
