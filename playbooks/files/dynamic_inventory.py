@@ -25,6 +25,7 @@ from os import environ
 
 """
 # Summary
+
 Dynamic inventory for DCNM Collection integration tests. Inventory
 is built from environment variables.
 
@@ -33,13 +34,13 @@ is built from environment variables.
 See README.md in the top-level of this repository and define the environment
 variables described there appropriately for your environment.
 """
-test_fabric = environ.get("ND_FABRIC_NAME")
 nd_ip4 = environ.get("ND_IP4")
 nd_password = environ.get("ND_PASSWORD")
 nd_testcase = environ.get("ND_TESTCASE")
 nd_username = environ.get("ND_USERNAME", "admin")
 nxos_password = environ.get("NXOS_PASSWORD")
 nxos_username = environ.get("NXOS_USERNAME", "admin")
+
 # These are not used in any integration tests
 bgw_1 = environ.get("ND_BGW_1_IP4", "10.1.1.211")
 bgw_2 = environ.get("ND_BGW_2_IP4", "10.1.1.212")
@@ -49,9 +50,13 @@ leaf_3 = environ.get("ND_LEAF_3_IP4", "10.1.1.108")
 leaf_4 = environ.get("ND_LEAF_4_IP4", "10.1.1.109")
 spine_1 = environ.get("ND_SPINE_1_IP4", "10.1.1.112")
 spine_2 = environ.get("ND_SPINE_2_IP4", "10.1.1.113")
-#-----------------
+
+# -----------------
 # dcnm_vrf
-#-----------------
+# -----------------
+
+# VXLAN/EVPN Fabric Name
+test_fabric = environ.get("ND_FABRIC_NAME")
 # switch_1: border switch role
 switch_1 = environ.get("ND_SPINE_1_IP4", "10.1.1.112")
 # switch_2: border switch role
@@ -60,6 +65,11 @@ switch_2 = environ.get("ND_SPINE_2_IP4", "10.1.1.113")
 switch_3 = environ.get("ND_LEAF_3_IP4", "10.1.1.108")
 # Interface to use for VRF LITE extensions on switch_1, switch_2
 interface_1 = environ.get("ND_INTERFACE_1", "Ethernet1/2")
+
+# output is printed to STDOUT, where ansible-playbook -i reads it.
+# If you change any vars above, be sure to add them below.
+# We'll clean this up as the integration test vars are standardized.
+
 output = {
     "_meta": {"hostvars": {}},
     "all": {
