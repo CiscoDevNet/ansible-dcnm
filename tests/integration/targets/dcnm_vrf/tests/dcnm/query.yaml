@@ -36,12 +36,21 @@
     that:
     - 'result.response.DATA != None'
 
-- name: SETUP.2 - QUERY - Clean up any existing vrfs
+- name: SETUP.2 - QUERY - Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: deleted
+  register: result_setup_2
 
-- name: SETUP.3 - QUERY - Create, Attach and Deploy new VRF - VLAN
+- name: SETUP.2a - QUERY - Wait 40 seconds for controller and switch to sync
+  # The vrf lite profile removal returns ok for deployment, but the switch
+  # takes time to remove the profile so wait for some time before creating
+  # a new vrf, else the switch goes into OUT-OF-SYNC state
+  wait_for:
+    timeout: 40
+  when: result_setup_2.changed == true
+
+- name: SETUP.4 - QUERY - Create, Attach and Deploy new VRF - VLAN
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -57,7 +66,7 @@
       deploy: true
   register: result
 
-- name: SETUP.4 - Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: SETUP.5 - Query fabric state until vrfStatus transitions to DEPLOYED state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -122,7 +131,7 @@
     - 'result_1.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result_1.response[0].attach[1].switchDetailsList[0].vlan == 500'
 
-- name: TEST.2 - QUERY - Clean up existing vrfs
+- name: TEST.2 - QUERY - Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: deleted
@@ -146,7 +155,11 @@
     - 'result_2.diff[0].attach[1].deploy == false'
     - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.3 - QUERY - Create, Attach and Deploy new VRF - VLAN
+- name: TEST.2b - QUERY - Wait 40 seconds for controller and switch to sync
+  wait_for:
+    timeout: 40
+
+- name: TEST.3 - QUERY - Create, Attach, Deploy VLAN+VRF
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -176,7 +189,7 @@
   retries: 30
   delay: 2
 
-- name: TEST.5 - QUERY - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION for one switch
+- name: TEST.5 - QUERY - Create, Attach, Deploy VRF+LITE EXTENSION 1x switch
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -204,7 +217,7 @@
   debug:
     var: result_4
 
-- name: TEST - Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: TEST.6 - QUERY - Query for vrfStatus transition to DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -240,7 +253,7 @@
     - '"{{ switch_2 }}" in result_4.diff[0].attach[0].ip_address'
     - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: QUERY - Query the - VRF/VRF LITE EXTENSION Provided by the User in one switch
+- name: TEST.7 - QUERY - Query the VRF+LITE EXTENSION in one switch
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -277,7 +290,7 @@
     - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[1].switchDetailsList[0].vlan == 1500'
 
-- name: QUERY - Query without the config element
+- name: TEST.8 - QUERY - Query without the config element
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -296,7 +309,7 @@
     - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
     - 'result.response[0].attach[1].switchDetailsList[0].vlan == 1500'
 
-- name: QUERY - Query the non available VRF
+- name: TEST.9 - QUERY - Query the non available VRF
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -321,7 +334,7 @@
 ###                 CLEAN-UP                 ##
 ###############################################
 
-- name: QUERY - Clean up any existing vrfs
+- name: CLEANUP.1 - QUERY - Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: deleted
