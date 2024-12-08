@@ -1,4 +1,20 @@
 ##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# test_fabric
+# A VXLAN_EVPN fabric
+#
+# switch_1
+# A border switch
+#
+# switch_2
+# A border switch
+#
+# interface_1
+# Ethernet interface on switch_1 and switch_2
+# used to test VRF LITE configuration.
+
+##############################################
 ##                 SETUP                    ##
 ##############################################
 
@@ -10,7 +26,7 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
-- name: QUERY - Verify if fabric is deployed.
+- name: SETUP.1 - QUERY - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -20,12 +36,12 @@
     that:
     - 'result.response.DATA != None'
 
-- name: QUERY - Clean up any existing vrfs
+- name: SETUP.2 - QUERY - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: deleted
 
-- name: QUERY - Create, Attach and Deploy new VRF - VLAN Provided by the User
+- name: SETUP.3 - QUERY - Create, Attach and Deploy new VRF - VLAN
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -36,12 +52,12 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: SETUP.4 - Query fabric state until vrfStatus transitions to DEPLOYED state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -50,6 +66,10 @@
     - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
+
+- name: debug result var SETUP.4
+  debug:
+    var: result
 
 - assert:
     that:
@@ -61,15 +81,15 @@
     - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
-###############################################
-###                QUERY                     ##
-###############################################
+# ###############################################
+# ###                QUERY                     ##
+# ###############################################
 
-- name: QUERY - Query the VRF
+- name: TEST.1 - QUERY - Query the VRF
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -80,45 +100,53 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-          - ip_address: "{{ ansible_switch1 }}"
-          - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
-  register: result
+  register: result_1
+
+- name: debug result_1 TEST.1
+  debug:
+    var: result_1
 
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response[0].parent.vrfName == "ansible-vrf-int1"'
-    - 'result.response[0].parent.vrfId == 9008011'
-    - 'result.response[0].parent.vrfStatus == "DEPLOYED"'
-    - 'result.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-    - 'result.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result.response[0].attach[0].switchDetailsList[0].vlan == 500'
-    - 'result.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-    - 'result.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result.response[0].attach[1].switchDetailsList[0].vlan == 500'
+    - 'result_1.changed == false'
+    - 'result_1.response[0].parent.vrfName == "ansible-vrf-int1"'
+    - 'result_1.response[0].parent.vrfId == 9008011'
+    - 'result_1.response[0].parent.vrfStatus == "DEPLOYED"'
+    - 'result_1.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result_1.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result_1.response[0].attach[0].switchDetailsList[0].vlan == 500'
+    - 'result_1.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result_1.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
+    - 'result_1.response[0].attach[1].switchDetailsList[0].vlan == 500'
 
-- name: QUERY - Clean up existing vrfs
+- name: TEST.2 - QUERY - Clean up existing vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: deleted
-  register: result
+  register: result_2
+
+- name: debug result_2 TEST.2
+  debug:
+    var: result_2
 
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[1].MESSAGE == "OK"'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[2].METHOD == "DELETE"'
-    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == false'
-    - 'result.diff[0].attach[1].deploy == false'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result_2.changed == true'
+    - 'result_2.response[0].RETURN_CODE == 200'
+    - 'result_2.response[1].RETURN_CODE == 200'
+    - 'result_2.response[1].MESSAGE == "OK"'
+    - 'result_2.response[2].RETURN_CODE == 200'
+    - 'result_2.response[2].METHOD == "DELETE"'
+    - '(result_2.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_2.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_2.diff[0].attach[0].deploy == false'
+    - 'result_2.diff[0].attach[1].deploy == false'
+    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: QUERY - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the User in one switch
+- name: TEST.3 - QUERY - Create, Attach and Deploy new VRF - VLAN
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: merged
@@ -129,20 +157,16 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 1500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
-        vrf_lite:
-          - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # mandatory
-            ipv4_addr: 10.33.0.2/30 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
       deploy: true
-  register: result
+  register: result_3
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: debug result_3 TEST.3
+  debug:
+    var: result_3
+
+- name: TEST.4 - Query fabric state until vrfStatus transitions to DEPLOYED state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_fabric }}"
     state: query
@@ -152,19 +176,69 @@
   retries: 30
   delay: 2
 
+- name: TEST.5 - QUERY - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION for one switch
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 1500
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+            interface: "{{ interface_1 }}" # mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # dot1q can be got from dcnm
+      deploy: true
+  register: result_4
+
+- name: debug result_4 TEST.5 (before query)
+  debug:
+    var: result_4
+
+- name: TEST - Query fabric state until vrfStatus transitions to DEPLOYED state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ test_fabric }}"
+    state: query
+  register: query_result
+  until:
+    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- name: debug result_4 TEST.5 (after query)
+  debug:
+    var: result_4
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
+    - 'result_3.changed == true'
+    - 'result_3.response[0].RETURN_CODE == 200'
+    - 'result_3.response[1].RETURN_CODE == 200'
+    - 'result_3.response[2].RETURN_CODE == 200'
+    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_3.diff[0].attach[0].deploy == true'
+    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+
+- assert:
+    that:
+    - 'result_4.changed == true'
+    - 'result_4.response[0].RETURN_CODE == 200'
+    - 'result_4.response[1].RETURN_CODE == 200'
+    - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - 'result_4.diff[0].attach[0].deploy == true'
+    - '"{{ switch_2 }}" in result_4.diff[0].attach[0].ip_address'
+    - 'result_4.diff[0].vrf_name == "ansible-vrf-int2"'
 
 - name: QUERY - Query the - VRF/VRF LITE EXTENSION Provided by the User in one switch
   cisco.dcnm.dcnm_vrf:
@@ -177,11 +251,11 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 1500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
-            interface: "{{ ansible_int1 }}" # mandatory
+            interface: "{{ interface_1 }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
@@ -233,8 +307,8 @@
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 500
         attach:
-          - ip_address: "{{ ansible_switch1 }}"
-          - ip_address: "{{ ansible_switch2 }}"
+          - ip_address: "{{ switch_1 }}"
+          - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result
 
