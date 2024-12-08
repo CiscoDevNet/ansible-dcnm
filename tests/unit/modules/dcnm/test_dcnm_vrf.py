@@ -1269,17 +1269,16 @@ class TestDcnmVrfModule(TestDcnmModule):
             )
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"], "ip_address is mandatory under attach parameters"
-        )
+        msg = "DcnmVrf.validate_input: "
+        msg += "vrf_name is mandatory under vrf parameters,"
+        msg += "ip_address is mandatory under attach parameters"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_validation_no_config(self):
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True)
         msg = "DcnmVrf.validate_input: config element is mandatory for merged state"
-        self.assertEqual(
-            result["msg"], msg
-        )
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_12check_mode(self):
         self.version = 12

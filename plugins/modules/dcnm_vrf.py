@@ -2143,7 +2143,7 @@ class DcnmVrf:
 
         msg = f"{self.class_name}.{method_name}: INPUT: "
         msg += "diff_create_update: "
-        mag += f"{json.dumps(diff_create_update, indent=4, sort_keys=True)}"
+        msg += f"{json.dumps(diff_create_update, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"{self.class_name}.{method_name}: INPUT: "
