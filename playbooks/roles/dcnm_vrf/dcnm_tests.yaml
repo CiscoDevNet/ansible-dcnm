@@ -17,7 +17,7 @@
 #    This must contain the vars mentioned below and controller
 #    info from dcnm_hosts.yaml (modified for your setup)
 #  2. Run the tests
-#     ansible-playbook dcnm_tests.yaml -i ../dynamic_inventory.py
+#     ansible-playbook dcnm_tests.yaml -i ../files/dynamic_inventory.py
 #
 # NOTES:
 - hosts: dcnm
