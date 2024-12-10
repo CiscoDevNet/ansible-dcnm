@@ -1,35 +1,53 @@
 ##############################################
 ##            REQUIRED VARS                 ##
 ##############################################
-# test_fabric
+# fabric_1
 # A VXLAN_EVPN fabric
 #
 # switch_1
-# A border switch
+# A vrf-lite capable switch
+# Does not require an interface.
 #
 # switch_2
-# A border switch
+# A vrf-lite capable switch
 #
 # switch_3
-# A non-border switch
+# A NON-vrf-lite capable switch
 #
-# interface_1
-# Ethernet interface on switch_1 and switch_2
-# used to test VRF LITE configuration.
+# interface_2
+# Ethernet interface on switch_2
+# Used to test VRF LITE configuration.
+#
+# interface_3
+# Ethernet interface on switch_3
+# Used to verify error when applied VRF LITE
+# extension on a non-vrf-lite capable switch.
+##############################################
 
 ##############################################
 ##                 SETUP                    ##
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
-- name: SETUP.1 - MERGED - Verify fabric is deployed.
+- name: SETUP.0 - MERGED - print vars
+  ansible.builtin.debug:
+    var: item
+  with_items:
+     - "fabric_1 : {{ fabric_1 }}"
+     - "switch_1 : {{ switch_1 }}"
+     - "switch_2 : {{ switch_2 }}"
+     - "switch_3 : {{ switch_3 }}"
+     - "interface_2 : {{ interface_2 }}"
+     - "interface_3 : {{ interface_3 }}"
+
+- name: SETUP.1 - MERGED - [dcnm_rest.GET] Verify fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -39,27 +57,27 @@
     that:
     - 'result.response.DATA != None'
 
-- name: SETUP.2 - MERGED - Delete all VRFs
+- name: SETUP.2 - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
   register: result_setup_2
 
-- name: SETUP.3 - MERGED - Wait 40 seconds for controller and switch to sync
+- name: SETUP.2a - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
   wait_for:
-    timeout: 40
+    timeout: 60
   when: result_setup_2.changed == true
 
 ###############################################
 ###                MERGED                    ##
 ###############################################
 
-- name: TEST.1 - MERGED - Create, Attach, Deploy VLAN+VRF
-  cisco.dcnm.dcnm_vrf: &conf
-    fabric: "{{ test_fabric }}"
+- name: TEST.1 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
+  cisco.dcnm.dcnm_vrf: &conf1
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -71,49 +89,62 @@
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
-  register: result
+  register: result_1
 
-- name: TEST.2 - MERGED - Query for vrfStatus transition to DEPLOYED
+- name: TEST.1a - MERGED - [debug] print result_1
+  ansible.builtin.debug:
+    var: result_1
+
+- name: TEST.1b - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
-  register: query_result
+  register: result_1b
   until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_1b.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
 
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result_1.changed == true'
+    - 'result_1.response[0].RETURN_CODE == 200'
+    - 'result_1.response[1].RETURN_CODE == 200'
+    - 'result_1.response[2].RETURN_CODE == 200'
+    - '(result_1.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_1.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_1.diff[0].attach[0].deploy == true'
+    - 'result_1.diff[0].attach[1].deploy == true'
+    - '"{{ switch_1 }}" in result_1.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result_1.diff[0].attach[1].ip_address'
+    - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.3 - MERGED - conf1 - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf
-  register: result
+- name: TEST.1c - MERGED - [merged] conf1 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf1
+  register: result_1c
 
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - 'result_1c.changed == false'
+    - 'result_1c.response|length == 0'
 
-- name: TEST.4 - MERGED - Delete all VRFs
+- name: TEST.1d - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
+  register: result_1d
 
-- name: TEST.5 - MERGED - Create, Attach, Deploy VLAN+VRF (controller provided)
+- name: TEST.1e - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
+  # The vrf lite profile removal returns ok for deployment, but the switch
+  # takes time to remove the profile so wait for some time before creating
+  # a new vrf, else the switch goes into OUT-OF-SYNC state
+  wait_for:
+    timeout: 60
+  when: result_1d.changed == true
+
+- name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided)
   cisco.dcnm.dcnm_vrf: &conf2
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -124,55 +155,63 @@
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
       deploy: true
-  register: result
+  register: result_2
 
-- name: TEST.6 - MERGED - Query for vrfStatus transition to DEPLOYED
+- name: TEST.2a - MERGED - [debug] print result_2
+  ansible.builtin.debug:
+    var: result_2
+
+- name: TEST.2b - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
-  register: query_result
+  register: result_2b
   until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_2b.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
 
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result_2.changed == true'
+    - 'result_2.response[0].RETURN_CODE == 200'
+    - 'result_2.response[1].RETURN_CODE == 200'
+    - 'result_2.response[2].RETURN_CODE == 200'
+    - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_2.diff[0].attach[0].deploy == true'
+    - 'result_2.diff[0].attach[1].deploy == true'
+    - '"{{ switch_1 }}" in result_2.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
+    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.7 - MERGED - conf2 - Idempotence
+- name: TEST.2c - MERGED - [merged] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
-  register: result
+  register: result_2c
+
+- name: TEST.2d - MERGED - [debug] print result_2c
+  ansible.builtin.debug:
+    var: result_2c
 
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - 'result_2c.changed == false'
+    - 'result_2c.response|length == 0'
 
-- name: TEST.8 - MERGED - Delete all VRFs
+- name: TEST.2e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
 
-- name: TEST.8a - MERGED - Wait 40 seconds for controller and switch to sync
+- name: TEST.2f - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
   # While vrf-lite extension was not configured above, we still hit VRF
   # OUT-OF-SYNC. Let's see if waiting helps here too.
   wait_for:
-    timeout: 40
+    timeout: 60
 
-- name: TEST.9 - MERGED - Create, Attach, Deploy VLAN+VRF+LITE EXTENSION 1x switch (user provided)
+- name: TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided)
   cisco.dcnm.dcnm_vrf: &conf3
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -185,66 +224,71 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_1 }}" # mandatory
+            interface: "{{ interface_2 }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
       deploy: true
-  register: result
+  register: result_3
 
-- name: TEST.10 - MERGED - Query for vrfStatus transition to DEPLOYED
+- name: TEST.3a - MERGED - [debug] print result_3
+  ansible.builtin.debug:
+    var: result_3
+
+- name: TEST.3b - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
-  register: query_result
+  register: result_3b
   until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_3b.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
 
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result_3.changed == true'
+    - 'result_3.response[0].RETURN_CODE == 200'
+    - 'result_3.response[1].RETURN_CODE == 200'
+    - 'result_3.response[2].RETURN_CODE == 200'
+    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_3.diff[0].attach[0].deploy == true'
+    - 'result_3.diff[0].attach[1].deploy == true'
+    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
+    - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.11 - MERGED - conf3 - Idempotence
+- name: TEST.3b - MERGED - [merged] conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
-  register: result
+  register: result_3b
+
+- name: TEST.3c - MERGED - [debug] print result_3b
+  ansible.builtin.debug:
+    var: result_3b
 
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - 'result_3b.changed == false'
+    - 'result_3b.response|length == 0'
 
-- name: TEST.12 - MERGED - Delete all VRFs
+- name: TEST.3d - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
 
-- name: TEST.12a - MERGED - Wait 40 seconds for controller and switch to sync
+- name: TEST.3e - MERGED - Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
   wait_for:
-    timeout: 40
+    timeout: 60
 
-# Original wording in case I misinterpreted
-# TEST.13 - MERGED - Create, Attach, Deploy VRF+VRF LITE EXTENSION -
-#    one optional - Rest are populated from DCNM
-- name: TEST.13 - MERGED - Create, Attach, Deploy VRF+VRF LITE EXTENSION - one optional (controller provided)
+- name: TEST.4 - MERGED - [merged] Create, Attach, Deploy VRF+VRF LITE EXTENSION - one optional (controller provided)
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -253,40 +297,44 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
+      - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
-          - interface: "{{ interface_1 }}" # mandatory
-      - ip_address: "{{ switch_1 }}"
+          - interface: "{{ interface_2 }}" # mandatory
       deploy: true
-  register: result
+  register: result_4
 
-- name: TEST.14 - MERGED - Query for vrfStatus transition to DEPLOYED
+- name: TEST.4a - MERGED - [debug] print result_4
+  ansible.builtin.debug:
+    var: result_4
+
+- name: TEST.4a - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
-  register: query_result
+  register: result_4a
   until:
-    - "query_result.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_4a.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
 
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+    - 'result_4.changed == true'
+    - 'result_4.response[0].RETURN_CODE == 200'
+    - 'result_4.response[1].RETURN_CODE == 200'
+    - 'result_4.response[2].RETURN_CODE == 200'
+    - '(result_4.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_4.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_4.diff[0].attach[0].deploy == true'
+    - 'result_4.diff[0].attach[1].deploy == true'
+    - '"{{ switch_1 }}" in result_4.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result_4.diff[0].attach[1].ip_address'
+    - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.15 - MERGED - Create, Attach, Deploy VRF - Update with incorrect VRF ID.
+- name: TEST.5 - MERGED - [merged] Create, Attach, Deploy VRF - Update with incorrect VRF ID.
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
@@ -297,17 +345,21 @@
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
         deploy: true
-  register: result
+  register: result_5
   ignore_errors: yes
+
+- name: TEST.5a - MERGED - [debug] print result_5
+  ansible.builtin.debug:
+    var: result_5
 
 - assert:
     that:
-    - 'result.changed == false'
-    - '"cannot be updated to a different value" in result.msg'
+    - 'result_5.changed == false'
+    - '"cannot be updated to a different value" in result_5.msg'
 
-- name: TEST.16 - MERGED - Create, Attach, Deploy VRF - Update with Out of Range VRF ID.
+- name: TEST.6 - MERGED - [merged] Create, Attach, Deploy VRF - Update with Out of Range VRF ID.
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
       - vrf_name: ansible-vrf-int1
@@ -318,17 +370,21 @@
           - ip_address: "{{ switch_1 }}"
           - ip_address: "{{ switch_2 }}"
         deploy: true
-  register: result
+  register: result_6
   ignore_errors: yes
+
+- name: TEST.6a - MERGED - [debug] print result_6
+  ansible.builtin.debug:
+    var: result_6
 
 - assert:
     that:
-    - 'result.changed == false'
-    - '"The item exceeds the allowed range of max" in result.msg'
+    - 'result_6.changed == false'
+    - '"The item exceeds the allowed range of max" in result_6.msg'
 
-- name: TEST.17 - MERGED - Create, Attach, Deploy VRF - VRF LITE missing required parameter
+- name: TEST.7 - MERGED - [merged] Create, Attach, Deploy VRF - VRF LITE missing required parameter
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -342,17 +398,21 @@
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
       deploy: true
-  register: result
+  register: result_7
   ignore_errors: yes
+
+- name: TEST.7a - MERGED - [debug] print result_7
+  ansible.builtin.debug:
+    var: result_7
 
 - assert:
     that:
-    - 'result.changed == false'
-    - '"Invalid parameters in playbook: interface : Required parameter not found" in result.msg'
+    - 'result_7.changed == false'
+    - '"Invalid parameters in playbook: interface : Required parameter not found" in result_7.msg'
 
-- name: TEST.18 - MERGED - Create, Attach and Deploy VRF - configure VRF LITE on non border switch
+- name: TEST.8 - MERGED - [merged] Create, Attach and Deploy VRF - configure VRF LITE on non border switch
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -364,26 +424,30 @@
       - ip_address: "{{ switch_3 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_1 }}" # mandatory
+            interface: "{{ interface_3 }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
       deploy: true
-  register: result
+  register: result_8
   ignore_errors: yes
+
+- name: TEST.8a - MERGED - [debug] print result_8
+  ansible.builtin.debug:
+    var: result_8
 
 - assert:
     that:
-    - 'result.changed == false'
-    - '"VRF LITE cannot be attached to switch" in result.msg'
+    - 'result_8.changed == false'
+    - '"VRF LITE cannot be attached to switch" in result_8.msg'
 
 ###############################################
 ###                 CLEAN-UP                 ##
 ###############################################
 
-- name: CLEANUP.1 - MERGED - Delete all VRFs
+- name: CLEANUP.1 - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted

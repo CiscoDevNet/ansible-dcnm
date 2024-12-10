@@ -26,22 +26,25 @@ from os import environ
 """
 # Summary
 
-Dynamic inventory for DCNM Collection integration tests. Inventory
-is built from environment variables.
+Dynamic inventory for DCNM Collection integration tests.
+Inventory is built from environment variables.
 
 # Usage
 
 See README.md in the top-level of this repository and define the environment
 variables described there appropriately for your environment.
 """
+nd_role = environ.get("ND_ROLE", "dcnm_vrf")
+nd_testcase = environ.get("ND_TESTCASE", "query")
+
+fabric_1 = environ.get("ND_FABRIC_1")
 nd_ip4 = environ.get("ND_IP4")
 nd_password = environ.get("ND_PASSWORD")
-nd_testcase = environ.get("ND_TESTCASE")
 nd_username = environ.get("ND_USERNAME", "admin")
 nxos_password = environ.get("NXOS_PASSWORD")
 nxos_username = environ.get("NXOS_USERNAME", "admin")
 
-# These are not used in any integration tests
+# Base set of switches
 bgw_1 = environ.get("ND_BGW_1_IP4", "10.1.1.211")
 bgw_2 = environ.get("ND_BGW_2_IP4", "10.1.1.212")
 leaf_1 = environ.get("ND_LEAF_1_IP4", "10.1.1.106")
@@ -51,20 +54,56 @@ leaf_4 = environ.get("ND_LEAF_4_IP4", "10.1.1.109")
 spine_1 = environ.get("ND_SPINE_1_IP4", "10.1.1.112")
 spine_2 = environ.get("ND_SPINE_2_IP4", "10.1.1.113")
 
-# -----------------
-# dcnm_vrf
-# -----------------
+# Base set of interfaces
+interface_1 = environ.get("ND_INTERFACE_1", "Ethernet1/1")
+interface_2 = environ.get("ND_INTERFACE_2", "Ethernet1/2")
+interface_3 = environ.get("ND_INTERFACE_3", "Ethernet1/3")
 
-# VXLAN/EVPN Fabric Name
-test_fabric = environ.get("ND_FABRIC_NAME")
-# switch_1: border switch role
-switch_1 = environ.get("ND_SPINE_1_IP4", "10.1.1.112")
-# switch_2: border switch role
-switch_2 = environ.get("ND_SPINE_2_IP4", "10.1.1.113")
-# switch_3: non-border switch role
-switch_3 = environ.get("ND_LEAF_3_IP4", "10.1.1.108")
-# Interface to use for VRF LITE extensions on switch_1, switch_2
-interface_1 = environ.get("ND_INTERFACE_1", "Ethernet1/2")
+if nd_role == "dcnm_vrf":
+    # VXLAN/EVPN Fabric Name
+    # fabric_1
+    #   - all tests
+    # switch_1
+    #   - all tests
+    #     - vrf capable
+    switch_1 = spine_1
+    # switch_2
+    #   - all tests
+    #     - vrf-lite capable
+    switch_2 = spine_2
+    # switch_3
+    #   - merged
+    #     - NOT vrf-lite capable
+    switch_3 = leaf_3
+    # interface_1
+    #   - no tests
+    # interface_2
+    #   - all tests
+    #      - switch_2 VRF LITE extensions
+    # interface_3
+    #   - merged
+    #     - switch_3 non-vrf-lite capable switch
+    #   - overridden
+    #     - Removed from test due to unrelated IP POOL errors.
+    #     - It appears that fabric would need to have SUBNET
+    #       resource added?
+    # 
+elif nd_role == "vrf_lite":
+    # VXLAN/EVPN Fabric Name
+    # Uses fabric_1
+    # switch_1: vrf-lite capable
+    switch_1 = spine_1
+    # switch_2: vrf-lite capable
+    switch_2 = spine_2
+    # switch_3: vrf-lite capable
+    switch_3 = bgw_1
+    interface_1 = interface_1
+    interface_2 = interface_2
+    interface_3 = interface_3
+else:
+    switch_1 = leaf_1
+    switch_2 = spine_1
+    switch_3 = bgw_1
 
 # output is printed to STDOUT, where ansible-playbook -i reads it.
 # If you change any vars above, be sure to add them below.
@@ -80,6 +119,7 @@ output = {
             "ansible_password": nd_password,
             "ansible_python_interpreter": "python",
             "ansible_user": nd_username,
+            "fabric_1": fabric_1,
             "bgw1": bgw_1,
             "bgw2": bgw_2,
             "leaf1": leaf_1,
@@ -100,8 +140,9 @@ output = {
             "switch_2": switch_2,
             "switch_3": switch_3,
             "interface_1": interface_1,
-            "testcase": nd_testcase,
-            "test_fabric": test_fabric
+            "interface_2": interface_2,
+            "interface_3": interface_3,
+            "testcase": nd_testcase
         },
     },
     "dcnm": {

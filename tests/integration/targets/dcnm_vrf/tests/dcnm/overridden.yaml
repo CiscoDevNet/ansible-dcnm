@@ -1,16 +1,55 @@
 ##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# fabric_1
+# A VXLAN_EVPN fabric
+#
+# switch_1
+# A vrf-lite capable switch
+#
+# switch_2
+# A vrf-lite capable switch
+#
+# interface_2
+# Ethernet interface on switch_2
+# Used to test VRF LITE configuration.
+#
+##############################################
+
+##############################################
+##            OTHER REQUIREMENTS            ##
+##############################################
+#
+# 1. A SUBNET pool for 10.33.0.0/24 must be
+# allocated for the fabric_1.
+# THIS REQUIREMENT HAS BEEN TEMPORARILY
+# REMOVED BY NOT CHANGING THE ipv4_addr and
+# neighbor_ipv4 values in the VRF LITE payload.
+# TODO: Discuss with Mike.
+##############################################
+
+##############################################
 ##                 SETUP                    ##
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
-- name: OVERRIDDEN - Verify if fabric is deployed.
+- name: SETUP.0 - OVERRIDDEN - print vars
+  ansible.builtin.debug:
+    var: item
+  with_items:
+     - "fabric_1 : {{ fabric_1 }}"
+     - "switch_1 : {{ switch_1 }}"
+     - "switch_2 : {{ switch_2 }}"
+     - "interface_2 : {{ interface_2 }}"
+
+- name: SETUP.1 - OVERRIDDEN - [dcnn_rest.GET] Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -20,14 +59,23 @@
     that:
     - 'result.response.DATA != None'
 
-- name: OVERRIDDEN - Clean up any existing vrfs
+- name: SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
+  register: result_setup_2
 
-- name: OVERRIDDEN - Create, Attach and Deploy new VRF - VLAN Provided by the User
+- name: SETUP.2a - OVERRIDDEN - [wait_for] Wait 40 seconds for controller and switch to sync
+  # The vrf lite profile removal returns ok for deployment, but the switch
+  # takes time to remove the profile so wait for some time before creating
+  # a new vrf, else the switch goes into OUT-OF-SYNC state
+  wait_for:
+    timeout: 40
+  when: result_setup_2.changed == true
+
+- name: SETUP.3 OVERRIDDEN - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int1
@@ -36,14 +84,14 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: SETUP.4 OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
   register: query_result
   until:
@@ -61,17 +109,17 @@
     - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
 ###############################################
 ###              OVERRIDDEN                  ##
 ###############################################
 
-- name: OVERRIDDEN - Update existing VRF using overridden - delete and create
-  cisco.dcnm.dcnm_vrf: &conf
-    fabric: "{{ test_fabric }}"
+- name: TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2
+  cisco.dcnm.dcnm_vrf: &conf1
+    fabric: "{{ fabric_1 }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int2
@@ -80,14 +128,14 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
       deploy: true
   register: result
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: TEST.2 - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
   register: query_result
   until:
@@ -115,8 +163,8 @@
     - 'result.diff[1].attach[1].deploy == false'
     - 'result.diff[1].vrf_name == "ansible-vrf-int1"'
 
-- name: OVERRIDDEN - conf - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf
+- name: TEST.3 - OVERRIDDEN - [overridden] conf1 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf1
   register: result
 
 - assert:
@@ -124,14 +172,20 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: OVERRIDDEN - Clean up any existing vrfs
+- name: TEST.4 - OVERRIDDEN - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
+  register: result_4
 
-- name: OVERRIDDEN - Create, Attach and Deploy new VRF - VRF/VRF LITE EXTENSION Provided by the User in one switch
+- name: TEST.4a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+  when: result_4.changed == true
+
+- name: TEST.5 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: merged
     config:
     - vrf_name: ansible-vrf-int2
@@ -140,22 +194,30 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 1500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # optional
-            interface: "{{ ansible_int1 }}" # mandatory
-            ipv4_addr: 10.33.0.2/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
+            interface: "{{ interface_2 }}" # mandatory
+            ipv4_addr: 10.33.0.1/24 # optional
+            neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # dot1q can be got from dcnm
       deploy: true
   register: result
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: TEST.5a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  # The vrf lite profile removal returns ok for deployment, but the switch
+  # takes time to remove the profile so wait for some time before creating
+  # a new vrf, else the switch goes into OUT-OF-SYNC state
+  wait_for:
+    timeout: 60
+  when: result.changed == true
+
+- name: TEST.5b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
   register: query_result
   until:
@@ -173,13 +235,13 @@
     - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result.diff[0].attach[1].ip_address'
     - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: OVERRIDDEN - Update existing VRF LITE using overridden - VRF stays Whereas Ext is modified/overridden
-  cisco.dcnm.dcnm_vrf: &conf1
-    fabric: "{{ test_fabric }}"
+- name: TEST.6 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
+  cisco.dcnm.dcnm_vrf: &conf2
+    fabric: "{{ fabric_1 }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int2
@@ -188,22 +250,46 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 1500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # optional
-            interface: "{{ ansible_int1 }}" # mandatory
-            ipv4_addr: 10.33.0.6/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:10/64 # optional
-            neighbor_ipv6: 2010::10:34:0:7 # optional
+            interface: "{{ interface_2 }}" # mandatory
+            ipv4_addr: 10.33.0.1/24 # optional
+            neighbor_ipv4: 10.33.0.0 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 21 # dot1q can be got from dcnm
       deploy: true
   register: result
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: TEST.6a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  # The vrf lite profile removal returns ok for deployment, but the switch
+  # takes time to remove the profile so wait for some time before creating
+  # a new vrf, else the switch goes into OUT-OF-SYNC state
+  wait_for:
+    timeout: 60
+  when: result.changed == true
+
+# In step TEST.6, NDFC issues an NX-OS CLI that immediately switches from
+# from configure profile mode, to configure terminal; vrf context <vrf>.
+# This command results in FAILURE (switch accounting log).  Adding a
+# wait_for will not help since this all happens within step TEST.6.
+# A config-deploy resolves the OUT-OF-SYNC VRF status.
+- name: TEST.6b - OVERRIDDEN - [dcnm_rest.POST] - config-deploy to workaround FAILED/OUT-OF-SYNC VRF status
+  cisco.dcnm.dcnm_rest:
+    method: POST
+    path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}/config-deploy?forceShowRun=false"
+  when: result.changed == true
+
+- name: TEST.6c - OVERRIDDEN - [wait_for] Wait 60 for vrfStatus == DEPLOYED
+  wait_for:
+    timeout: 60
+  when: result.changed == true
+
+- name: TEST.6d - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
   register: query_result
   until:
@@ -220,8 +306,8 @@
     - 'result.diff[0].attach[0].deploy == true'
     - 'result.diff[0].vrf_name == "ansible-vrf-int2"'
 
-- name: OVERRIDDEN - conf - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf1
+- name: TEST.7 - OVERRIDDEN - [overridden] conf2 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf2
   register: result
 
 - assert:
@@ -229,9 +315,9 @@
     - 'result.changed == false'
     - 'result.response|length == 0'
 
-- name: OVERRIDDEN - Update existing VRF LITE using overridden - VRF modified and Ext is modified - Old ones deleted
-  cisco.dcnm.dcnm_vrf: &conf2
-    fabric: "{{ test_fabric }}"
+- name: TEST.8 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension
+  cisco.dcnm.dcnm_vrf: &conf3
+    fabric: "{{ fabric_1 }}"
     state: overridden
     config:
     - vrf_name: ansible-vrf-int1
@@ -240,22 +326,30 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 500
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
-      - ip_address: "{{ ansible_switch2 }}"
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ ansible_int1 }}" # mandatory
-            ipv4_addr: 10.33.0.3/24 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
+            interface: "{{ interface_2 }}" # mandatory
+            ipv4_addr: 10.33.0.1/24 # optional
+            neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: 2010::10:34:0:1/64 # optional
             neighbor_ipv6: 2010::10:34:0:2 # optional
             dot1q: 31 # dot1q can be got from dcnm
       deploy: true
   register: result
 
-- name: Query fabric state until vrfStatus transitions to DEPLOYED state
+- name: TEST.8a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  # The vrf lite profile removal returns ok for deployment, but the switch
+  # takes time to remove the profile so wait for some time before creating
+  # a new vrf, else the switch goes into OUT-OF-SYNC state
+  wait_for:
+    timeout: 60
+  when: result.changed == true
+
+- name: TEST.8b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: query
   register: query_result
   until:
@@ -284,8 +378,8 @@
     - 'result.diff[1].attach[1].deploy == false'
     - 'result.diff[1].vrf_name == "ansible-vrf-int2"'
 
-- name: OVERRIDDEN - conf - Idempotence
-  cisco.dcnm.dcnm_vrf: *conf2
+- name: TEST.9 - OVERRIDDEN - [overridden] conf3 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf3
   register: result
 
 - assert:
@@ -297,7 +391,7 @@
 ##                 CLEAN-UP                 ##
 ##############################################
 
-- name: OVERRIDDEN - Clean up any existing vrfs
+- name: CLEANUP.1 - OVERRIDDEN - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
