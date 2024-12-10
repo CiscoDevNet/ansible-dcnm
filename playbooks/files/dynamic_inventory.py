@@ -87,7 +87,7 @@ if nd_role == "dcnm_vrf":
     #     - Removed from test due to unrelated IP POOL errors.
     #     - It appears that fabric would need to have SUBNET
     #       resource added?
-    # 
+    #
 elif nd_role == "vrf_lite":
     # VXLAN/EVPN Fabric Name
     # Uses fabric_1
@@ -97,9 +97,6 @@ elif nd_role == "vrf_lite":
     switch_2 = spine_2
     # switch_3: vrf-lite capable
     switch_3 = bgw_1
-    interface_1 = interface_1
-    interface_2 = interface_2
-    interface_3 = interface_3
 else:
     switch_1 = leaf_1
     switch_2 = spine_1
@@ -142,7 +139,7 @@ output = {
             "interface_1": interface_1,
             "interface_2": interface_2,
             "interface_3": interface_3,
-            "testcase": nd_testcase
+            "testcase": nd_testcase,
         },
     },
     "dcnm": {
