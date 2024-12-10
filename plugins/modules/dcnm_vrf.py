@@ -877,7 +877,8 @@ class DcnmVrf:
                                 want["deployment"] = True
                                 attach_list.append(want)
                                 if want_is_deploy is True:
-                                    del want["isAttached"]
+                                    if "isAttached" in want:
+                                        del want["isAttached"]
                                     deploy_vrf = True
                                 continue
 
