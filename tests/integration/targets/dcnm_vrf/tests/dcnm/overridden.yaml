@@ -395,3 +395,7 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
+
+- name: CLEANUP.2 - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60

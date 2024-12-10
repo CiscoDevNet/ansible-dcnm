@@ -36,7 +36,7 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
-- name: SETUP.0 - MERGED - print vars
+- name: SETUP.0 - MERGED - [with_items] print vars
   ansible.builtin.debug:
     var: item
   with_items:
@@ -91,19 +91,19 @@
       deploy: true
   register: result_1
 
-- name: TEST.1a - MERGED - [debug] print result_1
-  ansible.builtin.debug:
-    var: result_1
-
-- name: TEST.1b - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.1a - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
-  register: result_1b
+  register: result_1a
   until:
-    - "result_1b.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_1a.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
+
+- name: TEST.1b - MERGED - [debug] print result_1
+  ansible.builtin.debug:
+    var: result_1
 
 - assert:
     that:
@@ -122,6 +122,10 @@
 - name: TEST.1c - MERGED - [merged] conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
+
+- name: TEST.1d - MERGED - [debug] print result_1c
+  ansible.builtin.debug:
+    var: result_1c
 
 - assert:
     that:
@@ -157,19 +161,19 @@
       deploy: true
   register: result_2
 
-- name: TEST.2a - MERGED - [debug] print result_2
-  ansible.builtin.debug:
-    var: result_2
-
-- name: TEST.2b - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.2a - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
-  register: result_2b
+  register: result_2a
   until:
-    - "result_2b.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_2a.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
+
+- name: TEST.2b - MERGED - [debug] print result_2
+  ansible.builtin.debug:
+    var: result_2
 
 - assert:
     that:
@@ -233,19 +237,19 @@
       deploy: true
   register: result_3
 
-- name: TEST.3a - MERGED - [debug] print result_3
-  ansible.builtin.debug:
-    var: result_3
-
-- name: TEST.3b - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.3a - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
-  register: result_3b
+  register: result_3a
   until:
-    - "result_3b.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_3a.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
+
+- name: TEST.3b - MERGED - [debug] print result_3
+  ansible.builtin.debug:
+    var: result_3
 
 - assert:
     that:
@@ -261,25 +265,25 @@
     - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
     - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.3b - MERGED - [merged] conf3 - Idempotence
+- name: TEST.3c - MERGED - [merged] conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
-  register: result_3b
+  register: result_3c
 
-- name: TEST.3c - MERGED - [debug] print result_3b
+- name: TEST.3d - MERGED - [debug] print result_3c
   ansible.builtin.debug:
-    var: result_3b
+    var: result_3c
 
 - assert:
     that:
-    - 'result_3b.changed == false'
-    - 'result_3b.response|length == 0'
+    - 'result_3c.changed == false'
+    - 'result_3c.response|length == 0'
 
-- name: TEST.3d - MERGED - [deleted] Delete all VRFs
+- name: TEST.3e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
 
-- name: TEST.3e - MERGED - Wait 60 seconds for controller and switch to sync
+- name: TEST.3f - MERGED - Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
@@ -304,10 +308,6 @@
       deploy: true
   register: result_4
 
-- name: TEST.4a - MERGED - [debug] print result_4
-  ansible.builtin.debug:
-    var: result_4
-
 - name: TEST.4a - MERGED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
@@ -317,6 +317,10 @@
     - "result_4a.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
+
+- name: TEST.4b - MERGED - [debug] print result_4
+  ansible.builtin.debug:
+    var: result_4
 
 - assert:
     that:
@@ -451,3 +455,7 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
+
+- name: CLEANUP.2 - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
