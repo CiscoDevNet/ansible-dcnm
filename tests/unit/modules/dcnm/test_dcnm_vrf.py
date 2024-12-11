@@ -17,14 +17,14 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import copy
 from unittest.mock import patch
 
-# from units.compat.mock import patch
-
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_vrf
-from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
-import copy
+from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
+
+# from units.compat.mock import patch
 
 
 class TestDcnmVrfModule(TestDcnmModule):
@@ -587,7 +587,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "Fabric test_fabric missing on DCNM or does not have any switches",
+            "Fabric test_fabric missing on the controller or does not have any switches",
         )
 
     def test_dcnm_vrf_get_have_failure(self):
@@ -595,7 +595,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(state="merged", fabric="test_fabric", config=self.playbook_config)
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(result.get("msg"), "Fabric test_fabric not present on DCNM")
+        self.assertEqual(result.get("msg"), "Fabric test_fabric not present on the controller")
 
     def test_dcnm_vrf_merged_redeploy(self):
         set_module_args(
@@ -707,7 +707,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "vrf_id for vrf:test_vrf_1 cant be updated to a different value",
+            "DcnmVrf.diff_for_create: vrf_id for vrf test_vrf_1 cannot be updated to a different value",
         )
 
     def test_dcnm_vrf_merged_lite_invalidrole(self):
@@ -1144,9 +1144,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(state="deleted", fabric="test_fabric", config=self.playbook_config)
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"]["response"][2], "Deletion of vrfs test_vrf_1 has failed"
-        )
+        msg = "DcnmVrf.push_diff_delete: Deletion of vrfs test_vrf_1 has failed"
+        self.assertEqual(result["msg"]["response"][2], msg)
 
     def test_dcnm_vrf_query(self):
         set_module_args(
@@ -1270,16 +1269,16 @@ class TestDcnmVrfModule(TestDcnmModule):
             )
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"], "ip_address is mandatory under attach parameters"
-        )
+        msg = "DcnmVrf.validate_input: "
+        msg += "vrf_name is mandatory under vrf parameters,"
+        msg += "ip_address is mandatory under attach parameters"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_validation_no_config(self):
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"], "config: element is mandatory for this state merged"
-        )
+        msg = "DcnmVrf.validate_input: config element is mandatory for merged state"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_12check_mode(self):
         self.version = 12

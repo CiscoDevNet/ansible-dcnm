@@ -357,10 +357,12 @@
         "vrfName": "test_vrf_1",
         "lanAttachList": [
           {
-            "lanAttachState": "DEPLOYED"
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": false
           },
           {
-            "lanAttachState": "DEPLOYED"
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": false
           }
         ]
       }
@@ -393,10 +395,12 @@
         "vrfName": "test_vrf_1",
         "lanAttachList": [
           {
-            "lanAttachState": "NA"
+            "lanAttachState": "NA",
+            "isLanAttached": false
           },
           {
-            "lanAttachState": "NA"
+            "lanAttachState": "NA",
+            "isLanAttached": false
           }
         ]
       }
