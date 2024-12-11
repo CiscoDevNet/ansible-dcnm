@@ -2,17 +2,21 @@
 ##            REQUIRED VARS                 ##
 ##############################################
 # fabric_1
-# A VXLAN_EVPN fabric
+#
+# - A VXLAN_EVPN fabric
 #
 # switch_1
-# A vrf-lite capable switch
+#
+# - A vrf-lite capable switch
 #
 # switch_2
-# A vrf-lite capable switch
 #
-# interface_2
-# Ethernet interface on switch_2
-# Used to test VRF LITE configuration.
+# - A vrf-lite capable switch
+#
+# interface_2a
+#
+# - Ethernet interface on switch_2
+# - Used to test VRF LITE configuration.
 #
 ##############################################
 
@@ -47,7 +51,7 @@
      - "fabric_1 : {{ fabric_1 }}"
      - "switch_1 : {{ switch_1 }}"
      - "switch_2 : {{ switch_2 }}"
-     - "interface_2 : {{ interface_2 }}"
+     - "interface_2a : {{ interface_2a }}"
 
 - name: SETUP.1 - OVERRIDDEN - [dcnn_rest.GET] Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -198,7 +202,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # optional
-            interface: "{{ interface_2 }}" # mandatory
+            interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.1/24 # optional
             neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
@@ -254,7 +258,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int2 # optional
-            interface: "{{ interface_2 }}" # mandatory
+            interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.1/24 # optional
             neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
@@ -330,7 +334,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2 }}" # mandatory
+            interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.1/24 # optional
             neighbor_ipv4: 10.33.0.0 # optional
             ipv6_addr: 2010::10:34:0:1/64 # optional

@@ -5,23 +5,29 @@
 # A VXLAN_EVPN fabric
 #
 # switch_1
-# A vrf-lite capable switch
-# Does not require an interface.
+#
+# - A vrf-lite capable switch
+# - Does not require an interface.
 #
 # switch_2
-# A vrf-lite capable switch
+#
+# - A vrf-lite capable switch
 #
 # switch_3
+#
 # A NON-vrf-lite capable switch
 #
-# interface_2
-# Ethernet interface on switch_2
-# Used to test VRF LITE configuration.
+# interface_2a
 #
-# interface_3
-# Ethernet interface on switch_3
-# Used to verify error when applied VRF LITE
-# extension on a non-vrf-lite capable switch.
+# - Ethernet interface on switch_2
+# - Used to test VRF LITE configuration.
+#
+# interface_3a
+#
+# - Ethernet interface on switch_3
+# - Used to verify error when applying a
+#   VRF LITE extension on a non-vrf-lite
+#   capable switch.
 ##############################################
 
 ##############################################
@@ -44,8 +50,8 @@
      - "switch_1 : {{ switch_1 }}"
      - "switch_2 : {{ switch_2 }}"
      - "switch_3 : {{ switch_3 }}"
-     - "interface_2 : {{ interface_2 }}"
-     - "interface_3 : {{ interface_3 }}"
+     - "interface_2a : {{ interface_2a }}"
+     - "interface_3a : {{ interface_3a }}"
 
 - name: SETUP.1 - MERGED - [dcnm_rest.GET] Verify fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -132,19 +138,19 @@
     - 'result_1c.changed == false'
     - 'result_1c.response|length == 0'
 
-- name: TEST.1d - MERGED - [deleted] Delete all VRFs
+- name: TEST.1e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-  register: result_1d
+  register: result_1e
 
-- name: TEST.1e - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
+- name: TEST.1f - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
   wait_for:
     timeout: 60
-  when: result_1d.changed == true
+  when: result_1e.changed == true
 
 - name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided)
   cisco.dcnm.dcnm_vrf: &conf2
@@ -228,7 +234,7 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_2 }}" # mandatory
+            interface: "{{ interface_2a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
@@ -304,7 +310,7 @@
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
-          - interface: "{{ interface_2 }}" # mandatory
+          - interface: "{{ interface_2a }}" # mandatory
       deploy: true
   register: result_4
 
@@ -428,7 +434,7 @@
       - ip_address: "{{ switch_3 }}"
         vrf_lite:
           - peer_vrf: ansible-vrf-int1 # optional
-            interface: "{{ interface_3 }}" # mandatory
+            interface: "{{ interface_3a }}" # mandatory
             ipv4_addr: 10.33.0.2/30 # optional
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional

@@ -1,13 +1,22 @@
 ##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# fabric_1
+#
+# - A VXLAN_EVPN fabric
+#
+##############################################
+
+##############################################
 ##                 SETUP                    ##
 ##############################################
 
 - set_fact:
-    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
+    rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
 - set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
 - name: SCALE - Verify if fabric is deployed.
@@ -22,7 +31,7 @@
 
 - name: SCALE - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
 
 - name: Dummy set fact for leaf_attach_list
@@ -36,14 +45,14 @@
 
 - name: Push all VRFs to DCNM
   cisco.dcnm.dcnm_vrf:
-    fabric: '{{ test_fabric }}'
+    fabric: '{{ fabric_1 }}'
     state: merged
     config: '{{ vrfs_list }}'
   register: result
 
 - name: SCALE - Clean up existing vrfs
   cisco.dcnm.dcnm_vrf: &conf
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted
 
 - name: SCALE - conf - Idempotence
@@ -62,5 +71,5 @@
 
 - name: SCALE - Clean up any existing vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ fabric_1 }}"
     state: deleted

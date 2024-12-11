@@ -26,12 +26,13 @@ from os import environ
 """
 # Summary
 
-Dynamic inventory for DCNM Collection integration tests.
-Inventory is built from environment variables.
+Optional dynamic inventory for the ansible-dcnm repository
+integration tests. This inventory is built from environment
+variables.
 
-# Usage
+## Usage
 
-## Mandatory general variables
+### Mandatory general variables
 
 The following general environment variables are related
 to credentials, controller reachability, and role/testcase
@@ -43,7 +44,7 @@ Values below are examples, and should be modified for your
 setup and the roles/testcases you are running.
 
 ```bash
-export NDFC_ROLE=dcnm_vrf       # The role to run
+export ND_ROLE=dcnm_vrf         # The role to run
 export ND_TESTCASE=query        # The testcase to run
 export ND_IP4=10.1.1.1          # Controller IPv4 address
 export ND_PASSWORD=MyPassword   # Controller password
@@ -52,7 +53,7 @@ export NXOS_PASSWORD=MyPassword # Switch password
 export NXOS_USERNAME=admin      # Switch username
 ```
 
-## Fabrics
+### Fabrics
 
 We can add more fabrics later as the need arises...
 
@@ -63,18 +64,48 @@ export ND_FABRIC_3=MyFabric3   # Assigned to var fabric_3
 
 ```
 
-## Interfaces
+### Interfaces
 
 Interface usage varies by testcase.  See individual
 testcase YAML files for details regarding each test's
 usage.
 
+#### Interface naming convention
+
+##### Environment variables
+
+ND_INTERFACE_[A][b]
+
+Where:
+
+A - The number of the switch to which the interface belongs
+b - An incrementing lower-case letter in range a-z
+
+###### Examples:
+
 ```bash
-export ND_INTERFACE_1=Ethernet1/1
-export ND_INTERFACE_2=Ethernet1/2
-export ND_INTERFACE_3=Ethernet1/3
+export ND_INTERFACE_1a=Ethernet1/1
+export ND_INTERFACE_2a=Ethernet1/1
+export ND_INTERFACE_2b=Ethernet1/2
+export ND_INTERFACE_3a=Ethernet2/4
 ```
 
+Above:
+
+- switch_1 has one interface; Ethernet1/1
+- switch_2 two interfaces; Ethernet1/1 and Ethernet1/2
+- switch_3 has one interface; Ethernet2/4
+
+##### Test case variables
+
+Interface variables within test cases follow the same convention
+as above, but are lowercase, and remove the leading ND_.
+
+###### Examples
+
+interface_1a - 1st interface on switch_1
+interface_1b - 2st interface on switch_1
+etc...
 
 """
 nd_role = environ.get("ND_ROLE", "dcnm_vrf")
@@ -109,9 +140,10 @@ switch_2 = environ.get("ND_SWITCH_2_IP4", "10.1.1.113")
 switch_3 = environ.get("ND_SWITCH_3_IP4", "10.1.1.108")
 
 # Base set of interfaces
-interface_1 = environ.get("ND_INTERFACE_1", "Ethernet1/1")
-interface_2 = environ.get("ND_INTERFACE_2", "Ethernet1/2")
-interface_3 = environ.get("ND_INTERFACE_3", "Ethernet1/3")
+interface_1a = environ.get("ND_INTERFACE_1a", "Ethernet1/1")
+interface_2a = environ.get("ND_INTERFACE_2a", "Ethernet1/1")
+interface_2b = environ.get("ND_INTERFACE_2b", "Ethernet1/2")
+interface_3a = environ.get("ND_INTERFACE_3a", "Ethernet1/3")
 
 if nd_role == "dcnm_vrf":
     # VXLAN/EVPN Fabric Name
@@ -129,18 +161,17 @@ if nd_role == "dcnm_vrf":
     #   - merged
     #     - NOT vrf-lite capable
     switch_3 = leaf_3
-    # interface_1
+    # interface_1a
     #   - no tests
-    # interface_2
-    #   - all tests
+    # interface_2a
+    #   - [deleted, merged, overridden, query, replaced, vrf_lite]
+    #     - switch_2 VRF LITE extensions
+    # interface_2b
+    #   - [vrf_lite]
     #      - switch_2 VRF LITE extensions
-    # interface_3
-    #   - merged
+    # interface_3a
+    #   - [merged, vrf_lite]
     #     - switch_3 non-vrf-lite capable switch
-    #   - overridden
-    #     - Removed from test due to unrelated IP POOL errors.
-    #     - It appears that fabric would need to have SUBNET
-    #       resource added?
     #
 elif nd_role == "vrf_lite":
     # VXLAN/EVPN Fabric Name
@@ -149,7 +180,7 @@ elif nd_role == "vrf_lite":
     switch_1 = spine_1
     # switch_2: vrf-lite capable
     switch_2 = spine_2
-    # switch_3: vrf-lite capable
+    # switch_3: vrf capable
     switch_3 = bgw_1
 else:
     switch_1 = leaf_1
@@ -170,6 +201,7 @@ output = {
             "ansible_password": nd_password,
             "ansible_python_interpreter": "python",
             "ansible_user": nd_username,
+            "testcase": nd_testcase,
             "fabric_1": fabric_1,
             "fabric_2": fabric_2,
             "fabric_3": fabric_3,
@@ -192,10 +224,10 @@ output = {
             "switch_1": switch_1,
             "switch_2": switch_2,
             "switch_3": switch_3,
-            "interface_1": interface_1,
-            "interface_2": interface_2,
-            "interface_3": interface_3,
-            "testcase": nd_testcase,
+            "interface_1a": interface_1a,
+            "interface_2a": interface_2a,
+            "interface_2b": interface_2b,
+            "interface_3a": interface_3a,
         },
     },
     "dcnm": {
