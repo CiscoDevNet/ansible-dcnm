@@ -31,13 +31,59 @@ Inventory is built from environment variables.
 
 # Usage
 
-See README.md in the top-level of this repository and define the environment
-variables described there appropriately for your environment.
+## Mandatory general variables
+
+The following general environment variables are related
+to credentials, controller reachability, and role/testcase
+assignment.  These should be considered mandatory; though
+the NXOS_* variables are not strictly needed unless called
+for by the specific role/testcase.
+
+Values below are examples, and should be modified for your
+setup and the roles/testcases you are running.
+
+```bash
+export NDFC_ROLE=dcnm_vrf       # The role to run
+export ND_TESTCASE=query        # The testcase to run
+export ND_IP4=10.1.1.1          # Controller IPv4 address
+export ND_PASSWORD=MyPassword   # Controller password
+export ND_USERNAME=admin        # Controller username
+export NXOS_PASSWORD=MyPassword # Switch password
+export NXOS_USERNAME=admin      # Switch username
+```
+
+## Fabrics
+
+We can add more fabrics later as the need arises...
+
+```bash
+export ND_FABRIC_1=MyFabric1   # Assigned to var fabric_1
+export ND_FABRIC_2=MyFabric2   # Assigned to var fabric_2
+export ND_FABRIC_3=MyFabric3   # Assigned to var fabric_3
+
+```
+
+## Interfaces
+
+Interface usage varies by testcase.  See individual
+testcase YAML files for details regarding each test's
+usage.
+
+```bash
+export ND_INTERFACE_1=Ethernet1/1
+export ND_INTERFACE_2=Ethernet1/2
+export ND_INTERFACE_3=Ethernet1/3
+```
+
+
 """
 nd_role = environ.get("ND_ROLE", "dcnm_vrf")
 nd_testcase = environ.get("ND_TESTCASE", "query")
 
 fabric_1 = environ.get("ND_FABRIC_1")
+fabric_2 = environ.get("ND_FABRIC_1")
+fabric_3 = environ.get("ND_FABRIC_1")
+
 nd_ip4 = environ.get("ND_IP4")
 nd_password = environ.get("ND_PASSWORD")
 nd_username = environ.get("ND_USERNAME", "admin")
@@ -53,6 +99,14 @@ leaf_3 = environ.get("ND_LEAF_3_IP4", "10.1.1.108")
 leaf_4 = environ.get("ND_LEAF_4_IP4", "10.1.1.109")
 spine_1 = environ.get("ND_SPINE_1_IP4", "10.1.1.112")
 spine_2 = environ.get("ND_SPINE_2_IP4", "10.1.1.113")
+
+# Placeholders if you'd rather directly set each of
+# the switch vars instead of setting the switch vars
+# from the switch roles above (as is done for dcnm_vrf
+# below).
+switch_1 = environ.get("ND_SWITCH_1_IP4", "10.1.1.112")
+switch_2 = environ.get("ND_SWITCH_2_IP4", "10.1.1.113")
+switch_3 = environ.get("ND_SWITCH_3_IP4", "10.1.1.108")
 
 # Base set of interfaces
 interface_1 = environ.get("ND_INTERFACE_1", "Ethernet1/1")
@@ -117,6 +171,8 @@ output = {
             "ansible_python_interpreter": "python",
             "ansible_user": nd_username,
             "fabric_1": fabric_1,
+            "fabric_2": fabric_2,
+            "fabric_3": fabric_3,
             "bgw1": bgw_1,
             "bgw2": bgw_2,
             "leaf1": leaf_1,
