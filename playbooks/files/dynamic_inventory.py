@@ -133,8 +133,7 @@ spine_2 = environ.get("ND_SPINE_2_IP4", "10.1.1.113")
 
 # Placeholders if you'd rather directly set each of
 # the switch vars instead of setting the switch vars
-# from the switch roles above (as is done for dcnm_vrf
-# below).
+# from the switch roles above.
 switch_1 = environ.get("ND_SWITCH_1_IP4", "10.1.1.112")
 switch_2 = environ.get("ND_SWITCH_2_IP4", "10.1.1.113")
 switch_3 = environ.get("ND_SWITCH_3_IP4", "10.1.1.108")
@@ -146,21 +145,19 @@ interface_2b = environ.get("ND_INTERFACE_2b", "Ethernet1/2")
 interface_3a = environ.get("ND_INTERFACE_3a", "Ethernet1/3")
 
 if nd_role == "dcnm_vrf":
+    pass
     # VXLAN/EVPN Fabric Name
     # fabric_1
     #   - all tests
     # switch_1
     #   - all tests
     #     - vrf capable
-    switch_1 = spine_1
     # switch_2
     #   - all tests
     #     - vrf-lite capable
-    switch_2 = spine_2
     # switch_3
     #   - merged
     #     - NOT vrf-lite capable
-    switch_3 = leaf_3
     # interface_1a
     #   - no tests
     # interface_2a
@@ -182,6 +179,8 @@ elif nd_role == "vrf_lite":
     switch_2 = spine_2
     # switch_3: vrf capable
     switch_3 = bgw_1
+elif nd_role == "scale":
+    pass
 else:
     switch_1 = leaf_1
     switch_2 = spine_1
