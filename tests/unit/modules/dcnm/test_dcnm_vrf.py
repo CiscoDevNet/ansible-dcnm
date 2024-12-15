@@ -127,6 +127,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.test_data.get("mock_vrf_attach_lite_object")
         )
         self.mock_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_vrf_lite_obj"))
+        self.mock_pools_top_down_vrf_vlan = copy.deepcopy(self.test_data.get("mock_pools_top_down_vrf_vlan"))
 
     def setUp(self):
         super(TestDcnmVrfModule, self).setUp()
@@ -437,6 +438,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -472,6 +474,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -519,6 +522,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 obj1,
                 obj2,
                 self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
             ]
 
         elif "query" in self._testMethodName:
@@ -719,10 +723,10 @@ class TestDcnmVrfModule(TestDcnmModule):
             )
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"],
-            "VRF LITE cannot be attached to switch 10.10.10.225 with role leaf",
-        )
+        msg = "DcnmVrf.update_attach_params_extension_values: "
+        msg += "VRF LITE cannot be attached to switch 10.10.10.225 "
+        msg += "with role leaf"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_merged_with_update(self):
         set_module_args(
@@ -1025,10 +1029,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
+            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
         )
         self.assertEqual(
-            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
+            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
         )
 
     def test_dcnm_vrf_lite_override_with_deletions(self):

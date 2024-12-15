@@ -81,7 +81,7 @@
 ###                MERGED                    ##
 ###############################################
 
-- name: TEST.1 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
+- name: TEST.1 - MERGED - [merged] Create, Attach, Deploy VLAN(600)+VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -90,7 +90,7 @@
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 500
+      vlan_id: 600
       attach:
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
@@ -152,7 +152,7 @@
     timeout: 60
   when: result_1e.changed == true
 
-- name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided)
+- name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided VLAN)
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: merged

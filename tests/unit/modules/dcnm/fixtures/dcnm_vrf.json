@@ -1101,6 +1101,36 @@
       }
     ]
   },
+  "mock_pools_top_down_vrf_vlan": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "allocatedFlag": true,
+        "allocatedIp": "201",
+        "allocatedOn": 1734051260507,
+        "allocatedScopeValue": "FDO211218HH",
+        "entityName": "VRF_1",
+        "entityType": "Device",
+        "hierarchicalKey": "0",
+        "id": 36407,
+        "ipAddress": "172.22.150.104",
+        "resourcePool": {
+            "dynamicSubnetRange": null,
+            "fabricName": "f1",
+            "hierarchicalKey": "f1",
+            "id": 0,
+            "overlapAllowed": false,
+            "poolName": "TOP_DOWN_VRF_VLAN",
+            "poolType": "ID_POOL",
+            "targetSubnet": 0,
+            "vrfName": "VRF_1"
+        },
+        "switchName": "cvd-1313-leaf"
+      }
+    ]
+  },
   "mock_vrf_lite_obj": {
    "RETURN_CODE":200,
    "METHOD":"GET",
