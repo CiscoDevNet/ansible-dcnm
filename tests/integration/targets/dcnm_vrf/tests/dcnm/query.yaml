@@ -56,12 +56,12 @@
     state: deleted
   register: result_setup_2
 
-- name: SETUP.2a - QUERY - Wait 40 seconds for controller and switch to sync
+- name: SETUP.2a - QUERY - Wait 60 seconds for controller and switch to sync
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
   wait_for:
-    timeout: 40
+    timeout: 60
   when: result_setup_2.changed == true
 
 - name: SETUP.3 - QUERY - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
@@ -235,7 +235,7 @@
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm
+            dot1q: 2 # optional controller can provide
       deploy: true
   register: result_4
 
@@ -283,7 +283,7 @@
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm
+            dot1q: 2 # optional controller can provide
       deploy: true
   register: result_5
 

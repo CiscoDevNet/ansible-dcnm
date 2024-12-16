@@ -91,6 +91,10 @@
   ansible.builtin.debug:
     var: result_setup_4
 
+- name: SETUP.4c - REPLACED - [debug] print result_setup_4
+  debug:
+    var: result_setup_4
+
 - assert:
     that:
     - 'result_setup_4.changed == true'
@@ -220,7 +224,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.3 - REPLACED - [merged] Create, Attach, Deploy VLAN+VRF LITE EXTENSION switch_2 (user provided)
+- name: TEST.3 - REPLACED - [merged] Create, Attach, Deploy VLAN+VRF+LITE switch_2 (user provided VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -240,7 +244,7 @@
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm
+            dot1q: 2 # optional controller can provide
       deploy: true
   register: result_3
 
@@ -272,7 +276,7 @@
     - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
     - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.4 - REPLACED - [replaced] Update existing VRF LITE extensions using Replace - Delete VRF LITE Attachment Only
+- name: TEST.4 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf4
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -326,7 +330,7 @@
     that:
     - 'result_4d.changed == false'
 
-- name: TEST.5 - REPLACED - [replaced] Update existing VRF LITE extensions using Replace - Create VRF LITE Attachment Only
+- name: TEST.5 - REPLACED - [replaced] Update existing VRF - Create VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf5
     fabric: "{{ fabric_1 }}"
     state: replaced
@@ -346,7 +350,7 @@
             neighbor_ipv4: 10.33.0.1 # optional
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm
+            dot1q: 2 # optional controller can provide
       deploy: true
   register: result_5
 

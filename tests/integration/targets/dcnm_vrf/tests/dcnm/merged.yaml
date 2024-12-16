@@ -219,7 +219,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided)
+- name: TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided VLAN)
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -296,7 +296,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.4 - MERGED - [merged] Create, Attach, Deploy VRF+VRF LITE EXTENSION - one optional (controller provided)
+- name: TEST.4 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION - (controller provided VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
