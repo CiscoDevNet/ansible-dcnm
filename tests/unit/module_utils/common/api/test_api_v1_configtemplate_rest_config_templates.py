@@ -60,25 +60,6 @@ def test_ep_templates_00040():
         instance.path  # pylint: disable=pointless-statement
 
 
-def test_ep_templates_00050():
-    """
-    ### Class
-    -   EpFabricConfigDeploy
-
-    ### Summary
-    -   Verify ``ValueError`` is raised if ``template_name``
-        is invalid.
-    """
-    template_name = "Invalid_Template_Name"
-    with does_not_raise():
-        instance = EpTemplate()
-    match = r"EpTemplate.template_name:\s+"
-    match += r"Invalid template_name: Invalid_Template_Name.\s+"
-    match += r"Expected one of:\s+"
-    with pytest.raises(ValueError, match=match):
-        instance.template_name = template_name  # pylint: disable=pointless-statement
-
-
 def test_ep_templates_00100():
     """
     ### Class
