@@ -21,7 +21,6 @@ import inspect
 import logging
 
 from ..config import Config
-from ........fabric.fabric_types import FabricTypes
 
 
 class Templates(Config):
@@ -39,7 +38,6 @@ class Templates(Config):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.fabric_types = FabricTypes()
 
         self.templates = f"{self.config}/templates"
         self._template_name = None
@@ -71,13 +69,6 @@ class Templates(Config):
 
     @template_name.setter
     def template_name(self, value):
-        method_name = inspect.stack()[0][3]
-        if value not in self.fabric_types.valid_fabric_template_names:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Invalid template_name: {value}. "
-            msg += "Expected one of: "
-            msg += f"{', '.join(self.fabric_types.valid_fabric_template_names)}."
-            raise ValueError(msg)
         self._template_name = value
 
 
