@@ -298,6 +298,9 @@
 # This command results in FAILURE (switch accounting log).  Adding a
 # wait_for will not help since this all happens within step TEST.6.
 # A config-deploy resolves the OUT-OF-SYNC VRF status.
+# NOTE: this happens ONLY when Fabric Settings -> Advanced -> Overlay Mode
+# is set to "config-profile" (which is the default).  It does not happen
+# if Overlay Mode is set to "cli".
 - name: TEST.3b - OVERRIDDEN - [dcnm_rest.POST] - config-deploy to workaround FAILED/OUT-OF-SYNC VRF status
   cisco.dcnm.dcnm_rest:
     method: POST
