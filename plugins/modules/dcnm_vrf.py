@@ -570,7 +570,7 @@ import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_get_url, dcnm_send, dcnm_version_supported, get_fabric_details,
+    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported, get_fabric_details,
     get_fabric_inventory_details, get_ip_sn_dict, get_ip_sn_fabric_dict,
     validate_list_of_dicts)
 
@@ -677,6 +677,36 @@ class DcnmVrf:
 
         msg = "DONE"
         self.log.debug(msg)
+
+    @staticmethod
+    def get_list_of_lists(lst: list, size: int) -> list[list]:
+        """
+        # Summary
+        
+        Given a list of items (lst) and a chunk size (size), return a
+        list of lists, where each list is size items in length.
+        
+        ## Raises
+        
+        -    ValueError if:
+                -    lst is not a list.
+                -    size is not an integer
+
+        ## Example
+        
+        print(get_lists_of_lists([1,2,3,4,5,6,7], 3)
+        
+        # -> [[1, 2, 3], [4, 5, 6], [7]]
+        """
+        if not isinstance(lst, list):
+            msg = "lst must be a list(). "
+            msg += f"Got {type(lst)}."
+            raise ValueError(msg)
+        if not isinstance(size, int):
+            msg = "size must be an integer. "
+            msg += f"Got {type(size)}."
+            raise ValueError(msg)        
+        return [lst[x:x+size] for x in range(0, len(lst), size)]
 
     @staticmethod
     def find_dict_in_list_by_key_value(search: list, key: str, value: str):
@@ -1117,10 +1147,11 @@ class DcnmVrf:
             self.log.debug(msg)
             return {}
 
-        # Not sure why this was needed?
-        # attach["ip_address"] = dcnm_get_ip_addr_info(
-        #     self.module, attach["ip_address"], None, None
-        # )
+        # dcnm_get_ip_addr_info converts serial_numbers,
+        # hostnames, etc, to ip addresses.
+        attach["ip_address"] = dcnm_get_ip_addr_info(
+            self.module, attach["ip_address"], None, None
+        )
 
         serial = self.ip_to_serial_number(attach["ip_address"])
 
@@ -1363,7 +1394,13 @@ class DcnmVrf:
         - serialNumber: The serial_number of the switch
         - vrfName: The vrf to search
         """
-        self.log.debug("ENTERED")
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}"
+        self.log.debug(msg)
+
+        msg = f"attach: {json.dumps(attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         verb = "GET"
         path = self.paths["GET_VRF_SWITCH"].format(
@@ -1372,6 +1409,9 @@ class DcnmVrf:
         msg = f"verb: {verb}, path: {path}"
         self.log.debug(msg)
         lite_objects = dcnm_send(self.module, verb, path)
+
+        msg = f"Returning lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         return copy.deepcopy(lite_objects)
 
@@ -1525,6 +1565,9 @@ class DcnmVrf:
                     self.log.debug(msg)
                     return
 
+                msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+    
                 for sdl in lite_objects["DATA"]:
                     for epv in sdl["switchDetailsList"]:
                         if not epv.get("extensionValues"):
@@ -3168,17 +3211,18 @@ class DcnmVrf:
             msg += f"Error detail: {error}"
             self.module.fail_json(msg)
 
-        id_list = [str(x) for x in id_list]
+        id_list_of_lists = self.get_list_of_lists([str(x) for x in id_list], 512)
 
-        msg = f"Releasing resource IDs: {','.join(id_list)}"
-        self.log.debug(msg)
+        for id_list in id_list_of_lists:
+            msg = f"Releasing resource IDs: {','.join(id_list)}"
+            self.log.debug(msg)
 
-        action = "deploy"
-        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
-        path += "/rest/resource-manager/resources"
-        path += f"?id={','.join(id_list)}"
-        verb = "DELETE"
-        self.send_to_controller(action, verb, path, None)
+            action = "deploy"
+            path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
+            path += "/rest/resource-manager/resources"
+            path += f"?id={','.join(id_list)}"
+            verb = "DELETE"
+            self.send_to_controller(action, verb, path, None)
 
     def release_orphaned_resources(self, vrf, is_rollback=False):
         """
