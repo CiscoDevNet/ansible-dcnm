@@ -17,14 +17,14 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import copy
 from unittest.mock import patch
 
-# from units.compat.mock import patch
-
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_vrf
-from .dcnm_module import TestDcnmModule, set_module_args, loadPlaybookData
 
-import copy
+from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
+
+# from units.compat.mock import patch
 
 
 class TestDcnmVrfModule(TestDcnmModule):
@@ -127,6 +127,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.test_data.get("mock_vrf_attach_lite_object")
         )
         self.mock_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_vrf_lite_obj"))
+        self.mock_pools_top_down_vrf_vlan = copy.deepcopy(self.test_data.get("mock_pools_top_down_vrf_vlan"))
 
     def setUp(self):
         super(TestDcnmVrfModule, self).setUp()
@@ -437,6 +438,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -472,6 +474,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -519,6 +522,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 obj1,
                 obj2,
                 self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
             ]
 
         elif "query" in self._testMethodName:
@@ -587,7 +591,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "Fabric test_fabric missing on DCNM or does not have any switches",
+            "Fabric test_fabric missing on the controller or does not have any switches",
         )
 
     def test_dcnm_vrf_get_have_failure(self):
@@ -595,7 +599,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(state="merged", fabric="test_fabric", config=self.playbook_config)
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(result.get("msg"), "Fabric test_fabric not present on DCNM")
+        self.assertEqual(result.get("msg"), "Fabric test_fabric not present on the controller")
 
     def test_dcnm_vrf_merged_redeploy(self):
         set_module_args(
@@ -707,7 +711,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
             result.get("msg"),
-            "vrf_id for vrf:test_vrf_1 cant be updated to a different value",
+            "DcnmVrf.diff_for_create: vrf_id for vrf test_vrf_1 cannot be updated to a different value",
         )
 
     def test_dcnm_vrf_merged_lite_invalidrole(self):
@@ -719,10 +723,10 @@ class TestDcnmVrfModule(TestDcnmModule):
             )
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"],
-            "VRF LITE cannot be attached to switch 10.10.10.225 with role leaf",
-        )
+        msg = "DcnmVrf.update_attach_params_extension_values: "
+        msg += "VRF LITE cannot be attached to switch 10.10.10.225 "
+        msg += "with role leaf"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_merged_with_update(self):
         set_module_args(
@@ -1025,10 +1029,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
+            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
         )
         self.assertEqual(
-            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
+            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
         )
 
     def test_dcnm_vrf_lite_override_with_deletions(self):
@@ -1144,9 +1148,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(state="deleted", fabric="test_fabric", config=self.playbook_config)
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"]["response"][2], "Deletion of vrfs test_vrf_1 has failed"
-        )
+        msg = "DcnmVrf.push_diff_delete: Deletion of vrfs test_vrf_1 has failed"
+        self.assertEqual(result["msg"]["response"][2], msg)
 
     def test_dcnm_vrf_query(self):
         set_module_args(
@@ -1270,16 +1273,16 @@ class TestDcnmVrfModule(TestDcnmModule):
             )
         )
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"], "ip_address is mandatory under attach parameters"
-        )
+        msg = "DcnmVrf.validate_input: "
+        msg += "vrf_name is mandatory under vrf parameters,"
+        msg += "ip_address is mandatory under attach parameters"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_validation_no_config(self):
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True)
-        self.assertEqual(
-            result["msg"], "config: element is mandatory for this state merged"
-        )
+        msg = "DcnmVrf.validate_input: config element is mandatory for merged state"
+        self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_12check_mode(self):
         self.version = 12
