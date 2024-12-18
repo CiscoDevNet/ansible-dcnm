@@ -1236,8 +1236,8 @@ class DcnmVrf:
         for key in dict1.keys():
             if key in skip_keys:
                 continue
-            dict1_value = str(dict1[key]).lower()
-            dict2_value = str(dict2[key]).lower()
+            dict1_value = str(dict1.get(key)).lower()
+            dict2_value = str(dict2.get(key)).lower()
             if dict1_value != dict2_value:
                 msg = f"Values differ: key {key} "
                 msg += f"dict1_value {dict1_value} != dict2_value {dict2_value}. "
