@@ -618,6 +618,13 @@ class DcnmVrf:
         msg += f"{json.dumps(self.config, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        # Setting self.conf_changed to class scope since, after refactoring,
+        # it is initialized and updated in one refactored method
+        # (diff_merge_create) and accessed in another refactored method
+        # (diff_merge_attach) which reset it to {} at the top of the method
+        # (which undid the update in diff_merge_create).
+        # TODO: Revisit this in Phase 2 refactoring.
+        self.conf_changed = {}
         self.check_mode = False
         self.have_create = []
         self.want_create = []
@@ -1249,7 +1256,7 @@ class DcnmVrf:
     def diff_for_create(self, want, have):
         self.log.debug("ENTERED")
 
-        conf_changed = False
+        configuration_changed = False
         if not have:
             return {}
 
@@ -1281,7 +1288,7 @@ class DcnmVrf:
             self.module.fail_json(msg=msg)
 
         elif templates_differ:
-            conf_changed = True
+            configuration_changed = True
             if want["vrfId"] is None:
                 # The vrf updates with missing vrfId will have to use existing
                 # vrfId from the instance of the same vrf on DCNM.
@@ -1291,11 +1298,11 @@ class DcnmVrf:
         else:
             pass
 
-        msg = f"returning conf_changed: {conf_changed}, "
+        msg = f"returning configuration_changed: {configuration_changed}, "
         msg += f"create: {create}"
         self.log.debug(msg)
 
-        return create, conf_changed
+        return create, configuration_changed
 
     def update_create_params(self, vrf, vlan_id=""):
         self.log.debug("ENTERED")
@@ -1981,7 +1988,7 @@ class DcnmVrf:
         msg = f"ENTERED with replace == {replace}"
         self.log.debug(msg)
 
-        conf_changed = {}
+        self.conf_changed = {}
 
         diff_create = []
         diff_create_update = []
@@ -2004,10 +2011,10 @@ class DcnmVrf:
                     msg += f"diff {json.dumps(diff, indent=4, sort_keys=True)}, "
                     self.log.debug(msg)
 
-                    msg = f"Updating conf_changed[{want_c['vrfName']}] "
+                    msg = f"Updating self.conf_changed[{want_c['vrfName']}] "
                     msg += f"with {conf_chg}"
                     self.log.debug(msg)
-                    conf_changed.update({want_c["vrfName"]: conf_chg})
+                    self.conf_changed.update({want_c["vrfName"]: conf_chg})
 
                     if diff:
                         msg = "Appending diff_create_update with "
@@ -2138,7 +2145,6 @@ class DcnmVrf:
 
         diff_attach = []
         diff_deploy = {}
-        conf_changed = {}
 
         all_vrfs = ""
         for want_a in self.want_attach:
@@ -2159,7 +2165,7 @@ class DcnmVrf:
                         if deploy_vrf_bool is True:
                             deploy_vrf = want_a["vrfName"]
                     else:
-                        if deploy_vrf_bool or conf_changed.get(
+                        if deploy_vrf_bool or self.conf_changed.get(
                             want_a["vrfName"], False
                         ):
                             deploy_vrf = want_a["vrfName"]
