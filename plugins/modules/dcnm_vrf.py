@@ -3148,16 +3148,16 @@ class DcnmVrf:
 
                 new_lan_attach_list.append(vrf_attach)
 
-        msg = "Updating diff_attach[lanAttachList] with: "
-        msg += f"{json.dumps(new_lan_attach_list, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+            msg = "Updating diff_attach[lanAttachList] with: "
+            msg += f"{json.dumps(new_lan_attach_list, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
-        diff_attach["lanAttachList"] = copy.deepcopy(new_lan_attach_list)
-        new_diff_attach_list.append(copy.deepcopy(diff_attach))
+            diff_attach["lanAttachList"] = copy.deepcopy(new_lan_attach_list)
+            new_diff_attach_list.append(copy.deepcopy(diff_attach))
 
-        msg = "new_diff_attach_list: "
-        msg += f"{json.dumps(new_diff_attach_list, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+            msg = "new_diff_attach_list: "
+            msg += f"{json.dumps(new_diff_attach_list, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
         action = "attach"
         verb = "POST"
