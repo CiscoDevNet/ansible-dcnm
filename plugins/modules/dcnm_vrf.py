@@ -570,9 +570,9 @@ import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported, get_fabric_details,
-    get_fabric_inventory_details, get_ip_sn_dict, get_ip_sn_fabric_dict,
-    validate_list_of_dicts)
+    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
+    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_ip_sn_fabric_dict, validate_list_of_dicts)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -689,20 +689,20 @@ class DcnmVrf:
     def get_list_of_lists(lst: list, size: int) -> list[list]:
         """
         # Summary
-        
+
         Given a list of items (lst) and a chunk size (size), return a
         list of lists, where each list is size items in length.
-        
+
         ## Raises
-        
+
         -    ValueError if:
                 -    lst is not a list.
                 -    size is not an integer
 
         ## Example
-        
+
         print(get_lists_of_lists([1,2,3,4,5,6,7], 3)
-        
+
         # -> [[1, 2, 3], [4, 5, 6], [7]]
         """
         if not isinstance(lst, list):
@@ -712,8 +712,8 @@ class DcnmVrf:
         if not isinstance(size, int):
             msg = "size must be an integer. "
             msg += f"Got {type(size)}."
-            raise ValueError(msg)        
-        return [lst[x:x+size] for x in range(0, len(lst), size)]
+            raise ValueError(msg)
+        return [lst[x : x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
     def find_dict_in_list_by_key_value(search: list, key: str, value: str):
@@ -1258,7 +1258,7 @@ class DcnmVrf:
 
         configuration_changed = False
         if not have:
-            return {}
+            return {}, configuration_changed
 
         create = {}
 
@@ -1574,7 +1574,7 @@ class DcnmVrf:
 
                 msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-    
+
                 for sdl in lite_objects["DATA"]:
                     for epv in sdl["switchDetailsList"]:
                         if not epv.get("extensionValues"):
