@@ -1887,8 +1887,12 @@ class DcnmIntf:
             port_id = re.findall(r"\d+", name)
             return ("vPC" + str(port_id[0]), port_id[0])
         if "sub_int" == if_type:
-            port_id = re.findall(r"\d+\/\d+.\d+", name)
-            return ("Ethernet" + str(port_id[0]), port_id[0])
+            if re.findall(r"\d+\/\d+.\d+", name):
+                port_id = re.findall(r"\d+\/\d+.\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
+            if re.findall(r"\d+.\d+", name):
+                port_id = re.findall(r"\d+\.\d+", name)
+                return ("Port-channel" + str(port_id[0]), port_id[0])
         if "lo" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("Loopback" + str(port_id[0]), port_id[0])
