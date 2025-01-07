@@ -827,3 +827,54 @@ def test_controller_version_00250(controller_version, key, expected) -> None:
         instance.rest_send = rest_send
         instance.refresh()
     assert instance.version_patch == expected
+
+
+@pytest.mark.parametrize(
+    "key, expected",
+    [
+        ("test_controller_version_00300a", False),
+        ("test_controller_version_00300b", True),
+    ],
+)
+def test_controller_version_00300(controller_version, key, expected) -> None:
+    """
+    ### Classes and Methods
+
+    -   ``ControllerVersion()``
+            -   ``refresh``
+            -   ``is_controller_version_4x``
+
+    ### Test
+
+    - is_controller_version_4x returns expected values
+
+    ### Description
+
+    ``is_controller_version_4x`` returns:
+
+    - True, if int(self.version_major) == 12 and int(self.version_minor) >= 3.
+    - False, if int(self.version_major) == 12 and int(self.version_minor) < 3.
+
+    ### Expected result
+
+    1. test_controller_version_00300a is True
+    2. test_controller_version_00300b is False
+    """
+
+    def responses():
+        yield responses_ep_version(key)
+
+    gen_responses = ResponseGenerator(responses())
+
+    sender = Sender()
+    sender.ansible_module = MockAnsibleModule()
+    sender.gen = gen_responses
+    rest_send = RestSend(params)
+    rest_send.response_handler = ResponseHandler()
+    rest_send.sender = sender
+
+    with does_not_raise():
+        instance = controller_version
+        instance.rest_send = rest_send
+        instance.refresh()
+    assert instance.is_controller_version_4x == expected
