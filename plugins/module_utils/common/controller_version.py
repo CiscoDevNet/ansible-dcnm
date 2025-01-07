@@ -276,3 +276,26 @@ class ControllerVersion:
         if self.version is None:
             return None
         return (self._get("version").split("."))[2]
+
+    @property
+    def is_controller_version_4x(self) -> bool:
+        """
+        ### Summary
+
+        -   Return True if the controller version implies ND 4.0 or higher.
+        -   Return False otherwise.
+        """
+        method_name = inspect.stack()[0][3]
+
+        result = None
+        if int(self.version_major) == 12 and int(self.version_minor) < 3:
+            result = False
+        else:
+            result = True
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg = f"self.version: {self.version}, "
+        msg += f"Controller is version 4.x: {result}"
+        self.log.debug(msg)
+
+        return result

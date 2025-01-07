@@ -3060,21 +3060,15 @@ class Merged(Common):
             msg += f"self.features: {self.features}"
             self.log.debug(msg)
 
+            is_4x = self.controller_version.is_controller_version_4x
+
             msg = f"{self.class_name}.{method_name}: "
             msg += f"fabric_type: {fabric_type}, "
-            msg += f"configurable: {self.features.get(fabric_type)}"
+            msg += f"configurable: {self.features.get(fabric_type)}, "
+            msg += f"is_4x: {is_4x}"
             self.log.debug(msg)
 
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "self.controller_version.version: "
-            msg += f"{self.controller_version.version}"
-            self.log.debug(msg)
-
-            if (
-                self.features.get(fabric_type) is False
-                and int(self.controller_version.version_major) == 12
-                and int(self.controller_version.version_minor) < 3
-            ):
+            if self.features.get(fabric_type) is False and is_4x is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
@@ -3405,21 +3399,15 @@ class Replaced(Common):
                 self.need_create.append(want)
                 continue
 
+            is_4x = self.controller_version.is_controller_version_4x
+
             msg = f"{self.class_name}.{method_name}: "
             msg += f"fabric_type: {fabric_type}, "
-            msg += f"configurable: {self.features.get(fabric_type)}"
+            msg += f"configurable: {self.features.get(fabric_type)}, "
+            msg += f"is_4x: {is_4x}"
             self.log.debug(msg)
 
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "self.controller_version.version: "
-            msg += f"{self.controller_version.version}"
-            self.log.debug(msg)
-
-            if (
-                self.features.get(fabric_type) is False
-                and int(self.controller_version.version_major) == 12
-                and int(self.controller_version.version_minor) < 3
-            ):
+            if self.features.get(fabric_type) is False and is_4x is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
