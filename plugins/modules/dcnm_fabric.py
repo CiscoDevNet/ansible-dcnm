@@ -2671,7 +2671,9 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
+
 from ..module_utils.common.controller_features import ControllerFeatures
+from ..module_utils.common.controller_version import ControllerVersion
 from ..module_utils.common.exceptions import ControllerResponseError
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.common.properties import Properties
@@ -2712,6 +2714,7 @@ class Common(FabricCommon):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.controller_features = ControllerFeatures()
+        self.controller_version = ControllerVersion()
         self.features = {}
         self._implemented_states = set()
 
@@ -2898,6 +2901,27 @@ class Common(FabricCommon):
             self.controller_features.filter = self.fabric_types.feature_name
             self.features[fabric_type] = self.controller_features.started
 
+    def get_controller_version(self):
+        """
+        ### Summary
+        Initialize and refresh self.controller_version.
+
+        ### Raises
+
+        -   ``ValueError`` if the controller returns an error when attempting
+            to retrieve the controller version.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.controller_version.rest_send = self.rest_send
+            self.controller_version.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Controller returned error when attempting to retrieve "
+            msg += "controller version. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
 
 class Deleted(Common):
     """
@@ -3032,7 +3056,25 @@ class Merged(Common):
             fabric_name = want.get("FABRIC_NAME", None)
             fabric_type = want.get("FABRIC_TYPE", None)
 
-            if self.features.get("fabric_type") is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.features: {self.features}"
+            self.log.debug(msg)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"fabric_type: {fabric_type}, "
+            msg += f"configurable: {self.features.get(fabric_type)}"
+            self.log.debug(msg)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.controller_version.version: "
+            msg += f"{self.controller_version.version}"
+            self.log.debug(msg)
+
+            if (
+                self.features.get(fabric_type) is False
+                and int(self.controller_version.version_major) == 12
+                and int(self.controller_version.version_minor) < 3
+            ):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
@@ -3139,6 +3181,8 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
+
+        self.get_controller_version()
 
         self.fabric_details.rest_send = self.rest_send
         self.fabric_summary.rest_send = self.rest_send
@@ -3361,7 +3405,21 @@ class Replaced(Common):
                 self.need_create.append(want)
                 continue
 
-            if self.features.get("fabric_type") is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"fabric_type: {fabric_type}, "
+            msg += f"configurable: {self.features.get(fabric_type)}"
+            self.log.debug(msg)
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.controller_version.version: "
+            msg += f"{self.controller_version.version}"
+            self.log.debug(msg)
+
+            if (
+                self.features.get(fabric_type) is False
+                and int(self.controller_version.version_major) == 12
+                and int(self.controller_version.version_minor) < 3
+            ):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
@@ -3386,6 +3444,8 @@ class Replaced(Common):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
+
+        self.get_controller_version()
 
         self.fabric_details.rest_send = self.rest_send
         self.fabric_summary.rest_send = self.rest_send

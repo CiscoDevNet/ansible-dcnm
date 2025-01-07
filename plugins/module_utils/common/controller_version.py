@@ -229,14 +229,14 @@ class ControllerVersion:
     @property
     def version_major(self):
         """
-        Return the controller major version, if it exists.
+        Return the controller major version as a string, if it exists.
         Return None otherwise
 
         We are assuming semantic versioning based on:
         https://semver.org
 
         Possible values:
-            if version is 12.1.2e, return 12
+            if version is 12.1.2e, return "12"
             None
         """
         if self.version is None:
@@ -246,7 +246,7 @@ class ControllerVersion:
     @property
     def version_minor(self):
         """
-        Return the controller minor version, if it exists.
+        Return the controller minor version as a string, if it exists.
         Return None otherwise
 
         We are assuming semantic versioning based on:
@@ -263,7 +263,7 @@ class ControllerVersion:
     @property
     def version_patch(self):
         """
-        Return the controller minor version, if it exists.
+        Return the controller patch version as a string, if it exists.
         Return None otherwise
 
         We are assuming semantic versioning based on:
