@@ -478,6 +478,7 @@ import json
 import re
 from ansible.module_utils.six.moves.urllib.parse import urlencode
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import ConversionUtils
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send,
     validate_list_of_dicts,
@@ -509,6 +510,7 @@ class DcnmInventory:
         self.node_migration = False
         self.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
         self.switch_snos = []
+        self.conversion = ConversionUtils()
 
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -525,9 +527,10 @@ class DcnmInventory:
 
         for have_c in self.have_create:
             # Idempotence - Bootstrap but already in inventory
+            sw_ip = self.conversion.make_ipv4_or_ipv6_address(have_c["switches"][0]["ipaddr"])
             if poap_upd["serialNumber"]:
                 if (
-                    poap_upd["ipAddress"] == have_c["switches"][0]["ipaddr"]
+                    poap_upd["ipAddress"] == sw_ip
                     and poap_upd["serialNumber"] == have_c["switches"][0]["serialNumber"]
                 ):
                     return {}
@@ -535,7 +538,7 @@ class DcnmInventory:
             # Idempotence - Preprovision but already in inventory
             if poap_upd["preprovisionSerial"] and not poap_upd["serialNumber"]:
                 if (
-                    poap_upd["ipAddress"] == have_c["switches"][0]["ipaddr"]
+                    poap_upd["ipAddress"] == sw_ip
                 ):
                     return {}
 
@@ -694,7 +697,8 @@ class DcnmInventory:
         if "DATA" in response:
             switch = []
             for sw in response["DATA"]:
-                if inv["seedIP"] == sw["ipaddr"]:
+                sw_ip = self.conversion.make_ipv4_or_ipv6_address(sw["ipaddr"])
+                if inv["seedIP"] == sw_ip:
                     switch.append(sw)
                     return switch
             return 0
@@ -1411,7 +1415,8 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
-                if lan["ipAddress"] == create["switches"][0]["ipaddr"]:
+                lan_ip = self.conversion.make_ipv4_or_ipv6_address(lan["ipAddress"])
+                if lan_ip == create["switches"][0]["ipaddr"]:
                     set_lan = {
                         "switchIds": lan["switchDbID"],
                         "userName": create["username"],
@@ -1446,7 +1451,8 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
-                if role["ipAddress"] == create["switches"][0]["ipaddr"]:
+                role_ip = self.conversion.make_ipv4_or_ipv6_address(role["ipAddress"])
+                if role_ip == create["switches"][0]["ipaddr"]:
                     method = "PUT"
                     path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
                         role["switchDbID"], create["role"].replace("_", "%20")
@@ -1468,7 +1474,8 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
-                if role["ipAddress"] == create["ipAddress"]:
+                role_ip = self.conversion.make_ipv4_or_ipv6_address(role["ipAddress"])
+                if role_ip == create["ipAddress"]:
                     method = "PUT"
                     path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
                         role["switchDbID"], create["role"].replace("_", "%20")
@@ -1614,8 +1621,9 @@ class DcnmInventory:
         if self.config and inv_objects["DATA"]:
             for want_c in self.want_create:
                 for inv in inv_objects["DATA"]:
+                    inv_ip = self.conversion.make_ipv4_or_ipv6_address(inv["ipAddress"])
                     if want_c["role"] == "None" and want_c["seedIP"] != "None":
-                        if want_c["seedIP"] == inv["ipAddress"]:
+                        if want_c["seedIP"] == inv_ip:
                             query.append(inv)
                             continue
                     elif want_c["role"] != "None" and want_c["seedIP"] == "None":
@@ -1623,7 +1631,7 @@ class DcnmInventory:
                             query.append(inv)
                             continue
                     else:
-                        if want_c["seedIP"] == inv["ipAddress"] and want_c[
+                        if want_c["seedIP"] == inv_ip and want_c[
                             "role"
                         ] == inv["switchRole"].replace(" ", "_"):
                             query.append(inv)

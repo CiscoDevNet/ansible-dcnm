@@ -38,4 +38,4 @@
     - 'controller_version != "Unable to determine controller version"'
   tags: sanity
 
-- { include: dcnm.yaml, tags: ['dcnm'] }
+- { include_tasks: dcnm.yaml, tags: ['dcnm'] }

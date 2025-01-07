@@ -19,6 +19,7 @@ __author__ = "Allen Robel"
 
 import inspect
 import re
+import ipaddress
 
 
 class ConversionUtils:
@@ -171,3 +172,13 @@ class ConversionUtils:
         msg += "Fabric name must start with a letter A-Z or a-z and "
         msg += "contain only the characters in: [A-Z,a-z,0-9,-,_]."
         raise ValueError(msg)
+
+    @staticmethod
+    def make_ipv4_or_ipv6_address(ip_addr):
+        try:
+            if (isinstance(ipaddress.ip_address(ip_addr), ipaddress.IPv6Address)
+                    or isinstance(ipaddress.ip_address(ip_addr), ipaddress.IPv4Address)):
+                sw_ip = str(ipaddress.ip_address(ip_addr))
+        except ValueError:
+            sw_ip = ip_addr
+        return sw_ip
