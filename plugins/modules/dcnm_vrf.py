@@ -567,14 +567,19 @@ import json
 import logging
 import re
 import time
+from typing import Tuple
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
-    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
-    get_ip_sn_fabric_dict, validate_list_of_dicts)
 
 from ..module_utils.common.log_v2 import Log
+from ..module_utils.network.dcnm.dcnm import (dcnm_get_ip_addr_info,
+                                              dcnm_get_url, dcnm_send,
+                                              dcnm_version_supported,
+                                              get_fabric_details,
+                                              get_fabric_inventory_details,
+                                              get_ip_sn_dict,
+                                              get_ip_sn_fabric_dict,
+                                              validate_list_of_dicts)
 
 dcnm_vrf_paths = {
     11: {
@@ -659,7 +664,12 @@ class DcnmVrf:
         self.inventory_data = get_fabric_inventory_details(self.module, self.fabric)
         self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
         self.sn_ip = {value: key for (key, value) in self.ip_sn.items()}
+        self.per_vrf_loopback_auto_provision = None
         self.fabric_data = get_fabric_details(self.module, self.fabric)
+
+        msg = f"self.fabric_data: {json.dumps(self.fabric_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.fabric_type = self.fabric_data.get("fabricType")
         self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
         if self.dcnm_version > 12:
@@ -796,6 +806,50 @@ class DcnmVrf:
             if dict1.get(prop) != dict2.get(prop):
                 return False
         return True
+
+    def set_fabric_properties_of_interest(self) -> None:
+        """
+        # Summary
+
+        From self.fabric_data, extract parameters that are used within
+        the DcnmVrf class.
+
+        ## Parameters set
+
+        self.per_vrf_loopback_auto_provision : bool
+
+        ## Raises
+
+        None
+
+        ## TODO: convert unit tests to pytest
+
+        Would be better to use module_utils/fabric/fabric_details_v2.py for this,
+        but anything related to RestSend() and Sender() causes unit tests based on
+        TestDcnmModule.execute_module() to fail.
+
+        Investigate converting all unit tests for DcnmVrf module to pytest.
+        """
+        msg = f"self.fabric_data: {json.dumps(self.fabric_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        nv_pairs = self.fabric_data.get("nvPairs")
+        if nv_pairs is None:
+            self.log.debug("Setting self.per_vrf_loopback_auto_provision = False")
+            self.per_vrf_loopback_auto_provision = False
+            return
+
+        value = nv_pairs.get("PER_VRF_LOOPBACK_AUTO_PROVISION")
+        if value == "false":
+            self.per_vrf_loopback_auto_provision = False
+        elif value == "true":
+            self.per_vrf_loopback_auto_provision = True
+        elif value is None:
+            self.per_vrf_loopback_auto_provision = False
+        else:
+            self.per_vrf_loopback_auto_provision = value
+        msg = f"self.per_vrf_loopback_auto_provision: type: {type(self.per_vrf_loopback_auto_provision)}, "
+        msg += f"value: {self.per_vrf_loopback_auto_provision}"
+        self.log.debug(msg)
 
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
         """
@@ -2606,7 +2660,7 @@ class DcnmVrf:
         if not self.diff_detach:
             return
 
-        # For multiste fabric, update the fabric name to the child fabric
+        # For multisite fabric, update the fabric name to the child fabric
         # containing the switches
         if self.fabric_type == "MFD":
             for elem in self.diff_detach:
@@ -2620,11 +2674,16 @@ class DcnmVrf:
 
         action = "attach"
         path = self.paths["GET_VRF"].format(self.fabric)
-        detach_path = path + "/attachments"
+
+        if self.per_vrf_loopback_auto_provision is True:
+            path += "/attachments?quick-Attach=true"
+        elif self.per_vrf_loopback_auto_provision is False:
+            path += "/attachments"
+        else:
+            path += "/attachments"
+
         verb = "POST"
-        self.send_to_controller(
-            action, verb, detach_path, self.diff_detach, is_rollback
-        )
+        self.send_to_controller(action, verb, path, self.diff_detach, is_rollback)
 
     def push_diff_undeploy(self, is_rollback=False):
         """
@@ -3162,7 +3221,13 @@ class DcnmVrf:
         action = "attach"
         verb = "POST"
         path = self.paths["GET_VRF"].format(self.fabric)
-        attach_path = path + "/attachments"
+
+        if self.per_vrf_loopback_auto_provision is True:
+            path += "/attachments?quick-Attach=true"
+        elif self.per_vrf_loopback_auto_provision is False:
+            path += "/attachments"
+        else:
+            path += "/attachments"
 
         # For multisite fabrics, update the fabric name to the child fabric
         # containing the switches.
@@ -3171,9 +3236,7 @@ class DcnmVrf:
                 for node in elem["lanAttachList"]:
                     node["fabric"] = self.sn_fab[node["serialNumber"]]
 
-        self.send_to_controller(
-            action, verb, attach_path, new_diff_attach_list, is_rollback
-        )
+        self.send_to_controller(action, verb, path, new_diff_attach_list, is_rollback)
 
     def push_diff_deploy(self, is_rollback=False):
         """
@@ -3528,6 +3591,61 @@ class DcnmVrf:
 
         return copy.deepcopy(spec)
 
+    def validate_vrf_lite_for_per_vrf_loopback_provision(
+        self, vrf_lite_list: list
+    ) -> list[str]:
+        """
+        # Summary
+
+        If the fabric is configured with PER_VRF_LOOPBACK_AUTO_PROVISION,
+        the playbook vrf_lite config must not contain certain keys, as
+        described in invalid_keys below.
+
+        This method verifies the above.
+
+        ## Returns
+
+        - True if vrf_lite_dict is valid.
+        - False if vrf_lite_dict contains invalid key/values.
+        """
+        msg = "ENTERED. "
+        msg += f"vrf_lite: {json.dumps(vrf_lite_list, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        result: list[str] = []
+
+        if self.per_vrf_loopback_auto_provision is False:
+            msg = "per_vrf_loopback_auto_provision is not configured. "
+            msg += "Returning []"
+            self.log.debug(msg)
+            return result
+        invalid_keys = [
+            "ipv4_addr",
+            "neighbor_ipv4",
+            "ipv6_addr",
+            "neighbor_ipv6",
+            "dot1q",
+        ]
+        msg = "per_vrf_loopback_auto_provision is configured on fabric, "
+        msg += f"{self.fabric}. "
+        msg += "The following vrf_lite configuration items must be null, "
+        msg += "but contain a value: "
+        bad_keys = ["key(value)"]
+        for vrf_lite_dict in vrf_lite_list:
+            for key in invalid_keys:
+                value = vrf_lite_dict.get(key)
+                if value is not None:
+                    bad_keys.append(f"{key}({value})")
+        if len(bad_keys) != 0:
+            msg += ",".join(bad_keys)
+            self.log.debug(msg)
+            return [msg]
+        msg = "per_vrf_loopback_auto_provision is configured, "
+        msg += "and vrf_lite configuration is valid. "
+        msg = "Returning []"
+        self.log.debug(msg)
+        return []
+
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
         method_name = inspect.stack()[0][3]
@@ -3618,7 +3736,19 @@ class DcnmVrf:
                                 msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
                                 self.log.debug(msg)
 
-                                lite["vrf_lite"] = valid_lite
+                                msg = f"state {self.state}: "
+                                msg += "invalid_lite: "
+                                msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
+                                self.log.debug(msg)
+
+                                result = self.validate_vrf_lite_for_per_vrf_loopback_provision(
+                                    valid_lite
+                                )
+
+                                if result == []:
+                                    lite["vrf_lite"] = valid_lite
+                                else:
+                                    invalid_lite.extend(result)
                                 invalid_params.extend(invalid_lite)
                     self.validated.append(vrf)
 
@@ -3647,7 +3777,24 @@ class DcnmVrf:
                                 valid_lite, invalid_lite = validate_list_of_dicts(
                                     lite["vrf_lite"], lite_spec
                                 )
-                                lite["vrf_lite"] = valid_lite
+                                msg = f"state {self.state}: "
+                                msg += "valid_lite: "
+                                msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
+                                self.log.debug(msg)
+
+                                msg = f"state {self.state}: "
+                                msg += "invalid_lite: "
+                                msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
+                                self.log.debug(msg)
+
+                                result = self.validate_vrf_lite_for_per_vrf_loopback_provision(
+                                    valid_lite
+                                )
+
+                                if result == []:
+                                    lite["vrf_lite"] = valid_lite
+                                else:
+                                    invalid_lite.extend(result)
                                 invalid_params.extend(invalid_lite)
                     self.validated.append(vrf)
 
@@ -3658,7 +3805,25 @@ class DcnmVrf:
                     msg += f"{','.join(invalid_params)}"
                     self.module.fail_json(msg=msg)
 
-    def handle_response(self, res, op):
+    def handle_response(self, res, op) -> Tuple[bool, bool]:
+        """
+        # Summary
+
+        Handle responses from the controller.
+
+        ## Returns
+
+        - fail
+            - True if the response indicates failure.
+            - False otherwise.
+        - changed
+            - True if the response indicates something was changed.
+            - False otherwise
+
+        ## Raises
+
+        None
+        """
         self.log.debug("ENTERED")
 
         fail = False
@@ -3761,6 +3926,8 @@ def main():
         msg = f"Fabric {dcnm_vrf.fabric} missing on the controller or "
         msg += "does not have any switches"
         module.fail_json(msg=msg)
+
+    dcnm_vrf.set_fabric_properties_of_interest()
 
     dcnm_vrf.validate_input()
 
