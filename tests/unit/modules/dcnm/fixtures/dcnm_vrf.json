@@ -1455,6 +1455,7 @@
      "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
      "MS_LOOPBACK_ID": "100",
      "MS_UNDERLAY_AUTOCONFIG": "true",
+     "PER_VRF_LOOPBACK_AUTO_PROVISION": "false",
      "RP_SERVER_IP": "",
      "TOR_AUTO_DEPLOY": "false",
      "default_network": "Default_Network_Universal",
