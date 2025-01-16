@@ -570,6 +570,29 @@ import time
 from typing import Tuple
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
+    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_ip_sn_fabric_dict, validate_list_of_dicts)
+
+from ..module_utils.common.log_v2 import Log
+
+dcnm_vrf_paths = {
+    11: {
+        "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
+        "GET_VRF_ATTACH": "/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
+        "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
+        "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
+        "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+    },
+    12: {
+        "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
+        "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
+        "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
+        "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
+        "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+    },
+}
 
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (dcnm_get_ip_addr_info,
@@ -600,7 +623,6 @@ dcnm_vrf_paths = {
 
 
 class DcnmVrf:
-
     def __init__(self, module):
         self.class_name = self.__class__.__name__
 
@@ -1000,7 +1022,6 @@ class DcnmVrf:
                             have_is_attached = self.to_bool("isAttached", have)
 
                             if have_is_attached != want_is_attached:
-
                                 if "isAttached" in want:
                                     del want["isAttached"]
 
