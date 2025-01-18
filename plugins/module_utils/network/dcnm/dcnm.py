@@ -283,6 +283,47 @@ def get_ip_sn_fabric_dict(inventory_data):
 
     return ip_fab, sn_fab
 
+def get_ip_fabric_dict(inventory_data):
+    """
+    Maps the switch IP Address/Serial No. in the multisite inventory
+    data to respective member site fabric name to which it was actually added.
+
+    Parameters:
+        inventory_data: Fabric inventory data
+
+    Returns:
+        dict: Switch ip - fabric_name mapping
+        dict: Switch serial_no - fabric_name mapping
+    """
+    ip_fab = {}
+
+    for device_key in inventory_data.keys():
+        ip = inventory_data[device_key].get("ipAddress")
+        fabric_name = inventory_data[device_key].get("fabricName")
+        ip_fab.update({ip: fabric_name})
+
+    return ip_fab
+
+def get_sn_fabric_dict(inventory_data):
+    """
+    Maps the switch IP Address/Serial No. in the multisite inventory
+    data to respective member site fabric name to which it was actually added.
+
+    Parameters:
+        inventory_data: Fabric inventory data
+
+    Returns:
+        dict: Switch ip - fabric_name mapping
+        dict: Switch serial_no - fabric_name mapping
+    """
+    sn_fab = {}
+
+    for device_key in inventory_data.keys():
+        sn = inventory_data[device_key].get("serialNumber")
+        fabric_name = inventory_data[device_key].get("fabricName")
+        sn_fab.update({sn: fabric_name})
+
+    return sn_fab
 
 # sw_elem can be ip_addr, hostname, dns name or serial number. If the given
 # sw_elem is ip_addr, then it is returned as is. If DNS or hostname then a DNS
