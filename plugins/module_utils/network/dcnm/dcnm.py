@@ -280,8 +280,7 @@ def get_ip_sn_fabric_dict(inventory_data):
 
 def get_ip_fabric_dict(inventory_data):
     """
-    Maps the switch IP Address/Serial No. in the multisite inventory
-    data to respective member site fabric name to which it was actually added.
+    Maps the switch ip address to to switch's member fabric.
 
     Parameters:
         inventory_data: Fabric inventory data
@@ -302,8 +301,7 @@ def get_ip_fabric_dict(inventory_data):
 
 def get_sn_fabric_dict(inventory_data):
     """
-    Maps the switch IP Address/Serial No. in the multisite inventory
-    data to respective member site fabric name to which it was actually added.
+    Maps the switch serial number to the switch's member fabric.
 
     Parameters:
         inventory_data: Fabric inventory data

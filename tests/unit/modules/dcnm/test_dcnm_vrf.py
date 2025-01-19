@@ -597,7 +597,6 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_12merged_new" in self._testMethodName:
             self.init_data()
-            # HERE
             self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
