@@ -51,7 +51,7 @@ dcnm_template_type_xlations = {
     "boolean": "bool",
     "enum": "str",
     "ipV4AddressWithSubnet": "ipv4_subnet",
-    "ipV6AddressWithSubnet": "ipv6_subnet"
+    "ipV6AddressWithSubnet": "ipv6_subnet",
 }
 
 
@@ -73,15 +73,11 @@ def validate_ip_address_format(type, item, invalid_params):
                 subnet = item.split("/")[1]
                 if not subnet or int(subnet) > mask_len:
                     invalid_params.append(
-                        "{0} : Invalid {1} gw/subnet syntax".format(
-                            item, addr_type
-                        )
+                        "{0} : Invalid {1} gw/subnet syntax".format(item, addr_type)
                     )
             else:
                 invalid_params.append(
-                    "{0} : Invalid {1} gw/subnet syntax".format(
-                        item, addr_type
-                    )
+                    "{0} : Invalid {1} gw/subnet syntax".format(item, addr_type)
                 )
         try:
             socket.inet_pton(addr_family, address)
@@ -176,9 +172,7 @@ def validate_list_of_dicts(param_list, spec, module=None):
                         module.no_log_values.add(item)
                     else:
                         msg = "\n\n'{0}' is a no_log parameter".format(param)
-                        msg += (
-                            "\nAnsible module object must be passed to this "
-                        )
+                        msg += "\nAnsible module object must be passed to this "
                         msg += "\nfunction to ensure it is not logged\n\n"
                         raise Exception(msg)
 
@@ -283,6 +277,7 @@ def get_ip_sn_fabric_dict(inventory_data):
 
     return ip_fab, sn_fab
 
+
 def get_ip_fabric_dict(inventory_data):
     """
     Maps the switch IP Address/Serial No. in the multisite inventory
@@ -303,6 +298,7 @@ def get_ip_fabric_dict(inventory_data):
         ip_fab.update({ip: fabric_name})
 
     return ip_fab
+
 
 def get_sn_fabric_dict(inventory_data):
     """
@@ -325,6 +321,7 @@ def get_sn_fabric_dict(inventory_data):
 
     return sn_fab
 
+
 # sw_elem can be ip_addr, hostname, dns name or serial number. If the given
 # sw_elem is ip_addr, then it is returned as is. If DNS or hostname then a DNS
 # lookup is performed to get the IP address to be returned. If not ip_sn
@@ -334,7 +331,9 @@ def dcnm_get_ip_addr_info(module, sw_elem, ip_sn, hn_sn):
 
     msg_dict = {"Error": ""}
     msg = 'Given switch elem = "{}" is not a valid one for this fabric\n'
-    msg1 = 'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+    msg1 = (
+        'Given switch elem = "{}" cannot be validated, provide a valid ip_sn object\n'
+    )
 
     # Check if the given sw_elem is a v4 ip_addr
     try:
@@ -462,9 +461,7 @@ def dcnm_reset_connection(module):
 
     conn = Connection(module._socket_path)
 
-    return conn.login(
-        conn.get_option("remote_user"), conn.get_option("password")
-    )
+    return conn.login(conn.get_option("remote_user"), conn.get_option("password"))
 
 
 def dcnm_version_supported(module):
@@ -567,16 +564,14 @@ def dcnm_get_url(module, fabric, path, items, module_name):
         elif iter != (send_count - 1):
             itemstr = ",".join(
                 itemlist[
-                    (iter * (len(itemlist) // send_count)):(
+                    (iter * (len(itemlist) // send_count)) : (
                         (iter + 1) * (len(itemlist) // send_count)
                     )
                 ]
             )
             url = path.format(fabric, itemstr)
         else:
-            itemstr = ",".join(
-                itemlist[iter * (len(itemlist) // send_count):]
-            )
+            itemstr = ",".join(itemlist[iter * (len(itemlist) // send_count) :])
             url = path.format(fabric, itemstr)
 
         att_objects = dcnm_send(module, method, url)
@@ -623,12 +618,7 @@ def dcnm_get_template_details(module, version, name):
         module, "GET", dcnm_paths[version]["TEMPLATE_WITH_NAME"].format(name)
     )
 
-    if (
-        resp
-        and resp["RETURN_CODE"] == 200
-        and resp["MESSAGE"] == "OK"
-        and resp["DATA"]
-    ):
+    if resp and resp["RETURN_CODE"] == 200 and resp["MESSAGE"] == "OK" and resp["DATA"]:
         if resp["DATA"]["name"] == name:
             return resp["DATA"]
         else:
@@ -658,20 +648,12 @@ def dcnm_update_arg_specs(mspec, arg_specs):
                     # Given key is included in the mspec. So mark this a 'true' in the aspec. Final 'eval'
                     # on the item["required"] will yield the desired bool value.
                     item["required"] = item["required"].replace("true", "True")
-                    item["required"] = item["required"].replace(
-                        "false", "False"
-                    )
-                    item["required"] = eval(
-                        item["required"].replace(key, "True")
-                    )
+                    item["required"] = item["required"].replace("false", "False")
+                    item["required"] = eval(item["required"].replace(key, "True"))
                 else:
                     item["required"] = item["required"].replace("true", "True")
-                    item["required"] = item["required"].replace(
-                        "false", "False"
-                    )
-                    item["required"] = eval(
-                        item["required"].replace(key, "False")
-                    )
+                    item["required"] = item["required"].replace("false", "False")
+                    item["required"] = eval(item["required"].replace(key, "False"))
 
 
 def dcnm_get_template_specs(module, name, version):
@@ -697,12 +679,12 @@ def dcnm_get_template_specs(module, name, version):
             )
 
             if "IsShow" in p["annotations"]:
-                pb_template[name][p["name"]] += ", Mandatory: " + p[
-                    "annotations"
-                ]["IsShow"].replace('"', "")
-                pb_template[name + "_spec"][p["name"]]["required"] = p[
-                    "annotations"
-                ]["IsShow"].replace('"', "")
+                pb_template[name][p["name"]] += ", Mandatory: " + p["annotations"][
+                    "IsShow"
+                ].replace('"', "")
+                pb_template[name + "_spec"][p["name"]]["required"] = p["annotations"][
+                    "IsShow"
+                ].replace('"', "")
             else:
                 # If 'defaultValue' is included, then the object can be marked as optional.
                 if p["metaProperties"].get("defaultValue", None) is not None:
@@ -755,14 +737,14 @@ def dcnm_get_template_specs(module, name, version):
                 pb_template[name][p["name"]] += (
                     ", Type: " + dcnm_template_type_xlations[str(p["parameterType"])]
                 )
-                pb_template[name + "_spec"][p["name"]]["type"] = dcnm_template_type_xlations[
-                    p["parameterType"]
-                ]
+                pb_template[name + "_spec"][p["name"]]["type"] = (
+                    dcnm_template_type_xlations[p["parameterType"]]
+                )
                 if p.get("parameterType") == "string[]":
                     pb_template[name][p["name"]] += ", elements: " + "str"
-                    pb_template[name + "_spec"][p["name"]]["type"] = dcnm_template_type_xlations[
-                        p["parameterType"]
-                    ]
+                    pb_template[name + "_spec"][p["name"]]["type"] = (
+                        dcnm_template_type_xlations[p["parameterType"]]
+                    )
                     pb_template[name + "_spec"][p["name"]]["elements"] = "str"
 
             if p["metaProperties"].get("defaultValue", None) is not None:
@@ -775,9 +757,9 @@ def dcnm_get_template_specs(module, name, version):
                             "metaProperties"
                         ]["defaultValue"].replace('""', "")
                     else:
-                        pb_template[name + "_spec"][p["name"]][
-                            "default"
-                        ] = int(p["metaProperties"]["defaultValue"])
+                        pb_template[name + "_spec"][p["name"]]["default"] = int(
+                            p["metaProperties"]["defaultValue"]
+                        )
                 else:
                     pb_template[name + "_spec"][p["name"]]["default"] = p[
                         "metaProperties"
@@ -810,9 +792,7 @@ def dcnm_get_auth_token(module):
 
 def dcnm_post_request(path, hdrs, verify_flag, upload_files):
 
-    resp = requests.post(
-        path, headers=hdrs, verify=verify_flag, files=upload_files
-    )
+    resp = requests.post(path, headers=hdrs, verify=verify_flag, files=upload_files)
     json_resp = resp.json()
     if json_resp:
         json_resp["RETURN_CODE"] = resp.status_code

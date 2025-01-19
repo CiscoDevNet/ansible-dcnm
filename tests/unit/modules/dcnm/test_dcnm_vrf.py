@@ -42,7 +42,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     fabric_details = test_data.get("fabric_details")
     fabric_details_mfd = test_data.get("fabric_details_mfd")
     fabric_details_vxlan = test_data.get("fabric_details_vxlan")
-    
+
     mock_vrf_attach_object_del_not_ready = test_data.get(
         "mock_vrf_attach_object_del_not_ready"
     )

@@ -571,9 +571,8 @@ import time
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
-    get_fabric_details, get_fabric_inventory_details, get_ip_fabric_dict,
-    get_ip_sn_dict, get_ip_sn_fabric_dict, get_sn_fabric_dict,
-    validate_list_of_dicts)
+    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_sn_fabric_dict, validate_list_of_dicts)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -662,8 +661,6 @@ class DcnmVrf:
         self.sn_ip = {value: key for (key, value) in self.ip_sn.items()}
         self.fabric_data = get_fabric_details(self.module, self.fabric)
         self.fabric_type = self.fabric_data.get("fabricType")
-        # self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
-        self.ip_fab = get_ip_fabric_dict(self.inventory_data)
         self.sn_fab = get_sn_fabric_dict(self.inventory_data)
         if self.dcnm_version > 12:
             self.paths = dcnm_vrf_paths[12]
