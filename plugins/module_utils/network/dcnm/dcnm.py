@@ -280,14 +280,13 @@ def get_ip_sn_fabric_dict(inventory_data):
 
 def get_ip_fabric_dict(inventory_data):
     """
-    Maps the switch ip address to to switch's member fabric.
+    Maps the switch ip address to the switch's member fabric.
 
     Parameters:
         inventory_data: Fabric inventory data
 
     Returns:
-        dict: Switch ip - fabric_name mapping
-        dict: Switch serial_no - fabric_name mapping
+        dict: Switch ip address - fabric_name mapping
     """
     ip_fab = {}
 
@@ -307,8 +306,7 @@ def get_sn_fabric_dict(inventory_data):
         inventory_data: Fabric inventory data
 
     Returns:
-        dict: Switch ip - fabric_name mapping
-        dict: Switch serial_no - fabric_name mapping
+        dict: Switch serial number - fabric_name mapping
     """
     sn_fab = {}
 
