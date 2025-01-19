@@ -6,6 +6,13 @@
       "10.10.10.227": "XYZKSJHSMK4",
       "10.10.10.228": "XYZKSJHSMK5"
     },
+    "mock_ip_fab" : {
+        "10.10.10.224": "test_fabric",
+        "10.10.10.225": "test_fabric",
+        "10.10.10.226": "test_fabric",
+        "10.10.10.227": "test_fabric",
+        "10.10.10.228": "test_fabric"
+    },
     "mock_sn_fab" : {
         "XYZKSJHSMK1": "test_fabric",
         "XYZKSJHSMK2": "test_fabric",
