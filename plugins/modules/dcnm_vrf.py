@@ -661,7 +661,13 @@ class DcnmVrf:
         self.sn_ip = {value: key for (key, value) in self.ip_sn.items()}
         self.fabric_data = get_fabric_details(self.module, self.fabric)
         self.fabric_type = self.fabric_data.get("fabricType")
-        self.sn_fab = get_sn_fabric_dict(self.inventory_data)
+
+        try:
+            self.sn_fab = get_sn_fabric_dict(self.inventory_data)
+        except ValueError as error:
+            msg += f"{self.class_name}.__init__(): {error}"
+            module.fail_json(msg=msg)
+
         if self.dcnm_version > 12:
             self.paths = dcnm_vrf_paths[12]
         else:

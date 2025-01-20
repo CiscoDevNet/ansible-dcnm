@@ -15,6 +15,7 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+import copy
 import socket
 import json
 import time
@@ -285,17 +286,28 @@ def get_ip_fabric_dict(inventory_data):
     Parameters:
         inventory_data: Fabric inventory data
 
+    Raises:
+
+        ValueError, if inventory_data does not contain ipAddress
+        or fabricName.
+
     Returns:
         dict: Switch ip address - fabric_name mapping
     """
-    ip_fab = {}
-
+    mapping_dict = {}
     for device_key in inventory_data.keys():
-        ip = inventory_data[device_key].get("ipAddress")
+        ip_address = inventory_data[device_key].get("ipAddress")
         fabric_name = inventory_data[device_key].get("fabricName")
-        ip_fab.update({ip: fabric_name})
-
-    return ip_fab
+        if ip_address is None:
+            msg = "Cannot parse ipAddress from inventory_data:"
+            msg += f"{json.dumps(inventory_data, indent=4, sort_keys=True)}"
+            raise ValueError(msg)
+        if fabric_name is None:
+            msg = "Cannot parse fabricName from inventory_data:"
+            msg += f"{json.dumps(inventory_data, indent=4, sort_keys=True)}"
+            raise ValueError(msg)
+        mapping_dict.update({ip_address: fabric_name})
+    return copy.deepcopy(mapping_dict)
 
 
 def get_sn_fabric_dict(inventory_data):
@@ -305,17 +317,28 @@ def get_sn_fabric_dict(inventory_data):
     Parameters:
         inventory_data: Fabric inventory data
 
+    Raises:
+
+        ValueError, if inventory_data does not contain serialNumber
+        or fabricName.
+
     Returns:
         dict: Switch serial number - fabric_name mapping
     """
-    sn_fab = {}
-
+    mapping_dict = {}
     for device_key in inventory_data.keys():
-        sn = inventory_data[device_key].get("serialNumber")
+        serial_number = inventory_data[device_key].get("serialNumber")
         fabric_name = inventory_data[device_key].get("fabricName")
-        sn_fab.update({sn: fabric_name})
-
-    return sn_fab
+        if serial_number is None:
+            msg = "Cannot parse serial_number from inventory_data:"
+            msg += f"{json.dumps(inventory_data, indent=4, sort_keys=True)}"
+            raise ValueError(msg)
+        if fabric_name is None:
+            msg = "Cannot parse fabric_name from inventory_data:"
+            msg += f"{json.dumps(inventory_data, indent=4, sort_keys=True)}"
+            raise ValueError(msg)
+        mapping_dict.update({serial_number: fabric_name})
+    return copy.deepcopy(mapping_dict)
 
 
 # sw_elem can be ip_addr, hostname, dns name or serial number. If the given
