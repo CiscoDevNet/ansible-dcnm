@@ -38,4 +38,6 @@
     - 'controller_version != "Unable to determine controller version"'
   tags: sanity
 
-- { include_tasks: dcnm.yaml, tags: ['dcnm'] }
+- name: Import Role Tasks
+  ansible.builtin.import_tasks: dcnm.yaml
+  tags: ['dcnm']
