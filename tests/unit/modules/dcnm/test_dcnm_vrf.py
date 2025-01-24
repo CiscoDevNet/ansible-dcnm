@@ -54,13 +54,22 @@ class TestDcnmVrfModule(TestDcnmModule):
     error1 = test_data.get("error1")
     error2 = test_data.get("error2")
     error3 = test_data.get("error3")
-    delete_success_resp = test_data.get("delete_success_resp")
     blank_data = test_data.get("blank_data")
 
     def init_data(self):
         # Some of the mock data is re-initialized after each test as previous test might have altered portions
         # of the mock data.
 
+        self.delete_success_resp = copy.deepcopy(
+            self.test_data.get("delete_success_resp")
+        )
+        self.mock_release_all_unallocated_resources_response_no_ids_to_release = (
+            copy.deepcopy(
+                self.test_data.get(
+                    "mock_release_all_unallocated_resources_response_no_ids_to_release"
+                )
+            )
+        )
         self.mock_vrf_object = copy.deepcopy(self.test_data.get("mock_vrf_object"))
         self.mock_vrf12_object = copy.deepcopy(self.test_data.get("mock_vrf12_object"))
         self.mock_vrf_attach_object = copy.deepcopy(
@@ -78,6 +87,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_vrf_attach_object_pending = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_object_pending")
         )
+        self.mock_vrf_exists = copy.deepcopy(self.test_data.get("mock_vrf_exists"))
         self.mock_vrf_object_dcnm_only = copy.deepcopy(
             self.test_data.get("mock_vrf_object_dcnm_only")
         )
@@ -112,9 +122,6 @@ class TestDcnmVrfModule(TestDcnmModule):
             self.test_data.get("mock_vrf_attach_lite_object")
         )
         self.mock_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_vrf_lite_obj"))
-        self.mock_pools_top_down_vrf_vlan = copy.deepcopy(
-            self.test_data.get("mock_pools_top_down_vrf_vlan")
-        )
 
     def setUp(self):
         super(TestDcnmVrfModule, self).setUp()
@@ -421,11 +428,13 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_get_ext_object_ov_att1_only,
                 self.mock_vrf_attach_get_ext_object_ov_att2_only,
                 self.attach_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.deploy_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
-                self.mock_pools_top_down_vrf_vlan,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -457,11 +466,13 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
                 self.attach_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.deploy_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
-                self.mock_pools_top_down_vrf_vlan,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -486,7 +497,9 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
                 self.attach_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.deploy_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_oos,
             ]
@@ -505,11 +518,13 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
                 self.attach_success_resp,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
                 self.deploy_success_resp,
+                self.mock_vrf_exists,
                 obj1,
                 obj2,
                 self.delete_success_resp,
-                self.mock_pools_top_down_vrf_vlan,
+                self.mock_release_all_unallocated_resources_response_no_ids_to_release,
             ]
 
         elif "query" in self._testMethodName:
@@ -585,7 +600,8 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
-            result.get("msg"), "Fabric test_fabric not present on the controller"
+            result.get("msg"),
+            "caller: get_have.  Fabric test_fabric not present on the controller",
         )
 
     def test_dcnm_vrf_merged_redeploy(self):
@@ -748,8 +764,11 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
         result = self.execute_module(changed=False, failed=True)
         msg = "DcnmVrf.update_attach_params_extension_values: "
-        msg += "VRF LITE cannot be attached to switch 10.10.10.225 "
-        msg += "with role leaf"
+        msg += "caller: update_attach_params. "
+        msg += "VRF LITE attachments are appropriate only for switches with "
+        msg += "Border roles e.g. Border Gateway, Border Spine, etc. "
+        msg += "The playbook and/or controller settings for switch "
+        msg += "10.10.10.225 with role leaf need review."
         self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_merged_with_update(self):
@@ -886,7 +905,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_error3(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=True, failed=False)
         self.assertEqual(
             result["response"][2]["DATA"], "No switches PENDING for deployment"
         )
@@ -1099,10 +1118,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
+            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
         )
         self.assertEqual(
-            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
+            result["response"][4]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
         )
 
     def test_dcnm_vrf_lite_override_with_deletions_interface_with_extensions(self):
@@ -1235,7 +1254,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True)
-        msg = "DcnmVrf.push_diff_delete: Deletion of vrfs test_vrf_1 has failed"
+        msg = "DcnmVrf.delete_vrf: caller: push_diff_delete, "
+        msg += "fabric: test_fabric, "
+        msg += f"vrf_name: test_vrf_1. "
+        msg += "VRF delete failed."
         self.assertEqual(result["msg"]["response"][2], msg)
 
     def test_dcnm_vrf_query(self):

@@ -735,6 +735,42 @@
       "service_vrf_template": "None"
     }
   ],
+  "mock_release_all_unallocated_resources_response_no_ids_to_release": {
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "DATA": []
+  },
+  "mock_release_all_unallocated_resources_response_ids_to_release": {
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "DATA": [
+        {
+            "allocatedFlag": false,
+            "allocatedIp": "10.33.0.6",
+            "allocatedOn": 1737570335792,
+            "allocatedScopeValue": "XYZKSJHSMK1",
+            "entityName": "XYZKSJHSMK1~Ethernet2/1",
+            "entityType": "DeviceInterface",
+            "hierarchicalKey": "0",
+            "id": 27,
+            "ipAddress": null,
+            "resourcePool": {
+                "dynamicSubnetRange": null,
+                "fabricName": "test_fabric",
+                "hierarchicalKey": "test_fabric",
+                "id": 0,
+                "overlapAllowed": false,
+                "poolName": "10.33.0.4/30",
+                "poolType": "IP_POOL",
+                "targetSubnet": 0,
+                "vrfName": "test_vrf_dcnm"
+            },
+            "switchName": "n9kv_leaf1"
+        }
+    ]
+  },
   "mock_vrf_attach_object_del_not_ready": {
     "ERROR": "",
     "RETURN_CODE": 200,
@@ -745,11 +781,13 @@
         "lanAttachList": [
           {
             "lanAttachState": "DEPLOYED",
-            "isLanAttached": false
+            "isLanAttached": false,
+            "switchName": "n9kv_leaf1"
           },
           {
             "lanAttachState": "DEPLOYED",
-            "isLanAttached": false
+            "isLanAttached": false,
+            "switchName": "n9kv_leaf2"
           }
         ]
       }
@@ -773,6 +811,16 @@
       }
     ]
   },
+  "mock_vrf_exists": {
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "DATA": [
+        {
+            "vrfName": "test_vrf_dcnm"
+        }
+    ]
+  },
   "mock_vrf_attach_object_del_ready": {
     "ERROR": "",
     "RETURN_CODE": 200,
@@ -783,11 +831,13 @@
         "lanAttachList": [
           {
             "lanAttachState": "NA",
-            "isLanAttached": false
+            "isLanAttached": false,
+            "switchName": "n9kv_leaf1"
           },
           {
             "lanAttachState": "NA",
-            "isLanAttached": false
+            "isLanAttached": false,
+            "switchName": "n9kv_leaf2"
           }
         ]
       }
@@ -1314,8 +1364,6 @@
       }
     ]
   },
-
-
   "attach_success_resp": {
     "DATA": {
       "test-vrf-1--XYZKSJHSMK1(leaf1)": "SUCCESS",
@@ -1387,7 +1435,7 @@
   },
   "delete_success_resp": {
     "ERROR": "",
-    "METHOD": "POST",
+    "METHOD": "DELETE",
     "RETURN_CODE": 200,
     "MESSAGE": "OK"
   },
@@ -1485,36 +1533,6 @@
         "vrfTemplate": "Default_VRF_Universal",
         "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008013\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"routeTargetExportMvpn\":\"\",\"ENABLE_NETFLOW\":\"false\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"routeTargetExportEvpn\":\"\",\"NETFLOW_MONITOR\":\"\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"routeTargetImportMvpn\":\"\",\"isRPAbsent\":\"false\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"52125\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\",\"routeTargetImportEvpn\":\"\"}",
         "vrfStatus": "DEPLOYED"
-      }
-    ]
-  },
-  "mock_pools_top_down_vrf_vlan": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE":"OK",
-    "DATA": [
-      {
-        "allocatedFlag": true,
-        "allocatedIp": "201",
-        "allocatedOn": 1734051260507,
-        "allocatedScopeValue": "FDO211218HH",
-        "entityName": "VRF_1",
-        "entityType": "Device",
-        "hierarchicalKey": "0",
-        "id": 36407,
-        "ipAddress": "172.22.150.104",
-        "resourcePool": {
-            "dynamicSubnetRange": null,
-            "fabricName": "f1",
-            "hierarchicalKey": "f1",
-            "id": 0,
-            "overlapAllowed": false,
-            "poolName": "TOP_DOWN_VRF_VLAN",
-            "poolType": "ID_POOL",
-            "targetSubnet": 0,
-            "vrfName": "VRF_1"
-        },
-        "switchName": "cvd-1313-leaf"
       }
     ]
   },
