@@ -18,16 +18,35 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 
 import copy
-from unittest.mock import patch
+from json import dumps as _dumps
+from unittest.mock import MagicMock, patch
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_vrf
 
 from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
 
-# from units.compat.mock import patch
+
+# See NOTE_1 in TestDcnmVrfModule's docstring.
+def dumps_wrapper(*args, **kwargs):
+    return _dumps(*args, **(kwargs | {"default": lambda obj: "mock"}))
 
 
 class TestDcnmVrfModule(TestDcnmModule):
+    """
+    NOTE_1:
+    Some tests patch json.dumps() to handle MagicMocks (which not JSON
+    serializable). dcnm_vrf.py uses json.dumps() in multiple places
+    (e.g. send_to_controller() to log the payload).  If the structure
+    being logged contains a MagicMock, json.dumps() throws the following
+
+        TypeError: Object of type MagicMock is not JSON serializable
+
+    Specifically, the patch -- see dumps_wrapper() immediately after the
+    imports in this file -- alters json.dumps() to display "mock"
+    instead of the structure.  This workaround is described in the
+    accepted answer here:
+    https://stackoverflow.com/questions/73989150/how-to-make-a-python-magicmock-object-json-serializable
+    """
 
     module = dcnm_vrf
 
@@ -644,7 +663,14 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_merged_redeploy(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
+
+        # See NOTE_1 in this class's docstring (TestDcnmVrfModule).
+        patch_json = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.json.dumps",
+            MagicMock(wraps=dumps_wrapper),
+        )
+        with patch_json:
+            result = self.execute_module(changed=True, failed=False)
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
 
     def test_dcnm_vrf_merged_lite_redeploy_interface_with_extensions(self):
@@ -658,7 +684,15 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+
+        # See NOTE_1 in this class's docstring (TestDcnmVrfModule).
+        patch_json = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.json.dumps",
+            MagicMock(wraps=dumps_wrapper),
+        )
+        with patch_json:
+            result = self.execute_module(changed=True, failed=False)
+
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
 
     def test_dcnm_vrf_merged_lite_redeploy_interface_without_extensions(self):
@@ -672,7 +706,15 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+
+        # See NOTE_1 in this class's docstring (TestDcnmVrfModule).
+        patch_json = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.json.dumps",
+            MagicMock(wraps=dumps_wrapper),
+        )
+        with patch_json:
+            result = self.execute_module(changed=False, failed=True)
+
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
@@ -1270,7 +1312,15 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_delete_dcnm_only(self):
         set_module_args(dict(state="deleted", fabric="test_fabric", config=[]))
-        result = self.execute_module(changed=True, failed=False)
+
+        # See NOTE_1 in this class's docstring (TestDcnmVrfModule).
+        patch_json = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.json.dumps",
+            MagicMock(wraps=dumps_wrapper),
+        )
+        with patch_json:
+            result = self.execute_module(changed=True, failed=False)
+
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "402")

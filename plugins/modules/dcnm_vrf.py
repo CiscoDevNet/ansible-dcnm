@@ -1807,10 +1807,8 @@ class DcnmVrf:
         msg += f"{json.dumps(self.have_create, indent=4)}"
         self.log.debug(msg)
 
-        # json.dumps() here breaks unit tests since self.have_attach is
-        # a MagicMock and not JSON serializable.
         msg = "self.have_attach: "
-        msg += f"{self.have_attach}"
+        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = "self.have_deploy: "
@@ -3690,10 +3688,7 @@ class DcnmVrf:
         msg += "type(payload): "
         msg += f"{type(payload)}, "
         msg += "payload: "
-        # We cannot json.dumps(payload) here because unit tests inject
-        # fabric name, via a MagicMock, and MagicMocks are not JSON
-        # serializable.
-        msg += f"{payload}"
+        msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if payload is not None:
