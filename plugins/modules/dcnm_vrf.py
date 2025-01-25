@@ -570,16 +570,12 @@ import time
 from typing import Tuple
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
+    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_sn_fabric_dict, validate_list_of_dicts)
 
 from ..module_utils.common.log_v2 import Log
-from ..module_utils.network.dcnm.dcnm import (dcnm_get_ip_addr_info,
-                                              dcnm_get_url, dcnm_send,
-                                              dcnm_version_supported,
-                                              get_fabric_details,
-                                              get_fabric_inventory_details,
-                                              get_ip_sn_dict,
-                                              get_ip_sn_fabric_dict,
-                                              validate_list_of_dicts)
 
 dcnm_vrf_paths = {
     11: {
@@ -681,7 +677,13 @@ class DcnmVrf:
         self.log.debug(msg)
 
         self.fabric_type = self.fabric_data.get("fabricType")
-        self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
+
+        try:
+            self.sn_fab = get_sn_fabric_dict(self.inventory_data)
+        except ValueError as error:
+            msg += f"{self.class_name}.__init__(): {error}"
+            module.fail_json(msg=msg)
+
         if self.dcnm_version > 12:
             self.paths = dcnm_vrf_paths[12]
         else:
@@ -2772,6 +2774,8 @@ class DcnmVrf:
                     msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
 
                     self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+                    # TODO: add a pylint: disable=inconsistent-return at the top and remove this return
+                    return
 
                 if not vrf_attach_objects["DATA"]:
                     return
@@ -3314,12 +3318,24 @@ class DcnmVrf:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
+        msg = "Received vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         if self.fabric_type != "MFD":
             msg = "Early return. "
-            msg += f"FABRIC_TYPE is {self.fabric_type}. "
+            msg += f"FABRIC_TYPE {self.fabric_type} is not MFD. "
             msg += "Returning unmodified vrf_attach."
             self.log.debug(msg)
             return copy.deepcopy(vrf_attach)
+
+        parent_fabric_name = vrf_attach.get("fabric")
+
+        msg = f"fabric_type: {self.fabric_type}, "
+        msg += "replacing parent_fabric_name "
+        msg += f"({parent_fabric_name}) "
+        msg += "with child fabric name."
+        self.log.debug(msg)
 
         serial_number = vrf_attach.get("serialNumber")
 
@@ -3328,18 +3344,26 @@ class DcnmVrf:
             msg += f"caller: {caller}. "
             msg += "Unable to parse serial_number from vrf_attach. "
             msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.module.fail_json(msg)
+
+        child_fabric_name = self.sn_fab[serial_number]
+
+        if child_fabric_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "Unable to determine child fabric name for serial_number "
+            msg += f"{serial_number}."
+            self.log.debug(msg)
             self.module.fail_json(msg)
 
         msg = f"serial_number: {serial_number}, "
-        msg += "Received vrf_attach: "
-        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        msg += f"child fabric name: {child_fabric_name}. "
         self.log.debug(msg)
 
-        vrf_attach["fabric"] = self.sn_fab[serial_number]
+        vrf_attach["fabric"] = child_fabric_name
 
-        msg = f"serial_number: {serial_number}, "
-        msg += "fabric_type is MDF, updating vrf_attach.fabric "
-        msg += f"with child fabric name:{self.sn_fab[serial_number]}"
+        msg += "Updated vrf_attach: "
         msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -3663,12 +3687,17 @@ class DcnmVrf:
         msg += f"verb: {verb}, "
         msg += f"path: {path}, "
         msg += f"log_response: {log_response}, "
+        msg += "type(payload): "
+        msg += f"{type(payload)}, "
         msg += "payload: "
-        msg += f"{json.dumps(payload, indent=4, sort_keys=True)}"
+        # We cannot json.dumps(payload) here because unit tests inject
+        # fabric name, via a MagicMock, and MagicMocks are not JSON
+        # serializable.
+        msg += f"{payload}"
         self.log.debug(msg)
 
         if payload is not None:
-            response = dcnm_send(self.module, verb, path, json.dumps(payload))
+            response = dcnm_send(self.module, verb, path, payload)
         else:
             response = dcnm_send(self.module, verb, path)
 
@@ -4199,129 +4228,6 @@ class DcnmVrf:
             return "ok"
         else:
             return "failed"
-
-    def wait_for_vrfs_del_ready(self):
-        """
-        # Summary
-
-        NOT USED!  See wait_for_vrf_del_ready() instead.
-
-        REMOVE AFTER TESTING
-
-        Wait for all VRFs in self.diff_delete to be ready for deletion.
-
-        ## Raises
-
-        Calls fail_json if VRF has associated network attachments.
-        """
-        caller = inspect.stack()[1][3]
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_delete: "
-        msg += f"{json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if len(self.diff_delete) == 0:
-            msg = "Early return. "
-            msg += "self.diff_delete is empty."
-            self.log.debug(msg)
-            return
-
-        for vrf in self.diff_delete:
-            path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-
-            retries = 5
-            ok_to_delete = False
-            while ok_to_delete is False:
-                resp = dcnm_send(self.module, "GET", path)
-
-                msg = f"vrf: {vrf}, "
-                msg += f"retries: {retries}, "
-                msg += f"resp: {json.dumps(resp, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-
-                if resp.get("DATA") is None:
-                    msg = f"vrf: {vrf}, "
-                    msg += f"retries: {retries}. DATA is None. sleep "
-                    msg += f"{self.WAIT_TIME_FOR_DELETE_LOOP} seconds "
-                    msg += "and try again."
-                    self.log.debug(msg)
-                    time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                    retries -= 1
-
-                if retries <= 0:
-                    msg = f"vrf: {vrf}. "
-                    msg += f"retries: {retries}. "
-                    msg += "set ok_to_delete = True"
-                    self.log.debug(msg)
-                    ok_to_delete = True
-                else:
-                    msg = f"vrf: {vrf}. "
-                    msg += f"retries: {retries}. "
-                    msg += "continue until retries is 0"
-                    retries -= 1
-                    self.log.debug(msg)
-                    continue
-
-                if len(resp["DATA"]) == 0:
-                    msg = f"vrf: {vrf}. "
-                    msg += f"retries: {retries}. "
-                    msg += "DATA is empty. "
-                    msg += "set ok_to_delete = True and continue."
-                    self.log.debug(msg)
-                    ok_to_delete = True
-                    continue
-
-                attach_list = resp["DATA"][0]["lanAttachList"]
-
-                msg = f"ok_to_delete: {ok_to_delete}, "
-                msg += "attach_list: "
-                msg += f"{json.dumps(attach_list, indent=4)}"
-                self.log.debug(msg)
-
-                for attach in attach_list:
-                    if (
-                        attach["lanAttachState"] == "OUT-OF-SYNC"
-                        or attach["lanAttachState"] == "FAILED"
-                    ):
-                        self.diff_delete.update({vrf: "OUT-OF-SYNC"})
-                        break
-                    if (
-                        attach["lanAttachState"] == "DEPLOYED"
-                        and attach["isLanAttached"] is True
-                    ):
-                        # Perform a quick-detach and deploy
-                        self.quick_detach()
-
-                    # TODO: Rather than calling fail_json() here, we should
-                    # detach the attachment(s)?  This was a fix for an infinite
-                    # while loop (while)
-                    # if (
-                    #     attach["lanAttachState"] == "DEPLOYED"
-                    #     and attach["isLanAttached"] is True
-                    # ):
-                    #     vrf_name = attach.get("vrfName", "unknown")
-                    #     fabric_name = attach.get("fabricName", "unknown")
-                    #     switch_ip = attach.get("ipAddress", "unknown")
-                    #     switch_name = attach.get("switchName", "unknown")
-                    #     vlan_id = attach.get("vlanId", "unknown")
-                    #     msg = f"{self.class_name}.{method_name}: "
-                    #     msg += f"Network attachments associated with vrf {vrf_name} "
-                    #     msg += "must be removed (e.g. using the dcnm_network module) "
-                    #     msg += "prior to deleting the vrf. "
-                    #     msg += f"Details: fabric_name: {fabric_name}, "
-                    #     msg += f"vrf_name: {vrf_name}. "
-                    #     msg += "Network attachments found on "
-                    #     msg += f"switch_ip: {switch_ip}, "
-                    #     msg += f"switch_name: {switch_name}, "
-                    #     msg += f"vlan_id: {vlan_id}"
-                    #     self.module.fail_json(msg=msg)
-                    if attach["lanAttachState"] != "NA":
-                        time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-                        self.diff_delete.update({vrf: "DEPLOYED"})
-                        ok_to_delete = False
-                        break
-                    self.diff_delete.update({vrf: "NA"})
 
     def attach_spec(self):
         """

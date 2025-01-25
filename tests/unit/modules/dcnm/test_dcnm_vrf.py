@@ -40,6 +40,9 @@ class TestDcnmVrfModule(TestDcnmModule):
     mock_ip_sn = test_data.get("mock_ip_sn")
     vrf_inv_data = test_data.get("vrf_inv_data")
     fabric_details = test_data.get("fabric_details")
+    fabric_details_mfd = test_data.get("fabric_details_mfd")
+    fabric_details_vxlan = test_data.get("fabric_details_vxlan")
+
     mock_vrf_attach_object_del_not_ready = test_data.get(
         "mock_vrf_attach_object_del_not_ready"
     )
@@ -54,6 +57,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     error1 = test_data.get("error1")
     error2 = test_data.get("error2")
     error3 = test_data.get("error3")
+    delete_success_resp = test_data.get("delete_success_resp")
     blank_data = test_data.get("blank_data")
 
     def init_data(self):
@@ -70,6 +74,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 )
             )
         )
+        self.mock_sn_fab_dict = copy.deepcopy(self.test_data.get("mock_sn_fab"))
         self.mock_vrf_object = copy.deepcopy(self.test_data.get("mock_vrf_object"))
         self.mock_vrf12_object = copy.deepcopy(self.test_data.get("mock_vrf12_object"))
         self.mock_vrf_attach_object = copy.deepcopy(
@@ -125,6 +130,11 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def setUp(self):
         super(TestDcnmVrfModule, self).setUp()
+
+        self.mock_dcnm_sn_fab = patch(
+            "ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.get_sn_fabric_dict"
+        )
+        self.run_dcnm_sn_fab = self.mock_dcnm_sn_fab.start()
 
         self.mock_dcnm_ip_sn = patch(
             "ansible_collections.cisco.dcnm.plugins.modules.dcnm_vrf.get_fabric_inventory_details"
@@ -186,6 +196,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "_merged_new" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -195,6 +207,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_merged_lite_new" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -204,6 +217,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "error1" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -212,6 +227,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "error2" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -220,6 +237,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "error3" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -257,6 +276,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_merged_with_update" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -269,6 +289,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_merged_lite_update" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -281,6 +302,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_merged_lite_vlan_update" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -294,6 +316,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_merged_redeploy" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
                 self.mock_vrf_attach_object_pending,
@@ -304,6 +327,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
         elif "_merged_lite_redeploy" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
                 self.mock_vrf_lite_obj,
@@ -319,6 +343,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "replace_with_no_atch" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -331,6 +356,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "replace_lite_no_atch" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -343,6 +369,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "replace_with_changes" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -355,6 +382,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "replace_lite_changes" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -386,6 +414,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "lite_override_with_additions" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -395,6 +424,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "override_with_additions" in self._testMethodName:
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
@@ -404,6 +434,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "lite_override_with_deletions" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -422,6 +453,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "override_with_deletions" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -460,6 +492,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "delete_std" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -477,6 +510,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "delete_std_lite" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object2]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -491,6 +525,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "delete_failure" in self._testMethodName:
             self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
@@ -576,6 +611,8 @@ class TestDcnmVrfModule(TestDcnmModule):
             ]
 
         elif "_12merged_new" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
                 self.blank_data,
