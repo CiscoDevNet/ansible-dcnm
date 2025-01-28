@@ -3692,7 +3692,7 @@ class DcnmVrf:
         self.log.debug(msg)
 
         if payload is not None:
-            response = dcnm_send(self.module, verb, path, payload)
+            response = dcnm_send(self.module, verb, path, json.dumps(payload))
         else:
             response = dcnm_send(self.module, verb, path)
 
