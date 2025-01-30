@@ -572,7 +572,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
     get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
-    get_ip_sn_fabric_dict, validate_list_of_dicts)
+    get_sn_fabric_dict, validate_list_of_dicts)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -661,7 +661,13 @@ class DcnmVrf:
         self.sn_ip = {value: key for (key, value) in self.ip_sn.items()}
         self.fabric_data = get_fabric_details(self.module, self.fabric)
         self.fabric_type = self.fabric_data.get("fabricType")
-        self.ip_fab, self.sn_fab = get_ip_sn_fabric_dict(self.inventory_data)
+
+        try:
+            self.sn_fab = get_sn_fabric_dict(self.inventory_data)
+        except ValueError as error:
+            msg += f"{self.class_name}.__init__(): {error}"
+            module.fail_json(msg=msg)
+
         if self.dcnm_version > 12:
             self.paths = dcnm_vrf_paths[12]
         else:
@@ -3049,6 +3055,80 @@ class DcnmVrf:
             self.log.debug(msg)
             self.failure(resp)
 
+    def update_vrf_attach_fabric_name(self, vrf_attach: dict) -> dict:
+        """
+        # Summary
+
+        For multisite fabrics, replace `vrf_attach.fabric` with the name of
+        the child fabric returned by `self.sn_fab[vrf_attach.serialNumber]`
+
+        ## params
+
+        - `vrf_attach`
+
+        A `vrf_attach` dictionary containing the following keys:
+
+            - `fabric` : fabric name
+            - `serialNumber` : switch serial number
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        msg = "Received vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if self.fabric_type != "MFD":
+            msg = "Early return. "
+            msg += f"FABRIC_TYPE {self.fabric_type} is not MFD. "
+            msg += "Returning unmodified vrf_attach."
+            self.log.debug(msg)
+            return copy.deepcopy(vrf_attach)
+
+        parent_fabric_name = vrf_attach.get("fabric")
+
+        msg = f"fabric_type: {self.fabric_type}, "
+        msg += "replacing parent_fabric_name "
+        msg += f"({parent_fabric_name}) "
+        msg += "with child fabric name."
+        self.log.debug(msg)
+
+        serial_number = vrf_attach.get("serialNumber")
+
+        if serial_number is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "Unable to parse serial_number from vrf_attach. "
+            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            self.module.fail_json(msg)
+
+        child_fabric_name = self.sn_fab[serial_number]
+
+        if child_fabric_name is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "Unable to determine child fabric name for serial_number "
+            msg += f"{serial_number}."
+            self.log.debug(msg)
+            self.module.fail_json(msg)
+
+        msg = f"serial_number: {serial_number}, "
+        msg += f"child fabric name: {child_fabric_name}. "
+        self.log.debug(msg)
+
+        vrf_attach["fabric"] = child_fabric_name
+
+        msg += "Updated vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        return copy.deepcopy(vrf_attach)
+
     def push_diff_attach(self, is_rollback=False):
         """
         # Summary
@@ -3085,6 +3165,8 @@ class DcnmVrf:
                 msg += "vrf_attach: "
                 msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
+
+                vrf_attach = self.update_vrf_attach_fabric_name(vrf_attach)
 
                 if "is_deploy" in vrf_attach:
                     del vrf_attach["is_deploy"]
@@ -3163,13 +3245,6 @@ class DcnmVrf:
         verb = "POST"
         path = self.paths["GET_VRF"].format(self.fabric)
         attach_path = path + "/attachments"
-
-        # For multisite fabrics, update the fabric name to the child fabric
-        # containing the switches.
-        if self.fabric_type == "MFD":
-            for elem in new_diff_attach_list:
-                for node in elem["lanAttachList"]:
-                    node["fabric"] = self.sn_fab[node["serialNumber"]]
 
         self.send_to_controller(
             action, verb, attach_path, new_diff_attach_list, is_rollback
