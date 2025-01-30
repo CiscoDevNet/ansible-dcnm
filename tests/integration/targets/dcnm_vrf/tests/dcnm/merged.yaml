@@ -2,7 +2,8 @@
 ##            REQUIRED VARS                 ##
 ##############################################
 # fabric_1
-# A VXLAN_EVPN fabric
+#
+# - A VXLAN_EVPN fabric with PER_VRF_LOOPBACK_AUTO_PROVISION disabled
 #
 # switch_1
 #
@@ -68,14 +69,6 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
   register: result_setup_2
-
-- name: SETUP.2a - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-  when: result_setup_2.changed == true
 
 ###############################################
 ###                MERGED                    ##
@@ -144,14 +137,6 @@
     state: deleted
   register: result_1e
 
-- name: TEST.1f - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-  when: result_1e.changed == true
-
 - name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided VLAN)
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
@@ -212,12 +197,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: TEST.2f - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  # While vrf-lite extension was not configured above, we still hit VRF
-  # OUT-OF-SYNC. Let's see if waiting helps here too.
-  wait_for:
-    timeout: 60
 
 - name: TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided VLAN)
   cisco.dcnm.dcnm_vrf: &conf3
@@ -288,13 +267,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: TEST.3f - MERGED - Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
 
 - name: TEST.4 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION - (controller provided VLAN)
   cisco.dcnm.dcnm_vrf:
@@ -461,7 +433,3 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: CLEANUP.2 - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60

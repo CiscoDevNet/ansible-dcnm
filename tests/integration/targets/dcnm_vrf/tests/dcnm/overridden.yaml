@@ -3,7 +3,7 @@
 ##############################################
 # fabric_1
 #
-# - A VXLAN_EVPN fabric
+# - A VXLAN_EVPN fabric with PER_VRF_LOOPBACK_AUTO_PROVISION disabled
 #
 # switch_1
 #
@@ -68,14 +68,6 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
   register: result_setup_2
-
-- name: SETUP.2a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-  when: result_setup_2.changed == true
 
 - name: SETUP.3 OVERRIDDEN - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf:
@@ -196,11 +188,6 @@
     state: deleted
   register: result_1f
 
-- name: TEST.1g - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  when: result_1f.changed == true
-
 - name: TEST.2 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
@@ -224,14 +211,6 @@
             dot1q: 2 # optional controller can provide
       deploy: true
   register: result_2
-
-- name: TEST.2a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-  when: result_2.changed == true
 
 - name: TEST.2b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
@@ -284,14 +263,6 @@
             dot1q: 21 # optional controller can provide
       deploy: true
   register: result_3
-
-- name: TEST.3a - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-  when: result_3.changed == true
 
 # In step TEST.3, NDFC issues an NX-OS CLI that immediately switches
 # from configure profile mode, to configure terminal; vrf context <vrf>.

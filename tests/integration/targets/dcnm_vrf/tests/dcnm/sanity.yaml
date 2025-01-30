@@ -59,11 +59,6 @@
     state: deleted
   tags: sanity
 
-- name: SETUP.3 - SANITY - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  tags: sanity
-
 ###############################################
 ###                MERGED                    ##
 ###############################################
@@ -138,11 +133,6 @@
     state: deleted
   tags: sanity
 
-- name: TEST.1f - SANITY MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  tags: sanity
-
 ###############################################
 ###                REPLACED                  ##
 ###############################################
@@ -206,11 +196,6 @@
   register: result_2c
   tags: sanity
 
-- name: TEST.2d - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  tags: sanity
-
 - name: TEST.2e - SANITY REPLACED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
@@ -271,11 +256,6 @@
   register: result_2i
   tags: sanity
 
-- name: TEST.2j - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  tags: sanity
-
 - name: TEST.2k - SANITY REPLACED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
@@ -325,11 +305,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-  tags: sanity
-
-- name: TEST.2p - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
   tags: sanity
 
 ###############################################
@@ -460,11 +435,6 @@
     state: deleted
   tags: sanity
 
-- name: TEST.3i - SANITY OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  tags: sanity
-
 ###############################################
 ###                QUERY                     ##
 ###############################################
@@ -557,11 +527,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-  tags: sanity
-
-- name: TEST.4f - SANITY QUERY - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
   tags: sanity
 
 ###############################################

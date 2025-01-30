@@ -42,12 +42,6 @@
   register: setup_result_2
   tags: sanity
 
-- name: SETUP.3 - SCALE - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-  when: setup_result_2.changed == false
-  tags: sanity
-
 - name: SETUP.4 - SCALE - [set_fact] Dummy set fact for leaf_attach_list
   set_fact:
     leaf_vrf_attach: []
@@ -63,11 +57,6 @@
     state: merged
     config: '{{ vrfs_list }}'
   register: result
-
-- name: TEST.1a - SCALE - [wait_for] Wait 60 seconds
-  wait_for:
-    timeout: 60
-  tags: sanity
 
 - name: TEST.2 - SCALE - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf: &conf2

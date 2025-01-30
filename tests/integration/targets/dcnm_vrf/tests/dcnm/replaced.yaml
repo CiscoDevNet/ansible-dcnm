@@ -3,7 +3,7 @@
 ##############################################
 # fabric_1
 #
-# - A VXLAN_EVPN fabric
+# - A VXLAN_EVPN fabric with PER_VRF_LOOPBACK_AUTO_PROVISION disabled
 #
 # switch_1
 #
@@ -56,10 +56,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: SETUP.3 - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
 
 - name: SETUP.4 - REPLACED - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf:
@@ -220,10 +216,6 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
 
-- name: TEST.2f - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-
 - name: TEST.3 - REPLACED - [merged] Create, Attach, Deploy VLAN+VRF+LITE switch_2 (user provided VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
@@ -290,10 +282,6 @@
       - ip_address: "{{ switch_1 }}"
       deploy: true
   register: result_4
-
-- name: TEST.4a - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
 
 - name: TEST.4b - REPLACED - [query] Wait for vrfStatus == DEPLOYED
   cisco.dcnm.dcnm_vrf:
@@ -398,7 +386,3 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: CLEANUP.2 - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60

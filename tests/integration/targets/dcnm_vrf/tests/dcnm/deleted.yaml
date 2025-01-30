@@ -3,7 +3,7 @@
 ##############################################
 # fabric_1
 #
-# - A VXLAN_EVPN fabric
+# - A VXLAN_EVPN fabric with PER_VRF_LOOPBACK_AUTO_PROVISION disabled
 #
 # switch_1
 #
@@ -57,11 +57,6 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
   register: result_setup_2
-
-- name: SETUP.2a - DELETED - [wait_for] Wait 40 seconds for controller and switch to sync
-  wait_for:
-    timeout: 40
-  when: result_setup_2.changed == true
 
 - name: SETUP.3 - DELETED - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf
   cisco.dcnm.dcnm_vrf:
@@ -121,10 +116,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
   register: result_1
-
-- name: TEST.1a - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
 
 - name: TEST.1b - DELETED - [debug] print result_1
   debug:
@@ -252,13 +243,6 @@
     - 'result_2b.diff[0].attach[1].deploy == false'
     - 'result_2b.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.2d - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-
 - name: TEST.2e - DELETED - [deleted] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
   register: result_2e
@@ -350,13 +334,6 @@
     - 'result_3c.diff[0].attach[1].deploy == false'
     - 'result_3c.diff[0].vrf_name == "ansible-vrf-int1"'
 
-- name: TEST.3d - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  # The vrf lite profile removal returns ok for deployment, but the switch
-  # takes time to remove the profile so wait for some time before creating
-  # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
-    timeout: 60
-
 - name: TEST.3e - DELETED - conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
   register: result_3e
@@ -379,7 +356,3 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: CLEANUP.2 - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60

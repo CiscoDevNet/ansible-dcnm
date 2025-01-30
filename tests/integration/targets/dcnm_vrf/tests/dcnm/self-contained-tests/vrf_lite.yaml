@@ -58,13 +58,6 @@
     fabric: "{{ fabric_1 }}"
     state: deleted
 
-- name: VRF LITE - sleep for 40 seconds for DCNM to completely update the state
-  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
-  # the profile so wait for some time before creating a new vrf, else the switch goes into
-  # OUT-OF-SYNC state
-  wait_for:
-    timeout: 40
-
 ###############################################
 ###                TESTS                     ##
 ###############################################
@@ -328,13 +321,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: VRF LITE - sleep for 40 seconds for DCNM to completely update the state
-  # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
-  # the profile so wait for some time before creating a new vrf, else the switch goes into
-  # OUT-OF-SYNC state
-  wait_for:
-    timeout: 40
 
 - name: VRF LITE- Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in multiple switch
   cisco.dcnm.dcnm_vrf: &conf5
