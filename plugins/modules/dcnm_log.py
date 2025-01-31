@@ -171,7 +171,6 @@ def main():
     try:
         dcnm_log = DcnmLog(module.params)
     except ValueError as error:
-        dcnm_log.result["failed"] = True
         module.fail_json(msg=error)
 
     try:

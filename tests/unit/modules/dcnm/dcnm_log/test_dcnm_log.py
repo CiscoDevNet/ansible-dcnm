@@ -36,7 +36,7 @@ from utils import (params_error_severity, params_missing_msg,
                    params_missing_severity)
 
 
-def test_log_00000() -> None:
+def test_dcnm_log_00000() -> None:
     """
     ### Classes and Methods
     - DcnmLog()
@@ -63,7 +63,7 @@ def test_log_00000() -> None:
     assert isinstance(instance.log, type(log_instance))
 
 
-def test_log_00010() -> None:
+def test_dcnm_log_00010() -> None:
     """
     ### Classes and Methods
     - DcnmLog()
@@ -90,7 +90,7 @@ def test_log_00010() -> None:
     assert isinstance(instance.log, type(log_instance))
 
 
-def test_log_00020() -> None:
+def test_dcnm_log_00020() -> None:
     """
     ### Classes and Methods
     - DcnmLog()
