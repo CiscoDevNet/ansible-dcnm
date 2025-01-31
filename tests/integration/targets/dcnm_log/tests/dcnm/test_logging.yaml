@@ -96,10 +96,9 @@
     - 'result_4.changed == false'
     - 'result_4.failed == false'
 
-- name: TEST.5 - Negative. Verify invalid severity (FOO).
+- name: TEST.5 - Verify missing severity uses default (DEBUG).
   cisco.dcnm.dcnm_log:
-    msg: Testing FOO severity
-    severity: FOO
+    msg: Testing missing severity
   register: result_5
   ignore_errors: true
 
@@ -107,18 +106,15 @@
   ansible.builtin.debug:
     var: result_5
 
-- set_fact:
-    error_message: value of severity must be one of
-
 - assert:
     that:
     - 'result_5.changed == false'
-    - 'result_5.failed == true'
-    - error_message in result_5.msg
+    - 'result_5.failed == false'
 
-- name: TEST.6 - Negative. Missing msg.
+- name: TEST.6 - Negative. Verify invalid severity (FOO).
   cisco.dcnm.dcnm_log:
-    severity: DEBUG
+    msg: Testing FOO severity
+    severity: FOO
   register: result_6
   ignore_errors: true
 
@@ -127,10 +123,30 @@
     var: result_6
 
 - set_fact:
-    error_message: missing required arguments
+    error_message: value of severity must be one of
 
 - assert:
     that:
     - 'result_6.changed == false'
     - 'result_6.failed == true'
     - error_message in result_6.msg
+
+- name: TEST.7 - Negative. Missing msg.
+  cisco.dcnm.dcnm_log:
+    severity: DEBUG
+  register: result_7
+  ignore_errors: true
+
+- name: debug result_7
+  ansible.builtin.debug:
+    var: result_7
+
+- set_fact:
+    error_message: missing required arguments
+
+- assert:
+    that:
+    - 'result_7.changed == false'
+    - 'result_7.failed == true'
+    - error_message in result_7.msg
+

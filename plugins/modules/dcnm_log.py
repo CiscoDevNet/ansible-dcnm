@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2022 Cisco and/or its affiliates.
+# Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -104,6 +104,13 @@ class DcnmLog:
         self.message = self.params.get("msg")
         self.severity = self.params.get("severity")
 
+        if self.message is None:
+            msg = "Exiting. Missing mandatory parameter: msg"
+            raise ValueError(msg)
+
+        if self.severity is None:
+            self.severity = "DEBUG"
+
         self.result = {}
         self.result["changed"] = False
         self.result["failed"] = False
@@ -160,7 +167,13 @@ def main():
     ]
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
-    dcnm_log = DcnmLog(module.params)
+
+    try:
+        dcnm_log = DcnmLog(module.params)
+    except ValueError as error:
+        dcnm_log.result["failed"] = True
+        module.fail_json(msg=error)
+
     try:
         dcnm_log.msg()
     except ValueError as error:
