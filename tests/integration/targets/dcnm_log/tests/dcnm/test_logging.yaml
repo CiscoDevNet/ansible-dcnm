@@ -96,37 +96,22 @@
     - 'result_4.changed == false'
     - 'result_4.failed == false'
 
-- name: TEST.5 - Verify lowercase (debug) severity.
+- name: TEST.5 - Negative. Verify invalid severity (FOO).
   cisco.dcnm.dcnm_log:
-    message: Testing debug severity
-    severity: debug
+    message: Testing FOO severity
+    severity: FOO
   register: result_5
+  ignore_errors: true
 
 - name: debug result_5
   ansible.builtin.debug:
     var: result_5
-
-- assert:
-    that:
-    - 'result_5.changed == false'
-    - 'result_5.failed == false'
-
-- name: TEST.6 - Negative. Verify invalid severity (FOO).
-  cisco.dcnm.dcnm_log:
-    message: Testing FOO severity
-    severity: FOO
-  register: result_6
-  ignore_errors: true
-
-- name: debug result_6
-  ansible.builtin.debug:
-    var: result_6
 
 - set_fact:
     message: value of severity must be one of
 
 - assert:
     that:
-    - 'result_6.changed == false'
-    - 'result_6.failed == true'
-    - message in result_6.msg
+    - 'result_5.changed == false'
+    - 'result_5.failed == true'
+    - message in result_5.msg

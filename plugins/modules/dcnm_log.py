@@ -16,15 +16,15 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Mike Wiebe"
+__author__ = "Allen Robel"
 
 DOCUMENTATION = """
 ---
 module: dcnm_log
-short_description: Log messages to the target pointed to by env variable NDFC_LOGGING_CONFIG.
+short_description: Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG.
 version_added: "3.6.1"
 description:
-    - "Log messages to the target pointed to by env variable NDFC_LOGGING_CONFIG."
+    - "Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG."
 options:
   message:
     description:
@@ -33,10 +33,10 @@ options:
     type: str
   severity:
     description:
-    - Case-insensitive logging severity with which to log the message
+    - Case-sensitive logging severity with which to log the message (must be UPPERCASE)
     required: no
     default: DEBUG
-    choices: ['CRITICAL', 'critical', 'DEBUG', 'debug', 'ERROR', 'error', 'INFO', 'info', 'WARNING', 'warning']
+    choices: ['CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING']
     type: str
 author:
     - Allen Robel (@quantumonion)
@@ -89,13 +89,12 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.common.log_v2 import Log
 
+
 class DcnmLog:
     """
-    - name: Log message
-      cisco.dcnm.dcnm_log:
-        message: This is a log message.
-
+    Log messages from a playbook via the standard Python logging module.
     """
+
     def __init__(self, module):
         self.class_name = self.__class__.__name__
 
@@ -105,13 +104,21 @@ class DcnmLog:
         self.params = module.params
         self.message = self.params.get("message")
         self.severity = self.params.get("severity")
-        self.severity = self.severity.upper()
 
-        self.result = dict()
+        self.result = {}
         self.result["changed"] = False
         self.result["failed"] = False
 
-    def log_message(self):
+    def log_message(self) -> None:
+        """
+        # Summary
+
+        Log message self.message with severity self.severity.
+
+        ## Raises
+
+        -   ValueError: if an error occurs when logging the message.
+        """
         try:
             if self.severity == "CRITICAL":
                 self.log.critical(self.message)
@@ -126,7 +133,11 @@ class DcnmLog:
         except ValueError as error:
             raise ValueError from error
 
+
 def main():
+    """
+    Entry point for module execution.
+    """
     # Logging setup
     try:
         log = Log()
@@ -134,19 +145,19 @@ def main():
     except (TypeError, ValueError):
         pass
 
-    # choices = []
-    # choices.append("CRITICAL")
-    # choices.append("")
-    element_spec = dict(
-        message=dict(
-            default="",
-        ),
-        severity=dict(
-            default="DEBUG",
-            choices=["CRITICAL", "critical", "DEBUG", "debug", "ERROR", "INFO", "WARNING"]
-            # choices=["CRITICAL", "critical", "DEBUG", "debug", "ERROR", "INFO", "WARNING"]
-        )
-    )
+    element_spec = {}
+    element_spec["message"] = {}
+    element_spec["message"]["default"] = ""
+
+    element_spec["severity"] = {}
+    element_spec["severity"]["default"] = "DEBUG"
+    element_spec["severity"]["choices"] = [
+        "CRITICAL",
+        "DEBUG",
+        "ERROR",
+        "INFO",
+        "WARNING",
+    ]
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=False)
     dcnm_log = DcnmLog(module)
@@ -157,6 +168,7 @@ def main():
         module.fail_json(msg=error)
 
     module.exit_json(**dcnm_log.result)
+
 
 if __name__ == "__main__":
     main()
