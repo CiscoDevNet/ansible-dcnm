@@ -22,7 +22,7 @@ DOCUMENTATION = """
 ---
 module: dcnm_log
 short_description: Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG.
-version_added: "3.6.1"
+version_added: "3.6.0"
 description:
     - "Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG."
 options:
@@ -150,7 +150,7 @@ def main():
     argument_spec["msg"]["required"] = True
 
     argument_spec["severity"] = {}
-    argument_spec["msg"]["required"] = False
+    argument_spec["severity"]["required"] = False
     argument_spec["severity"]["default"] = "DEBUG"
     argument_spec["severity"]["choices"] = [
         "CRITICAL",

@@ -115,3 +115,22 @@
     - 'result_5.changed == false'
     - 'result_5.failed == true'
     - error_message in result_5.msg
+
+- name: TEST.6 - Negative. Missing msg.
+  cisco.dcnm.dcnm_log:
+    severity: DEBUG
+  register: result_6
+  ignore_errors: true
+
+- name: debug result_6
+  ansible.builtin.debug:
+    var: result_6
+
+- set_fact:
+    error_message: missing required arguments
+
+- assert:
+    that:
+    - 'result_6.changed == false'
+    - 'result_6.failed == true'
+    - error_message in result_6.msg
