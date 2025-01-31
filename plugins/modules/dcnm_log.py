@@ -26,14 +26,14 @@ version_added: "3.6.1"
 description:
     - "Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG."
 options:
-  log_message:
+  msg:
     description:
     - The message to log
     required: yes
     type: str
   severity:
     description:
-    - Case-sensitive logging severity with which to log the log_message (must be UPPERCASE)
+    - Case-sensitive logging severity with which to log the msg (must be UPPERCASE)
     required: no
     default: DEBUG
     choices: ['CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING']
@@ -50,7 +50,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    log_message: dcnm_vrf.merged - Create VRF myVrf 
+    msg: dcnm_vrf.merged - Create VRF myVrf 
     severity: INFO
 
 - name: dcnm_vrf.merged - Create VRF myVrf
@@ -70,7 +70,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    log_message: dcnm_vrf.merged - Create VRF myVrf DONE 
+    msg: dcnm_vrf.merged - Create VRF myVrf DONE 
     severity: INFO
 
 """  # noqa
@@ -102,14 +102,14 @@ class DcnmLog:
 
         self.module = module
         self.params = module.params
-        self.message = self.params.get("log_message")
+        self.message = self.params.get("msg")
         self.severity = self.params.get("severity")
 
         self.result = {}
         self.result["changed"] = False
         self.result["failed"] = False
 
-    def log_message(self) -> None:
+    def msg(self) -> None:
         """
         # Summary
 
@@ -145,13 +145,14 @@ def main():
     except (TypeError, ValueError):
         pass
 
-    element_spec = {}
-    element_spec["log_message"] = {}
-    element_spec["log_message"]["default"] = ""
+    argument_spec = {}
+    argument_spec["msg"] = {}
+    argument_spec["msg"]["required"] = True
 
-    element_spec["severity"] = {}
-    element_spec["severity"]["default"] = "DEBUG"
-    element_spec["severity"]["choices"] = [
+    argument_spec["severity"] = {}
+    argument_spec["msg"]["required"] = False
+    argument_spec["severity"]["default"] = "DEBUG"
+    argument_spec["severity"]["choices"] = [
         "CRITICAL",
         "DEBUG",
         "ERROR",
@@ -159,10 +160,10 @@ def main():
         "WARNING",
     ]
 
-    module = AnsibleModule(argument_spec=element_spec, supports_check_mode=False)
+    module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
     dcnm_log = DcnmLog(module)
     try:
-        dcnm_log.log_message()
+        dcnm_log.msg()
     except ValueError as error:
         dcnm_log.result["failed"] = True
         module.fail_json(msg=error)

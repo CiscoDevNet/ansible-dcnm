@@ -37,7 +37,7 @@
 
 - name: TEST.1 - Verify DEBUG severity.
   cisco.dcnm.dcnm_log:
-    log_message: Testing DEBUG severity
+    msg: Testing DEBUG severity
     severity: DEBUG
   register: result_1
 
@@ -53,7 +53,7 @@
 
 - name: TEST.2 - Verify ERROR severity.
   cisco.dcnm.dcnm_log:
-    log_message: Testing ERROR severity
+    msg: Testing ERROR severity
     severity: ERROR
   register: result_2
 
@@ -68,7 +68,7 @@
 
 - name: TEST.3 - Verify INFO severity.
   cisco.dcnm.dcnm_log:
-    log_message: Testing INFO severity
+    msg: Testing INFO severity
     severity: INFO
   register: result_3
 
@@ -83,7 +83,7 @@
 
 - name: TEST.4 - Verify WARNING severity.
   cisco.dcnm.dcnm_log:
-    log_message: Testing WARNING severity
+    msg: Testing WARNING severity
     severity: WARNING
   register: result_4
 
@@ -98,7 +98,7 @@
 
 - name: TEST.5 - Negative. Verify invalid severity (FOO).
   cisco.dcnm.dcnm_log:
-    log_message: Testing FOO severity
+    msg: Testing FOO severity
     severity: FOO
   register: result_5
   ignore_errors: true
