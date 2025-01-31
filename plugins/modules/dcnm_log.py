@@ -95,13 +95,12 @@ class DcnmLog:
     Log messages from a playbook via the standard Python logging module.
     """
 
-    def __init__(self, module):
+    def __init__(self, params):
         self.class_name = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.module = module
-        self.params = module.params
+        self.params = params
         self.message = self.params.get("msg")
         self.severity = self.params.get("severity")
 
@@ -161,7 +160,7 @@ def main():
     ]
 
     module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=False)
-    dcnm_log = DcnmLog(module)
+    dcnm_log = DcnmLog(module.params)
     try:
         dcnm_log.msg()
     except ValueError as error:
