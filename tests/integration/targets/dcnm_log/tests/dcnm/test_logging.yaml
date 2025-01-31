@@ -37,7 +37,7 @@
 
 - name: TEST.1 - Verify DEBUG severity.
   cisco.dcnm.dcnm_log:
-    message: Testing DEBUG severity
+    log_message: Testing DEBUG severity
     severity: DEBUG
   register: result_1
 
@@ -53,7 +53,7 @@
 
 - name: TEST.2 - Verify ERROR severity.
   cisco.dcnm.dcnm_log:
-    message: Testing ERROR severity
+    log_message: Testing ERROR severity
     severity: ERROR
   register: result_2
 
@@ -68,7 +68,7 @@
 
 - name: TEST.3 - Verify INFO severity.
   cisco.dcnm.dcnm_log:
-    message: Testing INFO severity
+    log_message: Testing INFO severity
     severity: INFO
   register: result_3
 
@@ -83,7 +83,7 @@
 
 - name: TEST.4 - Verify WARNING severity.
   cisco.dcnm.dcnm_log:
-    message: Testing WARNING severity
+    log_message: Testing WARNING severity
     severity: WARNING
   register: result_4
 
@@ -98,7 +98,7 @@
 
 - name: TEST.5 - Negative. Verify invalid severity (FOO).
   cisco.dcnm.dcnm_log:
-    message: Testing FOO severity
+    log_message: Testing FOO severity
     severity: FOO
   register: result_5
   ignore_errors: true
@@ -108,10 +108,10 @@
     var: result_5
 
 - set_fact:
-    message: value of severity must be one of
+    error_message: value of severity must be one of
 
 - assert:
     that:
     - 'result_5.changed == false'
     - 'result_5.failed == true'
-    - message in result_5.msg
+    - error_message in result_5.msg

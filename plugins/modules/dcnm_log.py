@@ -26,14 +26,14 @@ version_added: "3.6.1"
 description:
     - "Log messages according to the configuration pointed to by the environment variable NDFC_LOGGING_CONFIG."
 options:
-  message:
+  log_message:
     description:
     - The message to log
     required: yes
     type: str
   severity:
     description:
-    - Case-sensitive logging severity with which to log the message (must be UPPERCASE)
+    - Case-sensitive logging severity with which to log the log_message (must be UPPERCASE)
     required: no
     default: DEBUG
     choices: ['CRITICAL', 'DEBUG', 'ERROR', 'INFO', 'WARNING']
@@ -50,7 +50,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    message: dcnm_vrf.merged - Create VRF myVrf 
+    log_message: dcnm_vrf.merged - Create VRF myVrf 
     severity: INFO
 
 - name: dcnm_vrf.merged - Create VRF myVrf
@@ -70,7 +70,7 @@ EXAMPLES = """
 
 - name: Log
   cisco.dcnm.dcnm_log:
-    message: dcnm_vrf.merged - Create VRF myVrf DONE 
+    log_message: dcnm_vrf.merged - Create VRF myVrf DONE 
     severity: INFO
 
 """  # noqa
@@ -102,7 +102,7 @@ class DcnmLog:
 
         self.module = module
         self.params = module.params
-        self.message = self.params.get("message")
+        self.message = self.params.get("log_message")
         self.severity = self.params.get("severity")
 
         self.result = {}
@@ -146,8 +146,8 @@ def main():
         pass
 
     element_spec = {}
-    element_spec["message"] = {}
-    element_spec["message"]["default"] = ""
+    element_spec["log_message"] = {}
+    element_spec["log_message"]["default"] = ""
 
     element_spec["severity"] = {}
     element_spec["severity"]["default"] = "DEBUG"
