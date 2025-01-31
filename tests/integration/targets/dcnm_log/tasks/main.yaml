@@ -1,0 +1,5 @@
+---
+
+- name: Import Role Tasks
+  ansible.builtin.import_tasks: dcnm.yaml
+  tags: ['dcnm']
