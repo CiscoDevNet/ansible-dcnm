@@ -740,6 +740,7 @@ class DcnmInventory:
                 "cdpSecondTimeout": "5",
                 "role": inv["role"].replace(" ", "_"),
                 "preserveConfig": inv["preserve_config"],
+                "discoveryCredForLan": "true",
             }
 
             resp = self.update_discover_params(inv_upd)
@@ -1186,7 +1187,7 @@ class DcnmInventory:
         if self.nd:
             path = self.nd_prefix + path
         # create_path = path + '/inventory/discover?gfBlockingCall=true'
-        create_path = path + "/inventory/discover"
+        create_path = path + "/inventory/discover?setAndUseDiscoveryCredForLan=true"
 
         if self.diff_create:
             for create in self.diff_create:
