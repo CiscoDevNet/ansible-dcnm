@@ -1487,7 +1487,8 @@ class DcnmVrf:
                     "configureStaticDefaultRouteFlag", True
                 ),
                 "bgpPassword": json_to_dict.get("bgpPassword", ""),
-                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", ""),
+                # "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", ""),
+                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", 3),
             }
 
             if self.dcnm_version > 11:
