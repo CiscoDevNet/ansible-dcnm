@@ -265,7 +265,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"Invalid choice provided" in result.msg'
+    - '"Invalid choice" in result.msg'
 
 - name: MERGED - Merge a Switch with invalid auth choice
   cisco.dcnm.dcnm_inventory:
@@ -286,7 +286,7 @@
 - assert:
     that:
     - 'result.changed == false'
-    - '"Invalid choice provided" in result.msg'
+    - '"Invalid choice" in result.msg'
 
 
 - name: MERGED - Merge a Switch without a config
