@@ -1487,7 +1487,7 @@ class DcnmVrf:
                     "configureStaticDefaultRouteFlag", True
                 ),
                 "bgpPassword": json_to_dict.get("bgpPassword", ""),
-                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", ""),
+                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", 3),
             }
 
             if self.dcnm_version > 11:
@@ -2154,6 +2154,9 @@ class DcnmVrf:
 
         all_vrfs = ""
         for want_a in self.want_attach:
+            # Check user intent for this VRF and don't add it to the deploy_vrf
+            # list if the user has not requested a deploy.
+            want_config = self.find_dict_in_list_by_key_value(search=self.config, key='vrf_name', value=want_a["vrfName"])
             deploy_vrf = ""
             attach_found = False
             for have_a in self.have_attach:
@@ -2168,12 +2171,10 @@ class DcnmVrf:
                         base.update({"lanAttachList": diff})
 
                         diff_attach.append(base)
-                        if deploy_vrf_bool is True:
+                        if (want_config['deploy'] is True) and (deploy_vrf_bool is True):
                             deploy_vrf = want_a["vrfName"]
                     else:
-                        if deploy_vrf_bool or self.conf_changed.get(
-                            want_a["vrfName"], False
-                        ):
+                        if want_config['deploy'] is True and (deploy_vrf_bool or self.conf_changed.get(want_a["vrfName"], False)):
                             deploy_vrf = want_a["vrfName"]
 
             msg = f"attach_found: {attach_found}"
