@@ -23,18 +23,13 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+from ..common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyAttach
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.image_policies import \
-    ImagePolicies
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.switch_issu_details import \
-    SwitchIssuDetailsBySerialNumber
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_upgrade.wait_for_controller_done import \
-    WaitForControllerDone
+from ..common.image_policies import ImagePolicies
+from ..common.properties import Properties
+from ..common.results import Results
+from .switch_issu_details import SwitchIssuDetailsBySerialNumber
+from .wait_for_controller_done import WaitForControllerDone
 
 
 @Properties.add_rest_send

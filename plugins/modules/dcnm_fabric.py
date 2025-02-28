@@ -2671,44 +2671,27 @@ import json
 import logging
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.controller_features import \
-    ControllerFeatures
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.log_v2 import \
-    Log
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_dcnm import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.common import \
-    FabricCommon
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
-    FabricCreateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.delete import \
-    FabricDelete
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_details_v2 import \
-    FabricDetailsByName
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_summary import \
-    FabricSummary
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
-    FabricTypes
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.query import \
-    FabricQuery
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.replaced import \
-    FabricReplacedBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.template_get import \
-    TemplateGet
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-    FabricUpdateBulk
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.verify_playbook_params import \
-    VerifyPlaybookParams
+
+from ..module_utils.common.controller_features import ControllerFeatures
+from ..module_utils.common.controller_version import ControllerVersion
+from ..module_utils.common.exceptions import ControllerResponseError
+from ..module_utils.common.log_v2 import Log
+from ..module_utils.common.properties import Properties
+from ..module_utils.common.response_handler import ResponseHandler
+from ..module_utils.common.rest_send_v2 import RestSend
+from ..module_utils.common.results import Results
+from ..module_utils.common.sender_dcnm import Sender
+from ..module_utils.fabric.common import FabricCommon
+from ..module_utils.fabric.create import FabricCreateBulk
+from ..module_utils.fabric.delete import FabricDelete
+from ..module_utils.fabric.fabric_details_v2 import FabricDetailsByName
+from ..module_utils.fabric.fabric_summary import FabricSummary
+from ..module_utils.fabric.fabric_types import FabricTypes
+from ..module_utils.fabric.query import FabricQuery
+from ..module_utils.fabric.replaced import FabricReplacedBulk
+from ..module_utils.fabric.template_get import TemplateGet
+from ..module_utils.fabric.update import FabricUpdateBulk
+from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
 
 
 def json_pretty(msg):
@@ -2731,6 +2714,7 @@ class Common(FabricCommon):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
         self.controller_features = ControllerFeatures()
+        self.controller_version = ControllerVersion()
         self.features = {}
         self._implemented_states = set()
 
@@ -2917,6 +2901,27 @@ class Common(FabricCommon):
             self.controller_features.filter = self.fabric_types.feature_name
             self.features[fabric_type] = self.controller_features.started
 
+    def get_controller_version(self):
+        """
+        ### Summary
+        Initialize and refresh self.controller_version.
+
+        ### Raises
+
+        -   ``ValueError`` if the controller returns an error when attempting
+            to retrieve the controller version.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self.controller_version.rest_send = self.rest_send
+            self.controller_version.refresh()
+        except (ControllerResponseError, ValueError) as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Controller returned error when attempting to retrieve "
+            msg += "controller version. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
 
 class Deleted(Common):
     """
@@ -3051,7 +3056,19 @@ class Merged(Common):
             fabric_name = want.get("FABRIC_NAME", None)
             fabric_type = want.get("FABRIC_TYPE", None)
 
-            if self.features[fabric_type] is False:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"self.features: {self.features}"
+            self.log.debug(msg)
+
+            is_4x = self.controller_version.is_controller_version_4x
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"fabric_type: {fabric_type}, "
+            msg += f"configurable: {self.features.get(fabric_type)}, "
+            msg += f"is_4x: {is_4x}"
+            self.log.debug(msg)
+
+            if self.features.get(fabric_type) is False and is_4x is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
@@ -3158,6 +3175,8 @@ class Merged(Common):
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
+
+        self.get_controller_version()
 
         self.fabric_details.rest_send = self.rest_send
         self.fabric_summary.rest_send = self.rest_send
@@ -3380,7 +3399,15 @@ class Replaced(Common):
                 self.need_create.append(want)
                 continue
 
-            if self.features[fabric_type] is False:
+            is_4x = self.controller_version.is_controller_version_4x
+
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"fabric_type: {fabric_type}, "
+            msg += f"configurable: {self.features.get(fabric_type)}, "
+            msg += f"is_4x: {is_4x}"
+            self.log.debug(msg)
+
+            if self.features.get(fabric_type) is False and is_4x is False:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Features required for fabric {fabric_name} "
                 msg += f"of type {fabric_type} are not running on the "
@@ -3405,6 +3432,8 @@ class Replaced(Common):
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: entered"
         self.log.debug(msg)
+
+        self.get_controller_version()
 
         self.fabric_details.rest_send = self.rest_send
         self.fabric_summary.rest_send = self.rest_send

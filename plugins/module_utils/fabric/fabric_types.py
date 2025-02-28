@@ -88,7 +88,27 @@ class FabricTypes:
         self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
 
+        # Map fabric type to the value that the controller GUI displays
+        # in the Fabric Type column at NDFC -> Manage -> Fabrics
+        # This is needed only for fabrics that use the External_Fabric
+        # template, e.g. ISN, and will be inserted into the POST request
+        # payload for external fabrics as (in the case of ISN fabric type):
+        # "EXT_FABRIC_TYPE": "Multi-Site External Network"
+        #
+        # Exposed via property fabric_type_to_ext_fabric_type_map
+        self._fabric_type_to_ext_fabric_type_map = {}
+        self._fabric_type_to_ext_fabric_type_map["ISN"] = "Multi-Site External Network"
+
         self._valid_fabric_types = sorted(self._fabric_type_to_template_name_map.keys())
+
+        # self._external_fabric_types is used in conjunction with
+        # self._fabric_type_to_ext_fabric_type_map.  This is used in (at least)
+        # FabricCreateCommon() to determine if EXT_FABRIC_TYPE key needs to be
+        # added to a payload.
+        #
+        # Exposed via property external_fabric_types
+        self._external_fabric_types = set()
+        self._external_fabric_types.add("ISN")
 
         self._mandatory_parameters_all_fabrics = []
         self._mandatory_parameters_all_fabrics.append("FABRIC_NAME")
@@ -129,6 +149,19 @@ class FabricTypes:
         self._properties["valid_fabric_types"] = self._valid_fabric_types
 
     @property
+    def external_fabric_types(self):
+        """
+        # Summary
+
+        set() containing all external fabric types e.g. ISN.
+
+        # Raises
+
+        None
+        """
+        return self._external_fabric_types
+
+    @property
     def fabric_type(self):
         """
         -   getter: Return the currently-set fabric type.
@@ -149,6 +182,19 @@ class FabricTypes:
             msg += f"Expected one of: {', '.join(self.valid_fabric_types)}."
             raise ValueError(msg)
         self._properties["fabric_type"] = value
+
+    @property
+    def fabric_type_to_ext_fabric_type_map(self):
+        """
+        # Summary
+
+        Returns a dictionary, keyed on fabric_type (e.g. "ISN"),
+        whose value is a string that the NDFC GUI uses to describe the
+        external fabric type. See the Fabric Type column at
+        NDFC -> Manage -> Fabrics for an example of how this is used
+        by the NDFC GUI.
+        """
+        return self._fabric_type_to_ext_fabric_type_map
 
     @property
     def feature_name(self):

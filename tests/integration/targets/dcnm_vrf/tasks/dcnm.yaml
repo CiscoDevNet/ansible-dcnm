@@ -16,8 +16,16 @@
   set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
+- name: debug
+  debug:
+     var: test_items
+
+- name: debug
+  debug:
+     var: testcase
+
 - name: run test cases (connection=httpapi)
-  include: "{{ test_case_to_run }} ansible_connection=httpapi connection={{ dcnm }}"
+  include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run

@@ -21,18 +21,14 @@ import inspect
 import logging
 from pathlib import PurePosixPath
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
-    ConvertFileInfoToTarget
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.discovery.discovery import \
+from ..common.api.v1.imagemanagement.rest.discovery.discovery import \
     EpBootflashDiscovery
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
+from ..common.api.v1.imagemanagement.rest.imagemgnt.bootflash.bootflash import \
     EpBootflashInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
+from ..common.conversion import ConversionUtils
+from ..common.properties import Properties
+from ..common.results import Results
+from .convert_file_info_to_target import ConvertFileInfoToTarget
 
 
 @Properties.add_rest_send

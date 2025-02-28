@@ -12,11 +12,13 @@
 #
 # SETUP
 # 1. The following images must already be uploaded to the controller
-#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    See vars: section in cisco/dcnm/playbooks/dcnm_image_policy/dcnm_tests.yaml
 #    - nxos_image_1
 #    - nxos_image_2
 #    - epld_image_1
 #    - epld_image_2
+#    - install_package_1
+#    - uninstall_package_1
 # 2. No need for fabric or switches
 # 3. Delete image policies under test, if they exist
 #    - image_policy_1
@@ -43,6 +45,8 @@
 #    - nxos_image_2
 #    - epld_image_1
 #    - epld_image_2
+#    - install_package_1
+#    - uninstall_package_1
 # 2. No need for fabric or switches
 #
 # Example vars for dcnm_image_policy integration tests
@@ -71,6 +75,8 @@
 #   nxos_image_2: n9000-dk9.10.3.1.F.bin
 #   nxos_release_1: 10.2.5_nxos64-cs_64bit
 #   nxos_release_2: 10.3.1_nxos64-cs_64bit
+#   install_package_1: cfg_cmp-0.3.1.0-1.x86_64.rpm
+#   uninstall_package_1: mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000
 #
 ################################################################################
 # SETUP
@@ -99,10 +105,12 @@
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
 #                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
+#                 "packageName": "cfg_cmp-0.3.1.0-1.x86_64.rpm",
 #                 "platform": "N9K",
 #                 "policyDescr": "KR5M",
 #                 "policyName": "KR5M",
 #                 "policyType": "PLATFORM",
+#                 "rpmimages": "mtx-grpctunnel-2.1.0.0-10.4.1.lib32_64_n9000",
 #                 "sequence_number": 1
 #             },
 #             {
@@ -162,7 +170,8 @@
 #             }
 #         ]
 #     }
-# }################################################################################
+# }
+################################################################################
 
 - name: OVERRIDDEN - TEST - Create two image policies using merged state
   cisco.dcnm.dcnm_image_policy:
@@ -172,6 +181,11 @@
       agnostic: false
       description: "{{ image_policy_1 }}"
       epld_image: "{{ epld_image_1 }}"
+      packages:
+        install:
+        - "{{ install_package_1 }}"
+        uninstall:
+        - "{{ uninstall_package_1 }}"
       platform: N9K
       release: "{{ nxos_release_1 }}"
       type: PLATFORM
@@ -190,6 +204,8 @@
     - result.changed == true
     - result.failed == false
     - (result.diff | length) == 2
+    - result.diff[0].packageName == install_package_1
+    - result.diff[0].rpmimages == uninstall_package_1
     - result.diff[0].policyName == image_policy_1
     - result.diff[1].policyName == image_policy_2
     - result.diff[0].policyDescr == image_policy_1
@@ -249,18 +265,14 @@
 #             {
 #                 "agnostic": false,
 #                 "epldImgName": "n9000-epld.10.2.5.M.img",
-#                 "fabricPolicyName": null,
-#                 "imagePresent": "Present",
 #                 "nxosVersion": "10.2.5_nxos64-cs_64bit",
 #                 "packageName": "",
 #                 "platform": "N9K",
 #                 "policyDescr": "KR5M overridden",
 #                 "policyName": "KR5M",
 #                 "policyType": "PLATFORM",
-#                 "role": null,
-#                 "rpmimages": null,
-#                 "sequence_number": 2,
-#                 "unInstall": false
+#                 "rpmimages": "",
+#                 "sequence_number": 2
 #             }
 #         ],
 #         "failed": false,
@@ -272,7 +284,7 @@
 #                 "state": "overridden"
 #             },
 #             {
-#                 "action": "update",
+#                 "action": "replace",
 #                 "check_mode": false,
 #                 "sequence_number": 2,
 #                 "state": "overridden"
@@ -334,6 +346,8 @@
     - image_policy_2 in result.diff[0].policyNames
     - result.diff[0].sequence_number == 1
     - result.diff[1].agnostic == false
+    - result.diff[1].packageName == ""
+    - result.diff[1].rpmimages == ""
     - result.diff[1].policyName == image_policy_1
     - result.diff[1].policyDescr == image_policy_1 + " overridden"
     - result.diff[1].epldImgName == epld_image_1
@@ -343,7 +357,7 @@
     - result.diff[1].sequence_number == 2
     - (result.metadata | length) == 2
     - result.metadata[0].action == "delete"
-    - result.metadata[1].action == "update"
+    - result.metadata[1].action == "replace"
     - result.metadata[0].state == "overridden"
     - result.metadata[1].state == "overridden"
     - result.metadata[0].check_mode == False
@@ -371,7 +385,7 @@
 # OVERRIDDEN - TEST - query image policies and verify results
 ################################################################################
 # Expected result
-# ok: [172.22.150.244] => {
+# ok: [dcnm] => {
 #     "result": {
 #         "changed": false,
 #         "diff": [
@@ -390,7 +404,7 @@
 #                 "policyType": "PLATFORM",
 #                 "ref_count": 0,
 #                 "role": null,
-#                 "rpmimages": null,
+#                 "rpmimages": "",
 #                 "sequence_number": 1,
 #                 "unInstall": false
 #             }
@@ -423,7 +437,7 @@
 #                             "policyType": "PLATFORM",
 #                             "ref_count": 0,
 #                             "role": null,
-#                             "rpmimages": null,
+#                             "rpmimages": "",
 #                             "unInstall": false
 #                         }
 #                     ],
@@ -465,6 +479,8 @@
     - result.failed == false
     - (result.diff | length) == 1
     - result.diff[0].agnostic == false
+    - result.diff[0].packageName == ""
+    - result.diff[0].rpmimages == ""
     - result.diff[0].policyName == image_policy_1
     - result.diff[0].policyDescr == image_policy_1 + " overridden"
     - result.diff[0].epldImgName == epld_image_1

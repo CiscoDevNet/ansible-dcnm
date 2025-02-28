@@ -20,9 +20,8 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.control import \
-    Control
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.fabric_types import \
+from ..control import Control
+from ........fabric.fabric_types import \
     FabricTypes
 
 

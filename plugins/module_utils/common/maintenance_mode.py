@@ -23,15 +23,12 @@ import copy
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.fabrics.fabrics import (
+from .api.v1.lan_fabric.rest.control.fabrics.fabrics import (
     EpFabricConfigDeploy, EpMaintenanceModeDeploy, EpMaintenanceModeDisable,
     EpMaintenanceModeEnable)
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from .conversion import ConversionUtils
+from .exceptions import ControllerResponseError
+from .properties import Properties
 
 
 @Properties.add_rest_send

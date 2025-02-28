@@ -22,14 +22,10 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.fm.fm import \
-    EpVersion
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
+from .api.v1.fm.fm import EpVersion
+from .conversion import ConversionUtils
+from .exceptions import ControllerResponseError
+from .properties import Properties
 
 
 @Properties.add_rest_send
@@ -233,14 +229,14 @@ class ControllerVersion:
     @property
     def version_major(self):
         """
-        Return the controller major version, if it exists.
+        Return the controller major version as a string, if it exists.
         Return None otherwise
 
         We are assuming semantic versioning based on:
         https://semver.org
 
         Possible values:
-            if version is 12.1.2e, return 12
+            if version is 12.1.2e, return "12"
             None
         """
         if self.version is None:
@@ -250,7 +246,7 @@ class ControllerVersion:
     @property
     def version_minor(self):
         """
-        Return the controller minor version, if it exists.
+        Return the controller minor version as a string, if it exists.
         Return None otherwise
 
         We are assuming semantic versioning based on:
@@ -267,7 +263,7 @@ class ControllerVersion:
     @property
     def version_patch(self):
         """
-        Return the controller minor version, if it exists.
+        Return the controller patch version as a string, if it exists.
         Return None otherwise
 
         We are assuming semantic versioning based on:
@@ -280,3 +276,26 @@ class ControllerVersion:
         if self.version is None:
             return None
         return (self._get("version").split("."))[2]
+
+    @property
+    def is_controller_version_4x(self) -> bool:
+        """
+        ### Summary
+
+        -   Return True if the controller version implies ND 4.0 or higher.
+        -   Return False otherwise.
+        """
+        method_name = inspect.stack()[0][3]
+
+        result = None
+        if int(self.version_major) == 12 and int(self.version_minor) < 3:
+            result = False
+        else:
+            result = True
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg = f"self.version: {self.version}, "
+        msg += f"Controller is version 4.x: {result}"
+        self.log.debug(msg)
+
+        return result

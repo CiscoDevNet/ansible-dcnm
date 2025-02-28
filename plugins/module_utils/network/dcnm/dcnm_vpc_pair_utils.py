@@ -22,6 +22,7 @@ dcnm_vpc_pair_paths = {
         "VPC_PAIR_DELETE_PATH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair?serialNumber={}",
         "VPC_PAIR_DEPLOY_PATH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/{}?forceShowRun=false",
         "VPC_PAIR_CFG_SAVE_PATH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-save",
+        "VPC_PEER_LINK_GET_PATH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair/recommendation?serialNumber={}&useVirtualPeerlink=true",
         "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
     },
 }
@@ -62,41 +63,6 @@ def dcnm_vpc_pair_utils_validate_profile(self, profile, arg_spec):
             self.module.fail_json(msg=mesg)
 
     return vpc_pair_profile_info
-
-
-def dcnm_vpc_pair_utils_check_if_meta(self, dev):
-
-    for elem in self.meta_switches:
-        if dev in elem:
-            return True
-    return False
-
-
-def dcnm_vpc_pair_utils_validate_devices(self, cfg):
-
-    if (cfg.get("peerOneId", None) is not None) and (
-        cfg["peerOneId"] not in self.managable
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerOneId"])
-        self.module.fail_json(msg=mesg)
-
-    if (cfg.get("peerTwoId", None) is not None) and (
-        cfg["peerTwoId"] not in self.managable
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerTwoId"])
-        self.module.fail_json(msg=mesg)
-
-    if (cfg.get("peerOneId", None) is not None) and (
-        dcnm_vpc_pair_utils_check_if_meta(self, cfg["peerOneId"]) is True
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerOneId"])
-        self.module.fail_json(msg=mesg)
-
-    if (cfg.get("peerTwoId", None) is not None) and (
-        dcnm_vpc_pair_utils_check_if_meta(self, cfg["peerTwoId"]) is True
-    ):
-        mesg = "Switch {0} is not Manageable".format(cfg["peerTwoId"])
-        self.module.fail_json(msg=mesg)
 
 
 def dcnm_vpc_pair_utils_translate_config(self, cfg):
@@ -209,6 +175,22 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
     else:
         return []
 
+    # Get useVirtualPeerlink information
+    path = self.paths["VPC_PEER_LINK_GET_PATH"]
+    path = path.format(peerOneId)
+
+    resp = dcnm_send(self.module, "GET", path)
+
+    if (
+        resp
+        and (resp["RETURN_CODE"] == 200)
+        and (resp["MESSAGE"] == "OK")
+        and resp["DATA"]
+    ):
+        useVirtualPeerlink = resp["DATA"][0].get("useVirtualPeerlink", None)
+    else:
+        return []
+
     # Get the Profile information now and combine both the first response data and the current one to
     # form the 'have' object. There is no direct call to get this combined information.
     path = self.paths["VPC_PAIR_GET_POLICY_PATH"]
@@ -226,6 +208,7 @@ def dcnm_vpc_pair_utils_get_vpc_pair_info_from_dcnm(self, swid):
         resp["DATA"]["peerTwoId"] = peerTwoId
         resp["DATA"]["peerOneDbId"] = peerOneDbId
         resp["DATA"]["peerTwoDbId"] = peerTwoDbId
+        resp["DATA"]["useVirtualPeerlink"] = useVirtualPeerlink
 
         # Some of the fields in 'have' may be different than what is sent in CREATE/UPDATE/DELETE payloads to DCNM. Update these
         # fields,if any, so that all keys are consistent between 'want' and 'have'. This will be necessary for compare function to
@@ -634,6 +617,9 @@ def dcnm_vpc_pair_utils_process_modify_payloads(self):
         path = self.paths["VPC_PAIR_UPDATE_PATH"]
 
         json_payload = json.dumps(elem)
+        # Sample json_payload
+        # '{"useVirtualPeerlink":true,"peerOneId":"FDO24020JMB","peerTwoId":"FDO24020JMT"}'
+
         resp = dcnm_send(self.module, "PUT", path, json_payload)
 
         if resp != []:

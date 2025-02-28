@@ -20,8 +20,7 @@ __author__ = "Allen Robel"
 import inspect
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.control.control import \
-    Control
+from ..control import Control
 
 
 class Switches(Control):

@@ -34,8 +34,8 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.replace im
     ImagePolicyReplaceBulk
 from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.update import (
     ImagePolicyUpdate, ImagePolicyUpdateBulk)
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_image_policy.fixture import \
-    load_fixture
+
+from fixture import load_fixture
 
 
 def get_state(action):

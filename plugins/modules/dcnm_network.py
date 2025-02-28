@@ -556,6 +556,45 @@ class DcnmNetwork:
         self.failed_to_rollback = False
         self.WAIT_TIME_FOR_DELETE_LOOP = 5  # in seconds
 
+    @staticmethod
+    def find_dict_in_list_by_key_value(search: list, key: str, value: str):
+        """
+        # Summary
+
+        Find a dictionary in a list of dictionaries.
+
+
+        ## Raises
+
+        None
+
+        ## Parameters
+
+        -   search: A list of dict
+        -   key: The key to lookup in each dict
+        -   value: The desired matching value for key
+
+        ## Returns
+
+        Either the first matching dict or None
+
+        ## Usage
+
+        ```python
+        content = [{"foo": "bar"}, {"foo": "baz"}]
+
+        match = find_dict_in_list_by_key_value(search=content, key="foo", value="baz")
+        print(f"{match}")
+        # -> {"foo": "baz"}
+
+        match = find_dict_in_list_by_key_value(search=content, key="foo", value="bingo")
+        print(f"{match}")
+        # -> None
+        ```
+        """
+        match = (d for d in search if d[key] == value)
+        return next(match, None)
+
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
         attach_list = []
@@ -2135,8 +2174,16 @@ class DcnmNetwork:
             if dep_net:
                 all_nets.append(dep_net)
 
+        modified_all_nets = copy.deepcopy(all_nets)
         if all_nets:
-            diff_deploy.update({"networkNames": ",".join(all_nets)})
+            # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
+            for net in all_nets:
+                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key='net_name', value=net)
+                if want_net_data['deploy'] is False:
+                    modified_all_nets.remove(net)
+
+        if modified_all_nets:
+            diff_deploy.update({"networkNames": ",".join(modified_all_nets)})
 
         self.diff_create = diff_create
         self.diff_create_update = diff_create_update

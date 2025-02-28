@@ -22,16 +22,12 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
+from ..common.api.v1.imagemanagement.rest.policymgnt.policymgnt import \
     EpPolicyEdit
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.merge_dicts_v2 import \
-    MergeDicts
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.properties import \
-    Properties
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.image_policy.image_policies import \
-    ImagePolicies
+from ..common.merge_dicts_v2 import MergeDicts
+from ..common.properties import Properties
+from ..common.results import Results
+from .image_policies import ImagePolicies
 
 
 @Properties.add_rest_send

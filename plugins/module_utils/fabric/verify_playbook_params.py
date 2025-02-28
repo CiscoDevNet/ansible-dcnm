@@ -20,12 +20,9 @@ import inspect
 import json
 import logging
 
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.conversion import \
-    ConversionUtils
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.param_info import \
-    ParamInfo
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.ruleset import \
-    RuleSet
+from ..common.conversion import ConversionUtils
+from .param_info import ParamInfo
+from .ruleset import RuleSet
 
 
 class VerifyPlaybookParams:
