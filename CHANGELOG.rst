@@ -18,7 +18,7 @@ Added
 
 - The following new modules are included in this release
     - ``dcnm_log`` - Module for logging messages based on environment variable ``NDFC_LOGGING_CONFIG``
-- Dynamic inventory for ansible-dcnm repository integrateion tests
+- Dynamic inventory for ansible-dcnm repository integration tests
 - Support for virtual peer link in ``dcnm_vpc_pair`` module
 - Support for pre-provision workflows when using ``dcnm_vpc_pair`` and ``dcnm_interface`` module
 - Support for port-channel sub-interfaces in ``dcnm_interface`` module
