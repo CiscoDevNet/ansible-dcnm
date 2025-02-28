@@ -71,7 +71,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.6.0
+    version: 3.7.0
 ```
 ## Using this collection
 
@@ -192,7 +192,7 @@ We welcome community contributions to this collection. If you find problems, ple
 
 ## Licensing
 
-Copyright (c) 2020-2024 Cisco and/or its affiliates.
+Copyright (c) 2020-2025 Cisco and/or its affiliates.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
