@@ -5262,8 +5262,8 @@ def main():
     try:
         log = Log()
         log.commit()
-    except ValueError as error:
-        module.fail_json(str(error))
+    except (TypeError, ValueError):
+        pass
 
     dcnm_intf = DcnmIntf(module)
 
