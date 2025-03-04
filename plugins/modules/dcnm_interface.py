@@ -3553,9 +3553,15 @@ class DcnmIntf:
     def dcnm_intf_replace_pc_members(self, want, have):
 
         # List of keys in nvPairs to protect
-        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF"]
+        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
         for have_int in have:
-            if have_int["policy"] == "int_port_channel_trunk_member_11_1" or have_int["policy"] == "int_vpc_peer_link_po_member_11_1":
+            if (
+                have_int["policy"] == "int_port_channel_trunk_member_11_1" or
+                have_int["policy"] == "int_port_channel_access_member_11_1" or
+                have_int["policy"] == "int_vpc_peer_link_po_member_11_1" or
+                have_int["policy"] == "int_vpc_trunk_po_member_11_1" or
+                have_int["policy"] == "int_vpc_access_po_member_11_1"
+            ):
                 # We have a port-channel member interface. Find the corresponding port-channel
                 # interface in want and replace the member interfaces
                 have_pc_name = have_int["interfaces"][0]["ifName"]
@@ -3570,6 +3576,7 @@ class DcnmIntf:
 
                         want_int['interfaces'][0]['nvPairs']['PC_MODE'] = have_int['interfaces'][0]['nvPairs'].get('PC_MODE')
                         want_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS'] = have_int['interfaces'][0]['nvPairs'].get('ALLOWED_VLANS')
+                        want_int['interfaces'][0]['nvPairs']['PRIMARY_INTF'] = have_int['interfaces'][0]['nvPairs'].get('PRIMARY_INTF')
 
                         if want_int['interfaces'][0]['nvPairs']['PC_MODE'] is None:
                             if 'PC_MODE' in protected_keys:
@@ -3585,7 +3592,6 @@ class DcnmIntf:
 
                         # Update want_int policy to be the same as have_int policy
                         want_int['policy'] = have_int['policy']
-                        break
 
         self.want = want
         self.have = have
@@ -3593,9 +3599,12 @@ class DcnmIntf:
     def dcnm_intf_compare_want_and_have(self, state):
 
         # Special Case Handling for PortChannnel Member Interfaces
-        have_pc_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_port_channel_trunk_member_11_1')
-        have_vpc_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_vpc_peer_link_po_member_11_1')
-        if have_pc_member or have_vpc_member:
+        have_pc_trunk_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_port_channel_trunk_member_11_1')
+        have_access_trunk_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_port_channel_access_member_11_1')
+        have_vpc_peer_link_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_vpc_peer_link_po_member_11_1')
+        have_vpc_access_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_vpc_access_po_member_11_1')
+        have_vpc_trunk_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_vpc_trunk_po_member_11_1')
+        if have_pc_trunk_member or have_vpc_peer_link_member or have_vpc_access_member or have_vpc_trunk_member or have_access_trunk_member:
             # We have at least one interface in self.have that is a port-channel member
             # Call function to replace self.want members with the correct values
             self.dcnm_intf_replace_pc_members(self.want, self.have)
