@@ -16,7 +16,7 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Mallik Mudigonda"
+__author__ = "Mallik Mudigonda, Mike Wiebe"
 
 DOCUMENTATION = """
 ---
@@ -1604,11 +1604,14 @@ EXAMPLES = """
 
 """
 
-import time
-import json
-import re
 import copy
+import inspect
+import json
+import logging
+import re
 import sys
+import time
+
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
@@ -1620,9 +1623,19 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     dcnm_version_supported,
     find_dict_in_list_by_key_value,
 )
+from ..module_utils.common.log_v2 import Log
 
+
+def json_pretty(msg):
+    """
+    Return a pretty-printed JSON string for logging messages
+    """
+    return json.dumps(msg, indent=4, sort_keys=True)
 
 class DcnmIntf:
+    """
+    Dcnm Interface methods, properties, and resources for all states.
+    """
 
     dcnm_intf_paths = {
         11: {
@@ -1648,6 +1661,9 @@ class DcnmIntf:
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
@@ -1665,7 +1681,6 @@ class DcnmIntf:
         self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
-        self.log_verbosity = 0
         self.fd = None
         self.vpc_ip_sn = {}
         self.ip_sn = {}
@@ -1855,14 +1870,9 @@ class DcnmIntf:
             "AA_FEX": 7,
         }
 
-    def log_msg(self, msg):
+        msg = "ENTERED DcnmIntf: "
+        self.log.debug(msg)
 
-        if self.fd is None:
-            self.fd = open("dcnm_intf.log", "a+")
-        if self.fd is not None:
-            self.fd.write(msg)
-            self.fd.write("\n")
-            self.fd.flush()
 
     def dcnm_intf_dump_have_all(self):
 
@@ -1884,7 +1894,7 @@ class DcnmIntf:
                     "UNDERLAY POLICIES": have["underlayPolicies"],
                 }
             )
-        self.log_msg(f"HAVE ALL = {lhave_all}")
+        self.log.debug(f"HAVE ALL = {lhave_all}")
 
     def dcnm_intf_xlate_speed(self, speed):
 
@@ -3574,6 +3584,15 @@ class DcnmIntf:
         return [], True
 
     def dcnm_intf_replace_pc_members(self, want, have):
+        """
+        ### Summary
+        Search ``self.want`` for any port-channel member interfaces that are also
+        found in ``self.have`` and if found will replace the member interfaces in
+        self.want with the correct policy and properties that can be managed.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
 
         # Get supported port-channel member policies
         member_policy_names = []
@@ -3588,11 +3607,15 @@ class DcnmIntf:
                 # We have a port-channel member interface. Find the corresponding port-channel
                 # interface in want and replace the member interfaces
                 have_pc_name = have_int["interfaces"][0]["ifName"]
-                for want_int in want:
-                    # Save index for want_int
 
+                for want_int in want:
                     match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
                     if match_int:
+                        msg = "\nHave Interface Info: "
+                        msg += f"{json_pretty(have_int)}"
+                        msg += "Want Interface Info Before Update: "
+                        msg += f"{json_pretty(want_int)}"
+                        self.log.debug(msg)
                         # Rewrite want nvPairs and policy with the correct information
                         want_int['interfaces'][0]['nvPairs']['PO_ID'] = have_int['interfaces'][0]['nvPairs']['PO_ID']
                         want_int['interfaces'][0]['nvPairs']['INTF_NAME'] = have_int['interfaces'][0]['nvPairs']['INTF_NAME']
@@ -3611,12 +3634,23 @@ class DcnmIntf:
                         # Update want_int policy to be the same as have_int policy
                         want_int['policy'] = have_int['policy']
 
+                        msg += "Want Interface Info After Update: "
+                        msg += f"{json_pretty(want_int)}"
+                        self.log.debug(msg)
+
         self.want = want
         self.have = have
 
     def dcnm_intf_compare_want_and_have(self, state):
+        """
+        ### Summary
+        Compare want and have states for each interface
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
 
-        # Special Case Handling for PortChannnel and Virtual PortChannel Member Interfaces
+        # Special Case Handling for PortChannnel (PC) and Virtual PortChannel (vPC) Member Interfaces.
         # Member interfaces are added to a PC or vPC when the PC or vPC is created and the
         # policy is applied to the member interface based on the type of PC or vPC.
         #
@@ -3626,10 +3660,14 @@ class DcnmIntf:
         #   - Interface Admin State
         #   - Interface Freeform Configuration
         #
-        # The following logic will search self.have for any member interfaces and if found
-        # will replace the member interfaces in self.want with the correct policy and properties
-        # that can be managed.  After that we process the new self.want as usual.
+        # The following logic will search self.have for any member interfaces that are also
+        # found in self.want and if found will replace the member interfaces in self.want
+        # with the correct policy and properties that can be managed. After that we process
+        # the new self.want as usual.
         have_member = {}
+        msg = "Member Policy Types: "
+        msg += f"{self.pol_pc_member_types[self.dcnm_version]}"
+        self.log.debug(msg)
         for key in self.pol_pc_member_types[self.dcnm_version].keys():
             # Potential Keys:
             # [
@@ -3646,7 +3684,7 @@ class DcnmIntf:
             have_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value=policy_name)
 
             # If we find any member in self.have that matches a policy in self.pol_pc_member_types[self.dcnm_version].keys()
-            # then call the self.dcnm_intf_replace_pc_members function.
+            # then call the self.dcnm_intf_replace_pc_members function to process all PC and vPC members.
             if have_member:
                 self.dcnm_intf_replace_pc_members(self.want, self.have)
                 break
@@ -5217,6 +5255,13 @@ def main():
     module = AnsibleModule(
         argument_spec=element_spec, supports_check_mode=True
     )
+
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except ValueError as error:
+        module.fail_json(str(error))
 
     dcnm_intf = DcnmIntf(module)
 
