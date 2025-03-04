@@ -1632,6 +1632,7 @@ def json_pretty(msg):
     """
     return json.dumps(msg, indent=4, sort_keys=True)
 
+
 class DcnmIntf:
     """
     Dcnm Interface methods, properties, and resources for all states.
@@ -1873,7 +1874,6 @@ class DcnmIntf:
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
 
-
     def dcnm_intf_dump_have_all(self):
 
         lhave_all = []
@@ -1894,7 +1894,9 @@ class DcnmIntf:
                     "UNDERLAY POLICIES": have["underlayPolicies"],
                 }
             )
-        self.log.debug(f"HAVE ALL = {lhave_all}")
+        msg = "HAVE ALL = "
+        msg += f"{json_pretty(lhave_all)}"
+        self.log.debug(msg)
 
     def dcnm_intf_xlate_speed(self, speed):
 
