@@ -3602,7 +3602,7 @@ class DcnmIntf:
                             want_int['interfaces'][0]['nvPairs'][key] = have_int['interfaces'][0]['nvPairs'].get(key)
                             if want_int['interfaces'][0]['nvPairs'][key] is None and key in protected_keys:
                                 protected_keys.remove(key)
- 
+
                         # Delete unprotected keys from want_int nvPairs
                         for key in list(want_int['interfaces'][0]['nvPairs'].keys()):
                             if key not in protected_keys:
@@ -5296,7 +5296,6 @@ def main():
     if module.check_mode:
         dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
-
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
     module.exit_json(**dcnm_intf.result)
