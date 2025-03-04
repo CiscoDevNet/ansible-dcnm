@@ -3555,7 +3555,7 @@ class DcnmIntf:
         # List of keys in nvPairs to protect
         protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF"]
         for have_int in have:
-            if have_int["policy"] == "int_port_channel_trunk_member_11_1":
+            if have_int["policy"] == "int_port_channel_trunk_member_11_1" or have_int["policy"] == "int_vpc_peer_link_po_member_11_1":
                 # We have a port-channel member interface. Find the corresponding port-channel
                 # interface in want and replace the member interfaces
                 have_pc_name = have_int["interfaces"][0]["ifName"]
@@ -3564,10 +3564,19 @@ class DcnmIntf:
 
                     match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
                     if match_int:
+                        # Rewrite want nvPairs and policy with the correct information
                         want_int['interfaces'][0]['nvPairs']['PO_ID'] = have_int['interfaces'][0]['nvPairs']['PO_ID']
-                        want_int['interfaces'][0]['nvPairs']['PC_MODE'] = have_int['interfaces'][0]['nvPairs']['PC_MODE']
                         want_int['interfaces'][0]['nvPairs']['INTF_NAME'] = have_int['interfaces'][0]['nvPairs']['INTF_NAME']
-                        want_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS'] = have_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS']
+
+                        want_int['interfaces'][0]['nvPairs']['PC_MODE'] = have_int['interfaces'][0]['nvPairs'].get('PC_MODE')
+                        want_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS'] = have_int['interfaces'][0]['nvPairs'].get('ALLOWED_VLANS')
+
+                        if want_int['interfaces'][0]['nvPairs']['PC_MODE'] is None:
+                            if 'PC_MODE' in protected_keys:
+                                protected_keys.remove('PC_MODE')
+                        if want_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS'] is None:
+                            if 'ALLOWED_VLANS' in protected_keys:
+                                protected_keys.remove('ALLOWED_VLANS')
 
                         # Delete unprotected keys from want_int nvPairs
                         for key in list(want_int['interfaces'][0]['nvPairs'].keys()):
@@ -3577,7 +3586,6 @@ class DcnmIntf:
                         # Update want_int policy to be the same as have_int policy
                         want_int['policy'] = have_int['policy']
                         break
-                        # Rewrite want nvPairs and policy with the correct information
 
         self.want = want
         self.have = have
@@ -3586,7 +3594,8 @@ class DcnmIntf:
 
         # Special Case Handling for PortChannnel Member Interfaces
         have_pc_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_port_channel_trunk_member_11_1')
-        if have_pc_member:
+        have_vpc_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_vpc_peer_link_po_member_11_1')
+        if have_pc_member or have_vpc_member:
             # We have at least one interface in self.have that is a port-channel member
             # Call function to replace self.want members with the correct values
             self.dcnm_intf_replace_pc_members(self.want, self.have)
