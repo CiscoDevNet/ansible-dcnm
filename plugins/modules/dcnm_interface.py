@@ -1618,6 +1618,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     get_ip_sn_dict,
     dcnm_version_supported,
+    find_dict_in_list_by_key_value,
 )
 
 
@@ -1919,7 +1920,7 @@ class DcnmIntf:
         else:
             return ""
 
-    # Flatten the incoming config database and have the required fileds updated.
+    # Flatten the incoming config database and have the required fields updated.
     # This modified config DB will be used while creating payloads. To avoid
     # messing up the incoming config make a copy of it.
     def dcnm_intf_copy_config(self):
@@ -3549,7 +3550,46 @@ class DcnmIntf:
                 return match_have[0], False
         return [], True
 
+    def dcnm_intf_replace_pc_members(self, want, have):
+
+        # List of keys in nvPairs to protect
+        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF"]
+        for have_int in have:
+            if have_int["policy"] == "int_port_channel_trunk_member_11_1":
+                # We have a port-channel member interface. Find the corresponding port-channel
+                # interface in want and replace the member interfaces
+                have_pc_name = have_int["interfaces"][0]["ifName"]
+                for want_int in want:
+                    # Save index for want_int
+
+                    match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
+                    if match_int:
+                        want_int['interfaces'][0]['nvPairs']['PO_ID'] = have_int['interfaces'][0]['nvPairs']['PO_ID']
+                        want_int['interfaces'][0]['nvPairs']['PC_MODE'] = have_int['interfaces'][0]['nvPairs']['PC_MODE']
+                        want_int['interfaces'][0]['nvPairs']['INTF_NAME'] = have_int['interfaces'][0]['nvPairs']['INTF_NAME']
+                        want_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS'] = have_int['interfaces'][0]['nvPairs']['ALLOWED_VLANS']
+
+                        # Delete unprotected keys from want_int nvPairs
+                        for key in list(want_int['interfaces'][0]['nvPairs'].keys()):
+                            if key not in protected_keys:
+                                want_int['interfaces'][0]['nvPairs'].pop(key)
+
+                        # Update want_int policy to be the same as have_int policy
+                        want_int['policy'] = have_int['policy']
+                        break
+                        # Rewrite want nvPairs and policy with the correct information
+
+        self.want = want
+        self.have = have
+
     def dcnm_intf_compare_want_and_have(self, state):
+
+        # Special Case Handling for PortChannnel Member Interfaces
+        have_pc_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value='int_port_channel_trunk_member_11_1')
+        if have_pc_member:
+            # We have at least one interface in self.have that is a port-channel member
+            # Call function to replace self.want members with the correct values
+            self.dcnm_intf_replace_pc_members(self.want, self.have)
 
         for want in self.want:
 
@@ -5194,6 +5234,7 @@ def main():
     if module.check_mode:
         dcnm_intf.result["changed"] = False
         module.exit_json(**dcnm_intf.result)
+
 
     dcnm_intf.dcnm_intf_send_message_to_dcnm()
     module.exit_json(**dcnm_intf.result)

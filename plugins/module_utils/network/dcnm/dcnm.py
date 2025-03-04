@@ -820,3 +820,41 @@ def dcnm_post_request(path, hdrs, verify_flag, upload_files):
         json_resp["REQUEST_PATH"] = path
         json_resp.pop("message")
     return json_resp
+
+def find_dict_in_list_by_key_value(search: list, key: str, value: str):
+    """
+    # Summary
+
+    Find a dictionary in a list of dictionaries.
+
+
+    ## Raises
+
+    None
+
+    ## Parameters
+
+    -   search: A list of dict
+    -   key: The key to lookup in each dict
+    -   value: The desired matching value for key
+
+    ## Returns
+
+    Either the first matching dict or None
+
+    ## Usage
+
+    ```python
+    content = [{"foo": "bar"}, {"foo": "baz"}]
+
+    match = find_dict_in_list_by_key_value(search=content, key="foo", value="baz")
+    print(f"{match}")
+    # -> {"foo": "baz"}
+
+    match = find_dict_in_list_by_key_value(search=content, key="foo", value="bingo")
+    print(f"{match}")
+    # -> None
+    ```
+    """
+    match = (d for d in search if d[key] == value)
+    return next(match, None)
