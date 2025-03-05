@@ -1262,7 +1262,9 @@ class DcnmLinks:
             )
         if (
             cfg[0]["template"]
-            != self.templates["ios_xe_int_intra_fabric_num_link"]
+            != self.templates["ios_xe_int_intra_fabric_num_link"] or
+            cfg[0]["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
         ):
             link_spec["profile"]["mtu"] = dict(required=True, type="int")
         else:
