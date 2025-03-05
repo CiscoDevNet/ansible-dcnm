@@ -1773,17 +1773,28 @@ class DcnmLinks:
         """
 
         link_payload["nvPairs"] = {}
-        link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get(
-            "admin_state"
-        )
-        link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu")
-        link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
-            "peer1_description"
-        )
-        link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get(
-            "peer2_description"
-        )
-
+        if link["profile"].get("admin_state", "") != "":
+            link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get(
+                "admin_state"
+            )
+        else:
+            link_payload["nvPairs"]["ADMIN_STATE"] = False
+        if link["profile"].get("mtu", "") != "":
+            link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu")
+        else:
+            link_payload["nvPairs"]["MTU"] = 9216
+        if link["profile"].get("peer1_description", "") != "":
+            link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
+                "peer1_description"
+            )
+        else:
+            link_payload["nvPairs"]["PEER1_DESC"] = ""
+        if link["profile"].get("peer2_description"):
+            link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get(
+                "peer2_description"
+            )
+        else:
+            link_payload["nvPairs"]["PEER2_DESC"] = ""
         if link["profile"].get("peer1_cmds") == []:
             link_payload["nvPairs"]["PEER1_CONF"] = ""
         else:
