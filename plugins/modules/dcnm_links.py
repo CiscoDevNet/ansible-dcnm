@@ -1785,12 +1785,12 @@ class DcnmLinks:
             link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get(
                 "admin_state"
             )
-        link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu")
+        link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu", 1500)
         link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
-            "peer1_description"
+            "peer1_description", ""
         )
         link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get(
-            "peer2_description"
+            "peer2_description", ""
         )
         if link["profile"].get("peer1_cmds") == []:
             link_payload["nvPairs"]["PEER1_CONF"] = ""
