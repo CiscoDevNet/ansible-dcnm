@@ -1253,9 +1253,17 @@ class DcnmLinks:
                     type="ipv4", default=""
                 )
 
-        link_spec["profile"]["admin_state"] = dict(
-            required=True, type="bool", choices=[True, False]
-        )
+        if (
+            cfg[0]["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+        ):
+            link_spec["profile"]["admin_state"] = dict(
+                required=True, type="bool", choices=[True, False]
+            )
+        else:
+            link_spec["profile"]["admin_state"] = dict(
+                required=False, type="bool", choices=[True, False]
+            )
         if (
             cfg[0]["template"]
             != self.templates["ios_xe_int_intra_fabric_num_link"]
