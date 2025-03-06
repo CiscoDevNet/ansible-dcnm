@@ -21,4 +21,4 @@ plugins/modules/dcnm_bootflash.py validate-modules:missing-gplv3-license # GPLv3
 plugins/modules/dcnm_log.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/module_utils/common/sender_requests.py import-3.10 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
-plugins/modules/dcnm_child_fabric.py alidate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/modules/dcnm_child_fabric.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
