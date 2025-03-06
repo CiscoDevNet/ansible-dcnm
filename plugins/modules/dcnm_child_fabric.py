@@ -42,12 +42,6 @@ options:
         type: list
         elements: dict
         suboptions:
-            DEPLOY:
-                default: False
-                description:
-                - Save and deploy the fabric configuration.
-                required: false
-                type: bool
             FABRIC_NAME:
                 description:
                 - The name of the MSD fabric.
@@ -62,7 +56,7 @@ options:
 
 EXAMPLES = """
 
-- name: Create fabrics
+- name: add child fabrics to MSD
   cisco.dcnm.dcnm_child_fabric:
     state: merged
     config:
@@ -168,8 +162,9 @@ class childCommon():
                 if fabric == item["destFabric"]:
                     break
             else:
+                invalid_fab = item["destFabric"]
                 msg = f"{self.class_name}: {method_name}: "
-                msg += f"Playbook configuration for FABRIC_NAME {item["destFabric"]} "
+                msg += f"Playbook configuration for FABRIC_NAME {invalid_fab} "
                 msg += "is not found in Controller. Please create and try again"
                 raise ValueError(msg)
 
@@ -179,8 +174,9 @@ class childCommon():
             for fabric in self.data:
                 if fabric == item["destFabric"]:
                     if (self.data[fabric]['fabricType'] != "MSD"):
+                        invalid_fab = item["destFabric"]
                         msg = f"{self.class_name}: {method_name}: "
-                        msg += f"Playbook configuration for FABRIC_NAME {item["destFabric"]} "
+                        msg += f"Playbook configuration for FABRIC_NAME {invalid_fab} "
                         msg += "is not of type MSD"
                         raise ValueError(msg)
 
@@ -191,25 +187,26 @@ class childCommon():
                 if fabric == item["sourceFabric"]:
                     break
             else:
+                invalid_fab = item["sourceFabric"]
                 msg = f"{self.class_name}: {method_name}: "
-                msg += f"Playbook configuration for CHILD_FABRIC_NAME {item["sourceFabric"]} "
+                msg += f"Playbook configuration for CHILD_FABRIC_NAME {invalid_fab} "
                 msg += "is not found in Controller. Please create and try again"
                 raise ValueError(msg)
 
     def verify_child_fabric_is_member_of_another_fabric(self):
-        method_name = inspect.stack()[0][3]
         for item in self.payloads:
             for fabric in self.data:
                 if fabric == item["sourceFabric"]:
                     if (self.data[fabric]['fabricParent'] != item["destFabric"]) \
                             and (self.data[fabric]['fabricParent'] != "None"):
-                        msg = f"Invalid Operation: Child fabric {item["sourceFabric"]} "
-                        msg += f"is member of another Fabric {self.data[fabric]['fabricParent']}."
+                        inv_child_fab = item["sourceFabric"]
+                        another_fab = self.data[fabric]['fabricParent']
+                        msg = f"Invalid Operation: Child fabric {inv_child_fab} "
+                        msg += f"is member of another Fabric {another_fab}."
                         self.log.debug(msg)
                         raise ValueError(msg)
 
     def verify_child_fabric_is_already_member(self) -> bool:
-        method_name = inspect.stack()[0][3]
         for item in self.payloads:
             for fabric in self.data:
                 if fabric == item["sourceFabric"]:
