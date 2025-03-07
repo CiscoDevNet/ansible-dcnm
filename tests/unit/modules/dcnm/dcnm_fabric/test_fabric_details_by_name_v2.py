@@ -161,6 +161,7 @@ def test_fabric_details_by_name_v2_00200(fabric_details_by_name_v2) -> None:
     assert instance.fabric_id == "FABRIC-2"
     assert instance.fabric_type == "Switch_Fabric"
     assert instance.is_read_only is None
+    assert instance.per_vrf_loopback_auto_provision is False
     assert instance.replication_mode == "Multicast"
     assert instance.template_name == "Easy_Fabric"
 
