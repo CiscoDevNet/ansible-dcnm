@@ -382,7 +382,7 @@ class FabricDetails:
         try:
             return self._get_nv_pair("PER_VRF_LOOPBACK_AUTO_PROVISION")
         except ValueError as error:
-            msg = f"Failed to retrieve per_vrf_loopback_auto_provision: "
+            msg = "Failed to retrieve per_vrf_loopback_auto_provision: "
             msg += f"Error detail: {error}"
             self.log.debug(msg)
             return None
