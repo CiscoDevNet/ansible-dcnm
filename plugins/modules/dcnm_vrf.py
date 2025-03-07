@@ -2715,7 +2715,8 @@ class DcnmVrf:
                     msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
 
                     self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-                    # TODO: add a pylint: disable=inconsistent-return at the top and remove this return
+                    # TODO: add a _pylint_: disable=inconsistent-return
+                    # at the top and remove this return
                     return
 
                 if not vrf_attach_objects["DATA"]:
