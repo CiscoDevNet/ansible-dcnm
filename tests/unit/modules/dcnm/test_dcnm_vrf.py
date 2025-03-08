@@ -622,7 +622,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True)
         self.assertEqual(
-            result.get("msg"), "Fabric test_fabric not present on the controller"
+            result.get("msg"), "caller: get_have.  Fabric test_fabric not present on the controller"
         )
 
     def test_dcnm_vrf_merged_redeploy(self):
@@ -785,8 +785,11 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
         result = self.execute_module(changed=False, failed=True)
         msg = "DcnmVrf.update_attach_params_extension_values: "
-        msg += "VRF LITE cannot be attached to switch 10.10.10.225 "
-        msg += "with role leaf"
+        msg += "caller: update_attach_params. "
+        msg += "VRF LITE attachments are appropriate only for switches "
+        msg += "with Border roles e.g. Border Gateway, Border Spine, etc. "
+        msg += "The playbook and/or controller settings for "
+        msg += "switch 10.10.10.225 with role leaf need review."
         self.assertEqual(result["msg"], msg)
 
     def test_dcnm_vrf_merged_with_update(self):
