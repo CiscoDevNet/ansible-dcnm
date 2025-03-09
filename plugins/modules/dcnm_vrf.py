@@ -1337,6 +1337,11 @@ class DcnmVrf:
                 continue
             dict1_value = str(dict1.get(key)).lower()
             dict2_value = str(dict2.get(key)).lower()
+            # Treat None and "" as equal
+            if dict1_value in (None, "none", ""):
+                dict1_value = "none"
+            if dict2_value in (None, "none", ""):
+                dict2_value = "none"
             if dict1_value != dict2_value:
                 msg = f"Values differ: key {key} "
                 msg += f"dict1_value {dict1_value}, type {type(dict1_value)} != "
@@ -1815,7 +1820,7 @@ class DcnmVrf:
                 vrf_attach.update({"lanAttachList": vrfs})
                 want_attach.append(vrf_attach)
 
-        if all_vrfs:
+        if len(all_vrfs) != 0:
             vrf_names = ",".join(all_vrfs)
             want_deploy.update({"vrfNames": vrf_names})
 
@@ -1857,7 +1862,7 @@ class DcnmVrf:
         diff_undeploy = {}
         diff_delete = {}
 
-        all_vrfs = ""
+        all_vrfs = []
 
         if self.config:
 
@@ -1881,9 +1886,9 @@ class DcnmVrf:
                 if detach_items:
                     have_a.update({"lanAttachList": detach_items})
                     diff_detach.append(have_a)
-                    all_vrfs += have_a["vrfName"] + ","
-            if all_vrfs:
-                diff_undeploy.update({"vrfNames": all_vrfs[:-1]})
+                    all_vrfs.append(have_a["vrfName"])
+            if len(all_vrfs) != 0:
+                diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         else:
 
@@ -1892,11 +1897,11 @@ class DcnmVrf:
                 if detach_items:
                     have_a.update({"lanAttachList": detach_items})
                     diff_detach.append(have_a)
-                    all_vrfs += have_a["vrfName"] + ","
+                    all_vrfs.append(have_a["vrfName"])
 
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
-            if all_vrfs:
-                diff_undeploy.update({"vrfNames": all_vrfs[:-1]})
+            if len(all_vrfs) != 0:
+                diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
@@ -1921,7 +1926,7 @@ class DcnmVrf:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        all_vrfs = ""
+        all_vrfs = []
         diff_delete = {}
 
         self.get_diff_replace()
@@ -1946,12 +1951,12 @@ class DcnmVrf:
                 if detach_list:
                     have_a.update({"lanAttachList": detach_list})
                     diff_detach.append(have_a)
-                    all_vrfs += have_a["vrfName"] + ","
+                    all_vrfs.append(have_a["vrfName"])
 
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
 
-        if all_vrfs:
-            diff_undeploy.update({"vrfNames": all_vrfs[:-1]})
+        if len(all_vrfs) != 0:
+            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_delete = diff_delete
         self.diff_detach = diff_detach
@@ -1976,7 +1981,7 @@ class DcnmVrf:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        all_vrfs = ""
+        all_vrfs = []
 
         self.get_diff_merge(replace=True)
         diff_attach = self.diff_attach
@@ -2037,17 +2042,17 @@ class DcnmVrf:
                         "lanAttachList": replace_vrf_list,
                     }
                     diff_attach.append(r_vrf_dict)
-                    all_vrfs += have_a["vrfName"] + ","
+                    all_vrfs.append(have_a["vrfName"])
 
-        if not all_vrfs:
+        if len(all_vrfs) == 0:
             self.diff_attach = diff_attach
             self.diff_deploy = diff_deploy
             return
 
         if not self.diff_deploy:
-            diff_deploy.update({"vrfNames": all_vrfs[:-1]})
+            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
         else:
-            vrfs = self.diff_deploy["vrfNames"] + "," + all_vrfs[:-1]
+            vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(all_vrfs)
             diff_deploy.update({"vrfNames": vrfs})
 
         self.diff_attach = copy.deepcopy(diff_attach)
@@ -2292,11 +2297,13 @@ class DcnmVrf:
         diff_attach = []
         diff_deploy = {}
 
-        all_vrfs = ""
+        all_vrfs = []
         for want_a in self.want_attach:
             # Check user intent for this VRF and don't add it to the deploy_vrf
             # list if the user has not requested a deploy.
-            want_config = self.find_dict_in_list_by_key_value(search=self.config, key='vrf_name', value=want_a["vrfName"])
+            want_config = self.find_dict_in_list_by_key_value(
+                search=self.config, key="vrf_name", value=want_a["vrfName"]
+            )
             deploy_vrf = ""
             attach_found = False
             for have_a in self.have_attach:
@@ -2311,10 +2318,15 @@ class DcnmVrf:
                         base.update({"lanAttachList": diff})
 
                         diff_attach.append(base)
-                        if (want_config['deploy'] is True) and (deploy_vrf_bool is True):
+                        if (want_config["deploy"] is True) and (
+                            deploy_vrf_bool is True
+                        ):
                             deploy_vrf = want_a["vrfName"]
                     else:
-                        if want_config['deploy'] is True and (deploy_vrf_bool or self.conf_changed.get(want_a["vrfName"], False)):
+                        if want_config["deploy"] is True and (
+                            deploy_vrf_bool
+                            or self.conf_changed.get(want_a["vrfName"], False)
+                        ):
                             deploy_vrf = want_a["vrfName"]
 
             msg = f"attach_found: {attach_found}"
@@ -2338,10 +2350,10 @@ class DcnmVrf:
                 #     atch["deployment"] = True
 
             if deploy_vrf:
-                all_vrfs += deploy_vrf + ","
+                all_vrfs.append(deploy_vrf)
 
-        if all_vrfs:
-            diff_deploy.update({"vrfNames": all_vrfs[:-1]})
+        if len(all_vrfs) != 0:
+            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
