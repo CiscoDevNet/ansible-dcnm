@@ -409,7 +409,7 @@ class Deleted(childCommon):
                 self.delete = childFabricDelete()
                 self.delete.rest_send = self.rest_send
                 self.delete.results = self.results
-        
+
                 fabric_names_to_delete = []
                 for want in self.payloads:
                     fabric_names_to_delete.append(want["sourceFabric"])
@@ -418,7 +418,7 @@ class Deleted(childCommon):
                     self.delete.fabric_names = fabric_names_to_delete
                 except ValueError as error:
                     raise ValueError(f"{error}") from error
-        
+
                 try:
                     self.delete.commit(item)
                 except ValueError as error:
@@ -508,7 +508,7 @@ class Merged(childCommon):
                     self.add.fabric_names = fabric_names_to_add
                 except ValueError as error:
                     raise ValueError(f"{error}") from error
-        
+
                 try:
                     self.add.commit(item)
                 except ValueError as error:
