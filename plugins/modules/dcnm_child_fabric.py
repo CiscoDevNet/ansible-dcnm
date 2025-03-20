@@ -206,12 +206,11 @@ class childCommon():
                         self.log.debug(msg)
                         raise ValueError(msg)
 
-    def verify_child_fabric_is_already_member(self) -> bool:
-        for item in self.payloads:
-            for fabric in self.data:
-                if fabric == item["sourceFabric"]:
-                    if (self.data[fabric]['fabricParent'] == item["destFabric"]):
-                        return True
+    def verify_child_fabric_is_already_member(self, item) -> bool:
+        for fabric in self.data:
+            if fabric == item["sourceFabric"]:
+                if (self.data[fabric]['fabricParent'] == item["destFabric"]):
+                    return True
         return False
 
     def get_want(self):
@@ -399,29 +398,31 @@ class Deleted(childCommon):
 
         self.verify_parent_fab_exists_in_controller()
         self.verify_parent_fab_is_MSD()
-        if not self.verify_child_fabric_is_already_member():
-            self.results.result_current = {"success": True, "changed": False}
-            msg = "Child fabric is not a member of Parent fabric."
-            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
-            self.results.register_task_result()
-            return
-        self.delete = childFabricDelete()
-        self.delete.rest_send = self.rest_send
-        self.delete.results = self.results
-
-        fabric_names_to_delete = []
-        for want in self.payloads:
-            fabric_names_to_delete.append(want["sourceFabric"])
-            fabric_names_to_delete.append(want["destFabric"])
-        try:
-            self.delete.fabric_names = fabric_names_to_delete
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
-
-        try:
-            self.delete.commit(self.payloads)
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
+        for item in self.payloads:
+            if not self.verify_child_fabric_is_already_member(item):
+                self.results.action = self.action
+                self.results.result_current = {"success": True, "changed": False}
+                msg = "Child fabric is not a member of Parent fabric."
+                self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+                self.results.register_task_result()
+            else:
+                self.delete = childFabricDelete()
+                self.delete.rest_send = self.rest_send
+                self.delete.results = self.results
+        
+                fabric_names_to_delete = []
+                for want in self.payloads:
+                    fabric_names_to_delete.append(want["sourceFabric"])
+                    fabric_names_to_delete.append(want["destFabric"])
+                try:
+                    self.delete.fabric_names = fabric_names_to_delete
+                except ValueError as error:
+                    raise ValueError(f"{error}") from error
+        
+                try:
+                    self.delete.commit(item)
+                except ValueError as error:
+                    raise ValueError(f"{error}") from error
 
 
 class Merged(childCommon):
@@ -491,27 +492,27 @@ class Merged(childCommon):
         self.verify_parent_fab_is_MSD()
         self.verify_child_fab_exists_in_controller()
         self.verify_child_fabric_is_member_of_another_fabric()
-
-        if self.verify_child_fabric_is_already_member():
-            self.results.result_current = {"success": True, "changed": False}
-            msg = "Child fabric is already member of Parent fabric."
-            self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
-            self.results.register_task_result()
-            return
-
-        self.add.rest_send = self.rest_send
-        fabric_names_to_add = []
-        for want in self.payloads:
-            fabric_names_to_add.append(want["sourceFabric"])
-        try:
-            self.add.fabric_names = fabric_names_to_add
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
-
-        try:
-            self.add.commit(self.payloads)
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
+        for item in self.payloads:
+            if self.verify_child_fabric_is_already_member(item):
+                self.results.action = self.action
+                self.results.result_current = {"success": True, "changed": False}
+                msg = "Child fabric is already member of Parent fabric."
+                self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+                self.results.register_task_result()
+            else:
+                self.add.rest_send = self.rest_send
+                fabric_names_to_add = []
+                for want in self.payloads:
+                    fabric_names_to_add.append(want["sourceFabric"])
+                try:
+                    self.add.fabric_names = fabric_names_to_add
+                except ValueError as error:
+                    raise ValueError(f"{error}") from error
+        
+                try:
+                    self.add.commit(item)
+                except ValueError as error:
+                    raise ValueError(f"{error}") from error
 
 
 class Query(childCommon):

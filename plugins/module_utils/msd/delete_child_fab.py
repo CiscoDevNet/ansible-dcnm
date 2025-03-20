@@ -80,34 +80,31 @@ class childFabricDelete():
             raise ValueError(error) from error
             # pylint: enable=no-member
 
-        for payload_item in payload:
-            try:
-                self.rest_send.path = self.ep_child_fabric_delete.path
-                self.rest_send.verb = self.ep_child_fabric_delete.verb
-                self.rest_send.payload = payload_item
-                self.rest_send.save_settings()
-                self.rest_send.check_mode = False
-                self.rest_send.timeout = 1
-                self.rest_send.commit()
-                self.rest_send.restore_settings()
-            except (TypeError, ValueError) as error:
-                raise ValueError(error) from error
-
-            if self.rest_send.result_current["success"] is False:
-                self.results.diff_current = {}
-            else:
-                self.results.diff_current = copy.deepcopy(payload_item)
-            self.results.action = self.action
-            self.results.state = self.rest_send.state
-            self.results.check_mode = self.rest_send.check_mode
-            self.results.response_current = copy.deepcopy(
-                self.rest_send.response_current
-            )
-            self.results.result_current = copy.deepcopy(self.rest_send.result_current)
-            self.results.register_task_result()
-
-            msg = f"self.results.diff: {json.dumps(self.results.diff, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+        try:
+            self.rest_send.path = self.ep_child_fabric_delete.path
+            self.rest_send.verb = self.ep_child_fabric_delete.verb
+            self.rest_send.payload = payload
+            self.rest_send.save_settings()
+            self.rest_send.check_mode = False
+            self.rest_send.timeout = 1
+            self.rest_send.commit()
+            self.rest_send.restore_settings()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
+        if self.rest_send.result_current["success"] is False:
+            self.results.diff_current = {}
+        else:
+            self.results.diff_current = copy.deepcopy(payload)
+        self.results.action = self.action
+        self.results.state = self.rest_send.state
+        self.results.check_mode = self.rest_send.check_mode
+        self.results.response_current = copy.deepcopy(
+            self.rest_send.response_current
+        )
+        self.results.result_current = copy.deepcopy(self.rest_send.result_current)
+        self.results.register_task_result()
+        msg = f"self.results.diff: {json.dumps(self.results.diff, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def _validate_commit_parameters(self):
         """
