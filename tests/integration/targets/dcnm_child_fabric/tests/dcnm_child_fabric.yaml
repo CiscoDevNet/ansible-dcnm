@@ -15,20 +15,7 @@
 ################################################################################
 # 1. The following fabrics must be empty on the controller
 #    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
-#    - fabric_name_1
-#    - fabric_type_1  # VXLAN_EVPN
-#    - fabric_name_2
-#    - fabric_type_2  # VXLAN_EVPN_MSD
-#    - fabric_name_3
-#    - fabric_type_3  # LAN_CLASSIC
-# 2. Delete fabrics under test, if they exist
-#    - fabric_name_1
-#    - fabric_name_2
-#    - fabric_name_3
-################################################################################
-# TEST
-################################################################################
-# 3. Create fabrics and verify result
+# Delete fabrics under test, if they exist
 #    - msd_fabric_name_1
 #    - child_fabric_name_11
 #    - child_fabric_name_12
@@ -37,12 +24,29 @@
 #    - child_fabric_name_21
 #    - child_fabric_name_22
 #    - child_fabric_name_23
-# 4. Merge additional configs into fabric_1 and fabric_2 and verify result
-# 5. Merge additional config into fabric_3 and verify result
+################################################################################
+# TEST
+################################################################################
+# 2. Create fabrics and verify result
+#    - msd_fabric_name_1
+#    - child_fabric_name_11
+#    - child_fabric_name_12
+#    - child_fabric_name_13
+#    - msd_fabric_name_2
+#    - child_fabric_name_21
+#    - child_fabric_name_22
+#    - child_fabric_name_23
+# 3. Merge 2 child Fabrics into each MSD Fabrics and verify.
+# 4. Add one more child fabric of type "ISN" to MSD Fabric and verify.
+# 5. Idempotence : Add one more child fabric of type "ISN" to MSD Fabric and verify.
+# 6. Query the MSD Fabrics to get the child Fabrics.
+# 7. Delete the child Fabrics from MSD fabrics and verify.
+# 8. Idempotence : Delete the child Fabrics from MSD fabrics and verify.
+
 ################################################################################
 # CLEANUP
 ################################################################################
-# 6. Delete fabrics under test
+# 9. Delete fabrics under test
 #    - msd_fabric_name_1
 #    - child_fabric_name_11
 #    - child_fabric_name_12
