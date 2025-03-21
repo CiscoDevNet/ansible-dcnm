@@ -419,6 +419,9 @@ options:
           mode:
             description:
             - Interface mode
+            - When ethernet interface is a PortChannel or vPC member mode is ignored and
+              the only properties that can be managed are 'admin_state', 'description' and 'cmds'.
+              All other properties are ignored.
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
             type: str
             required: true
@@ -3607,12 +3610,13 @@ class DcnmIntf:
         for have_int in have:
             if have_int["policy"] in member_policy_names:
                 # We have a port-channel member interface. Find the corresponding port-channel
-                # interface in want and replace the member interfaces
+                # interface on the same device in want and replace the member interfaces
                 have_pc_name = have_int["interfaces"][0]["ifName"]
+                have_pc_serial = have_int["interfaces"][0]["serialNumber"]
 
                 for want_int in want:
                     match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
-                    if match_int:
+                    if match_int and match_int['serialNumber'] == have_pc_serial:
                         msg = "\nHave Interface Info: "
                         msg += f"{json_pretty(have_int)}"
                         msg += "Want Interface Info Before Update: "
@@ -3692,7 +3696,6 @@ class DcnmIntf:
                 break
 
         # --------------------------------------------------------------------------------------------------------------------
-
         for want in self.want:
 
             delem = {}
