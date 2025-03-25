@@ -1,0 +1,95 @@
+---
+# This NDFC test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+
+# ------------------------------
+# Trunk Members
+# ------------------------------
+- name: "{{ test_data.eth_intf8 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: trunk
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.eth_trunk_desc }}"
+- name: "{{ test_data.eth_intf9 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: trunk
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.eth_trunk_desc }}"
+
+# ------------------------------
+# Access Members
+# ------------------------------
+- name: "{{ test_data.eth_intf10 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: access
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.eth_access_desc }}"
+- name: "{{ test_data.eth_intf11 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: access
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.eth_access_desc }}"
+
+# ------------------------------
+# L3 Members
+# ------------------------------
+- name: "{{ test_data.eth_intf12 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: access
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.eth_l3_desc }}"
+- name: "{{ test_data.eth_intf13 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: access
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.eth_l3_desc }}"
