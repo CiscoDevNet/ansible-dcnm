@@ -5,7 +5,6 @@ __metaclass__ = type
 
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
-import re
 
 display = Display()
 
