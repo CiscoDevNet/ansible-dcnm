@@ -155,7 +155,7 @@ class childCommon():
         msg += f"check_mode: {self.check_mode}"
         self.log.debug(msg)
 
-    def verify_parent_fab_exists_in_controller(self):
+    def verify_msd_fab_exists_in_controller(self):
         method_name = inspect.stack()[0][3]
         for item in self.payloads:
             for fabric in self.data:
@@ -168,7 +168,7 @@ class childCommon():
                 msg += "is not found in Controller. Please create and try again"
                 raise ValueError(msg)
 
-    def verify_parent_fab_is_MSD(self):
+    def verify_msd_fab_type(self):
         method_name = inspect.stack()[0][3]
         for item in self.payloads:
             for fabric in self.data:
@@ -226,10 +226,10 @@ class childCommon():
                 msg += f"value {config}."
                 raise ValueError(msg)
             try:
-                parent_fabric = config.get("FABRIC_NAME", None)
+                msd_fabric = config.get("FABRIC_NAME", None)
                 child_fabric = config.get("CHILD_FABRIC_NAME", None)
                 try:
-                    self.conversion.validate_fabric_name(parent_fabric)
+                    self.conversion.validate_fabric_name(msd_fabric)
                     self.conversion.validate_fabric_name(child_fabric)
                 except (TypeError, ValueError) as error:
                     msg = f"{self.class_name}: "
@@ -241,7 +241,7 @@ class childCommon():
                     raise ValueError(msg) from error
             except ValueError as error:
                 raise ValueError(f"{error}") from error
-            config_payload = {'destFabric': parent_fabric, 'sourceFabric': child_fabric}
+            config_payload = {'destFabric': msd_fabric, 'sourceFabric': child_fabric}
             self.payloads.append(copy.deepcopy(config_payload))
 
     def populate_check_mode(self):
@@ -396,8 +396,8 @@ class Deleted(childCommon):
                 continue
             self.data[fabric_name] = item
 
-        self.verify_parent_fab_exists_in_controller()
-        self.verify_parent_fab_is_MSD()
+        self.verify_msd_fab_exists_in_controller()
+        self.verify_msd_fab_type()
         for item in self.payloads:
             if not self.verify_child_fabric_is_already_member(item):
                 self.results.action = self.action
@@ -488,8 +488,8 @@ class Merged(childCommon):
                 continue
             self.data[fabric_name] = item
 
-        self.verify_parent_fab_exists_in_controller()
-        self.verify_parent_fab_is_MSD()
+        self.verify_msd_fab_exists_in_controller()
+        self.verify_msd_fab_type()
         self.verify_child_fab_exists_in_controller()
         self.verify_child_fabric_is_member_of_another_fabric()
         for item in self.payloads:

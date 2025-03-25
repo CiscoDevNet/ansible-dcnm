@@ -176,7 +176,10 @@ class childFabricQuery():
         self.results.state = self.rest_send.state
         # pylint: disable=no-member
         self.results.diff_current = add_to_diff
-        self.results.result_current = {"success": True, "found": True}
+        if not add_to_diff:
+            self.results.result_current = {"success": True, "found": False}
+        else:
+            self.results.result_current = {"success": True, "found": True}
         self.results.response_current = copy.deepcopy(
             self.rest_send.response_current
         )
