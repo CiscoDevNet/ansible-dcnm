@@ -53,68 +53,68 @@ class ActionModule(ActionBase):
             ndfc_data_dict[int] = interface['interfaces'][0]
             ndfc_data_dict[int]['policy'] = interface['policy']
 
-        for int in interface_list:
-            if int not in ndfc_data_dict.keys():
+        for interface in interface_list:
+            if interface not in ndfc_data_dict.keys():
                 results['failed'] = True
-                results['msg'] = f'Interface {int} not found in response data'
+                results['msg'] = f'Interface {interface} not found in response data'
                 return results
 
-            # Use a regex to match string 'Eth' in int variable
-            if int == test_data['pc1']:
-                if ndfc_data_dict[int]['policy'] != expected_state['pc_trunk_host_policy']:
+            # Use a regex to match string 'Eth' in interface variable
+            if interface == test_data['pc1']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_trunk_host_policy']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} policy is not {expected_state["pc_trunk_host_policy"]}'
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_trunk_host_policy"]}'
                     return results
-                if ndfc_data_dict[int]['nvPairs']['DESC'] != expected_state['pc_trunk_description']:
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_trunk_description']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} description is not {expected_state["pc_trunk_description"]}'
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_trunk_description"]}'
                     return results
-            if int == test_data['eth_intf8'] or int == test_data['eth_intf9']:
-                if ndfc_data_dict[int]['policy'] != expected_state['pc_trunk_member_policy']:
+            if interface == test_data['eth_intf8'] or interface == test_data['eth_intf9']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_trunk_member_policy']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} policy is not {expected_state["pc_trunk_member_policy"]}'
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_trunk_member_policy"]}'
                     return results
-                if ndfc_data_dict[int]['nvPairs']['DESC'] != expected_state['pc_trunk_member_description']:
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_trunk_member_description']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} description is not {expected_state["pc_trunk_member_description"]}'
-                    return results
-
-            if int == test_data['pc2']:
-                if ndfc_data_dict[int]['policy'] != expected_state['pc_access_host_policy']:
-                    results['failed'] = True
-                    results['msg'] = f'Interface {int} policy is {expected_state["pc_access_host_policy"]}'
-                    return results
-                if ndfc_data_dict[int]['nvPairs']['DESC'] != expected_state['pc_access_description']:
-                    results['failed'] = True
-                    results['msg'] = f'Interface {int} description is not {expected_state["pc_access_description"]}'
-                    return results
-            if int == test_data['eth_intf10'] or int == test_data['eth_intf11']:
-                if ndfc_data_dict[int]['policy'] != expected_state['pc_access_member_policy']:
-                    results['failed'] = True
-                    results['msg'] = f'Interface {int} policy is not {expected_state["pc_access_member_policy"]}'
-                    return results
-                if ndfc_data_dict[int]['nvPairs']['DESC'] != expected_state['pc_access_member_description']:
-                    results['failed'] = True
-                    results['msg'] = f'Interface {int} description is not {expected_state["pc_access_member_description"]}'
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_trunk_member_description"]}'
                     return results
 
-            if int == test_data['pc3']:
-                if ndfc_data_dict[int]['policy'] != expected_state['pc_l3_policy']:
+            if interface == test_data['pc2']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_access_host_policy']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} policy is not {expected_state["pc_l3_policy"]}'
+                    results['msg'] = f'Interface {interface} policy is {expected_state["pc_access_host_policy"]}'
                     return results
-                if ndfc_data_dict[int]['nvPairs']['DESC'] != expected_state['pc_l3_description']:
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_access_description']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} description is not {expected_state["pc_l3_description"]}'
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_access_description"]}'
                     return results
-            if int == test_data['eth_intf12'] or int == test_data['eth_intf13']:
-                if ndfc_data_dict[int]['policy'] != expected_state['pc_l3_member_policy']:
+            if interface == test_data['eth_intf10'] or interface == test_data['eth_intf11']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_access_member_policy']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} policy is not {expected_state["pc_l3_member_policy"]}'
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_access_member_policy"]}'
                     return results
-                if ndfc_data_dict[int]['nvPairs']['DESC'] != expected_state['pc_l3_member_description']:
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_access_member_description']:
                     results['failed'] = True
-                    results['msg'] = f'Interface {int} description is not {expected_state["pc_l3_member_description"]}'
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_access_member_description"]}'
+                    return results
+
+            if interface == test_data['pc3']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_l3_policy']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_l3_policy"]}'
+                    return results
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_l3_description']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_l3_description"]}'
+                    return results
+            if interface == test_data['eth_intf12'] or interface == test_data['eth_intf13']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_l3_member_policy']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_l3_member_policy"]}'
+                    return results
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_l3_member_description']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_l3_member_description"]}'
                     return results
 
         return results

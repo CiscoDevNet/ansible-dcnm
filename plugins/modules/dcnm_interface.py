@@ -419,9 +419,9 @@ options:
           mode:
             description:
             - Interface mode
-            - When ethernet interface is a PortChannel or vPC member mode is ignored and
-              the only properties that can be managed are 'admin_state', 'description' and 'cmds'.
-              All other properties are ignored.
+            - When ethernet interface is a PortChannel or vPC member, mode is ignored.
+              The only properties that can be managed for PortChannel or vPC member interfaces
+              are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
             type: str
             required: true
