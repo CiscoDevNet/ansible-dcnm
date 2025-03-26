@@ -77,3 +77,6 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# Ignore Integration Tests Files Directories
+tests/integration/targets/ndfc_interface/files

@@ -16,7 +16,7 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Mallik Mudigonda"
+__author__ = "Mallik Mudigonda, Mike Wiebe"
 
 DOCUMENTATION = """
 ---
@@ -419,6 +419,9 @@ options:
           mode:
             description:
             - Interface mode
+            - When ethernet interface is a PortChannel or vPC member, mode is ignored.
+              The only properties that can be managed for PortChannel or vPC member interfaces
+              are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
             choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
             type: str
             required: true
@@ -1604,11 +1607,14 @@ EXAMPLES = """
 
 """
 
-import time
-import json
-import re
 import copy
+import inspect
+import json
+import logging
+import re
 import sys
+import time
+
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
@@ -1618,10 +1624,22 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     get_ip_sn_dict,
     dcnm_version_supported,
+    find_dict_in_list_by_key_value,
 )
+from ..module_utils.common.log_v2 import Log
+
+
+def json_pretty(msg):
+    """
+    Return a pretty-printed JSON string for logging messages
+    """
+    return json.dumps(msg, indent=4, sort_keys=True)
 
 
 class DcnmIntf:
+    """
+    Dcnm Interface methods, properties, and resources for all states.
+    """
 
     dcnm_intf_paths = {
         11: {
@@ -1647,6 +1665,9 @@ class DcnmIntf:
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
@@ -1664,7 +1685,6 @@ class DcnmIntf:
         self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
-        self.log_verbosity = 0
         self.fd = None
         self.vpc_ip_sn = {}
         self.ip_sn = {}
@@ -1807,6 +1827,29 @@ class DcnmIntf:
             },
         }
 
+        self.pol_pc_member_types = {
+            11: {
+                "pc_access_member": "int_port_channel_access_member_11_1",
+                "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
+                "vpc_access_member": "int_vpc_access_po_member_11_1",
+                "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
+                "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+            },
+            12: {
+                "pc_access_member": "int_port_channel_access_member_11_1",
+                "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
+                "vpc_access_member": "int_vpc_access_po_member_11_1",
+                "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
+                "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+            },
+        }
+
         # New Interfaces
         self.int_types = {
             "pc": "INTERFACE_PORT_CHANNEL",
@@ -1831,14 +1874,8 @@ class DcnmIntf:
             "AA_FEX": 7,
         }
 
-    def log_msg(self, msg):
-
-        if self.fd is None:
-            self.fd = open("dcnm_intf.log", "a+")
-        if self.fd is not None:
-            self.fd.write(msg)
-            self.fd.write("\n")
-            self.fd.flush()
+        msg = "ENTERED DcnmIntf: "
+        self.log.debug(msg)
 
     def dcnm_intf_dump_have_all(self):
 
@@ -1860,7 +1897,9 @@ class DcnmIntf:
                     "UNDERLAY POLICIES": have["underlayPolicies"],
                 }
             )
-        self.log_msg(f"HAVE ALL = {lhave_all}")
+        msg = "HAVE ALL = "
+        msg += f"{json_pretty(lhave_all)}"
+        self.log.debug(msg)
 
     def dcnm_intf_xlate_speed(self, speed):
 
@@ -1919,7 +1958,7 @@ class DcnmIntf:
         else:
             return ""
 
-    # Flatten the incoming config database and have the required fileds updated.
+    # Flatten the incoming config database and have the required fields updated.
     # This modified config DB will be used while creating payloads. To avoid
     # messing up the incoming config make a copy of it.
     def dcnm_intf_copy_config(self):
@@ -3549,8 +3588,114 @@ class DcnmIntf:
                 return match_have[0], False
         return [], True
 
-    def dcnm_intf_compare_want_and_have(self, state):
+    def dcnm_intf_replace_pc_members(self, want, have):
+        """
+        ### Summary
+        Search ``self.want`` for any port-channel member interfaces that are also
+        found in ``self.have`` and if found will replace the member interfaces in
+        self.want with the correct policy and properties that can be managed.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
 
+        # Get supported port-channel member policies
+        member_policy_names = []
+        for key in self.pol_pc_member_types[self.dcnm_version].keys():
+            member_policy_names.append(self.pol_pc_member_types[self.dcnm_version][key])
+
+        # List of keys in nvPairs to protect
+        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
+
+        for have_int in have:
+            if have_int["policy"] in member_policy_names:
+                # We have a port-channel member interface. Find the corresponding port-channel
+                # interface on the same device in want and replace the member interfaces
+                have_pc_name = have_int["interfaces"][0]["ifName"]
+                have_pc_serial = have_int["interfaces"][0]["serialNumber"]
+
+                for want_int in want:
+                    match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
+                    if match_int and match_int['serialNumber'] == have_pc_serial:
+                        msg = "\nHave Interface Info: "
+                        msg += f"{json_pretty(have_int)}"
+                        msg += "Want Interface Info Before Update: "
+                        msg += f"{json_pretty(want_int)}"
+                        self.log.debug(msg)
+                        # Rewrite want nvPairs and policy with the correct information
+                        want_int['interfaces'][0]['nvPairs']['PO_ID'] = have_int['interfaces'][0]['nvPairs']['PO_ID']
+                        want_int['interfaces'][0]['nvPairs']['INTF_NAME'] = have_int['interfaces'][0]['nvPairs']['INTF_NAME']
+
+                        # The following keys may or may not be present for PC member interfaces
+                        for key in ['PC_MODE', 'ALLOWED_VLANS', 'PRIMARY_INTF']:
+                            want_int['interfaces'][0]['nvPairs'][key] = have_int['interfaces'][0]['nvPairs'].get(key)
+                            if want_int['interfaces'][0]['nvPairs'][key] is None and key in protected_keys:
+                                protected_keys.remove(key)
+
+                        # Delete unprotected keys from want_int nvPairs
+                        for key in list(want_int['interfaces'][0]['nvPairs'].keys()):
+                            if key not in protected_keys:
+                                want_int['interfaces'][0]['nvPairs'].pop(key)
+
+                        # Update want_int policy to be the same as have_int policy
+                        want_int['policy'] = have_int['policy']
+
+                        msg += "Want Interface Info After Update: "
+                        msg += f"{json_pretty(want_int)}"
+                        self.log.debug(msg)
+
+        self.want = want
+        self.have = have
+
+    def dcnm_intf_compare_want_and_have(self, state):
+        """
+        ### Summary
+        Compare want and have states for each interface
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
+
+        # Special Case Handling for PortChannnel (PC) and Virtual PortChannel (vPC) Member Interfaces.
+        # Member interfaces are added to a PC or vPC when the PC or vPC is created and the
+        # policy is applied to the member interface based on the type of PC or vPC.
+        #
+        # Once this policy is applied to the member interface, only the following properties
+        # can be modified on the member interface:
+        #   - Interface Description
+        #   - Interface Admin State
+        #   - Interface Freeform Configuration
+        #
+        # The following logic will search self.have for any member interfaces that are also
+        # found in self.want and if found will replace the member interfaces in self.want
+        # with the correct policy and properties that can be managed. After that we process
+        # the new self.want as usual.
+        have_member = {}
+        msg = "Member Policy Types: "
+        msg += f"{self.pol_pc_member_types[self.dcnm_version]}"
+        self.log.debug(msg)
+        for key in self.pol_pc_member_types[self.dcnm_version].keys():
+            # Potential Keys:
+            # [
+            #   'pc_access_member',
+            #   'pc_trunk_member',
+            #   'vpc_peer_link_member',
+            #   'vpc_access_member',
+            #   'vpc_trunk_member',
+            #   'l3_pc_member',
+            #   'pc_dot1q_tunnel_member',
+            # ]
+            # NOTE: pvlan interface types are currently not supported by this module.
+            policy_name = self.pol_pc_member_types[self.dcnm_version][key]
+            have_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value=policy_name)
+
+            # If we find any member in self.have that matches a policy in self.pol_pc_member_types[self.dcnm_version].keys()
+            # then call the self.dcnm_intf_replace_pc_members function to process all PC and vPC members.
+            if have_member:
+                self.dcnm_intf_replace_pc_members(self.want, self.have)
+                break
+
+        # --------------------------------------------------------------------------------------------------------------------
         for want in self.want:
 
             delem = {}
@@ -5115,6 +5260,13 @@ def main():
     module = AnsibleModule(
         argument_spec=element_spec, supports_check_mode=True
     )
+
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except (TypeError, ValueError):
+        pass
 
     dcnm_intf = DcnmIntf(module)
 
