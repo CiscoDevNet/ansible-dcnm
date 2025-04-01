@@ -2901,7 +2901,7 @@ class DcnmVrf:
                 action,
                 verb,
                 delete_path,
-                self.diff_detach,
+                self.diff_delete,
                 log_response=True,
                 is_rollback=is_rollback,
             )
