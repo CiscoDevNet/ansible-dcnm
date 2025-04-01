@@ -595,6 +595,11 @@ dcnm_vrf_paths = {
 
 
 class DcnmVrf:
+    """
+    # Summary
+
+    dcnm_vrf module implementation.
+    """
 
     def __init__(self, module):
         self.class_name = self.__class__.__name__
@@ -1641,7 +1646,7 @@ class DcnmVrf:
             attach_list = vrf_attach["lanAttachList"]
             deploy_vrf = ""
             for attach in attach_list:
-                attach_state = False if attach["lanAttachState"] == "NA" else True
+                attach_state = not attach["isLanAttached"] == "NA"
                 deploy = attach["isLanAttached"]
                 deployed = False
                 if deploy and (
@@ -2773,7 +2778,15 @@ class DcnmVrf:
         if self.diff_create_update:
             for vrf in self.diff_create_update:
                 update_path = f"{path}/{vrf['vrfName']}"
-                self.send_to_controller(action, verb, update_path, vrf, is_rollback)
+
+                self.send_to_controller(
+                    action,
+                    verb,
+                    update_path,
+                    vrf,
+                    log_response=True,
+                    is_rollback=is_rollback,
+                )
 
     def push_diff_detach(self, is_rollback=False):
         """
@@ -2810,8 +2823,14 @@ class DcnmVrf:
         path = self.paths["GET_VRF"].format(self.fabric)
         detach_path = path + "/attachments"
         verb = "POST"
+
         self.send_to_controller(
-            action, verb, detach_path, self.diff_detach, is_rollback
+            action,
+            verb,
+            detach_path,
+            self.diff_detach,
+            log_response=True,
+            is_rollback=is_rollback,
         )
 
     def push_diff_undeploy(self, is_rollback=False):
@@ -2839,7 +2858,12 @@ class DcnmVrf:
         verb = "POST"
 
         self.send_to_controller(
-            action, verb, deploy_path, self.diff_undeploy, is_rollback
+            action,
+            verb,
+            deploy_path,
+            self.diff_undeploy,
+            log_response=True,
+            is_rollback=is_rollback,
         )
 
     def push_diff_delete(self, is_rollback=False):
@@ -2874,7 +2898,12 @@ class DcnmVrf:
                 continue
             delete_path = f"{path}/{vrf}"
             self.send_to_controller(
-                action, verb, delete_path, self.diff_detach, is_rollback
+                action,
+                verb,
+                delete_path,
+                self.diff_delete,
+                log_response=True,
+                is_rollback=is_rollback,
             )
 
         if del_failure:
@@ -2981,8 +3010,11 @@ class DcnmVrf:
             action = "create"
             verb = "POST"
             path = self.paths["GET_VRF"].format(self.fabric)
+            payload = copy.deepcopy(vrf)
 
-            self.send_to_controller(action, verb, path, vrf, is_rollback)
+            self.send_to_controller(
+                action, verb, path, payload, log_response=True, is_rollback=is_rollback
+            )
 
     def is_border_switch(self, serial_number) -> bool:
         """
@@ -3255,7 +3287,30 @@ class DcnmVrf:
 
         return self.sn_ip.get(serial_number)
 
-    def send_to_controller(self, action, verb, path, payload, is_rollback=False):
+    def send_to_controller(
+        self,
+        action: str,
+        verb: str,
+        path: str,
+        payload: dict,
+        log_response: bool = True,
+        is_rollback: bool = False,
+    ):
+        """
+        # Summary
+
+        Send a request to the controller.
+
+        ## params
+
+        -   `action`: The action to perform (create, update, delete, etc.)
+        -   `verb`: The HTTP verb to use (GET, POST, PUT, DELETE)
+        -   `path`: The URL path to send the request to
+        -   `payload`: The payload to send with the request (None for no payload)
+        -   `log_response`: If True, log the response in the result, else
+            do not include the response in the result
+        -   `is_rollback`: If True, attempt to rollback on failure
+        """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
 
@@ -3267,6 +3322,7 @@ class DcnmVrf:
         msg += f"action: {action}, "
         msg += f"verb: {verb}, "
         msg += f"path: {path}, "
+        msg += f"log_response: {log_response}, "
         msg += "type(payload): "
         msg += f"{type(payload)}, "
         msg += "payload: "
@@ -3290,7 +3346,9 @@ class DcnmVrf:
         msg += f"{self.result['changed']}"
         self.log.debug(msg)
 
-        self.result["response"].append(response)
+        if log_response is True:
+            self.result["response"].append(response)
+
         fail, self.result["changed"] = self.handle_response(response, action)
 
         msg = f"caller: {caller}, "
@@ -3509,7 +3567,12 @@ class DcnmVrf:
         attach_path = path + "/attachments"
 
         self.send_to_controller(
-            action, verb, attach_path, new_diff_attach_list, is_rollback
+            action,
+            verb,
+            attach_path,
+            new_diff_attach_list,
+            log_response=True,
+            is_rollback=is_rollback,
         )
 
     def push_diff_deploy(self, is_rollback=False):
@@ -3535,7 +3598,12 @@ class DcnmVrf:
         deploy_path = path + "/deployments"
 
         self.send_to_controller(
-            action, verb, deploy_path, self.diff_deploy, is_rollback
+            action,
+            verb,
+            deploy_path,
+            self.diff_deploy,
+            log_response=True,
+            is_rollback=is_rollback,
         )
 
     def release_resources_by_id(self, id_list=None):
@@ -3581,17 +3649,17 @@ class DcnmVrf:
         # likely ever only have one resulting list.
         id_list_of_lists = self.get_list_of_lists([str(x) for x in id_list], 512)
 
-        for id_list in id_list_of_lists:
+        for item in id_list_of_lists:
             msg = "Releasing resource IDs: "
-            msg += f"{','.join(id_list)}"
+            msg += f"{','.join(item)}"
             self.log.debug(msg)
 
             action = "deploy"
             path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
             path += "/rest/resource-manager/resources"
-            path += f"?id={','.join(id_list)}"
+            path += f"?id={','.join(item)}"
             verb = "DELETE"
-            self.send_to_controller(action, verb, path, None)
+            self.send_to_controller(action, verb, path, None, log_response=False)
 
     def release_orphaned_resources(self, vrf, is_rollback=False):
         """
@@ -4114,8 +4182,10 @@ class DcnmVrf:
                 )
                 res.update({"DATA": data})
 
+        # pylint: disable=protected-access
         if self.module._verbosity >= 5:
             self.module.fail_json(msg=res)
+        # pylint: enable=protected-access
 
         self.module.fail_json(msg=res)
 
