@@ -42,6 +42,12 @@ options:
         type: list
         elements: dict
         suboptions:
+            DEPLOY:
+                default: False
+                description:
+                - Save the member fabric configuration.
+                required: false
+                type: bool
             FABRIC_NAME:
                 description:
                 - The name of the MSD fabric.
@@ -228,6 +234,7 @@ class childCommon():
             try:
                 msd_fabric = config.get("FABRIC_NAME", None)
                 child_fabric = config.get("CHILD_FABRIC_NAME", None)
+                deploy = config.get("DEPLOY", None)
                 try:
                     self.conversion.validate_fabric_name(msd_fabric)
                     self.conversion.validate_fabric_name(child_fabric)
@@ -241,7 +248,7 @@ class childCommon():
                     raise ValueError(msg) from error
             except ValueError as error:
                 raise ValueError(f"{error}") from error
-            config_payload = {'destFabric': msd_fabric, 'sourceFabric': child_fabric}
+            config_payload = {'destFabric': msd_fabric, 'sourceFabric': child_fabric, 'DEPLOY': deploy}
             self.payloads.append(copy.deepcopy(config_payload))
 
     def populate_check_mode(self):
@@ -402,7 +409,7 @@ class Deleted(childCommon):
             if not self.verify_child_fabric_is_already_member(item):
                 self.results.action = self.action
                 self.results.result_current = {"success": True, "changed": False}
-                msg = "Child fabric is not a member of Parent fabric."
+                msg = "Given child fabric is already not a member of MSD fabric"
                 self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
                 self.results.register_task_result()
             else:
@@ -496,7 +503,7 @@ class Merged(childCommon):
             if self.verify_child_fabric_is_already_member(item):
                 self.results.action = self.action
                 self.results.result_current = {"success": True, "changed": False}
-                msg = "Child fabric is already member of Parent fabric."
+                msg = "Child fabric is already member of MSD fabric."
                 self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
                 self.results.register_task_result()
             else:

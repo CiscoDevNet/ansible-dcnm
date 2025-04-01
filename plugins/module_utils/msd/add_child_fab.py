@@ -31,21 +31,24 @@ from ..common.api.v1.lan_fabric.rest.control.fabrics.msd.msd import \
 # in _validate_commit_parameters() so that we can register the failure
 # in commit().
 from ..common.results import Results
+from ...module_utils.fabric.common import FabricCommon
 
 
-class childFabricAdd():
+class childFabricAdd(FabricCommon):
     """
     methods and properties for adding Child fabric into MSD:
 
     """
 
     def __init__(self):
+        super().__init__()
         self.class_name = self.__class__.__name__
         self.action = "child_fabric_add"
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self.ep_fabric_add = EpChildFabricAdd()
         msg = "ENTERED childFabricAdd()"
         self.log.debug(msg)
+        self.deploy = False
 
     def commit(self, payload):
         """
@@ -57,6 +60,9 @@ class childFabricAdd():
             -   ``_validate_commit_parameters`` raises ``ValueError``.
 
         """
+        if 'DEPLOY' in payload:
+            self.deploy = payload.pop('DEPLOY')
+
         try:
             self._validate_commit_parameters()
         except ValueError as error:
@@ -99,6 +105,13 @@ class childFabricAdd():
         self.results.register_task_result()
         msg = f"self.results.diff: {json.dumps(self.results.diff, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
+        if True in self.results.failed:
+            return
+
+        if self.deploy is True:
+            payload.update({'DEPLOY': True})
+            self._config_save(payload)
 
     def _validate_commit_parameters(self):
         """
