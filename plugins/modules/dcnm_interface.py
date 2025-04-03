@@ -132,7 +132,7 @@ options:
             - Vlan used as native vlan.
               This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
-            default: ""            
+            default: ""
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
