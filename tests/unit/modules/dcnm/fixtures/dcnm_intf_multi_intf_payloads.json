@@ -26,6 +26,7 @@
 						"ADMIN_STATE": "True",
 						"POLICY_ID": "POLICY-1849470",
 						"ALLOWED_VLANS": "none",
+						"NATIVE_VLAN": "10",
 						"DESC": "port channel acting as trunk"
 					}
 				}],
@@ -60,6 +61,7 @@
             "PORTTYPE_FAST_ENABLED": "true",
             "MTU": "jumbo",
             "ALLOWED_VLANS": "none",
+	    "NATIVE_VLAN": "10",
             "PO_ID": "Port-channel300",
             "DESC": "port channel acting as trunk",
             "CONF": "no shutdown",
@@ -96,6 +98,8 @@
             "MTU": "jumbo",
             "PEER1_ALLOWED_VLANS": "none",
             "PEER2_ALLOWED_VLANS": "none",
+            "PEER1_NATIVE_VLAN": "10",
+            "PEER2_NATIVE_VLAN": "10",
             "PEER1_PCID": "1",
             "PEER2_PCID": "1",
             "PEER1_PO_DESC": "VPC acting as trunk peer1",
@@ -133,6 +137,7 @@
             "PORTTYPE_FAST_ENABLED": "true",
             "MTU": "jumbo",
             "ALLOWED_VLANS": "none",
+            "NATIVE_VLAN": "10",
             "INTF_NAME": "Ethernet1/10",
             "DESC": "eth interface  acting as trunk",
             "CONF": "no shutdown",
