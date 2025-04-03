@@ -102,7 +102,7 @@
 				"peer1_description": "VPC acting as trunk peer1",
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_allowed_vlans": "none",
-				"peer2_native_vlan": "10",
+				"peer2_native_vlan": "10"
 			},
 			"switch": [
 					"192.168.1.109",
@@ -184,7 +184,7 @@
 				"peer1_description": "VPC acting as trunk peer1 - replaced",
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_allowed_vlans": "all",
-				"peer2_native_vlan": "10",
+				"peer2_native_vlan": "10"
 			},
 			"switch": [
 					"192.168.1.109",
@@ -348,7 +348,7 @@
 				"peer1_description": "VPC acting as trunk peer1",
 				"sno": "FOX1821H035~SAL1819SAN8",
 				"peer2_allowed_vlans": "none",
-				"peer2_native_vlan": "10",
+				"peer2_native_vlan": "10"
 			},
 			"switch": [
 					"192.168.1.109",
