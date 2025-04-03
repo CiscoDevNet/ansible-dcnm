@@ -127,6 +127,12 @@ options:
             - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
+            type: str
+            default: ""            
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
@@ -241,6 +247,18 @@ options:
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
+          peer1_native_vlan:
+            description:
+            - Vlan used as native vlan of first peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
+            type: str
+            default: ""
+          peer2_native_vlan:
+            description:
+            - Vlan used as native vlan of second peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
+            type: str
+            default: ""
           peer1_access_vlan:
             description:
             - Vlan for the interface of first peer.
@@ -455,6 +473,12 @@ options:
           access_vlan:
             description:
             - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
           speed:
@@ -1763,6 +1787,7 @@ class DcnmIntf:
             "MTU": "mtu",
             "SPEED": "speed",
             "ALLOWED_VLANS": "allowed_vlans",
+            "NATIVE_VLAN": "native_vlan",
             "ACCESS_VLAN": "access_vlan",
             "INTF_NAME": "ifname",
             "PO_ID": "ifname",
@@ -1772,6 +1797,8 @@ class DcnmIntf:
             "PEER2_MEMBER_INTERFACES": "peer2_members",
             "PEER1_ALLOWED_VLANS": "peer1_allowed_vlans",
             "PEER2_ALLOWED_VLANS": "peer2_allowed_vlans",
+            "PEER1_NATIVE_VLAN": "peer1_native_vlan",
+            "PEER2_NATIVE_VLAN": "peer2_native_vlan",
             "PO_DESC": "po_description",
             "PEER1_PO_DESC": "peer1_description",
             "PEER2_PO_DESC": "peer2_description",
@@ -2075,6 +2102,7 @@ class DcnmIntf:
             mtu=dict(type="str", default="jumbo"),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
+            native_vlan=dict(type="str", default=""),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
@@ -2151,6 +2179,8 @@ class DcnmIntf:
             speed=dict(type="str", default="Auto"),
             peer1_allowed_vlans=dict(type="str", default="none"),
             peer2_allowed_vlans=dict(type="str", default="none"),
+            peer1_native_vlan=dict(type="str", default=""),
+            peer2_native_vlan=dict(type="str", default=""),
             peer1_cmds=dict(type="list"),
             peer2_cmds=dict(type="list"),
             peer1_description=dict(type="str", default=""),
@@ -2266,6 +2296,7 @@ class DcnmIntf:
             ),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
+            native_vlan=dict(type="str", default=""),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
@@ -2578,6 +2609,9 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
             ]
+            intf["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = delem[profile][
+                "native_vlan"
+            ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
@@ -2700,7 +2734,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = delem[
                 profile
             ]["peer2_allowed_vlans"]
-
+            intf["interfaces"][0]["nvPairs"]["PEER1_NATIVE_VLAN"] = delem[
+                profile
+            ]["peer1_native_vlan"]
+            intf["interfaces"][0]["nvPairs"]["PEER2_NATIVE_VLAN"] = delem[
+                profile
+            ]["peer2_native_vlan"]
             if delem[profile]["peer1_pcid"] == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
             else:
@@ -2931,6 +2970,9 @@ class DcnmIntf:
             )
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
+            ]
+            intf["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = delem[profile][
+                "native_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         if delem[profile]["mode"] == "access":
@@ -3996,6 +4038,11 @@ class DcnmIntf:
                 != str(have_nv.get("ALLOWED_VLANS")).lower()
             ):
                 return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("NATIVE_VLAN")).lower()
+                != str(have_nv.get("NATIVE_VLAN")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
@@ -4039,6 +4086,7 @@ class DcnmIntf:
                 "PORTTYPE_FAST_ENABLED"
             ] = True
             eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
+            eth_payload["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
             eth_payload["interfaces"][0]["ifName"] = ifname
