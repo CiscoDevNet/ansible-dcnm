@@ -1646,7 +1646,7 @@ class DcnmVrf:
             attach_list = vrf_attach["lanAttachList"]
             deploy_vrf = ""
             for attach in attach_list:
-                attach_state = not attach["isLanAttached"] == "NA"
+                attach_state = not attach["lanAttachState"] == "NA"
                 deploy = attach["isLanAttached"]
                 deployed = False
                 if deploy and (
