@@ -1582,21 +1582,21 @@ EXAMPLES = """
 
 # Dot1q Tunnel host
 
-  - name: Configure dot1q_tunnel_host on interface E1/12
-    cisco.dcnm.dcnm_interface:
-      fabric: "{{ ansible_fabric }}"
-      state: merged
-      config:
-        - name: eth1/12
-          type: eth
-          switch:
-            - "{{ ansible_switch1 }}"
-          deploy: true
-          profile:
-            admin_state: true
-            mode: dot1q_tunnel_host
-            access_vlan: 41
-            description: "ETH 1/12 Dot1q Tunnel"
+- name: Configure dot1q_tunnel_host on interface E1/12
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    config:
+      - name: eth1/12
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+        admin_state: true
+        mode: dot1q_tunnel_host
+        access_vlan: 41
+        description: "ETH 1/12 Dot1q Tunnel"
 
 # QUERY
 
@@ -2345,7 +2345,7 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
         )
-        
+
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_trunk
@@ -2368,7 +2368,7 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
-    
+
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
 
         svi_spec = dict(
