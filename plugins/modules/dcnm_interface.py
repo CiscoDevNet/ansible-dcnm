@@ -422,7 +422,7 @@ options:
             - When ethernet interface is a PortChannel or vPC member, mode is ignored.
               The only properties that can be managed for PortChannel or vPC member interfaces
               are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
-            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
+            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q_tunnel_host']
             type: str
             required: true
           bpdu_guard:
@@ -454,7 +454,7 @@ options:
             default: none
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q_tunnel_host'
             type: str
             default: ""
           speed:
@@ -1580,6 +1580,24 @@ EXAMPLES = """
           enable_netflow: false                     # optional, flag to enable netflow, default is false
           mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
 
+# Dot1q Tunnel host
+
+  - name: Configure dot1q_tunnel_host on interface E1/12
+    cisco.dcnm.dcnm_interface:
+      fabric: "{{ ansible_fabric }}"
+      state: merged
+      config:
+        - name: eth1/12
+          type: eth
+          switch:
+            - "{{ ansible_switch1 }}"
+          deploy: true
+          profile:
+            admin_state: true
+            mode: dot1q_tunnel_host
+            access_vlan: 41
+            description: "ETH 1/12 Dot1q Tunnel"
+
 # QUERY
 
 - name: Query interface details
@@ -1824,6 +1842,7 @@ class DcnmIntf:
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
                 "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
+                "eth_dot1q_tunnel_host": "int_dot1q_tunnel_host",
             },
         }
 
@@ -2313,6 +2332,20 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        eth_prof_spec_dot1q_tunnel_host = dict(
+            mode=dict(required=True, type="str"),
+            bpdu_guard=dict(type="str", default="true"),
+            port_type_fast=dict(type="bool", default=True),
+            mtu=dict(
+                type="str", default="jumbo", choices=["jumbo", "default"]
+            ),
+            speed=dict(type="str", default="Auto"),
+            access_vlan=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            description=dict(type="str", default=""),
+            admin_state=dict(type="bool", default=True),
+        )
+        
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_trunk
@@ -2331,7 +2364,11 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_epl_routed_host
             )
-
+        if "dot1q_tunnel_host" == cfg[0]["profile"]["mode"]:
+            self.dcnm_intf_validate_interface_input(
+                cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
+            )
+    
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
 
         svi_spec = dict(
@@ -3008,6 +3045,20 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
+        if delem[profile]["mode"] == "dot1q_tunnel_host":
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
+            intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
+                delem[profile]["port_type_fast"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
+                "access_vlan"
+            ]
+            intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
