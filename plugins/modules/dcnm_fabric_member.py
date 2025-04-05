@@ -124,8 +124,8 @@ from ..module_utils.msd.query_child_fab import childFabricQuery
 from ..module_utils.msd.delete_child_fab import childFabricDelete
 from ..module_utils.msd.add_child_fab import childFabricAdd
 from ..module_utils.msd.fabric_associations import FabricAssociations
-from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
 from ..module_utils.network.dcnm.dcnm import validate_list_of_dicts
+
 
 @Properties.add_rest_send
 class childCommon():
@@ -217,25 +217,19 @@ class childCommon():
                 if (self.data[fabric]['fabricParent'] == item["destFabric"]):
                     return True
         return False
-    
+
     def validate_input(self):
-        if self.state != "query":
-            fab_member_spec = dict(
-                FABRIC_NAME=dict(required=True, type="str"),
-                CHILD_FABRIC_NAME=dict(required=True, type="str"),
-                DEPLOY=dict(type="bool", default=False),
-            )
-        else:
-            fab_member_spec = dict(
-                FABRIC_NAME=dict(type="str"),
-            )            
+        method_name = inspect.stack()[0][3]
+        fab_member_spec = dict(
+            FABRIC_NAME=dict(required=True, type="str"),
+            CHILD_FABRIC_NAME=dict(required=True, type="str"),
+            DEPLOY=dict(type="bool", default=False),
+        )
         fab_mem_info, invalid_params = validate_list_of_dicts(self.config, fab_member_spec, None)
         if invalid_params:
-            mesg = "Invalid parameters in playbook: {0}".format(
-            "while processing config "
-            + "\n".join(invalid_params)
-            )
-            raise ValueError(mesg)
+            msg = "Invalid parameters in playbook: {invalid_params}"
+            msg += "while processing config \n"
+            raise ValueError(msg)
         for config in self.config:
             if not isinstance(config, dict):
                 msg = f"{self.class_name}.{method_name}: "
@@ -389,7 +383,6 @@ class Deleted(childCommon):
 
         msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
-        
         self.validate_input()
         self.get_want()
 
@@ -482,7 +475,7 @@ class Merged(childCommon):
         msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
         self.get_controller_version()
-        ### Version validation needs to be added
+        # Version validation needs to be added
         self.validate_input()
         self.get_want()
 

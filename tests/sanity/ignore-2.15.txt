@@ -25,3 +25,4 @@ plugins/module_utils/common/sender_requests.py import-3.9 # TODO remove this if/
 plugins/module_utils/common/sender_requests.py import-3.10 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
 plugins/modules/dcnm_fabric_member.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
+plugins/action/tests/unit/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
