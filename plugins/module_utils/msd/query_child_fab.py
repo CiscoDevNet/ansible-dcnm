@@ -20,7 +20,7 @@ import inspect
 import logging
 
 from ..common.results import Results
-from ..msd.Fabric_associations import FabricAssociations
+from ..msd.fabric_associations import FabricAssociations
 
 
 class childFabricQuery():

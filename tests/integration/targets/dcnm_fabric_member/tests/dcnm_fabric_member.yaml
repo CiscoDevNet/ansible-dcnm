@@ -69,7 +69,7 @@
 # Example vars:
 #
 # vars:
-#   testcase: dcnm_child_fabric_merged
+#   testcase: dcnm_fabric_member_merged
 #   msd_fabric_name_1: MSD_1
 #   MSD_fabric_type: VXLAN_EVPN_MSD
 #   child_fabric_name_11: child_11
@@ -562,7 +562,7 @@
 
 ################################################################################
 - name: MERGED - TEST - Merge child fabrics into MSD Fabric
-  cisco.dcnm.dcnm_child_fabric:
+  cisco.dcnm.dcnm_fabric_member:
     state: merged
     config:
       - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
@@ -685,7 +685,7 @@
 #}
 #######################################################################################
 - name: MERGED - TEST - Merge additional fabric child_fabric_name_13 into MSD Fabric
-  cisco.dcnm.dcnm_child_fabric: &merge_child_fabric
+  cisco.dcnm.dcnm_fabric_member: &merge_child_fabric
     state: merged
     config:
       - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
@@ -728,7 +728,7 @@
 #-name QUERY - TEST - Query child fabrics of MSD Fabric
 ###################################################################################################
 - name: QUERY - TEST - Query child fabrics of MSD Fabric
-  cisco.dcnm.dcnm_child_fabric: 
+  cisco.dcnm.dcnm_fabric_member: 
     state: query
     config:
       - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
@@ -831,7 +831,7 @@
 #}
 #################################################################################
 - name: MERGED - TEST - Merge additional config into MSD fabric - idempotence
-  cisco.dcnm.dcnm_child_fabric: *merge_child_fabric
+  cisco.dcnm.dcnm_fabric_member: *merge_child_fabric
   register: result
 - debug:
     var: result
@@ -945,7 +945,7 @@
 #}
 ################################################################################
 - name: DELETED - SETUP - Delete child fabrics from MSD fabric
-  cisco.dcnm.dcnm_child_fabric: &delete_child_fabric
+  cisco.dcnm.dcnm_fabric_member: &delete_child_fabric
     state: deleted
     config:
       - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
@@ -1132,7 +1132,7 @@
 #}
 ###############################################################################################
 - name: MERGED - TEST - Delete child Fabrics into MSD fabric - idempotence
-  cisco.dcnm.dcnm_child_fabric: *delete_child_fabric
+  cisco.dcnm.dcnm_fabric_member: *delete_child_fabric
   register: result
 - debug:
     var: result
@@ -1214,7 +1214,7 @@
 #- name: MERGED - TEST - ADD child Fabrics into MSD fabric with Deploy
 ################################################################################################
 - name: Merged - TEST - Merge child fabrics into MSD Fabric with Deploy flag - To save the config
-  cisco.dcnm.dcnm_child_fabric:
+  cisco.dcnm.dcnm_fabric_member:
     state: merged
     config:
       - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
@@ -1361,7 +1361,7 @@
 #- name: DELETED - TEST - Delete child Fabrics from MSD fabric with Deploy
 ################################################################################################
 - name: Deleted - TEST - Delete child fabrics from MSD Fabric with Deploy flag - To save the config
-  cisco.dcnm.dcnm_child_fabric:
+  cisco.dcnm.dcnm_fabric_member:
     state: deleted
     config:
       - FABRIC_NAME: "{{ msd_fabric_name_1 }}"

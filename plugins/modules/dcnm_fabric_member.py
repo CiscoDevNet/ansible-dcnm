@@ -20,7 +20,7 @@ __author__ = "Prabahal"
 
 DOCUMENTATION = """
 ---
-module: dcnm_child_fabric
+module: dcnm_fabric_member
 short_description: Manage addition and deletion of NDFC fabrics to MSD.
 version_added: "3.5.0"
 author: Prabahal (@prabahal)
@@ -63,7 +63,7 @@ options:
 EXAMPLES = """
 
 - name: add child fabrics to MSD
-  cisco.dcnm.dcnm_child_fabric:
+  cisco.dcnm.dcnm_fabric_member:
     state: merged
     config:
     -   FABRIC_NAME: MSD_Parent1
@@ -79,7 +79,7 @@ EXAMPLES = """
 # Query the child fabrics of a MSD Fabric.
 
 - name: Query the child fabrics of MSD fabrics.
-  cisco.dcnm.dcnm_child_fabric:
+  cisco.dcnm.dcnm_fabric_member:
     state: query
     config:
     -   FABRIC_NAME: MSD_Fabric1
@@ -123,9 +123,9 @@ from ..module_utils.common.conversion import ConversionUtils
 from ..module_utils.msd.query_child_fab import childFabricQuery
 from ..module_utils.msd.delete_child_fab import childFabricDelete
 from ..module_utils.msd.add_child_fab import childFabricAdd
-from ..module_utils.msd.Fabric_associations import FabricAssociations
+from ..module_utils.msd.fabric_associations import FabricAssociations
 from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
-
+from ..module_utils.network.dcnm.dcnm import validate_list_of_dicts
 
 @Properties.add_rest_send
 class childCommon():
@@ -151,7 +151,6 @@ class childCommon():
         self.results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
-        self._verify_playbook_params = VerifyPlaybookParams()
         self.conversion = ConversionUtils()
         self.payloads = []
         self.want = []
@@ -218,36 +217,54 @@ class childCommon():
                 if (self.data[fabric]['fabricParent'] == item["destFabric"]):
                     return True
         return False
+    
+    def validate_input(self):
+        if self.state != "query":
+            fab_member_spec = dict(
+                FABRIC_NAME=dict(required=True, type="str"),
+                CHILD_FABRIC_NAME=dict(required=True, type="str"),
+                DEPLOY=dict(type="bool", default=False),
+            )
+        else:
+            fab_member_spec = dict(
+                FABRIC_NAME=dict(type="str"),
+            )            
+        fab_mem_info, invalid_params = validate_list_of_dicts(self.config, fab_member_spec, None)
+        if invalid_params:
+            mesg = "Invalid parameters in playbook: {0}".format(
+            "while processing config "
+            + "\n".join(invalid_params)
+            )
+            raise ValueError(mesg)
+        for config in self.config:
+            if not isinstance(config, dict):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Playbook configuration for fabric_member must be a dict. "
+                msg += f"Got type {type(config).__name__}, "
+                msg += f"value {config}."
+                raise ValueError(msg)
+            msd_fabric = config.get("FABRIC_NAME", None)
+            child_fabric = config.get("CHILD_FABRIC_NAME", None)
+            try:
+                self.conversion.validate_fabric_name(msd_fabric)
+                self.conversion.validate_fabric_name(child_fabric)
+            except (TypeError, ValueError) as error:
+                msg = f"{self.class_name}: "
+                msg += "Playbook configuration for FABRIC_NAME or CHILD_FABRIC_NAME "
+                msg += "contains an invalid FABRIC_NAME. "
+                # error below already contains a period "." at the end
+                msg += f"Error detail: {error} "
+                msg += f"Bad configuration: {config}."
+                raise ValueError(msg) from error
 
     def get_want(self):
         method_name = inspect.stack()[0][3]
         for config in self.config:
-            msg = f"payload: {config}"
+            msg = f"{method_name} payload: {config}"
             self.log.debug(msg)
-
-            if not isinstance(config, dict):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Playbook configuration for fabrics must be a dict. "
-                msg += f"Got type {type(config).__name__}, "
-                msg += f"value {config}."
-                raise ValueError(msg)
-            try:
-                msd_fabric = config.get("FABRIC_NAME", None)
-                child_fabric = config.get("CHILD_FABRIC_NAME", None)
-                deploy = config.get("DEPLOY", None)
-                try:
-                    self.conversion.validate_fabric_name(msd_fabric)
-                    self.conversion.validate_fabric_name(child_fabric)
-                except (TypeError, ValueError) as error:
-                    msg = f"{self.class_name}: "
-                    msg += "Playbook configuration for FABRIC_NAME or CHILD_FABRIC_NAME "
-                    msg += "contains an invalid FABRIC_NAME. "
-                    # error below already contains a period "." at the end
-                    msg += f"Error detail: {error} "
-                    msg += f"Bad configuration: {config}."
-                    raise ValueError(msg) from error
-            except ValueError as error:
-                raise ValueError(f"{error}") from error
+            msd_fabric = config.get("FABRIC_NAME", None)
+            child_fabric = config.get("CHILD_FABRIC_NAME", None)
+            deploy = config.get("DEPLOY", None)
             config_payload = {'destFabric': msd_fabric, 'sourceFabric': child_fabric, 'DEPLOY': deploy}
             self.payloads.append(copy.deepcopy(config_payload))
 
@@ -315,24 +332,7 @@ class childCommon():
             msg += f"Expected one of: {','.join(valid_states)}."
             raise ValueError(msg)
 
-    def get_want_query(self) -> None:
-        """
-        ### Summary
-        -   Validate the playbook configs.
-        -   Update self.want with the playbook configs.
-
-        ### Raises
-        -   ``ValueError`` if the playbook configs are invalid.
-        """
-        merged_configs = []
-        for config in self.config:
-            merged_configs.append(copy.deepcopy(config))
-
-        self.want = []
-        for config in merged_configs:
-            self.want.append(copy.deepcopy(config))
-
-# Keeping this function to check lower NDFC version support. yet to get data
+# Keeping this function to check lower NDFC version support. yet to get data from Mike
     def get_controller_version(self):
         """
         ### Summary
@@ -389,7 +389,8 @@ class Deleted(childCommon):
 
         msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
-
+        
+        self.validate_input()
         self.get_want()
 
         self.fab_association = FabricAssociations()
@@ -480,7 +481,9 @@ class Merged(childCommon):
 
         msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
-
+        self.get_controller_version()
+        ### Version validation needs to be added
+        self.validate_input()
         self.get_want()
 
         self.add.results = self.results
@@ -582,14 +585,14 @@ class Query(childCommon):
                 query the fabrics.
         """
         self.verify_payload()
-        self.get_want_query()
+        self.get_want()
         fabric_query = childFabricQuery()
         fabric_query.rest_send = self.rest_send
         fabric_query.results = self.results
 
         fabric_names_to_query = []
-        for want in self.want:
-            fabric_names_to_query.append(want["FABRIC_NAME"])
+        for item in self.payloads:
+            fabric_names_to_query.append(item["destFabric"])
         try:
             fabric_query.fabric_names = copy.copy(fabric_names_to_query)
         except ValueError as error:
