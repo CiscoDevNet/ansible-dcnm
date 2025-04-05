@@ -610,6 +610,7 @@ Parameters
                 </td>
                 <td>
                         <div>Interface mode</div>
+                        <div>When ethernet interface is a PortChannel or vPC member, mode is ignored. The only properties that can be managed for PortChannel or vPC member interfaces are &#x27;admin_state&#x27;, &#x27;description&#x27; and &#x27;cmds&#x27;. All other properties are ignored.</div>
                 </td>
             </tr>
             <tr>
