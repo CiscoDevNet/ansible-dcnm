@@ -170,7 +170,7 @@ class InstanceValues:
     switchRouteTargetImportEvpn: str
     switchRouteTargetExportEvpn: str
 
-    def dumps(self):
+    def to_str(self):
         """
         # Summary
 
@@ -178,7 +178,7 @@ class InstanceValues:
         """
         return serialize_dict(self.__dict__)
 
-    def dict(self):
+    def to_dict(self):
         """
         # Summary
 
@@ -251,24 +251,25 @@ class LanAttachment:
     vrfName: str
     vlan: VlanId = field(default_factory=lambda: VlanId(0))
 
-    def dict(self):
+    def to_dict(self):
         """
         # Summary
 
         Serialize the object to a dictionary.
         """
-        instance_values_dict = self.instanceValues.dict()
+        instance_values_dict = self.instanceValues.to_dict()
         as_dict = asdict(self)
         as_dict["instanceValues"] = instance_values_dict
+        as_dict["vlan"] = self.vlan.vlanId
         return as_dict
 
-    def dumps(self):
+    def to_str(self):
         """
         # Summary
 
         Serialize the object to a JSON string.
         """
-        instance_values = self.instanceValues.dumps()
+        instance_values = self.instanceValues.to_str()
         return json.dumps(
             {
                 "deployment": self.deployment,
