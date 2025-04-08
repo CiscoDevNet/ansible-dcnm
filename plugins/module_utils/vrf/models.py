@@ -7,7 +7,7 @@
 """
 # Summary
 
-Serialization/Deserialization functions for LanAttachment and InstanceValuesInternal objects.
+Serialization/Deserialization functions for LanAttach and InstanceValues objects.
 """
 import json
 from ast import literal_eval
@@ -15,15 +15,15 @@ from dataclasses import asdict, dataclass, field
 from typing import Union
 
 
-def to_lan_attachment_internal(obj):
+def to_lan_attach_item_internal(obj):
     """
-    Convert a dictionary to a LanAttachmentInternal object.
+    Convert a dictionary to a LanAttachItemInternal object.
     """
     if obj.get("vlan"):
         obj["vlan"] = VlanId(obj["vlan"])
     if obj.get("instanceValues"):
         obj["instanceValues"] = InstanceValuesInternal(**obj["instanceValues"])
-    return LanAttachmentInternal(**obj)
+    return LanAttachItemInternal(**obj)
 
 
 @dataclass
@@ -70,7 +70,7 @@ class InstanceValuesController:
     """
     # Summary
 
-    Instance values for LanAttachmentController, in controller format.
+    Instance values for LanAttachItemController, in controller format.
 
     ## Keys
 
@@ -86,17 +86,7 @@ class InstanceValuesController:
 
     ```json
     {
-        "deployment": true,
-        "entityName": "ansible-vrf-int2",
-        "extensionValues": "",
-        "fabric": "f1",
         "instanceValues": "{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
-        "isAttached": true,
-        "is_deploy": true,
-        "peerSerialNo": null,
-        "serialNumber": "FOX2109PGD0",
-        "vlan": 500,
-        "vrfName": "ansible-vrf-int2"
     }
     ```
 
@@ -107,7 +97,8 @@ class InstanceValuesController:
         instanceValues="{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}"
     )
 
-    print(instance_values.to_internal())
+    print(instance_values.as_controller())
+    print(instance_values.as_internal())
     ```
     """
 
@@ -162,6 +153,13 @@ class InstanceValuesController:
             loopbackIpAddress=instance_values["loopbackIpAddress"],
             switchRouteTargetExportEvpn=instance_values["switchRouteTargetExportEvpn"],
         )
+
+    def as_playbook(self):
+        """
+        # Summary
+
+        Serialize to dcnm_vrf playbook format.
+        """
 
 
 @dataclass
@@ -218,7 +216,6 @@ class InstanceValuesInternal:
         return InstanceValuesController(
             instanceValues=json.dumps(self.__dict__, default=str)
         )
-        # return json.dumps(json.dumps(self.__dict__))
 
     def as_internal(self):
         """
@@ -230,7 +227,7 @@ class InstanceValuesInternal:
 
 
 @dataclass
-class LanAttachmentInternal:
+class LanAttachItemInternal:
     """
     # Summary
 
@@ -257,7 +254,7 @@ class LanAttachmentInternal:
     ## Example
 
     ```python
-    lan_attachment = LanAttachment(
+    lan_attach_item_internal = LanAttachItemInternal(
         deployment=True,
         export_evpn_rt="",
         extensionValues="",
@@ -276,8 +273,8 @@ class LanAttachmentInternal:
         vrfName="ansible-vrf-int1"
     )
 
-    print(lan_attachment.dumps())
-    print(lan_attachment.dict())
+    print(lan_attach_item_internal.as_controller())
+    print(lan_attach_item_internal.as_internal())
     ```
     """
 
@@ -353,7 +350,7 @@ class LanAttachmentInternal:
 
 
 @dataclass
-class LanAttachmentController:
+class LanAttachItemController:
     """
     # Summary
 
@@ -412,24 +409,24 @@ class LanAttachmentController:
     ```python
     vrf_response = get_vrf_attachments(**args)
 
-    # Extract the first lanAttachment object from the response
+    # Extract the first lanAttach object from the response
 
     attachment_object: dict = vrf_response.json()[0]["lanAttachList"][0]
 
-    # Feed the lanAttachment object to the LanAttachmentController class
-    # to create a LanAttachmentController instance
+    # Feed the lanAttach dictionary to the LanAttachItemController class
+    # to create a LanAttachItemController instance
 
-    lan_attachment_controller = LanAttachmentController(**attachment_object)
+    lan_attach_item_controller = LanAttachItemController(**attachment_object)
 
     # Now you can use the instance to serialize the controller response
     # into either internal format or controller format
 
-    print(lan_attachment_controller.as_controller())
-    print(lan_attachment_controller.as_internal())
+    print(lan_attach_item_controller.as_controller())
+    print(lan_attach_item_controller.as_internal())
 
     # You can also populate the object with your own values
 
-    lan_attachment_controller = LanAttachmentController(
+    lan_attach_item_controller = LanAttachItemController(
         entityName="myVrf",
         fabricName="f1",
         instanceValues="{\"loopbackId\": \"\", \"loopbackIpAddress\": \"\", \"loopbackIpV6Address\": \"\", \"switchRouteTargetImportEvpn\": \"\", \"switchRouteTargetExportEvpn\": \"\", \"deviceSupportL3VniNoVlan\": false}",
@@ -445,8 +442,8 @@ class LanAttachmentController:
         vrfName="ansible-vrf-int2"
     )
 
-    print(lan_attachment_controller.as_controller())
-    print(lan_attachment_controller.as_internal())
+    print(lan_attach_item_controller.as_controller())
+    print(lan_attach_item_controller.as_internal())
     ```
     """
 
