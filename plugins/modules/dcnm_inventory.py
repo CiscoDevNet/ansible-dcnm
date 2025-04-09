@@ -488,6 +488,14 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_ip_sn_dict,
 )
 
+import datetime
+from pprint import pprint
+def logit(msg):
+    with open('/projects/ndfc_dev_personal/alog.txt', 'a') as of:
+        d = datetime.datetime.now().replace(microsecond=0).isoformat()
+        pprint(msg, of)
+        # of.write("---- %s ----\n%s\n" % (d,msg))
+
 
 class DcnmInventory:
     def __init__(self, module):
@@ -685,6 +693,17 @@ class DcnmInventory:
         if self.nd:
             path = self.nd_prefix + path
         response = dcnm_send(self.module, method, path, json.dumps(inv))
+        # Write code to loop through the response until response['DATA'][0]['statusReason] == 'manageable'
+        for i in range(0, 10):
+            logit("Attempt number: {0}".format(i))
+            logit(response)
+            if response["DATA"][0]["statusReason"] == "manageable":
+                break
+            else:
+                time.sleep(5)
+                response = dcnm_send(self.module, method, path, json.dumps(inv))
+
+
         self.result["response"].append(response)
         fail, self.result["changed"] = self.handle_response(response, "create")
 
