@@ -465,22 +465,16 @@ EXAMPLES = """
     - net_name: ansible-net12
 """
 
-import json
-import time
 import copy
+import json
 import re
-from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    get_fabric_inventory_details,
-    dcnm_send,
-    validate_list_of_dicts,
-    dcnm_get_ip_addr_info,
-    get_ip_sn_dict,
-    get_fabric_details,
-    get_ip_sn_fabric_dict,
-    dcnm_version_supported,
-    dcnm_get_url,
-)
+import time
+
 from ansible.module_utils.basic import AnsibleModule
+from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
+    dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
+    get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
+    get_ip_sn_fabric_dict, validate_list_of_dicts)
 
 
 class DcnmNetwork:
@@ -634,25 +628,42 @@ class DcnmNetwork:
                                                         else []
                                                     )
 
-                                                    if sorted(h_tor_ports) != sorted(w_tor_ports):
+                                                    if sorted(h_tor_ports) != sorted(
+                                                        w_tor_ports
+                                                    ):
                                                         atch_tor_ports = list(
-                                                            set(w_tor_ports) - set(h_tor_ports)
+                                                            set(w_tor_ports)
+                                                            - set(h_tor_ports)
                                                         )
 
                                                     if replace:
                                                         atch_tor_ports = w_tor_ports
                                                     else:
-                                                        atch_tor_ports.extend(h_tor_ports)
+                                                        atch_tor_ports.extend(
+                                                            h_tor_ports
+                                                        )
 
-                                                    torconfig = tor_w["switch"] + "(" + ",".join(atch_tor_ports) + ")"
+                                                    torconfig = (
+                                                        tor_w["switch"]
+                                                        + "("
+                                                        + ",".join(atch_tor_ports)
+                                                        + ")"
+                                                    )
                                                     want.update({"torPorts": torconfig})
                                                     # Update torports_configured to True. If there is no other config change for attach
                                                     # We will still append this attach to attach_list as there is tor port change
-                                                    if sorted(atch_tor_ports) != sorted(h_tor_ports):
+                                                    if sorted(atch_tor_ports) != sorted(
+                                                        h_tor_ports
+                                                    ):
                                                         torports_configured = True
 
                                         if not torports_present:
-                                            torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                            torconfig = (
+                                                tor_w["switch"]
+                                                + "("
+                                                + tor_w["torPorts"]
+                                                + ")"
+                                            )
                                             want.update({"torPorts": torconfig})
                                             # Update torports_configured to True. If there is no other config change for attach
                                             # We will still append this attach to attach_list as there is tor port change
@@ -672,7 +683,12 @@ class DcnmNetwork:
                                         # Dont update torports_configured to True.
                                         # If at all there is any other config change, this attach to will be appended attach_list there
                                         for tor_h in have.get("torports"):
-                                            torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
+                                            torconfig = (
+                                                tor_h["switch"]
+                                                + "("
+                                                + tor_h["torPorts"]
+                                                + ")"
+                                            )
                                             want.update({"torPorts": torconfig})
 
                                     del have["torports"]
@@ -719,18 +735,20 @@ class DcnmNetwork:
 
                                         want.update(
                                             {
-                                                "switchPorts": ",".join(atch_sw_ports)
-                                                if atch_sw_ports
-                                                else ""
+                                                "switchPorts": (
+                                                    ",".join(atch_sw_ports)
+                                                    if atch_sw_ports
+                                                    else ""
+                                                )
                                             }
                                         )
                                         want.update(
                                             {
-                                                "detachSwitchPorts": ",".join(
-                                                    dtach_sw_ports
+                                                "detachSwitchPorts": (
+                                                    ",".join(dtach_sw_ports)
+                                                    if dtach_sw_ports
+                                                    else ""
                                                 )
-                                                if dtach_sw_ports
-                                                else ""
                                             }
                                         )
 
@@ -782,7 +800,12 @@ class DcnmNetwork:
                                 del want["isAttached"]
                                 if want.get("torports"):
                                     for tor_w in want["torports"]:
-                                        torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                        torconfig = (
+                                            tor_w["switch"]
+                                            + "("
+                                            + tor_w["torPorts"]
+                                            + ")"
+                                        )
                                         want.update({"torPorts": torconfig})
                                 del want["torports"]
                                 want.update({"deployment": True})
@@ -798,7 +821,9 @@ class DcnmNetwork:
                             if bool(want["is_deploy"]):
                                 dep_net = True
 
-                        if bool(want.get("is_deploy")) is not bool(have.get("is_deploy")):
+                        if bool(want.get("is_deploy")) is not bool(
+                            have.get("is_deploy")
+                        ):
                             if bool(want.get("is_deploy")):
                                 dep_net = True
 
@@ -823,9 +848,7 @@ class DcnmNetwork:
             is_vpc = self.inventory_data[ip_addr].get("isVpcConfigured")
             if is_vpc is True:
                 peer_found = False
-                peer_ser = self.inventory_data[ip_addr].get(
-                    "peerSerialNumber"
-                )
+                peer_ser = self.inventory_data[ip_addr].get("peerSerialNumber")
                 for attch in attach_list:
                     if peer_ser == attch["serialNumber"]:
                         peer_found = True
@@ -898,7 +921,13 @@ class DcnmNetwork:
                 )
                 self.module.fail_json(msg=msg)
             for tor in attach.get("tor_ports"):
-                torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
+                torports.update(
+                    {
+                        "switch": self.inventory_data[tor["ip_address"]].get(
+                            "logicalName"
+                        )
+                    }
+                )
                 torports.update({"torPorts": ",".join(tor["ports"])})
                 torlist.append(torports)
             del attach["tor_ports"]
@@ -1246,7 +1275,7 @@ class DcnmNetwork:
             l3gw_onbd_changed,
             nf_en_changed,
             intvlan_nfmon_changed,
-            vlan_nfmon_changed
+            vlan_nfmon_changed,
         )
 
     def update_create_params(self, net):
@@ -1445,9 +1474,17 @@ class DcnmNetwork:
                 }
 
                 if self.dcnm_version > 11:
-                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-                    t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                    t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                    t_conf.update(
+                        ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False)
+                    )
+                    t_conf.update(
+                        SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", "")
+                    )
+                    t_conf.update(
+                        VLAN_NETFLOW_MONITOR=json_to_dict.get(
+                            "VLAN_NETFLOW_MONITOR", ""
+                        )
+                    )
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
                 del net["displayName"]
@@ -1468,7 +1505,9 @@ class DcnmNetwork:
                     if (json_to_dict.get("vrfName", "")) == "NA":
                         t_conf = {
                             "vlanId": json_to_dict.get("vlanId", ""),
-                            "gatewayIpAddress": json_to_dict.get("gatewayIpAddress", ""),
+                            "gatewayIpAddress": json_to_dict.get(
+                                "gatewayIpAddress", ""
+                            ),
                             "isLayer2Only": json_to_dict.get("isLayer2Only", False),
                             "tag": json_to_dict.get("tag", ""),
                             "vlanName": json_to_dict.get("vlanName", ""),
@@ -1483,20 +1522,34 @@ class DcnmNetwork:
                             "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
                             "mcastGroup": json_to_dict.get("mcastGroup", ""),
-                            "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
+                            "gatewayIpV6Address": json_to_dict.get(
+                                "gatewayIpV6Address", ""
+                            ),
                             "secondaryGW1": json_to_dict.get("secondaryGW1", ""),
                             "secondaryGW2": json_to_dict.get("secondaryGW2", ""),
                             "secondaryGW3": json_to_dict.get("secondaryGW3", ""),
                             "secondaryGW4": json_to_dict.get("secondaryGW4", ""),
                             "trmEnabled": json_to_dict.get("trmEnabled", False),
                             "rtBothAuto": json_to_dict.get("rtBothAuto", False),
-                            "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                            "enableL3OnBorder": json_to_dict.get(
+                                "enableL3OnBorder", False
+                            ),
                         }
 
                         if self.dcnm_version > 11:
-                            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-                            t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                            t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                            t_conf.update(
+                                ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False)
+                            )
+                            t_conf.update(
+                                SVI_NETFLOW_MONITOR=json_to_dict.get(
+                                    "SVI_NETFLOW_MONITOR", ""
+                                )
+                            )
+                            t_conf.update(
+                                VLAN_NETFLOW_MONITOR=json_to_dict.get(
+                                    "VLAN_NETFLOW_MONITOR", ""
+                                )
+                            )
 
                         l2net.update({"networkTemplateConfig": json.dumps(t_conf)})
                         del l2net["displayName"]
@@ -1545,8 +1598,12 @@ class DcnmNetwork:
                 sn = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
 
-                if attach["portNames"] and re.match(r"\S+\(\S+\d+\/\d+\)", attach["portNames"]):
-                    for idx, sw_list in enumerate(re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])):
+                if attach["portNames"] and re.match(
+                    r"\S+\(\S+\d+\/\d+\)", attach["portNames"]
+                ):
+                    for idx, sw_list in enumerate(
+                        re.findall(r"\S+\(\S+\d+\/\d+\)", attach["portNames"])
+                    ):
                         torports = {}
                         sw = sw_list.split("(")
                         eth_list = sw[1].split(")")
@@ -1641,9 +1698,7 @@ class DcnmNetwork:
                             ip_address = ip
                             break
                     # deploy = attch["deployment"]
-                    is_vpc = self.inventory_data[ip_address].get(
-                        "isVpcConfigured"
-                    )
+                    is_vpc = self.inventory_data[ip_address].get("isVpcConfigured")
                     if is_vpc is True:
                         peer_found = False
                         peer_ser = self.inventory_data[ip_address].get(
@@ -1656,8 +1711,10 @@ class DcnmNetwork:
                         if not peer_found:
                             msg = (
                                 "Switch {0} in fabric {1} is configured for vPC, "
-                                "please attach the peer switch also to network"
-                                .format(ip_address, self.fabric))
+                                "please attach the peer switch also to network".format(
+                                    ip_address, self.fabric
+                                )
+                            )
                             self.module.fail_json(msg=msg)
                             # This code add the peer switch in vpc cases automatically
                             # As of now UI return error in such cases. Uncomment this if
@@ -1986,7 +2043,7 @@ class DcnmNetwork:
                         l3gw_onbd_chg,
                         nf_en_chg,
                         intvlan_nfmon_chg,
-                        vlan_nfmon_chg
+                        vlan_nfmon_chg,
                     ) = self.diff_for_create(want_c, have_c)
                     gw_changed.update({want_c["networkName"]: gw_chg})
                     tg_changed.update({want_c["networkName"]: tg_chg})
@@ -2016,7 +2073,9 @@ class DcnmNetwork:
                     rt_both_changed.update({want_c["networkName"]: rt_both_chg})
                     l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
                     nf_en_changed.update({want_c["networkName"]: nf_en_chg})
-                    intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
+                    intvlan_nfmon_changed.update(
+                        {want_c["networkName"]: intvlan_nfmon_chg}
+                    )
                     vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
                     if diff:
                         diff_create_update.append(diff)
@@ -2133,7 +2192,9 @@ class DcnmNetwork:
                             or dhcp2_vrf_changed.get(want_a["networkName"], False)
                             or dhcp3_vrf_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
-                            or multicast_group_address_changed.get(want_a["networkName"], False)
+                            or multicast_group_address_changed.get(
+                                want_a["networkName"], False
+                            )
                             or gwv6_changed.get(want_a["networkName"], False)
                             or sec_gw1_changed.get(want_a["networkName"], False)
                             or sec_gw2_changed.get(want_a["networkName"], False)
@@ -2155,7 +2216,9 @@ class DcnmNetwork:
                     if attach.get("isAttached"):
                         if attach.get("torports"):
                             for tor_w in attach["torports"]:
-                                torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                torconfig = (
+                                    tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
+                                )
                                 attach.update({"torPorts": torconfig})
                         del attach["torports"]
                         del attach["isAttached"]
@@ -2178,8 +2241,10 @@ class DcnmNetwork:
         if all_nets:
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
             for net in all_nets:
-                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key='net_name', value=net)
-                if want_net_data['deploy'] is False:
+                want_net_data = self.find_dict_in_list_by_key_value(
+                    search=self.config, key="net_name", value=net
+                )
+                if want_net_data.get("deploy") is False:
                     modified_all_nets.remove(net)
 
         if modified_all_nets:
@@ -2250,19 +2315,31 @@ class DcnmNetwork:
             found_c.update({"dhcp_srvr2_vrf": json_to_dict.get("vrfDhcp2", "")})
             found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
             found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
-            found_c.update({"multicast_group_address": json_to_dict.get("mcastGroup", "")})
-            found_c.update({"gw_ipv6_subnet": json_to_dict.get("gatewayIpV6Address", "")})
+            found_c.update(
+                {"multicast_group_address": json_to_dict.get("mcastGroup", "")}
+            )
+            found_c.update(
+                {"gw_ipv6_subnet": json_to_dict.get("gatewayIpV6Address", "")}
+            )
             found_c.update({"secondary_ip_gw1": json_to_dict.get("secondaryGW1", "")})
             found_c.update({"secondary_ip_gw2": json_to_dict.get("secondaryGW2", "")})
             found_c.update({"secondary_ip_gw3": json_to_dict.get("secondaryGW3", "")})
             found_c.update({"secondary_ip_gw4": json_to_dict.get("secondaryGW4", "")})
             found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
             found_c.update({"route_target_both": json_to_dict.get("rtBothAuto", False)})
-            found_c.update({"l3gw_on_border": json_to_dict.get("enableL3OnBorder", False)})
+            found_c.update(
+                {"l3gw_on_border": json_to_dict.get("enableL3OnBorder", False)}
+            )
             if self.dcnm_version > 11:
-                found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
-                found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
-                found_c.update({"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")})
+                found_c.update(
+                    {"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)}
+                )
+                found_c.update(
+                    {"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")}
+                )
+                found_c.update(
+                    {"vlan_nf_monitor": json_to_dict.get("VLAN_NETFLOW_MONITOR", "")}
+                )
             found_c.update({"attach": []})
 
             del found_c["fabric"]
@@ -2370,7 +2447,9 @@ class DcnmNetwork:
 
                     if not network["DATA"]:
                         continue
-                    missing_network, not_ok = self.handle_response(network, "query_dcnm")
+                    missing_network, not_ok = self.handle_response(
+                        network, "query_dcnm"
+                    )
                     if missing_network or not_ok:
                         continue
 
@@ -2561,7 +2640,9 @@ class DcnmNetwork:
                     self.failure(resp)
 
         if del_failure:
-            fail_msg = "Deletion of Networks {0} has failed: {1}".format(del_failure[:-1], resp)
+            fail_msg = "Deletion of Networks {0} has failed: {1}".format(
+                del_failure[:-1], resp
+            )
             self.result["response"].append(resp)
             if is_rollback:
                 self.failed_to_rollback = True
@@ -2613,9 +2694,17 @@ class DcnmNetwork:
                 }
 
                 if self.dcnm_version > 11:
-                    t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-                    t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
-                    t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+                    t_conf.update(
+                        ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False)
+                    )
+                    t_conf.update(
+                        SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", "")
+                    )
+                    t_conf.update(
+                        VLAN_NETFLOW_MONITOR=json_to_dict.get(
+                            "VLAN_NETFLOW_MONITOR", ""
+                        )
+                    )
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
 
@@ -2680,6 +2769,42 @@ class DcnmNetwork:
                     return
                 self.failure(resp)
 
+    def get_fabric_multicast_group_address(self) -> str:
+        """
+        # Summary
+
+        -   If fabric REPLICATION_MODE is "Ingress", default multicast group
+            address should be set to ""
+        -   If fabric REPLICATION_MODE is "Multicast", default multicast group
+            address is set to 239.1.1.0 for DCNM version 11, and 239.1.1.1 for
+            NDFC version 12
+
+        ## Raises
+
+        Call fail_json for any unhandled combinations of REPLICATION_MODE and
+        version.
+        """
+        controller_version: int = 12
+        if self.dcnm_version is not None:
+            controller_version = self.dcnm_version
+
+        fabric_multicast_group_address: str = ""
+        replication_mode: str = self.fabric_det.get("nvPairs", {}).get(
+            "REPLICATION_MODE", "Ingress"
+        )
+        if replication_mode == "Ingress":
+            fabric_multicast_group_address = ""
+        elif replication_mode == "Multicast" and controller_version == 11:
+            fabric_multicast_group_address = "239.1.1.0"
+        elif replication_mode == "Multicast" and controller_version > 11:
+            fabric_multicast_group_address = "239.1.1.1"
+        else:
+            msg = "Unhandled REPLICATION_MODE or controller version. "
+            msg += f"REPLICATION_MODE {replication_mode}, "
+            msg += f"controller version {self.dcnm_version}."
+            self.module.fail_json(msg=msg)
+        return fabric_multicast_group_address
+
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
 
@@ -2687,15 +2812,7 @@ class DcnmNetwork:
 
         if state == "query":
 
-            # If ingress replication is enabled multicast group address should be set to "" as default.
-            # If ingress replication is not enabled, the default value for multicast group address
-            # is different for DCNM and NDFC.
-            if self.fabric_det.get("replicationMode") == "Ingress":
-                mcast_group_addr = ""
-            elif self.dcnm_version > 11:
-                mcast_group_addr = "239.1.1.1"
-            else:
-                mcast_group_addr = "239.1.1.0"
+            mcast_group_addr = self.get_fabric_multicast_group_address()
 
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
@@ -2772,15 +2889,7 @@ class DcnmNetwork:
 
         else:
 
-            # If ingress replication is enabled multicast group address should be set to "" as default.
-            # If ingress replication is not enabled, the default value for multicast group address
-            # is different for DCNM and NDFC.
-            if self.fabric_det.get("replicationMode") == "Ingress":
-                mcast_group_addr = ""
-            elif self.dcnm_version > 11:
-                mcast_group_addr = "239.1.1.1"
-            else:
-                mcast_group_addr = "239.1.1.0"
+            mcast_group_addr = self.get_fabric_multicast_group_address()
 
             net_spec = dict(
                 net_name=dict(required=True, type="str", length_max=64),
@@ -2846,7 +2955,9 @@ class DcnmNetwork:
                         for attach in net["attach"]:
                             attach["deploy"] = net["deploy"]
                             if attach.get("ports"):
-                                attach["ports"] = [port.capitalize() for port in attach["ports"]]
+                                attach["ports"] = [
+                                    port.capitalize() for port in attach["ports"]
+                                ]
                             if attach.get("tor_ports"):
                                 if self.dcnm_version == 11:
                                     msg = "Invalid parameters in playbook: tor_ports configurations are supported only on NDFC"
@@ -2858,7 +2969,9 @@ class DcnmNetwork:
                                 attach["tor_ports"] = valid_tor_att
                                 for tor in attach["tor_ports"]:
                                     if tor.get("ports"):
-                                        tor["ports"] = [port.capitalize() for port in tor["ports"]]
+                                        tor["ports"] = [
+                                            port.capitalize() for port in tor["ports"]
+                                        ]
                                 invalid_params.extend(invalid_tor_att)
                         invalid_params.extend(invalid_att)
 
@@ -2907,7 +3020,11 @@ class DcnmNetwork:
                             )
 
                         if self.dcnm_version == 11:
-                            if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
+                            if (
+                                net.get("netflow_enable")
+                                or net.get("intfvlan_nf_monitor")
+                                or net.get("vlan_nf_monitor")
+                            ):
                                 invalid_params.append(
                                     "Netflow configurations are supported only on NDFC"
                                 )
@@ -2924,11 +3041,7 @@ class DcnmNetwork:
                 state = self.params["state"]
                 msg = None
 
-                if (
-                    state == "merged"
-                    or state == "replaced"
-                    or state == "query"
-                ):
+                if state == "merged" or state == "replaced" or state == "query":
                     msg = "config: element is mandatory for this state {0}".format(
                         state
                     )
@@ -3101,7 +3214,9 @@ class DcnmNetwork:
             json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
 
         if cfg.get("gw_ipv6_subnet", None) is None:
-            json_to_dict_want["gatewayIpV6Address"] = json_to_dict_have["gatewayIpV6Address"]
+            json_to_dict_want["gatewayIpV6Address"] = json_to_dict_have[
+                "gatewayIpV6Address"
+            ]
 
         if cfg.get("secondary_ip_gw1", None) is None:
             json_to_dict_want["secondaryGW1"] = json_to_dict_have["secondaryGW1"]
@@ -3130,7 +3245,9 @@ class DcnmNetwork:
                 json_to_dict_want["rtBothAuto"] = False
 
         if cfg.get("l3gw_on_border", None) is None:
-            json_to_dict_want["enableL3OnBorder"] = json_to_dict_have["enableL3OnBorder"]
+            json_to_dict_want["enableL3OnBorder"] = json_to_dict_have[
+                "enableL3OnBorder"
+            ]
             if str(json_to_dict_want["enableL3OnBorder"]).lower() == "true":
                 json_to_dict_want["enableL3OnBorder"] = True
             else:
@@ -3138,17 +3255,23 @@ class DcnmNetwork:
 
         if self.dcnm_version > 11:
             if cfg.get("netflow_enable", None) is None:
-                json_to_dict_want["ENABLE_NETFLOW"] = json_to_dict_have["ENABLE_NETFLOW"]
+                json_to_dict_want["ENABLE_NETFLOW"] = json_to_dict_have[
+                    "ENABLE_NETFLOW"
+                ]
                 if str(json_to_dict_want["ENABLE_NETFLOW"]).lower() == "true":
                     json_to_dict_want["ENABLE_NETFLOW"] = True
                 else:
                     json_to_dict_want["ENABLE_NETFLOW"] = False
 
             if cfg.get("intfvlan_nf_monitor", None) is None:
-                json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have["SVI_NETFLOW_MONITOR"]
+                json_to_dict_want["SVI_NETFLOW_MONITOR"] = json_to_dict_have[
+                    "SVI_NETFLOW_MONITOR"
+                ]
 
             if cfg.get("vlan_nf_monitor", None) is None:
-                json_to_dict_want["VLAN_NETFLOW_MONITOR"] = json_to_dict_have["VLAN_NETFLOW_MONITOR"]
+                json_to_dict_want["VLAN_NETFLOW_MONITOR"] = json_to_dict_have[
+                    "VLAN_NETFLOW_MONITOR"
+                ]
 
         want.update({"networkTemplateConfig": json.dumps(json_to_dict_want)})
 
