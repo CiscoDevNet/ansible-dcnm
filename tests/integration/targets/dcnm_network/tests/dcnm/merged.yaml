@@ -10,15 +10,19 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
   when: controller_version >= "12"
 
-- name: MERGED - Verify if fabric - Fabric1 is deployed.
+- name: MERGED - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - result.response.DATA != None
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
@@ -56,14 +60,18 @@
   retries: 5
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.diff[0].attach|length == 0'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - result.changed == true
+    - result.diff[0].attach|length == 0
+    - result.diff[0].net_id == 7005
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.response[0].RETURN_CODE == 200
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
@@ -97,14 +105,18 @@
   retries: 5
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.diff[0].attach|length == 0'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - result.diff[0].attach|length == 0
+    - result.diff[0].net_id == 7005
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.changed == true
+    - result.response[0].RETURN_CODE == 200
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
@@ -125,7 +137,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       deploy: True
   register: result
 
@@ -139,18 +151,22 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - result.changed == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].net_id == 7005
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - (result.response[1].DATA|dict2items)[0].value == "SUCCESS"
 
 - name: MERGED - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
@@ -171,7 +187,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       deploy: False
   register: result
 
@@ -185,26 +201,34 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - result.changed == true
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - (result.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].net_id == 7005
+    - result.diff[0].vrf_name == "Tenant-1"
 
 - name: MERGED - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
+    - result.response|length == 0
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -225,7 +249,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       deploy: true
     - net_name: ansible-net12
       vrf_name: Tenant-2
@@ -236,7 +260,7 @@
       gw_ip_subnet: '192.168.40.1/24'
       attach:
       - ip_address: "{{ ansible_switch2 }}"
-        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        ports: ["{{ interface_2a }}", "{{ interface_2b }}"]
       deploy: false
   register: result
 
@@ -251,34 +275,42 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
-    - 'result.diff[1].attach[0].deploy == true'
-    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
-    - 'result.diff[1].net_name == "ansible-net12"'
-    - 'result.diff[1].net_id == 7002'
-    - 'result.diff[1].vrf_name == "Tenant-2"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - ansible_switch2 in result.diff[1].attach[0].ip_address
+    - result.changed == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[1].attach[0].deploy == true
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[1].net_name == "ansible-net12"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.diff[1].vrf_name == "Tenant-2"
+    - result.diff[0].net_id == 7005
+    - result.diff[1].net_id == 7002
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - result.response[3].RETURN_CODE == 200
+    - (result.response[2].DATA|dict2items)[0].value == "SUCCESS"
+    - (result.response[2].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: MERGED - conf1 - Idempotence
   cisco.dcnm.dcnm_network: *conf1
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
+    - result.response|length == 0
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -299,9 +331,9 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       - ip_address: "{{ ansible_switch2 }}"
-        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        ports: ["{{ interface_2a }}", "{{ interface_2b }}"]
       deploy: True
   register: result
 
@@ -315,30 +347,38 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - ansible_switch2 in result.diff[0].attach[1].ip_address
+    - result.changed == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].attach[1].deploy == true
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].net_id == 7005
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - (result.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result.response[1].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: MERGED - conf2 - Idempotence
   cisco.dcnm.dcnm_network: *conf2
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
+    - result.response|length == 0
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -358,9 +398,9 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
         - ip_address: "{{ ansible_switch1 }}"
-          ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+          ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
         - ip_address: "{{ ansible_switch2 }}"
-          ports: ["{{ ansible_sw2_int3 }}", "{{ ansible_sw2_int4 }}"]
+          ports: ["{{ interface_2c }}", "{{ interface_2d }}"]
     - net_name: ansible-net12
       vrf_name: Tenant-2
       net_id: 7002
@@ -370,9 +410,9 @@
       gw_ip_subnet: '192.168.40.1/24'
       attach:
         - ip_address: "{{ ansible_switch2 }}"
-          ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+          ports: ["{{ interface_2a }}", "{{ interface_2b }}"]
         - ip_address: "{{ ansible_switch1 }}"
-          ports: ["{{ ansible_sw1_int3 }}", "{{ ansible_sw1_int4 }}"]
+          ports: ["{{ interface_1c }}", "{{ interface_1d }}"]
       deploy: True
   register: result
 
@@ -387,36 +427,44 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - '(result.response[2].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[2].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result.response[2].DATA|dict2items)[2].value == "SUCCESS"'
-    - '(result.response[2].DATA|dict2items)[3].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
-    - 'result.diff[1].attach[0].deploy == true'
-    - '"{{ ansible_switch2 }}" in result.diff[1].attach[0].ip_address'
-    - 'result.diff[1].net_name == "ansible-net12"'
-    - 'result.diff[1].net_id == 7002'
-    - 'result.diff[1].vrf_name == "Tenant-2"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - ansible_switch2 in result.diff[1].attach[0].ip_address
+    - result.changed == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[1].attach[0].deploy == true
+    - result.diff[0].net_id == 7005
+    - result.diff[1].net_id == 7002
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[1].net_name == "ansible-net12"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.diff[1].vrf_name == "Tenant-2"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - result.response[3].RETURN_CODE == 200
+    - (result.response[2].DATA|dict2items)[0].value == "SUCCESS"
+    - (result.response[2].DATA|dict2items)[1].value == "SUCCESS"
+    - (result.response[2].DATA|dict2items)[2].value == "SUCCESS"
+    - (result.response[2].DATA|dict2items)[3].value == "SUCCESS"
 
 - name: MERGED - conf3 - Idempotence
   cisco.dcnm.dcnm_network: *conf3
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
+    - result.response|length == 0
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -438,9 +486,9 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       - ip_address: "{{ ansible_switch2 }}"
-        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        ports: ["{{ interface_2a }}", "{{ interface_2b }}"]
       deploy: true
   register: result
 
@@ -454,21 +502,25 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch2 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - ansible_switch2 in result.diff[0].attach[1].ip_address
+    - result.changed == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].attach[1].deploy == true
+    - result.diff[0].net_id == 7005
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - (result.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result.response[1].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -499,7 +551,7 @@
       dhcp_srvr3_vrf: three
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       deploy: True
   register: result
 
@@ -513,33 +565,41 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7009'
-    - 'result.diff[0].vrf_name == "NA"'
-    - 'result.diff[0].arp_suppress == true'
-    - 'result.diff[0].int_desc == "test interface"'
-    - 'result.diff[0].is_l2only == true'
-    - 'result.diff[0].mtu_l3intf == 7600'
-    - 'result.diff[0].vlan_name == "testvlan"'
-    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
-    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
-    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
-    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
-    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
-    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - result.changed == true
+    - result.diff[0].arp_suppress == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].dhcp_srvr1_ip == "1.1.1.1"
+    - result.diff[0].dhcp_srvr2_ip == "2.2.2.2"
+    - result.diff[0].dhcp_srvr3_ip == "3.3.3.3"
+    - result.diff[0].dhcp_srvr1_vrf == "one"
+    - result.diff[0].dhcp_srvr2_vrf == "two"
+    - result.diff[0].dhcp_srvr3_vrf == "three"
+    - result.diff[0].int_desc == "test interface"
+    - result.diff[0].is_l2only == true
+    - result.diff[0].net_id == 7009
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].mtu_l3intf == 7600
+    - result.diff[0].vrf_name == "NA"
+    - result.diff[0].vlan_name == "testvlan"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - (result.response[1].DATA|dict2items)[0].value == "SUCCESS"
 
 - name: MERGED - conf4 - Idempotence
   cisco.dcnm.dcnm_network: *conf4
   register: result
+
+- name: debug
+  debug:
+    var: result
 
 - assert:
     that:
@@ -577,7 +637,7 @@
       dhcp_srvr3_vrf: three
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       deploy: True
   register: result
 
@@ -591,38 +651,46 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7009'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
-    - 'result.diff[0].arp_suppress == false'
-    - 'result.diff[0].int_desc == "test interface"'
-    - 'result.diff[0].is_l2only == false'
-    - 'result.diff[0].mtu_l3intf == 7600'
-    - 'result.diff[0].vlan_name == "testvlan"'
-    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
-    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
-    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
-    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
-    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
-    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - result.changed == true
+    - result.diff[0].arp_suppress == false
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].dhcp_srvr1_ip == "1.1.1.1"
+    - result.diff[0].dhcp_srvr2_ip == "2.2.2.2"
+    - result.diff[0].dhcp_srvr3_ip == "3.3.3.3"
+    - result.diff[0].dhcp_srvr1_vrf == "one"
+    - result.diff[0].dhcp_srvr2_vrf == "two"
+    - result.diff[0].dhcp_srvr3_vrf == "three"
+    - result.diff[0].int_desc == "test interface"
+    - result.diff[0].is_l2only == false
+    - result.diff[0].mtu_l3intf == 7600
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].net_id == 7009
+    - result.diff[0].vlan_name == "testvlan"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - result.response[2].RETURN_CODE == 200
+    - (result.response[1].DATA|dict2items)[0].value == "SUCCESS"
 
 - name: MERGED - conf5 - Idempotence
   cisco.dcnm.dcnm_network: *conf5
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
+    - result.response|length == 0
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -662,23 +730,27 @@
   retries: 5
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7009'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
-    - 'result.diff[0].int_desc == "test interface"'
-    - 'result.diff[0].is_l2only == false'
-    - 'result.diff[0].mtu_l3intf == 7600'
-    - 'result.diff[0].vlan_name == "testvlan"'
-    - 'result.diff[0].dhcp_srvr1_ip == "1.1.1.1"'
-    - 'result.diff[0].dhcp_srvr1_vrf == "one"'
-    - 'result.diff[0].dhcp_srvr2_ip == "2.2.2.2"'
-    - 'result.diff[0].dhcp_srvr2_vrf == "two"'
-    - 'result.diff[0].dhcp_srvr3_ip == "3.3.3.3"'
-    - 'result.diff[0].dhcp_srvr3_vrf == "three"'
+    - result.changed == true
+    - result.diff[0].dhcp_srvr1_ip == "1.1.1.1"
+    - result.diff[0].dhcp_srvr2_ip == "2.2.2.2"
+    - result.diff[0].dhcp_srvr3_ip == "3.3.3.3"
+    - result.diff[0].dhcp_srvr1_vrf == "one"
+    - result.diff[0].dhcp_srvr2_vrf == "two"
+    - result.diff[0].dhcp_srvr3_vrf == "three"
+    - result.diff[0].int_desc == "test interface"
+    - result.diff[0].is_l2only == false
+    - result.diff[0].mtu_l3intf == 7600
+    - result.diff[0].net_id == 7009
+    - result.diff[0].net_name == "ansible-net13"
+    - result.diff[0].vrf_name == "Tenant-1"
+    - result.diff[0].vlan_name == "testvlan"
+    - result.response[0].RETURN_CODE == 200
 
 - name: MERGED -  attach networks to already created network
   cisco.dcnm.dcnm_network:
@@ -689,9 +761,9 @@
       vrf_name: Tenant-1
       attach:
       - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       - ip_address: "{{ ansible_switch2 }}"
-        ports: ["{{ ansible_sw2_int5 }}", "{{ ansible_sw2_int6 }}"]
+        ports: ["{{ interface_2a }}", "{{ interface_2b }}"]
   register: result
 
 - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -704,17 +776,21 @@
   retries: 30
   delay: 2
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - ansible_switch1 in result.diff[0].attach[0].ip_address
+    - result.changed == true
+    - result.diff[0].attach[0].deploy == true
+    - result.diff[0].attach[1].deploy == true
+    - result.response[0].RETURN_CODE == 200
+    - result.response[1].RETURN_CODE == 200
+    - (result.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result.response[0].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: MERGED - Query the Network to check for configs
   cisco.dcnm.dcnm_network:
@@ -722,34 +798,38 @@
     state: query
   register: result
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
-    - 'result.response[0].parent.networkName == "ansible-net13"'
-    - 'result.response[0].parent.networkId == 7009'
-    - 'result.response[0].parent.networkTemplate == "Default_Network_Universal"'
-    - 'result.response[0].parent.vrf == "Tenant-1"'
-    - 'result.response[0].parent.networkTemplateConfig.suppressArp == "false"'
-    - 'result.response[0].parent.networkTemplateConfig.isLayer2Only == "false"'
-    - 'result.response[0].parent.networkTemplateConfig.intfDescription == "test interface"'
-    - 'result.response[0].parent.networkTemplateConfig.vlanName == "testvlan"'
-    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp3 == "three"'
-    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"'
-    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp2 == "two"'
-    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"'
-    - 'result.response[0].parent.networkTemplateConfig.vrfDhcp == "one"'
-    - 'result.response[0].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"'
-    - 'result.response[0].parent.networkTemplateConfig.vrfName == "Tenant-1"'
-    - 'result.response[0].parent.networkTemplateConfig.mtu == "7600"'
-    - 'result.response[0].parent.networkTemplateConfig.vlanId == "3504"'
-    - 'result.response[0].attach[0].isLanAttached== true'
-    - 'result.response[0].attach[0].lanAttachState== "DEPLOYED"'
-    - 'result.response[0].attach[0].networkName== "ansible-net13"'
-    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.response[0].attach[0].ipAddress'
-    - 'result.response[0].attach[1].isLanAttached== true'
-    - 'result.response[0].attach[1].lanAttachState== "DEPLOYED"'
-    - 'result.response[0].attach[1].networkName== "ansible-net13"'
-    - '"{{ ansible_switch1 }}" or "{{ ansible_switch2 }}" in result.response[0].attach[1].ipAddress'
+    - ansible_switch1 or ansible_switch2 in result.response[0].attach[0].ipAddress
+    - ansible_switch1 or ansible_switch2 in result.response[0].attach[1].ipAddress
+    - result.changed == false
+    - result.response[0].attach[0].isLanAttached== true
+    - result.response[0].attach[1].isLanAttached== true
+    - result.response[0].attach[0].lanAttachState== "DEPLOYED"
+    - result.response[0].attach[1].lanAttachState== "DEPLOYED"
+    - result.response[0].attach[0].networkName== "ansible-net13"
+    - result.response[0].attach[1].networkName== "ansible-net13"
+    - result.response[0].parent.networkId == 7009
+    - result.response[0].parent.networkName == "ansible-net13"
+    - result.response[0].parent.networkTemplate == "Default_Network_Universal"
+    - result.response[0].parent.networkTemplateConfig.dhcpServerAddr1 == "1.1.1.1"
+    - result.response[0].parent.networkTemplateConfig.dhcpServerAddr2 == "2.2.2.2"
+    - result.response[0].parent.networkTemplateConfig.dhcpServerAddr3 == "3.3.3.3"
+    - result.response[0].parent.networkTemplateConfig.intfDescription == "test interface"
+    - result.response[0].parent.networkTemplateConfig.isLayer2Only == "false"
+    - result.response[0].parent.networkTemplateConfig.mtu == "7600"
+    - result.response[0].parent.networkTemplateConfig.suppressArp == "false"
+    - result.response[0].parent.networkTemplateConfig.vlanId == "3504"
+    - result.response[0].parent.networkTemplateConfig.vlanName == "testvlan"
+    - result.response[0].parent.networkTemplateConfig.vrfDhcp == "one"
+    - result.response[0].parent.networkTemplateConfig.vrfDhcp2 == "two"
+    - result.response[0].parent.networkTemplateConfig.vrfDhcp3 == "three"
+    - result.response[0].parent.networkTemplateConfig.vrfName == "Tenant-1"
+    - result.response[0].parent.vrf == "Tenant-1"
 
 - name: MERGED - setup - Clean up any existing network
   cisco.dcnm.dcnm_network:
@@ -772,10 +852,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create Network with invalid VRF name
   cisco.dcnm.dcnm_network:
@@ -793,10 +877,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"VRF: Tenant-10000 is missing in fabric:" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create Network with invalid vlan id
   cisco.dcnm.dcnm_network:
@@ -814,10 +902,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: vlan_id:15000 : The item exceeds the allowed range of max 4094" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create Network and deploy in invalid switch
   cisco.dcnm.dcnm_network:
@@ -833,15 +925,19 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address:
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
+        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
       deploy: false
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: ip_address : Required parameter not found" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create Network and deploy in switch with null interface
   cisco.dcnm.dcnm_network:
@@ -862,10 +958,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: ports : Required parameter not found" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create Network with out of range routing tag
   cisco.dcnm.dcnm_network:
@@ -884,10 +984,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"routing_tag:4294967296 : The item exceeds the allowed range of max 4294967295" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create L2 only Network with a vrf name
   cisco.dcnm.dcnm_network:
@@ -906,10 +1010,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: vrf_name should not be specified for L2 Networks" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create L3 Network without a vrf name
   cisco.dcnm.dcnm_network:
@@ -926,10 +1034,14 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: vrf_name is required for L3 Networks" in result.msg'
+    - result.changed == false
 
 - name: MERGED - Create L3 Network with DHCP server IP alone
   cisco.dcnm.dcnm_network:
@@ -948,16 +1060,20 @@
   register: result
   ignore_errors: yes
 
+- name: debug
+  debug:
+    var: result
+
 - assert:
     that:
-    - 'result.changed == false'
     - '"Invalid parameters in playbook: DHCP server IP should be specified along with DHCP server VRF" in result.msg'
+    - result.changed == false
 
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################
 
-- name: MERGED - setup - remove any networks
+- name: MERGED - Cleanup - remove networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_fabric }}"
     state: deleted
