@@ -1,0 +1,323 @@
+{
+    "get_controller_version":
+        {
+        "RETURN_CODE": 200, 
+        "METHOD": "GET", 
+        "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/fm/about/version", 
+        "MESSAGE": "OK", 
+        "DATA": {"version": "12.2.2.241", "mode": "LAN", "isMediaController": "False", "dev": "False", "isHaEnabled": "False", "install": "EASYFABRIC", "uuid": "", "is_upgrade_inprogress": "False"}
+        },
+    "Fabric_association_get_data": [
+        {
+            "fabricId": 2,
+            "fabricName": "test_fab",
+            "fabricParent": "None",
+            "fabricState": "standalone",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 6,
+            "fabricName": "nac-site1",
+            "fabricParent": "None",
+            "fabricState": "standalone",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 7,
+            "fabricName": "child13",
+            "fabricParent": "MSD_Fabric1",
+            "fabricState": "member",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 8,
+            "fabricName": "child12",
+            "fabricParent": "MSD_Fabric1",
+            "fabricState": "member",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 9,
+            "fabricName": "MSD_Fabric1",
+            "fabricParent": "None",
+            "fabricState": "msd",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "MSD"
+        },
+        {
+            "fabricId": 10,
+            "fabricName": "child11",
+            "fabricParent": "MSD_Fabric1",
+            "fabricState": "member",
+            "fabricTechnology": "External",
+            "fabricType": "External"
+        },
+        {
+            "fabricId": 13,
+            "fabricName": "IT_Prabahal",
+            "fabricParent": "None",
+            "fabricState": "standalone",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 16,
+            "fabricName": "MSD_Fabric2",
+            "fabricParent": "None",
+            "fabricState": "msd",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "MSD"
+        },
+        {
+            "fabricId": 19,
+            "fabricName": "child21",
+            "fabricParent": "MSD_Fabric2",
+            "fabricState": "member",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 20,
+            "fabricName": "msd_3",
+            "fabricParent": "None",
+            "fabricState": "msd",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "MSD"
+        },
+        {
+            "fabricId": 21,
+            "fabricName": "child3",
+            "fabricParent": "None",
+            "fabricState": "standalone",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 22,
+            "fabricName": "dup1",
+            "fabricParent": "None",
+            "fabricState": "standalone",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 23,
+            "fabricName": "dup2",
+            "fabricParent": "None",
+            "fabricState": "standalone",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        },
+        {
+            "fabricId": 24,
+            "fabricName": "child22",
+            "fabricParent": "MSD_Fabric2",
+            "fabricState": "member",
+            "fabricTechnology": "VXLANFabric",
+            "fabricType": "Switch_Fabric"
+        }
+    ],
+    "Fabric_association_get_response": 
+    {
+    "RETURN_CODE": 200,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "MESSAGE": "OK",
+    "DATA": [{"fabricId": 2, "fabricName": "test_fab", "fabricType": "Switch_Fabric", "fabricState": "standalone", "fabricParent": "None", "fabricTechnology": "VXLANFabric"}]
+    },
+    "Fabric_association_get_response_00019": 
+    {
+    "RETURN_CODE": 200,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "MESSAGE": "OK",
+    "DATA": [{
+        "fabricId": 16,
+        "fabricName": "f1",
+        "fabricParent": "None",
+        "fabricState": "msd",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "MSD"
+    }]
+    },
+    "Fabric_association_get_response_exists": 
+    {
+    "RETURN_CODE": 200,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "MESSAGE": "OK",
+    "DATA": [{
+        "fabricId": 16,
+        "fabricName": "f1",
+        "fabricParent": "None",
+        "fabricState": "msd",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "MSD"
+    },
+    {
+        "fabricId": 19,
+        "fabricName": "child",
+        "fabricParent": "f1",
+        "fabricState": "member",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "Switch_Fabric"
+    }]
+    },
+    "Fabric_association_get_valid_data": 
+    {
+    "RETURN_CODE": 200,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "DATA": [
+    {
+        "fabricId": 19,
+        "fabricName": "f1",
+        "fabricParent": "None",
+        "fabricState": "member",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "Switch_Fabric"
+    }],
+    "MESSAGE": "OK"
+    },
+    "Fabric_association_get_data_empty": 
+    {
+    "RETURN_CODE": 200,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "MESSAGE": "OK",
+    "DATA": []
+    },
+    "childFabric_delete_response":
+    {
+        "changed": true,
+        "diff": [
+            {
+                "destFabric": "msd",
+                "sequence_number": 1,
+                "sourceFabric": "child"
+            }
+        ],
+        "invocation": {
+            "module_args": {
+                "config": [
+                    {
+                        "CHILD_FABRIC_NAME": "child",
+                        "FABRIC_NAME": "msd"
+                    }
+                ],
+                "state": "deleted"
+            }
+        },
+        "metadata": [
+            {
+                "action": "child_fabric_delete",
+                "check_mode": false,
+                "sequence_number": 1,
+                "state": "deleted"
+            }
+        ],
+        "response": [
+            {
+                "DATA": {},
+                "MESSAGE": "OK",
+                "METHOD": "POST",
+                "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+                "RETURN_CODE": 200,
+                "sequence_number": 1
+            }
+        ],
+        "result": [
+            {
+                "changed": true,
+                "sequence_number": 1,
+                "success": true
+            }
+        ]
+    },
+    "childFabric_delete_response_2":
+    {
+        "DATA": {},
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "childFabric_add_response":
+    {
+        "DATA": {},
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+        "RETURN_CODE": 200,
+        "sequence_number": 1
+    },
+    "childFabric_nok_get_response":
+    {
+        "DATA": [],
+        "MESSAGE": "NOK",
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+        "RETURN_CODE": 500
+    },
+    "childFabric_delete_response_3":
+    {
+        "DATA": {},
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+        "RETURN_CODE": 500,
+        "sequence_number": 1
+    },
+    "childFabric_add_response_3":
+    {
+        "DATA": {},
+        "MESSAGE": "NOK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+        "RETURN_CODE": 500,
+        "sequence_number": 1
+    },
+    "Fabric_association_get_failure_response": 
+    {
+    "RETURN_CODE": 404,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "MESSAGE": "NOK"
+    },
+    "Fabric_association_get_response_00018": 
+    {
+    "RETURN_CODE": 200,
+    "METHOD": "GET", 
+    "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+    "MESSAGE": "OK",
+    "DATA": [{
+        "fabricId": 16,
+        "fabricName": "f2",
+        "fabricParent": "None",
+        "fabricState": "msd",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "MSD"
+    },
+    {
+        "fabricId": 16,
+        "fabricName": "f1",
+        "fabricParent": "None",
+        "fabricState": "msd",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "MSD"
+    },
+    {
+        "fabricId": 19,
+        "fabricName": "child2",
+        "fabricParent": "f2",
+        "fabricState": "member",
+        "fabricTechnology": "VXLANFabric",
+        "fabricType": "Switch_Fabric"
+    }]
+    }
+}

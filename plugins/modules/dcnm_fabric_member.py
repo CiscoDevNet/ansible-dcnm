@@ -220,14 +220,19 @@ class childCommon():
 
     def validate_input(self):
         method_name = inspect.stack()[0][3]
+        if self.config is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "params is missing config parameter."
+            raise ValueError(msg)
         fab_member_spec = dict(
             FABRIC_NAME=dict(required=True, type="str"),
             CHILD_FABRIC_NAME=dict(required=True, type="str"),
             DEPLOY=dict(type="bool", default=False),
         )
+
         fab_mem_info, invalid_params = validate_list_of_dicts(self.config, fab_member_spec, None)
         if invalid_params:
-            msg = "Invalid parameters in playbook: {invalid_params}"
+            msg = f"Invalid parameters in playbook: {invalid_params} "
             msg += "while processing config \n"
             raise ValueError(msg)
         for config in self.config:
@@ -246,7 +251,6 @@ class childCommon():
                 msg = f"{self.class_name}: "
                 msg += "Playbook configuration for FABRIC_NAME or CHILD_FABRIC_NAME "
                 msg += "contains an invalid FABRIC_NAME. "
-                # error below already contains a period "." at the end
                 msg += f"Error detail: {error} "
                 msg += f"Bad configuration: {config}."
                 raise ValueError(msg) from error
@@ -369,6 +373,13 @@ class Deleted(childCommon):
         self.log.debug(msg)
         self.data = {}
 
+    def refresh_fab_association_data(self):
+        for item in self.fab_association.fabric_association_data:
+            fabric_name = item.get("fabricName", None)
+            if fabric_name is None:
+                continue
+            self.data[fabric_name] = item
+
     def commit(self) -> None:
         """
         ### Summary
@@ -386,16 +397,16 @@ class Deleted(childCommon):
         self.validate_input()
         self.get_want()
 
-        self.fab_association = FabricAssociations()
-        self.fab_association.rest_send = self.rest_send
-        self.fab_association.refresh()
+        try:
+            self.fab_association = FabricAssociations()
+            self.fab_association.rest_send = self.rest_send
+            self.fab_association.refresh()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
+
         msg = f"Fab association data{self.fab_association.fabric_association_data}"
         self.log.debug(msg)
-        for item in self.fab_association.fabric_association_data:
-            fabric_name = item.get("fabricName", None)
-            if fabric_name is None:
-                continue
-            self.data[fabric_name] = item
+        self.refresh_fab_association_data()
 
         self.verify_msd_fab_exists_in_controller()
         self.verify_msd_fab_type()
@@ -405,15 +416,19 @@ class Deleted(childCommon):
                 self.results.result_current = {"success": True, "changed": False}
                 msg = "Given child fabric is already not a member of MSD fabric"
                 self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+                self.results.diff_current = {}
+                self.results.state = self.state
+                self.results.changed = False
+                self.results.failed = False
                 self.results.register_task_result()
             else:
                 self.delete = childFabricDelete()
                 self.delete.rest_send = self.rest_send
+                self.delete.rest_send.check_mode = self.check_mode
                 self.delete.results = self.results
 
                 fabric_names_to_delete = []
                 for want in self.payloads:
-                    fabric_names_to_delete.append(want["sourceFabric"])
                     fabric_names_to_delete.append(want["destFabric"])
                 try:
                     self.delete.fabric_names = fabric_names_to_delete
@@ -424,6 +439,9 @@ class Deleted(childCommon):
                     self.delete.commit(item)
                 except ValueError as error:
                     raise ValueError(f"{error}") from error
+                self.fab_association.refreshed = False
+                self.fab_association.refresh()
+                self.refresh_fab_association_data()
 
 
 class Merged(childCommon):
@@ -460,6 +478,13 @@ class Merged(childCommon):
         self.log.debug(msg)
         self.data = {}
 
+    def refresh_fab_association_data(self):
+        for item in self.fab_association.fabric_association_data:
+            fabric_name = item.get("fabricName", None)
+            if fabric_name is None:
+                continue
+            self.data[fabric_name] = item
+
     def commit(self) -> None:
         """
         ### Summary
@@ -480,16 +505,16 @@ class Merged(childCommon):
         self.get_want()
 
         self.add.results = self.results
-        self.fab_association = FabricAssociations()
-        self.fab_association.rest_send = self.rest_send
-        self.fab_association.refresh()
+        try:
+            self.fab_association = FabricAssociations()
+            self.fab_association.rest_send = self.rest_send
+            self.fab_association.refresh()
+        except (TypeError, ValueError) as error:
+            raise ValueError(error) from error
+
         msg = f"Fab association data{self.fab_association.fabric_association_data}"
         self.log.debug(msg)
-        for item in self.fab_association.fabric_association_data:
-            fabric_name = item.get("fabricName", None)
-            if fabric_name is None:
-                continue
-            self.data[fabric_name] = item
+        self.refresh_fab_association_data()
 
         self.verify_msd_fab_exists_in_controller()
         self.verify_msd_fab_type()
@@ -501,9 +526,14 @@ class Merged(childCommon):
                 self.results.result_current = {"success": True, "changed": False}
                 msg = "Child fabric is already member of MSD fabric."
                 self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
+                self.results.diff_current = {}
+                self.results.state = self.state
+                self.results.changed = False
+                self.results.failed = False
                 self.results.register_task_result()
             else:
                 self.add.rest_send = self.rest_send
+                self.add.rest_send.check_mode = self.check_mode
                 fabric_names_to_add = []
                 for want in self.payloads:
                     fabric_names_to_add.append(want["sourceFabric"])
@@ -517,6 +547,10 @@ class Merged(childCommon):
                 except ValueError as error:
                     raise ValueError(f"{error}") from error
 
+                self.fab_association.refreshed = False
+                self.fab_association.refresh()
+                self.refresh_fab_association_data()
+
 
 class Query(childCommon):
     """
@@ -528,7 +562,7 @@ class Query(childCommon):
     -   ``ValueError`` if:
         -   The playbook parameters are invalid.
         -   The controller returns an error when attempting to retrieve
-            the fabric details.
+            the fabric Association details.
     """
 
     def __init__(self, params):
@@ -558,7 +592,6 @@ class Query(childCommon):
                     msg = f"{self.class_name}: "
                     msg += "Playbook configuration for FABRIC_NAME is missing or "
                     msg += "contains an invalid FABRIC_NAME. "
-                    # error below already contains a period "." at the end
                     msg += f"Error detail: {error} "
                     msg += f"Bad configuration: {config}."
                     raise ValueError(msg) from error
@@ -581,6 +614,7 @@ class Query(childCommon):
         self.get_want()
         fabric_query = childFabricQuery()
         fabric_query.rest_send = self.rest_send
+        fabric_query.rest_send.check_mode = self.check_mode
         fabric_query.results = self.results
 
         fabric_names_to_query = []
@@ -626,7 +660,6 @@ def main():
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
-    # Logging setup
     try:
         log = Log()
         log.commit()

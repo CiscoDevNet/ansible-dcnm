@@ -2,7 +2,7 @@
 # RUNTIME
 ################################################################################
 # Recent run times (MM:SS.ms):
-# 02:17.62
+# 02:57.62
 ################################################################################
 # DESCRIPTION - CHILD FABRIC TEST
 #
@@ -44,6 +44,8 @@
 # 8. Idempotence : Delete the child Fabrics from MSD fabrics and verify.
 # 9. Add Child fabrics into MSD with Config-save
 #10. Delete child fabrics from MSD with config-save
+#11. Add same child fabric into MSD Fabric twice - 2nd config is idempotent
+#12. Delete same child fabric from MSD Fabric twice - 2nd config is idempotent
 ################################################################################
 # CLEANUP
 ################################################################################
@@ -1503,8 +1505,247 @@
       - result.result[7].changed == true
       - result.result[7].success == true
       - result.result[7].sequence_number == 8
-################################################################################
-# MERGED - CLEANUP - Delete the fabrics
+
+###########################################################################################
+# MERGED - Add same child fabric again in the same playbook. 2nd config should be idempotent 
+############################################################################################
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child2"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "merged"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "merged"
+#        },
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "merged"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "MESSAGE": "Child fabric is already member of MSD fabric.",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": false,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+###########################################################################################
+- name: Merged - TEST - Merge same child fabrics into MSD Fabric twice - 2nd config is idempotent
+  cisco.dcnm.dcnm_fabric_member:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].destFabric == "{{ msd_fabric_name_1 }}"
+      - result.diff[0].sourceFabric == "{{ child_fabric_name_11 }}"
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "child_fabric_add"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "child_fabric_add"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "Child fabric is already member of MSD fabric."
+      - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == false
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+###########################################################################################
+# DELETED - Add same child fabric again in the same playbook. 2nd config should be idempotent 
+############################################################################################
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child2"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "deleted"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "deleted"
+#        },
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "deleted"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "MESSAGE": "Given child fabric is already not a member of MSD fabric",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": false,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+#
+- name: Deleted - TEST - Delete same child fabric from MSD Fabric twice - 2nd config is idempotent
+  cisco.dcnm.dcnm_fabric_member:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].destFabric == "{{ msd_fabric_name_1 }}"
+      - result.diff[0].sourceFabric == "{{ child_fabric_name_11 }}"
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "child_fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "child_fabric_delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == false
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+###############################################################################
+#  CLEANUP - Delete the fabrics
 ################################################################################
 # Expected result
 #ok: [10.78.210.227] => {

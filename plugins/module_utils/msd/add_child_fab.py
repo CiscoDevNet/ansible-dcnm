@@ -16,7 +16,7 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Prabahal"
+__author__ = "prabahal"
 
 import copy
 import inspect
@@ -25,11 +25,6 @@ import logging
 
 from ..common.api.v1.lan_fabric.rest.control.fabrics.msd.msd import \
     EpChildFabricAdd
-
-# Import Results() only for the case where the user has not set Results()
-# prior to calling commit().  In this case, we instantiate Results()
-# in _validate_commit_parameters() so that we can register the failure
-# in commit().
 from ..common.results import Results
 from ...module_utils.fabric.common import FabricCommon
 
@@ -48,12 +43,52 @@ class childFabricAdd(FabricCommon):
         self.ep_fabric_add = EpChildFabricAdd()
         msg = "ENTERED childFabricAdd()"
         self.log.debug(msg)
+        self._fabric_names = None
         self.deploy = False
+
+    @property
+    def fabric_names(self):
+        """
+        ### Summary
+        -   setter: return the fabric names
+        -   getter: set the fabric_names
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``value`` is not a list.
+            -   ``value`` is an empty list.
+            -   ``value`` is not a list of strings.
+
+        """
+        return self._fabric_names
+
+    @fabric_names.setter
+    def fabric_names(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, list):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be a list. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            raise ValueError(msg)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be a list of at least one string. "
+            msg += f"got {value}."
+            raise ValueError(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "fabric_names must be a list of strings. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"value {item}"
+                raise ValueError(msg)
+        self._fabric_names = value
 
     def commit(self, payload):
         """
         ### Summary
-        -   Add child fabrics to Mentioned Parent fabric.
+        -   Add child fabrics to Mentioned MSD fabric.
 
         ### Raises
         -   ``ValueError`` if:
@@ -66,7 +101,6 @@ class childFabricAdd(FabricCommon):
         try:
             self._validate_commit_parameters()
         except ValueError as error:
-            # pylint: disable=no-member
             self.results.action = self.action
             self.results.changed = False
             self.results.failed = True
@@ -78,7 +112,6 @@ class childFabricAdd(FabricCommon):
                 self.results.state = "Added"
             self.results.register_task_result()
             raise ValueError(error) from error
-            # pylint: enable=no-member
 
         try:
             self.rest_send.path = self.ep_fabric_add.path
@@ -118,26 +151,21 @@ class childFabricAdd(FabricCommon):
         - validate the parameters for commit
         - raise ``ValueError`` if ``fabric_names`` is not set
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
 
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=access-member-before-definition
-        # pylint: disable=attribute-defined-outside-init
         if self.results is None:
             # Instantiate Results() only to register the failure
             self.results = Results()
             msg = f"{self.class_name}.{method_name}: "
             msg += "results must be set prior to calling commit."
             raise ValueError(msg)
-        # pylint: enable=access-member-before-definition
-        # pylint: enable=attribute-defined-outside-init

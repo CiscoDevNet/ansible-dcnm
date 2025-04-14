@@ -69,6 +69,7 @@ class FabricAssociations():
 
     def refresh(self):
 
+        method_name = inspect.stack()[0][3]
         self.ep_fabrics_associations = EpFabricAssociations()
         self.rest_send.path = self.ep_fabrics_associations.path
         self.rest_send.verb = self.ep_fabrics_associations.verb
@@ -81,8 +82,16 @@ class FabricAssociations():
         msg = f"self.data: {json.dumps(self.data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         self.refreshed = True
+
         self.results.response_current = self.rest_send.response_current
         self.results.response = self.rest_send.response_current
         self.results.result_current = self.rest_send.result_current
         self.results.result = self.rest_send.result_current
+
         self.results.register_task_result()
+
+        if self.results.result_current.get("success", None) is False:
+            msg = f"{self.class_name}: {method_name}: "
+            msg += "Fabric Association response from NDFC controller returns failure. "
+            msg += "Cannot proceed further."
+            raise ValueError(msg)

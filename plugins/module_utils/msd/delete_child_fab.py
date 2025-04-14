@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ from ...module_utils.fabric.common import FabricCommon
 
 class childFabricDelete(FabricCommon):
     """
-    Delete child fabrics from Parent fabrics
+    Delete child fabrics from MSD fabrics
     """
 
     def __init__(self):
@@ -49,16 +49,53 @@ class childFabricDelete(FabricCommon):
         self.ep_child_fabric_delete = EpChildFabricExit()
         self._fabric_names = None
 
-        self._cannot_delete_fabric_reason = None
-
         msg = "ENTERED childFabricDelete()"
         self.log.debug(msg)
         self.deploy = False
 
+    @property
+    def fabric_names(self):
+        """
+        ### Summary
+        -   setter: return the fabric names
+        -   getter: set the fabric_names
+
+        ### Raises
+        -   ``ValueError`` if:
+            -   ``value`` is not a list.
+            -   ``value`` is an empty list.
+            -   ``value`` is not a list of strings.
+
+        """
+        return self._fabric_names
+
+    @fabric_names.setter
+    def fabric_names(self, value):
+        method_name = inspect.stack()[0][3]
+        if not isinstance(value, list):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be a list. "
+            msg += f"got {type(value).__name__} for "
+            msg += f"value {value}"
+            raise ValueError(msg)
+        if len(value) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "fabric_names must be a list of at least one string. "
+            msg += f"got {value}."
+            raise ValueError(msg)
+        for item in value:
+            if not isinstance(item, str):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "fabric_names must be a list of strings. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"value {item}"
+                raise ValueError(msg)
+        self._fabric_names = value
+
     def commit(self, payload):
         """
         ### Summary
-        -   Delete fabrics in Mentioned Parent fabric.
+        -   Remove fabrics in Mentioned MSD fabric.
 
         ### Raises
         -   ``ValueError`` if:
@@ -82,14 +119,12 @@ class childFabricDelete(FabricCommon):
                 self.results.state = "Deleted"
             self.results.register_task_result()
             raise ValueError(error) from error
-            # pylint: enable=no-member
 
         try:
             self.rest_send.path = self.ep_child_fabric_delete.path
             self.rest_send.verb = self.ep_child_fabric_delete.verb
             self.rest_send.payload = payload
             self.rest_send.save_settings()
-            self.rest_send.check_mode = False
             self.rest_send.timeout = 1
             self.rest_send.commit()
             self.rest_send.restore_settings()
@@ -122,14 +157,13 @@ class childFabricDelete(FabricCommon):
         - validate the parameters for commit
         - raise ``ValueError`` if ``fabric_names`` is not set
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
 
         if self.fabric_names is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_names must be set prior to calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=no-member
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must be set prior to calling commit."
