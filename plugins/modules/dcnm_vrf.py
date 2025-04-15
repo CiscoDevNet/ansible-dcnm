@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=wrong-import-position
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -572,7 +573,7 @@ from typing import Any, Final, Union
 
 from ansible.module_utils.basic import AnsibleModule
 
-from ..module_utils.common.enums import RequestVerb
+from ..module_utils.common.enums.request import RequestVerb
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (dcnm_get_ip_addr_info,
                                               dcnm_get_url, dcnm_send,
@@ -1417,7 +1418,7 @@ class DcnmVrf:
         return copy.deepcopy(attach)
 
     def dict_values_differ(
-        self, dict1: dict, dict2: dict, skip_keys: list = []
+        self, dict1: dict, dict2: dict, skip_keys=None
     ) -> bool:
         """
         # Summary
@@ -1438,6 +1439,9 @@ class DcnmVrf:
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
+
+        if skip_keys is None:
+            skip_keys = []
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"caller: {caller}. "
@@ -4299,9 +4303,13 @@ class DcnmVrf:
         return copy.deepcopy(spec)
 
     def validate_input(self):
-        """Parse the playbook values, validate to param specs."""
-        method_name = inspect.stack()[0][3]
-        self.log.debug("ENTERED")
+        """
+        # Summary
+ 
+        Parse the playbook values, validate to param specs.
+        """
+        msg = f"Entered. state: {self.state}"
+        self.log.debug(msg)
 
         attach_spec = self.attach_spec()
         lite_spec = self.lite_spec()
@@ -4319,129 +4327,163 @@ class DcnmVrf:
         msg += f"{json.dumps(vrf_spec, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        # supported states: deleted, merged, overridden, replaced, query
         if self.state in ("merged", "overridden", "replaced"):
-            fail_msg_list = []
-            if self.config:
-                for vrf in self.config:
-                    msg = f"state {self.state}: "
-                    msg += "self.config[vrf]: "
-                    msg += f"{json.dumps(vrf, indent=4, sort_keys=True)}"
-                    self.log.debug(msg)
-                    # A few user provided vrf parameters need special handling
-                    # Ignore user input for src and hard code it to None
-                    vrf["source"] = None
-                    if not vrf.get("service_vrf_template"):
-                        vrf["service_vrf_template"] = None
+            msg = "Validating input for merged, overridden, replaced states."
+            self.log.debug(msg)
+            self.validate_input_overridden_merged_replaced_state()
+        else:
+            msg = "Validating input for deleted, query states."
+            self.log.debug(msg)
+            self.validate_input_deleted_query_state()
 
-                    if "vrf_name" not in vrf:
-                        fail_msg_list.append(
-                            "vrf_name is mandatory under vrf parameters"
-                        )
+    def validate_input_deleted_query_state(self):
+        """
+        # Summary
 
-                    if isinstance(vrf.get("attach"), list):
-                        for attach in vrf["attach"]:
-                            if "ip_address" not in attach:
-                                fail_msg_list.append(
-                                    "ip_address is mandatory under attach parameters"
-                                )
-            else:
-                if self.state in ("merged", "replaced"):
-                    msg = f"config element is mandatory for {self.state} state"
-                    fail_msg_list.append(msg)
+        Validate the input for deleted and query states.
+        """
+        # For deleted, and query, Original code implies config is not mandatory.
+        if not self.config:
+            return
+        method_name = inspect.stack()[0][3]
 
-            if fail_msg_list:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += ",".join(fail_msg_list)
-                self.module.fail_json(msg=msg)
+        attach_spec = self.attach_spec()
+        lite_spec = self.lite_spec()
+        vrf_spec = self.vrf_spec()
 
-            if self.config:
-                valid_vrf, invalid_params = validate_list_of_dicts(
-                    self.config, vrf_spec
+        valid_vrf, invalid_params = validate_list_of_dicts(
+            self.config, vrf_spec
+        )
+        for vrf in valid_vrf:
+            if vrf.get("attach"):
+                valid_att, invalid_att = validate_list_of_dicts(
+                    vrf["attach"], attach_spec
                 )
-                for vrf in valid_vrf:
-
-                    msg = f"state {self.state}: "
-                    msg += "valid_vrf[vrf]: "
-                    msg += f"{json.dumps(vrf, indent=4, sort_keys=True)}"
-                    self.log.debug(msg)
-
-                    if vrf.get("attach"):
-                        for entry in vrf.get("attach"):
-                            entry["deploy"] = vrf["deploy"]
-                        valid_att, invalid_att = validate_list_of_dicts(
-                            vrf["attach"], attach_spec
+                vrf["attach"] = valid_att
+                invalid_params.extend(invalid_att)
+                for lite in vrf.get("attach"):
+                    if lite.get("vrf_lite"):
+                        valid_lite, invalid_lite = validate_list_of_dicts(
+                            lite["vrf_lite"], lite_spec
                         )
                         msg = f"state {self.state}: "
-                        msg += "valid_att: "
-                        msg += f"{json.dumps(valid_att, indent=4, sort_keys=True)}"
+                        msg += "valid_lite: "
+                        msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
                         self.log.debug(msg)
-                        vrf["attach"] = valid_att
 
-                        invalid_params.extend(invalid_att)
-                        for lite in vrf.get("attach"):
-                            if lite.get("vrf_lite"):
-                                valid_lite, invalid_lite = validate_list_of_dicts(
-                                    lite["vrf_lite"], lite_spec
-                                )
-                                msg = f"state {self.state}: "
-                                msg += "valid_lite: "
-                                msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
-                                self.log.debug(msg)
+                        msg = f"state {self.state}: "
+                        msg += "invalid_lite: "
+                        msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
+                        self.log.debug(msg)
 
-                                msg = f"state {self.state}: "
-                                msg += "invalid_lite: "
-                                msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
-                                self.log.debug(msg)
+                        lite["vrf_lite"] = valid_lite
+                        invalid_params.extend(invalid_lite)
+            self.validated.append(vrf)
 
-                                lite["vrf_lite"] = valid_lite
-                                invalid_params.extend(invalid_lite)
-                    self.validated.append(vrf)
+        if invalid_params:
+            # arobel: TODO: Not in UT
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Invalid parameters in playbook: "
+            msg += f"{','.join(invalid_params)}"
+            self.module.fail_json(msg=msg)
 
-                if invalid_params:
-                    # arobel: TODO: Not in UT
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += "Invalid parameters in playbook: "
-                    msg += f"{','.join(invalid_params)}"
-                    self.module.fail_json(msg=msg)
+    def validate_input_overridden_merged_replaced_state(self):
+        """
+        # Summary
 
-        else:
+        Validate the input for overridden, merged and replaced states.
+        """
+        method_name = inspect.stack()[0][3]
 
-            if self.config:
-                valid_vrf, invalid_params = validate_list_of_dicts(
-                    self.config, vrf_spec
+        if self.state not in ("merged", "overridden", "replaced"):
+            return
+        if not self.config and self.state in ("merged", "replaced"):
+            msg = f"config element is mandatory for {self.state} state"
+            self.module.fail_json(msg)
+
+        attach_spec = self.attach_spec()
+        lite_spec = self.lite_spec()
+        vrf_spec = self.vrf_spec()
+
+        fail_msg_list = []
+        for vrf in self.config:
+            msg = f"state {self.state}: "
+            msg += "self.config[vrf]: "
+            msg += f"{json.dumps(vrf, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            # A few user provided vrf parameters need special handling
+            # Ignore user input for src and hard code it to None
+            vrf["source"] = None
+            if not vrf.get("service_vrf_template"):
+                vrf["service_vrf_template"] = None
+
+            if "vrf_name" not in vrf:
+                fail_msg_list.append(
+                    "vrf_name is mandatory under vrf parameters"
                 )
-                for vrf in valid_vrf:
-                    if vrf.get("attach"):
-                        valid_att, invalid_att = validate_list_of_dicts(
-                            vrf["attach"], attach_spec
+
+            if isinstance(vrf.get("attach"), list):
+                for attach in vrf["attach"]:
+                    if "ip_address" not in attach:
+                        fail_msg_list.append(
+                            "ip_address is mandatory under attach parameters"
                         )
-                        vrf["attach"] = valid_att
-                        invalid_params.extend(invalid_att)
-                        for lite in vrf.get("attach"):
-                            if lite.get("vrf_lite"):
-                                valid_lite, invalid_lite = validate_list_of_dicts(
-                                    lite["vrf_lite"], lite_spec
-                                )
-                                msg = f"state {self.state}: "
-                                msg += "valid_lite: "
-                                msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
-                                self.log.debug(msg)
 
-                                msg = f"state {self.state}: "
-                                msg += "invalid_lite: "
-                                msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
-                                self.log.debug(msg)
+        if fail_msg_list:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += ",".join(fail_msg_list)
+            self.module.fail_json(msg=msg)
 
-                                lite["vrf_lite"] = valid_lite
-                                invalid_params.extend(invalid_lite)
-                    self.validated.append(vrf)
+        if self.config:
+            valid_vrf, invalid_params = validate_list_of_dicts(
+                self.config, vrf_spec
+            )
+            for vrf in valid_vrf:
 
-                if invalid_params:
-                    # arobel: TODO: Not in UT
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += "Invalid parameters in playbook: "
-                    msg += f"{','.join(invalid_params)}"
-                    self.module.fail_json(msg=msg)
+                msg = f"state {self.state}: "
+                msg += "valid_vrf[vrf]: "
+                msg += f"{json.dumps(vrf, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                if vrf.get("attach"):
+                    for entry in vrf.get("attach"):
+                        entry["deploy"] = vrf["deploy"]
+                    valid_att, invalid_att = validate_list_of_dicts(
+                        vrf["attach"], attach_spec
+                    )
+                    msg = f"state {self.state}: "
+                    msg += "valid_att: "
+                    msg += f"{json.dumps(valid_att, indent=4, sort_keys=True)}"
+                    self.log.debug(msg)
+                    vrf["attach"] = valid_att
+
+                    invalid_params.extend(invalid_att)
+                    for lite in vrf.get("attach"):
+                        if lite.get("vrf_lite"):
+                            valid_lite, invalid_lite = validate_list_of_dicts(
+                                lite["vrf_lite"], lite_spec
+                            )
+                            msg = f"state {self.state}: "
+                            msg += "valid_lite: "
+                            msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
+                            self.log.debug(msg)
+
+                            msg = f"state {self.state}: "
+                            msg += "invalid_lite: "
+                            msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
+                            self.log.debug(msg)
+
+                            lite["vrf_lite"] = valid_lite
+                            invalid_params.extend(invalid_lite)
+                self.validated.append(vrf)
+
+            if invalid_params:
+                # arobel: TODO: Not in UT
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Invalid parameters in playbook: "
+                msg += f"{','.join(invalid_params)}"
+                self.module.fail_json(msg=msg)
 
     def handle_response(self, res, op):
         """
@@ -4480,6 +4522,11 @@ class DcnmVrf:
         return fail, changed
 
     def failure(self, resp):
+        """
+        # Summary
+
+        Handle failures.
+        """
         # Do not Rollback for Multi-site fabrics
         if self.fabric_type == "MFD":
             self.failed_to_rollback = True
