@@ -2792,11 +2792,11 @@ class DcnmNetwork:
         replication_mode: str = self.fabric_det.get("nvPairs", {}).get(
             "REPLICATION_MODE", "Ingress"
         )
-        if replication_mode == "Ingress":
+        if replication_mode.lower() == "ingress":
             fabric_multicast_group_address = ""
-        elif replication_mode == "Multicast" and controller_version == 11:
+        elif replication_mode.lower() == "multicast" and controller_version == 11:
             fabric_multicast_group_address = "239.1.1.0"
-        elif replication_mode == "Multicast" and controller_version > 11:
+        elif replication_mode.lower() == "multicast" and controller_version > 11:
             fabric_multicast_group_address = "239.1.1.1"
         else:
             msg = "Unhandled REPLICATION_MODE or controller version. "
