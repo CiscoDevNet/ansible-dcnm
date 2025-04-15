@@ -1,0 +1,44 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_interface
+#
+# Modify the vars section with details for your testing setup.
+#
+- hosts: ndfc
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    # Uncomment testcase to run a specific test
+    testcase: dcnm_vpc*
+    ansible_it_fabric: test_fabric
+    ansible_switch1: 192.168.1.13
+    ansible_switch2: 192.168.1.14
+    ansible_eth_intf2: Ethernet1/2
+    ansible_eth_intf3: Ethernet1/3
+    ansible_eth_intf4: Ethernet1/4
+    ansible_eth_intf5: Ethernet1/5
+    ansible_eth_intf6: Ethernet1/6
+    ansible_eth_intf7: Ethernet1/7
+    ansible_eth_intf8: Ethernet1/8
+    ansible_eth_intf9: Ethernet1/9
+    ansible_eth_intf10: Ethernet1/10
+    ansible_eth_intf11: Ethernet1/11
+    ansible_eth_intf12: Ethernet1/12
+    ansible_eth_intf13: Ethernet1/13
+    ansible_eth_intf14: Ethernet1/14
+    ansible_eth_intf15: Ethernet1/15
+    ansible_eth_intf16: Ethernet1/16
+    ansible_eth_intf17: Ethernet1/17
+    ansible_eth_intf18: Ethernet1/18
+    ansible_eth_intf19: Ethernet1/19
+    ansible_eth_intf20: Ethernet1/20
+    ansible_eth_intf21: Ethernet1/21
+    ansible_eth_intf22: Ethernet1/22
+    ansible_eth_intf23: Ethernet1/23
+    ansible_eth_intf24: Ethernet1/24
+
+  roles:
+    - dcnm_interface
