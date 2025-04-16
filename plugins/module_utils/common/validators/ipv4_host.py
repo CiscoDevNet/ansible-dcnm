@@ -1,0 +1,75 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+ipv4_host.py
+
+Validate IPv4 host address without a prefix
+"""
+from ipaddress import AddressValueError, IPv4Address
+
+
+def validate_ipv4_host(value: str) -> bool:
+    """
+    # Summary
+
+    - Return True if value is an IPv4 host address without a prefix.
+    - Return False otherwise.
+
+    Where: value is a string representation an IPv4 address without a prefix.
+
+    ## Raises
+
+    None
+
+    ## Examples
+
+    - value: "10.10.10.1"     -> True
+    - value: "10.10.10.81/28" -> False
+    - value: "10.10.10.0"     -> True
+    - value: 1                -> False (is not a string)
+    """
+    prefixlen: str = ""
+    try:
+        __, prefixlen = value.split("/")
+    except (AttributeError, ValueError):
+        if prefixlen != "":
+            # prefixlen is not empty
+            return False
+
+    if isinstance(value, int):
+        # value is an int and IPv4Address accepts int as a valid address.
+        # We don't want to acceps int, so reject it here.
+        return False
+
+    try:
+        addr = IPv4Address(value)  # pylint: disable=unused-variable
+    except AddressValueError:
+        return False
+
+    return True
+
+
+def test_ipv4() -> None:
+    """
+    Tests the validate_ipv4_cidr_host function.
+    """
+    items: list = []
+    items.append("10.10.10.0")
+    items.append("10.10.10.2")
+    items.append("10.10.10.0/24")
+    items.append({})  # type: ignore[arg-type]
+    items.append(1)  # type: ignore[arg-type]
+
+    for ipv4 in items:
+        print(f"{ipv4}: Is IPv4 host: {validate_ipv4_host(ipv4)}")
+
+
+def main() -> None:
+    """
+    Main function to run tests.
+    """
+    test_ipv4()
+
+
+if __name__ == "__main__":
+    main()

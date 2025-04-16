@@ -1,2 +1,4 @@
 ansible
 requests
+typing_extensions
+pydantic
