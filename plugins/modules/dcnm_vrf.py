@@ -571,10 +571,13 @@ import re
 import time
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Union
+from pydantic import ValidationError
 
 from ansible.module_utils.basic import AnsibleModule
 
 from ..module_utils.common.enums.request import RequestVerb
+from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
+
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
@@ -4081,10 +4084,67 @@ class DcnmVrf:
         msg += f"{json.dumps(vrf_spec, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if self.state in ("merged", "overridden", "replaced"):
+        if self.state == "merged":
+            self.validate_input_merged_state()
+        elif self.state in ("overridden", "replaced"):
             self.validate_input_overridden_merged_replaced_state()
         else:
             self.validate_input_deleted_query_state()
+
+    def validate_vrf_config(self) -> None:
+        """
+        # Summary
+
+        Validate self.config against VrfPlaybookModel and update
+        self.validated with the validated config.
+
+        ## Raises
+
+        -   Calls fail_json() if the input is invalid
+
+        """
+        if self.config is None:
+            return
+
+        for vrf_config in self.config:
+            try:
+                self.log.debug("Calling VrfPlaybookModel")
+                config = VrfPlaybookModel(**vrf_config)
+                msg = f"config.model_dump_json(): {config.model_dump_json()}"
+                self.log.debug(msg)
+                self.log.debug("Calling VrfPlaybookModel DONE")
+            except ValidationError as error:
+                self.module.fail_json(msg=error)
+            self.validated.append(config.model_dump())
+            msg = f"self.validated: {json.dumps(self.validated, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+    def validate_input_merged_state(self):
+        """
+        # Summary
+
+        Validate the input for merged state.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}, "
+        msg += f"self.state: {self.state}"
+        self.log.debug(msg)
+
+        if self.state != "merged":
+            return
+
+        if len(self.config) == 0:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "config element is mandatory for merged state"
+            self.module.fail_json(msg=msg)
+
+        msg = f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        self.validate_vrf_config()
 
     def validate_input_deleted_query_state(self):
         """

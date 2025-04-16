@@ -1392,6 +1392,18 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
 
     def test_dcnm_vrf_validation(self):
+        """
+        # Summary
+
+        Verify that two missing mandatory fields are detected and an appropriate
+        error is generated.  The fields are:
+
+        - ip_address
+        - vrf_name
+        
+        The Pydantic model VrfPlaybookModel() is used for validation in the
+        method DcnmVrf.validate_input_merged_state().
+        """
         playbook = self.test_data.get("playbook_config_input_validation")
         set_module_args(
             dict(
@@ -1401,15 +1413,23 @@ class TestDcnmVrfModule(TestDcnmModule):
             )
         )
         result = self.execute_module(changed=False, failed=True)
-        msg = "DcnmVrf.validate_input_overridden_merged_replaced_state: "
-        msg += "vrf_name is mandatory under vrf parameters,"
-        msg += "ip_address is mandatory under attach parameters"
-        self.assertEqual(result["msg"], msg)
+        pydantic_result = result["msg"]
+        self.assertEqual(pydantic_result.error_count(), 2)
+        self.assertEqual(pydantic_result.errors()[0]["loc"], ("attach", 1, "ip_address"))
+        self.assertEqual(pydantic_result.errors()[0]["msg"], "Field required")
+        self.assertEqual(pydantic_result.errors()[1]["loc"], ("vrf_name",))
+        self.assertEqual(pydantic_result.errors()[1]["msg"], "Field required")
 
     def test_dcnm_vrf_validation_no_config(self):
+        """
+        # Summary
+
+        Verify that an empty config object results in an error when
+        state is merged.
+        """
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True)
-        msg = "DcnmVrf.validate_input_overridden_merged_replaced_state: "
+        msg = "DcnmVrf.validate_input_merged_state: "
         msg += "config element is mandatory for merged state"
         self.assertEqual(result.get("msg"), msg)
 
