@@ -9,7 +9,6 @@ from typing import Optional, Union
 from typing_extensions import Self
 
 from pydantic import BaseModel, Field, model_validator
-from pydantic.networks import IPvAnyAddress
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
 from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
 from ..common.models.ipv4_host import IPv4HostModel
@@ -72,17 +71,44 @@ class VrfAttachModel(BaseModel):
     deploy: bool = Field(default=True)
     export_evpn_rt: str = Field(default="")
     import_evpn_rt: str = Field(default="")
-    ip_address: IPvAnyAddress
-    vrf_lite: list[VrfLiteModel] = Field(default_factory=list)
+    ip_address: str
+    vrf_lite: list[VrfLiteModel] | None = Field(default=None)
+
+    @model_validator(mode="after")
+    def validate_ipv4_host(self) -> Self:
+        """
+        Validate ip_address is an IPv4 host address without prefix.
+        """
+        if self.ip_address != "":
+            IPv4HostModel(ipv4_host=self.ip_address)
+        return self
+
+    @model_validator(mode="after")
+    def vrf_lite_set_to_none_if_empty_list(self) -> Self:
+        """
+        Set vrf_lite to None if it is an empty list.
+        This mimics the behavior of the original code.
+        """
+        if not self.vrf_lite:
+            self.vrf_lite = None
+        return self
+
 
 class VrfPlaybookModel(BaseModel):
     """
     Model for VRF configuration.
     """
+    model_config = {
+        "str_strip_whitespace": True,
+        "str_to_lower": True,
+        "use_enum_values": True,
+        "validate_assignment": True,
+        "arbitrary_types_allowed": True,
+    }
     adv_default_routes: bool = Field(default=True)
     adv_host_routes: bool = Field(default=False)
     attach: Optional[list[VrfAttachModel]] = None
-    bgp_passwd_encrypt: Union[BgpPasswordEncrypt, str] = Field(default=BgpPasswordEncrypt.NONE)
+    bgp_passwd_encrypt: Union[BgpPasswordEncrypt, int] = Field(default=BgpPasswordEncrypt.MD5.value)
     bgp_password: str = Field(default="")
     deploy: bool = Field(default=True)
     disable_rt_auto: bool = Field(default=False)
@@ -120,22 +146,13 @@ class VrfPlaybookModel(BaseModel):
     vrf_template: str = Field(default="Default_VRF_Universal")
     vrf_vlan_name: str = Field(default="")
 
-    # @model_validator(mode="after")
-    # def validate_bgp_password(self) -> Self:
-    #     """
-    #     Ensure bgp_password is set if bgp_passwd_encrypt is not None
-    #     """
-    #     if self.bgp_passwd_encrypt != BgpPasswordEncrypt.NONE and self.bgp_password == "":
-    #         raise ValueError("bgp_password must be set if bgp_passwd_encrypt is provided.")
-    #     return self
-
     @model_validator(mode="after")
-    def remove_null_bgp_passwd_encrypt(self) -> Self:
+    def hardcode_source_to_none(self) -> Self:
         """
-        If bgp_passwd_encrypt has not been set by the user, set it to "".
+        To mimic original code, hardcode source to None.
         """
-        if self.bgp_passwd_encrypt == BgpPasswordEncrypt.NONE:
-            self.bgp_passwd_encrypt = ""
+        if self.source is not None:
+            self.source = None
         return self
 
     @model_validator(mode="after")
@@ -147,31 +164,6 @@ class VrfPlaybookModel(BaseModel):
             IPv4HostModel(ipv4_host=self.rp_address)
         return self
 
-    class Config:  # pylint: disable=too-few-public-methods
-        """
-        Pydantic configuration for VRFModel.
-        """
-        str_strip_whitespace = True
-        str_to_lower = True
-        #str_min_length = 1
-        use_enum_values = True
-        validate_assignment = True
-        arbitrary_types_allowed = True
-        # json_encoders = {
-        #     BgpPasswordEncrypt: lambda v: v.value,
-        # }
-        json_schema_extra = {
-            "example": {
-                "vrf_name": "VRF1",
-                "vrf_description": "Description for VRF1",
-                "vlan_id": 100,
-                "bgp_password": "password123",
-                "bgp_passwd_encrypt": BgpPasswordEncrypt.MD5,
-                "ipv6_linklocal_enable": True,
-                "rp_address": "1.2.3.4",
-                "deploy": True,
-            }
-        }
 
 class VrfPlaybookConfigModel(BaseModel):
     """
