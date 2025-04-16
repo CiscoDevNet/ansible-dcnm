@@ -4064,7 +4064,7 @@ class DcnmVrf:
 
         return copy.deepcopy(spec)
 
-    def validate_input(self):
+    def validate_input(self) -> None:
         """Parse the playbook values, validate to param specs."""
         self.log.debug("ENTERED")
 
@@ -4141,7 +4141,7 @@ class DcnmVrf:
 
         self.validate_vrf_config()
 
-    def validate_input_deleted_state(self):
+    def validate_input_deleted_state(self) -> None:
         """
         # Summary
 
@@ -4153,7 +4153,7 @@ class DcnmVrf:
             return
         self.validate_vrf_config()
 
-    def validate_input_query_state(self):
+    def validate_input_query_state(self) -> None:
         """
         # Summary
 
