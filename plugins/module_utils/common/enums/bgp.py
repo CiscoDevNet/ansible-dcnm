@@ -1,8 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Author  : Allen Robel
-# @File    : enums_common.py
+"""
+bgp.py
 
+Enumerations for BGP parameters.
+"""
 from enum import Enum
 
 class BgpPasswordEncrypt(Enum):
