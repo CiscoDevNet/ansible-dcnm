@@ -52,6 +52,8 @@
               peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
               peer1_description: "VPC acting as trunk peer1"
               peer2_description: "VPC acting as trunk peer2"
+              peer1_native_vlan: 10
+              peer2_native_vlan: 10
 
           - name: vpc751                      # should be of the form vpc<port-id>
             type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
@@ -76,6 +78,9 @@
               peer2_access_vlan: ""           # vlan id
               peer1_description: "VPC acting as access peer1"
               peer2_description: "VPC acting as access peer2"
+              peer1_native_vlan: 20
+              peer2_native_vlan: 20
+
       register: result
 
     - assert:
@@ -125,6 +130,9 @@
               peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
               peer1_description: "VPC acting as trunk peer1"
               peer2_description: "VPC acting as trunk peer2"
+              peer1_native_vlan: 30
+              peer2_native_vlan: 30
+
               peer1_cmds:                     # Freeform config
                   - no shutdown   
                   - no shutdown

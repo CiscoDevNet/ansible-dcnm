@@ -18,8 +18,6 @@ class ActionModule(ActionBase):
         ndfc_data = self._task.args['ndfc_data']
         test_data = self._task.args['test_data']
 
-        # import epdb ; epdb.st()
-
         expected_state = {}
         expected_state['pc_trunk_description'] = test_data['pc_trunk_desc']
         expected_state['pc_trunk_member_description'] = test_data['eth_trunk_desc']

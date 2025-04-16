@@ -18,7 +18,8 @@
 						"BPDUGUARD_ENABLED": "True",
 						"ALLOWED_VLANS": "none",
 						"SPEED": "auto",
-						"DESC": "eth interface  acting as trunk"
+						"DESC": "eth interface  acting as trunk",
+						"NATIVE_VLAN": "10"
 					},
 					"ifName": "Ethernet1/30",
 					"serialNumber": "SAL1819SAN8",

@@ -146,7 +146,8 @@
               bpdu_guard: 'no'                ## choose from [true, false, 'no']
               port_type_fast: false           ## choose from [true, false]
               mtu: default                    ## choose from [default, jumbo]
-              allowed_vlans: all              ## choose from [none, all, vlan range] 
+              allowed_vlans: all              ## choose from [none, all, vlan range]
+              native_vlan: 10
               cmds:                           # Freeform config
                 - no shutdown
               description: "eth interface  acting as trunk - replace"
