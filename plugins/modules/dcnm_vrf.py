@@ -4121,30 +4121,23 @@ class DcnmVrf:
             msg = f"self.validated: {json.dumps(self.validated, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-    def validate_input_merged_state(self):
+    def validate_input_merged_state(self) -> None:
         """
         # Summary
 
         Validate the input for merged state.
         """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}, "
-        msg += f"self.state: {self.state}"
-        self.log.debug(msg)
-
         if self.state != "merged":
             return
 
+        if self.config is None:
+            self.config = []
+
+        method_name = inspect.stack()[0][3]
         if len(self.config) == 0:
             msg = f"{self.class_name}.{method_name}: "
             msg += "config element is mandatory for merged state"
             self.module.fail_json(msg=msg)
-
-        msg = f"self.config: {json.dumps(self.config, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
         self.validate_vrf_config()
 
