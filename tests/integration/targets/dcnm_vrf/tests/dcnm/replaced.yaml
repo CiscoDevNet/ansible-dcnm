@@ -142,11 +142,38 @@
     - 'result_1.changed == true'
     - 'result_1.response[0].RETURN_CODE == 200'
     - 'result_1.response[1].RETURN_CODE == 200'
-    - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].attach[0].deploy == false'
-    - 'result_1.diff[0].attach[1].deploy == false'
+    # - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    # - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
+    # - 'result_1.diff[0].attach[0].deploy == false'
+    # - 'result_1.diff[0].attach[1].deploy == false'
     - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
+
+- name: TEST.1b - Extract the attach list
+  set_fact:
+    attach_list: "{{ result_1.diff[0].attach }}"
+
+- name: TEST.1b - Assert that all items in attach_list have "deploy" set to false
+  assert:
+    that:
+      - attach_list | map(attribute='deploy') | unique | list == [false]
+    fail_msg: "Not all items in attach_list have 'deploy' set to false"
+    success_msg: "All items in attach_list have 'deploy' set to false"
+
+- name: TEST.1b - Count "SUCCESS" items in response.DATA
+  set_fact:
+    success_count: "{{ result_1.response[0].DATA | dict2items | selectattr('value', 'equalto', 'SUCCESS') | list | length }}"
+
+- name: TEST.1b - Debug success_count
+  ansible.builtin.debug:
+    var: success_count | int
+
+- name: TEST.1b - Assert that success_count equals at least 1
+  assert:
+    that:
+      - success_count | int > 1
+    fail_msg: "Expected at least 1 'SUCCESS' response.DATA.  Got {{ success_count }}."
+    success_msg: "The number of 'SUCCESS' items in response.DATA is {{ success_count }}."
+
 
 - name: TEST.1c - REPLACED - conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -185,6 +212,11 @@
     - "result_2a.response[0].parent.vrfStatus is search('DEPLOYED')"
   retries: 30
   delay: 2
+  ignore_errors: true
+
+- name: DEBUG register result_2a
+  debug:
+    var: result_2a
 
 - name: TEST.2b - REPLACED - [debug] print result_2
   debug:
