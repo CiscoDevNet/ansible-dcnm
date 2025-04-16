@@ -92,6 +92,7 @@
 					"no shutdown"
 				],
 				"peer1_allowed_vlans": "none",
+				"peer1_native_vlan": "10",
 				"mode": "trunk",
 				"policy": "int_vpc_trunk_host_11_1",
 				"port_type_fast": "True",
@@ -100,7 +101,8 @@
 				"ifname": "vPC750",
 				"peer1_description": "VPC acting as trunk peer1",
 				"sno": "FOX1821H035~SAL1819SAN8",
-				"peer2_allowed_vlans": "none"
+				"peer2_allowed_vlans": "none",
+				"peer2_native_vlan": "10"
 			},
 			"switch": [
 					"192.168.1.109",
@@ -172,6 +174,7 @@
 					"no shutdown"
 				],
 				"peer1_allowed_vlans": "none",
+				"peer1_native_vlan": "10",
 				"mode": "trunk",
 				"policy": "int_vpc_trunk_host_11_1",
 				"port_type_fast": "False",
@@ -180,7 +183,8 @@
 				"ifname": "vPC750",
 				"peer1_description": "VPC acting as trunk peer1 - replaced",
 				"sno": "FOX1821H035~SAL1819SAN8",
-				"peer2_allowed_vlans": "all"
+				"peer2_allowed_vlans": "all",
+				"peer2_native_vlan": "10"
 			},
 			"switch": [
 					"192.168.1.109",
@@ -334,6 +338,7 @@
 					"no shutdown"
 				],
 				"peer1_allowed_vlans": "none",
+				"peer1_native_vlan": "10",
 				"mode": "trunk",
 				"policy": "int_vpc_trunk_host_11_1",
 				"port_type_fast": "True",
@@ -342,7 +347,8 @@
 				"ifname": "vPC750",
 				"peer1_description": "VPC acting as trunk peer1",
 				"sno": "FOX1821H035~SAL1819SAN8",
-				"peer2_allowed_vlans": "none"
+				"peer2_allowed_vlans": "none",
+				"peer2_native_vlan": "10"
 			},
 			"switch": [
 					"192.168.1.109",
