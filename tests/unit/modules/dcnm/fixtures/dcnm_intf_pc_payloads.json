@@ -15,7 +15,7 @@
 						"FABRIC_NAME": "test_fabric",
 						"PO_ID": "Port-channel300",
 						"MTU": "jumbo",
-            "SPEED": "auto",
+            					"SPEED": "auto",
 						"PRIORITY": "500",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PC_MODE": "on",
@@ -25,6 +25,7 @@
 						"ADMIN_STATE": "True",
 						"POLICY_ID": "POLICY-1849470",
 						"ALLOWED_VLANS": "none",
+						"NATIVE_VLAN": "10",
 						"DESC": "port channel acting as trunk"
 					}
 				}],
