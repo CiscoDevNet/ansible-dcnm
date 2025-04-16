@@ -4086,10 +4086,12 @@ class DcnmVrf:
 
         if self.state == "merged":
             self.validate_input_merged_state()
+        elif self.state == "deleted":
+            self.validate_input_deleted_state()
         elif self.state in ("overridden", "replaced"):
             self.validate_input_overridden_merged_replaced_state()
-        else:
-            self.validate_input_deleted_query_state()
+        elif self.state == "query":
+            self.validate_input_query_state()
 
     def validate_vrf_config(self) -> None:
         """
@@ -4146,50 +4148,29 @@ class DcnmVrf:
 
         self.validate_vrf_config()
 
-    def validate_input_deleted_query_state(self):
+    def validate_input_deleted_state(self):
         """
         # Summary
 
-        Validate the input for deleted and query states.
+        Validate the input for deleted state.
         """
-        # For deleted, and query, Original code implies config is not mandatory.
+        if self.state != "deleted":
+            return
         if not self.config:
             return
-        method_name = inspect.stack()[0][3]
+        self.validate_vrf_config()
 
-        attach_spec = self.attach_spec()
-        lite_spec = self.lite_spec()
-        vrf_spec = self.vrf_spec()
+    def validate_input_query_state(self):
+        """
+        # Summary
 
-        valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
-        for vrf in valid_vrf:
-            if vrf.get("attach"):
-                valid_att, invalid_att = validate_list_of_dicts(vrf["attach"], attach_spec)
-                vrf["attach"] = valid_att
-                invalid_params.extend(invalid_att)
-                for lite in vrf.get("attach"):
-                    if lite.get("vrf_lite"):
-                        valid_lite, invalid_lite = validate_list_of_dicts(lite["vrf_lite"], lite_spec)
-                        msg = f"state {self.state}: "
-                        msg += "valid_lite: "
-                        msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
-                        self.log.debug(msg)
-
-                        msg = f"state {self.state}: "
-                        msg += "invalid_lite: "
-                        msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
-                        self.log.debug(msg)
-
-                        lite["vrf_lite"] = valid_lite
-                        invalid_params.extend(invalid_lite)
-            self.validated.append(vrf)
-
-        if invalid_params:
-            # arobel: TODO: Not in UT
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Invalid parameters in playbook: "
-            msg += f"{','.join(invalid_params)}"
-            self.module.fail_json(msg=msg)
+        Validate the input for query state.
+        """
+        if self.state != "query":
+            return
+        if not self.config:
+            return
+        self.validate_vrf_config()
 
     def validate_input_overridden_merged_replaced_state(self):
         """
