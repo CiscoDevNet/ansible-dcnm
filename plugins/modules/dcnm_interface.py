@@ -813,10 +813,12 @@ options:
         - Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported.
         suboptions:
           map:
+            description:
+            - type of breakout
             type: str
             required: true
             choices: ["10g-4x","25g-4x","50g-2x","50g-4x","100g-2x","100g-4x","200g-2x"]
-            default: []
+            default: ""
 """
 
 EXAMPLES = """
@@ -2068,7 +2070,7 @@ class DcnmIntf:
         if "breakout" == if_type:
             port_id = re.findall(r"\d+\/\d+", name)
             return ("Ethernet" + str(port_id[0]), port_id[0])
-    
+
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
         path = self.paths["VPC_SNO"].format(self.ip_sn[sw])
@@ -5250,7 +5252,7 @@ class DcnmIntf:
                     breakout.pop("interfaceType")
                 json_payload = json.dumps(payload['interfaces'])
                 resp = dcnm_send(self.module, "POST", path, json_payload)
-            else: 
+            else:
                 json_payload = json.dumps(payload)
                 resp = dcnm_send(self.module, "PUT", path, json_payload)
 
