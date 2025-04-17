@@ -571,13 +571,11 @@ import re
 import time
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Union
-from pydantic import ValidationError
 
 from ansible.module_utils.basic import AnsibleModule
+from pydantic import ValidationError
 
 from ..module_utils.common.enums.request import RequestVerb
-from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
-
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
@@ -588,8 +586,8 @@ from ..module_utils.network.dcnm.dcnm import (
     get_fabric_inventory_details,
     get_ip_sn_dict,
     get_sn_fabric_dict,
-    validate_list_of_dicts,
 )
+from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
 
 dcnm_vrf_paths: dict = {
     11: {
@@ -3934,164 +3932,20 @@ class DcnmVrf:
                         break
                     self.diff_delete.update({vrf: "NA"})
 
-    def attach_spec(self):
-        """
-        # Summary
-
-        Return the argument spec for network attachments
-        """
-        spec = {}
-        spec["deploy"] = {"default": True, "type": "bool"}
-        spec["ip_address"] = {"required": True, "type": "str"}
-        spec["import_evpn_rt"] = {"default": "", "type": "str"}
-        spec["export_evpn_rt"] = {"default": "", "type": "str"}
-
-        if self.state in ("merged", "overridden", "replaced"):
-            spec["vrf_lite"] = {"type": "list"}
-        else:
-            spec["vrf_lite"] = {"default": [], "type": "list"}
-
-        return copy.deepcopy(spec)
-
-    def lite_spec(self):
-        """
-        # Summary
-
-        Return the argument spec for VRF LITE parameters
-        """
-        spec = {}
-        spec["dot1q"] = {"type": "int"}
-        spec["ipv4_addr"] = {"type": "ipv4_subnet"}
-        spec["ipv6_addr"] = {"type": "ipv6"}
-        spec["neighbor_ipv4"] = {"type": "ipv4"}
-        spec["neighbor_ipv6"] = {"type": "ipv6"}
-        spec["peer_vrf"] = {"type": "str"}
-
-        if self.state in ("merged", "overridden", "replaced"):
-            spec["interface"] = {"required": True, "type": "str"}
-        else:
-            spec["interface"] = {"type": "str"}
-
-        return copy.deepcopy(spec)
-
-    def vrf_spec(self):
-        """
-        # Summary
-
-        Return the argument spec for VRF parameters
-        """
-        spec = {}
-        spec["adv_default_routes"] = {"default": True, "type": "bool"}
-        spec["adv_host_routes"] = {"default": False, "type": "bool"}
-
-        spec["attach"] = {"type": "list"}
-        spec["bgp_password"] = {"default": "", "type": "str"}
-        spec["bgp_passwd_encrypt"] = {"choices": [3, 7], "default": 3, "type": "int"}
-        spec["disable_rt_auto"] = {"default": False, "type": "bool"}
-
-        spec["export_evpn_rt"] = {"default": "", "type": "str"}
-        spec["export_mvpn_rt"] = {"default": "", "type": "str"}
-        spec["export_vpn_rt"] = {"default": "", "type": "str"}
-
-        spec["import_evpn_rt"] = {"default": "", "type": "str"}
-        spec["import_mvpn_rt"] = {"default": "", "type": "str"}
-        spec["import_vpn_rt"] = {"default": "", "type": "str"}
-
-        spec["ipv6_linklocal_enable"] = {"default": True, "type": "bool"}
-
-        spec["loopback_route_tag"] = {
-            "default": 12345,
-            "range_max": 4294967295,
-            "type": "int",
-        }
-        spec["max_bgp_paths"] = {
-            "default": 1,
-            "range_max": 64,
-            "range_min": 1,
-            "type": "int",
-        }
-        spec["max_ibgp_paths"] = {
-            "default": 2,
-            "range_max": 64,
-            "range_min": 1,
-            "type": "int",
-        }
-        spec["netflow_enable"] = {"default": False, "type": "bool"}
-        spec["nf_monitor"] = {"default": "", "type": "str"}
-
-        spec["no_rp"] = {"default": False, "type": "bool"}
-        spec["overlay_mcast_group"] = {"default": "", "type": "str"}
-
-        spec["redist_direct_rmap"] = {
-            "default": "FABRIC-RMAP-REDIST-SUBNET",
-            "type": "str",
-        }
-        spec["rp_address"] = {"default": "", "type": "str"}
-        spec["rp_external"] = {"default": False, "type": "bool"}
-        spec["rp_loopback_id"] = {"default": "", "range_max": 1023, "type": "int"}
-
-        spec["service_vrf_template"] = {"default": None, "type": "str"}
-        spec["source"] = {"default": None, "type": "str"}
-        spec["static_default_route"] = {"default": True, "type": "bool"}
-
-        spec["trm_bgw_msite"] = {"default": False, "type": "bool"}
-        spec["trm_enable"] = {"default": False, "type": "bool"}
-
-        spec["underlay_mcast_ip"] = {"default": "", "type": "str"}
-
-        spec["vlan_id"] = {"range_max": 4094, "type": "int"}
-        spec["vrf_description"] = {"default": "", "type": "str"}
-        spec["vrf_id"] = {"range_max": 16777214, "type": "int"}
-        spec["vrf_intf_desc"] = {"default": "", "type": "str"}
-        spec["vrf_int_mtu"] = {
-            "default": 9216,
-            "range_max": 9216,
-            "range_min": 68,
-            "type": "int",
-        }
-        spec["vrf_name"] = {"length_max": 32, "required": True, "type": "str"}
-        spec["vrf_template"] = {"default": "Default_VRF_Universal", "type": "str"}
-        spec["vrf_extension_template"] = {
-            "default": "Default_VRF_Extension_Universal",
-            "type": "str",
-        }
-        spec["vrf_vlan_name"] = {"default": "", "type": "str"}
-
-        if self.state in ("merged", "overridden", "replaced"):
-            spec["deploy"] = {"default": True, "type": "bool"}
-        else:
-            spec["deploy"] = {"type": "bool"}
-
-        return copy.deepcopy(spec)
-
     def validate_input(self) -> None:
         """Parse the playbook values, validate to param specs."""
         self.log.debug("ENTERED")
 
-        attach_spec = self.attach_spec()
-        lite_spec = self.lite_spec()
-        vrf_spec = self.vrf_spec()
-
-        msg = "attach_spec: "
-        msg += f"{json.dumps(attach_spec, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "lite_spec: "
-        msg += f"{json.dumps(lite_spec, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = "vrf_spec: "
-        msg += f"{json.dumps(vrf_spec, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if self.state == "merged":
-            self.validate_input_merged_state()
-        elif self.state == "deleted":
+        if self.state == "deleted":
             self.validate_input_deleted_state()
-        elif self.state in ("overridden", "replaced"):
-            self.validate_input_overridden_merged_replaced_state()
+        elif self.state == "merged":
+            self.validate_input_merged_state()
+        elif self.state == "overridden":
+            self.validate_input_overridden_state()
         elif self.state == "query":
             self.validate_input_query_state()
+        elif self.state in ("replaced"):
+            self.validate_input_replaced_state()
 
     def validate_vrf_config(self) -> None:
         """
@@ -4165,93 +4019,29 @@ class DcnmVrf:
             return
         self.validate_vrf_config()
 
-    def validate_input_overridden_merged_replaced_state(self):
+    def validate_input_overridden_state(self) -> None:
         """
         # Summary
 
-        Validate the input for overridden, merged and replaced states.
+        Validate the input for overridden state.
         """
-        method_name = inspect.stack()[0][3]
-
-        if self.state not in ("merged", "overridden", "replaced"):
+        if self.state != "overridden":
             return
-        if not self.config and self.state in ("merged", "replaced"):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"config element is mandatory for {self.state} state"
-            self.module.fail_json(msg=msg)
+        if not self.config:
+            return
+        self.validate_vrf_config()
 
-        attach_spec = self.attach_spec()
-        lite_spec = self.lite_spec()
-        vrf_spec = self.vrf_spec()
+    def validate_input_replaced_state(self) -> None:
+        """
+        # Summary
 
-        fail_msg_list = []
-        for vrf in self.config:
-            msg = f"state {self.state}: "
-            msg += "self.config[vrf]: "
-            msg += f"{json.dumps(vrf, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            # A few user provided vrf parameters need special handling
-            # Ignore user input for src and hard code it to None
-            vrf["source"] = None
-            if not vrf.get("service_vrf_template"):
-                vrf["service_vrf_template"] = None
-
-            if "vrf_name" not in vrf:
-                fail_msg_list.append("vrf_name is mandatory under vrf parameters")
-
-            if isinstance(vrf.get("attach"), list):
-                for attach in vrf["attach"]:
-                    if "ip_address" not in attach:
-                        fail_msg_list.append("ip_address is mandatory under attach parameters")
-
-        if fail_msg_list:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += ",".join(fail_msg_list)
-            self.module.fail_json(msg=msg)
-
-        if self.config:
-            valid_vrf, invalid_params = validate_list_of_dicts(self.config, vrf_spec)
-            for vrf in valid_vrf:
-
-                msg = f"state {self.state}: "
-                msg += "valid_vrf[vrf]: "
-                msg += f"{json.dumps(vrf, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-
-                if vrf.get("attach"):
-                    for entry in vrf.get("attach"):
-                        entry["deploy"] = vrf["deploy"]
-                    valid_att, invalid_att = validate_list_of_dicts(vrf["attach"], attach_spec)
-                    msg = f"state {self.state}: "
-                    msg += "valid_att: "
-                    msg += f"{json.dumps(valid_att, indent=4, sort_keys=True)}"
-                    self.log.debug(msg)
-                    vrf["attach"] = valid_att
-
-                    invalid_params.extend(invalid_att)
-                    for lite in vrf.get("attach"):
-                        if lite.get("vrf_lite"):
-                            valid_lite, invalid_lite = validate_list_of_dicts(lite["vrf_lite"], lite_spec)
-                            msg = f"state {self.state}: "
-                            msg += "valid_lite: "
-                            msg += f"{json.dumps(valid_lite, indent=4, sort_keys=True)}"
-                            self.log.debug(msg)
-
-                            msg = f"state {self.state}: "
-                            msg += "invalid_lite: "
-                            msg += f"{json.dumps(invalid_lite, indent=4, sort_keys=True)}"
-                            self.log.debug(msg)
-
-                            lite["vrf_lite"] = valid_lite
-                            invalid_params.extend(invalid_lite)
-                self.validated.append(vrf)
-
-            if invalid_params:
-                # arobel: TODO: Not in UT
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Invalid parameters in playbook: "
-                msg += f"{','.join(invalid_params)}"
-                self.module.fail_json(msg=msg)
+        Validate the input for replaced state.
+        """
+        if self.state != "replaced":
+            return
+        if not self.config:
+            return
+        self.validate_vrf_config()
 
     def handle_response(self, res, op):
         """
