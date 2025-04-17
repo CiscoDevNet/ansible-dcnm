@@ -6,20 +6,22 @@ Validation models for dcnm_vrf playbooks.
 """
 
 from typing import Optional, Union
+
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 from typing_extensions import Self
 
-from pydantic import BaseModel, Field, model_validator
-from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
-from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
-from ..common.models.ipv4_host import IPv4HostModel
-from ..common.models.ipv6_host import IPv6HostModel
 from ..common.enums.bgp import BgpPasswordEncrypt
+from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
+from ..common.models.ipv4_host import IPv4HostModel
+from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
+from ..common.models.ipv6_host import IPv6HostModel
 
 
 class VrfLiteModel(BaseModel):
     """
     Model for VRF Lite configuration."
     """
+
     dot1q: int = Field(default=0, ge=0, le=4094)
     interface: str
     ipv4_addr: str = Field(default="")
@@ -64,10 +66,12 @@ class VrfLiteModel(BaseModel):
             IPv6CidrHostModel(ipv6_cidr_host=self.ipv6_addr)
         return self
 
+
 class VrfAttachModel(BaseModel):
     """
     Model for VRF attachment configuration.
     """
+
     deploy: bool = Field(default=True)
     export_evpn_rt: str = Field(default="")
     import_evpn_rt: str = Field(default="")
@@ -98,13 +102,13 @@ class VrfPlaybookModel(BaseModel):
     """
     Model for VRF configuration.
     """
-    model_config = {
-        "str_strip_whitespace": True,
-        "str_to_lower": True,
-        "use_enum_values": True,
-        "validate_assignment": True,
-        "arbitrary_types_allowed": True,
-    }
+
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        str_to_lower=True,
+        use_enum_values=True,
+        validate_assignment=True,
+    )
     adv_default_routes: bool = Field(default=True)
     adv_host_routes: bool = Field(default=False)
     attach: Optional[list[VrfAttachModel]] = None
@@ -169,7 +173,9 @@ class VrfPlaybookConfigModel(BaseModel):
     """
     Model for VRF playbook configuration.
     """
+
     config: list[VrfPlaybookModel] = Field(default_factory=list[VrfPlaybookModel])
+
 
 if __name__ == "__main__":
     pass
