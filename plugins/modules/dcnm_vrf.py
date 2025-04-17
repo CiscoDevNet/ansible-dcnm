@@ -3971,9 +3971,23 @@ class DcnmVrf:
                 self.log.debug("Calling VrfPlaybookModel DONE")
             except ValidationError as error:
                 self.module.fail_json(msg=error)
+
             self.validated.append(config.model_dump())
+
             msg = f"self.validated: {json.dumps(self.validated, indent=4, sort_keys=True)}"
             self.log.debug(msg)
+
+    def validate_input_deleted_state(self) -> None:
+        """
+        # Summary
+
+        Validate the input for deleted state.
+        """
+        if self.state != "deleted":
+            return
+        if not self.config:
+            return
+        self.validate_vrf_config()
 
     def validate_input_merged_state(self) -> None:
         """
@@ -3995,13 +4009,13 @@ class DcnmVrf:
 
         self.validate_vrf_config()
 
-    def validate_input_deleted_state(self) -> None:
+    def validate_input_overridden_state(self) -> None:
         """
         # Summary
 
-        Validate the input for deleted state.
+        Validate the input for overridden state.
         """
-        if self.state != "deleted":
+        if self.state != "overridden":
             return
         if not self.config:
             return
@@ -4014,18 +4028,6 @@ class DcnmVrf:
         Validate the input for query state.
         """
         if self.state != "query":
-            return
-        if not self.config:
-            return
-        self.validate_vrf_config()
-
-    def validate_input_overridden_state(self) -> None:
-        """
-        # Summary
-
-        Validate the input for overridden state.
-        """
-        if self.state != "overridden":
             return
         if not self.config:
             return
