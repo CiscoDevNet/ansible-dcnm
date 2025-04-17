@@ -97,7 +97,7 @@ options:
         - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', "breakout"]
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -817,8 +817,7 @@ options:
             - type of breakout
             type: str
             required: true
-            choices: ["10g-4x","25g-4x","50g-2x","50g-4x","100g-2x","100g-4x","200g-2x"]
-            default: ""
+            choices: ["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]
 """
 
 EXAMPLES = """
@@ -2641,8 +2640,8 @@ class DcnmIntf:
 
         breakout_prof_spec = dict(
             map=dict(required=True, type="str",
-            default="",
-            choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
+                default="",
+                choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
         )
         self.dcnm_intf_validate_interface_input(cfg, breakout_spec, breakout_prof_spec)
 
