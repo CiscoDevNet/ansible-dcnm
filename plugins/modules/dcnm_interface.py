@@ -97,7 +97,7 @@ options:
         - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', "breakout"]
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', 'breakout']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -5556,6 +5556,7 @@ def main():
                 "svi",
                 "st_fex",
                 "aa_fex",
+                "breakout",
             ],
             default=[],
         ),
