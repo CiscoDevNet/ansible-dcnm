@@ -4719,17 +4719,18 @@ class DcnmIntf:
                         #         "ifName": "Ethernet1/100/1"
                         #     }
                         # ]
-                        if cfg['type'] == "breakout":
-                            payload = {"serialNumber": self.ip_sn[sw],
-                                       "ifName": cfg["name"] + "/1"}
-                            if_type = cfg['type']
-                            self.diff_delete[
-                                self.int_index[self.int_types[cfg['type']]]
-                            ].append(payload)
-                            self.changed_dict[0]["deleted"].append(
-                                copy.deepcopy(payload)
-                            )
-                            continue
+                        if cfg.get("type", None) is not None:
+                            if cfg['type'] == "breakout":
+                                payload = {"serialNumber": self.ip_sn[sw],
+                                           "ifName": cfg["name"] + "/1"}
+                                if_type = cfg['type']
+                                self.diff_delete[
+                                    self.int_index[self.int_types[cfg['type']]]
+                                ].append(payload)
+                                self.changed_dict[0]["deleted"].append(
+                                    copy.deepcopy(payload)
+                                )
+                                continue
                         if_name, if_type = self.dcnm_extract_if_name(cfg)
 
                         # Check if the interface is present in DCNM
