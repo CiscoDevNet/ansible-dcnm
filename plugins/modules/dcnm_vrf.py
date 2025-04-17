@@ -2883,9 +2883,13 @@ class DcnmVrf:
                         attach_copy.update({"serialNumber": attach["switchSerialNo"]})
                         lite_objects = self.get_vrf_lite_objects(attach_copy)
 
-                        if not lite_objects.get("DATA"):
+                        lite_objects_data: list = lite_objects.get("DATA", [])
+                        if not lite_objects_data:
                             return
-                        item["attach"].append(lite_objects.get("DATA")[0])
+                        if not isinstance(lite_objects_data, list):
+                            msg = "lite_objects_data is not a list."
+                            self.module.fail_json(msg=msg)
+                        item["attach"].append(lite_objects_data[0])
                     query.append(item)
 
         self.query = copy.deepcopy(query)
