@@ -2640,8 +2640,8 @@ class DcnmIntf:
 
         breakout_prof_spec = dict(
             map=dict(required=True, type="str",
-                default="",
-                choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
+                     default="",
+                     choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
         )
         self.dcnm_intf_validate_interface_input(cfg, breakout_spec, breakout_prof_spec)
 
