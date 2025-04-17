@@ -67,7 +67,7 @@ jobs:
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
     - name: Install pydantic
-      run : pip install pydantic
+      run: pip install pydantic
 
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
@@ -107,7 +107,7 @@ jobs:
       run: pip install pytest==7.4.4
 
     - name: Install pydantic
-      run : pip install pydantic
+      run: pip install pydantic
 
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
