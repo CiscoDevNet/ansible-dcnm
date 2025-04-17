@@ -588,6 +588,8 @@ from ..module_utils.network.dcnm.dcnm import (
     get_sn_fabric_dict,
 )
 from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
+from ..module_utils.vrf.vrf_controller_to_playbook import VrfControllerToPlaybookModel
+from ..module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 
 dcnm_vrf_paths: dict = {
     11: {
@@ -2646,38 +2648,14 @@ class DcnmVrf:
             found_c.update({"attach": []})
 
             json_to_dict = json.loads(found_c["vrfTemplateConfig"])
-            found_c.update({"vrf_vlan_name": json_to_dict.get("vrfVlanName", "")})
-            found_c.update({"vrf_intf_desc": json_to_dict.get("vrfIntfDescription", "")})
-            found_c.update({"vrf_description": json_to_dict.get("vrfDescription", "")})
-            found_c.update({"vrf_int_mtu": json_to_dict.get("mtu", "")})
-            found_c.update({"loopback_route_tag": json_to_dict.get("tag", "")})
-            found_c.update({"redist_direct_rmap": json_to_dict.get("vrfRouteMap", "")})
-            found_c.update({"max_bgp_paths": json_to_dict.get("maxBgpPaths", "")})
-            found_c.update({"max_ibgp_paths": json_to_dict.get("maxIbgpPaths", "")})
-            found_c.update({"ipv6_linklocal_enable": json_to_dict.get("ipv6LinkLocalFlag", True)})
-            found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
-            found_c.update({"rp_external": json_to_dict.get("isRPExternal", False)})
-            found_c.update({"rp_address": json_to_dict.get("rpAddress", "")})
-            found_c.update({"rp_loopback_id": json_to_dict.get("loopbackNumber", "")})
-            found_c.update({"underlay_mcast_ip": json_to_dict.get("L3VniMcastGroup", "")})
-            found_c.update({"overlay_mcast_group": json_to_dict.get("multicastGroup", "")})
-            found_c.update({"trm_bgw_msite": json_to_dict.get("trmBGWMSiteEnabled", False)})
-            found_c.update({"adv_host_routes": json_to_dict.get("advertiseHostRouteFlag", False)})
-            found_c.update({"adv_default_routes": json_to_dict.get("advertiseDefaultRouteFlag", True)})
-            found_c.update({"static_default_route": json_to_dict.get("configureStaticDefaultRouteFlag", True)})
-            found_c.update({"bgp_password": json_to_dict.get("bgpPassword", "")})
-            found_c.update({"bgp_passwd_encrypt": json_to_dict.get("bgpPasswordKeyType", "")})
+            vrf_controller_to_playbook = VrfControllerToPlaybookModel(**json_to_dict)
+            found_c.update(vrf_controller_to_playbook.model_dump(by_alias=False))
             if self.dcnm_version > 11:
-                found_c.update({"no_rp": json_to_dict.get("isRPAbsent", False)})
-                found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", True)})
-                found_c.update({"nf_monitor": json_to_dict.get("NETFLOW_MONITOR", "")})
-                found_c.update({"disable_rt_auto": json_to_dict.get("disableRtAuto", False)})
-                found_c.update({"import_vpn_rt": json_to_dict.get("routeTargetImport", "")})
-                found_c.update({"export_vpn_rt": json_to_dict.get("routeTargetExport", "")})
-                found_c.update({"import_evpn_rt": json_to_dict.get("routeTargetImportEvpn", "")})
-                found_c.update({"export_evpn_rt": json_to_dict.get("routeTargetExportEvpn", "")})
-                found_c.update({"import_mvpn_rt": json_to_dict.get("routeTargetImportMvpn", "")})
-                found_c.update({"export_mvpn_rt": json_to_dict.get("routeTargetExportMvpn", "")})
+                vrf_controller_to_playbook_v12 = VrfControllerToPlaybookV12Model(**json_to_dict)
+                found_c.update(vrf_controller_to_playbook_v12.model_dump(by_alias=False))
+
+            msg = f"found_c: POST_UPDATE_12: {json.dumps(found_c, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             del found_c["fabric"]
             del found_c["vrfName"]
@@ -2687,7 +2665,7 @@ class DcnmVrf:
             del found_c["serviceVrfTemplate"]
             del found_c["vrfTemplateConfig"]
 
-            msg = "found_c: POST_UPDATE: "
+            msg = "found_c: POST_UPDATE_FINAL: "
             msg += f"{json.dumps(found_c, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
