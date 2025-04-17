@@ -810,7 +810,7 @@ options:
         - Though the key shown here is 'profile_breakout' the actual key to be used in playbook
           is 'profile'. The key 'profile_breakout' is used here to logically segregate the interface
           objects applicable for this profile
-        - Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported.
+        - "Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported."
         suboptions:
           map:
             description:
