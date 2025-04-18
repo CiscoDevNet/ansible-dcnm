@@ -24,10 +24,10 @@ jobs:
         ansible: [2.15.12, 2.16.7]
     steps:
     - name: Check out code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v2
     
     - name: Set up Python "3.10"
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v1
       with:
         python-version: "3.10"
 
@@ -64,7 +64,7 @@ jobs:
             python: "3.9"
     steps:
     - name: Set up Python (v${{ matrix.python }})
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python }}
 
@@ -99,8 +99,15 @@ jobs:
       matrix:
         ansible: [2.15.12, 2.16.7]
     steps:
+    - name: Install rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        override: true
+        profile: minimal
+
     - name: Set up Python "3.10"
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@v1
       with:
         python-version: "3.10"
 
