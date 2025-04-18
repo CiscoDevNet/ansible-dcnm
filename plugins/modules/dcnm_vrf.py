@@ -2591,6 +2591,7 @@ class DcnmVrf:
         are those used by the controller API.
         """
         caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
@@ -2668,10 +2669,21 @@ class DcnmVrf:
             found_c.update({"attach": []})
 
             json_to_dict = json.loads(found_c["vrfTemplateConfig"])
-            vrf_controller_to_playbook = VrfControllerToPlaybookModel(**json_to_dict)
+            try:
+                vrf_controller_to_playbook = VrfControllerToPlaybookModel(**json_to_dict)
+            except ValidationError as error:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Validation error: {error}"
+                self.module.fail_json(msg=msg)
             found_c.update(vrf_controller_to_playbook.model_dump(by_alias=False))
+
             if self.dcnm_version > 11:
-                vrf_controller_to_playbook_v12 = VrfControllerToPlaybookV12Model(**json_to_dict)
+                try:
+                    vrf_controller_to_playbook_v12 = VrfControllerToPlaybookV12Model(**json_to_dict)
+                except ValidationError as error:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"Validation error: {error}"
+                    self.module.fail_json(msg=msg)
                 found_c.update(vrf_controller_to_playbook_v12.model_dump(by_alias=False))
 
             msg = f"found_c: POST_UPDATE_12: {json.dumps(found_c, indent=4, sort_keys=True)}"
@@ -2702,9 +2714,9 @@ class DcnmVrf:
             for a_w in attach:
                 attach_d = {}
 
-                for k, v in self.ip_sn.items():
-                    if v == a_w["serialNumber"]:
-                        attach_d.update({"ip_address": k})
+                for key, value in self.ip_sn.items():
+                    if value == a_w["serialNumber"]:
+                        attach_d.update({"ip_address": key})
                         break
                 attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"deploy": a_w["deployment"]})
