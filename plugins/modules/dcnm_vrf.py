@@ -4196,10 +4196,10 @@ def main() -> None:
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     if not HAS_THIRD_PARTY_IMPORTS:
-        module.fail_json(msg=missing_required_lib(f"{THIRD_PARTY_FAILED_IMPORT}"), exception=THIRD_PARTY_IMPORT_ERROR)
+        module.fail_json(msg=missing_required_lib(f"3rd party: {THIRD_PARTY_FAILED_IMPORT}"), exception=THIRD_PARTY_IMPORT_ERROR)
 
     if not HAS_FIRST_PARTY_IMPORTS:
-        module.fail_json(msg=missing_required_lib(f"{FIRST_PARTY_FAILED_IMPORT}"), exception=FIRST_PARTY_IMPORT_ERROR)
+        module.fail_json(msg=missing_required_lib(f"1st party: {FIRST_PARTY_FAILED_IMPORT}"), exception=FIRST_PARTY_IMPORT_ERROR)
 
     dcnm_vrf: DcnmVrf = DcnmVrf(module)
 
