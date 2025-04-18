@@ -18,6 +18,7 @@
 						"BPDUGUARD_ENABLED": "True",
 						"ALLOWED_VLANS": "none",
 						"SPEED": "auto",
+						"PORT_DUPLEX_MODE": "auto",
 						"DESC": "eth interface  acting as trunk",
 						"NATIVE_VLAN": "10"
 					},
@@ -50,6 +51,7 @@
 						"INTF_NAME": "Ethernet1/31",
 						"BPDUGUARD_ENABLED": "True",
 						"SPEED": "auto",
+						"PORT_DUPLEX_MODE": "auto",
 						"DESC": "eth interface acting as access"
 					},
 					"ifName": "Ethernet1/31",
