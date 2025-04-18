@@ -497,7 +497,7 @@ options:
             - Duplex of the interface. Speed must be set to use duplex.
             type: str
             choices: ['auto', 'full', 'half']
-            default: auto  
+            default: auto
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
