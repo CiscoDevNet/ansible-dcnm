@@ -17,6 +17,7 @@
 						"PO_ID": "Port-channel300",
 						"MTU": "jumbo",
 						"SPEED": "auto",
+						"PORT_DUPLEX_MODE": "auto",
 						"PRIORITY": "500",
 						"PORTTYPE_FAST_ENABLED": "True",
 						"PC_MODE": "on",
@@ -55,6 +56,7 @@
           "fabricName": "test_fabric",
           "nvPairs": {
             "SPEED": "Auto",
+	    "PORT_DUPLEX_MODE": "auto",
             "MEMBER_INTERFACES": "e1/9",
             "PC_MODE": "on",
             "BPDUGUARD_ENABLED": "true",
@@ -133,6 +135,7 @@
           "fabricName": "test_fabric",
           "nvPairs": {
             "SPEED": "auto",
+	    "PORT_DUPLEX_MODE": "auto",
             "BPDUGUARD_ENABLED": "true",
             "PORTTYPE_FAST_ENABLED": "true",
             "MTU": "jumbo",
