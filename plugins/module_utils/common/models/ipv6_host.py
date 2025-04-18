@@ -1,10 +1,22 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# mypy: disable-error-code="import-untyped"
 """
 @file   : ipv6_host.py
 @Author : Allen Robel
 """
-from pydantic import BaseModel, Field, field_validator
+import traceback
+
+from ansible.module_utils.basic import missing_required_lib # pylint: disable=unused-import
+
+PYDANTIC_IMPORT_ERROR: str | None = None
+HAS_PYDANTIC: bool = True
+
+try:
+    from pydantic import BaseModel, Field, field_validator
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
 from ..validators.ipv6_host import validate_ipv6_host
 

@@ -1,12 +1,25 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# mypy: disable-error-code="import-untyped"
 """
 VrfControllerToPlaybookV12Model
 
 Serialize controller field names to names used in a dcnm_vrf playbook.
 """
 import json
+import traceback
 from typing import Optional
-from pydantic import BaseModel, Field, ConfigDict
+
+from ansible.module_utils.basic import missing_required_lib # pylint: disable=unused-import
+
+PYDANTIC_IMPORT_ERROR: str | None = None
+HAS_PYDANTIC: bool = True
+
+try:
+    from pydantic import BaseModel, ConfigDict, Field
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
 class VrfControllerToPlaybookV12Model(BaseModel):
     """

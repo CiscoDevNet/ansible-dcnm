@@ -1,4 +1,6 @@
 #!/usr/bin/python
+# -*- coding: utf-8 -*-
+# mypy: disable-error-code="import-untyped"
 #
 # Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
@@ -570,10 +572,19 @@ import logging
 import re
 import time
 from dataclasses import asdict, dataclass
+import traceback
 from typing import Any, Final, Union
 
-from ansible.module_utils.basic import AnsibleModule
-from pydantic import ValidationError
+from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+
+PYDANTIC_IMPORT_ERROR: str | None = None
+HAS_PYDANTIC: bool = True
+
+try:
+    from pydantic import ValidationError
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.enums.request import RequestVerb
 from ..module_utils.common.log_v2 import Log
@@ -4142,6 +4153,11 @@ def main() -> None:
     ]
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
+
+    if not HAS_PYDANTIC:
+        module.fail_json(
+            msg=missing_required_lib('pydantic'),
+            exception=PYDANTIC_IMPORT_ERROR)
 
     dcnm_vrf: DcnmVrf = DcnmVrf(module)
 
