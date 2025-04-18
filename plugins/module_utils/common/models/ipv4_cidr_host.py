@@ -5,55 +5,64 @@
 @file   : ipv4.py
 @Author : Allen Robel
 """
-from pydantic import BaseModel, Field, field_validator
+
+PYDANTIC_IMPORT_ERROR: ImportError | None
+
+try:
+    from pydantic import BaseModel, Field, field_validator
+except ImportError as pydantic_import_error:
+    PYDANTIC_IMPORT_ERROR = pydantic_import_error
+else:
+    PYDANTIC_IMPORT_ERROR = None
 
 from ..validators.ipv4_cidr_host import validate_ipv4_cidr_host
 
+if not PYDANTIC_IMPORT_ERROR:
 
-class IPv4CidrHostModel(BaseModel):
-    """
-    # Summary
-
-    Model to validate a CIDR-format IPv4 host address.
-
-    ## Raises
-
-    - ValueError: If the input is not a valid CIDR-format IPv4 host address.
-
-    ## Example usage
-    ```python
-    try:
-        ipv4_cidr_host_address = IPv4CidrHostModel(ipv4_cidr_host="192.168.1.1/24")
-    except ValueError as err:
-        # Handle the error
-    ```
-
-    """
-
-    ipv4_cidr_host: str = Field(
-        ...,
-        description="CIDR-format IPv4 host address, e.g. 10.1.1.1/24",
-    )
-
-    @field_validator("ipv4_cidr_host")
-    @classmethod
-    def validate(cls, value: str):
+    class IPv4CidrHostModel(BaseModel):
         """
-        Validate that the input is a valid CIDR-format IPv4 host address
-        and that it is NOT a network address.
+        # Summary
 
-        Note: Broadcast addresses are accepted as valid.
-        """
-        # Validate the address part
+        Model to validate a CIDR-format IPv4 host address.
+
+        ## Raises
+
+        - ValueError: If the input is not a valid CIDR-format IPv4 host address.
+
+        ## Example usage
+        ```python
         try:
-            result = validate_ipv4_cidr_host(value)
+            ipv4_cidr_host_address = IPv4CidrHostModel(ipv4_cidr_host="192.168.1.1/24")
         except ValueError as err:
-            msg = f"Invalid CIDR-format IPv4 host address: {value}. Error: {err}"
-            raise ValueError(msg) from err
+            # Handle the error
+        ```
 
-        if result is True:
-            # If the address is a host address, return it
-            return value
-        msg = f"Invalid CIDR-format IPv4 host address: {value}. "
-        msg += "Are the host bits all zero?"
-        raise ValueError(msg)
+        """
+
+        ipv4_cidr_host: str = Field(
+            ...,
+            description="CIDR-format IPv4 host address, e.g. 10.1.1.1/24",
+        )
+
+        @field_validator("ipv4_cidr_host")
+        @classmethod
+        def validate(cls, value: str):
+            """
+            Validate that the input is a valid CIDR-format IPv4 host address
+            and that it is NOT a network address.
+
+            Note: Broadcast addresses are accepted as valid.
+            """
+            # Validate the address part
+            try:
+                result = validate_ipv4_cidr_host(value)
+            except ValueError as err:
+                msg = f"Invalid CIDR-format IPv4 host address: {value}. Error: {err}"
+                raise ValueError(msg) from err
+
+            if result is True:
+                # If the address is a host address, return it
+                return value
+            msg = f"Invalid CIDR-format IPv4 host address: {value}. "
+            msg += "Are the host bits all zero?"
+            raise ValueError(msg)
