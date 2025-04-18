@@ -8,19 +8,9 @@ Serialize vrfTemplateConfig formatted as a dcnm_vrf diff.
 """
 
 import json
-import traceback
 from typing import Optional
 
-from ansible.module_utils.basic import missing_required_lib # pylint: disable=unused-import
-
-PYDANTIC_IMPORT_ERROR: str | None = None
-HAS_PYDANTIC: bool = True
-
-try:
-    from pydantic import BaseModel, ConfigDict, Field
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class VrfControllerToPlaybookModel(BaseModel):
@@ -29,6 +19,7 @@ class VrfControllerToPlaybookModel(BaseModel):
 
     Serialize vrfTemplateConfig formatted as a dcnm_vrf diff.
     """
+
     model_config = ConfigDict(
         str_strip_whitespace=True,
     )
@@ -54,18 +45,20 @@ class VrfControllerToPlaybookModel(BaseModel):
     vrf_intf_desc: Optional[str] = Field(alias="vrfIntfDescription")
     vrf_vlan_name: Optional[str] = Field(alias="vrfVlanName")
 
+
 def main():
     """
     test the model
     """
     # pylint: disable=line-too-long
-    json_string = "{\"vrfSegmentId\": 9008011, \"vrfName\": \"test_vrf_1\", \"vrfVlanId\": \"202\", \"vrfVlanName\": \"\", \"vrfIntfDescription\": \"\", \"vrfDescription\": \"\", \"mtu\": \"9216\", \"tag\": \"12345\", \"vrfRouteMap\": \"FABRIC-RMAP-REDIST-SUBNET\", \"maxBgpPaths\": \"1\", \"maxIbgpPaths\": \"2\", \"ipv6LinkLocalFlag\": \"true\", \"trmEnabled\": \"false\", \"isRPExternal\": \"false\", \"rpAddress\": \"\", \"loopbackNumber\": \"\", \"L3VniMcastGroup\": \"\", \"multicastGroup\": \"\", \"trmBGWMSiteEnabled\": \"false\", \"advertiseHostRouteFlag\": \"false\", \"advertiseDefaultRouteFlag\": \"true\", \"configureStaticDefaultRouteFlag\": \"true\", \"bgpPassword\": \"\", \"bgpPasswordKeyType\": \"3\", \"isRPAbsent\": \"false\", \"ENABLE_NETFLOW\": \"false\", \"NETFLOW_MONITOR\": \"\", \"disableRtAuto\": \"false\", \"routeTargetImport\": \"\", \"routeTargetExport\": \"\", \"routeTargetImportEvpn\": \"\", \"routeTargetExportEvpn\": \"\", \"routeTargetImportMvpn\": \"\", \"routeTargetExportMvpn\": \"\"}"
+    json_string = '{"vrfSegmentId": 9008011, "vrfName": "test_vrf_1", "vrfVlanId": "202", "vrfVlanName": "", "vrfIntfDescription": "", "vrfDescription": "", "mtu": "9216", "tag": "12345", "vrfRouteMap": "FABRIC-RMAP-REDIST-SUBNET", "maxBgpPaths": "1", "maxIbgpPaths": "2", "ipv6LinkLocalFlag": "true", "trmEnabled": "false", "isRPExternal": "false", "rpAddress": "", "loopbackNumber": "", "L3VniMcastGroup": "", "multicastGroup": "", "trmBGWMSiteEnabled": "false", "advertiseHostRouteFlag": "false", "advertiseDefaultRouteFlag": "true", "configureStaticDefaultRouteFlag": "true", "bgpPassword": "", "bgpPasswordKeyType": "3", "isRPAbsent": "false", "ENABLE_NETFLOW": "false", "NETFLOW_MONITOR": "", "disableRtAuto": "false", "routeTargetImport": "", "routeTargetExport": "", "routeTargetImportEvpn": "", "routeTargetExportEvpn": "", "routeTargetImportMvpn": "", "routeTargetExportMvpn": ""}'
     # pylint: enable=line-too-long
     json_data = json.loads(json_string)
     model = VrfControllerToPlaybookModel(**json_data)
     print(model.model_dump(by_alias=True))
     print()
     print(model.model_dump(by_alias=False))
+
 
 if __name__ == "__main__":
     main()

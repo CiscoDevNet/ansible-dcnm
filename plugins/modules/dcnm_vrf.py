@@ -584,7 +584,7 @@ PYDANTIC_IMPORT_ERROR: str | None = None
 TYPING_EXTENSIONS_IMPORT_ERROR: str | None = None
 
 try:
-    from pydantic import BaseModel, ValidationError # pylint: disable=unused-import
+    from pydantic import ValidationError
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()

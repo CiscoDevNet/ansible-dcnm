@@ -5,18 +5,7 @@
 @file   : ipv4.py
 @Author : Allen Robel
 """
-import traceback
-
-from ansible.module_utils.basic import missing_required_lib # pylint: disable=unused-import
-
-PYDANTIC_IMPORT_ERROR: str | None = None
-HAS_PYDANTIC: bool = True
-
-try:
-    from pydantic import BaseModel, Field, field_validator
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+from pydantic import BaseModel, Field, field_validator
 
 from ..validators.ipv4_cidr_host import validate_ipv4_cidr_host
 

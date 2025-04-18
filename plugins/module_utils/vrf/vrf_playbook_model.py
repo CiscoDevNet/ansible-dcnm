@@ -6,26 +6,10 @@ VrfPlaybookModel
 
 Validation models for dcnm_vrf playbooks.
 """
-import traceback
 from typing import Optional, Union
 
-from ansible.module_utils.basic import missing_required_lib # pylint: disable=unused-import
-
-PYDANTIC_IMPORT_ERROR: str | None = None
-HAS_PYDANTIC: bool = True
-HAS_TYPING_EXTENSIONS: bool = True
-
-try:
-    from pydantic import BaseModel, ConfigDict, Field, model_validator
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-try:
-    from typing_extensions import Self
-except ImportError:
-    HAS_TYPING_EXTENSIONS = False
-    TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()
+from pydantic import BaseModel, ConfigDict, Field, model_validator
+from typing_extensions import Self
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
@@ -173,7 +157,7 @@ class VrfPlaybookModel(BaseModel):
     vrf_id: Optional[int] = Field(default=None, le=16777214)
     vrf_int_mtu: int = Field(default=9216, ge=68, le=9216, alias="mtu")
     vrf_intf_desc: str = Field(default="", alias="vrfIntfDescription")
-    #vrf_name: str = Field(..., max_length=32, alias="vrfName")
+    # vrf_name: str = Field(..., max_length=32, alias="vrfName")
     vrf_name: str = Field(..., max_length=32)
     vrf_template: str = Field(default="Default_VRF_Universal")
     vrf_vlan_name: str = Field(default="", alias="vrfVlanName")
