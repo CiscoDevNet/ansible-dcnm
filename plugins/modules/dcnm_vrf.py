@@ -584,13 +584,13 @@ PYDANTIC_IMPORT_ERROR: str | None = None
 TYPING_EXTENSIONS_IMPORT_ERROR: str | None = None
 
 try:
-    from pydantic import ValidationError
+    import pydantic
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
 try:
-    from typing_extensions import Self # pylint: disable=unused-import
+    import typing_extensions # pylint: disable=unused-import
 except ImportError:
     HAS_TYPING_EXTENSIONS = False
     TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()
@@ -2671,7 +2671,7 @@ class DcnmVrf:
             json_to_dict = json.loads(found_c["vrfTemplateConfig"])
             try:
                 vrf_controller_to_playbook = VrfControllerToPlaybookModel(**json_to_dict)
-            except ValidationError as error:
+            except pydantic.ValidationError as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Validation error: {error}"
                 self.module.fail_json(msg=msg)
@@ -2680,7 +2680,7 @@ class DcnmVrf:
             if self.dcnm_version > 11:
                 try:
                     vrf_controller_to_playbook_v12 = VrfControllerToPlaybookV12Model(**json_to_dict)
-                except ValidationError as error:
+                except pydantic.ValidationError as error:
                     msg = f"{self.class_name}.{method_name}: "
                     msg += f"Validation error: {error}"
                     self.module.fail_json(msg=msg)
@@ -3983,7 +3983,7 @@ class DcnmVrf:
                 msg = f"config.model_dump_json(): {config.model_dump_json()}"
                 self.log.debug(msg)
                 self.log.debug("Calling VrfPlaybookModel DONE")
-            except ValidationError as error:
+            except pydantic.ValidationError as error:
                 self.module.fail_json(msg=error)
 
             self.validated.append(config.model_dump())
