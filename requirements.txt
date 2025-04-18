@@ -1,4 +1,4 @@
 ansible
 requests
-typing_extensions
+typing-extensions
 pydantic
