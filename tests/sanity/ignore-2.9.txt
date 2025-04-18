@@ -21,3 +21,10 @@ plugins/modules/dcnm_log.py validate-modules:missing-gplv3-license # GPLv3 licen
 plugins/modules/dcnm_rest.py import-2.6!skip
 plugins/modules/dcnm_rest.py import-2.7!skip
 plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/vrf/vrf_controller_to_playbook_v12.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/vrf/vrf_controller_to_playbook.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/vrf/vrf_playbook_model.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/models/ipv4_cidr_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/models/ipv4_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/models/ipv6_cidr_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/models/ipv6_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
