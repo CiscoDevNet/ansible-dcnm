@@ -577,20 +577,23 @@ from typing import Any, Final, Union
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
-HAS_PYDANTIC: bool = True
-HAS_TYPING_EXTENSIONS: bool = True
+HAS_PYDANTIC: bool
+HAS_TYPING_EXTENSIONS: bool
 
-PYDANTIC_IMPORT_ERROR: str | None = None
-TYPING_EXTENSIONS_IMPORT_ERROR: str | None = None
+PYDANTIC_IMPORT_ERROR: Union[str, None]
+TYPING_EXTENSIONS_IMPORT_ERROR:  Union[str, None]
 
 try:
     import pydantic
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
 try:
     import typing_extensions  # pylint: disable=unused-import
+    HAS_TYPING_EXTENSIONS = True
 except ImportError:
     HAS_TYPING_EXTENSIONS = False
     TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()
