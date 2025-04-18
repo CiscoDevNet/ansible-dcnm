@@ -96,6 +96,8 @@
         "admin_state": "True",
         "allowed_vlans": "none",
 	"native_vlan": "10",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "no shutdown"
         ],
@@ -167,6 +169,7 @@
           "no shutdown"
         ],
         "speed": "Auto",
+	"duplex": "auto",
         "ifname": "Ethernet1/10",
         "fabric": "test_fabric"
       },
@@ -245,6 +248,8 @@
         "admin_state": "True",
         "allowed_vlans": "none",
 	"native_vlan": "10",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "spanning-tree bpduguard enable"
         ],
@@ -316,6 +321,7 @@
           "spanning-tree bpduguard enable"
         ],
         "speed": "Auto",
+	"duplex": "auto",
         "ifname": "Ethernet1/10",
         "fabric": "test_fabric"
       },
