@@ -577,24 +577,24 @@ from typing import Any, Final, Union
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
-HAS_FIRST_PARTY_IMPORTS: bool
-HAS_THIRD_PARTY_IMPORTS: bool
+HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
+HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
 
 FIRST_PARTY_IMPORT_ERROR: Union[ImportError, None]
-FIRST_PARTY_FAILED_IMPORT: str
+FIRST_PARTY_FAILED_IMPORT: set[str] = set()
 THIRD_PARTY_IMPORT_ERROR: Union[str, None]
-THIRD_PARTY_FAILED_IMPORT: str
+THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
 try:
     import pydantic
 
     # import typing_extensions  # pylint: disable=unused-import
 
-    HAS_THIRD_PARTY_IMPORTS = True
+    HAS_THIRD_PARTY_IMPORTS.add(True)
     THIRD_PARTY_IMPORT_ERROR = None
 except ImportError:
-    HAS_THIRD_PARTY_IMPORTS = False
-    THIRD_PARTY_FAILED_IMPORT = "pydantic"
+    HAS_THIRD_PARTY_IMPORTS.add(False)
+    THIRD_PARTY_FAILED_IMPORT.add("pydantic")
     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.enums.request import RequestVerb
@@ -612,24 +612,27 @@ from ..module_utils.network.dcnm.dcnm import (
 
 try:
     from ..module_utils.vrf.vrf_controller_to_playbook import VrfControllerToPlaybookModel
+    HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS = False
-    FIRST_PARTY_FAILED_IMPORT = "VrfControllerToPlaybookModel"
+    HAS_FIRST_PARTY_IMPORTS.add(False)
+    FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookModel")
 
 try:
     from ..module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
+    HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS = False
-    FIRST_PARTY_FAILED_IMPORT = "VrfControllerToPlaybookV12Model"
+    HAS_FIRST_PARTY_IMPORTS.add(False)
+    FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV12Model")
 
 try:
     from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
+    HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS = False
-    FIRST_PARTY_FAILED_IMPORT = "VrfPlaybookModel"
+    HAS_FIRST_PARTY_IMPORTS.add(False)
+    FIRST_PARTY_FAILED_IMPORT.add("VrfPlaybookModel")
 
 dcnm_vrf_paths: dict = {
     11: {
@@ -4195,11 +4198,11 @@ def main() -> None:
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    if not HAS_THIRD_PARTY_IMPORTS:
-        module.fail_json(msg=missing_required_lib(f"3rd party: {THIRD_PARTY_FAILED_IMPORT}"), exception=THIRD_PARTY_IMPORT_ERROR)
+    if False in HAS_THIRD_PARTY_IMPORTS:
+        module.fail_json(msg=missing_required_lib(f"3rd party: {','.join(THIRD_PARTY_FAILED_IMPORT)}"), exception=THIRD_PARTY_IMPORT_ERROR)
 
-    if not HAS_FIRST_PARTY_IMPORTS:
-        module.fail_json(msg=missing_required_lib(f"1st party: {FIRST_PARTY_FAILED_IMPORT}"), exception=FIRST_PARTY_IMPORT_ERROR)
+    if False in HAS_FIRST_PARTY_IMPORTS:
+        module.fail_json(msg=missing_required_lib(f"1st party: {','.join(FIRST_PARTY_FAILED_IMPORT)}"), exception=FIRST_PARTY_IMPORT_ERROR)
 
     dcnm_vrf: DcnmVrf = DcnmVrf(module)
 
