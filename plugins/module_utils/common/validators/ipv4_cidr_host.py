@@ -51,32 +51,3 @@ def validate_ipv4_cidr_host(value: str) -> bool:
     if address != str(network):
         return True
     return False
-
-
-def test_ipv4() -> None:
-    """
-    Tests the validate_ipv4_cidr_host function.
-    """
-    ipv4_items: list = []
-    ipv4_items.append("10.10.10.0/24")
-    ipv4_items.append("10.10.10.2/24")
-    ipv4_items.append("10.10.10.81/28")
-    ipv4_items.append("10.10.10.80/28")
-    ipv4_items.append("10.10.10.2")
-    ipv4_items.append("10.1.1.1/32")
-    ipv4_items.append({})  # type: ignore[arg-type]
-    ipv4_items.append(1)  # type: ignore[arg-type]
-
-    for ipv4 in ipv4_items:
-        print(f"{ipv4}: Is IPv4 host: {validate_ipv4_cidr_host(ipv4)}")
-
-
-def main() -> None:
-    """
-    Main function to run tests.
-    """
-    test_ipv4()
-
-
-if __name__ == "__main__":
-    main()

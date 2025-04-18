@@ -51,30 +51,3 @@ def validate_ipv6_cidr_host(value: str) -> bool:
     if address != str(network):
         return True
     return False
-
-
-def test_ipv6() -> None:
-    """
-    Tests the validate_ipv6_cidr_host function.
-    """
-    ipv6_items: list = []
-    ipv6_items.append("2001:20:20:20::/64")
-    ipv6_items.append("2001:20:20:20::1/64")
-    ipv6_items.append("2001::1/128")
-    ipv6_items.append("10.1.1.1/32")
-    ipv6_items.append({})  # type: ignore[arg-type]
-    ipv6_items.append(1)  # type: ignore[arg-type]
-
-    for ip in ipv6_items:
-        print(f"{ip}: Is IPv4 host: {validate_ipv6_cidr_host(ip)}")
-
-
-def main() -> None:
-    """
-    Main function to run tests.
-    """
-    test_ipv6()
-
-
-if __name__ == "__main__":
-    main()

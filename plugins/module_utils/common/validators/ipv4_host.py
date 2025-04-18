@@ -47,29 +47,3 @@ def validate_ipv4_host(value: str) -> bool:
         return False
 
     return True
-
-
-def test_ipv4() -> None:
-    """
-    Tests the validate_ipv4_cidr_host function.
-    """
-    items: list = []
-    items.append("10.10.10.0")
-    items.append("10.10.10.2")
-    items.append("10.10.10.0/24")
-    items.append({})  # type: ignore[arg-type]
-    items.append(1)  # type: ignore[arg-type]
-
-    for ipv4 in items:
-        print(f"{ipv4}: Is IPv4 host: {validate_ipv4_host(ipv4)}")
-
-
-def main() -> None:
-    """
-    Main function to run tests.
-    """
-    test_ipv4()
-
-
-if __name__ == "__main__":
-    main()

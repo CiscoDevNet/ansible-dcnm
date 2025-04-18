@@ -48,30 +48,3 @@ def validate_ipv6_host(value: str) -> bool:
         return False
 
     return True
-
-
-def test_ipv6() -> None:
-    """
-    Tests the validate_ipv4_cidr_host function.
-    """
-    items: list = []
-    items.append("2001::1")
-    items.append("2001:20:20:20::1")
-    items.append("2001:20:20:20::/64")
-    items.append("10.10.10.0")
-    items.append({})  # type: ignore[arg-type]
-    items.append(1)  # type: ignore[arg-type]
-
-    for ipv6 in items:
-        print(f"{ipv6}: Is IPv4 host: {validate_ipv6_host(ipv6)}")
-
-
-def main() -> None:
-    """
-    Main function to run tests.
-    """
-    test_ipv6()
-
-
-if __name__ == "__main__":
-    main()

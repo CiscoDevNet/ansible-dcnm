@@ -6,7 +6,6 @@ VrfControllerToPlaybookV12Model
 
 Serialize controller field names to names used in a dcnm_vrf playbook.
 """
-import json
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
