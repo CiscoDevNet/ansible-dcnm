@@ -584,7 +584,7 @@ PYDANTIC_IMPORT_ERROR: str | None = None
 TYPING_EXTENSIONS_IMPORT_ERROR: str | None = None
 
 try:
-    from pydantic import ValidationError
+    from pydantic import BaseModel, ValidationError # pylint: disable=unused-import
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
@@ -865,10 +865,10 @@ class DcnmVrf:
         """
         if search is None:
             return {}
-        for d in search:
-            match = d.get(key)
+        for item in search:
+            match = item.get(key)
             if match == value:
-                return d
+                return item
         return {}
 
     # pylint: disable=inconsistent-return-statements
@@ -1760,7 +1760,7 @@ class DcnmVrf:
                 if deployed:
                     vrf_to_deploy = attach["vrfName"]
 
-                sn: str = attach["switchSerialNo"]
+                switch_serial_number: str = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
                 inst_values = attach.get("instanceValues", None)
 
@@ -1781,7 +1781,7 @@ class DcnmVrf:
 
                 attach.update({"fabric": self.fabric})
                 attach.update({"vlan": vlan})
-                attach.update({"serialNumber": sn})
+                attach.update({"serialNumber": switch_serial_number})
                 attach.update({"deployment": deploy})
                 attach.update({"extensionValues": ""})
                 attach.update({"instanceValues": inst_values})
@@ -1803,7 +1803,7 @@ class DcnmVrf:
 
                 sdl: dict = {}
                 epv: dict = {}
-                ev: dict = {}
+                extension_values_dict: dict = {}
                 ms_con: dict = {}
                 for sdl in lite_objects["DATA"]:
                     for epv in sdl["switchDetailsList"]:
@@ -1817,8 +1817,8 @@ class DcnmVrf:
                         extension_values: dict = {}
                         extension_values["VRF_LITE_CONN"] = []
 
-                        for ev in ext_values.get("VRF_LITE_CONN"):
-                            ev_dict = copy.deepcopy(ev)
+                        for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
+                            ev_dict = copy.deepcopy(extension_values_dict)
                             ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
                             ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
 
@@ -2565,7 +2565,7 @@ class DcnmVrf:
         #    - In this case, query the controller for a vrfId and
         #      use it in the payload.
         #    - Any such vrf create requests need to be pushed individually
-        #      (not bulk op).
+        #      (not bulk operation).
 
         self.diff_merge_create(replace)
         self.diff_merge_attach(replace)
@@ -2724,9 +2724,9 @@ class DcnmVrf:
 
             for a_w in attach:
                 attach_d = {}
-                for k, v in self.ip_sn.items():
-                    if v == a_w["serialNumber"]:
-                        attach_d.update({"ip_address": k})
+                for key, value in self.ip_sn.items():
+                    if value == a_w["serialNumber"]:
+                        attach_d.update({"ip_address": key})
                         break
                 attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"deploy": a_w["deployment"]})
@@ -3145,12 +3145,12 @@ class DcnmVrf:
         -   Return False otherwise
         """
         is_border = False
-        for ip, serial in self.ip_sn.items():
+        for ip_address, serial in self.ip_sn.items():
             if serial != serial_number:
                 continue
-            role = self.inventory_data[ip].get("switchRole")
-            r = re.search(r"\bborder\b", role.lower())
-            if r:
+            role = self.inventory_data[ip_address].get("switchRole")
+            re_result = re.search(r"\bborder\b", role.lower())
+            if re_result:
                 is_border = True
         return is_border
 
@@ -4047,7 +4047,7 @@ class DcnmVrf:
             return
         self.validate_vrf_config()
 
-    def handle_response(self, res, op):
+    def handle_response(self, res, action):
         """
         # Summary
 
@@ -4058,7 +4058,7 @@ class DcnmVrf:
         fail = False
         changed = True
 
-        if op == "query_dcnm":
+        if action == "query_dcnm":
             # These if blocks handle responses to the query APIs.
             # Basically all GET operations.
             if res.get("ERROR") == "Not Found" and res["RETURN_CODE"] == 404:
@@ -4075,10 +4075,10 @@ class DcnmVrf:
         if res.get("ERROR"):
             fail = True
             changed = False
-        if op == "attach" and "is in use already" in str(res.values()):
+        if action == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
-        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()):
+        if action == "deploy" and "No switches PENDING for deployment" in str(res.values()):
             changed = False
 
         return fail, changed

@@ -71,7 +71,12 @@ class VrfLiteModel(BaseModel):
         Validate ipv4_addr is a CIDR-format IPv4 host address.
         """
         if self.ipv4_addr != "":
-            IPv4CidrHostModel(ipv4_cidr_host=self.ipv4_addr)
+            try:
+                IPv4CidrHostModel(ipv4_cidr_host=self.ipv4_addr)
+            except ValueError as err:
+                msg = f"Invalid CIDR-format IPv4 host address: {self.ipv4_addr}. "
+                msg += f"detail: {err}"
+                raise ValueError(msg) from err
         return self
 
     @model_validator(mode="after")
@@ -80,7 +85,12 @@ class VrfLiteModel(BaseModel):
         Validate ipv6_addr is a CIDR-format IPv6 host address.
         """
         if self.ipv6_addr != "":
-            IPv6CidrHostModel(ipv6_cidr_host=self.ipv6_addr)
+            try:
+                IPv6CidrHostModel(ipv6_cidr_host=self.ipv6_addr)
+            except ValueError as err:
+                msg = f"Invalid CIDR-format IPv6 host address: {self.ipv6_addr}. "
+                msg += f"detail: {err}"
+                raise ValueError(msg) from err
         return self
 
 

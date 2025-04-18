@@ -67,7 +67,6 @@ class IPv6CidrHostModel(BaseModel):
         if result is True:
             # If the address is a host address, return it
             return value
-        raise ValueError(
-            f"Invalid CIDR-format IPv6 host address: {value}. "
-            "Are the host bits all zero?"
-        )
+        msg = f"Invalid CIDR-format IPv6 host address: {value}. "
+        msg += "Are the host bits all zero?"
+        raise ValueError(msg)

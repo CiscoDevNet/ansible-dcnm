@@ -66,4 +66,5 @@ class IPv4HostModel(BaseModel):
         if result is True:
             # If the address is a host address, return it
             return value
-        raise ValueError(f"Invalid IPv4 host address: {value}.")
+        msg = f"Invalid IPv4 host address: {value}."
+        raise ValueError(msg)

@@ -5,8 +5,7 @@ Unit tests for IPv4CidrHostModel
 # pylint: disable=line-too-long
 # mypy: disable-error-code="import-untyped"
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.models.ipv4_cidr_host import \
-    IPv4CidrHostModel
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.models.ipv4_cidr_host import IPv4CidrHostModel
 
 from ...common.common_utils import does_not_raise
 
