@@ -23,6 +23,9 @@ plugins/modules/dcnm_rest.py import-2.7!skip
 plugins/httpapi/dcnm.py import-3.8!skip
 plugins/httpapi/dcnm.py import-3.9!skip
 plugins/httpapi/dcnm.py import-3.10!skip
+plugins/modules/dcnm_vrf.py import-3.9
+plugins/modules/dcnm_vrf.py import-3.10
+plugins/modules/dcnm_vrf.py import-3.11
 plugins/module_utils/common/sender_requests.py import-3.9
 plugins/module_utils/common/sender_requests.py import-3.10
 plugins/module_utils/common/sender_requests.py import-3.11
