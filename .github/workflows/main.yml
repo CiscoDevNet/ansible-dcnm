@@ -33,7 +33,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install typing-extensions
         pip install pydantic
 
     - name: Install ansible-base (v${{ matrix.ansible }})
@@ -70,7 +69,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install typing-extensions
         pip install pydantic
 
     - name: Install ansible-base (v${{ matrix.ansible }})
@@ -106,7 +104,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        pip install typing-extensions
         pip install pydantic
 
     - name: Install ansible-base (v${{ matrix.ansible }})
