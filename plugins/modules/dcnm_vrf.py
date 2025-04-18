@@ -590,7 +590,7 @@ except ImportError:
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
 try:
-    import typing_extensions # pylint: disable=unused-import
+    import typing_extensions  # pylint: disable=unused-import
 except ImportError:
     HAS_TYPING_EXTENSIONS = False
     TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()

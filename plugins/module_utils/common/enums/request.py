@@ -3,6 +3,7 @@ Enums related to HTTP requests
 """
 from enum import Enum
 
+
 class RequestVerb(Enum):
     """
     # Summary

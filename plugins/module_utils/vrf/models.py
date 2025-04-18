@@ -86,7 +86,7 @@ class InstanceValuesController:
 
     ```json
     {
-        "instanceValues": "{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+        "instanceValues": "{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",...etc}"
     }
     ```
 
@@ -94,7 +94,7 @@ class InstanceValuesController:
 
     ```python
     instance_values_controller = InstanceValuesController(
-        instanceValues="{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}"
+        instanceValues="{\"loopbackId\": \"\", \"loopbackIpAddress\": \"\", \"loopbackIpV6Address\": \"\",(truncated)",
     )
 
     print(instance_values.as_controller())
@@ -364,7 +364,7 @@ class LanAttachItemController:
     {
         "entityName": "ansible-vrf-int1",
         "fabricName": "f1",
-        "instanceValues": "{\"loopbackId\": \"\", \"loopbackIpAddress\": \"\", \"loopbackIpV6Address\": \"\", \"switchRouteTargetImportEvpn\": \"\", \"switchRouteTargetExportEvpn\": \"\", \"deviceSupportL3VniNoVlan\": false}",
+        instanceValues="{\"loopbackId\": \"\", \"loopbackIpAddress\": \"\", \"loopbackIpV6Address\": \"\",(truncated)",
         "ipAddress": "172.22.150.113",
         "isLanAttached": true,
         "lanAttachState": "DEPLOYED",
@@ -429,7 +429,7 @@ class LanAttachItemController:
     lan_attach_item_controller = LanAttachItemController(
         entityName="myVrf",
         fabricName="f1",
-        instanceValues="{\"loopbackId\": \"\", \"loopbackIpAddress\": \"\", \"loopbackIpV6Address\": \"\", \"switchRouteTargetImportEvpn\": \"\", \"switchRouteTargetExportEvpn\": \"\", \"deviceSupportL3VniNoVlan\": false}",
+        instanceValues="{\"loopbackId\": \"\", \"loopbackIpAddress\": \"\", \"loopbackIpV6Address\": \"\",(truncated)",
         ipAddress="10.1.1.1",
         isLanAttached=True,
         lanAttachState="DEPLOYED",

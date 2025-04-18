@@ -7,6 +7,7 @@ Enumerations for BGP parameters.
 """
 from enum import Enum
 
+
 class BgpPasswordEncrypt(Enum):
     """
     Enumeration for BGP password encryption types.
