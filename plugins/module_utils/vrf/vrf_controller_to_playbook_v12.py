@@ -8,29 +8,37 @@ Serialize controller field names to names used in a dcnm_vrf playbook.
 """
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+PYDANTIC_IMPORT_ERROR: ImportError | None
 
+try:
+    from pydantic import BaseModel, ConfigDict, Field
+except ImportError as pydantic_import_error:
+    PYDANTIC_IMPORT_ERROR = pydantic_import_error
+else:
+    PYDANTIC_IMPORT_ERROR = None
 
-class VrfControllerToPlaybookV12Model(BaseModel):
-    """
-    # Summary
+if not PYDANTIC_IMPORT_ERROR:
 
-    Serialize controller field names to names used in a dcnm_vrf playbook.
-    """
+    class VrfControllerToPlaybookV12Model(BaseModel):
+        """
+        # Summary
 
-    model_config = ConfigDict(
-        str_strip_whitespace=True,
-    )
-    disable_rt_auto: Optional[bool] = Field(alias="disableRtAuto")
+        Serialize controller field names to names used in a dcnm_vrf playbook.
+        """
 
-    export_evpn_rt: Optional[str] = Field(alias="routeTargetExportEvpn")
-    export_mvpn_rt: Optional[str] = Field(alias="routeTargetExportMvpn")
-    export_vpn_rt: Optional[str] = Field(alias="routeTargetExport")
+        model_config = ConfigDict(
+            str_strip_whitespace=True,
+        )
+        disable_rt_auto: Optional[bool] = Field(alias="disableRtAuto")
 
-    netflow_enable: Optional[bool] = Field(alias="ENABLE_NETFLOW")
-    nf_monitor: Optional[str] = Field(alias="NETFLOW_MONITOR")
-    no_rp: Optional[bool] = Field(alias="isRPAbsent")
+        export_evpn_rt: Optional[str] = Field(alias="routeTargetExportEvpn")
+        export_mvpn_rt: Optional[str] = Field(alias="routeTargetExportMvpn")
+        export_vpn_rt: Optional[str] = Field(alias="routeTargetExport")
 
-    import_evpn_rt: Optional[str] = Field(alias="routeTargetImportEvpn")
-    import_mvpn_rt: Optional[str] = Field(alias="routeTargetImportMvpn")
-    import_vpn_rt: Optional[str] = Field(alias="routeTargetImport")
+        netflow_enable: Optional[bool] = Field(alias="ENABLE_NETFLOW")
+        nf_monitor: Optional[str] = Field(alias="NETFLOW_MONITOR")
+        no_rp: Optional[bool] = Field(alias="isRPAbsent")
+
+        import_evpn_rt: Optional[str] = Field(alias="routeTargetImportEvpn")
+        import_mvpn_rt: Optional[str] = Field(alias="routeTargetImportMvpn")
+        import_vpn_rt: Optional[str] = Field(alias="routeTargetImport")
