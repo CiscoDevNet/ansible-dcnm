@@ -24,9 +24,8 @@ class IPv4CidrHostModel(BaseModel):
     ```python
     try:
         ipv4_cidr_host_address = IPv4CidrHostModel(ipv4_cidr_host="192.168.1.1/24")
-        print(f"Valid: {ipv4_cidr_host_address}")
     except ValueError as err:
-        print(f"Validation error: {err}")
+        # Handle the error
     ```
 
     """

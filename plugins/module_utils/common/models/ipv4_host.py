@@ -25,9 +25,8 @@ class IPv4HostModel(BaseModel):
     ```python
     try:
         ipv4_host_address = IPv4HostModel(ipv4_host="10.33.0.1")
-        print(f"Valid: {ipv4_host_address}")
     except ValueError as err:
-        print(f"Validation error: {err}")
+        # Handle the error
     ```
 
     """

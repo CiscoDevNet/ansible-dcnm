@@ -187,7 +187,3 @@ class VrfPlaybookConfigModel(BaseModel):
     """
 
     config: list[VrfPlaybookModel] = Field(default_factory=list[VrfPlaybookModel])
-
-
-if __name__ == "__main__":
-    pass

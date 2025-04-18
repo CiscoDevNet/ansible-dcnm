@@ -24,9 +24,8 @@ class IPv6CidrHostModel(BaseModel):
     ```python
     try:
         ipv6_cidr_host_address = IPv6CidrHostModel(ipv6_cidr_host="2001:db8::1/64")
-        print(f"Valid: {ipv6_cidr_host_address}")
     except ValueError as err:
-        print(f"Validation error: {err}")
+        # Handle the error
     ```
 
     """

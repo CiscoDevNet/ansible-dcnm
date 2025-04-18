@@ -25,9 +25,9 @@ class IPv6HostModel(BaseModel):
     ```python
     try:
         ipv6_host_address = IPv6HostModel(ipv6_host="2001::1")
-        print(f"Valid: {ipv6_host_address}")
+        log.debug(f"Valid: {ipv6_host_address}")
     except ValueError as err:
-        print(f"Validation error: {err}")
+        # Handle the error
     ```
 
     """
