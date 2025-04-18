@@ -581,7 +581,7 @@ HAS_PYDANTIC: bool
 HAS_TYPING_EXTENSIONS: bool
 
 PYDANTIC_IMPORT_ERROR: Union[str, None]
-TYPING_EXTENSIONS_IMPORT_ERROR:  Union[str, None]
+TYPING_EXTENSIONS_IMPORT_ERROR: Union[str, None]
 
 try:
     import pydantic
