@@ -93,6 +93,7 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "none",
 				"native_vlan": 10,
+				"orphan_port": false,
 				"cmds": [
 					"no shutdown"
 				],
@@ -215,6 +216,7 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "all",
 				"native_vlan": 10,
+				"orphan_port": false,
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -462,6 +464,7 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "all",
 				"native_vlan": 10,
+				"orphan_port": false,
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -491,6 +494,7 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "all",
 				"native_vlan": 10,
+				"orphan_port": false,
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
