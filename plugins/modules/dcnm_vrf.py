@@ -577,14 +577,23 @@ from typing import Any, Final, Union
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
-PYDANTIC_IMPORT_ERROR: str | None = None
 HAS_PYDANTIC: bool = True
+HAS_TYPING_EXTENSIONS: bool = True
+
+PYDANTIC_IMPORT_ERROR: str | None = None
+TYPING_EXTENSIONS_IMPORT_ERROR: str | None = None
 
 try:
     from pydantic import ValidationError
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
+
+try:
+    from typing_extensions import Self # pylint: disable=unused-import
+except ImportError:
+    HAS_TYPING_EXTENSIONS = False
+    TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.enums.request import RequestVerb
 from ..module_utils.common.log_v2 import Log
@@ -4158,6 +4167,11 @@ def main() -> None:
         module.fail_json(
             msg=missing_required_lib('pydantic'),
             exception=PYDANTIC_IMPORT_ERROR)
+
+    if not HAS_TYPING_EXTENSIONS:
+        module.fail_json(
+            msg=missing_required_lib('typing_extensions'),
+            exception=TYPING_EXTENSIONS_IMPORT_ERROR)
 
     dcnm_vrf: DcnmVrf = DcnmVrf(module)
 

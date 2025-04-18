@@ -13,6 +13,7 @@ from ansible.module_utils.basic import missing_required_lib # pylint: disable=un
 
 PYDANTIC_IMPORT_ERROR: str | None = None
 HAS_PYDANTIC: bool = True
+HAS_TYPING_EXTENSIONS: bool = True
 
 try:
     from pydantic import BaseModel, ConfigDict, Field, model_validator
@@ -20,7 +21,11 @@ except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR = traceback.format_exc()
 
-from typing_extensions import Self
+try:
+    from typing_extensions import Self
+except ImportError:
+    HAS_TYPING_EXTENSIONS = False
+    TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
