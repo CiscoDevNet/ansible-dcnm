@@ -571,32 +571,29 @@ import json
 import logging
 import re
 import time
-from dataclasses import asdict, dataclass
 import traceback
+from dataclasses import asdict, dataclass
 from typing import Any, Final, Union
 
 from ansible.module_utils.basic import AnsibleModule, missing_required_lib
 
-HAS_PYDANTIC: bool
-HAS_TYPING_EXTENSIONS: bool
+HAS_THIRD_PARTY_IMPORTS: bool
 
-PYDANTIC_IMPORT_ERROR: Union[str, None]
-TYPING_EXTENSIONS_IMPORT_ERROR: Union[str, None]
+THIRD_PARTY_IMPORT_ERROR: Union[str, None]
 
 try:
     import pydantic
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR = traceback.format_exc()
-
-try:
     import typing_extensions  # pylint: disable=unused-import
-    HAS_TYPING_EXTENSIONS = True
+
+    from ..module_utils.vrf.vrf_controller_to_playbook import VrfControllerToPlaybookModel
+    from ..module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
+    from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
+
+    HAS_THIRD_PARTY_IMPORTS = True
+    THIRD_PARTY_IMPORT_ERROR = None
 except ImportError:
-    HAS_TYPING_EXTENSIONS = False
-    TYPING_EXTENSIONS_IMPORT_ERROR = traceback.format_exc()
+    HAS_THIRD_PARTY_IMPORTS = False
+    THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.enums.request import RequestVerb
 from ..module_utils.common.log_v2 import Log
@@ -610,9 +607,6 @@ from ..module_utils.network.dcnm.dcnm import (
     get_ip_sn_dict,
     get_sn_fabric_dict,
 )
-from ..module_utils.vrf.vrf_playbook_model import VrfPlaybookModel
-from ..module_utils.vrf.vrf_controller_to_playbook import VrfControllerToPlaybookModel
-from ..module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 
 dcnm_vrf_paths: dict = {
     11: {
@@ -4178,15 +4172,8 @@ def main() -> None:
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
-    if not HAS_PYDANTIC:
-        module.fail_json(
-            msg=missing_required_lib('pydantic'),
-            exception=PYDANTIC_IMPORT_ERROR)
-
-    if not HAS_TYPING_EXTENSIONS:
-        module.fail_json(
-            msg=missing_required_lib('typing_extensions'),
-            exception=TYPING_EXTENSIONS_IMPORT_ERROR)
+    if not HAS_THIRD_PARTY_IMPORTS:
+        module.fail_json(msg=missing_required_lib("pydantic"), exception=THIRD_PARTY_IMPORT_ERROR)
 
     dcnm_vrf: DcnmVrf = DcnmVrf(module)
 
