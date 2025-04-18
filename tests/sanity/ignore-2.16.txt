@@ -22,10 +22,11 @@ plugins/modules/dcnm_log.py validate-modules:missing-gplv3-license # GPLv3 licen
 plugins/module_utils/common/sender_requests.py import-3.10 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
 plugins/action/tests/unit/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
-plugins/module_utils/common/vrf/vrf_controller_to_playbook_v12.py import-3.11 # TODO remove this if/when requests is added to the standard library
-plugins/module_utils/common/vrf/vrf_controller_to_playbook.py import-3.11 # TODO remove this if/when requests is added to the standard library
-plugins/module_utils/common/vrf/vrf_playbook_model.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/vrf/vrf_controller_to_playbook_v12.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/vrf/vrf_controller_to_playbook.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/vrf/vrf_playbook_model.py import-3.11 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/models/ipv4_cidr_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/models/ipv4_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/models/ipv6_cidr_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/models/ipv6_host.py import-3.10 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/models/ipv6_host.py import-3.11 # TODO remove this if/when requests is added to the standard library
