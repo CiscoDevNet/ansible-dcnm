@@ -80,8 +80,15 @@
 ###############################################
 ###                MERGED                    ##
 ###############################################
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1 - MERGED - [merged] Create, Attach, Deploy VLAN(600)+VRF ansible-vrf-int1"
 
-- name: TEST.1 - MERGED - [merged] Create, Attach, Deploy VLAN(600)+VRF ansible-vrf-int1
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -97,7 +104,15 @@
       deploy: true
   register: result_1
 
-- name: TEST.1a - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1a - MERGED - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -125,7 +140,15 @@
     - switch_2 in result_1.diff[0].attach[1].ip_address
     - result_1.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.1c - MERGED - [merged] conf1 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1c - MERGED - [merged] conf1 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
 
@@ -138,7 +161,15 @@
     - result_1c.changed == false
     - result_1c.response|length == 0
 
-- name: TEST.1e - MERGED - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1e - MERGED - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -152,7 +183,15 @@
     timeout: 60
   when: result_1e.changed == true
 
-- name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided VLAN)
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.2 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided VLAN)"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -167,7 +206,15 @@
       deploy: true
   register: result_2
 
-- name: TEST.2a - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.2a - MERGED - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -195,7 +242,15 @@
     - switch_2 in result_2.diff[0].attach[1].ip_address
     - result_2.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.2c - MERGED - [merged] conf2 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.2c - MERGED - [merged] conf2 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf2
   register: result_2c
 
@@ -208,7 +263,15 @@
     - result_2c.changed == false
     - result_2c.response|length == 0
 
-- name: TEST.2e - MERGED - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.2e - MERGED - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -219,7 +282,15 @@
   wait_for:
     timeout: 60
 
-- name: TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided VLAN)
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided VLAN)"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -243,7 +314,15 @@
       deploy: true
   register: result_3
 
-- name: TEST.3a - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3a - MERGED - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -271,7 +350,15 @@
     - switch_2 in result_3.diff[0].attach[1].ip_address
     - result_3.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.3c - MERGED - [merged] conf3 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3c - MERGED - [merged] conf3 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf3
   register: result_3c
 
@@ -284,7 +371,15 @@
     - result_3c.changed == false
     - result_3c.response|length == 0
 
-- name: TEST.3e - MERGED - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3e - MERGED - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -296,7 +391,15 @@
   wait_for:
     timeout: 60
 
-- name: TEST.4 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION - (controller provided VLAN)
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.4 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION - (controller provided VLAN)"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -314,7 +417,15 @@
       deploy: true
   register: result_4
 
-- name: TEST.4a - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.4a - MERGED - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -342,7 +453,15 @@
     - switch_2 in result_4.diff[0].attach[1].ip_address
     - result_4.diff[0].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.5 - MERGED - [merged] Create, Attach, Deploy VRF - Update with incorrect VRF ID.
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.5 - MERGED - [merged] Create, Attach, Deploy VRF - Update with incorrect VRF ID."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -371,7 +490,15 @@
     - result_5.changed == false
     - TEST_PHRASE in result_5.msg
 
-- name: TEST.6 - MERGED - [merged] Create, Attach, Deploy VRF - Update with Out of Range VRF ID.
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.6 - MERGED - [merged] Create, Attach, Deploy VRF - Update with Out of Range vrf_id."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -393,14 +520,24 @@
 
 - name: set fact
   set_fact:
-    TEST_PHRASE: "The item exceeds the allowed range of max"
+    TEST_PARAM: "vrf_id"
+    TEST_PHRASE: "Input should be less than or equal to 16777214"
 
 - assert:
     that:
     - result_6.changed == false
-    - TEST_PHRASE in result_6.msg
+    - TEST_PARAM in result_6.module_stderr
+    - TEST_PHRASE in result_6.module_stderr
 
-- name: TEST.7 - MERGED - [merged] Create, Attach, Deploy VRF - VRF LITE missing required parameter
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.7 - MERGED - [merged] Create, Attach, Deploy VRF - VRF LITE missing required parameter"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -425,14 +562,24 @@
 
 - name: set fact
   set_fact:
-    TEST_PHRASE: "Invalid parameters in playbook: interface : Required parameter not found"
+    TEST_PARAM: "attach.1.vrf_lite.0.interface"
+    TEST_PHRASE: "Field required"
 
 - assert:
     that:
     - result_7.changed == false
-    - TEST_PHRASE in result_7.msg
+    - TEST_PARAM in result_7.module_stderr
+    - TEST_PHRASE in result_7.module_stderr
 
-- name: TEST.8 - MERGED - [merged] Create, Attach and Deploy VRF - configure VRF LITE on non border switch
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.8 - MERGED - [merged] Create, Attach and Deploy VRF - configure VRF LITE on non border switch"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -473,7 +620,16 @@
 ###                 CLEAN-UP                 ##
 ###############################################
 
-- name: CLEANUP.1 - MERGED - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "CLEANUP.1 - MERGED - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted

@@ -24,11 +24,11 @@ class VrfLiteModel(BaseModel):
 
     dot1q: int = Field(default=0, ge=0, le=4094)
     interface: str
-    ipv4_addr: str = Field(default="")
-    ipv6_addr: str = Field(default="")
-    neighbor_ipv4: str = Field(default="")
-    neighbor_ipv6: str = Field(default="")
-    peer_vrf: str
+    ipv4_addr: Optional[str] = Field(default="")
+    ipv6_addr: Optional[str] = Field(default="")
+    neighbor_ipv4: Optional[str] = Field(default="")
+    neighbor_ipv6: Optional[str] = Field(default="")
+    peer_vrf: Optional[str] = Field(default="")
 
     @model_validator(mode="after")
     def validate_ipv4_host(self) -> Self:
@@ -142,7 +142,7 @@ class VrfPlaybookModel(BaseModel):
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="vrfRouteMap")
     rp_address: str = Field(default="", alias="rpAddress")
     rp_external: bool = Field(default=False, alias="isRPExternal")
-    rp_loopback_id: Optional[int] = Field(default=None, ge=0, le=1023, alias="loopbackNumber")
+    rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=0, le=1023, alias="loopbackNumber")
     service_vrf_template: Optional[str] = Field(default=None, alias="serviceVrfTemplate")
     source: Optional[str] = None
     static_default_route: bool = Field(default=True, alias="configureStaticDefaultRouteFlag")
