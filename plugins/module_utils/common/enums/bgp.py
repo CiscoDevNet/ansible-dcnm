@@ -1,8 +1,7 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @author: Allen Robel
+# @file: plugins/module_utils/common/enums/bgp.py
 """
-bgp.py
-
 Enumerations for BGP parameters.
 """
 from enum import Enum

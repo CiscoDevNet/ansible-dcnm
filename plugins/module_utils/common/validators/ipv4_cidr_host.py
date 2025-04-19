@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @author: Allen Robel
 # @file: plugins/module_utils/common/validators/ipv4_cidr_host.py
