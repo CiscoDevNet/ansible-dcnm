@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+# @author: Allen Robel
+# @file: plugins/module_utils/common/enums/request.py
 """
-Enums related to HTTP requests
+Enumerations related to HTTP requests
 """
 from enum import Enum
 

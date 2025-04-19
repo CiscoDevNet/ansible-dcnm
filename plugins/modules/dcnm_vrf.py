@@ -597,7 +597,7 @@ except ImportError:
     THIRD_PARTY_FAILED_IMPORT.add("pydantic")
     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
-from ..module_utils.common.enums.request import RequestVerb
+from ..module_utils.common.enums.http_requests import RequestVerb
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
