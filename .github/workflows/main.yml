@@ -23,12 +23,12 @@ jobs:
       matrix:
         ansible: [2.15.12, 2.16.7]
     steps:
-    - name: Install rust minimal stable with clippy and rustfmt
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        components: rustfmt, clippy
+    # - name: Install rust minimal stable with clippy and rustfmt
+    #   uses: actions-rs/toolchain@v1
+    #   with:
+    #     profile: minimal
+    #     toolchain: stable
+    #     components: rustfmt, clippy
 
     - name: Check out code
       uses: actions/checkout@v2
