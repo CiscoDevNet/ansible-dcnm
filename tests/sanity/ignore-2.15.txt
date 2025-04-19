@@ -23,7 +23,6 @@ plugins/action/tests/unit/ndfc_pc_members_validate.py action-plugin-docs # actio
 plugins/httpapi/dcnm.py import-3.9!skip
 plugins/httpapi/dcnm.py import-3.10!skip
 plugins/modules/dcnm_vrf.py import-3.9
-plugins/modules/dcnm_vrf.py import-3.10
 plugins/module_utils/common/sender_requests.py import-3.9
 plugins/module_utils/common/sender_requests.py import-3.10
 plugins/module_utils/common/sender_requests.py import-3.11
