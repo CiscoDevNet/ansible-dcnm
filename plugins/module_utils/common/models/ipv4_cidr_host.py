@@ -1,11 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# mypy: disable-error-code="import-untyped"
+# @author: Allen Robel
+# @file: plugins/module_utils/common/models/ipv4_cidr_host.py
 """
-@file   : ipv4.py
-@Author : Allen Robel
+Validate CIDR-format IPv4 host address.
 """
-
 from pydantic import BaseModel, Field, field_validator
 
 from ..validators.ipv4_cidr_host import validate_ipv4_cidr_host

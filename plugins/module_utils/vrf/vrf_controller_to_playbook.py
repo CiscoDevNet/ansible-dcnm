@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# mypy: disable-error-code="import-untyped"
+# @author: Allen Robel
+# @file: plugins/module_utils/vrf/vrf_controller_to_playbook.py
 """
-vrfTemplateConfigToDiffModel
-
-Serialize vrfTemplateConfig formatted as a dcnm_vrf diff.
+Serialize payload fields (common to NDFC versions 11 and 12) to fields
+used in a dcnm_vrf playbook.
 """
 from typing import Optional
 
@@ -15,7 +15,8 @@ class VrfControllerToPlaybookModel(BaseModel):
     """
     # Summary
 
-    Serialize vrfTemplateConfig formatted as a dcnm_vrf diff.
+    Serialize payload fields (common to NDFC versions 11 and 12) to fields
+    used in a dcnm_vrf playbook.
     """
 
     model_config = ConfigDict(

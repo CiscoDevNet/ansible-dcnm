@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# mypy: disable-error-code="import-untyped"
+# @author: Allen Robel
+# @file: plugins/module_utils/vrf/vrf_controller_to_playbook_v12.py
 """
-VrfControllerToPlaybookV12Model
-
-Serialize controller field names to names used in a dcnm_vrf playbook.
+Serialize NDFC version 12 controller payload fields to fie;ds used in a dcnm_vrf playbook.
 """
 from typing import Optional
 
@@ -15,7 +14,7 @@ class VrfControllerToPlaybookV12Model(BaseModel):
     """
     # Summary
 
-    Serialize controller field names to names used in a dcnm_vrf playbook.
+    Serialize NDFC version 12 controller payload fields to fie;ds used in a dcnm_vrf playbook.
     """
 
     model_config = ConfigDict(

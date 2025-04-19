@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @author: Allen Robel
+# @file: plugins/module_utils/common/validators/ipv6_host.py
 """
-ipv6_host.py
-
 Validate IPv6 host address without a prefix
 """
 from ipaddress import AddressValueError, IPv6Address

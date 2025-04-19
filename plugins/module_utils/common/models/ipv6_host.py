@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# mypy: disable-error-code="import-untyped"
+# @author: Allen Robel
+# @file: plugins/module_utils/common/models/ipv6_host.py
 """
-@file   : ipv6_host.py
-@Author : Allen Robel
+Validate IPv6 host address.
 """
 from pydantic import BaseModel, Field, field_validator
 

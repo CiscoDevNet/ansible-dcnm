@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# mypy: disable-error-code="import-untyped"
+# @author: Allen Robel
+# @file: plugins/module_utils/vrf/vrf_playbook_model.py
 """
-VrfPlaybookModel
-
-Validation models for dcnm_vrf playbooks.
+Validation model for dcnm_vrf playbooks.
 """
 from typing import Optional, Union
 
@@ -111,7 +110,7 @@ class VrfAttachModel(BaseModel):
 
 class VrfPlaybookModel(BaseModel):
     """
-    Model for VRF configuration.
+    Model to validate a playbook VRF configuration.
     """
 
     model_config = ConfigDict(
@@ -153,11 +152,9 @@ class VrfPlaybookModel(BaseModel):
     vlan_id: Optional[int] = Field(default=None, le=4094)
     vrf_description: str = Field(default="", alias="vrfDescription")
     vrf_extension_template: str = Field(default="Default_VRF_Extension_Universal", alias="vrfExtensionTemplate")
-    # vrf_id: Optional[int] = Field(default=None, le=16777214, alias="vrfId")
     vrf_id: Optional[int] = Field(default=None, le=16777214)
     vrf_int_mtu: int = Field(default=9216, ge=68, le=9216, alias="mtu")
     vrf_intf_desc: str = Field(default="", alias="vrfIntfDescription")
-    # vrf_name: str = Field(..., max_length=32, alias="vrfName")
     vrf_name: str = Field(..., max_length=32)
     vrf_template: str = Field(default="Default_VRF_Universal")
     vrf_vlan_name: str = Field(default="", alias="vrfVlanName")
