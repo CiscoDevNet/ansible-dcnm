@@ -53,7 +53,15 @@
      - "switch_2 : {{ switch_2 }}"
      - "interface_2a : {{ interface_2a }}"
 
-- name: SETUP.1 - OVERRIDDEN - [dcnn_rest.GET] Verify if fabric is deployed.
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.1 - OVERRIDDEN - [dcnn_rest.GET] Verify if fabric is deployed."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -61,9 +69,17 @@
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - result.response.DATA != None
 
-- name: SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.2 - OVERRIDDEN - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -77,7 +93,15 @@
     timeout: 60
   when: result_setup_2.changed == true
 
-- name: SETUP.3 OVERRIDDEN - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.3 OVERRIDDEN - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -97,7 +121,15 @@
   debug:
     var: result_setup_3
 
-- name: SETUP.4 OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.4 OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -109,23 +141,31 @@
 
 - assert:
     that:
-    - 'result_setup_3.changed == true'
-    - 'result_setup_3.response[0].RETURN_CODE == 200'
-    - 'result_setup_3.response[1].RETURN_CODE == 200'
-    - 'result_setup_3.response[2].RETURN_CODE == 200'
-    - '(result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_setup_3.diff[0].attach[0].deploy == true'
-    - 'result_setup_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_setup_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_setup_3.diff[0].attach[1].ip_address'
-    - 'result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_setup_3.changed == true
+    - result_setup_3.response[0].RETURN_CODE == 200
+    - result_setup_3.response[1].RETURN_CODE == 200
+    - result_setup_3.response[2].RETURN_CODE == 200
+    - (result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - result_setup_3.diff[0].attach[0].deploy == true
+    - result_setup_3.diff[0].attach[1].deploy == true
+    - switch_1 in result_setup_3.diff[0].attach[0].ip_address
+    - switch_2 in result_setup_3.diff[0].attach[1].ip_address
+    - result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"
 
 ###############################################
 ###              OVERRIDDEN                  ##
 ###############################################
 
-- name: TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -141,7 +181,15 @@
       deploy: true
   register: result_1
 
-- name: TEST.1a - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1a - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -157,27 +205,35 @@
 
 - assert:
     that:
-    - 'result_1.changed == true'
-    - 'result_1.response[0].RETURN_CODE == 200'
-    - 'result_1.response[1].RETURN_CODE == 200'
-    - 'result_1.response[2].RETURN_CODE == 200'
-    - 'result_1.response[3].RETURN_CODE == 200'
-    - 'result_1.response[4].RETURN_CODE == 200'
-    - 'result_1.response[5].RETURN_CODE == 200'
-    - 'result_1.response[6].RETURN_CODE == 200'
-    - 'result_1.response[7].RETURN_CODE == 200'
-    - '(result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_1.response[6].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[6].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].attach[0].deploy == true'
-    - 'result_1.diff[0].attach[1].deploy == true'
-    - 'result_1.diff[0].vrf_name == "ansible-vrf-int2"'
-    - 'result_1.diff[1].attach[0].deploy == false'
-    - 'result_1.diff[1].attach[1].deploy == false'
-    - 'result_1.diff[1].vrf_name == "ansible-vrf-int1"'
+    - result_1.changed == true
+    - result_1.response[0].RETURN_CODE == 200
+    - result_1.response[1].RETURN_CODE == 200
+    - result_1.response[2].RETURN_CODE == 200
+    - result_1.response[3].RETURN_CODE == 200
+    - result_1.response[4].RETURN_CODE == 200
+    - result_1.response[5].RETURN_CODE == 200
+    - result_1.response[6].RETURN_CODE == 200
+    - result_1.response[7].RETURN_CODE == 200
+    - (result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"
+    - (result_1.response[6].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[6].DATA|dict2items)[1].value == "SUCCESS"
+    - result_1.diff[0].attach[0].deploy == true
+    - result_1.diff[0].attach[1].deploy == true
+    - result_1.diff[0].vrf_name == "ansible-vrf-int2"
+    - result_1.diff[1].attach[0].deploy == false
+    - result_1.diff[1].attach[1].deploy == false
+    - result_1.diff[1].vrf_name == "ansible-vrf-int1"
 
-- name: TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1c - OVERRIDDEN - [overridden] conf1 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf1
   register: result_1c
 
@@ -187,10 +243,18 @@
 
 - assert:
     that:
-    - 'result_1c.changed == false'
-    - 'result_1c.response|length == 0'
+    - result_1c.changed == false
+    - result_1c.response|length == 0
 
-- name: TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.1f - OVERRIDDEN - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
@@ -201,7 +265,15 @@
     timeout: 60
   when: result_1f.changed == true
 
-- name: TEST.2 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.2 - OVERRIDDEN - [merged] ansible-vrf-int2 to add vrf_lite extension to switch_2"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -233,7 +305,15 @@
     timeout: 60
   when: result_2.changed == true
 
-- name: TEST.2b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.2b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -249,19 +329,27 @@
 
 - assert:
     that:
-    - 'result_2.changed == true'
-    - 'result_2.response[0].RETURN_CODE == 200'
-    - 'result_2.response[1].RETURN_CODE == 200'
-    - 'result_2.response[2].RETURN_CODE == 200'
-    - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2.diff[0].attach[0].deploy == true'
-    - 'result_2.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_2.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
-    - 'result_2.diff[0].vrf_name == "ansible-vrf-int2"'
+    - result_2.changed == true
+    - result_2.response[0].RETURN_CODE == 200
+    - result_2.response[1].RETURN_CODE == 200
+    - result_2.response[2].RETURN_CODE == 200
+    - (result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - result_2.diff[0].attach[0].deploy == true
+    - result_2.diff[0].attach[1].deploy == true
+    - switch_1 in result_2.diff[0].attach[0].ip_address
+    - switch_2 in result_2.diff[0].attach[1].ip_address
+    - result_2.diff[0].vrf_name == "ansible-vrf-int2"
 
-- name: TEST.3 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3 - OVERRIDDEN - [overridden] Override vrf_lite extension with new dot1q value"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -301,7 +389,15 @@
 # NOTE: this happens ONLY when Fabric Settings -> Advanced -> Overlay Mode
 # is set to "config-profile" (which is the default).  It does not happen
 # if Overlay Mode is set to "cli".
-- name: TEST.3b - OVERRIDDEN - [dcnm_rest.POST] - config-deploy to workaround FAILED/OUT-OF-SYNC VRF status
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3b - OVERRIDDEN - [dcnm_rest.POST] - config-deploy to workaround FAILED/OUT-OF-SYNC VRF status"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_rest:
     method: POST
     path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}/config-deploy?forceShowRun=false"
@@ -312,7 +408,15 @@
     timeout: 60
   when: result_3.changed == true
 
-- name: TEST.3d - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3d - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -328,14 +432,22 @@
 
 - assert:
     that:
-    - 'result_3.changed == true'
-    - 'result_3.response[0].RETURN_CODE == 200'
-    - 'result_3.response[1].RETURN_CODE == 200'
-    - '(result_3.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result_3.diff[0].attach[0].deploy == true'
-    - 'result_3.diff[0].vrf_name == "ansible-vrf-int2"'
+    - result_3.changed == true
+    - result_3.response[0].RETURN_CODE == 200
+    - result_3.response[1].RETURN_CODE == 200
+    - (result_3.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - result_3.diff[0].attach[0].deploy == true
+    - result_3.diff[0].vrf_name == "ansible-vrf-int2"
 
-- name: TEST.3f - OVERRIDDEN - [overridden] conf2 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.3f - OVERRIDDEN - [overridden] conf2 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf3
   register: result_3f
 
@@ -345,10 +457,18 @@
 
 - assert:
     that:
-    - 'result_3f.changed == false'
-    - 'result_3f.response|length == 0'
+    - result_3f.changed == false
+    - result_3f.response|length == 0
 
-- name: TEST.4 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.4 - OVERRIDDEN - [overridden] Override ansible-vrf-int2 to create ansible-vrf-int1 with LITE Extension"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: &conf4
     fabric: "{{ fabric_1 }}"
     state: overridden
@@ -380,7 +500,15 @@
     timeout: 60
   when: result_4.changed == true
 
-- name: TEST.4b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.4b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
@@ -396,28 +524,36 @@
 
 - assert:
     that:
-    - 'result_4.changed == true'
-    - 'result_4.response[0].RETURN_CODE == 200'
-    - 'result_4.response[1].RETURN_CODE == 200'
-    - 'result_4.response[2].RETURN_CODE == 200'
-    - 'result_4.response[3].RETURN_CODE == 200'
-    - 'result_4.response[4].RETURN_CODE == 200'
-    - 'result_4.response[5].RETURN_CODE == 200'
-    - 'result_4.response[6].RETURN_CODE == 200'
-    - 'result_4.response[7].RETURN_CODE == 200'
-    - '(result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_4.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_4.response[6].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_4.response[6].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_4.response[2].METHOD == "DELETE"'
-    - 'result_4.diff[0].attach[0].deploy == true'
-    - 'result_4.diff[0].attach[1].deploy == true'
-    - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
-    - 'result_4.diff[1].attach[0].deploy == false'
-    - 'result_4.diff[1].attach[1].deploy == false'
-    - 'result_4.diff[1].vrf_name == "ansible-vrf-int2"'
+    - result_4.changed == true
+    - result_4.response[0].RETURN_CODE == 200
+    - result_4.response[1].RETURN_CODE == 200
+    - result_4.response[2].RETURN_CODE == 200
+    - result_4.response[3].RETURN_CODE == 200
+    - result_4.response[4].RETURN_CODE == 200
+    - result_4.response[5].RETURN_CODE == 200
+    - result_4.response[6].RETURN_CODE == 200
+    - result_4.response[7].RETURN_CODE == 200
+    - (result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_4.response[0].DATA|dict2items)[1].value == "SUCCESS"
+    - (result_4.response[6].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_4.response[6].DATA|dict2items)[1].value == "SUCCESS"
+    - result_4.response[2].METHOD == "DELETE"
+    - result_4.diff[0].attach[0].deploy == true
+    - result_4.diff[0].attach[1].deploy == true
+    - result_4.diff[0].vrf_name == "ansible-vrf-int1"
+    - result_4.diff[1].attach[0].deploy == false
+    - result_4.diff[1].attach[1].deploy == false
+    - result_4.diff[1].vrf_name == "ansible-vrf-int2"
 
-- name: TEST.4d - OVERRIDDEN - [overridden] conf3 - Idempotence
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "TEST.4d - OVERRIDDEN - [overridden] conf3 - Idempotence"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf: *conf4
   register: result_4d
 
@@ -427,14 +563,22 @@
 
 - assert:
     that:
-    - 'result_4d.changed == false'
-    - 'result_4d.response|length == 0'
+    - result_4d.changed == false
+    - result_4d.response|length == 0
 
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################
 
-- name: CLEANUP.1 - OVERRIDDEN - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "CLEANUP.1 - OVERRIDDEN - [deleted] Delete all VRFs"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
