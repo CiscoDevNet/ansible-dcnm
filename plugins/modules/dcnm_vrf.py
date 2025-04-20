@@ -1096,12 +1096,6 @@ class DcnmVrf:
                             deploy_vrf = True
                         continue
 
-                    msg = "want_deployment: "
-                    msg += f"{str(want.get('want_deployment'))}, "
-                    msg += "have_deployment: "
-                    msg += f"{str(want.get('have_deployment'))}"
-                    self.log.debug(msg)
-
                     want_deployment = self.to_bool("deployment", want)
                     have_deployment = self.to_bool("deployment", have)
 
@@ -2471,7 +2465,7 @@ class DcnmVrf:
         """
         # Summary
 
-        Populates the following lists
+        Populates the following
 
         - self.diff_attach
         - self.diff_deploy
@@ -2487,10 +2481,17 @@ class DcnmVrf:
         msg += f"replace == {replace}"
         self.log.debug(msg)
 
-        diff_attach = []
-        diff_deploy = {}
+        if not self.want_attach:
+            self.diff_attach = []
+            self.diff_deploy = {}
+            msg = "Early return. No attachments to process."
+            self.log.debug(msg)
+            return
 
-        all_vrfs = set()
+        diff_attach: list = []
+        diff_deploy: dict = {}
+        all_vrfs: set = set()
+
         for want_a in self.want_attach:
             # Check user intent for this VRF and don't add it to the all_vrfs
             # set if the user has not requested a deploy.
@@ -2498,24 +2499,25 @@ class DcnmVrf:
             vrf_to_deploy: str = ""
             attach_found = False
             for have_a in self.have_attach:
-                if want_a["vrfName"] == have_a["vrfName"]:
-                    attach_found = True
-                    diff, deploy_vrf_bool = self.diff_for_attach_deploy(
-                        want_a=want_a["lanAttachList"],
-                        have_a=have_a["lanAttachList"],
-                        replace=replace,
-                    )
-                    if diff:
-                        base = want_a.copy()
-                        del base["lanAttachList"]
-                        base.update({"lanAttachList": diff})
+                if want_a["vrfName"] != have_a["vrfName"]:
+                    continue
+                attach_found = True
+                diff, deploy_vrf_bool = self.diff_for_attach_deploy(
+                    want_a=want_a["lanAttachList"],
+                    have_a=have_a["lanAttachList"],
+                    replace=replace,
+                )
+                if diff:
+                    base = want_a.copy()
+                    del base["lanAttachList"]
+                    base.update({"lanAttachList": diff})
 
-                        diff_attach.append(base)
-                        if (want_config["deploy"] is True) and (deploy_vrf_bool is True):
-                            vrf_to_deploy = want_a["vrfName"]
-                    else:
-                        if want_config["deploy"] is True and (deploy_vrf_bool or self.conf_changed.get(want_a["vrfName"], False)):
-                            vrf_to_deploy = want_a["vrfName"]
+                    diff_attach.append(base)
+                    if (want_config["deploy"] is True) and (deploy_vrf_bool is True):
+                        vrf_to_deploy = want_a["vrfName"]
+                else:
+                    if want_config["deploy"] is True and (deploy_vrf_bool or self.conf_changed.get(want_a["vrfName"], False)):
+                        vrf_to_deploy = want_a["vrfName"]
 
             msg = f"attach_found: {attach_found}"
             self.log.debug(msg)
