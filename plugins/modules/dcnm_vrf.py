@@ -814,6 +814,8 @@ class DcnmVrf:
             "PEER_VRF_NAME",
         ]
 
+        # Controller responses
+        self.response: dict = {}
         self.log.debug("DONE")
 
     @staticmethod
@@ -3443,6 +3445,8 @@ class DcnmVrf:
 
         Send a request to the controller.
 
+        Update self.response with the response from the controller.
+
         ## params
 
         args: instance of SendToControllerArgs containing the following
@@ -3477,6 +3481,8 @@ class DcnmVrf:
         else:
             response = dcnm_send(self.module, args.verb.value, args.path)
 
+        self.response = copy.deepcopy(response)
+
         msg = "RX controller: "
         msg += f"verb: {args.verb.value}, "
         msg += f"path: {args.path}, "
@@ -3491,7 +3497,7 @@ class DcnmVrf:
 
         if args.log_response is True:
             self.result["response"].append(response)
-
+        
         fail, self.result["changed"] = self.handle_response(response, args.action)
 
         msg = f"caller: {caller}, "
@@ -3850,8 +3856,18 @@ class DcnmVrf:
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
         path += f"resource-manager/fabric/{self.fabric}/"
         path += "pools/TOP_DOWN_VRF_VLAN"
-        resp = dcnm_send(self.module, "GET", path)
-        self.result["response"].append(resp)
+
+        args = SendToControllerArgs(
+            action="query",
+            path=path,
+            verb=RequestVerb.GET,
+            payload=None,
+            log_response=False,
+            is_rollback=False,
+        )
+        self.send_to_controller(args)
+        resp = copy.deepcopy(self.response)
+
         fail, self.result["changed"] = self.handle_response(resp, "deploy")
         if fail:
             if is_rollback:
@@ -3930,7 +3946,17 @@ class DcnmVrf:
             path: str = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
 
             while not ok_to_delete:
-                resp = dcnm_send(self.module, "GET", path)
+                args = SendToControllerArgs(
+                    action="query",
+                    path=path,
+                    verb=RequestVerb.GET,
+                    payload=None,
+                    log_response=False,
+                    is_rollback=False,
+                )
+                self.send_to_controller(args)
+
+                resp = copy.deepcopy(self.response)
                 ok_to_delete = True
                 if resp.get("DATA") is None:
                     time.sleep(self.wait_time_for_delete_loop)

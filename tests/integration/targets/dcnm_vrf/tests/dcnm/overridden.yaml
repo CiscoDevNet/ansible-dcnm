@@ -142,20 +142,23 @@
 - assert:
     that:
     - result_setup_3.changed == true
+    - result_setup_3.diff[0].attach[0].deploy == true
+    - result_setup_3.diff[0].attach[1].deploy == true
+    - result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"
     - result_setup_3.response[0].RETURN_CODE == 200
     - result_setup_3.response[1].RETURN_CODE == 200
     - result_setup_3.response[2].RETURN_CODE == 200
     - (result_setup_3.response[1].DATA|dict2items)[0].value == "SUCCESS"
     - (result_setup_3.response[1].DATA|dict2items)[1].value == "SUCCESS"
-    - result_setup_3.diff[0].attach[0].deploy == true
-    - result_setup_3.diff[0].attach[1].deploy == true
     - switch_1 in result_setup_3.diff[0].attach[0].ip_address
     - switch_2 in result_setup_3.diff[0].attach[1].ip_address
-    - result_setup_3.diff[0].vrf_name == "ansible-vrf-int1"
 
 ###############################################
 ###              OVERRIDDEN                  ##
 ###############################################
+- name: Set fact
+  ansible.builtin.set_fact:
+    DEPLOYMENT_OF_VRFS: "Deployment of VRF(s) has been initiated successfully"
 
 - name: Set task name
   ansible.builtin.set_fact:
@@ -206,24 +209,30 @@
 - assert:
     that:
     - result_1.changed == true
-    - result_1.response[0].RETURN_CODE == 200
-    - result_1.response[1].RETURN_CODE == 200
-    - result_1.response[2].RETURN_CODE == 200
-    - result_1.response[3].RETURN_CODE == 200
-    - result_1.response[4].RETURN_CODE == 200
-    - result_1.response[5].RETURN_CODE == 200
-    - result_1.response[6].RETURN_CODE == 200
-    - result_1.response[7].RETURN_CODE == 200
-    - (result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"
-    - (result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"
-    - (result_1.response[6].DATA|dict2items)[0].value == "SUCCESS"
-    - (result_1.response[6].DATA|dict2items)[1].value == "SUCCESS"
     - result_1.diff[0].attach[0].deploy == true
     - result_1.diff[0].attach[1].deploy == true
     - result_1.diff[0].vrf_name == "ansible-vrf-int2"
     - result_1.diff[1].attach[0].deploy == false
     - result_1.diff[1].attach[1].deploy == false
     - result_1.diff[1].vrf_name == "ansible-vrf-int1"
+    - result_1.response[0].METHOD == "POST"
+    - result_1.response[1].METHOD == "POST"
+    - result_1.response[2].METHOD == "DELETE"
+    - result_1.response[3].METHOD == "POST"
+    - result_1.response[4].METHOD == "POST"
+    - result_1.response[5].METHOD == "POST"
+    - result_1.response[0].RETURN_CODE == 200
+    - result_1.response[1].RETURN_CODE == 200
+    - result_1.response[2].RETURN_CODE == 200
+    - result_1.response[3].RETURN_CODE == 200
+    - result_1.response[4].RETURN_CODE == 200
+    - result_1.response[5].RETURN_CODE == 200
+    - (result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"
+    - (result_1.response[4].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[4].DATA|dict2items)[1].value == "SUCCESS"
+    - result_1.response[1].DATA.status == DEPLOYMENT_OF_VRFS
+    - result_1.response[5].DATA.status == DEPLOYMENT_OF_VRFS
 
 - name: Set task name
   ansible.builtin.set_fact:
@@ -330,16 +339,17 @@
 - assert:
     that:
     - result_2.changed == true
+    - result_2.diff[0].attach[0].deploy == true
+    - result_2.diff[0].attach[1].deploy == true
+    - result_2.diff[0].vrf_name == "ansible-vrf-int2"
     - result_2.response[0].RETURN_CODE == 200
     - result_2.response[1].RETURN_CODE == 200
     - result_2.response[2].RETURN_CODE == 200
+    - result_2.response[2].DATA.status == DEPLOYMENT_OF_VRFS
     - (result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"
     - (result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"
-    - result_2.diff[0].attach[0].deploy == true
-    - result_2.diff[0].attach[1].deploy == true
     - switch_1 in result_2.diff[0].attach[0].ip_address
     - switch_2 in result_2.diff[0].attach[1].ip_address
-    - result_2.diff[0].vrf_name == "ansible-vrf-int2"
 
 - name: Set task name
   ansible.builtin.set_fact:
@@ -433,11 +443,12 @@
 - assert:
     that:
     - result_3.changed == true
-    - result_3.response[0].RETURN_CODE == 200
-    - result_3.response[1].RETURN_CODE == 200
-    - (result_3.response[0].DATA|dict2items)[0].value == "SUCCESS"
     - result_3.diff[0].attach[0].deploy == true
     - result_3.diff[0].vrf_name == "ansible-vrf-int2"
+    - result_3.response[0].RETURN_CODE == 200
+    - result_3.response[1].RETURN_CODE == 200
+    - result_3.response[1].DATA.status == DEPLOYMENT_OF_VRFS
+    - (result_3.response[0].DATA|dict2items)[0].value == "SUCCESS"
 
 - name: Set task name
   ansible.builtin.set_fact:
@@ -525,25 +536,30 @@
 - assert:
     that:
     - result_4.changed == true
-    - result_4.response[0].RETURN_CODE == 200
-    - result_4.response[1].RETURN_CODE == 200
-    - result_4.response[2].RETURN_CODE == 200
-    - result_4.response[3].RETURN_CODE == 200
-    - result_4.response[4].RETURN_CODE == 200
-    - result_4.response[5].RETURN_CODE == 200
-    - result_4.response[6].RETURN_CODE == 200
-    - result_4.response[7].RETURN_CODE == 200
-    - (result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"
-    - (result_4.response[0].DATA|dict2items)[1].value == "SUCCESS"
-    - (result_4.response[6].DATA|dict2items)[0].value == "SUCCESS"
-    - (result_4.response[6].DATA|dict2items)[1].value == "SUCCESS"
-    - result_4.response[2].METHOD == "DELETE"
     - result_4.diff[0].attach[0].deploy == true
     - result_4.diff[0].attach[1].deploy == true
     - result_4.diff[0].vrf_name == "ansible-vrf-int1"
     - result_4.diff[1].attach[0].deploy == false
     - result_4.diff[1].attach[1].deploy == false
     - result_4.diff[1].vrf_name == "ansible-vrf-int2"
+    - result_4.response[0].METHOD == "POST"
+    - result_4.response[1].METHOD == "POST"
+    - result_4.response[2].METHOD == "DELETE"
+    - result_4.response[3].METHOD == "POST"
+    - result_4.response[4].METHOD == "POST"
+    - result_4.response[5].METHOD == "POST"
+    - result_4.response[0].RETURN_CODE == 200
+    - result_4.response[1].RETURN_CODE == 200
+    - result_4.response[2].RETURN_CODE == 200
+    - result_4.response[3].RETURN_CODE == 200
+    - result_4.response[4].RETURN_CODE == 200
+    - result_4.response[5].RETURN_CODE == 200
+    - result_4.response[1].DATA.status == DEPLOYMENT_OF_VRFS
+    - result_4.response[5].DATA.status == DEPLOYMENT_OF_VRFS
+    - (result_4.response[0].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_4.response[0].DATA|dict2items)[1].value == "SUCCESS"
+    - (result_4.response[4].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_4.response[4].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: Set task name
   ansible.builtin.set_fact:

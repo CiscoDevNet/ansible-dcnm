@@ -1002,8 +1002,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
-        self.assertEqual(result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS")
 
     def test_dcnm_vrf_lite_override_with_deletions_interface_with_extensions(self):
         playbook = self.test_data.get("playbook_vrf_lite_override_with_deletions_interface_with_extensions")
