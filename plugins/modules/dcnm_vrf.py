@@ -3497,7 +3497,7 @@ class DcnmVrf:
 
         if args.log_response is True:
             self.result["response"].append(response)
-        
+
         fail, self.result["changed"] = self.handle_response(response, args.action)
 
         msg = f"caller: {caller}, "
