@@ -2159,42 +2159,45 @@ class DcnmVrf:
             replace_vrf_list = []
             have_in_want = False
             for want_a in self.want_attach:
-                if have_a.get("vrfName") == want_a.get("vrfName"):
-                    have_in_want = True
+                # arobel: TODO: verify changed logic with integration tests
+                if have_a.get("vrfName") != want_a.get("vrfName"):
+                    continue
+                have_in_want = True
 
+                try:
+                    have_lan_attach_list: list = have_a["lanAttachList"]
+                except KeyError:
+                    msg = f"{self.class_name}.{inspect.stack()[0][3]}: "
+                    msg += "lanAttachList key missing from in have_a"
+                    self.module.fail_json(msg=msg)
+
+                have_lan_attach: dict
+                for have_lan_attach in have_lan_attach_list:
+                    if "isAttached" in have_lan_attach:
+                        if not have_lan_attach.get("isAttached"):
+                            continue
+
+                    attach_match = False
                     try:
-                        have_lan_attach_list: list = have_a["lanAttachList"]
+                        want_lan_attach_list = want_a["lanAttachList"]
                     except KeyError:
                         msg = f"{self.class_name}.{inspect.stack()[0][3]}: "
-                        msg += "lanAttachList key missing from in have_a"
+                        msg += "lanAttachList key missing from in want_a"
                         self.module.fail_json(msg=msg)
 
-                    have_lan_attach: dict
-                    for have_lan_attach in have_lan_attach_list:
+                    want_lan_attach: dict
+                    for want_lan_attach in want_lan_attach_list:
+                        if have_lan_attach.get("serialNumber") != want_lan_attach.get("serialNumber"):
+                            continue
+                        # Have is already in diff, no need to continue looking for it.
+                        attach_match = True
+                        break
+                    if not attach_match:
                         if "isAttached" in have_lan_attach:
-                            if not have_lan_attach.get("isAttached"):
-                                continue
-
-                        attach_match = False
-                        try:
-                            want_lan_attach_list = want_a["lanAttachList"]
-                        except KeyError:
-                            msg = f"{self.class_name}.{inspect.stack()[0][3]}: "
-                            msg += "lanAttachList key missing from in want_a"
-                            self.module.fail_json(msg=msg)
-
-                        want_lan_attach: dict
-                        for want_lan_attach in want_lan_attach_list:
-                            if have_lan_attach.get("serialNumber") == want_lan_attach.get("serialNumber"):
-                                # Have is already in diff, no need to continue looking for it.
-                                attach_match = True
-                                break
-                        if not attach_match:
-                            if "isAttached" in have_lan_attach:
-                                del have_lan_attach["isAttached"]
-                            have_lan_attach.update({"deployment": False})
-                            replace_vrf_list.append(have_lan_attach)
-                    break
+                            del have_lan_attach["isAttached"]
+                        have_lan_attach.update({"deployment": False})
+                        replace_vrf_list.append(have_lan_attach)
+                break
 
             if not have_in_want:
                 found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a["vrfName"])
@@ -2202,20 +2205,22 @@ class DcnmVrf:
                 if found:
                     atch_h = have_a["lanAttachList"]
                     for a_h in atch_h:
-                        if "isAttached" in a_h:
-                            if not a_h["isAttached"]:
-                                continue
-                            del a_h["isAttached"]
-                            a_h.update({"deployment": False})
-                            replace_vrf_list.append(a_h)
+                        if "isAttached" not in a_h:
+                            continue
+                        if not a_h["isAttached"]:
+                            continue
+                        del a_h["isAttached"]
+                        a_h.update({"deployment": False})
+                        replace_vrf_list.append(a_h)
 
             if replace_vrf_list:
                 in_diff = False
                 for d_attach in self.diff_attach:
-                    if have_a["vrfName"] == d_attach["vrfName"]:
-                        in_diff = True
-                        d_attach["lanAttachList"].extend(replace_vrf_list)
-                        break
+                    if have_a["vrfName"] != d_attach["vrfName"]:
+                        continue
+                    in_diff = True
+                    d_attach["lanAttachList"].extend(replace_vrf_list)
+                    break
 
                 if not in_diff:
                     r_vrf_dict = {
@@ -2346,104 +2351,103 @@ class DcnmVrf:
             vrf_found: bool = False
             have_c: dict = {}
             for have_c in self.have_create:
-                if want_c["vrfName"] == have_c["vrfName"]:
-                    vrf_found = True
-                    msg = "Calling diff_for_create with: "
-                    msg += f"want_c: {json.dumps(want_c, indent=4, sort_keys=True)}, "
-                    msg += f"have_c: {json.dumps(have_c, indent=4, sort_keys=True)}"
+                # arobel: TODO: verify changed logic with integration tests
+                if want_c["vrfName"] != have_c["vrfName"]:
+                    continue
+                vrf_found = True
+                msg = "Calling diff_for_create with: "
+                msg += f"want_c: {json.dumps(want_c, indent=4, sort_keys=True)}, "
+                msg += f"have_c: {json.dumps(have_c, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                diff, changed = self.diff_for_create(want_c, have_c)
+
+                msg = "diff_for_create() returned with: "
+                msg += f"changed {changed}, "
+                msg += f"diff {json.dumps(diff, indent=4, sort_keys=True)}, "
+                self.log.debug(msg)
+
+                msg = f"Updating self.conf_changed[{want_c['vrfName']}] "
+                msg += f"with {changed}"
+                self.log.debug(msg)
+                self.conf_changed.update({want_c["vrfName"]: changed})
+
+                if diff:
+                    msg = "Appending diff_create_update with "
+                    msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
                     self.log.debug(msg)
+                    diff_create_update.append(diff)
+                break
 
-                    diff, changed = self.diff_for_create(want_c, have_c)
+            if vrf_found:
+                continue
+            # arobel: TODO: verify changed logic with integration tests
+            vrf_id = want_c.get("vrfId", None)
+            if vrf_id is not None:
+                diff_create.append(want_c)
+            else:
+                # vrfId is not provided by user.
+                # Fetch the next available vrfId and use it here.
+                vrf_id = self.get_next_vrf_id(self.fabric)
 
-                    msg = "diff_for_create() returned with: "
-                    msg += f"changed {changed}, "
-                    msg += f"diff {json.dumps(diff, indent=4, sort_keys=True)}, "
-                    self.log.debug(msg)
+                want_c.update({"vrfId": vrf_id})
+                json_to_dict = json.loads(want_c["vrfTemplateConfig"])
+                template_conf = {
+                    "vrfSegmentId": vrf_id,
+                    "vrfName": want_c["vrfName"],
+                    "vrfVlanId": json_to_dict.get("vrfVlanId"),
+                    "vrfVlanName": json_to_dict.get("vrfVlanName"),
+                    "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
+                    "vrfDescription": json_to_dict.get("vrfDescription"),
+                    "mtu": json_to_dict.get("mtu"),
+                    "tag": json_to_dict.get("tag"),
+                    "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                    "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
+                    "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
+                    "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                    "trmEnabled": json_to_dict.get("trmEnabled"),
+                    "isRPExternal": json_to_dict.get("isRPExternal"),
+                    "rpAddress": json_to_dict.get("rpAddress"),
+                    "loopbackNumber": json_to_dict.get("loopbackNumber"),
+                    "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
+                    "multicastGroup": json_to_dict.get("multicastGroup"),
+                    "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
+                    "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
+                    "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
+                    "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
+                    "bgpPassword": json_to_dict.get("bgpPassword"),
+                    "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
+                }
 
-                    msg = f"Updating self.conf_changed[{want_c['vrfName']}] "
-                    msg += f"with {changed}"
-                    self.log.debug(msg)
-                    self.conf_changed.update({want_c["vrfName"]: changed})
+                if self.dcnm_version > 11:
+                    template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
+                    template_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
+                    template_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
+                    template_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
+                    template_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
+                    template_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
+                    template_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
+                    template_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
+                    template_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
+                    template_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
 
-                    if diff:
-                        msg = "Appending diff_create_update with "
-                        msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
-                        self.log.debug(msg)
-                        diff_create_update.append(diff)
-                    break
+                want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
-            if not vrf_found:
-                # arobel: TODO: we should change the logic here
-                # if vrf_found:
-                #     continue
-                # Then unindent the below.
-                # Wait for a separate PR...
-                vrf_id = want_c.get("vrfId", None)
-                if vrf_id is not None:
-                    diff_create.append(want_c)
-                else:
-                    # vrfId is not provided by user.
-                    # Fetch the next available vrfId and use it here.
-                    vrf_id = self.get_next_vrf_id(self.fabric)
+                create_path = self.paths["GET_VRF"].format(self.fabric)
 
-                    want_c.update({"vrfId": vrf_id})
-                    json_to_dict = json.loads(want_c["vrfTemplateConfig"])
-                    template_conf = {
-                        "vrfSegmentId": vrf_id,
-                        "vrfName": want_c["vrfName"],
-                        "vrfVlanId": json_to_dict.get("vrfVlanId"),
-                        "vrfVlanName": json_to_dict.get("vrfVlanName"),
-                        "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
-                        "vrfDescription": json_to_dict.get("vrfDescription"),
-                        "mtu": json_to_dict.get("mtu"),
-                        "tag": json_to_dict.get("tag"),
-                        "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
-                        "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
-                        "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
-                        "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
-                        "trmEnabled": json_to_dict.get("trmEnabled"),
-                        "isRPExternal": json_to_dict.get("isRPExternal"),
-                        "rpAddress": json_to_dict.get("rpAddress"),
-                        "loopbackNumber": json_to_dict.get("loopbackNumber"),
-                        "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
-                        "multicastGroup": json_to_dict.get("multicastGroup"),
-                        "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
-                        "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
-                        "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
-                        "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
-                        "bgpPassword": json_to_dict.get("bgpPassword"),
-                        "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
-                    }
+                diff_create_quick.append(want_c)
 
-                    if self.dcnm_version > 11:
-                        template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
-                        template_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
-                        template_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
-                        template_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
-                        template_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
-                        template_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
-                        template_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
-                        template_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
-                        template_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
-                        template_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
+                if self.module.check_mode:
+                    continue
 
-                    want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
+                # arobel: TODO: Not covered by UT
+                resp = dcnm_send(self.module, "POST", create_path, json.dumps(want_c))
+                self.result["response"].append(resp)
 
-                    create_path = self.paths["GET_VRF"].format(self.fabric)
+                fail, self.result["changed"] = self.handle_response(resp, "create")
 
-                    diff_create_quick.append(want_c)
-
-                    if self.module.check_mode:
-                        continue
-
-                    # arobel: TODO: Not covered by UT
-                    resp = dcnm_send(self.module, "POST", create_path, json.dumps(want_c))
-                    self.result["response"].append(resp)
-
-                    fail, self.result["changed"] = self.handle_response(resp, "create")
-
-                    if fail:
-                        self.failure(resp)
+                if fail:
+                    self.failure(resp)
 
         self.diff_create = copy.deepcopy(diff_create)
         self.diff_create_update = copy.deepcopy(diff_create_update)
@@ -2725,9 +2729,10 @@ class DcnmVrf:
                 attach_d = {}
 
                 for key, value in self.ip_sn.items():
-                    if value == a_w["serialNumber"]:
-                        attach_d.update({"ip_address": key})
-                        break
+                    if value != a_w["serialNumber"]:
+                        continue
+                    attach_d.update({"ip_address": key})
+                    break
                 attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"deploy": a_w["deployment"]})
                 found_c["attach"].append(attach_d)
@@ -2817,50 +2822,53 @@ class DcnmVrf:
                 # Query the VRF
                 for vrf in vrf_objects["DATA"]:
 
-                    if want_c["vrfName"] == vrf["vrfName"]:
+                    # arobel: TODO: verify changed logic with integration tests
+                    if want_c["vrfName"] != vrf["vrfName"]:
+                        continue
 
-                        item: dict = {"parent": {}, "attach": []}
-                        item["parent"] = vrf
+                    item: dict = {"parent": {}, "attach": []}
+                    item["parent"] = vrf
 
-                        # Query the Attachment for the found VRF
-                        path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+                    # Query the Attachment for the found VRF
+                    path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
-                        get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+                    get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
 
-                        missing_fabric, not_ok = self.handle_response(get_vrf_attach_response, "query_dcnm")
+                    missing_fabric, not_ok = self.handle_response(get_vrf_attach_response, "query_dcnm")
 
-                        if missing_fabric or not_ok:
-                            # arobel: TODO: Not covered by UT
-                            msg0 = f"{self.class_name}.{method_name}:"
-                            msg0 += f"caller: {caller}. "
-                            msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
-                            msg2 = f"{msg0} Unable to find attachments for "
-                            msg2 += f"vrfs: {vrf['vrfName']} under "
-                            msg2 += f"fabric: {self.fabric}"
-                            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+                    if missing_fabric or not_ok:
+                        # arobel: TODO: Not covered by UT
+                        msg0 = f"{self.class_name}.{method_name}:"
+                        msg0 += f"caller: {caller}. "
+                        msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+                        msg2 = f"{msg0} Unable to find attachments for "
+                        msg2 += f"vrfs: {vrf['vrfName']} under "
+                        msg2 += f"fabric: {self.fabric}"
+                        self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-                        if not get_vrf_attach_response.get("DATA", []):
-                            return
+                    if not get_vrf_attach_response.get("DATA", []):
+                        return
 
-                        for vrf_attach in get_vrf_attach_response["DATA"]:
-                            if want_c["vrfName"] == vrf_attach["vrfName"]:
-                                if not vrf_attach.get("lanAttachList"):
-                                    continue
-                                attach_list = vrf_attach["lanAttachList"]
+                    for vrf_attach in get_vrf_attach_response["DATA"]:
+                        if want_c["vrfName"] != vrf_attach["vrfName"]:
+                            continue
+                        if not vrf_attach.get("lanAttachList"):
+                            continue
+                        attach_list = vrf_attach["lanAttachList"]
 
-                                for attach in attach_list:
-                                    # copy attach and update it with the keys that
-                                    # get_vrf_lite_objects() expects.
-                                    attach_copy = copy.deepcopy(attach)
-                                    attach_copy.update({"fabric": self.fabric})
-                                    attach_copy.update({"serialNumber": attach["switchSerialNo"]})
-                                    lite_objects = self.get_vrf_lite_objects(attach_copy)
-                                    if not lite_objects.get("DATA"):
-                                        return
-                                    data = lite_objects.get("DATA")
-                                    if data is not None:
-                                        item["attach"].append(data[0])
-                                query.append(item)
+                        for attach in attach_list:
+                            # copy attach and update it with the keys that
+                            # get_vrf_lite_objects() expects.
+                            attach_copy = copy.deepcopy(attach)
+                            attach_copy.update({"fabric": self.fabric})
+                            attach_copy.update({"serialNumber": attach["switchSerialNo"]})
+                            lite_objects = self.get_vrf_lite_objects(attach_copy)
+                            if not lite_objects.get("DATA"):
+                                return
+                            data = lite_objects.get("DATA")
+                            if data is not None:
+                                item["attach"].append(data[0])
+                        query.append(item)
 
         else:
             query = []
@@ -3294,15 +3302,17 @@ class DcnmVrf:
                 msg = f"item_interface: {item_interface}, "
                 msg += f"ext_value_interface: {ext_value_interface}"
                 self.log.debug(msg)
-                if item_interface == ext_value_interface:
-                    msg = "Found item: "
-                    msg += f"item[interface] {item_interface}, == "
-                    msg += f"ext_values[IF_NAME] {ext_value_interface}, "
-                    msg += f"{json.dumps(item)}"
-                    self.log.debug(msg)
-                    matches[item_interface] = {}
-                    matches[item_interface]["user"] = item
-                    matches[item_interface]["switch"] = ext_value
+                # arobel: TODO: verify changed logic with integration tests
+                if item_interface != ext_value_interface:
+                    continue
+                msg = "Found item: "
+                msg += f"item[interface] {item_interface}, == "
+                msg += f"ext_values[IF_NAME] {ext_value_interface}, "
+                msg += f"{json.dumps(item)}"
+                self.log.debug(msg)
+                matches[item_interface] = {}
+                matches[item_interface]["user"] = item
+                matches[item_interface]["switch"] = ext_value
         if not matches:
             # No matches. fail_json here to avoid the following 500 error
             # "Provided interface doesn't have extensions"
