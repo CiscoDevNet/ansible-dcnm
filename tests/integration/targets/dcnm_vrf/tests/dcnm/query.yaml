@@ -134,7 +134,7 @@
 
 - assert:
     that:
-    - result_1.changed == false'
+    - result_1.changed == false
     - result_1.response[0].attach[0].switchDetailsList[0].islanAttached == true
     - result_1.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"
     - result_1.response[0].attach[0].switchDetailsList[0].vlan == 500
