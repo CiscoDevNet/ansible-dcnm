@@ -8,7 +8,7 @@ created through other means (NDFC GUI, separate Ansible scripts, etc)
 ## ISN
 
 - Fabric type is `Multi-Site External Network`
-- The fabric not referenced in the test, but needs to exist
+- The fabric is not referenced in the test, but needs to exist
 
 ### switch_4
 
