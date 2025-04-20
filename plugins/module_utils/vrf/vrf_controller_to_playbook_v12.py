@@ -14,7 +14,7 @@ class VrfControllerToPlaybookV12Model(BaseModel):
     """
     # Summary
 
-    Serialize NDFC version 12 controller payload fields to fie;ds used in a dcnm_vrf playbook.
+    Serialize NDFC version 12 controller payload fields to fields used in a dcnm_vrf playbook.
     """
 
     model_config = ConfigDict(
