@@ -987,160 +987,147 @@ class DcnmVrf:
             if not have_a:
                 continue
             for have in have_a:
-                if want.get("serialNumber") == have.get("serialNumber"):
-                    # handle instanceValues first
-                    want.update({"freeformConfig": have.get("freeformConfig", "")})  # copy freeformConfig from have as module is not managing it
-                    want_inst_values: dict = {}
-                    have_inst_values: dict = {}
-                    if want.get("instanceValues") is not None and have.get("instanceValues") is not None:
-                        want_inst_values = ast.literal_eval(want["instanceValues"])
-                        have_inst_values = ast.literal_eval(have["instanceValues"])
+                if want.get("serialNumber") != have.get("serialNumber"):
+                    continue
+                # handle instanceValues first
+                want.update({"freeformConfig": have.get("freeformConfig", "")})  # copy freeformConfig from have as module is not managing it
+                want_inst_values: dict = {}
+                have_inst_values: dict = {}
+                if want.get("instanceValues") is not None and have.get("instanceValues") is not None:
+                    want_inst_values = ast.literal_eval(want["instanceValues"])
+                    have_inst_values = ast.literal_eval(have["instanceValues"])
 
-                        # update unsupported parameters using have
-                        # Only need ipv4 or ipv6. Don't require both, but both can be supplied (as per the GUI)
-                        if "loopbackId" in have_inst_values:
-                            want_inst_values.update({"loopbackId": have_inst_values["loopbackId"]})
-                        if "loopbackIpAddress" in have_inst_values:
-                            want_inst_values.update({"loopbackIpAddress": have_inst_values["loopbackIpAddress"]})
-                        if "loopbackIpV6Address" in have_inst_values:
-                            want_inst_values.update({"loopbackIpV6Address": have_inst_values["loopbackIpV6Address"]})
+                    # update unsupported parameters using have
+                    # Only need ipv4 or ipv6. Don't require both, but both can be supplied (as per the GUI)
+                    if "loopbackId" in have_inst_values:
+                        want_inst_values.update({"loopbackId": have_inst_values["loopbackId"]})
+                    if "loopbackIpAddress" in have_inst_values:
+                        want_inst_values.update({"loopbackIpAddress": have_inst_values["loopbackIpAddress"]})
+                    if "loopbackIpV6Address" in have_inst_values:
+                        want_inst_values.update({"loopbackIpV6Address": have_inst_values["loopbackIpV6Address"]})
 
-                        want.update({"instanceValues": json.dumps(want_inst_values)})
-                    if want.get("extensionValues", "") != "" and have.get("extensionValues", "") != "":
+                    want.update({"instanceValues": json.dumps(want_inst_values)})
+                if want.get("extensionValues", "") != "" and have.get("extensionValues", "") != "":
 
-                        want_ext_values = want["extensionValues"]
-                        have_ext_values = have["extensionValues"]
+                    want_ext_values = want["extensionValues"]
+                    have_ext_values = have["extensionValues"]
 
-                        want_ext_values_dict: dict = ast.literal_eval(want_ext_values)
-                        have_ext_values_dict: dict = ast.literal_eval(have_ext_values)
+                    want_ext_values_dict: dict = ast.literal_eval(want_ext_values)
+                    have_ext_values_dict: dict = ast.literal_eval(have_ext_values)
 
-                        want_e: dict = ast.literal_eval(want_ext_values_dict["VRF_LITE_CONN"])
-                        have_e: dict = ast.literal_eval(have_ext_values_dict["VRF_LITE_CONN"])
+                    want_e: dict = ast.literal_eval(want_ext_values_dict["VRF_LITE_CONN"])
+                    have_e: dict = ast.literal_eval(have_ext_values_dict["VRF_LITE_CONN"])
 
-                        if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
-                            # In case of replace/override if the length of want and have lite attach of a switch
-                            # is not same then we have to push the want to NDFC. No further check is required for
-                            # this switch
-                            break
+                    if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
+                        # In case of replace/override if the length of want and have lite attach of a switch
+                        # is not same then we have to push the want to NDFC. No further check is required for
+                        # this switch
+                        break
 
-                        wlite: dict
-                        hlite: dict
-                        for wlite in want_e["VRF_LITE_CONN"]:
-                            for hlite in have_e["VRF_LITE_CONN"]:
+                    wlite: dict
+                    hlite: dict
+                    for wlite in want_e["VRF_LITE_CONN"]:
+                        for hlite in have_e["VRF_LITE_CONN"]:
+                            found = False
+                            interface_match = False
+                            if wlite["IF_NAME"] != hlite["IF_NAME"]:
+                                continue
+                            found = True
+                            interface_match = True
+                            if not self.compare_properties(wlite, hlite, self.vrf_lite_properties):
                                 found = False
-                                interface_match = False
-                                if wlite["IF_NAME"] != hlite["IF_NAME"]:
-                                    continue
-                                found = True
-                                interface_match = True
-                                if not self.compare_properties(wlite, hlite, self.vrf_lite_properties):
-                                    found = False
-                                    break
+                                break
 
-                                if found:
-                                    break
-
-                                if interface_match and not found:
-                                    break
+                            if found:
+                                break
 
                             if interface_match and not found:
                                 break
 
-                    elif want["extensionValues"] != "" and have["extensionValues"] == "":
+                        if interface_match and not found:
+                            break
+
+                elif want["extensionValues"] != "" and have["extensionValues"] == "":
+                    found = False
+                elif want["extensionValues"] == "" and have["extensionValues"] != "":
+                    if replace:
                         found = False
-                    elif want["extensionValues"] == "" and have["extensionValues"] != "":
-                        if replace:
-                            found = False
-                        else:
-                            found = True
                     else:
                         found = True
-                        msg = "want_is_deploy: "
-                        msg += f"{str(want.get('want_is_deploy'))}, "
-                        msg += "have_is_deploy: "
-                        msg += f"{str(want.get('have_is_deploy'))}"
-                        self.log.debug(msg)
+                else:
+                    found = True
 
-                        want_is_deploy = self.to_bool("is_deploy", want)
-                        have_is_deploy = self.to_bool("is_deploy", have)
+                    want_is_deploy = self.to_bool("is_deploy", want)
+                    have_is_deploy = self.to_bool("is_deploy", have)
 
-                        msg = "want_is_deploy: "
-                        msg += f"type {type(want_is_deploy)}, "
-                        msg += f"value {want_is_deploy}"
-                        self.log.debug(msg)
+                    msg = "want_is_deploy: "
+                    msg += f"type {type(want_is_deploy)}, "
+                    msg += f"value {want_is_deploy}"
+                    self.log.debug(msg)
 
-                        msg = "have_is_deploy: "
-                        msg += f"type {type(have_is_deploy)}, "
-                        msg += f"value {have_is_deploy}"
-                        self.log.debug(msg)
+                    msg = "have_is_deploy: "
+                    msg += f"type {type(have_is_deploy)}, "
+                    msg += f"value {have_is_deploy}"
+                    self.log.debug(msg)
 
-                        msg = "want_is_attached: "
-                        msg += f"{str(want.get('want_is_attached'))}, "
-                        msg += "want_is_attached: "
-                        msg += f"{str(want.get('want_is_attached'))}"
-                        self.log.debug(msg)
+                    want_is_attached = self.to_bool("isAttached", want)
+                    have_is_attached = self.to_bool("isAttached", have)
 
-                        want_is_attached = self.to_bool("isAttached", want)
-                        have_is_attached = self.to_bool("isAttached", have)
+                    msg = "want_is_attached: "
+                    msg += f"type {type(want_is_attached)}, "
+                    msg += f"value {want_is_attached}"
+                    self.log.debug(msg)
 
-                        msg = "want_is_attached: "
-                        msg += f"type {type(want_is_attached)}, "
-                        msg += f"value {want_is_attached}"
-                        self.log.debug(msg)
+                    msg = "have_is_attached: "
+                    msg += f"type {type(have_is_attached)}, "
+                    msg += f"value {have_is_attached}"
+                    self.log.debug(msg)
 
-                        msg = "have_is_attached: "
-                        msg += f"type {type(have_is_attached)}, "
-                        msg += f"value {have_is_attached}"
-                        self.log.debug(msg)
+                    if have_is_attached != want_is_attached:
 
-                        if have_is_attached != want_is_attached:
+                        if "isAttached" in want:
+                            del want["isAttached"]
 
+                        want["deployment"] = True
+                        attach_list.append(want)
+                        if want_is_deploy is True:
                             if "isAttached" in want:
                                 del want["isAttached"]
+                            deploy_vrf = True
+                        continue
 
-                            want["deployment"] = True
-                            attach_list.append(want)
-                            if want_is_deploy is True:
-                                if "isAttached" in want:
-                                    del want["isAttached"]
-                                deploy_vrf = True
-                            continue
+                    msg = "want_deployment: "
+                    msg += f"{str(want.get('want_deployment'))}, "
+                    msg += "have_deployment: "
+                    msg += f"{str(want.get('have_deployment'))}"
+                    self.log.debug(msg)
 
-                        msg = "want_deployment: "
-                        msg += f"{str(want.get('want_deployment'))}, "
-                        msg += "have_deployment: "
-                        msg += f"{str(want.get('have_deployment'))}"
-                        self.log.debug(msg)
+                    want_deployment = self.to_bool("deployment", want)
+                    have_deployment = self.to_bool("deployment", have)
 
-                        want_deployment = self.to_bool("deployment", want)
-                        have_deployment = self.to_bool("deployment", have)
+                    msg = "want_deployment: "
+                    msg += f"type {type(want_deployment)}, "
+                    msg += f"value {want_deployment}"
+                    self.log.debug(msg)
 
-                        msg = "want_deployment: "
-                        msg += f"type {type(want_deployment)}, "
-                        msg += f"value {want_deployment}"
-                        self.log.debug(msg)
+                    msg = "have_deployment: "
+                    msg += f"type {type(have_deployment)}, "
+                    msg += f"value {have_deployment}"
+                    self.log.debug(msg)
 
-                        msg = "have_deployment: "
-                        msg += f"type {type(have_deployment)}, "
-                        msg += f"value {have_deployment}"
-                        self.log.debug(msg)
+                    if (want_deployment != have_deployment) or (want_is_deploy != have_is_deploy):
+                        if want_is_deploy is True:
+                            deploy_vrf = True
 
-                        if (want_deployment != have_deployment) or (want_is_deploy != have_is_deploy):
-                            if want_is_deploy is True:
-                                deploy_vrf = True
+                try:
+                    if self.dict_values_differ(dict1=want_inst_values, dict2=have_inst_values):
+                        found = False
+                except ValueError as error:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}: {error}"
+                    self.module.fail_json(msg=msg)
 
-                    try:
-                        if self.dict_values_differ(dict1=want_inst_values, dict2=have_inst_values):
-                            found = False
-                    except ValueError as error:
-                        msg = f"{self.class_name}.{method_name}: "
-                        msg += f"caller: {caller}: {error}"
-                        self.module.fail_json(msg=msg)
-
-                    if found:
-                        break
-
-                if interface_match and not found:
+                if found:
                     break
 
             if not found:
