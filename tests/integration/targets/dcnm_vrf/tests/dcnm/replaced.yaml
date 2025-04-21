@@ -141,12 +141,8 @@
     that:
     - result_1.changed == true
     - result_1.diff[0].vrf_name == "ansible-vrf-int1"
-    # - result_1.diff[0].attach[0].deploy == false
-    # - result_1.diff[0].attach[1].deploy == false
     - result_1.response[0].RETURN_CODE == 200
     - result_1.response[1].RETURN_CODE == 200
-    # - (result_1.response[0].DATA|dict2items)[0].value == "SUCCESS"
-    # - (result_1.response[0].DATA|dict2items)[1].value == "SUCCESS"
 
 - name: TEST.1b - Extract the attach list
   set_fact:
