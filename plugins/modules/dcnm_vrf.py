@@ -2235,13 +2235,10 @@ class DcnmVrf:
             self.diff_deploy = copy.deepcopy(diff_deploy)
             return
 
-        if not self.diff_deploy:
-            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
-        else:
-            vrf: str
-            for vrf in self.diff_deploy["vrfNames"].split(","):
-                all_vrfs.add(vrf)
-            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+        vrf: str
+        for vrf in self.diff_deploy.get("vrfNames", "").split(","):
+            all_vrfs.add(vrf)
+        diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_attach = copy.deepcopy(diff_attach)
         self.diff_deploy = copy.deepcopy(diff_deploy)
