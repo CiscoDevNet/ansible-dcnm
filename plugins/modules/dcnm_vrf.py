@@ -2091,12 +2091,13 @@ class DcnmVrf:
 
             detach_list = []
             if not found:
-                for item in have_a["lanAttachList"]:
-                    if "isAttached" in item:
-                        if item["isAttached"]:
-                            del item["isAttached"]
-                            item.update({"deployment": False})
-                            detach_list.append(item)
+                for item in have_a.get("lanAttachList"):
+                    if "isAttached" not in item:
+                        continue
+                    if item["isAttached"]:
+                        del item["isAttached"]
+                        item.update({"deployment": False})
+                        detach_list.append(item)
 
                 if detach_list:
                     have_a.update({"lanAttachList": detach_list})
