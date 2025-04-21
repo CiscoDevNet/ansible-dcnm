@@ -19,7 +19,45 @@ from ..common.models.ipv6_host import IPv6HostModel
 
 class VrfLiteModel(BaseModel):
     """
-    Model for VRF Lite configuration."
+    # Summary
+
+    Model for VRF Lite configuration.
+
+    ## Raises
+
+    - ValueError if:
+      - dot1q is not within the range 0-4094
+      - ipv4_addr is not valid
+      - ipv6_addr is not valid
+      - interface is not provided
+      - neighbor_ipv4 is not valid
+      - neighbor_ipv6 is not valid
+
+    ## Attributes:
+
+    - dot1q (int): VLAN ID for the interface.
+    - interface (str): Interface name.
+    - ipv4_addr (str): IPv4 address in CIDR format.
+    - ipv6_addr (str): IPv6 address in CIDR format.
+    - neighbor_ipv4 (str): IPv4 address without prefix.
+    - neighbor_ipv6 (str): IPv6 address without prefix.
+    - peer_vrf (str): Peer VRF name.
+
+    ## Example usage:
+
+    ```python
+    from pydantic import ValidationError
+    from vrf_lite_module import VrfLiteModel
+    try:
+        vrf_lite = VrfLiteModel(
+            dot1q=100,
+            interface="Ethernet1/1",
+            ipv4_addr="10.1.1.1/24"
+        )
+    except ValidationError as e:
+        print(e)
+    ```
+
     """
 
     dot1q: int = Field(default=0, ge=0, le=4094)
@@ -36,7 +74,12 @@ class VrfLiteModel(BaseModel):
         Validate neighbor_ipv4 is an IPv4 host address without prefix.
         """
         if self.neighbor_ipv4 != "":
-            IPv4HostModel(ipv4_host=self.neighbor_ipv4)
+            try:
+                IPv4HostModel(ipv4_host=str(self.neighbor_ipv4))
+            except ValueError as err:
+                msg = f"Invalid IPv4 host address: {self.neighbor_ipv4}. "
+                msg += f"detail: {err}"
+                raise ValueError(msg) from err
         return self
 
     @model_validator(mode="after")
@@ -45,7 +88,12 @@ class VrfLiteModel(BaseModel):
         Validate neighbor_ipv6 is an IPv6 host address without prefix.
         """
         if self.neighbor_ipv6 != "":
-            IPv6HostModel(ipv6_host=self.neighbor_ipv6)
+            try:
+                IPv6HostModel(ipv6_host=str(self.neighbor_ipv6))
+            except ValueError as err:
+                msg = f"Invalid IPv6 host address: {self.neighbor_ipv6}. "
+                msg += f"detail: {err}"
+                raise ValueError(msg) from err
         return self
 
     @model_validator(mode="after")
@@ -55,7 +103,7 @@ class VrfLiteModel(BaseModel):
         """
         if self.ipv4_addr != "":
             try:
-                IPv4CidrHostModel(ipv4_cidr_host=self.ipv4_addr)
+                IPv4CidrHostModel(ipv4_cidr_host=str(self.ipv4_addr))
             except ValueError as err:
                 msg = f"Invalid CIDR-format IPv4 host address: {self.ipv4_addr}. "
                 msg += f"detail: {err}"
@@ -69,7 +117,7 @@ class VrfLiteModel(BaseModel):
         """
         if self.ipv6_addr != "":
             try:
-                IPv6CidrHostModel(ipv6_cidr_host=self.ipv6_addr)
+                IPv6CidrHostModel(ipv6_cidr_host=str(self.ipv6_addr))
             except ValueError as err:
                 msg = f"Invalid CIDR-format IPv6 host address: {self.ipv6_addr}. "
                 msg += f"detail: {err}"
@@ -79,7 +127,51 @@ class VrfLiteModel(BaseModel):
 
 class VrfAttachModel(BaseModel):
     """
+    # Summary
+
     Model for VRF attachment configuration.
+
+    ## Raises
+
+    - ValueError if:
+        - deploy is not a boolean
+        - export_evpn_rt is not a string
+        - import_evpn_rt is not a string
+        - ip_address is not a valid IPv4 host address
+        - ip_address is not provided
+        - vrf_lite (if provided) is not a list of VrfLiteModel instances
+
+    ## Attributes:
+
+    - deploy (bool): Flag to indicate if the VRF should be deployed.
+    - export_evpn_rt (str): Route target for EVPN export.
+    - import_evpn_rt (str): Route target for EVPN import.
+    - ip_address (str): IP address of the interface.
+    - vrf_lite (list[VrfLiteModel]): List of VRF Lite configurations.
+    - vrf_lite (None): If not provided, defaults to None.
+
+    ## Example usage:
+
+    ```python
+    from pydantic import ValidationError
+    from vrf_attach_module import VrfAttachModel
+    try:
+        vrf_attach = VrfAttachModel(
+            deploy=True,
+            export_evpn_rt="target:1:1",
+            import_evpn_rt="target:1:2",
+            ip_address="10.1.1.1",
+            vrf_lite=[
+                VrfLiteModel(
+                    dot1q=100,
+                    interface="Ethernet1/1",
+                    ipv4_addr="10.1.1.1/24"
+                )
+            ]
+        )
+    except ValidationError as e:
+        print(e)
+    ```
     """
 
     deploy: bool = Field(default=True)
@@ -110,7 +202,57 @@ class VrfAttachModel(BaseModel):
 
 class VrfPlaybookModel(BaseModel):
     """
+    # Summary
+
+
     Model to validate a playbook VRF configuration.
+
+    All fields can take an alias, which is the name of the field in the
+    original payload. The alias is used to map the field to the
+    corresponding field in the playbook.
+
+    ## Raises
+
+    - ValueError if:
+        - adv_default_routes is not a boolean
+        - adv_host_routes is not a boolean
+        - attach (if provided) is not a list of VrfAttachModel instances
+        - bgp_passwd_encrypt is not a valid BgpPasswordEncrypt enum value
+        - bgp_password is not a string
+        - deploy is not a boolean
+        - disable_rt_auto is not a boolean
+        - export_evpn_rt is not a string
+        - export_mvpn_rt is not a string
+        - export_vpn_rt is not a string
+        - import_evpn_rt is not a string
+        - import_mvpn_rt is not a string
+        - import_vpn_rt is not a string
+        - ipv6_linklocal_enable is not a boolean
+        - loopback_route_tag is not an integer between 0 and 4294967295
+        - max_bgp_paths is not an integer between 1 and 64
+        - max_ibgp_paths is not an integer between 1 and 64
+        - netflow_enable is not a boolean
+        - nf_monitor is not a string
+        - no_rp is not a boolean
+        - overlay_mcast_group is not a string
+        - redist_direct_rmap is not a string
+        - rp_address is not a valid IPv4 host address
+        - rp_external is not a boolean
+        - rp_loopback_id is not an integer between 0 and 1023
+        - service_vrf_template is not a string
+        - static_default_route is not a boolean
+        - trm_bgw_msite is not a boolean
+        - trm_enable is not a boolean
+        - underlay_mcast_ip is not a string
+        - vlan_id is not an integer between 0 and 4094
+        - vrf_description is not a string
+        - vrf_extension_template is not a string
+        - vrf_id is not an integer between 0 and 16777214
+        - vrf_int_mtu is not an integer between 68 and 9216
+        - vrf_intf_desc is not a string
+        - vrf_name is not a string
+        - vrf_template is not a string
+        - vrf_vlan_name is not a string
     """
 
     model_config = ConfigDict(
