@@ -55,7 +55,7 @@ class VrfLiteModel(BaseModel):
             ipv4_addr="10.1.1.1/24"
         )
     except ValidationError as e:
-        print(e)
+        handle_error
     ```
 
     """
@@ -74,12 +74,7 @@ class VrfLiteModel(BaseModel):
         Validate neighbor_ipv4 is an IPv4 host address without prefix.
         """
         if self.neighbor_ipv4 != "":
-            try:
-                IPv4HostModel(ipv4_host=str(self.neighbor_ipv4))
-            except ValueError as err:
-                msg = f"Invalid IPv4 host address: {self.neighbor_ipv4}. "
-                msg += f"detail: {err}"
-                raise ValueError(msg) from err
+            IPv4HostModel(ipv4_host=str(self.neighbor_ipv4))
         return self
 
     @model_validator(mode="after")
@@ -88,12 +83,7 @@ class VrfLiteModel(BaseModel):
         Validate neighbor_ipv6 is an IPv6 host address without prefix.
         """
         if self.neighbor_ipv6 != "":
-            try:
-                IPv6HostModel(ipv6_host=str(self.neighbor_ipv6))
-            except ValueError as err:
-                msg = f"Invalid IPv6 host address: {self.neighbor_ipv6}. "
-                msg += f"detail: {err}"
-                raise ValueError(msg) from err
+            IPv6HostModel(ipv6_host=str(self.neighbor_ipv6))
         return self
 
     @model_validator(mode="after")
@@ -102,12 +92,7 @@ class VrfLiteModel(BaseModel):
         Validate ipv4_addr is a CIDR-format IPv4 host address.
         """
         if self.ipv4_addr != "":
-            try:
-                IPv4CidrHostModel(ipv4_cidr_host=str(self.ipv4_addr))
-            except ValueError as err:
-                msg = f"Invalid CIDR-format IPv4 host address: {self.ipv4_addr}. "
-                msg += f"detail: {err}"
-                raise ValueError(msg) from err
+            IPv4CidrHostModel(ipv4_cidr_host=str(self.ipv4_addr))
         return self
 
     @model_validator(mode="after")
@@ -116,12 +101,7 @@ class VrfLiteModel(BaseModel):
         Validate ipv6_addr is a CIDR-format IPv6 host address.
         """
         if self.ipv6_addr != "":
-            try:
-                IPv6CidrHostModel(ipv6_cidr_host=str(self.ipv6_addr))
-            except ValueError as err:
-                msg = f"Invalid CIDR-format IPv6 host address: {self.ipv6_addr}. "
-                msg += f"detail: {err}"
-                raise ValueError(msg) from err
+            IPv6CidrHostModel(ipv6_cidr_host=str(self.ipv6_addr))
         return self
 
 
@@ -170,7 +150,7 @@ class VrfAttachModel(BaseModel):
             ]
         )
     except ValidationError as e:
-        print(e)
+        handle_error
     ```
     """
 
