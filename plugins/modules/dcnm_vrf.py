@@ -2160,7 +2160,6 @@ class DcnmVrf:
             replace_vrf_list = []
             have_in_want = False
             for want_a in self.want_attach:
-                # arobel: TODO: verify changed logic with integration tests
                 if have_a.get("vrfName") != want_a.get("vrfName"):
                     continue
                 have_in_want = True
@@ -2352,7 +2351,6 @@ class DcnmVrf:
             vrf_found: bool = False
             have_c: dict = {}
             for have_c in self.have_create:
-                # arobel: TODO: verify changed logic with integration tests
                 if want_c["vrfName"] != have_c["vrfName"]:
                     continue
                 vrf_found = True
@@ -2382,7 +2380,6 @@ class DcnmVrf:
 
             if vrf_found:
                 continue
-            # arobel: TODO: verify changed logic with integration tests
             vrf_id = want_c.get("vrfId", None)
             if vrf_id is not None:
                 diff_create.append(want_c)
@@ -2823,7 +2820,6 @@ class DcnmVrf:
                 # Query the VRF
                 for vrf in vrf_objects["DATA"]:
 
-                    # arobel: TODO: verify changed logic with integration tests
                     if want_c["vrfName"] != vrf["vrfName"]:
                         continue
 
@@ -3303,7 +3299,6 @@ class DcnmVrf:
                 msg = f"item_interface: {item_interface}, "
                 msg += f"ext_value_interface: {ext_value_interface}"
                 self.log.debug(msg)
-                # arobel: TODO: verify changed logic with integration tests
                 if item_interface != ext_value_interface:
                     continue
                 msg = "Found item: "
