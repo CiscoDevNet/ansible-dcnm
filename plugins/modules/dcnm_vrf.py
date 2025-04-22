@@ -578,26 +578,18 @@ THIRD_PARTY_IMPORT_ERROR: Union[str, None]
 FIRST_PARTY_FAILED_IMPORT: set[str] = set()
 THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
-try:
-    import pydantic
-    HAS_THIRD_PARTY_IMPORTS.add(True)
-    THIRD_PARTY_IMPORT_ERROR = None
-except ImportError as import_error:
-    HAS_THIRD_PARTY_IMPORTS.add(False)
-    THIRD_PARTY_FAILED_IMPORT.add("pydantic")
-    THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
-
+# try:
+#     import pydantic
+#     HAS_THIRD_PARTY_IMPORTS.add(True)
+#     THIRD_PARTY_IMPORT_ERROR = None
+# except ImportError as import_error:
+#     HAS_THIRD_PARTY_IMPORTS.add(False)
+#     THIRD_PARTY_FAILED_IMPORT.add("pydantic")
+#     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (
-    dcnm_get_ip_addr_info,
-    dcnm_get_url,
-    dcnm_send,
     dcnm_version_supported,
-    get_fabric_details,
-    get_fabric_inventory_details,
-    get_ip_sn_dict,
-    get_sn_fabric_dict,
 )
 
 try:
@@ -617,6 +609,13 @@ except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 class DcnmVrf:
+    """
+    Stub class used only to return the controller version.
+
+    We needed this to satisfy the unittest patch that is done in the dcnm_vrf unit tests.
+
+    TODO: This can be removed when we move to pytest-based unit tests.
+    """
     def __init__(self, module: AnsibleModule):
         self.module = module
         self.dcnm_version: int = dcnm_version_supported(self.module)

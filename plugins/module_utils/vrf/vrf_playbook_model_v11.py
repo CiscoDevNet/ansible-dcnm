@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @author: Allen Robel
 # @file: plugins/module_utils/vrf/vrf_playbook_model.py

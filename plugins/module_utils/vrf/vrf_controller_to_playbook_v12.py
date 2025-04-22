@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @author: Allen Robel
 # @file: plugins/module_utils/vrf/vrf_controller_to_playbook_v12.py

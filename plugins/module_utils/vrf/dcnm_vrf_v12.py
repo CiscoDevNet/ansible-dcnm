@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # mypy: disable-error-code="import-untyped"
 #
@@ -35,7 +34,7 @@ import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Union
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import AnsibleModule
 
 HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
 HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
@@ -60,20 +59,11 @@ from ...module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
     dcnm_get_url,
     dcnm_send,
-    dcnm_version_supported,
     get_fabric_details,
     get_fabric_inventory_details,
     get_ip_sn_dict,
     get_sn_fabric_dict,
 )
-
-try:
-    from ...module_utils.vrf.vrf_controller_to_playbook_v11 import VrfControllerToPlaybookV11Model
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV11Model")
 
 try:
     from ...module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
@@ -82,14 +72,6 @@ except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error
     HAS_FIRST_PARTY_IMPORTS.add(False)
     FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV12Model")
-
-try:
-    from ...module_utils.vrf.vrf_playbook_model_v11 import VrfPlaybookModelV11
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("VrfPlaybookModelV11")
 
 try:
     from ...module_utils.vrf.vrf_playbook_model_v12 import VrfPlaybookModelV12
@@ -3046,7 +3028,7 @@ class NdfcVrf12:
                 # if vrf_lite is null, delete it.
                 if not vrf_attach.get("vrf_lite"):
                     if "vrf_lite" in vrf_attach:
-                        msg = f"vrf_lite exists, but is null. Delete it."
+                        msg = "vrf_lite exists, but is null. Delete it."
                         self.log.debug(msg)
                         # vrf_attach["vrf_lite"] = ""
                         del vrf_attach["vrf_lite"]

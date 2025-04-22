@@ -1,4 +1,3 @@
-#!/usr/bin/python
 # -*- coding: utf-8 -*-
 # mypy: disable-error-code="import-untyped"
 #
@@ -33,7 +32,7 @@ import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Union
 
-from ansible.module_utils.basic import AnsibleModule, missing_required_lib
+from ansible.module_utils.basic import AnsibleModule
 
 HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
 HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
@@ -73,28 +72,12 @@ except ImportError as import_error:
     FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV11Model")
 
 try:
-    from ...module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV12Model")
-
-try:
     from ...module_utils.vrf.vrf_playbook_model_v11 import VrfPlaybookModelV11
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error
     HAS_FIRST_PARTY_IMPORTS.add(False)
     FIRST_PARTY_FAILED_IMPORT.add("VrfPlaybookModelV11")
-
-try:
-    from ...module_utils.vrf.vrf_playbook_model_v12 import VrfPlaybookModelV12
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("VrfPlaybookModelV12")
 
 dcnm_vrf_paths: dict = {
     "GET_VRF": "/rest/top-down/fabrics/{}/vrfs",
