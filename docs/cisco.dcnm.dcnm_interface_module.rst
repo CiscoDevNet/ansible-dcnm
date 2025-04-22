@@ -390,7 +390,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27;</div>
+                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27; or &#x27;dot1q_tunnel_host&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -606,6 +606,7 @@ Parameters
                                     <li>routed</li>
                                     <li>monitor</li>
                                     <li>epl_routed</li>
+                                    <li>dot1q_tunnel_host</li>
                         </ul>
                 </td>
                 <td>
@@ -3340,6 +3341,24 @@ Examples
               admin_state: true                         # Flag to enable/disable FEX interface.
               enable_netflow: false                     # optional, flag to enable netflow, default is false
               mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
+
+    # Dot1q Tunnel host
+
+    - name: Configure dot1q_tunnel_host on interface E1/12
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_fabric }}"
+        state: merged
+        config:
+          - name: eth1/12
+            type: eth
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+            admin_state: true
+            mode: dot1q_tunnel_host
+            access_vlan: 41
+            description: "ETH 1/12 Dot1q Tunnel"
 
     # QUERY
 
