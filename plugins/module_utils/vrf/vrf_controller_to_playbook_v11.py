@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # @author: Allen Robel
-# @file: plugins/module_utils/vrf/vrf_controller_to_playbook_v12.py
+# @file: plugins/module_utils/vrf/vrf_controller_to_playbook_v11.py
 # Copyright (c) 2020-2023 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,18 +17,18 @@
 # limitations under the License.
 # pylint: disable=wrong-import-position
 """
-Serialize NDFC version 12 controller payload fields to fie;ds used in a dcnm_vrf playbook.
+Serialize NDFC v11 payload fields to fields used in a dcnm_vrf playbook.
 """
 from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class VrfControllerToPlaybookV12Model(BaseModel):
+class VrfControllerToPlaybookV11Model(BaseModel):
     """
     # Summary
 
-    Serialize NDFC version 12 controller payload fields to fields used in a dcnm_vrf playbook.
+    Serialize NDFC v11 payload fields to fields used in a dcnm_vrf playbook.
     """
 
     model_config = ConfigDict(
@@ -40,25 +40,12 @@ class VrfControllerToPlaybookV12Model(BaseModel):
     bgp_password: Optional[str] = Field(alias="bgpPassword")
     bgp_passwd_encrypt: Optional[int] = Field(alias="bgpPasswordKeyType")
 
-    disable_rt_auto: Optional[bool] = Field(alias="disableRtAuto")
-
-    export_evpn_rt: Optional[str] = Field(alias="routeTargetExportEvpn")
-    export_mvpn_rt: Optional[str] = Field(alias="routeTargetExportMvpn")
-    export_vpn_rt: Optional[str] = Field(alias="routeTargetExport")
-
-    import_evpn_rt: Optional[str] = Field(alias="routeTargetImportEvpn")
-    import_mvpn_rt: Optional[str] = Field(alias="routeTargetImportMvpn")
-    import_vpn_rt: Optional[str] = Field(alias="routeTargetImport")
     ipv6_linklocal_enable: Optional[bool] = Field(alias="ipv6LinkLocalFlag")
 
     loopback_route_tag: Optional[int] = Field(alias="tag")
 
     max_bgp_paths: Optional[int] = Field(alias="maxBgpPaths")
     max_ibgp_paths: Optional[int] = Field(alias="maxIbgpPaths")
-
-    netflow_enable: Optional[bool] = Field(alias="ENABLE_NETFLOW")
-    nf_monitor: Optional[str] = Field(alias="NETFLOW_MONITOR")
-    no_rp: Optional[bool] = Field(alias="isRPAbsent")
 
     overlay_mcast_group: Optional[str] = Field(alias="multicastGroup")
 
