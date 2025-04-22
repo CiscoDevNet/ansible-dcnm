@@ -1619,14 +1619,14 @@ EXAMPLES = """
 # Dot1q Tunnel host
 
 - name: Configure dot1q on interface E1/12
-    cisco.dcnm.dcnm_interface:
+  cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
     state: merged
     config:
-        - name: eth1/12
+      - name: eth1/12
         type: eth
         switch:
-            - "{{ ansible_switch1 }}"
+          - "{{ ansible_switch1 }}"
         deploy: true
         profile:
         admin_state: true
