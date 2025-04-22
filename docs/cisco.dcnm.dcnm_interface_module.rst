@@ -3494,10 +3494,6 @@ Examples
             deploy: true
             profile:
               map: 10g-4x
-            admin_state: true
-            mode: dot1q
-            access_vlan: 41
-            description: "ETH 1/12 Dot1q Tunnel"
           - name: ethernet1/101
             type: breakout
             switch:
