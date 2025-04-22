@@ -127,12 +127,6 @@ options:
             - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
             type: str
             default: ""
-          native_vlan:
-            description:
-            - Vlan used as native vlan.
-              This option is applicable only for interfaces whose 'mode' is 'trunk'.
-            type: str
-            default: ""
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'l3'
@@ -473,12 +467,6 @@ options:
           access_vlan:
             description:
             - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
-            type: str
-            default: ""
-          native_vlan:
-            description:
-            - Vlan used as native vlan.
-              This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
           speed:
