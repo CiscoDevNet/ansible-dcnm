@@ -362,6 +362,51 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="2">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>profile_breakout</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">-</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Though the key shown here is &#x27;profile_breakout&#x27; the actual key to be used in playbook is &#x27;profile&#x27;. The key &#x27;profile_breakout&#x27; is used here to logically segregate the interface objects applicable for this profile</div>
+                        <div>Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported.</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>map</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>10g-4x</li>
+                                    <li>25g-4x</li>
+                                    <li>50g-2x</li>
+                                    <li>50g-4x</li>
+                                    <li>100g-2x</li>
+                                    <li>100g-4x</li>
+                                    <li>200g-2x</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>type of breakout</div>
+                </td>
+            </tr>
+
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="2">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>profile_eth</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -2516,6 +2561,7 @@ Parameters
                                     <li>svi</li>
                                     <li>st-fex</li>
                                     <li>aa-fex</li>
+                                    <li>breakout</li>
                         </ul>
                 </td>
                 <td>
@@ -2581,6 +2627,7 @@ Parameters
                                     <li>svi</li>
                                     <li>st_fex</li>
                                     <li>aa_fex</li>
+                                    <li>breakout</li>
                         </ul>
                         <b>Default:</b><br/><div style="color: blue">[]</div>
                 </td>
@@ -3432,6 +3479,57 @@ Examples
             mode: dot1q
             access_vlan: 41
             description: "ETH 1/12 Dot1q Tunnel"
+
+    # Breakout interfaces
+
+    - name: Configure breakout interface
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_svi_fabric }}"
+        state: merged
+        config:
+          - name: ethernet1/100
+            type: breakout
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              map: 10g-4x
+            admin_state: true
+            mode: dot1q
+            access_vlan: 41
+            description: "ETH 1/12 Dot1q Tunnel"
+          - name: ethernet1/101
+            type: breakout
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              map: 10g-4x
+          - name: ethernet1/102
+            type: breakout
+            switch:
+              - "{{ ansible_switch1 }}"
+            deploy: true
+            profile:
+              map: 10g-4x
+
+    - name: Configure breakout interface
+      cisco.dcnm.dcnm_interface:
+        fabric: "{{ ansible_svi_fabric }}"
+        state: deleted
+        config:
+          - name: ethernet1/100
+            type: breakout
+            switch:
+              - "{{ ansible_switch1 }}"
+          - name: ethernet1/101
+            type: breakout
+            switch:
+              - "{{ ansible_switch1 }}"
+          - name: ethernet1/102
+            type: breakout
+            switch:
+              - "{{ ansible_switch1 }}"
 
     # QUERY
 
