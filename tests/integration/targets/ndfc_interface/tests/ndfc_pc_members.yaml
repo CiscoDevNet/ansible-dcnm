@@ -16,6 +16,7 @@
       pc1: "{{ port_channel_1 }}"
       pc2: "{{ port_channel_2 }}"
       pc3: "{{ port_channel_3 }}"
+      pc4: "{{ port_channel_4 }}"
       sw1: "{{ ansible_switch1 }}"
       sw2: "{{ ansible_switch2 }}"
       eth_intf8: "{{ ansible_eth_intf8 }}"
@@ -24,12 +25,16 @@
       eth_intf11: "{{ ansible_eth_intf11 }}"
       eth_intf12: "{{ ansible_eth_intf12 }}"
       eth_intf13: "{{ ansible_eth_intf13 }}"
+      eth_intf14: "{{ ansible_eth_intf14 }}"
+      eth_intf15: "{{ ansible_eth_intf15 }}"
       pc_trunk_desc: "Trunk PC Configured by Ansible"
       pc_access_desc: "Access PC Configured by Ansible"
       pc_l3_desc: "L3 PC Configured by Ansible"
+      pc_dot1q_desc: "DOT1Q PC Configured by Ansible"
       eth_trunk_desc: "Trunk Member Configured by Ansible"
       eth_access_desc: "Access Member Configured by Ansible"
       eth_l3_desc: "L3 Member Configured by Ansible"
+      eth_dot1q_desc: "DOT1Q Member Configured by Ansible"
   delegate_to: localhost
 
 # ----------------------------------------------

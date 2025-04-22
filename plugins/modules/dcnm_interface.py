@@ -422,7 +422,7 @@ options:
             - When ethernet interface is a PortChannel or vPC member, mode is ignored.
               The only properties that can be managed for PortChannel or vPC member interfaces
               are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
-            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q_tunnel_host']
+            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q']
             type: str
             required: true
           bpdu_guard:
@@ -454,7 +454,7 @@ options:
             default: none
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q_tunnel_host'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
             type: str
             default: ""
           speed:
@@ -1582,7 +1582,7 @@ EXAMPLES = """
 
 # Dot1q Tunnel host
 
-- name: Configure dot1q_tunnel_host on interface E1/12
+- name: Configure dot1q on interface E1/12
   cisco.dcnm.dcnm_interface:
     fabric: "{{ ansible_fabric }}"
     state: merged
@@ -1594,7 +1594,7 @@ EXAMPLES = """
         deploy: true
         profile:
         admin_state: true
-        mode: dot1q_tunnel_host
+        mode: dot1q
         access_vlan: 41
         description: "ETH 1/12 Dot1q Tunnel"
 
@@ -1827,6 +1827,7 @@ class DcnmIntf:
                 "pc_trunk": "int_port_channel_trunk_host",
                 "pc_access": "int_port_channel_access_host",
                 "pc_l3": "int_l3_port_channel",
+                "pc_dot1q": "int_port_channel_dot1q_tunnel_host",
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
                 "lo_fabric": "int_fabric_loopback_11_1",
@@ -1836,13 +1837,13 @@ class DcnmIntf:
                 "eth_routed": "int_routed_host",
                 "eth_monitor": "int_monitor_ethernet",
                 "eth_epl_routed": "epl_routed_intf",
+                "eth_dot1q": "int_dot1q_tunnel_host",
                 "vpc_trunk": "int_vpc_trunk_host",
                 "vpc_access": "int_vpc_access_host",
                 "svi_vlan": "int_vlan",
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
                 "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
-                "eth_dot1q_tunnel_host": "int_dot1q_tunnel_host",
             },
         }
 
@@ -1850,22 +1851,22 @@ class DcnmIntf:
             11: {
                 "pc_access_member": "int_port_channel_access_member_11_1",
                 "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
                 "vpc_access_member": "int_vpc_access_po_member_11_1",
                 "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
-                "l3_pc_member": "int_l3_port_channel_member",
-                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
             },
             12: {
                 "pc_access_member": "int_port_channel_access_member_11_1",
                 "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
                 "vpc_access_member": "int_vpc_access_po_member_11_1",
                 "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
-                "l3_pc_member": "int_l3_port_channel_member",
-                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
             },
         }
 
@@ -2128,6 +2129,20 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        pc_prof_spec_dot1q = dict(
+            mode=dict(required=True, type="str"),
+            members=dict(type="list"),
+            pc_mode=dict(type="str", default="active"),
+            bpdu_guard=dict(type="str", default="true"),
+            port_type_fast=dict(type="bool", default=True),
+            mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
+            access_vlan=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            description=dict(type="str", default=""),
+            admin_state=dict(type="bool", default=True),
+        )
+
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_trunk
@@ -2139,6 +2154,10 @@ class DcnmIntf:
         if "l3" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_l3
+            )
+        if "dot1q" == config[0]["profile"]["mode"]:
+            self.dcnm_intf_validate_interface_input(
+                config, pc_spec, pc_prof_spec_dot1q
             )
         if "monitor" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(config, pc_spec, None)
@@ -2364,7 +2383,7 @@ class DcnmIntf:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_epl_routed_host
             )
-        if "dot1q_tunnel_host" == cfg[0]["profile"]["mode"]:
+        if "dot1q" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
@@ -2616,6 +2635,7 @@ class DcnmIntf:
                 "allowed_vlans"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2639,6 +2659,7 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2668,6 +2689,31 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
+
+        if delem[profile]["mode"] == "dot1q":
+            if delem[profile]["members"] is None:
+                intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"][
+                    "MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["members"])
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
+            intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
+                delem[profile]["port_type_fast"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
+                "access_vlan"
+            ]
+            intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
@@ -3045,7 +3091,7 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
-        if delem[profile]["mode"] == "dot1q_tunnel_host":
+        if delem[profile]["mode"] == "dot1q":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
             ]["bpdu_guard"].lower()
