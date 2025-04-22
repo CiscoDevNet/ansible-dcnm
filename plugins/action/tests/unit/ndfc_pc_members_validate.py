@@ -25,6 +25,8 @@ class ActionModule(ActionBase):
         expected_state['pc_access_member_description'] = test_data['eth_access_desc']
         expected_state['pc_l3_description'] = test_data['pc_l3_desc']
         expected_state['pc_l3_member_description'] = test_data['eth_l3_desc']
+        expected_state['pc_dot1q_description'] = test_data['pc_dot1q_desc']
+        expected_state['pc_dot1q_member_description'] = test_data['eth_dot1q_desc']
         # --
         expected_state['pc_trunk_host_policy'] = 'int_port_channel_trunk_host'
         expected_state['pc_trunk_member_policy'] = 'int_port_channel_trunk_member_11_1'
@@ -34,10 +36,14 @@ class ActionModule(ActionBase):
         # --
         expected_state['pc_l3_policy'] = 'int_l3_port_channel'
         expected_state['pc_l3_member_policy'] = 'int_l3_port_channel_member'
+        # --
+        expected_state['pc_dot1q_policy'] = 'int_port_channel_dot1q_tunnel_host'
+        expected_state['pc_dot1q_member_policy'] = 'int_port_channel_dot1q_tunnel_member_11_1'
 
         interface_list = [test_data['pc1'], test_data['eth_intf8'], test_data['eth_intf9'],
                           test_data['pc2'], test_data['eth_intf10'], test_data['eth_intf11'],
-                          test_data['pc3'], test_data['eth_intf12'], test_data['eth_intf13']]
+                          test_data['pc3'], test_data['eth_intf12'], test_data['eth_intf13'],
+                          test_data['pc4'], test_data['eth_intf14'], test_data['eth_intf15']]
 
         if len(ndfc_data['response']) == 0:
             results['failed'] = True
@@ -113,6 +119,25 @@ class ActionModule(ActionBase):
                 if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_l3_member_description']:
                     results['failed'] = True
                     results['msg'] = f'Interface {interface} description is not {expected_state["pc_l3_member_description"]}'
+                    return results
+
+            if interface == test_data['pc4']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_dot1q_policy']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_dot1q_policy"]}'
+                    return results
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_dot1q_description']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_dot1q_description"]}'
+                    return results
+            if interface == test_data['eth_intf14'] or interface == test_data['eth_intf15']:
+                if ndfc_data_dict[interface]['policy'] != expected_state['pc_dot1q_member_policy']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} policy is not {expected_state["pc_dot1q_member_policy"]}'
+                    return results
+                if ndfc_data_dict[interface]['nvPairs']['DESC'] != expected_state['pc_dot1q_member_description']:
+                    results['failed'] = True
+                    results['msg'] = f'Interface {interface} description is not {expected_state["pc_dot1q_member_description"]}'
                     return results
 
         return results
