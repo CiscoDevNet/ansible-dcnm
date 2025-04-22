@@ -578,14 +578,14 @@ THIRD_PARTY_IMPORT_ERROR: Union[str, None]
 FIRST_PARTY_FAILED_IMPORT: set[str] = set()
 THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
-# try:
-#     import pydantic
-#     HAS_THIRD_PARTY_IMPORTS.add(True)
-#     THIRD_PARTY_IMPORT_ERROR = None
-# except ImportError as import_error:
-#     HAS_THIRD_PARTY_IMPORTS.add(False)
-#     THIRD_PARTY_FAILED_IMPORT.add("pydantic")
-#     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
+try:
+    import pydantic  # pylint: disable=unused-import
+    HAS_THIRD_PARTY_IMPORTS.add(True)
+    THIRD_PARTY_IMPORT_ERROR = None
+except ImportError as import_error:
+    HAS_THIRD_PARTY_IMPORTS.add(False)
+    THIRD_PARTY_FAILED_IMPORT.add("pydantic")
+    THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import (
@@ -608,6 +608,7 @@ except ImportError as import_error:
     FIRST_PARTY_FAILED_IMPORT.add("NdfcVrf12")
     FIRST_PARTY_IMPORT_ERROR = traceback.format_exc()
 
+
 class DcnmVrf:
     """
     Stub class used only to return the controller version.
@@ -619,6 +620,7 @@ class DcnmVrf:
     def __init__(self, module: AnsibleModule):
         self.module = module
         self.dcnm_version: int = dcnm_version_supported(self.module)
+
 
 def main() -> None:
     """main entry point for module execution"""
@@ -659,10 +661,11 @@ def main() -> None:
     dcnm_vrf_launch: DcnmVrf = DcnmVrf(module)
 
     controller_version: int = dcnm_vrf_launch.dcnm_version
+    dcnm_vrf: Union[DcnmVrf11, NdfcVrf12]
     if controller_version == 12:
-        dcnm_vrf: NdfcVrf12 = NdfcVrf12(module)
+        dcnm_vrf = NdfcVrf12(module)
     else:
-        dcnm_vrf: DcnmVrf11 = DcnmVrf11(module)
+        dcnm_vrf = DcnmVrf11(module)
 
     if not dcnm_vrf.ip_sn:
         msg = f"Fabric {dcnm_vrf.fabric} missing on the controller or "
