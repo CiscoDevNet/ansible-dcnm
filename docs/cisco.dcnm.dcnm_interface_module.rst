@@ -390,7 +390,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27; or &#x27;dot1q_tunnel_host&#x27;</div>
+                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27; or &#x27;dot1q&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -606,7 +606,7 @@ Parameters
                                     <li>routed</li>
                                     <li>monitor</li>
                                     <li>epl_routed</li>
-                                    <li>dot1q_tunnel_host</li>
+                                    <li>dot1q</li>
                         </ul>
                 </td>
                 <td>
@@ -916,7 +916,7 @@ Parameters
                         <b>Default:</b><br/><div style="color: blue">""</div>
                 </td>
                 <td>
-                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27;</div>
+                        <div>Vlan for the interface. This option is applicable only for interfaces whose &#x27;mode&#x27; is &#x27;access&#x27; or &#x27;dot1q&#x27;</div>
                 </td>
             </tr>
             <tr>
@@ -1068,6 +1068,7 @@ Parameters
                                     <li>trunk</li>
                                     <li>access</li>
                                     <li>l3</li>
+                                    <li>dot1q</li>
                                     <li>monitor</li>
                         </ul>
                 </td>
@@ -3344,7 +3345,7 @@ Examples
 
     # Dot1q Tunnel host
 
-    - name: Configure dot1q_tunnel_host on interface E1/12
+    - name: Configure dot1q on interface E1/12
       cisco.dcnm.dcnm_interface:
         fabric: "{{ ansible_fabric }}"
         state: merged
@@ -3356,7 +3357,7 @@ Examples
             deploy: true
             profile:
             admin_state: true
-            mode: dot1q_tunnel_host
+            mode: dot1q
             access_vlan: 41
             description: "ETH 1/12 Dot1q Tunnel"
 

@@ -113,7 +113,7 @@ options:
           mode:
             description:
             - Interface mode
-            choices: ['trunk', 'access', 'l3', 'monitor']
+            choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor']
             type: str
             required: true
           members:
@@ -124,7 +124,7 @@ options:
             required: true
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
             type: str
             default: ""
           int_vrf:
