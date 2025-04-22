@@ -113,7 +113,7 @@ options:
           mode:
             description:
             - Interface mode
-            choices: ['trunk', 'access', 'l3', 'monitor']
+            choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor']
             type: str
             required: true
           members:
@@ -124,7 +124,13 @@ options:
             required: true
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
           native_vlan:
@@ -440,7 +446,7 @@ options:
             - When ethernet interface is a PortChannel or vPC member, mode is ignored.
               The only properties that can be managed for PortChannel or vPC member interfaces
               are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
-            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
+            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q']
             type: str
             required: true
           bpdu_guard:
@@ -472,7 +478,13 @@ options:
             default: none
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
           native_vlan:
@@ -1604,6 +1616,24 @@ EXAMPLES = """
           enable_netflow: false                     # optional, flag to enable netflow, default is false
           mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
 
+# Dot1q Tunnel host
+
+- name: Configure dot1q on interface E1/12
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    config:
+      - name: eth1/12
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+        admin_state: true
+        mode: dot1q
+        access_vlan: 41
+        description: "ETH 1/12 Dot1q Tunnel"
+
 # QUERY
 
 - name: Query interface details
@@ -1836,6 +1866,7 @@ class DcnmIntf:
                 "pc_trunk": "int_port_channel_trunk_host",
                 "pc_access": "int_port_channel_access_host",
                 "pc_l3": "int_l3_port_channel",
+                "pc_dot1q": "int_port_channel_dot1q_tunnel_host",
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
                 "lo_fabric": "int_fabric_loopback_11_1",
@@ -1845,6 +1876,7 @@ class DcnmIntf:
                 "eth_routed": "int_routed_host",
                 "eth_monitor": "int_monitor_ethernet",
                 "eth_epl_routed": "epl_routed_intf",
+                "eth_dot1q": "int_dot1q_tunnel_host",
                 "vpc_trunk": "int_vpc_trunk_host",
                 "vpc_access": "int_vpc_access_host",
                 "svi_vlan": "int_vlan",
@@ -1858,22 +1890,22 @@ class DcnmIntf:
             11: {
                 "pc_access_member": "int_port_channel_access_member_11_1",
                 "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
                 "vpc_access_member": "int_vpc_access_po_member_11_1",
                 "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
-                "l3_pc_member": "int_l3_port_channel_member",
-                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
             },
             12: {
                 "pc_access_member": "int_port_channel_access_member_11_1",
                 "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
                 "vpc_access_member": "int_vpc_access_po_member_11_1",
                 "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
-                "l3_pc_member": "int_l3_port_channel_member",
-                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
                 "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
             },
         }
 
@@ -2137,6 +2169,20 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        pc_prof_spec_dot1q = dict(
+            mode=dict(required=True, type="str"),
+            members=dict(type="list"),
+            pc_mode=dict(type="str", default="active"),
+            bpdu_guard=dict(type="str", default="true"),
+            port_type_fast=dict(type="bool", default=True),
+            mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
+            access_vlan=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            description=dict(type="str", default=""),
+            admin_state=dict(type="bool", default=True),
+        )
+
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_trunk
@@ -2148,6 +2194,10 @@ class DcnmIntf:
         if "l3" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_l3
+            )
+        if "dot1q" == config[0]["profile"]["mode"]:
+            self.dcnm_intf_validate_interface_input(
+                config, pc_spec, pc_prof_spec_dot1q
             )
         if "monitor" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(config, pc_spec, None)
@@ -2344,6 +2394,20 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        eth_prof_spec_dot1q_tunnel_host = dict(
+            mode=dict(required=True, type="str"),
+            bpdu_guard=dict(type="str", default="true"),
+            port_type_fast=dict(type="bool", default=True),
+            mtu=dict(
+                type="str", default="jumbo", choices=["jumbo", "default"]
+            ),
+            speed=dict(type="str", default="Auto"),
+            access_vlan=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            description=dict(type="str", default=""),
+            admin_state=dict(type="bool", default=True),
+        )
+
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_trunk
@@ -2361,6 +2425,10 @@ class DcnmIntf:
         if "epl_routed" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_epl_routed_host
+            )
+        if "dot1q" == cfg[0]["profile"]["mode"]:
+            self.dcnm_intf_validate_interface_input(
+                cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
 
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
@@ -2613,6 +2681,7 @@ class DcnmIntf:
                 "native_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2636,6 +2705,7 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2665,6 +2735,31 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
+
+        if delem[profile]["mode"] == "dot1q":
+            if delem[profile]["members"] is None:
+                intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"][
+                    "MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["members"])
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
+            intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
+                delem[profile]["port_type_fast"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
+                "access_vlan"
+            ]
+            intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
@@ -3050,6 +3145,20 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
+        if delem[profile]["mode"] == "dot1q":
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
+            intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
+                delem[profile]["port_type_fast"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
+                "access_vlan"
+            ]
+            intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
