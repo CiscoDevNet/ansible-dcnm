@@ -16,7 +16,7 @@
 # limitations under the License.
 # pylint: disable=wrong-import-position
 """
-Serialize NDFC version 12 controller payload fields to fie;ds used in a dcnm_vrf playbook.
+Serialize NDFC version 12 controller payload fields to fields used in a dcnm_vrf playbook.
 """
 from typing import Optional, Union
 
