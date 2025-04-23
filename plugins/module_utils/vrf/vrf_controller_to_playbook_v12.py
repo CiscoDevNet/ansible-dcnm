@@ -18,7 +18,7 @@
 """
 Serialize NDFC version 12 controller payload fields to fie;ds used in a dcnm_vrf playbook.
 """
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -64,7 +64,7 @@ class VrfControllerToPlaybookV12Model(BaseModel):
     redist_direct_rmap: Optional[str] = Field(alias="vrfRouteMap")
     rp_address: Optional[str] = Field(alias="rpAddress")
     rp_external: Optional[bool] = Field(alias="isRPExternal")
-    rp_loopback_id: Optional[int | str] = Field(alias="loopbackNumber")
+    rp_loopback_id: Optional[Union[int, str]] = Field(alias="loopbackNumber")
 
     static_default_route: Optional[bool] = Field(alias="configureStaticDefaultRouteFlag")
 
