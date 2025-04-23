@@ -580,6 +580,7 @@ THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
 try:
     import pydantic  # pylint: disable=unused-import
+
     HAS_THIRD_PARTY_IMPORTS.add(True)
     THIRD_PARTY_IMPORT_ERROR = None
 except ImportError as import_error:
@@ -588,12 +589,11 @@ except ImportError as import_error:
     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.log_v2 import Log
-from ..module_utils.network.dcnm.dcnm import (
-    dcnm_version_supported,
-)
+from ..module_utils.network.dcnm.dcnm import dcnm_version_supported
 
 try:
     from ..module_utils.vrf.dcnm_vrf_v11 import DcnmVrf11
+
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
@@ -602,6 +602,7 @@ except ImportError as import_error:
 
 try:
     from ..module_utils.vrf.dcnm_vrf_v12 import NdfcVrf12
+
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
@@ -617,6 +618,7 @@ class DcnmVrf:  # pylint: disable=too-few-public-methods
 
     TODO: This can be removed when we move to pytest-based unit tests.
     """
+
     def __init__(self, module: AnsibleModule):
         self.module = module
         self.version: int = dcnm_version_supported(self.module)
