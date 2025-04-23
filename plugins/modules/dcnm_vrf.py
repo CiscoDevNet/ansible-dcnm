@@ -609,7 +609,7 @@ except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 
-class DcnmVrf:
+class DcnmVrf:  # pylint: disable=too-few-public-methods
     """
     Stub class used only to return the controller version.
 
@@ -619,7 +619,16 @@ class DcnmVrf:
     """
     def __init__(self, module: AnsibleModule):
         self.module = module
-        self.dcnm_version: int = dcnm_version_supported(self.module)
+        self.version: int = dcnm_version_supported(self.module)
+
+    @property
+    def controller_version(self) -> int:
+        """
+        # Summary
+
+        Return the controller major version as am integer.
+        """
+        return self.version
 
 
 def main() -> None:
@@ -660,9 +669,8 @@ def main() -> None:
 
     dcnm_vrf_launch: DcnmVrf = DcnmVrf(module)
 
-    controller_version: int = dcnm_vrf_launch.dcnm_version
     dcnm_vrf: Union[DcnmVrf11, NdfcVrf12]
-    if controller_version == 12:
+    if dcnm_vrf_launch.controller_version == 12:
         dcnm_vrf = NdfcVrf12(module)
     else:
         dcnm_vrf = DcnmVrf11(module)
