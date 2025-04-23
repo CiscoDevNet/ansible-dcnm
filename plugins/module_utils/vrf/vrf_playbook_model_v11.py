@@ -128,8 +128,6 @@ class VrfAttachModel(BaseModel):
 
     - ValueError if:
         - deploy is not a boolean
-        - export_evpn_rt is not a string
-        - import_evpn_rt is not a string
         - ip_address is not a valid IPv4 host address
         - ip_address is not provided
         - vrf_lite (if provided) is not a list of VrfLiteModel instances
@@ -137,8 +135,6 @@ class VrfAttachModel(BaseModel):
     ## Attributes:
 
     - deploy (bool): Flag to indicate if the VRF should be deployed.
-    - export_evpn_rt (str): Route target for EVPN export.
-    - import_evpn_rt (str): Route target for EVPN import.
     - ip_address (str): IP address of the interface.
     - vrf_lite (list[VrfLiteModel]): List of VRF Lite configurations.
     - vrf_lite (None): If not provided, defaults to None.
@@ -151,8 +147,6 @@ class VrfAttachModel(BaseModel):
     try:
         vrf_attach = VrfAttachModel(
             deploy=True,
-            export_evpn_rt="target:1:1",
-            import_evpn_rt="target:1:2",
             ip_address="10.1.1.1",
             vrf_lite=[
                 VrfLiteModel(
@@ -168,8 +162,6 @@ class VrfAttachModel(BaseModel):
     """
 
     deploy: bool = Field(default=True)
-    export_evpn_rt: str = Field(default="")
-    import_evpn_rt: str = Field(default="")
     ip_address: str
     vrf_lite: Union[list[VrfLiteModel], None] = Field(default=None)
 
@@ -213,20 +205,10 @@ class VrfPlaybookModelV11(BaseModel):
         - bgp_passwd_encrypt is not a valid BgpPasswordEncrypt enum value
         - bgp_password is not a string
         - deploy is not a boolean
-        - disable_rt_auto is not a boolean
-        - export_evpn_rt is not a string
-        - export_mvpn_rt is not a string
-        - export_vpn_rt is not a string
-        - import_evpn_rt is not a string
-        - import_mvpn_rt is not a string
-        - import_vpn_rt is not a string
         - ipv6_linklocal_enable is not a boolean
         - loopback_route_tag is not an integer between 0 and 4294967295
         - max_bgp_paths is not an integer between 1 and 64
         - max_ibgp_paths is not an integer between 1 and 64
-        - netflow_enable is not a boolean
-        - nf_monitor is not a string
-        - no_rp is not a boolean
         - overlay_mcast_group is not a string
         - redist_direct_rmap is not a string
         - rp_address is not a valid IPv4 host address
@@ -259,20 +241,10 @@ class VrfPlaybookModelV11(BaseModel):
     bgp_passwd_encrypt: Union[BgpPasswordEncrypt, int] = Field(default=BgpPasswordEncrypt.MD5.value, alias="bgpPasswordKeyType")
     bgp_password: str = Field(default="", alias="bgpPassword")
     deploy: bool = Field(default=True)
-    disable_rt_auto: bool = Field(default=False, alias="disableRtAuto")
-    export_evpn_rt: str = Field(default="", alias="routeTargetExportEvpn")
-    export_mvpn_rt: str = Field(default="", alias="routeTargetExportMvpn")
-    export_vpn_rt: str = Field(default="", alias="routeTargetExport")
-    import_evpn_rt: str = Field(default="", alias="routeTargetImportEvpn")
-    import_mvpn_rt: str = Field(default="", alias="routeTargetImportMvpn")
-    import_vpn_rt: str = Field(default="", alias="routeTargetImport")
     ipv6_linklocal_enable: bool = Field(default=True, alias="ipv6LinkLocalFlag")
     loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295, alias="tag")
     max_bgp_paths: int = Field(default=1, ge=1, le=64, alias="maxBgpPaths")
     max_ibgp_paths: int = Field(default=2, ge=1, le=64, alias="maxIbgpPaths")
-    netflow_enable: bool = Field(default=False, alias="ENABLE_NETFLOW")
-    nf_monitor: str = Field(default="", alias="NETFLOW_MONITOR")
-    no_rp: bool = Field(default=False, alias="isRPAbsent")
     overlay_mcast_group: str = Field(default="", alias="multicastGroup")
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="vrfRouteMap")
     rp_address: str = Field(default="", alias="rpAddress")
