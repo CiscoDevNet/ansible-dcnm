@@ -163,7 +163,7 @@ class VrfAttachModel(BaseModel):
 
     deploy: bool = Field(default=True)
     ip_address: str
-    vrf_lite: Union[list[VrfLiteModel], None] = Field(default=None)
+    vrf_lite: Optional[list[VrfLiteModel]] = Field(default=None)
 
     @model_validator(mode="after")
     def validate_ipv4_host(self) -> Self:

@@ -30,16 +30,16 @@ import re
 import time
 import traceback
 from dataclasses import asdict, dataclass
-from typing import Any, Final, Union
+from typing import Any, Final, Optional, Union
 
 from ansible.module_utils.basic import AnsibleModule
 
 HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
 HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
 
-FIRST_PARTY_IMPORT_ERROR: Union[ImportError, None]
+FIRST_PARTY_IMPORT_ERROR: Optional[ImportError]
 FIRST_PARTY_FAILED_IMPORT: set[str] = set()
-THIRD_PARTY_IMPORT_ERROR: Union[str, None]
+THIRD_PARTY_IMPORT_ERROR: Optional[str]
 THIRD_PARTY_FAILED_IMPORT: set[str] = set()
 
 try:
@@ -110,7 +110,7 @@ class SendToControllerArgs:
     action: str
     verb: RequestVerb
     path: str
-    payload: Union[dict, list, None]
+    payload: Optional[Union[dict, list]]
     log_response: bool = True
     is_rollback: bool = False
 
@@ -151,7 +151,7 @@ class DcnmVrf11:
         msg += f"{json.dumps(self.params, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self.config: Union[list[dict], None] = copy.deepcopy(module.params.get("config"))
+        self.config: Optional[list[dict]] = copy.deepcopy(module.params.get("config"))
 
         msg = f"self.state: {self.state}, "
         msg += "self.config: "
@@ -277,7 +277,7 @@ class DcnmVrf11:
         return [lst[x : x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
-    def find_dict_in_list_by_key_value(search: Union[list[dict[Any, Any]], None], key: str, value: str) -> dict[Any, Any]:
+    def find_dict_in_list_by_key_value(search: Optional[list[dict[Any, Any]]], key: str, value: str) -> dict[Any, Any]:
         """
         # Summary
 

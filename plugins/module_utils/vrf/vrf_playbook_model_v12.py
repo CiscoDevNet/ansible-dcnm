@@ -171,7 +171,7 @@ class VrfAttachModel(BaseModel):
     export_evpn_rt: str = Field(default="")
     import_evpn_rt: str = Field(default="")
     ip_address: str
-    vrf_lite: Union[list[VrfLiteModel], None] = Field(default=None)
+    vrf_lite: Optional[list[VrfLiteModel]] = Field(default=None)
 
     @model_validator(mode="after")
     def validate_ipv4_host(self) -> Self:
