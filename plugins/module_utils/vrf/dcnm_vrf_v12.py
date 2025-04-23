@@ -2157,18 +2157,18 @@ class NdfcVrf12:
                         break
                 attach_d.update({"vlan_id": a_w["vlan"]})
                 attach_d.update({"deploy": a_w["deployment"]})
-                new_attach_list.append(attach_d)
+                new_attach_list.append(copy.deepcopy(attach_d))
 
             if new_attach_list:
                 if diff_deploy and vrf["vrfName"] in diff_deploy:
                     diff_deploy.remove(vrf["vrfName"])
                 new_attach_dict.update({"attach": new_attach_list})
                 new_attach_dict.update({"vrf_name": vrf["vrfName"]})
-                diff.append(new_attach_dict)
+                diff.append(copy.deepcopy(new_attach_dict))
 
         for vrf in diff_deploy:
             new_deploy_dict = {"vrf_name": vrf}
-            diff.append(new_deploy_dict)
+            diff.append(copy.deepcopy(new_deploy_dict))
 
         self.diff_input_format = copy.deepcopy(diff)
 
