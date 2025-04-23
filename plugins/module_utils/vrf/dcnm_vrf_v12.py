@@ -3418,6 +3418,8 @@ class NdfcVrf12:
         -   Calls fail_json() if the input is invalid
 
         """
+        if self.config is None:
+            return
         for vrf_config in self.config:
             try:
                 self.log.debug("Calling VrfPlaybookModelV12")
