@@ -2077,7 +2077,7 @@ class NdfcVrf12:
 
             found_c = copy.deepcopy(want_d)
 
-            msg = "found_c: PRE_UPDATE: "
+            msg = "found_c: PRE_UPDATE_v12: "
             msg += f"{json.dumps(found_c, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
@@ -2100,7 +2100,7 @@ class NdfcVrf12:
                 self.module.fail_json(msg=msg)
             found_c.update(vrf_controller_to_playbook.model_dump(by_alias=False))
 
-            msg = f"found_c: POST_UPDATE_12: {json.dumps(found_c, indent=4, sort_keys=True)}"
+            msg = f"found_c: POST_UPDATE_v12: {json.dumps(found_c, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             del found_c["fabric"]
@@ -3030,11 +3030,9 @@ class NdfcVrf12:
                     if "vrf_lite" in vrf_attach:
                         msg = "vrf_lite exists, but is null. Delete it."
                         self.log.debug(msg)
-                        # vrf_attach["vrf_lite"] = ""
                         del vrf_attach["vrf_lite"]
                     new_lan_attach_list.append(vrf_attach)
                     msg = f"ip_address {ip_address} ({serial_number}), "
-                    # msg += "converted null vrf_lite to '' and "
                     msg += "deleted null vrf_lite in vrf_attach and "
                     msg += "skipping VRF Lite processing. "
                     msg += "updated vrf_attach: "

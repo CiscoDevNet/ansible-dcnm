@@ -2977,10 +2977,12 @@ class DcnmVrf11:
                 # if vrf_lite is null, delete it.
                 if not vrf_attach.get("vrf_lite"):
                     if "vrf_lite" in vrf_attach:
+                        msg = "vrf_lite exists, but is null. Delete it."
+                        self.log.debug(msg)
                         del vrf_attach["vrf_lite"]
                     new_lan_attach_list.append(vrf_attach)
                     msg = f"ip_address {ip_address} ({serial_number}), "
-                    msg += "deleting null vrf_lite in vrf_attach and "
+                    msg += "deleted null vrf_lite in vrf_attach and "
                     msg += "skipping VRF Lite processing. "
                     msg += "updated vrf_attach: "
                     msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
