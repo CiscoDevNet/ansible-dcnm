@@ -4390,8 +4390,8 @@ class DcnmIntf:
 
         deploy = False
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4500,6 +4500,25 @@ class DcnmIntf:
                     self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
+                    # In case of breakout, check if parent interface is in cfg
+                    if re.findall(r"\d+\/\d+\/\d+", name):
+                        port_id = re.search(r"(\d+/\d+)/\d+", name)
+                        found = False
+                        for interface in cfg:
+                            intfmatch = "ethernet" + port_id.group(1)
+                            if intfmatch == interface['name'] and interface['type'] == 'breakout':
+                                # If parent interface is present in cfg, we keep interface breakout
+                                # Else we need to the interface to replace list and build payload.
+                                found = True
+                                continue
+                        if found is False:
+                            payload = {"serialNumber": have['serialNo'],
+                                        "ifName": have["ifName"]}
+                            self.diff_delete[
+                                self.int_index[self.int_types['breakout']]].append(payload)
+                            self.changed_dict[0]["deleted"].append(
+                                copy.deepcopy(payload)
+                            )
                     continue
 
                 if uelem is not None:
