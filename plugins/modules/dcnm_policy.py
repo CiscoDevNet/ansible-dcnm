@@ -427,6 +427,7 @@ class DcnmPolicy:
             "POLICY_BULK_CREATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/bulk-create",
             "POLICY_BULK_UPDATE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/bulk",
             "POLICY_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}/mark-delete",
+            "POLICY_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/policyIds?policyIds={}",
             "POLICY_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/config-deploy/",
             "POLICY_WITH_POLICY_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/{}",
@@ -957,13 +958,23 @@ class DcnmPolicy:
 
         # Filter the list of policies and keep only those that are matching. For delete case, playbook policies
         # may either contain template names of policy names. So compare both.
+
+        # NDFC has strange behavior when deleting switch_freeform template policies when the
+        # deploy flag is set to False.  NDFC will change the policy name from switch_freeform
+        # to switch_freeform_config making it impossible to use the playbook name switch_freeform
+        # to delete the policy on a subsequent run where the flag is set to True.
+        # The following 3 lines of code will change switch_freeform to switch_freeform_config when
+        # the deploy flag is set to True.
+        for pl in plist:
+            if pl["templateName"] == "switch_freeform_config" and self.deploy is True:
+                pl["templateName"] = "switch_freeform"
+
         match_pol = [
             pl
             for pl in plist
             for wp in self.want
             if (
-                not pl["deleted"]
-                and (
+                (
                     (wp["policy_id_given"] is False)
                     and (pl["templateName"] == wp["templateName"])
                     and (
@@ -980,7 +991,6 @@ class DcnmPolicy:
         ]
         # match_pol contains all the policies which exist and are to be deleted
         # Build the delete payloads
-
         for pol in match_pol:
 
             del_payload = self.dcnm_policy_get_delete_payload(pol)
@@ -1136,9 +1146,9 @@ class DcnmPolicy:
     def dcnm_policy_delete_policy(self, policy, mark_del):
 
         if mark_del is True:
-            path = self.paths["POLICY_MARK_DELETE"].format(policy["policyId"])
+            path = self.paths["POLICY_DELETE"].format(policy["policyId"])
             json_payload = ""
-            command = "PUT"
+            command = "DELETE"
         else:
             path = self.paths["POLICY_WITH_POLICY_ID"].format(policy)
             json_payload = ""
