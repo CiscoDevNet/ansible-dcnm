@@ -4513,7 +4513,7 @@ class DcnmIntf:
                                 continue
                         if found is False:
                             payload = {"serialNumber": have['serialNo'],
-                                        "ifName": have["ifName"]}
+                                       "ifName": have["ifName"]}
                             self.diff_delete[
                                 self.int_index[self.int_types['breakout']]].append(payload)
                             self.changed_dict[0]["deleted"].append(
