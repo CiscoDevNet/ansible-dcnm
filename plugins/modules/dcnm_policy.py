@@ -416,6 +416,7 @@ class DcnmPolicy:
             "POLICY_BULK_CREATE": "/rest/control/policies/bulk-create",
             "POLICY_BULK_UPDATE": "/rest/control/policies/{}/bulk",
             "POLICY_MARK_DELETE": "/rest/control/policies/{}/mark-delete",
+            "POLICY_DELETE": "/rest/control/policies/policyIds?policyIds={}",
             "POLICY_DEPLOY": "/rest/control/policies/deploy",
             "POLICY_CFG_DEPLOY": "/rest/control/fabrics/{}/config-deploy/",
             "POLICY_WITH_POLICY_ID": "/rest/control/policies/{}",
