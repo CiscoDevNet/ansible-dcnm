@@ -125,6 +125,15 @@ options:
           access_vlan:
             description:
             - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
+<<<<<<< HEAD
+=======
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
+>>>>>>> develop
             type: str
             default: ""
           int_vrf:
@@ -467,6 +476,15 @@ options:
           access_vlan:
             description:
             - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
+<<<<<<< HEAD
+=======
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
+>>>>>>> develop
             type: str
             default: ""
           speed:
