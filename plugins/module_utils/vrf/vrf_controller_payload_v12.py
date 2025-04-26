@@ -6,7 +6,7 @@ Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name
 Verb: POST
 """
 
-import ast
+import json
 import warnings
 from typing import Any, Optional, Union
 
@@ -76,7 +76,7 @@ class VrfTemplateConfig(BaseModel):
         """
         Convert incoming data
 
-        - If data is a JSON string, use ast.literal_eval() to convert to a dict.
+        - If data is a JSON string, use json.loads() to convert to a dict.
         - If data is a dict, convert to int all fields that should be int.
         - If data is already a VrfTemplateConfig model, return as-is.
         """
@@ -133,7 +133,7 @@ class VrfTemplateConfig(BaseModel):
         ]
 
         if isinstance(data, str):
-            data = ast.literal_eval(data)
+            data = json.loads(data)
         if isinstance(data, dict):
             for key in vrf_template_config_params_with_integer_values:
                 data[key] = convert_to_integer(key, data)
