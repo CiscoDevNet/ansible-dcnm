@@ -13,11 +13,11 @@ class IPv6CidrHostModel(BaseModel):
     """
     # Summary
 
-    Model to validate a CIDR-format IPv4 host address.
+    Model to validate a CIDR-format IPv6 host address.
 
     ## Raises
 
-    - ValueError: If the input is not a valid CIDR-format IPv4 host address.
+    - ValueError: If the input is not a valid CIDR-format IPv6 host address.
 
     ## Example usage
     ```python
@@ -36,7 +36,7 @@ class IPv6CidrHostModel(BaseModel):
 
     @field_validator("ipv6_cidr_host")
     @classmethod
-    def validate(cls, value: str):
+    def validate(cls, value: str) -> str:
         """
         Validate that the input is a valid IPv6 CIDR-format host address
         and that it is NOT a network address.
@@ -46,13 +46,13 @@ class IPv6CidrHostModel(BaseModel):
         # Validate the address part
         try:
             result = validate_ipv6_cidr_host(value)
-        except ValueError as err:
+        except ValueError as error:
             msg = f"Invalid CIDR-format IPv6 host address: {value}. "
-            msg += f"detail: {err}"
-            raise ValueError(msg) from err
+            msg += f"detail: {error}"
+            raise ValueError(msg) from error
 
         if result is True:
-            # If the address is a host address, return it
+            # Valid CIDR-format IPv6 host address
             return value
         msg = f"Invalid CIDR-format IPv6 host address: {value}. "
         msg += "Are the host bits all zero?"

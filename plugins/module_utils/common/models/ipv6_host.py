@@ -38,7 +38,7 @@ class IPv6HostModel(BaseModel):
 
     @field_validator("ipv6_host")
     @classmethod
-    def validate(cls, value: str):
+    def validate(cls, value: str) -> str:
         """
         Validate that the input is a valid IPv6 host address
 
@@ -47,12 +47,13 @@ class IPv6HostModel(BaseModel):
         # Validate the address part
         try:
             result = validate_ipv6_host(value)
-        except ValueError as err:
-            msg = f"Invalid IPv6 host address: {value}. Error: {err}"
-            raise ValueError(msg) from err
+        except ValueError as error:
+            msg = f"Invalid IPv6 host address: {value}. "
+            msg += f"detail: {error}"
+            raise ValueError(msg) from error
 
         if result is True:
-            # If the address is a host address, return it
+            # Valid IPv6 host address
             return value
         msg = f"Invalid IPv6 host address: {value}."
         raise ValueError(msg)
