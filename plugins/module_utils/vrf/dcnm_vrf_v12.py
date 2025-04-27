@@ -81,8 +81,23 @@ except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
     FIRST_PARTY_FAILED_IMPORT.add("VrfPlaybookModelV12")
 
+try:
+    from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet
+    HAS_FIRST_PARTY_IMPORTS.add(True)
+except ImportError as import_error:
+    FIRST_PARTY_IMPORT_ERROR = import_error
+    HAS_FIRST_PARTY_IMPORTS.add(False)
+    FIRST_PARTY_FAILED_IMPORT.add("EpVrfGet")
+
+try:
+    from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfPost
+    HAS_FIRST_PARTY_IMPORTS.add(True)
+except ImportError as import_error:
+    FIRST_PARTY_IMPORT_ERROR = import_error
+    HAS_FIRST_PARTY_IMPORTS.add(False)
+    FIRST_PARTY_FAILED_IMPORT.add("EpVrfPost")
+
 dcnm_vrf_paths: dict = {
-    "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
     "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
     "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
     "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
@@ -1037,9 +1052,9 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        path = self.paths["GET_VRF"].format(self.fabric)
-
-        vrf_objects = dcnm_send(self.module, "GET", path)
+        ep = EpVrfGet()
+        ep.fabric_name = self.fabric
+        vrf_objects = dcnm_send(self.module, ep.verb, ep.path)
 
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -1842,15 +1857,16 @@ class NdfcVrf12:
 
                 want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
-                create_path = self.paths["GET_VRF"].format(self.fabric)
-
                 diff_create_quick.append(want_c)
 
                 if self.module.check_mode:
                     continue
 
                 # arobel: TODO: Not covered by UT
-                resp = dcnm_send(self.module, "POST", create_path, json.dumps(want_c))
+                ep = EpVrfPost()
+                ep.fabric_name = self.fabric
+
+                resp = dcnm_send(self.module, ep.verb, ep.path, json.dumps(want_c))
                 self.result["response"].append(resp)
 
                 fail, self.result["changed"] = self.handle_response(resp, "create")
@@ -2191,8 +2207,9 @@ class NdfcVrf12:
 
         path_get_vrf_attach: str
 
-        path_get_vrf: str = self.paths["GET_VRF"].format(self.fabric)
-        vrf_objects = dcnm_send(self.module, "GET", path_get_vrf)
+        ep = EpVrfGet()
+        ep.fabric_name = self.fabric
+        vrf_objects = dcnm_send(self.module, ep.verb, ep.path)
 
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -2334,15 +2351,14 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         action: str = "create"
-        path: str = self.paths["GET_VRF"].format(self.fabric)
+        ep = EpVrfPost()
+        ep.fabric_name = self.fabric
 
         if self.diff_create_update:
             for payload in self.diff_create_update:
-                update_path: str = f"{path}/{payload['vrfName']}"
-
                 args = SendToControllerArgs(
                     action=action,
-                    path=update_path,
+                    path=f"{ep.path}/{payload['vrfName']}",
                     verb=RequestVerb.PUT,
                     payload=payload,
                     log_response=True,
@@ -2382,13 +2398,13 @@ class NdfcVrf12:
                     del vrf_attach["is_deploy"]
 
         action: str = "attach"
-        path: str = self.paths["GET_VRF"].format(self.fabric)
-        detach_path: str = path + "/attachments"
+        ep = EpVrfPost()
+        ep.fabric_name = self.fabric
 
         args = SendToControllerArgs(
             action=action,
-            path=detach_path,
-            verb=RequestVerb.POST,
+            path=f"{ep.path}/attachments",
+            verb=ep.verb,
             payload=self.diff_detach,
             log_response=True,
             is_rollback=is_rollback,
@@ -2415,13 +2431,12 @@ class NdfcVrf12:
             return
 
         action = "deploy"
-        path = self.paths["GET_VRF"].format(self.fabric)
-        deploy_path = path + "/deployments"
-
+        ep = EpVrfPost()
+        ep.fabric_name = self.fabric
         args = SendToControllerArgs(
             action=action,
-            path=deploy_path,
-            verb=RequestVerb.POST,
+            path=f"{ep.path}/deployments",
+            verb=ep.verb,
             payload=self.diff_undeploy,
             log_response=True,
             is_rollback=is_rollback,
@@ -2450,14 +2465,15 @@ class NdfcVrf12:
         self.wait_for_vrf_del_ready()
 
         del_failure: set = set()
-        path: str = self.paths["GET_VRF"].format(self.fabric)
+        ep = EpVrfGet()
+        ep.fabric_name = self.fabric
         for vrf, state in self.diff_delete.items():
             if state == "OUT-OF-SYNC":
                 del_failure.add(vrf)
                 continue
             args = SendToControllerArgs(
                 action="delete",
-                path=f"{path}/{vrf}",
+                path=f"{ep.path}/{vrf}",
                 verb=RequestVerb.DELETE,
                 payload=self.diff_delete,
                 log_response=True,
@@ -2553,10 +2569,12 @@ class NdfcVrf12:
             msg = "Sending vrf create request."
             self.log.debug(msg)
 
+            ep = EpVrfPost()
+            ep.fabric_name = self.fabric
             args = SendToControllerArgs(
                 action="create",
-                path=self.paths["GET_VRF"].format(self.fabric),
-                verb=RequestVerb.POST,
+                path=ep.path,
+                verb=ep.verb,
                 payload=copy.deepcopy(vrf),
                 log_response=True,
                 is_rollback=is_rollback,
@@ -3100,10 +3118,12 @@ class NdfcVrf12:
             msg += f"{json.dumps(new_diff_attach_list, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
+        ep = EpVrfPost()
+        ep.fabric_name = self.fabric
         args = SendToControllerArgs(
             action="attach",
-            path=f"{self.paths['GET_VRF'].format(self.fabric)}/attachments",
-            verb=RequestVerb.POST,
+            path=f"{ep.path}/attachments",
+            verb=ep.verb,
             payload=new_diff_attach_list,
             log_response=True,
             is_rollback=is_rollback,
@@ -3127,10 +3147,12 @@ class NdfcVrf12:
             self.log.debug(msg)
             return
 
+        ep = EpVrfPost()
+        ep.fabric_name = self.fabric
         args = SendToControllerArgs(
             action="deploy",
-            path=f"{self.paths['GET_VRF'].format(self.fabric)}/deployments",
-            verb=RequestVerb.POST,
+            path=f"{ep.path}/deployments",
+            verb=ep.verb,
             payload=self.diff_deploy,
             log_response=True,
             is_rollback=is_rollback,

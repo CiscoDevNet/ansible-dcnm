@@ -21,7 +21,7 @@ import inspect
 import logging
 
 from ..fabrics import Fabrics
-
+from .........common.enums.http_requests import RequestVerb
 
 class Vrfs(Fabrics):
     """
@@ -106,9 +106,65 @@ class Vrfs(Fabrics):
         self.properties["ticket_id"] = value
 
 
-class EpVrfCreate(Fabrics):
+class EpVrfGet(Fabrics):
     """
-    ## V1 API - Fabrics().EpVrfCreate()
+    ## V1 API - Fabrics().EpVrfGet()
+
+    ### Description
+    Return endpoint information.
+
+    ### Raises
+    -   ``ValueError``: If fabric_name is not set.
+    -   ``ValueError``: If fabric_name is invalid.
+
+    ### Path
+    -   ``/rest/control/fabrics/{fabric_name}/vrfs``
+
+    ### Verb
+    -   GET
+
+    ### Parameters
+    - fabric_name: string
+        - set the ``fabric_name`` to be used in the path
+        - required
+    -   path: retrieve the path for the endpoint
+    -   verb: retrieve the verb for the endpoint
+
+    ### Usage
+    ```python
+    instance = EpVrfGet()
+    instance.fabric_name = "MyFabric"
+    path = instance.path
+    verb = instance.verb
+    ```
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.required_properties.add("fabric_name")
+        self._build_properties()
+        msg = "ENTERED api.v1.lan_fabric.rest.top_down.fabrics.vrfs."
+        msg += f"Vrfs.{self.class_name}"
+        self.log.debug(msg)
+
+    def _build_properties(self):
+        super()._build_properties()
+        self.properties["verb"] = RequestVerb.GET.value
+
+    @property
+    def path(self):
+        """
+        - Endpoint for VRF GET request.
+        - Raise ``ValueError`` if fabric_name is not set.
+        """
+        return f"{self.path_fabric_name}/vrfs"
+
+
+class EpVrfPost(Fabrics):
+    """
+    ## V1 API - Fabrics().EpVrfPost()
 
     ### Description
     Return endpoint information.
@@ -151,12 +207,12 @@ class EpVrfCreate(Fabrics):
 
     def _build_properties(self):
         super()._build_properties()
-        self.properties["verb"] = "POST"
+        self.properties["verb"] = RequestVerb.POST.value
 
     @property
     def path(self):
         """
-        - Endpoint for fabric create.
+        - Endpoint for VRF POST request.
         - Raise ``ValueError`` if fabric_name is not set.
         """
         return f"{self.path_fabric_name}/vrfs"
