@@ -20,7 +20,7 @@ __metaclass__ = type
 
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import (
-    EpVrfCreate)
+    EpVrfPost)
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise
 
@@ -32,7 +32,7 @@ TICKET_ID = "MyTicket1234"
 def test_ep_vrf_create_00000():
     """
     ### Class
-    -   EpVrfCreate
+    -   EpVrfPost
 
     ### Summary
     -   Verify __init__ method
@@ -45,12 +45,12 @@ def test_ep_vrf_create_00000():
                 ``fabric_name`` is not yet set.
     """
     with does_not_raise():
-        instance = EpVrfCreate()
-    assert instance.class_name == "EpVrfCreate"
+        instance = EpVrfPost()
+    assert instance.class_name == "EpVrfPost"
     assert "fabric_name" in instance.required_properties
     assert len(instance.required_properties) == 1
     assert instance.properties["verb"] == "POST"
-    match = r"EpVrfCreate.path_fabric_name:\s+"
+    match = r"EpVrfPost.path_fabric_name:\s+"
     with pytest.raises(ValueError, match=match):
         instance.path  # pylint: disable=pointless-statement
 
@@ -58,13 +58,13 @@ def test_ep_vrf_create_00000():
 def test_ep_vrf_create_00010():
     """
     ### Class
-    -   EpVrfCreate
+    -   EpVrfPost
 
     ### Summary
     -   Verify path and verb
     """
     with does_not_raise():
-        instance = EpVrfCreate()
+        instance = EpVrfPost()
         instance.fabric_name = FABRIC_NAME
     assert f"{PATH_PREFIX}/{FABRIC_NAME}/vrfs" in instance.path
     assert instance.verb == "POST"
@@ -81,8 +81,8 @@ def test_ep_vrf_create_00050():
 
     """
     with does_not_raise():
-        instance = EpVrfCreate()
-    match = r"EpVrfCreate.path_fabric_name:\s+"
+        instance = EpVrfPost()
+    match = r"EpVrfPost.path_fabric_name:\s+"
     match += r"fabric_name must be set prior to accessing path\."
     with pytest.raises(ValueError, match=match):
         instance.path  # pylint: disable=pointless-statement
@@ -99,8 +99,8 @@ def test_ep_vrf_create_00060():
     """
     fabric_name = "1_InvalidFabricName"
     with does_not_raise():
-        instance = EpVrfCreate()
-    match = r"EpVrfCreate.fabric_name:\s+"
+        instance = EpVrfPost()
+    match = r"EpVrfPost.fabric_name:\s+"
     match += r"ConversionUtils\.validate_fabric_name:\s+"
     match += rf"Invalid fabric name: {fabric_name}\."
     with pytest.raises(ValueError, match=match):
