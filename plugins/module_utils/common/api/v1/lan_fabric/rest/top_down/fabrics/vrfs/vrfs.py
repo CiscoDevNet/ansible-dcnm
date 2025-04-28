@@ -23,6 +23,7 @@ import logging
 from ..fabrics import Fabrics
 from .........common.enums.http_requests import RequestVerb
 
+
 class Vrfs(Fabrics):
     """
     ## api.v1.lan-fabric.rest.control.top-down.fabrics.Vrfs()

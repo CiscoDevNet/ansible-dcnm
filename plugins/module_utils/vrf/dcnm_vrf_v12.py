@@ -1011,15 +1011,15 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        ep = EpVrfGet()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfGet()
+        endpoint.fabric_name = self.fabric
 
-        vrf_objects = dcnm_send(self.module, ep.verb.value, ep.path)
+        vrf_objects = dcnm_send(self.module, endpoint.verb.value, endpoint.path)
 
         if vrf_objects is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to retrieve endpoint. "
-            msg += f"verb {ep.verb.value} path {ep.path}"
+            msg += f"verb {endpoint.verb.value} path {endpoint.path}"
             raise ValueError(msg)
 
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
@@ -1850,10 +1850,10 @@ class NdfcVrf12:
                     continue
 
                 # arobel: TODO: Not covered by UT
-                ep = EpVrfPost()
-                ep.fabric_name = self.fabric
+                endpoint = EpVrfPost()
+                endpoint.fabric_name = self.fabric
 
-                resp = dcnm_send(self.module, ep.verb.value, ep.path, json.dumps(want_c))
+                resp = dcnm_send(self.module, endpoint.verb.value, endpoint.path, json.dumps(want_c))
                 self.result["response"].append(resp)
 
                 fail, self.result["changed"] = self.handle_response(resp, "create")
@@ -2194,16 +2194,16 @@ class NdfcVrf12:
 
         path_get_vrf_attach: str
 
-        ep = EpVrfGet()
-        ep.fabric_name = self.fabric
-        vrf_objects = dcnm_send(self.module, ep.verb.value, ep.path)
+        endpoint = EpVrfGet()
+        endpoint.fabric_name = self.fabric
+        vrf_objects = dcnm_send(self.module, endpoint.verb.value, endpoint.path)
             
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
         if vrf_objects is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
-            msg += f"Fabric {self.fabric} unable to retrieve verb {ep.verb} path {ep.path}"
+            msg += f"Fabric {self.fabric} unable to retrieve verb {endpoint.verb} path {endpoint.path}"
             self.module.fail_json(msg=msg)
 
 
@@ -2355,14 +2355,14 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         action: str = "create"
-        ep = EpVrfPost()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfPost()
+        endpoint.fabric_name = self.fabric
 
         if self.diff_create_update:
             for payload in self.diff_create_update:
                 args = SendToControllerArgs(
                     action=action,
-                    path=f"{ep.path}/{payload['vrfName']}",
+                    path=f"{endpoint.path}/{payload['vrfName']}",
                     verb=RequestVerb.PUT,
                     payload=payload,
                     log_response=True,
@@ -2402,13 +2402,13 @@ class NdfcVrf12:
                     del vrf_attach["is_deploy"]
 
         action: str = "attach"
-        ep = EpVrfPost()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfPost()
+        endpoint.fabric_name = self.fabric
 
         args = SendToControllerArgs(
             action=action,
-            path=f"{ep.path}/attachments",
-            verb=ep.verb,
+            path=f"{endpoint.path}/attachments",
+            verb=endpoint.verb,
             payload=self.diff_detach,
             log_response=True,
             is_rollback=is_rollback,
@@ -2435,12 +2435,12 @@ class NdfcVrf12:
             return
 
         action = "deploy"
-        ep = EpVrfPost()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfPost()
+        endpoint.fabric_name = self.fabric
         args = SendToControllerArgs(
             action=action,
-            path=f"{ep.path}/deployments",
-            verb=ep.verb,
+            path=f"{endpoint.path}/deployments",
+            verb=endpoint.verb,
             payload=self.diff_undeploy,
             log_response=True,
             is_rollback=is_rollback,
@@ -2469,15 +2469,15 @@ class NdfcVrf12:
         self.wait_for_vrf_del_ready()
 
         del_failure: set = set()
-        ep = EpVrfGet()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfGet()
+        endpoint.fabric_name = self.fabric
         for vrf, state in self.diff_delete.items():
             if state == "OUT-OF-SYNC":
                 del_failure.add(vrf)
                 continue
             args = SendToControllerArgs(
                 action="delete",
-                path=f"{ep.path}/{vrf}",
+                path=f"{endpoint.path}/{vrf}",
                 verb=RequestVerb.DELETE,
                 payload=self.diff_delete,
                 log_response=True,
@@ -2579,12 +2579,12 @@ class NdfcVrf12:
             msg = "Sending vrf create request."
             self.log.debug(msg)
 
-            ep = EpVrfPost()
-            ep.fabric_name = self.fabric
+            endpoint = EpVrfPost()
+            endpoint.fabric_name = self.fabric
             args = SendToControllerArgs(
                 action="create",
-                path=ep.path,
-                verb=ep.verb,
+                path=endpoint.path,
+                verb=endpoint.verb,
                 payload=copy.deepcopy(vrf),
                 log_response=True,
                 is_rollback=is_rollback,
@@ -3134,12 +3134,12 @@ class NdfcVrf12:
             msg += f"{json.dumps(new_diff_attach_list, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-        ep = EpVrfPost()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfPost()
+        endpoint.fabric_name = self.fabric
         args = SendToControllerArgs(
             action="attach",
-            path=f"{ep.path}/attachments",
-            verb=ep.verb,
+            path=f"{endpoint.path}/attachments",
+            verb=endpoint.verb,
             payload=new_diff_attach_list,
             log_response=True,
             is_rollback=is_rollback,
@@ -3163,12 +3163,12 @@ class NdfcVrf12:
             self.log.debug(msg)
             return
 
-        ep = EpVrfPost()
-        ep.fabric_name = self.fabric
+        endpoint = EpVrfPost()
+        endpoint.fabric_name = self.fabric
         args = SendToControllerArgs(
             action="deploy",
-            path=f"{ep.path}/deployments",
-            verb=ep.verb,
+            path=f"{endpoint.path}/deployments",
+            verb=endpoint.verb,
             payload=self.diff_deploy,
             log_response=True,
             is_rollback=is_rollback,
