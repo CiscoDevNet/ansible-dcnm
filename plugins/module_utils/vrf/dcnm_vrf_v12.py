@@ -30,14 +30,13 @@ import json
 import logging
 import re
 import time
-import traceback
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Optional, Union
 
+import pydantic
 from ansible.module_utils.basic import AnsibleModule
 
-import pydantic
-
+from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
 from ...module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
@@ -48,12 +47,8 @@ from ...module_utils.network.dcnm.dcnm import (
     get_ip_sn_dict,
     get_sn_fabric_dict,
 )
-
 from ...module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from ...module_utils.vrf.vrf_playbook_model_v12 import VrfPlaybookModelV12
-from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet
-from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfPost
-
 
 dcnm_vrf_paths: dict = {
     "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
@@ -1113,7 +1108,7 @@ class NdfcVrf12:
             module_name="vrfs",
         )
 
-        if get_vrf_attach_response == None:
+        if get_vrf_attach_response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}: unable to set get_vrf_attach_response."
             raise ValueError(msg)
@@ -2197,7 +2192,7 @@ class NdfcVrf12:
         endpoint = EpVrfGet()
         endpoint.fabric_name = self.fabric
         vrf_objects = dcnm_send(self.module, endpoint.verb.value, endpoint.path)
-            
+
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
         if vrf_objects is None:
@@ -2205,7 +2200,6 @@ class NdfcVrf12:
             msg += f"caller: {caller}. "
             msg += f"Fabric {self.fabric} unable to retrieve verb {endpoint.verb} path {endpoint.path}"
             self.module.fail_json(msg=msg)
-
 
         if vrf_objects.get("ERROR") == "Not Found" and vrf_objects.get("RETURN_CODE") == 404:
             msg = f"{self.class_name}.{method_name}: "
@@ -2904,7 +2898,7 @@ class NdfcVrf12:
         if response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
-            msg += f"Unable to retrieve endpoint. "
+            msg += "Unable to retrieve endpoint. "
             msg += f"verb {args.verb.value}, path {args.path}"
             raise ValueError(msg)
         self.response = copy.deepcopy(response)
