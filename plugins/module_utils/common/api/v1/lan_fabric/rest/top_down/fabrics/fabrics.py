@@ -25,13 +25,13 @@ from ..top_down import TopDown
 
 class Fabrics(TopDown):
     """
-    ## api.v1.lan-fabric.rest.control.top-down.fabrics.Fabrics()
+    ## api.v1.lan-fabric.rest.top-down.fabrics.Fabrics()
 
     ### Description
     Common methods and properties for top-down.fabrics.Fabrics() subclasses.
 
     ### Path
-    -   ``/api/v1/lan-fabric/rest/control/top_down/fabrics``
+    -   ``/api/v1/lan-fabric/rest/top_down/fabrics``
     """
 
     def __init__(self):

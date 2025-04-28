@@ -26,13 +26,13 @@ from .........common.enums.http_requests import RequestVerb
 
 class Vrfs(Fabrics):
     """
-    ## api.v1.lan-fabric.rest.control.top-down.fabrics.Vrfs()
+    ## api.v1.lan-fabric.rest.top-down.fabrics.Vrfs()
 
     ### Description
     Common methods and properties for top-down.fabrics.Vrfs() subclasses.
 
     ### Path
-    -   ``/api/v1/lan-fabric/rest/control/top-down/fabrics/{fabric_name}/vrfs``
+    -   ``/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs``
     """
 
     def __init__(self):
@@ -109,7 +109,7 @@ class Vrfs(Fabrics):
 
 class EpVrfGet(Fabrics):
     """
-    ## V1 API - Fabrics().EpVrfGet()
+    ## V1 API - Vrfs().EpVrfGet()
 
     ### Description
     Return endpoint information.
@@ -119,7 +119,7 @@ class EpVrfGet(Fabrics):
     -   ``ValueError``: If fabric_name is invalid.
 
     ### Path
-    -   ``/rest/control/fabrics/{fabric_name}/vrfs``
+    -   ``/rest/top-down/fabrics/{fabric_name}/vrfs``
 
     ### Verb
     -   GET
@@ -165,7 +165,7 @@ class EpVrfGet(Fabrics):
 
 class EpVrfPost(Fabrics):
     """
-    ## V1 API - Fabrics().EpVrfPost()
+    ## V1 API - Vrfs().EpVrfPost()
 
     ### Description
     Return endpoint information.
@@ -175,7 +175,7 @@ class EpVrfPost(Fabrics):
     -   ``ValueError``: If fabric_name is invalid.
 
     ### Path
-    -   ``/rest/control/fabrics/{fabric_name}/vrfs``
+    -   ``/rest/top-down/fabrics/{fabric_name}/vrfs``
 
     ### Verb
     -   POST
@@ -189,7 +189,7 @@ class EpVrfPost(Fabrics):
 
     ### Usage
     ```python
-    instance = EpVrfCreate()
+    instance = EpVrfPost()
     instance.fabric_name = "MyFabric"
     path = instance.path
     verb = instance.verb
