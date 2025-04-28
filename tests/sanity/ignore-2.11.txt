@@ -32,6 +32,9 @@ plugins/modules/dcnm_vrf.py import-3.11
 plugins/module_utils/common/sender_requests.py import-3.9
 plugins/module_utils/common/sender_requests.py import-3.10
 plugins/module_utils/common/sender_requests.py import-3.11
+plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.9!skip
+plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.10!skip
+plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.11!skip
 plugins/module_utils/vrf/vrf_controller_payload_v12.py import-3.9!skip
 plugins/module_utils/vrf/vrf_controller_payload_v12.py import-3.10!skip
 plugins/module_utils/vrf/vrf_controller_payload_v12.py import-3.11!skip
