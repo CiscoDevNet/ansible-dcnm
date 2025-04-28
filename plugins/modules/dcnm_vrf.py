@@ -591,8 +591,8 @@ except ImportError as import_error:
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import dcnm_version_supported
 
-DcnmVrf11 = None
-NdfcVrf12 = None
+DcnmVrf11 = None  # pylint: disable=invalid-name
+NdfcVrf12 = None  # pylint: disable=invalid-name
 
 try:
     from ..module_utils.vrf.dcnm_vrf_v11 import DcnmVrf11

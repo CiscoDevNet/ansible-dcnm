@@ -21,10 +21,11 @@ __metaclass__ = type
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import (
     EpVrfPost)
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.enums.http_requests import RequestVerb
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
     does_not_raise
 
-PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top_down/fabrics"
+PATH_PREFIX = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics"
 FABRIC_NAME = "MyFabric"
 TICKET_ID = "MyTicket1234"
 
@@ -49,7 +50,7 @@ def test_ep_vrf_create_00000():
     assert instance.class_name == "EpVrfPost"
     assert "fabric_name" in instance.required_properties
     assert len(instance.required_properties) == 1
-    assert instance.properties["verb"] == "POST"
+    assert instance.properties["verb"] == RequestVerb.POST
     match = r"EpVrfPost.path_fabric_name:\s+"
     with pytest.raises(ValueError, match=match):
         instance.path  # pylint: disable=pointless-statement
@@ -67,7 +68,7 @@ def test_ep_vrf_create_00010():
         instance = EpVrfPost()
         instance.fabric_name = FABRIC_NAME
     assert f"{PATH_PREFIX}/{FABRIC_NAME}/vrfs" in instance.path
-    assert instance.verb == "POST"
+    assert instance.verb == RequestVerb.POST
 
 
 def test_ep_vrf_create_00050():
