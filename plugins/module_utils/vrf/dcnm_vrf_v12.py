@@ -36,23 +36,7 @@ from typing import Any, Final, Optional, Union
 
 from ansible.module_utils.basic import AnsibleModule
 
-HAS_FIRST_PARTY_IMPORTS: set[bool] = set()
-HAS_THIRD_PARTY_IMPORTS: set[bool] = set()
-
-FIRST_PARTY_IMPORT_ERROR: Optional[ImportError]
-FIRST_PARTY_FAILED_IMPORT: set[str] = set()
-THIRD_PARTY_IMPORT_ERROR: Optional[str]
-THIRD_PARTY_FAILED_IMPORT: set[str] = set()
-
-try:
-    import pydantic
-
-    HAS_THIRD_PARTY_IMPORTS.add(True)
-    THIRD_PARTY_IMPORT_ERROR = None
-except ImportError:
-    HAS_THIRD_PARTY_IMPORTS.add(False)
-    THIRD_PARTY_FAILED_IMPORT.add("pydantic")
-    THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
+import pydantic
 
 from ...module_utils.common.enums.http_requests import RequestVerb
 from ...module_utils.network.dcnm.dcnm import (
@@ -65,37 +49,11 @@ from ...module_utils.network.dcnm.dcnm import (
     get_sn_fabric_dict,
 )
 
-try:
-    from ...module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV12Model")
+from ...module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
+from ...module_utils.vrf.vrf_playbook_model_v12 import VrfPlaybookModelV12
+from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet
+from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfPost
 
-try:
-    from ...module_utils.vrf.vrf_playbook_model_v12 import VrfPlaybookModelV12
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("VrfPlaybookModelV12")
-
-try:
-    from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("EpVrfGet")
-
-try:
-    from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfPost
-    HAS_FIRST_PARTY_IMPORTS.add(True)
-except ImportError as import_error:
-    FIRST_PARTY_IMPORT_ERROR = import_error
-    HAS_FIRST_PARTY_IMPORTS.add(False)
-    FIRST_PARTY_FAILED_IMPORT.add("EpVrfPost")
 
 dcnm_vrf_paths: dict = {
     "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
@@ -1047,6 +1005,7 @@ class NdfcVrf12:
         Retrieve all VRF objects from the controller
         """
         caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
@@ -1054,7 +1013,14 @@ class NdfcVrf12:
 
         ep = EpVrfGet()
         ep.fabric_name = self.fabric
-        vrf_objects = dcnm_send(self.module, ep.verb, ep.path)
+
+        vrf_objects = dcnm_send(self.module, ep.verb.value, ep.path)
+
+        if vrf_objects is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{caller}: Unable to retrieve endpoint. "
+            msg += f"verb {ep.verb.value} path {ep.path}"
+            raise ValueError(msg)
 
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -1079,6 +1045,7 @@ class NdfcVrf12:
         - vrfName: The vrf to search
         """
         caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
         msg += f"caller: {caller}"
@@ -1092,6 +1059,11 @@ class NdfcVrf12:
         msg = f"verb: {verb}, path: {path}"
         self.log.debug(msg)
         lite_objects = dcnm_send(self.module, verb, path)
+
+        if lite_objects is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{caller}: Unable to retrieve lite_objects."
+            raise ValueError(msg)
 
         msg = f"Returning lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -1110,6 +1082,7 @@ class NdfcVrf12:
         -   self.have_deploy
         """
         caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
@@ -1120,6 +1093,9 @@ class NdfcVrf12:
 
         vrf_objects = self.get_vrf_objects()
 
+        msg = f"ZZZ: vrf_objects: {vrf_objects}"
+        self.log.debug(msg)
+
         if not vrf_objects.get("DATA"):
             return
 
@@ -1129,13 +1105,21 @@ class NdfcVrf12:
             if vrf.get("vrfName"):
                 curr_vrfs.add(vrf["vrfName"])
 
-        get_vrf_attach_response: dict = dcnm_get_url(
+        get_vrf_attach_response = dcnm_get_url(
             module=self.module,
             fabric=self.fabric,
             path=self.paths["GET_VRF_ATTACH"],
             items=",".join(curr_vrfs),
             module_name="vrfs",
         )
+
+        if get_vrf_attach_response == None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}: unable to set get_vrf_attach_response."
+            raise ValueError(msg)
+
+        msg = f"ZZZ: get_vrf_response: {get_vrf_attach_response}"
+        self.log.debug(msg)
 
         if not get_vrf_attach_response.get("DATA"):
             return
@@ -1260,6 +1244,7 @@ class NdfcVrf12:
                         ext_values = ast.literal_eval(ext_values["VRF_LITE_CONN"])
                         extension_values: dict = {}
                         extension_values["VRF_LITE_CONN"] = []
+                        extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": []}
 
                         for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
                             ev_dict = copy.deepcopy(extension_values_dict)
@@ -1728,6 +1713,8 @@ class NdfcVrf12:
                 msg2 = f"{msg0} Unable to generate vrfId under fabric {fabric}"
                 self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
+            if not vrf_id_obj:
+                continue
             if not vrf_id_obj["DATA"]:
                 continue
 
@@ -1866,7 +1853,7 @@ class NdfcVrf12:
                 ep = EpVrfPost()
                 ep.fabric_name = self.fabric
 
-                resp = dcnm_send(self.module, ep.verb, ep.path, json.dumps(want_c))
+                resp = dcnm_send(self.module, ep.verb.value, ep.path, json.dumps(want_c))
                 self.result["response"].append(resp)
 
                 fail, self.result["changed"] = self.handle_response(resp, "create")
@@ -2209,9 +2196,16 @@ class NdfcVrf12:
 
         ep = EpVrfGet()
         ep.fabric_name = self.fabric
-        vrf_objects = dcnm_send(self.module, ep.verb, ep.path)
-
+        vrf_objects = dcnm_send(self.module, ep.verb.value, ep.path)
+            
         missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
+
+        if vrf_objects is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += f"Fabric {self.fabric} unable to retrieve verb {ep.verb} path {ep.path}"
+            self.module.fail_json(msg=msg)
+
 
         if vrf_objects.get("ERROR") == "Not Found" and vrf_objects.get("RETURN_CODE") == 404:
             msg = f"{self.class_name}.{method_name}: "
@@ -2232,7 +2226,6 @@ class NdfcVrf12:
 
         query: list
         vrf: dict
-        get_vrf_attach_response: dict
         if self.config:
             query = []
             for want_c in self.want_create:
@@ -2249,6 +2242,11 @@ class NdfcVrf12:
                     path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
                     get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+
+                    if get_vrf_attach_response is None:
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"{caller}: Unable to retrieve endpoint: verb GET, path {path_get_vrf_attach}"
+                        raise ValueError(msg)
 
                     missing_fabric, not_ok = self.handle_response(get_vrf_attach_response, "query_dcnm")
 
@@ -2297,6 +2295,12 @@ class NdfcVrf12:
                 path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
                 get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+
+                if get_vrf_attach_response is None:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"{caller}: Unable to retrieve endpoint. "
+                    msg += f"verb GET, path {path_get_vrf_attach}"
+                    raise ValueError(msg)
 
                 missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
 
@@ -2515,6 +2519,12 @@ class NdfcVrf12:
             if vlan_id == 0:
                 vlan_path = self.paths["GET_VLAN"].format(self.fabric)
                 vlan_data = dcnm_send(self.module, "GET", vlan_path)
+
+                if vlan_data is None:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}. Unable to retrieve endpoint. "
+                    msg += f"verb GET, path {vlan_path}"
+                    raise ValueError(msg)
 
                 # TODO: arobel: Not in UT
                 if vlan_data["RETURN_CODE"] != 200:
@@ -2891,6 +2901,12 @@ class NdfcVrf12:
         else:
             response = dcnm_send(self.module, args.verb.value, args.path)
 
+        if response is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += f"Unable to retrieve endpoint. "
+            msg += f"verb {args.verb.value}, path {args.path}"
+            raise ValueError(msg)
         self.response = copy.deepcopy(response)
 
         msg = "RX controller: "

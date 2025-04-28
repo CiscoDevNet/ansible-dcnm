@@ -591,9 +591,11 @@ except ImportError as import_error:
 from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import dcnm_version_supported
 
+DcnmVrf11 = None
+NdfcVrf12 = None
+
 try:
     from ..module_utils.vrf.dcnm_vrf_v11 import DcnmVrf11
-
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
@@ -602,7 +604,6 @@ except ImportError as import_error:
 
 try:
     from ..module_utils.vrf.dcnm_vrf_v12 import NdfcVrf12
-
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
@@ -671,7 +672,11 @@ def main() -> None:
 
     dcnm_vrf_launch: DcnmVrf = DcnmVrf(module)
 
-    dcnm_vrf: Union[DcnmVrf11, NdfcVrf12]
+    if DcnmVrf11 is None:
+        module.fail_json(msg="Unable to import DcnmVrf11")
+    if NdfcVrf12 is None:
+        module.fail_json(msg="Unable to import DcnmVrf12")
+
     if dcnm_vrf_launch.controller_version == 12:
         dcnm_vrf = NdfcVrf12(module)
     else:
