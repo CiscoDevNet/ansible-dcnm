@@ -25,13 +25,13 @@ from .........common.enums.http_requests import RequestVerb
 
 class Vrfs(Fabrics):
     """
-    ## api.v1.lan-fabric.rest.control.top_down.fabrics.Vrfs()
+    ## api.v1.lan-fabric.rest.control.top-down.fabrics.Vrfs()
 
     ### Description
-    Common methods and properties for top_down.fabrics.Vrfs() subclasses.
+    Common methods and properties for top-down.fabrics.Vrfs() subclasses.
 
     ### Path
-    -   ``/api/v1/lan-fabric/rest/control/top_down/fabrics/{fabric_name}/vrfs``
+    -   ``/api/v1/lan-fabric/rest/control/top-down/fabrics/{fabric_name}/vrfs``
     """
 
     def __init__(self):
@@ -151,7 +151,7 @@ class EpVrfGet(Fabrics):
 
     def _build_properties(self):
         super()._build_properties()
-        self.properties["verb"] = RequestVerb.GET.value
+        self.properties["verb"] = RequestVerb.GET
 
     @property
     def path(self):
@@ -207,7 +207,7 @@ class EpVrfPost(Fabrics):
 
     def _build_properties(self):
         super()._build_properties()
-        self.properties["verb"] = RequestVerb.POST.value
+        self.properties["verb"] = RequestVerb.POST
 
     @property
     def path(self):

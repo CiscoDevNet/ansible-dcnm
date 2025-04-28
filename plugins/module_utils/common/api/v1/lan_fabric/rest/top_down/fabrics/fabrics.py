@@ -25,10 +25,10 @@ from ..top_down import TopDown
 
 class Fabrics(TopDown):
     """
-    ## api.v1.lan-fabric.rest.control.top_down.fabrics.Fabrics()
+    ## api.v1.lan-fabric.rest.control.top-down.fabrics.Fabrics()
 
     ### Description
-    Common methods and properties for top_down.fabrics.Fabrics() subclasses.
+    Common methods and properties for top-down.fabrics.Fabrics() subclasses.
 
     ### Path
     -   ``/api/v1/lan-fabric/rest/control/top_down/fabrics``
@@ -104,59 +104,3 @@ class Fabrics(TopDown):
             msg += f"Got {value} with type {type(value).__name__}."
             raise ValueError(msg)
         self.properties["ticket_id"] = value
-
-
-class EpVrfCreate(Fabrics):
-    """
-    ## V1 API - Fabrics().EpVrfCreate()
-
-    ### Description
-    Return endpoint information.
-
-    ### Raises
-    -   ``ValueError``: If fabric_name is not set.
-    -   ``ValueError``: If fabric_name is invalid.
-
-    ### Path
-    -   ``/rest/control/fabrics/{fabric_name}/vrfs``
-
-    ### Verb
-    -   POST
-
-    ### Parameters
-    - fabric_name: string
-        - set the ``fabric_name`` to be used in the path
-        - required
-    -   path: retrieve the path for the endpoint
-    -   verb: retrieve the verb for the endpoint
-
-    ### Usage
-    ```python
-    instance = EpVrfCreate()
-    instance.fabric_name = "MyFabric"
-    path = instance.path
-    verb = instance.verb
-    ```
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self.required_properties.add("fabric_name")
-        self._build_properties()
-        msg = "ENTERED api.v1.lan_fabric.rest.top_down.fabrics."
-        msg += f"Fabrics.{self.class_name}"
-        self.log.debug(msg)
-
-    def _build_properties(self):
-        super()._build_properties()
-        self.properties["verb"] = "POST"
-
-    @property
-    def path(self):
-        """
-        - Endpoint for fabric create.
-        - Raise ``ValueError`` if fabric_name is not set.
-        """
-        return f"{self.path_fabric_name}/vrfs"
