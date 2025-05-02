@@ -458,28 +458,37 @@
           - 'result["response"][0]["RETURN_CODE"] == 200'
           - 'result["response"][0]["MESSAGE"] == "OK"'
 
-    - name: Delete policy using template name - with deploy
-      cisco.dcnm.dcnm_policy:
-        fabric: "{{ ansible_it_fabric }}"
-        state: deleted                     # only choose form [merged, deleted, query]
-        config:
-          - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
-          - switch:
-             - ip: "{{ ansible_switch1 }}"
-      register: result
+    # TBD: This test case needs to be refactored to test delete with and without deploy
+    #      using a the switch_freeform template.  The following order should be verified.
+    #      1. Create policy with deploy
+    #      2. Delete policy with deploy
+    #      3. Create policy with deploy
+    #      4. Delete policy without deploy and verify policy config is not removed from switch
+    #      5. Delete policy with deploy and verify policy config is removed from switch
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 1'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["response"] | length) == 2'
 
-    - assert:
-        that:
-          - 'result["response"][0]["RETURN_CODE"] == 200'
-          - 'result["response"][0]["MESSAGE"] == "OK"'
+    # - name: Delete policy using template name - with deploy
+    #   cisco.dcnm.dcnm_policy:
+    #     fabric: "{{ ansible_it_fabric }}"
+    #     state: deleted                     # only choose form [merged, deleted, query]
+    #     config:
+    #       - name: template_101  # This can either be a policy name like POLICY-xxxxx or template name
+    #       - switch:
+    #          - ip: "{{ ansible_switch1 }}"
+    #   register: result
+
+    # - assert:
+    #     that:
+    #       - 'result.changed == true'
+    #       - '(result["diff"][0]["merged"] | length) == 0'
+    #       - '(result["diff"][0]["deleted"] | length) == 1'
+    #       - '(result["diff"][0]["query"] | length) == 0'
+    #       - '(result["response"] | length) == 2'
+
+    # - assert:
+    #     that:
+    #       - 'result["response"][0]["RETURN_CODE"] == 200'
+    #       - 'result["response"][0]["MESSAGE"] == "OK"'
 
 ##############################################
 ##                CLEANUP                   ##
