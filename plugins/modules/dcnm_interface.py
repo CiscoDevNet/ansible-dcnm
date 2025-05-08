@@ -3492,30 +3492,23 @@ class DcnmIntf:
         # commands to be executed on switch. This will affect the idempotence
         # check
 
-        if "breakout" == delem["type"]:
+        if delem["type"] == "breakout":
+            ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+
             intf = {
-                "deploy": False,
-                "policy": "",
+                "deploy": delem["deploy"],
+                "policy": "breakout_interface",
+                "interfaceType": "breakout_interface",
                 "interfaces": [
                     {
-                        "serialNumber": "",
-                        "ifName": "",
-                        "map": "",
+                        "serialNumber": str(self.ip_sn[sw]),
+                        "ifName": ifname,
+                        "map": str(delem["profile"]["map"]),
+                        "interfaceType": self.int_types[delem["type"]],
+                        "fabricName": self.fabric,
                     }
                 ]
             }
-            intf.update({"deploy": delem["deploy"]})
-            intf.update({"policy": "breakout_interface"})
-            intf.update({"interfaceType": "breakout_interface"})
-            ifname, port_id = self.dcnm_intf_get_if_name(
-                delem["name"], delem["type"]
-            )
-            intf["interfaces"][0].update({"ifName": ifname})
-
-            intf["interfaces"][0].update({"serialNumber": str(self.ip_sn[sw])})
-            intf["interfaces"][0].update({"map": str(delem['profile']['map'])})
-            intf["interfaces"][0].update({"interfaceType": self.int_types[delem["type"]]})
-            intf["interfaces"][0].update({"fabricName": self.fabric})
             return intf
 
         if delem["profile"]["mode"] == "monitor":
@@ -4120,6 +4113,15 @@ class DcnmIntf:
                                 changed_dict.pop(k)
 
             if action == "add":
+                # If E1/x/y do not create. Interface is created with breakout
+                if re.search(r"\d+\/\d+\/\d+", name):
+                    found, parent_type = self.dcnm_intf_get_parent(self.config, name)
+                    if found and parent_type == "breakout":
+                        if want.get("interfaceType", None) is not None:
+                            want.pop("interfaceType")
+                        self.diff_replace.append(want)
+                        self.changed_dict[0][state].append(changed_dict)
+                    continue
                 self.dcnm_intf_merge_intf_info(want, self.diff_create)
                 # Add the changed_dict to self.changed_dict
                 self.changed_dict[0][state].append(changed_dict)
@@ -4386,6 +4388,21 @@ class DcnmIntf:
                 ):
                     self.dcnm_intf_get_have_all(sw)
 
+    def dcnm_intf_get_parent(self, cfg, name):
+        # Extract the parent interface ID (e.g., "1/2" from "1/2/3")
+        match = re.search(r"(\d+/\d+)/\d+", name)
+        if not match:
+            return False, None  # Return early if the pattern doesn't match
+
+        parent_port_id = f"ethernet{match.group(1)}"
+
+        # Search for the parent interface in the configuration
+        for interface in cfg:
+            if interface.get("name") == parent_port_id:
+                return True, interface.get("type", None)
+
+        return False, None
+
     def dcnm_intf_get_diff_overridden(self, cfg):
 
         deploy = False
@@ -4501,24 +4518,19 @@ class DcnmIntf:
                     == "DCNM_INTF_MATCH"
                 ):
                     # In case of breakout, check if parent interface is in cfg
-                    if re.findall(r"\d+\/\d+\/\d+", name):
-                        port_id = re.search(r"(\d+/\d+)/\d+", name)
-                        found = False
-                        for interface in cfg:
-                            intfmatch = "ethernet" + port_id.group(1)
-                            if intfmatch == interface['name'] and interface['type'] == 'breakout':
-                                # If parent interface is present in cfg, we keep interface breakout
-                                # Else we need to the interface to replace list and build payload.
-                                found = True
-                                continue
-                        if found is False:
-                            payload = {"serialNumber": have['serialNo'],
-                                       "ifName": have["ifName"]}
-                            self.diff_delete[
-                                self.int_index[self.int_types['breakout']]].append(payload)
-                            self.changed_dict[0]["deleted"].append(
-                                copy.deepcopy(payload)
-                            )
+                    # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
+                    # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
+                    if re.search(r"\d+\/\d+\/\d+", name):
+                        found, parent_type = self.dcnm_intf_get_parent(cfg, name)
+
+                        if not (found and parent_type == "breakout"):
+                            payload = {
+                                "serialNumber": have["serialNo"],
+                                "ifName": have["ifName"]
+                            }
+                            breakout_index = self.int_index[self.int_types["breakout"]]
+                            self.diff_delete[breakout_index].append(payload)
+                            self.changed_dict[0]["deleted"].append(copy.deepcopy(payload))
                     continue
 
                 if uelem is not None:
@@ -5256,7 +5268,6 @@ class DcnmIntf:
             self.result["response"].append(resp)
 
         resp = None
-
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
             # breakout interface
@@ -5268,6 +5279,7 @@ class DcnmIntf:
                 json_payload = json.dumps(payload['interfaces'])
                 resp = dcnm_send(self.module, "POST", path, json_payload)
             else:
+                path = self.paths["INTERFACE"]
                 json_payload = json.dumps(payload)
                 resp = dcnm_send(self.module, "PUT", path, json_payload)
 
@@ -5285,7 +5297,9 @@ class DcnmIntf:
 
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
-
+            # Do not create interface E1/x/y directly.
+            if re.search(r"\d+\/\d+\/\d+", payload['interfaces'][0]['ifName']):
+                continue
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
