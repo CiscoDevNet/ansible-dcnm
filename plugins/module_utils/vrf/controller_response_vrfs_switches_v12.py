@@ -211,7 +211,6 @@ class SwitchDetails(BaseModel):
         if isinstance(data, str):
             if data == "":
                 return ""
-            assert isinstance(data, str)
             data = json.loads(data)
         if isinstance(data, dict):
             data = InstanceValues(**data)
