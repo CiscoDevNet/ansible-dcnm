@@ -36,7 +36,10 @@ from typing import Any, Final, Optional, Union
 import pydantic
 from ansible.module_utils.basic import AnsibleModule
 
-from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
+from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import (
+    EpVrfGet,
+    EpVrfPost,
+)
 from ...module_utils.common.enums.http_requests import RequestVerb
 from ...module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
@@ -47,8 +50,14 @@ from ...module_utils.network.dcnm.dcnm import (
     get_ip_sn_dict,
     get_sn_fabric_dict,
 )
-from ...module_utils.vrf.vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
-from ...module_utils.vrf.vrf_playbook_model_v12 import VrfPlaybookModelV12
+from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12
+from .controller_response_vrfs_deployments_v12 import (
+    ControllerResponseVrfsDeploymentsV12,
+)
+from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12
+from .controller_response_vrfs_v12 import ControllerResponseVrfsV12
+from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
+from .vrf_playbook_model_v12 import VrfPlaybookModelV12
 
 dcnm_vrf_paths: dict = {
     "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
@@ -166,7 +175,9 @@ class NdfcVrf12:
         self.diff_input_format: list = []
         self.query: list = []
 
-        self.inventory_data: dict = get_fabric_inventory_details(self.module, self.fabric)
+        self.inventory_data: dict = get_fabric_inventory_details(
+            self.module, self.fabric
+        )
 
         msg = "self.inventory_data: "
         msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
@@ -247,7 +258,9 @@ class NdfcVrf12:
         return [lst[x : x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
-    def find_dict_in_list_by_key_value(search: Optional[list[dict[Any, Any]]], key: str, value: str) -> dict[Any, Any]:
+    def find_dict_in_list_by_key_value(
+        search: Optional[list[dict[Any, Any]]], key: str, value: str
+    ) -> dict[Any, Any]:
         """
         # Summary
 
@@ -338,7 +351,9 @@ class NdfcVrf12:
 
     # pylint: enable=inconsistent-return-statements
     @staticmethod
-    def compare_properties(dict1: dict[Any, Any], dict2: dict[Any, Any], property_list: list) -> bool:
+    def compare_properties(
+        dict1: dict[Any, Any], dict2: dict[Any, Any], property_list: list
+    ) -> bool:
         """
         Given two dictionaries and a list of keys:
 
@@ -350,7 +365,9 @@ class NdfcVrf12:
                 return False
         return True
 
-    def diff_for_attach_deploy(self, want_a: list[dict], have_a: list[dict], replace=False) -> tuple[list, bool]:
+    def diff_for_attach_deploy(
+        self, want_a: list[dict], have_a: list[dict], replace=False
+    ) -> tuple[list, bool]:
         """
         # Summary
 
@@ -388,24 +405,42 @@ class NdfcVrf12:
                 if want.get("serialNumber") != have.get("serialNumber"):
                     continue
                 # handle instanceValues first
-                want.update({"freeformConfig": have.get("freeformConfig", "")})  # copy freeformConfig from have as module is not managing it
+                want.update(
+                    {"freeformConfig": have.get("freeformConfig", "")}
+                )  # copy freeformConfig from have as module is not managing it
                 want_inst_values: dict = {}
                 have_inst_values: dict = {}
-                if want.get("instanceValues") is not None and have.get("instanceValues") is not None:
+                if (
+                    want.get("instanceValues") is not None
+                    and have.get("instanceValues") is not None
+                ):
                     want_inst_values = ast.literal_eval(want["instanceValues"])
                     have_inst_values = ast.literal_eval(have["instanceValues"])
 
                     # update unsupported parameters using have
                     # Only need ipv4 or ipv6. Don't require both, but both can be supplied (as per the GUI)
                     if "loopbackId" in have_inst_values:
-                        want_inst_values.update({"loopbackId": have_inst_values["loopbackId"]})
+                        want_inst_values.update(
+                            {"loopbackId": have_inst_values["loopbackId"]}
+                        )
                     if "loopbackIpAddress" in have_inst_values:
-                        want_inst_values.update({"loopbackIpAddress": have_inst_values["loopbackIpAddress"]})
+                        want_inst_values.update(
+                            {"loopbackIpAddress": have_inst_values["loopbackIpAddress"]}
+                        )
                     if "loopbackIpV6Address" in have_inst_values:
-                        want_inst_values.update({"loopbackIpV6Address": have_inst_values["loopbackIpV6Address"]})
+                        want_inst_values.update(
+                            {
+                                "loopbackIpV6Address": have_inst_values[
+                                    "loopbackIpV6Address"
+                                ]
+                            }
+                        )
 
                     want.update({"instanceValues": json.dumps(want_inst_values)})
-                if want.get("extensionValues", "") != "" and have.get("extensionValues", "") != "":
+                if (
+                    want.get("extensionValues", "") != ""
+                    and have.get("extensionValues", "") != ""
+                ):
 
                     want_ext_values = want["extensionValues"]
                     have_ext_values = have["extensionValues"]
@@ -413,10 +448,16 @@ class NdfcVrf12:
                     want_ext_values_dict: dict = ast.literal_eval(want_ext_values)
                     have_ext_values_dict: dict = ast.literal_eval(have_ext_values)
 
-                    want_e: dict = ast.literal_eval(want_ext_values_dict["VRF_LITE_CONN"])
-                    have_e: dict = ast.literal_eval(have_ext_values_dict["VRF_LITE_CONN"])
+                    want_e: dict = ast.literal_eval(
+                        want_ext_values_dict["VRF_LITE_CONN"]
+                    )
+                    have_e: dict = ast.literal_eval(
+                        have_ext_values_dict["VRF_LITE_CONN"]
+                    )
 
-                    if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
+                    if replace and (
+                        len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])
+                    ):
                         # In case of replace/override if the length of want and have lite attach of a switch
                         # is not same then we have to push the want to NDFC. No further check is required for
                         # this switch
@@ -432,7 +473,9 @@ class NdfcVrf12:
                                 continue
                             found = True
                             interface_match = True
-                            if not self.compare_properties(wlite, hlite, self.vrf_lite_properties):
+                            if not self.compare_properties(
+                                wlite, hlite, self.vrf_lite_properties
+                            ):
                                 found = False
                                 break
 
@@ -507,12 +550,16 @@ class NdfcVrf12:
                     msg += f"value {have_deployment}"
                     self.log.debug(msg)
 
-                    if (want_deployment != have_deployment) or (want_is_deploy != have_is_deploy):
+                    if (want_deployment != have_deployment) or (
+                        want_is_deploy != have_is_deploy
+                    ):
                         if want_is_deploy is True:
                             deploy_vrf = True
 
                 try:
-                    if self.dict_values_differ(dict1=want_inst_values, dict2=have_inst_values):
+                    if self.dict_values_differ(
+                        dict1=want_inst_values, dict2=have_inst_values
+                    ):
                         found = False
                 except ValueError as error:
                     msg = f"{self.class_name}.{method_name}: "
@@ -662,11 +709,15 @@ class NdfcVrf12:
             vrf_lite_connections["VRF_LITE_CONN"].append(copy.deepcopy(vrf_lite_conn))
 
             if extension_values["VRF_LITE_CONN"]:
-                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrf_lite_connections["VRF_LITE_CONN"])
+                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(
+                    vrf_lite_connections["VRF_LITE_CONN"]
+                )
             else:
                 extension_values["VRF_LITE_CONN"] = copy.deepcopy(vrf_lite_connections)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+            extension_values["VRF_LITE_CONN"] = json.dumps(
+                extension_values["VRF_LITE_CONN"]
+            )
 
             msg = "Returning extension_values: "
             msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
@@ -674,7 +725,9 @@ class NdfcVrf12:
 
         return copy.deepcopy(extension_values)
 
-    def update_attach_params(self, attach: dict, vrf_name: str, deploy: bool, vlan_id: int) -> dict:
+    def update_attach_params(
+        self, attach: dict, vrf_name: str, deploy: bool, vlan_id: int
+    ) -> dict:
         """
         # Summary
 
@@ -702,7 +755,9 @@ class NdfcVrf12:
 
         # dcnm_get_ip_addr_info converts serial_numbers,
         # hostnames, etc, to ip addresses.
-        attach["ip_address"] = dcnm_get_ip_addr_info(self.module, attach["ip_address"], None, None)
+        attach["ip_address"] = dcnm_get_ip_addr_info(
+            self.module, attach["ip_address"], None, None
+        )
 
         serial = self.ip_to_serial_number(attach["ip_address"])
 
@@ -734,7 +789,9 @@ class NdfcVrf12:
 
         extension_values = self.update_attach_params_extension_values(attach)
         if extension_values:
-            attach.update({"extensionValues": json.dumps(extension_values).replace(" ", "")})
+            attach.update(
+                {"extensionValues": json.dumps(extension_values).replace(" ", "")}
+            )
         else:
             attach.update({"extensionValues": ""})
 
@@ -886,7 +943,9 @@ class NdfcVrf12:
         if vlan_id_want == "0":
             skip_keys = ["vrfVlanId"]
         try:
-            templates_differ = self.dict_values_differ(dict1=json_to_dict_want, dict2=json_to_dict_have, skip_keys=skip_keys)
+            templates_differ = self.dict_values_differ(
+                dict1=json_to_dict_want, dict2=json_to_dict_have, skip_keys=skip_keys
+            )
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
@@ -939,7 +998,9 @@ class NdfcVrf12:
             return vrf
 
         v_template = vrf.get("vrf_template", "Default_VRF_Universal")
-        ve_template = vrf.get("vrf_extension_template", "Default_VRF_Extension_Universal")
+        ve_template = vrf.get(
+            "vrf_extension_template", "Default_VRF_Extension_Universal"
+        )
         src = None
         s_v_template = vrf.get("service_vrf_template", None)
 
@@ -948,7 +1009,9 @@ class NdfcVrf12:
             "vrfName": vrf["vrf_name"],
             "vrfTemplate": v_template,
             "vrfExtensionTemplate": ve_template,
-            "vrfId": vrf.get("vrf_id", None),  # vrf_id will be auto generated in get_diff_merge()
+            "vrfId": vrf.get(
+                "vrf_id", None
+            ),  # vrf_id will be auto generated in get_diff_merge()
             "serviceVrfTemplate": s_v_template,
             "source": src,
         }
@@ -1017,7 +1080,12 @@ class NdfcVrf12:
             msg += f"verb {endpoint.verb.value} path {endpoint.path}"
             raise ValueError(msg)
 
-        missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
+        response = ControllerResponseVrfsV12(**vrf_objects)
+
+        msg = f"ControllerResponseVrfsV12: {json.dumps(response.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        missing_fabric, not_ok = self.handle_response(vrf_objects, "query")
 
         if missing_fabric or not_ok:
             msg0 = f"caller: {caller}. "
@@ -1050,8 +1118,10 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         verb = "GET"
-        path = self.paths["GET_VRF_SWITCH"].format(attach["fabric"], attach["vrfName"], attach["serialNumber"])
-        msg = f"verb: {verb}, path: {path}"
+        path = self.paths["GET_VRF_SWITCH"].format(
+            attach["fabric"], attach["vrfName"], attach["serialNumber"]
+        )
+        msg = f"ZZZ: verb: {verb}, path: {path}"
         self.log.debug(msg)
         lite_objects = dcnm_send(self.module, verb, path)
 
@@ -1059,6 +1129,20 @@ class NdfcVrf12:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to retrieve lite_objects."
             raise ValueError(msg)
+
+        msg = f"Returning lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        try:
+            response = ControllerResponseVrfsSwitchesV12(**lite_objects)
+        except pydantic.ValidationError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{caller}: Unable to parse response: {error}"
+            raise ValueError(msg) from error
+
+        msg = "ControllerResponseVrfsSwitchesV12: "
+        msg += f"{json.dumps(response.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         msg = f"Returning lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -1141,9 +1225,15 @@ class NdfcVrf12:
                 "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup", ""),
                 "multicastGroup": json_to_dict.get("multicastGroup", ""),
                 "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled", False),
-                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag", False),
-                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag", True),
-                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag", True),
+                "advertiseHostRouteFlag": json_to_dict.get(
+                    "advertiseHostRouteFlag", False
+                ),
+                "advertiseDefaultRouteFlag": json_to_dict.get(
+                    "advertiseDefaultRouteFlag", True
+                ),
+                "configureStaticDefaultRouteFlag": json_to_dict.get(
+                    "configureStaticDefaultRouteFlag", True
+                ),
                 "bgpPassword": json_to_dict.get("bgpPassword", ""),
                 "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", 3),
             }
@@ -1154,10 +1244,18 @@ class NdfcVrf12:
             t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto", False))
             t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport", ""))
             t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport", ""))
-            t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn", ""))
-            t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn", ""))
-            t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn", ""))
-            t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn", ""))
+            t_conf.update(
+                routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn", "")
+            )
+            t_conf.update(
+                routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn", "")
+            )
+            t_conf.update(
+                routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn", "")
+            )
+            t_conf.update(
+                routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn", "")
+            )
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
             del vrf["vrfStatus"]
@@ -1175,7 +1273,10 @@ class NdfcVrf12:
                 attach_state = not attach["lanAttachState"] == "NA"
                 deploy = attach["isLanAttached"]
                 deployed: bool = False
-                if deploy and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
+                if deploy and (
+                    attach["lanAttachState"] == "OUT-OF-SYNC"
+                    or attach["lanAttachState"] == "PENDING"
+                ):
                     deployed = False
                 else:
                     deployed = True
@@ -1244,14 +1345,22 @@ class NdfcVrf12:
                         for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
                             ev_dict = copy.deepcopy(extension_values_dict)
                             ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
-                            ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
+                            ev_dict.update(
+                                {"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"}
+                            )
 
                             if extension_values["VRF_LITE_CONN"]:
-                                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend([ev_dict])
+                                extension_values["VRF_LITE_CONN"][
+                                    "VRF_LITE_CONN"
+                                ].extend([ev_dict])
                             else:
-                                extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": [ev_dict]}
+                                extension_values["VRF_LITE_CONN"] = {
+                                    "VRF_LITE_CONN": [ev_dict]
+                                }
 
-                        extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+                        extension_values["VRF_LITE_CONN"] = json.dumps(
+                            extension_values["VRF_LITE_CONN"]
+                        )
 
                         ms_con["MULTISITE_CONN"] = []
                         extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
@@ -1346,7 +1455,9 @@ class NdfcVrf12:
                 continue
             for attach in vrf["attach"]:
                 deploy = vrf_deploy
-                vrfs.append(self.update_attach_params(attach, vrf_name, deploy, vlan_id))
+                vrfs.append(
+                    self.update_attach_params(attach, vrf_name, deploy, vlan_id)
+                )
 
             if vrfs:
                 vrf_attach.update({"vrfName": vrf_name})
@@ -1432,12 +1543,19 @@ class NdfcVrf12:
             have_a: dict = {}
             for want_c in self.want_create:
 
-                if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_c["vrfName"]) == {}:
+                if (
+                    self.find_dict_in_list_by_key_value(
+                        search=self.have_create, key="vrfName", value=want_c["vrfName"]
+                    )
+                    == {}
+                ):
                     continue
 
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
-                have_a = self.find_dict_in_list_by_key_value(search=self.have_attach, key="vrfName", value=want_c["vrfName"])
+                have_a = self.find_dict_in_list_by_key_value(
+                    search=self.have_attach, key="vrfName", value=want_c["vrfName"]
+                )
 
                 if not have_a:
                     continue
@@ -1509,7 +1627,9 @@ class NdfcVrf12:
         diff_undeploy = copy.deepcopy(self.diff_undeploy)
 
         for have_a in self.have_attach:
-            found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a["vrfName"])
+            found = self.find_dict_in_list_by_key_value(
+                search=self.want_create, key="vrfName", value=have_a["vrfName"]
+            )
 
             detach_list = []
             if not found:
@@ -1609,7 +1729,9 @@ class NdfcVrf12:
 
                     want_lan_attach: dict
                     for want_lan_attach in want_lan_attach_list:
-                        if have_lan_attach.get("serialNumber") != want_lan_attach.get("serialNumber"):
+                        if have_lan_attach.get("serialNumber") != want_lan_attach.get(
+                            "serialNumber"
+                        ):
                             continue
                         # Have is already in diff, no need to continue looking for it.
                         attach_match = True
@@ -1622,7 +1744,9 @@ class NdfcVrf12:
                 break
 
             if not have_in_want:
-                found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a["vrfName"])
+                found = self.find_dict_in_list_by_key_value(
+                    search=self.want_create, key="vrfName", value=have_a["vrfName"]
+                )
 
                 if found:
                     atch_h = have_a["lanAttachList"]
@@ -1699,7 +1823,7 @@ class NdfcVrf12:
             path = self.paths["GET_VRF_ID"].format(fabric)
             vrf_id_obj = dcnm_send(self.module, "GET", path)
 
-            missing_fabric, not_ok = self.handle_response(vrf_id_obj, "query_dcnm")
+            missing_fabric, not_ok = self.handle_response(vrf_id_obj, "query")
 
             if missing_fabric or not_ok:
                 # arobel: TODO: Not covered by UT
@@ -1819,23 +1943,43 @@ class NdfcVrf12:
                     "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
                     "multicastGroup": json_to_dict.get("multicastGroup"),
                     "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
-                    "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
-                    "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
-                    "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
+                    "advertiseHostRouteFlag": json_to_dict.get(
+                        "advertiseHostRouteFlag"
+                    ),
+                    "advertiseDefaultRouteFlag": json_to_dict.get(
+                        "advertiseDefaultRouteFlag"
+                    ),
+                    "configureStaticDefaultRouteFlag": json_to_dict.get(
+                        "configureStaticDefaultRouteFlag"
+                    ),
                     "bgpPassword": json_to_dict.get("bgpPassword"),
                     "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
                 }
 
                 template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
                 template_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
-                template_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
+                template_conf.update(
+                    NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR")
+                )
                 template_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
-                template_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
-                template_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
-                template_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
-                template_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
-                template_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
-                template_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
+                template_conf.update(
+                    routeTargetImport=json_to_dict.get("routeTargetImport")
+                )
+                template_conf.update(
+                    routeTargetExport=json_to_dict.get("routeTargetExport")
+                )
+                template_conf.update(
+                    routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn")
+                )
+                template_conf.update(
+                    routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn")
+                )
+                template_conf.update(
+                    routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn")
+                )
+                template_conf.update(
+                    routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn")
+                )
 
                 want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
 
@@ -1848,8 +1992,12 @@ class NdfcVrf12:
                 endpoint = EpVrfPost()
                 endpoint.fabric_name = self.fabric
 
-                resp = dcnm_send(self.module, endpoint.verb.value, endpoint.path, json.dumps(want_c))
+                resp = dcnm_send(
+                    self.module, endpoint.verb.value, endpoint.path, json.dumps(want_c)
+                )
                 self.result["response"].append(resp)
+                msg = f"resp: {json.dumps(resp, indent=4)}"
+                self.log.debug(msg)
 
                 fail, self.result["changed"] = self.handle_response(resp, "create")
 
@@ -1906,7 +2054,9 @@ class NdfcVrf12:
         for want_a in self.want_attach:
             # Check user intent for this VRF and don't add it to the all_vrfs
             # set if the user has not requested a deploy.
-            want_config = self.find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=want_a["vrfName"])
+            want_config = self.find_dict_in_list_by_key_value(
+                search=self.config, key="vrf_name", value=want_a["vrfName"]
+            )
             vrf_to_deploy: str = ""
             attach_found = False
             for have_a in self.have_attach:
@@ -1927,7 +2077,10 @@ class NdfcVrf12:
                     if (want_config["deploy"] is True) and (deploy_vrf_bool is True):
                         vrf_to_deploy = want_a["vrfName"]
                 else:
-                    if want_config["deploy"] is True and (deploy_vrf_bool or self.conf_changed.get(want_a["vrfName"], False)):
+                    if want_config["deploy"] is True and (
+                        deploy_vrf_bool
+                        or self.conf_changed.get(want_a["vrfName"], False)
+                    ):
                         vrf_to_deploy = want_a["vrfName"]
 
             msg = f"attach_found: {attach_found}"
@@ -2025,8 +2178,12 @@ class NdfcVrf12:
         diff_create_update: list = copy.deepcopy(self.diff_create_update)
         diff_attach: list = copy.deepcopy(self.diff_attach)
         diff_detach: list = copy.deepcopy(self.diff_detach)
-        diff_deploy: list = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
-        diff_undeploy: list = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
+        diff_deploy: list = (
+            self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
+        )
+        diff_undeploy: list = (
+            self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
+        )
 
         msg = "INPUT: diff_create: "
         msg += f"{json.dumps(diff_create, indent=4, sort_keys=True)}"
@@ -2067,7 +2224,9 @@ class NdfcVrf12:
             msg += f"{json.dumps(want_d, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            found_a = self.find_dict_in_list_by_key_value(search=diff_attach, key="vrfName", value=want_d["vrfName"])
+            found_a = self.find_dict_in_list_by_key_value(
+                search=diff_attach, key="vrfName", value=want_d["vrfName"]
+            )
 
             msg = "found_a: "
             msg += f"{json.dumps(found_a, indent=4, sort_keys=True)}"
@@ -2091,7 +2250,9 @@ class NdfcVrf12:
 
             json_to_dict = json.loads(found_c["vrfTemplateConfig"])
             try:
-                vrf_controller_to_playbook = VrfControllerToPlaybookV12Model(**json_to_dict)
+                vrf_controller_to_playbook = VrfControllerToPlaybookV12Model(
+                    **json_to_dict
+                )
             except pydantic.ValidationError as error:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Validation error: {error}"
@@ -2189,31 +2350,7 @@ class NdfcVrf12:
 
         path_get_vrf_attach: str
 
-        endpoint = EpVrfGet()
-        endpoint.fabric_name = self.fabric
-        vrf_objects = dcnm_send(self.module, endpoint.verb.value, endpoint.path)
-
-        missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
-
-        if vrf_objects is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += f"Fabric {self.fabric} unable to retrieve verb {endpoint.verb} path {endpoint.path}"
-            self.module.fail_json(msg=msg)
-
-        if vrf_objects.get("ERROR") == "Not Found" and vrf_objects.get("RETURN_CODE") == 404:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += f"Fabric {self.fabric} does not exist on the controller"
-            self.module.fail_json(msg=msg)
-
-        if missing_fabric or not_ok:
-            # arobel: TODO: Not covered by UT
-            msg0 = f"{self.class_name}.{method_name}:"
-            msg0 += f"caller: {caller}. "
-            msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
-            msg2 = f"{msg0} Unable to find VRFs under fabric: {self.fabric}"
-            self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+        vrf_objects = self.get_vrf_objects()
 
         if not vrf_objects["DATA"]:
             return
@@ -2233,22 +2370,41 @@ class NdfcVrf12:
                     item["parent"] = vrf
 
                     # Query the Attachment for the found VRF
-                    path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+                    path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(
+                        self.fabric, vrf["vrfName"]
+                    )
 
-                    get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+                    get_vrf_attach_response = dcnm_send(
+                        self.module, "GET", path_get_vrf_attach
+                    )
+
+                    msg = f"path_get_vrf_attach: {path_get_vrf_attach}"
+                    self.log.debug(msg)
+
+                    msg = "get_vrf_attach_response: "
+                    msg += f"{json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}"
+                    self.log.debug(msg)
 
                     if get_vrf_attach_response is None:
                         msg = f"{self.class_name}.{method_name}: "
                         msg += f"{caller}: Unable to retrieve endpoint: verb GET, path {path_get_vrf_attach}"
                         raise ValueError(msg)
 
-                    missing_fabric, not_ok = self.handle_response(get_vrf_attach_response, "query_dcnm")
+                    response = ControllerResponseVrfsAttachmentsV12(
+                        **get_vrf_attach_response
+                    )
+
+                    missing_fabric, not_ok = self.handle_response(
+                        get_vrf_attach_response, "query"
+                    )
 
                     if missing_fabric or not_ok:
                         # arobel: TODO: Not covered by UT
                         msg0 = f"{self.class_name}.{method_name}:"
                         msg0 += f"caller: {caller}. "
-                        msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+                        msg1 = (
+                            f"{msg0} Fabric {self.fabric} not present on the controller"
+                        )
                         msg2 = f"{msg0} Unable to find attachments for "
                         msg2 += f"vrfs: {vrf['vrfName']} under "
                         msg2 += f"fabric: {self.fabric}"
@@ -2269,7 +2425,9 @@ class NdfcVrf12:
                             # get_vrf_lite_objects() expects.
                             attach_copy = copy.deepcopy(attach)
                             attach_copy.update({"fabric": self.fabric})
-                            attach_copy.update({"serialNumber": attach["switchSerialNo"]})
+                            attach_copy.update(
+                                {"serialNumber": attach["switchSerialNo"]}
+                            )
                             lite_objects = self.get_vrf_lite_objects(attach_copy)
                             if not lite_objects.get("DATA"):
                                 return
@@ -2286,9 +2444,13 @@ class NdfcVrf12:
                 item["parent"] = vrf
 
                 # Query the Attachment for the found VRF
-                path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+                path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(
+                    self.fabric, vrf["vrfName"]
+                )
 
-                get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+                get_vrf_attach_response = dcnm_send(
+                    self.module, "GET", path_get_vrf_attach
+                )
 
                 if get_vrf_attach_response is None:
                     msg = f"{self.class_name}.{method_name}: "
@@ -2296,7 +2458,9 @@ class NdfcVrf12:
                     msg += f"verb GET, path {path_get_vrf_attach}"
                     raise ValueError(msg)
 
-                missing_fabric, not_ok = self.handle_response(vrf_objects, "query_dcnm")
+                response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+
+                missing_fabric, not_ok = self.handle_response(vrf_objects, "query")
 
                 if missing_fabric or not_ok:
                     msg0 = f"caller: {caller}. "
@@ -2514,6 +2678,14 @@ class NdfcVrf12:
                 vlan_path = self.paths["GET_VLAN"].format(self.fabric)
                 vlan_data = dcnm_send(self.module, "GET", vlan_path)
 
+                msg = "vlan_path: "
+                msg += f"{vlan_path}"
+                self.log.debug(msg)
+
+                msg = "vlan_data: "
+                msg += f"{json.dumps(vlan_data, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
                 if vlan_data is None:
                     msg = f"{self.class_name}.{method_name}: "
                     msg += f"caller: {caller}. Unable to retrieve endpoint. "
@@ -2551,8 +2723,12 @@ class NdfcVrf12:
                 "multicastGroup": json_to_dict.get("multicastGroup"),
                 "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
                 "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
-                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
-                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
+                "advertiseDefaultRouteFlag": json_to_dict.get(
+                    "advertiseDefaultRouteFlag"
+                ),
+                "configureStaticDefaultRouteFlag": json_to_dict.get(
+                    "configureStaticDefaultRouteFlag"
+                ),
                 "bgpPassword": json_to_dict.get("bgpPassword"),
                 "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
             }
@@ -2563,10 +2739,18 @@ class NdfcVrf12:
             t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
             t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
             t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
-            t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
-            t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
-            t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
-            t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
+            t_conf.update(
+                routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn")
+            )
+            t_conf.update(
+                routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn")
+            )
+            t_conf.update(
+                routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn")
+            )
+            t_conf.update(
+                routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn")
+            )
 
             vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
 
@@ -2805,7 +2989,9 @@ class NdfcVrf12:
             vrflite_con["VRF_LITE_CONN"] = []
             vrflite_con["VRF_LITE_CONN"].append(copy.deepcopy(nbr_dict))
             if extension_values["VRF_LITE_CONN"]:
-                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(vrflite_con["VRF_LITE_CONN"])
+                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend(
+                    vrflite_con["VRF_LITE_CONN"]
+                )
             else:
                 extension_values["VRF_LITE_CONN"] = vrflite_con
 
@@ -2813,7 +2999,9 @@ class NdfcVrf12:
             ms_con["MULTISITE_CONN"] = []
             extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+            extension_values["VRF_LITE_CONN"] = json.dumps(
+                extension_values["VRF_LITE_CONN"]
+            )
         vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
         if vrf_attach.get("vrf_lite") is not None:
             del vrf_attach["vrf_lite"]
@@ -2891,7 +3079,9 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         if args.payload is not None:
-            response = dcnm_send(self.module, args.verb.value, args.path, json.dumps(args.payload))
+            response = dcnm_send(
+                self.module, args.verb.value, args.path, json.dumps(args.payload)
+            )
         else:
             response = dcnm_send(self.module, args.verb.value, args.path)
 
@@ -2921,8 +3111,8 @@ class NdfcVrf12:
         fail, self.result["changed"] = self.handle_response(response, args.action)
 
         msg = f"caller: {caller}, "
-        msg += "Calling self.handle_response. DONE"
-        msg += f"{self.result['changed']}"
+        msg += "Calling self.handle_response. DONE. "
+        msg += f"changed: {self.result['changed']}"
         self.log.debug(msg)
 
         if fail:
@@ -3098,7 +3288,9 @@ class NdfcVrf12:
                     self.log.debug(msg)
                     return
 
-                lite = lite_objects["DATA"][0]["switchDetailsList"][0]["extensionPrototypeValues"]
+                lite = lite_objects["DATA"][0]["switchDetailsList"][0][
+                    "extensionPrototypeValues"
+                ]
                 msg = f"ip_address {ip_address} ({serial_number}), "
                 msg += "lite: "
                 msg += f"{json.dumps(lite, indent=4, sort_keys=True)}"
@@ -3109,7 +3301,9 @@ class NdfcVrf12:
                 msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
 
-                vrf_attach = self.update_vrf_attach_vrf_lite_extensions(vrf_attach, lite)
+                vrf_attach = self.update_vrf_attach_vrf_lite_extensions(
+                    vrf_attach, lite
+                )
                 msg = f"ip_address {ip_address} ({serial_number}), "
                 msg += "new vrf_attach: "
                 msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
@@ -3284,7 +3478,7 @@ class NdfcVrf12:
         path += "pools/TOP_DOWN_VRF_VLAN"
 
         args = SendToControllerArgs(
-            action="query",
+            action="release_resources",
             path=path,
             verb=RequestVerb.GET,
             payload=None,
@@ -3294,7 +3488,9 @@ class NdfcVrf12:
         self.send_to_controller(args)
         resp = copy.deepcopy(self.response)
 
-        fail, self.result["changed"] = self.handle_response(resp, "deploy")
+        fail, self.result["changed"] = self.handle_response(
+            resp, action="release_resources"
+        )
         if fail:
             if is_rollback:
                 self.failed_to_rollback = True
@@ -3395,10 +3591,16 @@ class NdfcVrf12:
 
                 attach: dict = {}
                 for attach in attach_list:
-                    if attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "FAILED":
+                    if (
+                        attach["lanAttachState"] == "OUT-OF-SYNC"
+                        or attach["lanAttachState"] == "FAILED"
+                    ):
                         self.diff_delete.update({vrf: "OUT-OF-SYNC"})
                         break
-                    if attach["lanAttachState"] == "DEPLOYED" and attach["isLanAttached"] is True:
+                    if (
+                        attach["lanAttachState"] == "DEPLOYED"
+                        and attach["isLanAttached"] is True
+                    ):
                         vrf_name = attach.get("vrfName", "unknown")
                         fabric_name: str = attach.get("fabricName", "unknown")
                         switch_ip: str = attach.get("ipAddress", "unknown")
@@ -3533,18 +3735,27 @@ class NdfcVrf12:
             return
         self.validate_vrf_config()
 
-    def handle_response(self, res, action):
+    def handle_response(self, res, action: str = "not_supplied") -> tuple:
         """
         # Summary
 
         Handle the response from the controller.
         """
-        self.log.debug("ENTERED")
+        caller = inspect.stack()[1][3]
+        msg = f"ENTERED. caller {caller}, action {action}"
+        self.log.debug(msg)
+
+        try:
+            msg = f"res: {json.dumps(res, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+        except TypeError:
+            msg = f"res: {res}"
+            self.log.debug(msg)
 
         fail = False
         changed = True
 
-        if action == "query_dcnm":
+        if action == "query":
             # These if blocks handle responses to the query APIs.
             # Basically all GET operations.
             if res.get("ERROR") == "Not Found" and res["RETURN_CODE"] == 404:
@@ -3564,8 +3775,18 @@ class NdfcVrf12:
         if action == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
-        if action == "deploy" and "No switches PENDING for deployment" in str(res.values()):
-            changed = False
+        # if action == "deploy" and "No switches PENDING for deployment" in str(res.values()):
+        if action == "deploy":
+            try:
+                response = ControllerResponseVrfsDeploymentsV12(**res)
+            except ValueError as error:
+                msg = f"{self.class_name}.handle_response: "
+                msg += f"action: {action}, caller: {caller}. "
+                msg += "Unable to parse response. "
+                msg += f"Error detail: {error}"
+                self.module.fail_json(msg=msg)
+            if response.DATA == "No switches PENDING for deployment":
+                changed = False
 
         return fail, changed
 
@@ -3608,7 +3829,9 @@ class NdfcVrf12:
         if not resp.get("DATA"):
             data = copy.deepcopy(resp.get("DATA"))
             if data.get("stackTrace"):
-                data.update({"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"})
+                data.update(
+                    {"stackTrace": "Stack trace is hidden, use '-vvvvv' to print it"}
+                )
                 res.update({"DATA": data})
 
         # pylint: disable=protected-access
