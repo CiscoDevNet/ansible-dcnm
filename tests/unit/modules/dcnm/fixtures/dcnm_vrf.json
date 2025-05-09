@@ -1979,7 +1979,7 @@
              "vlan":2001,
              "serialNumber":"9D2DAUJJFQQ",
              "peerSerialNumber":"None",
-             "extensionValues":"None",
+             "extensionValues":"",
              "extensionPrototypeValues":[
                {
                  "interfaceName":"Ethernet1/3",
@@ -1999,7 +1999,7 @@
              "islanAttached":false,
              "lanAttachedState":"NA",
              "errorMessage":"None",
-             "instanceValues":"None",
+             "instanceValues":"",
              "freeformConfig":"None",
              "role":"border gateway",
              "vlanModifiable":true
