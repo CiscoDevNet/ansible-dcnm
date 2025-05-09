@@ -1141,7 +1141,7 @@ class NdfcVrf12:
             raise ValueError(msg) from error
 
         msg = "ControllerResponseVrfsSwitchesV12: "
-        msg += f"{json.dumps(response.model_dump(), indent=4, sort_keys=True)}"
+        msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = f"Returning lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
@@ -2394,6 +2394,10 @@ class NdfcVrf12:
                         **get_vrf_attach_response
                     )
 
+                    msg = "ControllerResponseVrfsAttachmentsV12: "
+                    msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+                    self.log.debug(msg)
+
                     missing_fabric, not_ok = self.handle_response(
                         get_vrf_attach_response, "query"
                     )
@@ -2459,6 +2463,10 @@ class NdfcVrf12:
                     raise ValueError(msg)
 
                 response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+
+                msg = "ControllerResponseVrfsAttachmentsV12: "
+                msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+                self.log.debug(msg)
 
                 missing_fabric, not_ok = self.handle_response(vrf_objects, "query")
 
@@ -3785,6 +3793,11 @@ class NdfcVrf12:
                 msg += "Unable to parse response. "
                 msg += f"Error detail: {error}"
                 self.module.fail_json(msg=msg)
+
+            msg = "ControllerResponseVrfsDeploymentsV12: "
+            msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
             if response.DATA == "No switches PENDING for deployment":
                 changed = False
 
