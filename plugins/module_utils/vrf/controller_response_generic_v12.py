@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-from typing import Any, Optional, Union
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
+
 
 class ControllerResponseGenericV12(BaseModel):
     """
