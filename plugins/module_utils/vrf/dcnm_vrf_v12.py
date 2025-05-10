@@ -1318,9 +1318,8 @@ class NdfcVrf12:
                 lite_objects = self.get_vrf_lite_objects(attach)
 
                 if not lite_objects.get("DATA"):
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"caller: {caller}: "
-                    msg += f"Continuing. No lite_objects."
+                    msg = f"caller: {caller}: "
+                    msg += "Continuing. No vrf_lite_objects."
                     self.log.debug(msg)
                     continue
 
