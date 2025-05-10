@@ -1318,9 +1318,19 @@ class NdfcVrf12:
                 lite_objects = self.get_vrf_lite_objects(attach)
 
                 if not lite_objects.get("DATA"):
-                    msg = "Early return. lite_objects missing DATA"
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}: "
+                    msg += f"Continuing. No lite_objects."
                     self.log.debug(msg)
-                    return
+                    continue
+
+                    # This original code does not make sense since it
+                    # will skip attachments that do not have lite_objects
+                    # Leaving it commented out and replacing it with the
+                    # above continue statement.
+                    # msg = "Early return. lite_objects missing DATA"
+                    # self.log.debug(msg)
+                    # return
 
                 msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
