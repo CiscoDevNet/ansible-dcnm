@@ -3757,6 +3757,37 @@ class NdfcVrf12:
         # Summary
 
         Handle the response from the controller.
+
+        ## params
+
+        -   res: The response from the controller.
+        -   action: The action that was performed. Current actions that are
+            passed to this method (some of which are not specifically handled)
+            are:
+
+            -   attach
+            -   create (not specifically handled)
+            -   deploy
+            -   query
+            -   release_resources (not specifically handled)
+
+        ## Returns
+
+        -   fail: True if the response indicates a failure, else False
+        -   changed: True if the response indicates a change, else False
+
+        ## Example return
+
+        - (True, False)  # Indicates a failure, no change
+        - (False, True). # Indicates success, change
+        - (False, False) # Indicates success, no change
+        - (True, True)   # Indicates a failure, change
+
+        ## Raises
+
+        -   Calls fail_json() if the response is invalid
+        -   Calls fail_json() if the response is not in the expected format
+
         """
         caller = inspect.stack()[1][3]
         msg = f"ENTERED. caller {caller}, action {action}"
@@ -3792,7 +3823,6 @@ class NdfcVrf12:
         if action == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
-        # if action == "deploy" and "No switches PENDING for deployment" in str(res.values()):
         if action == "deploy":
             try:
                 response = ControllerResponseVrfsDeploymentsV12(**res)
