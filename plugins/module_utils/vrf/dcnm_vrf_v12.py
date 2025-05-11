@@ -54,6 +54,7 @@ from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitche
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
+from .vrf_template_config_v12 import VrfTemplateConfigV12
 
 dcnm_vrf_paths: dict = {
     "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
@@ -925,7 +926,7 @@ class NdfcVrf12:
 
         return create, configuration_changed
 
-    def update_create_params(self, vrf: dict, vlan_id: str = "") -> dict:
+    def update_create_params(self, vrf: dict) -> dict:
         """
         # Summary
 
@@ -937,65 +938,28 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}."
         self.log.debug(msg)
 
         if not vrf:
             return vrf
 
-        v_template = vrf.get("vrf_template", "Default_VRF_Universal")
-        ve_template = vrf.get("vrf_extension_template", "Default_VRF_Extension_Universal")
-        src = None
-        s_v_template = vrf.get("service_vrf_template", None)
-
         vrf_upd = {
             "fabric": self.fabric,
             "vrfName": vrf["vrf_name"],
-            "vrfTemplate": v_template,
-            "vrfExtensionTemplate": ve_template,
+            "vrfTemplate": vrf.get("vrf_template", "Default_VRF_Universal"),
+            "vrfExtensionTemplate": vrf.get("vrf_extension_template", "Default_VRF_Extension_Universal"),
             "vrfId": vrf.get("vrf_id", None),  # vrf_id will be auto generated in get_diff_merge()
-            "serviceVrfTemplate": s_v_template,
-            "source": src,
+            "serviceVrfTemplate": vrf.get("service_vrf_template", ""),
+            "source": None,
         }
-        template_conf = {
-            "vrfSegmentId": vrf.get("vrf_id", None),
-            "vrfName": vrf["vrf_name"],
-            "vrfVlanId": vlan_id,
-            "vrfVlanName": vrf.get("vrf_vlan_name", ""),
-            "vrfIntfDescription": vrf.get("vrf_intf_desc", ""),
-            "vrfDescription": vrf.get("vrf_description", ""),
-            "mtu": vrf.get("vrf_int_mtu", ""),
-            "tag": vrf.get("loopback_route_tag", ""),
-            "vrfRouteMap": vrf.get("redist_direct_rmap", ""),
-            "maxBgpPaths": vrf.get("max_bgp_paths", ""),
-            "maxIbgpPaths": vrf.get("max_ibgp_paths", ""),
-            "ipv6LinkLocalFlag": vrf.get("ipv6_linklocal_enable", True),
-            "trmEnabled": vrf.get("trm_enable", False),
-            "isRPExternal": vrf.get("rp_external", False),
-            "rpAddress": vrf.get("rp_address", ""),
-            "loopbackNumber": vrf.get("rp_loopback_id", ""),
-            "L3VniMcastGroup": vrf.get("underlay_mcast_ip", ""),
-            "multicastGroup": vrf.get("overlay_mcast_group", ""),
-            "trmBGWMSiteEnabled": vrf.get("trm_bgw_msite", False),
-            "advertiseHostRouteFlag": vrf.get("adv_host_routes", False),
-            "advertiseDefaultRouteFlag": vrf.get("adv_default_routes", True),
-            "configureStaticDefaultRouteFlag": vrf.get("static_default_route", True),
-            "bgpPassword": vrf.get("bgp_password", ""),
-            "bgpPasswordKeyType": vrf.get("bgp_passwd_encrypt", ""),
-        }
-        template_conf.update(isRPAbsent=vrf.get("no_rp", False))
-        template_conf.update(ENABLE_NETFLOW=vrf.get("netflow_enable", False))
-        template_conf.update(NETFLOW_MONITOR=vrf.get("nf_monitor", ""))
-        template_conf.update(disableRtAuto=vrf.get("disable_rt_auto", False))
-        template_conf.update(routeTargetImport=vrf.get("import_vpn_rt", ""))
-        template_conf.update(routeTargetExport=vrf.get("export_vpn_rt", ""))
-        template_conf.update(routeTargetImportEvpn=vrf.get("import_evpn_rt", ""))
-        template_conf.update(routeTargetExportEvpn=vrf.get("export_evpn_rt", ""))
-        template_conf.update(routeTargetImportMvpn=vrf.get("import_mvpn_rt", ""))
-        template_conf.update(routeTargetExportMvpn=vrf.get("export_mvpn_rt", ""))
 
-        vrf_upd.update({"vrfTemplateConfig": json.dumps(template_conf)})
+        validated_template_config = VrfTemplateConfigV12.model_validate(vrf)
+        template = validated_template_config.model_dump_json(by_alias=True)
+        vrf_upd.update({"vrfTemplateConfig": template})
 
+        msg = f"Returning vrf_upd: {json.dumps(vrf_upd, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return vrf_upd
 
     def get_vrf_objects(self) -> dict:
@@ -1145,47 +1109,14 @@ class NdfcVrf12:
             return
 
         for vrf in vrf_objects["DATA"]:
-            json_to_dict: dict = json.loads(vrf["vrfTemplateConfig"])
-            t_conf: dict = {
-                "vrfSegmentId": vrf["vrfId"],
-                "vrfName": vrf["vrfName"],
-                "vrfVlanId": json_to_dict.get("vrfVlanId", 0),
-                "vrfVlanName": json_to_dict.get("vrfVlanName", ""),
-                "vrfIntfDescription": json_to_dict.get("vrfIntfDescription", ""),
-                "vrfDescription": json_to_dict.get("vrfDescription", ""),
-                "mtu": json_to_dict.get("mtu", 9216),
-                "tag": json_to_dict.get("tag", 12345),
-                "vrfRouteMap": json_to_dict.get("vrfRouteMap", ""),
-                "maxBgpPaths": json_to_dict.get("maxBgpPaths", 1),
-                "maxIbgpPaths": json_to_dict.get("maxIbgpPaths", 2),
-                "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag", True),
-                "trmEnabled": json_to_dict.get("trmEnabled", False),
-                "isRPExternal": json_to_dict.get("isRPExternal", False),
-                "rpAddress": json_to_dict.get("rpAddress", ""),
-                "loopbackNumber": json_to_dict.get("loopbackNumber", ""),
-                "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup", ""),
-                "multicastGroup": json_to_dict.get("multicastGroup", ""),
-                "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled", False),
-                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag", False),
-                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag", True),
-                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag", True),
-                "bgpPassword": json_to_dict.get("bgpPassword", ""),
-                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", 3),
-            }
+            msg = f"ZZZ: vrf.PRE.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
 
-            t_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent", False))
-            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
-            t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR", ""))
-            t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto", False))
-            t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport", ""))
-            t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport", ""))
-            t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn", ""))
-            t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn", ""))
-            t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn", ""))
-            t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn", ""))
-
-            vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
             del vrf["vrfStatus"]
+            msg = f"ZZZ: vrf.POST.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
             have_create.append(vrf)
 
         vrfs_to_update: set[str] = set()
@@ -1372,7 +1303,7 @@ class NdfcVrf12:
             if vrf.get("vlan_id"):
                 vlan_id = vrf["vlan_id"]
 
-            want_create.append(self.update_create_params(vrf=vrf, vlan_id=str(vlan_id)))
+            want_create.append(self.update_create_params(vrf=vrf))
 
             if not vrf.get("attach"):
                 msg = f"No attachments for vrf {vrf_name}. Skipping."
@@ -1832,46 +1763,9 @@ class NdfcVrf12:
                 vrf_id = self.get_next_vrf_id(self.fabric)
 
                 want_c.update({"vrfId": vrf_id})
-                json_to_dict = json.loads(want_c["vrfTemplateConfig"])
-                template_conf = {
-                    "vrfSegmentId": vrf_id,
-                    "vrfName": want_c["vrfName"],
-                    "vrfVlanId": json_to_dict.get("vrfVlanId"),
-                    "vrfVlanName": json_to_dict.get("vrfVlanName"),
-                    "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
-                    "vrfDescription": json_to_dict.get("vrfDescription"),
-                    "mtu": json_to_dict.get("mtu"),
-                    "tag": json_to_dict.get("tag"),
-                    "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
-                    "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
-                    "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
-                    "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
-                    "trmEnabled": json_to_dict.get("trmEnabled"),
-                    "isRPExternal": json_to_dict.get("isRPExternal"),
-                    "rpAddress": json_to_dict.get("rpAddress"),
-                    "loopbackNumber": json_to_dict.get("loopbackNumber"),
-                    "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
-                    "multicastGroup": json_to_dict.get("multicastGroup"),
-                    "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
-                    "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
-                    "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
-                    "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
-                    "bgpPassword": json_to_dict.get("bgpPassword"),
-                    "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
-                }
 
-                template_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
-                template_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
-                template_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
-                template_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
-                template_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
-                template_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
-                template_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
-                template_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
-                template_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
-                template_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
-
-                want_c.update({"vrfTemplateConfig": json.dumps(template_conf)})
+                want_c.update({"vrfTemplateConfig": self.update_vrf_template_config(want_c)})
+                want_c["vrfTemplateConfig"]["vrfSegmentId"] = vrf_id
 
                 diff_create_quick.append(want_c)
 
@@ -2520,13 +2414,104 @@ class NdfcVrf12:
             self.result["response"].append(msg)
             self.module.fail_json(msg=self.result)
 
+    def get_next_vlan_id_for_fabric(self, fabric: str) -> int:
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}"
+        self.log.debug(msg)
+
+        vlan_path = self.paths["GET_VLAN"].format(fabric)
+        vlan_data = dcnm_send(self.module, "GET", vlan_path)
+
+        msg = "vlan_path: "
+        msg += f"{vlan_path}"
+        self.log.debug(msg)
+
+        msg = "vlan_data: "
+        msg += f"{json.dumps(vlan_data, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if vlan_data is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. Unable to retrieve endpoint. "
+            msg += f"verb GET, path {vlan_path}"
+            raise ValueError(msg)
+
+        # TODO: arobel: Not in UT
+        if vlan_data["RETURN_CODE"] != 200:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}, "
+            msg += f"Failure getting autogenerated vlan_id {vlan_data}."
+            self.module.fail_json(msg=msg)
+
+        vlan_id = vlan_data.get("DATA")
+        if not vlan_id:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}, "
+            msg += f"Failure getting autogenerated vlan_id {vlan_data}."
+            self.module.fail_json(msg=msg)
+
+        msg = f"Returning vlan_id: {vlan_id}. type: {type(vlan_id)}"
+        self.log.debug(msg)
+        return vlan_id
+
+    def update_vrf_template_config(self, vrf: dict) -> dict:
+        vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
+        vlan_id = vrf_template_config.get("vrfVlanId", 0)
+
+        if vlan_id == 0:
+            msg = "ZZZ: vlan_id is 0."
+            self.log.debug(msg)
+            vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
+
+        t_conf = {
+            "vrfSegmentId": vrf.get("vrfId"),
+            "vrfName": vrf_template_config.get("vrfName", ""),
+            "vrfVlanId": vlan_id,
+            "vrfVlanName": vrf_template_config.get("vrfVlanName", ""),
+            "vrfIntfDescription": vrf_template_config.get("vrfIntfDescription", ""),
+            "vrfDescription": vrf_template_config.get("vrfDescription", ""),
+            "mtu": vrf_template_config.get("mtu", 9216),
+            "tag": vrf_template_config.get("tag", 12345),
+            "vrfRouteMap": vrf_template_config.get("vrfRouteMap", ""),
+            "maxBgpPaths": vrf_template_config.get("maxBgpPaths", 1),
+            "maxIbgpPaths": vrf_template_config.get("maxIbgpPaths", 2),
+            "ipv6LinkLocalFlag": vrf_template_config.get("ipv6LinkLocalFlag", True),
+            "trmEnabled": vrf_template_config.get("trmEnabled", False),
+            "isRPExternal": vrf_template_config.get("isRPExternal", False),
+            "rpAddress": vrf_template_config.get("rpAddress", ""),
+            "loopbackNumber": vrf_template_config.get("loopbackNumber", ""),
+            "L3VniMcastGroup": vrf_template_config.get("L3VniMcastGroup", ""),
+            "multicastGroup": vrf_template_config.get("multicastGroup", ""),
+            "trmBGWMSiteEnabled": vrf_template_config.get("trmBGWMSiteEnabled", False),
+            "advertiseHostRouteFlag": vrf_template_config.get("advertiseHostRouteFlag", False),
+            "advertiseDefaultRouteFlag": vrf_template_config.get("advertiseDefaultRouteFlag", True),
+            "configureStaticDefaultRouteFlag": vrf_template_config.get("configureStaticDefaultRouteFlag", True),
+            "bgpPassword": vrf_template_config.get("bgpPassword", ""),
+            "bgpPasswordKeyType": vrf_template_config.get("bgpPasswordKeyType", 3),
+        }
+
+        t_conf.update(isRPAbsent=vrf_template_config.get("isRPAbsent", False))
+        t_conf.update(ENABLE_NETFLOW=vrf_template_config.get("ENABLE_NETFLOW", False))
+        t_conf.update(NETFLOW_MONITOR=vrf_template_config.get("NETFLOW_MONITOR", ""))
+        t_conf.update(disableRtAuto=vrf_template_config.get("disableRtAuto", False))
+        t_conf.update(routeTargetImport=vrf_template_config.get("routeTargetImport", ""))
+        t_conf.update(routeTargetExport=vrf_template_config.get("routeTargetExport", ""))
+        t_conf.update(routeTargetImportEvpn=vrf_template_config.get("routeTargetImportEvpn", ""))
+        t_conf.update(routeTargetExportEvpn=vrf_template_config.get("routeTargetExportEvpn", ""))
+        t_conf.update(routeTargetImportMvpn=vrf_template_config.get("routeTargetImportMvpn", ""))
+        t_conf.update(routeTargetExportMvpn=vrf_template_config.get("routeTargetExportMvpn", ""))
+
+        return json.dumps(t_conf)
+
     def push_diff_create(self, is_rollback=False) -> None:
         """
         # Summary
 
         Send diff_create to the controller
         """
-        method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
@@ -2541,77 +2526,7 @@ class NdfcVrf12:
             return
 
         for vrf in self.diff_create:
-            json_to_dict = json.loads(vrf["vrfTemplateConfig"])
-            vlan_id = json_to_dict.get("vrfVlanId", "0")
-            vrf_name = json_to_dict.get("vrfName")
-
-            if vlan_id == 0:
-                vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-                vlan_data = dcnm_send(self.module, "GET", vlan_path)
-
-                msg = "vlan_path: "
-                msg += f"{vlan_path}"
-                self.log.debug(msg)
-
-                msg = "vlan_data: "
-                msg += f"{json.dumps(vlan_data, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-
-                if vlan_data is None:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"caller: {caller}. Unable to retrieve endpoint. "
-                    msg += f"verb GET, path {vlan_path}"
-                    raise ValueError(msg)
-
-                # TODO: arobel: Not in UT
-                if vlan_data["RETURN_CODE"] != 200:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"caller: {caller}, "
-                    msg += f"vrf_name: {vrf_name}. "
-                    msg += f"Failure getting autogenerated vlan_id {vlan_data}"
-                    self.module.fail_json(msg=msg)
-
-                vlan_id = vlan_data["DATA"]
-
-            t_conf = {
-                "vrfSegmentId": vrf["vrfId"],
-                "vrfName": json_to_dict.get("vrfName", ""),
-                "vrfVlanId": vlan_id,
-                "vrfVlanName": json_to_dict.get("vrfVlanName"),
-                "vrfIntfDescription": json_to_dict.get("vrfIntfDescription"),
-                "vrfDescription": json_to_dict.get("vrfDescription"),
-                "mtu": json_to_dict.get("mtu"),
-                "tag": json_to_dict.get("tag"),
-                "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
-                "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
-                "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
-                "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
-                "trmEnabled": json_to_dict.get("trmEnabled"),
-                "isRPExternal": json_to_dict.get("isRPExternal"),
-                "rpAddress": json_to_dict.get("rpAddress"),
-                "loopbackNumber": json_to_dict.get("loopbackNumber"),
-                "L3VniMcastGroup": json_to_dict.get("L3VniMcastGroup"),
-                "multicastGroup": json_to_dict.get("multicastGroup"),
-                "trmBGWMSiteEnabled": json_to_dict.get("trmBGWMSiteEnabled"),
-                "advertiseHostRouteFlag": json_to_dict.get("advertiseHostRouteFlag"),
-                "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag"),
-                "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag"),
-                "bgpPassword": json_to_dict.get("bgpPassword"),
-                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType"),
-            }
-
-            t_conf.update(isRPAbsent=json_to_dict.get("isRPAbsent"))
-            t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW"))
-            t_conf.update(NETFLOW_MONITOR=json_to_dict.get("NETFLOW_MONITOR"))
-            t_conf.update(disableRtAuto=json_to_dict.get("disableRtAuto"))
-            t_conf.update(routeTargetImport=json_to_dict.get("routeTargetImport"))
-            t_conf.update(routeTargetExport=json_to_dict.get("routeTargetExport"))
-            t_conf.update(routeTargetImportEvpn=json_to_dict.get("routeTargetImportEvpn"))
-            t_conf.update(routeTargetExportEvpn=json_to_dict.get("routeTargetExportEvpn"))
-            t_conf.update(routeTargetImportMvpn=json_to_dict.get("routeTargetImportMvpn"))
-            t_conf.update(routeTargetExportMvpn=json_to_dict.get("routeTargetExportMvpn"))
-
-            vrf.update({"vrfTemplateConfig": json.dumps(t_conf)})
+            vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
 
             msg = "Sending vrf create request."
             self.log.debug(msg)
