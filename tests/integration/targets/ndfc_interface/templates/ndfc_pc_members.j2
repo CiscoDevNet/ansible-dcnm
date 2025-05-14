@@ -93,3 +93,35 @@
     cmds:
       - no shutdown
     description: "{{ test_data.eth_l3_desc }}"
+
+# ------------------------------
+# DOT1Q Tunnel Members
+# ------------------------------
+- name: "{{ test_data.eth_intf14 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: dot1q
+    access_vlan: 41
+    cmds: |
+      no lldp transmit
+      no lldp receive
+      no cdp enable
+    description: "{{ test_data.eth_dot1q_desc }}"
+- name: "{{ test_data.eth_intf15 }}"
+  deploy: false
+  type: eth
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: dot1q
+    access_vlan: 42
+    cmds: |
+      no lldp transmit
+      no lldp receive
+      no cdp enable
+    description: "{{ test_data.eth_dot1q_desc }}"
