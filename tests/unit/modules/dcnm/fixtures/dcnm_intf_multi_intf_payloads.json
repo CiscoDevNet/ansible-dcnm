@@ -28,6 +28,7 @@
 						"POLICY_ID": "POLICY-1849470",
 						"ALLOWED_VLANS": "none",
 						"NATIVE_VLAN": "10",
+						"ENABLE_ORPHAN_PORT": false,
 						"DESC": "port channel acting as trunk"
 					}
 				}],
@@ -67,6 +68,7 @@
             "PO_ID": "Port-channel300",
             "DESC": "port channel acting as trunk",
             "CONF": "no shutdown",
+	    "ENABLE_ORPHAN_PORT": false,
             "ADMIN_STATE": "true"
           }
         }
@@ -144,6 +146,7 @@
             "INTF_NAME": "Ethernet1/10",
             "DESC": "eth interface  acting as trunk",
             "CONF": "no shutdown",
+	    "ENABLE_ORPHAN_PORT": false,
             "ADMIN_STATE": "true"
           }
         }

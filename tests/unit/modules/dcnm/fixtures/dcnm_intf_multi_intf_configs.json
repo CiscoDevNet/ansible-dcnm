@@ -95,9 +95,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
-	"native_vlan": "10",
-	"speed": "Auto",
-	"duplex": "auto",
+	      "native_vlan": "10",
+        "orphan_port": false,
+	      "speed": "Auto",
+	      "duplex": "auto",
         "cmds": [
           "no shutdown"
         ],
@@ -165,6 +166,7 @@
         "policy": "int_trunk_host_11_1",
         "allowed_vlans": "none",
 	"native_vlan": "10",
+	"orphan_port": false,
         "cmds": [
           "no shutdown"
         ],
@@ -247,9 +249,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
-	"native_vlan": "10",
-	"speed": "Auto",
-	"duplex": "auto",
+	      "native_vlan": "10",
+        "orphan_port": false,
+	      "speed": "Auto",
+	      "duplex": "auto",
         "cmds": [
           "spanning-tree bpduguard enable"
         ],
@@ -317,6 +320,7 @@
         "policy": "int_trunk_host_11_1",
         "allowed_vlans": "none",
 	"native_vlan": "10",
+        "orphan_port": false,
         "cmds": [
           "spanning-tree bpduguard enable"
         ],

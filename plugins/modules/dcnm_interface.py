@@ -170,6 +170,11 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          orphan_port:
+            description:
+            - interface orphan port behavior when switch is in vPC
+            type: bool
+            default: false
           duplex:
             description:
             - Duplex of the interface. Speed must be set to use duplex.
@@ -492,6 +497,11 @@ options:
             - Speed of the interface.
             type: str
             default: Auto
+          orphan_port:
+            description:
+            - interface orphan port behavior when switch is in vPC
+            type: bool
+            default: false
           duplex:
             description:
             - Duplex of the interface. Speed must be set to use duplex.
@@ -1899,6 +1909,7 @@ class DcnmIntf:
             "PEER2_ACCESS_VLAN": "peer2_access_vlan",
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
+            "ENABLE_ORPHAN_PORT": "orphan_port",
         }
 
         # New Interfaces
@@ -2212,6 +2223,7 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2228,6 +2240,7 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2428,6 +2441,7 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2444,6 +2458,7 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2782,6 +2797,8 @@ class DcnmIntf:
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
             intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
@@ -2806,6 +2823,8 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "l3":
@@ -3173,6 +3192,8 @@ class DcnmIntf:
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
@@ -3188,6 +3209,8 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "routed":
