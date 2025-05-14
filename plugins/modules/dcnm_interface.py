@@ -69,7 +69,7 @@ options:
     type: list
     required: false
     elements: str
-    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex"]
+    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex", "breakout"]
     default: []
   config:
     description:
@@ -97,7 +97,7 @@ options:
         - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', 'breakout']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -805,7 +805,19 @@ options:
             - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
             type: str
             default: ""
-
+      profile_breakout:
+        description:
+        - Though the key shown here is 'profile_breakout' the actual key to be used in playbook
+          is 'profile'. The key 'profile_breakout' is used here to logically segregate the interface
+          objects applicable for this profile
+        - "Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported."
+        suboptions:
+          map:
+            description:
+            - type of breakout
+            type: str
+            required: true
+            choices: ["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]
 """
 
 EXAMPLES = """
@@ -1622,6 +1634,53 @@ EXAMPLES = """
         access_vlan: 41
         description: "ETH 1/12 Dot1q Tunnel"
 
+# Breakout interfaces
+
+- name: Configure breakout interface
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_svi_fabric }}"
+    state: merged
+    config:
+      - name: ethernet1/100
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+      - name: ethernet1/101
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+      - name: ethernet1/102
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+
+- name: Configure breakout interface
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_svi_fabric }}"
+    state: deleted
+    config:
+      - name: ethernet1/100
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+      - name: ethernet1/101
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+      - name: ethernet1/102
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+
 # QUERY
 
 - name: Query interface details
@@ -1703,6 +1762,7 @@ class DcnmIntf:
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
+            "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
         },
     }
 
@@ -1723,8 +1783,8 @@ class DcnmIntf:
         self.have_all_list = []
         self.diff_create = []
         self.diff_replace = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
         self.fd = None
@@ -1871,6 +1931,7 @@ class DcnmIntf:
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
                 "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
+                "breakout": "breakout_interface",
             },
         }
 
@@ -1907,6 +1968,7 @@ class DcnmIntf:
             "svi": "INTERFACE_VLAN",
             "st_fex": "STRAIGHT_TROUGH_FEX",
             "aa_fex": "AA_FEX",
+            "breakout": "BREAKOUT",
         }
 
         # New Interfaces
@@ -1919,6 +1981,7 @@ class DcnmIntf:
             "INTERFACE_VLAN": 5,
             "STRAIGHT_TROUGH_FEX": 6,
             "AA_FEX": 7,
+            "BREAKOUT": 8,
         }
 
         msg = "ENTERED DcnmIntf: "
@@ -1983,8 +2046,13 @@ class DcnmIntf:
             port_id = re.findall(r"\d+", name)
             return ("Loopback" + str(port_id[0]), port_id[0])
         if "eth" == if_type:
-            port_id = re.findall(r"\d+\/\d+", name)
-            return ("Ethernet" + str(port_id[0]), port_id[0])
+            # add regex for breakout Ex: Ethernet1/49/1
+            if re.findall(r"\d+\/\d+\/\d+", name):
+                port_id = re.findall(r"\d+\/\d+\/\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
+            if re.findall(r"\d+\/\d+", name):
+                port_id = re.findall(r"\d+\/\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
         if "svi" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vlan" + str(port_id[0]), port_id[0])
@@ -1994,6 +2062,9 @@ class DcnmIntf:
         if "aa_fex" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vPC" + str(port_id[0]), port_id[0])
+        if "breakout" == if_type:
+            port_id = re.findall(r"\d+\/\d+", name)
+            return ("Ethernet" + str(port_id[0]), port_id[0])
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
@@ -2044,7 +2115,9 @@ class DcnmIntf:
                         ifname, port_id = self.dcnm_intf_get_if_name(
                             c["name"], c["type"]
                         )
-
+                        # No need to copy when we break interface, because parent interface will be removed
+                        if "breakout" in cfg["type"]:
+                            continue
                         if "mode" not in cfg["profile"]:
                             self.module.fail_json(
                                 msg="Invalid parameters in playbook: while processing interface "
@@ -2552,6 +2625,22 @@ class DcnmIntf:
 
         self.dcnm_intf_validate_interface_input(cfg, fex_spec, fex_prof_spec)
 
+    def dcnm_intf_validate_breakout_interface_input(self, cfg):
+        breakout_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        breakout_prof_spec = dict(
+            map=dict(required=True, type="str",
+                     default="",
+                     choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
+        )
+        self.dcnm_intf_validate_interface_input(cfg, breakout_spec, breakout_prof_spec)
+
     def dcnm_intf_validate_delete_state_input(self, cfg):
 
         del_spec = dict(
@@ -2632,6 +2721,8 @@ class DcnmIntf:
                     self.dcnm_intf_validate_st_fex_interface_input(cfg)
                 if item["type"] == "aa_fex":
                     self.dcnm_intf_validate_aa_fex_interface_input(cfg)
+                if item["type"] == "breakout":
+                    self.dcnm_intf_validate_breakout_interface_input(cfg)
             cfg.remove(citem)
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
@@ -3400,6 +3491,26 @@ class DcnmIntf:
         # Monitor ports are not put into diff_deploy, since they don't have any
         # commands to be executed on switch. This will affect the idempotence
         # check
+
+        if delem["type"] == "breakout":
+            ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+
+            intf = {
+                "deploy": delem["deploy"],
+                "policy": "breakout_interface",
+                "interfaceType": "breakout_interface",
+                "interfaces": [
+                    {
+                        "serialNumber": str(self.ip_sn[sw]),
+                        "ifName": ifname,
+                        "map": str(delem["profile"]["map"]),
+                        "interfaceType": self.int_types[delem["type"]],
+                        "fabricName": self.fabric,
+                    }
+                ]
+            }
+            return intf
+
         if delem["profile"]["mode"] == "monitor":
             intf.update({"deploy": False})
         else:
@@ -3857,6 +3968,10 @@ class DcnmIntf:
             ]
 
             if not match_have:
+                # Match when interface is a breakout, is not possible because
+                # parent interface doesn't exist.
+                if "breakout_interface" in want['policy']:
+                    continue
                 changed_dict = copy.deepcopy(want)
 
                 if (
@@ -3998,6 +4113,15 @@ class DcnmIntf:
                                 changed_dict.pop(k)
 
             if action == "add":
+                # If E1/x/y do not create. Interface is created with breakout
+                if re.search(r"\d+\/\d+\/\d+", name):
+                    found, parent_type = self.dcnm_intf_get_parent(self.config, name)
+                    if found and parent_type == "breakout":
+                        if want.get("interfaceType", None) is not None:
+                            want.pop("interfaceType")
+                        self.diff_replace.append(want)
+                        self.changed_dict[0][state].append(changed_dict)
+                    continue
                 self.dcnm_intf_merge_intf_info(want, self.diff_create)
                 # Add the changed_dict to self.changed_dict
                 self.changed_dict[0][state].append(changed_dict)
@@ -4264,12 +4388,27 @@ class DcnmIntf:
                 ):
                     self.dcnm_intf_get_have_all(sw)
 
+    def dcnm_intf_get_parent(self, cfg, name):
+        # Extract the parent interface ID (e.g., "1/2" from "1/2/3")
+        match = re.search(r"(\d+/\d+)/\d+", name)
+        if not match:
+            return False, None  # Return early if the pattern doesn't match
+
+        parent_port_id = f"ethernet{match.group(1)}"
+
+        # Search for the parent interface in the configuration
+        for interface in cfg:
+            if interface.get("name") == parent_port_id:
+                return True, interface.get("type", None)
+
+        return False, None
+
     def dcnm_intf_get_diff_overridden(self, cfg):
 
         deploy = False
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4378,6 +4517,20 @@ class DcnmIntf:
                     self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
+                    # In case of breakout, check if parent interface is in cfg
+                    # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
+                    # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
+                    if re.search(r"\d+\/\d+\/\d+", name):
+                        found, parent_type = self.dcnm_intf_get_parent(cfg, name)
+
+                        if not (found and parent_type == "breakout"):
+                            payload = {
+                                "serialNumber": have["serialNo"],
+                                "ifName": have["ifName"]
+                            }
+                            breakout_index = self.int_index[self.int_types["breakout"]]
+                            self.diff_delete[breakout_index].append(payload)
+                            self.changed_dict[0]["deleted"].append(copy.deepcopy(payload))
                     continue
 
                 if uelem is not None:
@@ -4555,8 +4708,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_deleted(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4584,6 +4737,27 @@ class DcnmIntf:
                         intf = {}
                         delem = {}
 
+                        # If interface type is breakout, we rewrite payload.
+                        # We append "/1" to the parent interface to create delete payload.
+                        # Delete payload:
+                        # [
+                        #     {
+                        #         "serialNumber": "xxxxxx",
+                        #         "ifName": "Ethernet1/100/1"
+                        #     }
+                        # ]
+                        if cfg.get("type", None) is not None:
+                            if cfg['type'] == "breakout":
+                                payload = {"serialNumber": self.ip_sn[sw],
+                                           "ifName": cfg["name"] + "/1"}
+                                if_type = cfg['type']
+                                self.diff_delete[
+                                    self.int_index[self.int_types[cfg['type']]]
+                                ].append(payload)
+                                self.changed_dict[0]["deleted"].append(
+                                    copy.deepcopy(payload)
+                                )
+                                continue
                         if_name, if_type = self.dcnm_extract_if_name(cfg)
 
                         # Check if the interface is present in DCNM
@@ -5006,10 +5180,16 @@ class DcnmIntf:
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
 
+        delete_index = 0
         for delem in self.diff_delete:
 
             if delem == []:
+                delete_index = delete_index + 1
                 continue
+
+            # index 8 is used for breakout interface
+            if delete_index == 8:
+                path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
 
             json_payload = json.dumps(delem)
 
@@ -5053,7 +5233,7 @@ class DcnmIntf:
 
             delete = changed
             self.result["response"].append(resp)
-
+            delete_index = delete_index + 1
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
@@ -5088,12 +5268,20 @@ class DcnmIntf:
             self.result["response"].append(resp)
 
         resp = None
-
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
-
-            json_payload = json.dumps(payload)
-            resp = dcnm_send(self.module, "PUT", path, json_payload)
+            # breakout interface
+            if "breakout_interface" in payload["policy"]:
+                path = self.paths["BREAKOUT"]
+                for breakout in payload['interfaces']:
+                    breakout.pop("fabricName")
+                    breakout.pop("interfaceType")
+                json_payload = json.dumps(payload['interfaces'])
+                resp = dcnm_send(self.module, "POST", path, json_payload)
+            else:
+                path = self.paths["INTERFACE"]
+                json_payload = json.dumps(payload)
+                resp = dcnm_send(self.module, "PUT", path, json_payload)
 
             self.result["response"].append(resp)
 
@@ -5109,7 +5297,9 @@ class DcnmIntf:
 
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
-
+            # Do not create interface E1/x/y directly.
+            if re.search(r"\d+\/\d+\/\d+", payload['interfaces'][0]['ifName']):
+                continue
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -5396,6 +5586,7 @@ def main():
                 "svi",
                 "st_fex",
                 "aa_fex",
+                "breakout",
             ],
             default=[],
         ),
