@@ -215,6 +215,8 @@
         "admin_state": "True",
         "allowed_vlans": "none",
 	"native_vlan": "10",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "no shutdown"
         ],
@@ -468,6 +470,8 @@
         "admin_state": "False",
         "allowed_vlans": "all",
 	"native_vlan": "10",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "no shutdown",
         "no shutdown"
@@ -574,6 +578,8 @@
         "admin_state": "True",
         "allowed_vlans": "none",
 	"native_vlan": "10",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "no shutdown"
         ],

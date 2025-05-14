@@ -170,6 +170,12 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          duplex:
+            description:
+            - Duplex of the interface. Speed must be set to use duplex.
+            type: str
+            choices: ['auto', 'full', 'half']
+            default: auto
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -486,6 +492,12 @@ options:
             - Speed of the interface.
             type: str
             default: Auto
+          duplex:
+            description:
+            - Duplex of the interface. Speed must be set to use duplex.
+            type: str
+            choices: ['auto', 'full', 'half']
+            default: auto
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
@@ -1864,6 +1876,7 @@ class DcnmIntf:
             "PORTTYPE_FAST_ENABLED": "port_type_fast",
             "MTU": "mtu",
             "SPEED": "speed",
+            "PORT_DUPLEX_MODE": "duplex",
             "ALLOWED_VLANS": "allowed_vlans",
             "NATIVE_VLAN": "native_vlan",
             "ACCESS_VLAN": "access_vlan",
@@ -2199,6 +2212,8 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         pc_prof_spec_access = dict(
@@ -2213,6 +2228,8 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2411,6 +2428,8 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         eth_prof_spec_access = dict(
@@ -2425,6 +2444,8 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         eth_prof_spec_routed_host = dict(
@@ -2760,7 +2781,8 @@ class DcnmIntf:
                 "native_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
-
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2784,7 +2806,8 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
-
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3149,6 +3172,8 @@ class DcnmIntf:
                 "native_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3163,6 +3188,8 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
