@@ -94,6 +94,7 @@
 				"allowed_vlans": "none",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown"
 				],
@@ -124,6 +125,7 @@
 					"no shutdown"
 				],
 				"speed": "Auto",
+				"duplex": "auto",
 				"fabric": "test_fabric"
 			},
 			"name": "eth1/31",
@@ -217,6 +219,7 @@
 				"allowed_vlans": "all",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -244,6 +247,7 @@
 				"port_type_fast": "False",
 				"policy": "int_access_host_11_1",
 				"ifname": "Ethernet1/31",
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -465,6 +469,7 @@
 				"allowed_vlans": "all",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -495,6 +500,7 @@
 				"allowed_vlans": "all",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
