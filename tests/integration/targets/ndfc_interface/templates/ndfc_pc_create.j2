@@ -74,3 +74,26 @@
     cmds:
       - no shutdown
     description: "{{ test_data.pc_l3_desc }}"
+
+# ------------------------------
+# DOT1Q PortChannel
+# ------------------------------
+- name: "{{ test_data.pc4 }}"
+  deploy: false
+  type: pc
+  switch:
+    - "{{ test_data.sw1 }}"
+  profile:
+    admin_state: true
+    mode: dot1q
+    members:
+      - "{{ test_data.eth_intf14 }}"
+      - "{{ test_data.eth_intf15 }}"
+    pc_mode: 'on'
+    ipv4_addr: 192.168.20.1
+    ipv4_mask_len: 24
+    mtu: jumbo
+    allowed_vlans: none
+    cmds:
+      - no shutdown
+    description: "{{ test_data.pc_dot1q_desc }}"

@@ -108,7 +108,7 @@
         state: merged
         config:
           - name: my_base_ospf  # This must be a valid template name
-            create_additional_policy: false
+            create_additional_policy: true
             priority: 111
             description: "Changed description - 1"
             policy_vars:
@@ -116,7 +116,7 @@
               LOOPBACK_IP: 10.122.84.108
 
           - name: my_base_ospf  # This must be a valid template name
-            create_additional_policy: false
+            create_additional_policy: true
             priority: 121
             description: "Changed description - 2"
             policy_vars:
