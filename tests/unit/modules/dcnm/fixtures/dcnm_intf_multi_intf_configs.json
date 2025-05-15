@@ -95,10 +95,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
-	      "native_vlan": "10",
+	"native_vlan": "10",
         "orphan_port": false,
-	      "speed": "Auto",
-	      "duplex": "auto",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "no shutdown"
         ],
@@ -198,6 +198,7 @@
         "mode": "subint",
         "policy": "int_subif_11_1",
         "admin_state": "True",
+        "route_tag": "",
         "ifname": "Ethernet1/1.1",
         "cmds": [
           "no shutdown"
@@ -249,10 +250,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
-	      "native_vlan": "10",
+	"native_vlan": "10",
         "orphan_port": false,
-	      "speed": "Auto",
-	      "duplex": "auto",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "spanning-tree bpduguard enable"
         ],
