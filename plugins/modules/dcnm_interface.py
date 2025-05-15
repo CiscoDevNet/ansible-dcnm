@@ -2385,6 +2385,7 @@ class DcnmIntf:
                 type="int", range_min=64, range_max=127, default=64
             ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
+            route_tag=dict(type="str", default=""),
             speed=dict(type="str", default="Auto"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
@@ -3068,6 +3069,9 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
             delem[profile]["ipv4_mask_len"]
         )
+        intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
+                "route_tag"
+            ]
         if delem[profile]["ipv6_addr"]:
             intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
                 delem[profile]["ipv6_addr"]
