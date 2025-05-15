@@ -95,10 +95,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
-	      "native_vlan": "10",
+	"native_vlan": "10",
         "orphan_port": false,
-	      "speed": "Auto",
-	      "duplex": "auto",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "no shutdown"
         ],
@@ -130,7 +130,7 @@
           "no shutdown"
         ],
         "peer1_allowed_vlans": "none",
-	      "peer1_native_vlan": "10",
+	"peer1_native_vlan": "10",
         "mode": "trunk",
         "policy": "int_vpc_trunk_host_11_1",
         "port_type_fast": "True",
@@ -140,7 +140,7 @@
         "peer1_description": "VPC acting as trunk peer1",
         "sno": "FOX1821H035~SAL1819SAN8",
         "peer2_allowed_vlans": "none",
-	      "peer2_native_vlan": "10"
+	"peer2_native_vlan": "10"
       },
       "switch": [
          "192.168.1.109",
@@ -165,8 +165,8 @@
         "port_type_fast": "True",
         "policy": "int_trunk_host_11_1",
         "allowed_vlans": "none",
-	      "native_vlan": "10",
-	      "orphan_port": false,
+	"native_vlan": "10",
+	"orphan_port": false,
         "cmds": [
           "no shutdown"
         ],
@@ -250,10 +250,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
-	      "native_vlan": "10",
+	"native_vlan": "10",
         "orphan_port": false,
-	      "speed": "Auto",
-	      "duplex": "auto",
+	"speed": "Auto",
+	"duplex": "auto",
         "cmds": [
           "spanning-tree bpduguard enable"
         ],
@@ -285,7 +285,7 @@
           "spanning-tree bpduguard enable"
         ],
         "peer1_allowed_vlans": "none",
-	      "peer1_native_vlan": "10",
+	"peer1_native_vlan": "10",
         "mode": "trunk",
         "policy": "int_vpc_trunk_host_11_1",
         "port_type_fast": "True",
@@ -320,13 +320,13 @@
         "port_type_fast": "True",
         "policy": "int_trunk_host_11_1",
         "allowed_vlans": "none",
-	      "native_vlan": "10",
+	"native_vlan": "10",
         "orphan_port": false,
         "cmds": [
           "spanning-tree bpduguard enable"
         ],
         "speed": "Auto",
-	      "duplex": "auto",
+	"duplex": "auto",
         "ifname": "Ethernet1/10",
         "fabric": "test_fabric"
       },
