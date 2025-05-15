@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import List
+from typing import List, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -12,8 +12,8 @@ class LanAttachItem(BaseModel):
     switch_name: str = Field(alias="switchName")
     switch_role: str = Field(alias="switchRole")
     switch_serial_no: str = Field(alias="switchSerialNo")
-    vlan_id: int = Field(alias="vlanId", ge=2, le=4094)
-    vrf_id: int = Field(alias="vrfId", ge=1, le=16777214)
+    vlan_id: Union[int, None] = Field(alias="vlanId", ge=2, le=4094)
+    vrf_id: Union[int, None] = Field(alias="vrfId", ge=1, le=16777214)
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
 

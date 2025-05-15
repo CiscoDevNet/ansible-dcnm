@@ -140,20 +140,20 @@ class ExtensionValuesOuter(BaseModel):
 
 
 class SwitchDetails(BaseModel):
-    error_message: Optional[str] = Field(alias="errorMessage")
+    error_message: Union[str, None] = Field(alias="errorMessage")
     extension_prototype_values: Union[List[ExtensionPrototypeValue], str] = Field(
         default="", alias="extensionPrototypeValues"
     )
-    extension_values: Union[ExtensionValuesOuter, str] = Field(
+    extension_values: Union[ExtensionValuesOuter, str, None] = Field(
         default="", alias="extensionValues"
     )
-    freeform_config: str = Field(alias="freeformConfig")
-    instance_values: Optional[Union[InstanceValues, str]] = Field(
+    freeform_config: Union[str, None] = Field(alias="freeformConfig")
+    instance_values: Optional[Union[InstanceValues, str, None]] = Field(
         default="", alias="instanceValues"
     )
     is_lan_attached: bool = Field(alias="islanAttached")
     lan_attached_state: str = Field(alias="lanAttachedState")
-    peer_serial_number: Optional[str] = Field(alias="peerSerialNumber")
+    peer_serial_number: Union[str, None] = Field(alias="peerSerialNumber")
     role: str
     serial_number: str = Field(alias="serialNumber")
     switch_name: str = Field(alias="switchName")

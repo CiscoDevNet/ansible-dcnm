@@ -60,7 +60,7 @@ class VrfTemplateConfig(BaseModel):
     isRPExternal: bool = Field(
         default=False, description="Is TRMv4 RP external to the fabric?"
     )
-    loopbackNumber: Optional[Union[int, str]] = Field(
+    loopbackNumber: Union[int, str] = Field(
         default="", description="Loopback number"
     )
     L3VniMcastGroup: str = Field(default="", description="L3 VNI multicast group")
@@ -197,7 +197,7 @@ class VrfTemplateConfig(BaseModel):
     def validate_loopback_number(self) -> Self:
         """
         If loopbackNumber is an empty string, return.
-        If loopbackNumber is an integer, verify it it within range 0-1023
+        If loopbackNumber is an integer, verify it is within range 0-1023
         """
         if self.loopbackNumber == "":
             return self
@@ -297,9 +297,9 @@ class VrfObjectV12(BaseModel):
         ..., max_length=64, description="Fabric name in which the VRF resides."
     )
     hierarchicalKey: str = Field(default="", max_length=64)
-    serviceVrfTemplate: str = Field(default="")
-    source: str = Field(default="None")
-    tenantName: str = Field(default="")
+    serviceVrfTemplate: Union[str, None] = Field(default=None)
+    source: Union[str, None] = Field(default=None)
+    tenantName: Union[str, None] = Field(default=None)
     vrfExtensionTemplate: str = Field(default="Default_VRF_Extension_Universal")
     vrfId: int = Field(..., ge=1, le=16777214)
     vrfName: str = Field(
