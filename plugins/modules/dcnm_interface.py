@@ -3070,8 +3070,8 @@ class DcnmIntf:
             delem[profile]["ipv4_mask_len"]
         )
         intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
-                "route_tag"
-            ]
+            "route_tag"
+        ]
         if delem[profile]["ipv6_addr"]:
             intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
                 delem[profile]["ipv6_addr"]

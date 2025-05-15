@@ -57,18 +57,18 @@
           "fabricName": "test_fabric",
           "nvPairs": {
             "SPEED": "Auto",
-	    "PORT_DUPLEX_MODE": "auto",
+	          "PORT_DUPLEX_MODE": "auto",
             "MEMBER_INTERFACES": "e1/9",
             "PC_MODE": "on",
             "BPDUGUARD_ENABLED": "true",
             "PORTTYPE_FAST_ENABLED": "true",
             "MTU": "jumbo",
             "ALLOWED_VLANS": "none",
-	    "NATIVE_VLAN": "10",
+	          "NATIVE_VLAN": "10",
             "PO_ID": "Port-channel300",
             "DESC": "port channel acting as trunk",
             "CONF": "no shutdown",
-	    "ENABLE_ORPHAN_PORT": false,
+	          "ENABLE_ORPHAN_PORT": false,
             "ADMIN_STATE": "true"
           }
         }
@@ -178,6 +178,7 @@
             "PREFIX": "24",
             "IPv6": "",
             "IPv6_PREFIX": "",
+            "ROUTING_TAG": "",
             "MTU": "9216",
             "INTF_NAME": "Ethernet1/1.1",
             "DESC": "sub interface eth25/1.1 configuration",

@@ -41,7 +41,7 @@
 
 	"mock_ip_sn" : {
 		"192.168.1.109": "FOX1821H035",
-			"192.168.1.108": "SAL1819SAN8" 
+			"192.168.1.108": "SAL1819SAN8"
 	},
 
 		"mock_vpc_sno" : {
@@ -97,6 +97,7 @@
 				"policy": "int_subif_11_1",
 				"admin_state": "True",
 				"ifname": "Ethernet1/25.1",
+				"route_tag": 12345,
 				"cmds": [
 					"no shutdown"
 				],
@@ -124,6 +125,7 @@
 				"policy": "int_subif_11_1",
 				"admin_state": "True",
 				"ifname": "Ethernet1/25.2",
+				"route_tag": 12345,
 				"cmds": [
 					"no shutdown"
 				],
@@ -153,6 +155,7 @@
 				"policy": "int_subif_11_1",
 				"admin_state": "False",
 				"ifname": "Ethernet1/27.1",
+				"route_tag": 12345,
 				"cmds": [
 					"no shutdown",
 					"no shutdown"
@@ -183,6 +186,7 @@
 				"policy": "int_subif_11_1",
 				"admin_state": "False",
 				"ifname": "Ethernet1/25.1",
+				"route_tag": 12345,
 				"cmds": [
 					"no shutdown",
 					"no shutdown"
@@ -211,6 +215,7 @@
 				"policy": "int_subif_11_1",
 				"admin_state": "False",
 				"ifname": "Ethernet1/25.2",
+				"route_tag": 12345,
 				"cmds": [
 					"no shutdown",
 					"no shutdown"
