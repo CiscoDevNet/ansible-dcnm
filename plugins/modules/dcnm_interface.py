@@ -377,6 +377,11 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          route_tag:
+            description:
+            - Route tag associated with the interface IP.
+            type: str
+            default: ""
       profile_lo:
         description:
         - Though the key shown here is 'profile_lo' the actual key to be used in playbook
