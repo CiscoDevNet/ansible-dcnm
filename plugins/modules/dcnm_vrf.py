@@ -589,6 +589,7 @@ except ImportError as import_error:
     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
 from ..module_utils.common.log_v2 import Log
+from ..module_utils.common.enums.ansible import AnsibleStates
 from ..module_utils.network.dcnm.dcnm import dcnm_version_supported
 
 DcnmVrf11 = None  # pylint: disable=invalid-name
@@ -645,22 +646,16 @@ def main() -> None:
         pass
 
     argument_spec: dict = {}
+    argument_spec["config"] = {}
+    argument_spec["config"]["elements"] = "dict"
+    argument_spec["config"]["required"] = False
+    argument_spec["config"]["type"] = "list"
     argument_spec["fabric"] = {}
     argument_spec["fabric"]["required"] = True
     argument_spec["fabric"]["type"] = "str"
-    argument_spec["config"] = {}
-    argument_spec["config"]["required"] = False
-    argument_spec["config"]["type"] = "list"
-    argument_spec["config"]["elements"] = "dict"
     argument_spec["state"] = {}
-    argument_spec["state"]["default"] = "merged"
-    argument_spec["state"]["choices"] = [
-        "merged",
-        "replaced",
-        "deleted",
-        "overridden",
-        "query",
-    ]
+    argument_spec["state"]["choices"] = [x.value for x in AnsibleStates]
+    argument_spec["state"]["default"] = AnsibleStates.merged.value
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
