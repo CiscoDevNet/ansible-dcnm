@@ -153,15 +153,16 @@ base_vrf_model_config = ConfigDict(
 #             if self.loopbackNumber < 0:
 #                 del self.loopbackNumber
 #         return self
-    # @field_validator("loopbackNumber", mode="after")
-    # @classmethod
-    # def delete_loopback_number_if_negative(cls, data: Any) -> int:
-    #     """
-    #     If loopbackNumber is negative, delete it from vrfTemplateConfig
-    #     """
-    #     if isinstance(data, int):
-    #         if data < 0:
-    #             del data
+#
+# @field_validator("loopbackNumber", mode="after")
+# @classmethod
+# def delete_loopback_number_if_negative(cls, data: Any) -> int:
+#     """
+#     If loopbackNumber is negative, delete it from vrfTemplateConfig
+#     """
+#     if isinstance(data, int):
+#         if data < 0:
+#             del data
 
 
 class VrfPayloadV12(BaseModel):
