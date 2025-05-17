@@ -6,10 +6,11 @@ Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name
 Verb: GET
 """
 
+import json
 import warnings
 from typing import Any, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator
+from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator, model_validator
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 
@@ -64,7 +65,7 @@ class VrfTemplateConfigV12(BaseModel):
         alias="maxIbgpPaths",
         description="Max IBGP paths, 1-64 for NX-OS, 1-32 for IOS XE",
     )
-    vrf_int_mtu: Union[int, str] = Field(default=9216, ge=68, le=9216, alias="mtu", description="VRF interface MTU")
+    vrf_int_mtu: int = Field(default=9216, ge=68, le=9216, alias="mtu", description="VRF interface MTU")
     overlay_mcast_group: str = Field(default="", alias="multicastGroup", description="Overlay Multicast group")
     nf_monitor: str = Field(default="", alias="NETFLOW_MONITOR", description="NetFlow monitor")
     # nve_id: int = Field(default=1, ge=1, le=1, alias="nveId", description="NVE ID")
@@ -98,18 +99,162 @@ class VrfTemplateConfigV12(BaseModel):
         description="If > 32 chars, enable 'system vlan long-name' for NX-OS. Not applicable to L3VNI w/o VLAN config",
     )
 
+    @field_validator("rp_loopback_id", mode="before")
+    @classmethod
+    def validate_rp_loopback_id(cls, data: Any) -> Union[int, str]:
+        """
+        If rp_loopback_id is None, return ""
+        If rp_loopback_id is an empty string, return ""
+        If rp_loopback_id is an integer, verify it is within range 0-1023
+        If rp_loopback_id is a non-empty string, try to convert to int and verify it is within range 0-1023
+
+        ## Raises
+
+        - ValueError: If rp_loopback_id is not an integer or string representing an integer
+        - ValueError: If rp_loopback_id is not in range 0-1023
+
+        ## Notes
+
+        - Replace this validator with the one using match-case when python 3.10 is the minimum version supported
+        """
+        if data is None:
+            return ""
+        if data == "":
+            return ""
+        if isinstance(data, str):
+            try:
+                data = int(data)
+            except ValueError as error:
+                msg = "rp_loopback_id (loopbackNumber) must be an integer "
+                msg += "or string representing an integer. "
+                msg += f"Got: {data} of type {type(data)}. "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
+        if isinstance(data, int):
+            if data in range(0, 1024):
+                return data
+            msg = "rp_loopback_id (loopbackNumber) must be between 0 and 1023. "
+            msg += f"Got: {data}"
+            raise ValueError(msg)
+        # Return invalid data as-is.  Type checking is done in the model_validator
+        return data
+
     @field_validator("vlan_id", mode="before")
     @classmethod
     def preprocess_vlan_id(cls, data: Any) -> int:
         """
         Preprocess the vlan_id field to ensure it is an integer.
+
+        ## Raises
+
+        - ValueError: If vlan_id is not an integer or string representing an integer
+        - ValueError: If vlan_id is 1
         """
         if data is None:
             return 0
-        if isinstance(data, int):
-            return data
         if isinstance(data, str):
             try:
-                return int(data)
-            except ValueError:
+                data = int(data)
+            except ValueError as error:
+                msg = "vlan_id (vrfVlanId) must be an integer "
+                msg += "or string representing an integer. "
+                msg += f"Got: {data} of type {type(data)}. "
+                msg += f"Error detail: {error}"
+                raise ValueError(msg) from error
+        if data == 1:
+            msg = "vlan_id (vrfVlanId) must not be 1. "
+            msg += f"Got: {data}"
+            raise ValueError(msg)
+        # Further validation is done in the model_validator
+        return data
+
+    @model_validator(mode="before")
+    @classmethod
+    def preprocess_data(cls, data: Any) -> Any:
+        """
+        Convert incoming data
+
+        - If data is a JSON string, use json.loads() to convert to a dict.
+        - If data is a dict, convert to int all fields that should be int.
+        - If data is already a VrfTemplateConfig model, return as-is.
+        """
+
+        if isinstance(data, str):
+            data = json.loads(data)
+        if isinstance(data, dict):
+            pass
+        if isinstance(data, VrfTemplateConfigV12):
+            pass
+        return data
+
+    # Replace rp_loopback_id validator with this one when python 3.10 is the minimum version supported
+    '''
+    @field_validator("rp_loopback_id", mode="before")
+    @classmethod
+    def validate_rp_loopback_id(cls, data: Any) -> Union[int, str]:
+        """
+        If rp_loopback_id is None, return ""
+        If rp_loopback_id is an empty string, return ""
+        If rp_loopback_id is an integer, verify it is within range 0-1023
+        If rp_loopback_id is a non-empty string, try to convert to int and verify it is within range 0-1023
+
+        ## Raises
+
+        - ValueError: If rp_loopback_id is not an integer or string representing an integer
+        - ValueError: If rp_loopback_id is not in range 0-1023
+        """
+        match data:
+            case None:
+                return ""
+            case "":
+                return ""
+            case int():
+                pass
+            case str():
+                try:
+                    data = int(data)
+                except ValueError as error:
+                    msg = "rp_loopback_id (loopbackNumber) must be an integer "
+                    msg += "or string representing an integer. "
+                    msg += f"Got: {data} of type {type(data)}. "
+                    msg += f"Error detail: {error}"
+                    raise ValueError(msg) from error
+        if data in range(0, 1024):
+            return data
+        msg = "rp_loopback_id (loopbackNumber) must be between 0 and 1023. "
+        msg += f"Got: {data}"
+        raise ValueError(msg)
+    '''
+
+    # Replace vlan_id validator with this one when python 3.10 is the minimum version supported
+    '''
+    @field_validator("vlan_id", mode="before")
+    @classmethod
+    def preprocess_vlan_id(cls, data: Any) -> int:
+        """
+        Preprocess the vlan_id field to ensure it is an integer.
+
+        ## Raises
+
+        - ValueError: If vlan_id is not an integer or string representing an integer
+        - ValueError: If vlan_id is 1
+        """
+        match data:
+            case None:
                 return 0
+            case "":
+                return 0
+            case 1 | "1":
+                msg = "vlan_id (vrfVlanId) must not be 1. "
+                msg += f"Got: {data}"
+                raise ValueError(msg)
+            case str():
+                try:
+                    data = int(data)
+                except ValueError as error:
+                    msg = "vlan_id (vrfVlanId) must be an integer "
+                    msg += "or string representing an integer. "
+                    msg += f"Got: {data} of type {type(data)}. "
+                    msg += f"Error detail: {error}"
+                    raise ValueError(msg) from error
+    '''
