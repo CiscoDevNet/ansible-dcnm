@@ -36,7 +36,6 @@ class VrfTemplateConfigV12(BaseModel):
 
     adv_default_routes: bool = Field(default=True, alias="advertiseDefaultRouteFlag", description="Advertise default route flag")
     adv_host_routes: bool = Field(default=False, alias="advertiseHostRouteFlag", description="Advertise host route flag")
-    # asn: str = Field(..., alias="asn", description="BGP Autonomous System Number")
     bgp_password: str = Field(default="", alias="bgpPassword", description="BGP password")
     bgp_passwd_encrypt: int = Field(default=BgpPasswordEncrypt.MD5.value, alias="bgpPasswordKeyType", description="BGP password key type")
     static_default_route: bool = Field(default=True, alias="configureStaticDefaultRouteFlag", description="Configure static default route flag")
@@ -68,7 +67,6 @@ class VrfTemplateConfigV12(BaseModel):
     vrf_int_mtu: int = Field(default=9216, ge=68, le=9216, alias="mtu", description="VRF interface MTU")
     overlay_mcast_group: str = Field(default="", alias="multicastGroup", description="Overlay Multicast group")
     nf_monitor: str = Field(default="", alias="NETFLOW_MONITOR", description="NetFlow monitor")
-    # nve_id: int = Field(default=1, ge=1, le=1, alias="nveId", description="NVE ID")
     export_vpn_rt: str = Field(default="", alias="routeTargetExport", description="Route target export")
     export_evpn_rt: str = Field(default="", alias="routeTargetExportEvpn", description="Route target export EVPN")
     export_mvpn_rt: str = Field(default="", alias="routeTargetExportMvpn", description="Route target export MVPN")
