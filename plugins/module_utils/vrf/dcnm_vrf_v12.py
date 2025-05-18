@@ -909,16 +909,13 @@ class NdfcVrf12:
             msg += "a different value"
             self.module.fail_json(msg=msg)
 
-        elif templates_differ:
+        if templates_differ:
             configuration_changed = True
             if want.get("vrfId") is None:
                 # The vrf updates with missing vrfId will have to use existing
                 # vrfId from the instance of the same vrf on DCNM.
                 want["vrfId"] = have["vrfId"]
             create = want
-
-        else:
-            pass
 
         msg = f"returning configuration_changed: {configuration_changed}, "
         msg += f"create: {create}"
