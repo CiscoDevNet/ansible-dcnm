@@ -941,6 +941,9 @@ class NdfcVrf12:
         if not vrf:
             return vrf
 
+        msg = f"vrf: {json.dumps(vrf, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         vrf_upd = {
             "fabric": self.fabric,
             "vrfName": vrf["vrf_name"],
@@ -1099,19 +1102,19 @@ class NdfcVrf12:
             msg += f"caller: {caller}: unable to set get_vrf_attach_response."
             raise ValueError(msg)
 
-        msg = f"ZZZ: get_vrf_response: {get_vrf_attach_response}"
+        msg = f"get_vrf_attach_response: {get_vrf_attach_response}"
         self.log.debug(msg)
 
         if not get_vrf_attach_response.get("DATA"):
             return
 
         for vrf in vrf_objects["DATA"]:
-            msg = f"ZZZ: vrf.PRE.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
+            msg = f"vrf.PRE.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
 
             del vrf["vrfStatus"]
-            msg = f"ZZZ: vrf.POST.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
+            msg = f"vrf.POST.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             have_create.append(vrf)
