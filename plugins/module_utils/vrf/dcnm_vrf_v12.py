@@ -962,7 +962,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return vrf_upd
 
-    def get_vrf_objects(self) -> dict:
+    def get_vrf_objects(self) -> tuple[dict, ControllerResponseVrfsV12]:
         """
         # Summary
 
@@ -1000,7 +1000,7 @@ class NdfcVrf12:
             msg2 = f"{msg0} Unable to find vrfs under fabric: {self.fabric}"
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-        return copy.deepcopy(vrf_objects)
+        return copy.deepcopy(vrf_objects), response
 
     def get_vrf_lite_objects(self, attach: dict) -> dict:
         """
@@ -1075,19 +1075,22 @@ class NdfcVrf12:
         have_create: list[dict] = []
         have_deploy: dict = {}
 
-        vrf_objects = self.get_vrf_objects()
+        vrf_objects, vrf_objects_model = self.get_vrf_objects()
 
-        msg = f"ZZZ: vrf_objects: {vrf_objects}"
+        msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not vrf_objects.get("DATA"):
+        if not vrf_objects_model.DATA:
             return
 
-        vrf: dict = {}
         curr_vrfs: set = set()
-        for vrf in vrf_objects["DATA"]:
-            if vrf.get("vrfName"):
-                curr_vrfs.add(vrf["vrfName"])
+        for vrf in vrf_objects_model.DATA:
+            curr_vrfs.add(vrf.vrfName)
+
+        msg = f"curr_vrfs: {curr_vrfs}"
+        self.log.debug(msg)
+
+        vrf: dict = {}
 
         get_vrf_attach_response = dcnm_get_url(
             module=self.module,
@@ -1108,16 +1111,18 @@ class NdfcVrf12:
         if not get_vrf_attach_response.get("DATA"):
             return
 
-        for vrf in vrf_objects["DATA"]:
-            msg = f"vrf.PRE.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
+        for vrf in vrf_objects_model.DATA:
+            msg = f"vrf.PRE.update: {json.dumps(vrf.model_dump(by_alias=True), indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
+            vrf.vrfTemplateConfig = self.update_vrf_template_config_from_model(vrf)
 
-            del vrf["vrfStatus"]
-            msg = f"vrf.POST.update: {json.dumps(vrf, indent=4, sort_keys=True)}"
+            vrf_dump = vrf.model_dump(by_alias=True)
+            del vrf_dump["vrfStatus"]
+            vrf_dump.update({"vrfTemplateConfig": vrf.vrfTemplateConfig.model_dump_json(by_alias=True)})
+            msg = f"vrf.POST.update: {json.dumps(vrf_dump, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            have_create.append(vrf)
+            have_create.append(vrf_dump)
 
         vrfs_to_update: set[str] = set()
 
@@ -2127,7 +2132,10 @@ class NdfcVrf12:
 
         path_get_vrf_attach: str
 
-        vrf_objects = self.get_vrf_objects()
+        vrf_objects, vrf_objects_model = self.get_vrf_objects()
+
+        msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         if not vrf_objects["DATA"]:
             return
@@ -2472,6 +2480,84 @@ class NdfcVrf12:
         self.log.debug(msg)
         return vlan_id
 
+    def update_vrf_template_config_from_model(self, vrf: ControllerResponseVrfsV12) -> dict:
+        """
+        # Summary
+
+        Update the following fields in the vrfTemplateConfig
+
+        - vrfVlanId
+        - vrfSegmentId
+        """
+        vrf_template_config = vrf.vrfTemplateConfig
+        vlan_id = vrf_template_config.vlan_id
+
+        if vlan_id == 0:
+            msg = "ZZZ: vlan_id is 0."
+            self.log.debug(msg)
+            vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
+
+        t_conf = vrf_template_config.model_dump(by_alias=True)
+        t_conf["vrfVlanId"] = vlan_id
+        t_conf["vrfSegmentId"] = vrf.vrfId
+
+        msg = f"Returning t_conf: {json.dumps(t_conf)}"
+        self.log.debug(msg)
+        return json.dumps(t_conf)
+
+    def update_vrf_template_config_from_dict(self, vrf: dict) -> dict:
+        vrf_template_config = vrf.get("vrfTemplateConfig")
+        msg = f"vrf_template_config: {vrf_template_config}"
+        self.log.debug(msg)
+        vlan_id = vrf_template_config.get("vrfVlanId", 0)
+
+        if vlan_id == 0:
+            msg = "ZZZ: vlan_id is 0."
+            self.log.debug(msg)
+            vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
+
+        t_conf = {
+            "vrfSegmentId": vrf.get("vrfId"),
+            "vrfName": vrf_template_config.get("vrfName", ""),
+            "vrfVlanId": vlan_id,
+            "vrfVlanName": vrf_template_config.get("vrfVlanName", ""),
+            "vrfIntfDescription": vrf_template_config.get("vrfIntfDescription", ""),
+            "vrfDescription": vrf_template_config.get("vrfDescription", ""),
+            "mtu": vrf_template_config.get("mtu", 9216),
+            "tag": vrf_template_config.get("tag", 12345),
+            "vrfRouteMap": vrf_template_config.get("vrfRouteMap", ""),
+            "maxBgpPaths": vrf_template_config.get("maxBgpPaths", 1),
+            "maxIbgpPaths": vrf_template_config.get("maxIbgpPaths", 2),
+            "ipv6LinkLocalFlag": vrf_template_config.get("ipv6LinkLocalFlag", True),
+            "trmEnabled": vrf_template_config.get("trmEnabled", False),
+            "isRPExternal": vrf_template_config.get("isRPExternal", False),
+            "rpAddress": vrf_template_config.get("rpAddress", ""),
+            "loopbackNumber": vrf_template_config.get("loopbackNumber", ""),
+            "L3VniMcastGroup": vrf_template_config.get("L3VniMcastGroup", ""),
+            "multicastGroup": vrf_template_config.get("multicastGroup", ""),
+            "trmBGWMSiteEnabled": vrf_template_config.get("trmBGWMSiteEnabled", False),
+            "advertiseHostRouteFlag": vrf_template_config.get("advertiseHostRouteFlag", False),
+            "advertiseDefaultRouteFlag": vrf_template_config.get("advertiseDefaultRouteFlag", True),
+            "configureStaticDefaultRouteFlag": vrf_template_config.get("configureStaticDefaultRouteFlag", True),
+            "bgpPassword": vrf_template_config.get("bgpPassword", ""),
+            "bgpPasswordKeyType": vrf_template_config.get("bgpPasswordKeyType", 3),
+        }
+
+        t_conf.update(isRPAbsent=vrf_template_config.get("isRPAbsent", False))
+        t_conf.update(ENABLE_NETFLOW=vrf_template_config.get("ENABLE_NETFLOW", False))
+        t_conf.update(NETFLOW_MONITOR=vrf_template_config.get("NETFLOW_MONITOR", ""))
+        t_conf.update(disableRtAuto=vrf_template_config.get("disableRtAuto", False))
+        t_conf.update(routeTargetImport=vrf_template_config.get("routeTargetImport", ""))
+        t_conf.update(routeTargetExport=vrf_template_config.get("routeTargetExport", ""))
+        t_conf.update(routeTargetImportEvpn=vrf_template_config.get("routeTargetImportEvpn", ""))
+        t_conf.update(routeTargetExportEvpn=vrf_template_config.get("routeTargetExportEvpn", ""))
+        t_conf.update(routeTargetImportMvpn=vrf_template_config.get("routeTargetImportMvpn", ""))
+        t_conf.update(routeTargetExportMvpn=vrf_template_config.get("routeTargetExportMvpn", ""))
+
+        msg = f"Returning t_conf: {json.dumps(t_conf)}"
+        self.log.debug(msg)
+        return json.dumps(t_conf)
+
     def update_vrf_template_config(self, vrf: dict) -> dict:
         vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
         vlan_id = vrf_template_config.get("vrfVlanId", 0)
@@ -2519,6 +2605,8 @@ class NdfcVrf12:
         t_conf.update(routeTargetImportMvpn=vrf_template_config.get("routeTargetImportMvpn", ""))
         t_conf.update(routeTargetExportMvpn=vrf_template_config.get("routeTargetExportMvpn", ""))
 
+        msg = f"Returning t_conf: {json.dumps(t_conf)}"
+        self.log.debug(msg)
         return json.dumps(t_conf)
 
     def push_diff_create(self, is_rollback=False) -> None:
