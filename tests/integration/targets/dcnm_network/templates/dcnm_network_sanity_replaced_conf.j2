@@ -1,0 +1,29 @@
+---
+# This NDFC test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+
+# ------------------------------
+# Network 1
+# ------------------------------
+- net_name: "{{ test_data.net1 }}"
+  vrf_name: "{{ test_data.net1_vrf }}"
+  net_id: "{{ test_data.net1_net_id }}"
+  net_template: "{{ test_data.net1_default_net_template }}"
+  net_extension_template: "{{ test_data.net1_net_extension_template }}"
+  vlan_id: "{{ test_data.net1_vlan_id }}"
+  gw_ip_subnet: "{{ test_data.net1_gw_ip_subnet }}"
+  deploy: {{ test_data.deploy | bool }}
+
+# ------------------------------
+# Network 2
+# ------------------------------
+- net_name: "{{ test_data.net2 }}"
+  vrf_name: "{{ test_data.net2_vrf }}"
+  net_id: "{{ test_data.net2_net_id }}"
+  net_template: "{{ test_data.net2_default_net_template }}"
+  net_extension_template: "{{ test_data.net2_net_extension_template }}"
+  vlan_id: "{{ test_data.net2_vlan_id }}"
+  gw_ip_subnet: "{{ test_data.net2_gw_ip_subnet }}"
+  deploy: {{ test_data.deploy | bool }}

@@ -14,11 +14,49 @@
   connection: ansible.netcommon.httpapi
 
   vars:
+
+    # maintain backward compatibility with the old test structure until refactoring is done
+    test_fabric: fabric-stage
+    interface_1a: Ethernet1/15
+    interface_1b: Ethernet1/16
+    interface_1c: Ethernet1/17
+    interface_1d: Ethernet1/18
+    interface_2a: Ethernet1/15
+    interface_2b: Ethernet1/16
+    interface_2c: Ethernet1/17
+    interface_2d: Ethernet1/18
+    interface_2e: Ethernet1/19
+    interface_2f: Ethernet1/20
+  
     # Uncomment testcase to run a specific test
     # testcase: replaced_net_all
-    test_fabric: nac-ndfc1
+    #---
+    ansible_deploy: false
+    #---
+    # Common VRF setup
+    #---
+    ansible_vrf_1: ansible-vrf-int1
+    ansible_vrf_1_id: 9008011
+    ansible_vrf_1_vlan_id: 500
+    #---
+    ansible_vrf_2: Tenant-1
+    ansible_vrf_2_id: 9008012
+    ansible_vrf_2_vlan_id: 501
+    #---
+    ansible_vrf_3: Tenant-2
+    ansible_vrf_3_id: 9008013
+    ansible_vrf_3_vlan_id: 502
+    #---
+    # VRF setup template
+    #---
+    ansible_setup_vrf_conf: dcnm_network_setup_vrf_conf.j2
+    #---
+    # Resources
+    #---
+    ansible_test_fabric: nac-ndfc1
     ansible_switch1: 192.168.1.1
     ansible_switch2: 192.168.1.2
+    #---
     ansible_sw1_int1: Ethernet1/15
     ansible_sw1_int2: Ethernet1/16
     ansible_sw1_int3: Ethernet1/17
@@ -30,6 +68,29 @@
     ansible_sw2_int4: Ethernet1/18
     ansible_sw2_int5: Ethernet1/19
     ansible_sw2_int6: Ethernet1/20
+    #---
+    ansible_net1: ansible-net13
+    ansible_net1_net_id: 7005
+    ansible_net1_default_net_template: Default_Network_Universal
+    ansible_net1_net_extension_template: Default_Network_Extension_Universal
+    ansible_net1_vlan_id: 1500
+    ansible_net1_gw_ip_subnet: '192.168.30.1/24'
+    #---
+    ansible_net2: ansible-net12
+    ansible_net2_net_id: 7002
+    ansible_net2_default_net_template: Default_Network_Universal
+    ansible_net2_net_extension_template: Default_Network_Extension_Universal
+    ansible_net2_vlan_id: 151
+    ansible_net2_gw_ip_subnet: '192.168.40.1/24'
+    #---
+    ansible_net1_vrf: Tenant-1
+    ansible_net2_vrf: Tenant-2
+    #---
+    # config files for test cases (provide only file name)
+    #---
+    ansible_sanity_merged_conf: dcnm_network_sanity_merged_conf.j2
+    ansible_sanity_overridden_conf: dcnm_network_sanity_overridden_conf.j2
+    ansible_sanity_replaced_conf: dcnm_network_sanity_replaced_conf.j2
 
   roles:
     - dcnm_network
