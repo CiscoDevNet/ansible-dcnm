@@ -51,7 +51,7 @@ from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12
-from .controller_response_vrfs_v12 import ControllerResponseVrfsV12
+from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
@@ -2506,6 +2506,31 @@ class NdfcVrf12:
         self.log.debug(msg)
         return json.dumps(updated_vrf_template_config)
 
+    def update_vrf_template_config_from_vrf_template_model(self, vrf_segment_id: int, vrf_template_config: VrfTemplateConfigV12) -> dict:
+        """
+        # Summary
+
+        Update the following fields in the vrfTemplateConfig
+
+        - vrfVlanId
+        - vrfSegmentId
+        """
+        vlan_id = vrf_template_config.vlan_id
+
+        if vlan_id == 0:
+            vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
+            msg = "vlan_id was 0. "
+            msg += f"Using next available controller-generated vlan_id: {vlan_id}"
+            self.log.debug(msg)
+
+        updated_vrf_template_config = vrf_template_config.model_dump(by_alias=True)
+        updated_vrf_template_config["vrfVlanId"] = vlan_id
+        updated_vrf_template_config["vrfSegmentId"] = vrf_segment_id
+
+        msg = f"Returning updated_vrf_template_config: {json.dumps(updated_vrf_template_config)}"
+        self.log.debug(msg)
+        return json.dumps(updated_vrf_template_config)
+
     def update_vrf_template_config(self, vrf: dict) -> dict:
         vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
         vlan_id = vrf_template_config.get("vrfVlanId", 0)
@@ -2543,7 +2568,17 @@ class NdfcVrf12:
             return
 
         for vrf in self.diff_create:
-            vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
+            msg = f"ZZZ vrf_push_diff_create: {json.dumps(vrf, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            # vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
+
+            # HERE1
+            vrf_model = VrfObjectV12(**vrf)
+            msg = f"HERE1: vrf_model: {json.dumps(vrf_model.model_dump(exclude_unset=True), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            vrf_model.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_template_model(vrf_model.vrfId, vrf_model.vrfTemplateConfig)
+            msg = f"HERE2: vrf_model: {json.dumps(vrf_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
             msg = "Sending vrf create request."
             self.log.debug(msg)
@@ -2554,10 +2589,18 @@ class NdfcVrf12:
                 action="create",
                 path=endpoint.path,
                 verb=endpoint.verb,
-                payload=copy.deepcopy(vrf),
+                payload=vrf_model.model_dump(exclude_unset=True, by_alias=True),
                 log_response=True,
                 is_rollback=is_rollback,
             )
+            # args = SendToControllerArgs(
+            #     action="create",
+            #     path=endpoint.path,
+            #     verb=endpoint.verb,
+            #     payload=copy.deepcopy(vrf),
+            #     log_response=True,
+            #     is_rollback=is_rollback,
+            # )
             self.send_to_controller(args)
 
     def is_border_switch(self, serial_number) -> bool:

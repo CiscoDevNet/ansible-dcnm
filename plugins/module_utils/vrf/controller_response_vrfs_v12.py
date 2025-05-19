@@ -106,7 +106,7 @@ class VrfObjectV12(BaseModel):
     vrfExtensionTemplate: str = Field(default="Default_VRF_Extension_Universal")
     vrfId: int = Field(..., ge=1, le=16777214)
     vrfName: str = Field(..., min_length=1, max_length=32, description="Name of the VRF, 1-32 characters.")
-    vrfStatus: str
+    vrfStatus: Optional[str] = Field(default="")
     vrfTemplate: str = Field(default="Default_VRF_Universal")
     vrfTemplateConfig: VrfTemplateConfigV12
 
