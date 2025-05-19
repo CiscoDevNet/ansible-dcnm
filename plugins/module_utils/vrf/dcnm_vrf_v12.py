@@ -2493,121 +2493,35 @@ class NdfcVrf12:
         vlan_id = vrf_template_config.vlan_id
 
         if vlan_id == 0:
-            msg = "ZZZ: vlan_id is 0."
-            self.log.debug(msg)
             vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
-
-        t_conf = vrf_template_config.model_dump(by_alias=True)
-        t_conf["vrfVlanId"] = vlan_id
-        t_conf["vrfSegmentId"] = vrf.vrfId
-
-        msg = f"Returning t_conf: {json.dumps(t_conf)}"
-        self.log.debug(msg)
-        return json.dumps(t_conf)
-
-    def update_vrf_template_config_from_dict(self, vrf: dict) -> dict:
-        vrf_template_config = vrf.get("vrfTemplateConfig")
-        msg = f"vrf_template_config: {vrf_template_config}"
-        self.log.debug(msg)
-        vlan_id = vrf_template_config.get("vrfVlanId", 0)
-
-        if vlan_id == 0:
-            msg = "ZZZ: vlan_id is 0."
+            msg = "vlan_id was 0. "
+            msg += f"Using next available controller-generated vlan_id: {vlan_id}"
             self.log.debug(msg)
-            vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
 
-        t_conf = {
-            "vrfSegmentId": vrf.get("vrfId"),
-            "vrfName": vrf_template_config.get("vrfName", ""),
-            "vrfVlanId": vlan_id,
-            "vrfVlanName": vrf_template_config.get("vrfVlanName", ""),
-            "vrfIntfDescription": vrf_template_config.get("vrfIntfDescription", ""),
-            "vrfDescription": vrf_template_config.get("vrfDescription", ""),
-            "mtu": vrf_template_config.get("mtu", 9216),
-            "tag": vrf_template_config.get("tag", 12345),
-            "vrfRouteMap": vrf_template_config.get("vrfRouteMap", ""),
-            "maxBgpPaths": vrf_template_config.get("maxBgpPaths", 1),
-            "maxIbgpPaths": vrf_template_config.get("maxIbgpPaths", 2),
-            "ipv6LinkLocalFlag": vrf_template_config.get("ipv6LinkLocalFlag", True),
-            "trmEnabled": vrf_template_config.get("trmEnabled", False),
-            "isRPExternal": vrf_template_config.get("isRPExternal", False),
-            "rpAddress": vrf_template_config.get("rpAddress", ""),
-            "loopbackNumber": vrf_template_config.get("loopbackNumber", ""),
-            "L3VniMcastGroup": vrf_template_config.get("L3VniMcastGroup", ""),
-            "multicastGroup": vrf_template_config.get("multicastGroup", ""),
-            "trmBGWMSiteEnabled": vrf_template_config.get("trmBGWMSiteEnabled", False),
-            "advertiseHostRouteFlag": vrf_template_config.get("advertiseHostRouteFlag", False),
-            "advertiseDefaultRouteFlag": vrf_template_config.get("advertiseDefaultRouteFlag", True),
-            "configureStaticDefaultRouteFlag": vrf_template_config.get("configureStaticDefaultRouteFlag", True),
-            "bgpPassword": vrf_template_config.get("bgpPassword", ""),
-            "bgpPasswordKeyType": vrf_template_config.get("bgpPasswordKeyType", 3),
-        }
+        updated_vrf_template_config = vrf_template_config.model_dump(by_alias=True)
+        updated_vrf_template_config["vrfVlanId"] = vlan_id
+        updated_vrf_template_config["vrfSegmentId"] = vrf.vrfId
 
-        t_conf.update(isRPAbsent=vrf_template_config.get("isRPAbsent", False))
-        t_conf.update(ENABLE_NETFLOW=vrf_template_config.get("ENABLE_NETFLOW", False))
-        t_conf.update(NETFLOW_MONITOR=vrf_template_config.get("NETFLOW_MONITOR", ""))
-        t_conf.update(disableRtAuto=vrf_template_config.get("disableRtAuto", False))
-        t_conf.update(routeTargetImport=vrf_template_config.get("routeTargetImport", ""))
-        t_conf.update(routeTargetExport=vrf_template_config.get("routeTargetExport", ""))
-        t_conf.update(routeTargetImportEvpn=vrf_template_config.get("routeTargetImportEvpn", ""))
-        t_conf.update(routeTargetExportEvpn=vrf_template_config.get("routeTargetExportEvpn", ""))
-        t_conf.update(routeTargetImportMvpn=vrf_template_config.get("routeTargetImportMvpn", ""))
-        t_conf.update(routeTargetExportMvpn=vrf_template_config.get("routeTargetExportMvpn", ""))
-
-        msg = f"Returning t_conf: {json.dumps(t_conf)}"
+        msg = f"Returning updated_vrf_template_config: {json.dumps(updated_vrf_template_config)}"
         self.log.debug(msg)
-        return json.dumps(t_conf)
+        return json.dumps(updated_vrf_template_config)
 
     def update_vrf_template_config(self, vrf: dict) -> dict:
         vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
         vlan_id = vrf_template_config.get("vrfVlanId", 0)
 
         if vlan_id == 0:
-            msg = "ZZZ: vlan_id is 0."
-            self.log.debug(msg)
             vlan_id = self.get_next_vlan_id_for_fabric(self.fabric)
+            msg = "vlan_id was 0. "
+            msg += f"Using next available controller-generated vlan_id: {vlan_id}"
+            self.log.debug(msg)
 
-        t_conf = {
-            "vrfSegmentId": vrf.get("vrfId"),
-            "vrfName": vrf_template_config.get("vrfName", ""),
-            "vrfVlanId": vlan_id,
-            "vrfVlanName": vrf_template_config.get("vrfVlanName", ""),
-            "vrfIntfDescription": vrf_template_config.get("vrfIntfDescription", ""),
-            "vrfDescription": vrf_template_config.get("vrfDescription", ""),
-            "mtu": vrf_template_config.get("mtu", 9216),
-            "tag": vrf_template_config.get("tag", 12345),
-            "vrfRouteMap": vrf_template_config.get("vrfRouteMap", ""),
-            "maxBgpPaths": vrf_template_config.get("maxBgpPaths", 1),
-            "maxIbgpPaths": vrf_template_config.get("maxIbgpPaths", 2),
-            "ipv6LinkLocalFlag": vrf_template_config.get("ipv6LinkLocalFlag", True),
-            "trmEnabled": vrf_template_config.get("trmEnabled", False),
-            "isRPExternal": vrf_template_config.get("isRPExternal", False),
-            "rpAddress": vrf_template_config.get("rpAddress", ""),
-            "loopbackNumber": vrf_template_config.get("loopbackNumber", ""),
-            "L3VniMcastGroup": vrf_template_config.get("L3VniMcastGroup", ""),
-            "multicastGroup": vrf_template_config.get("multicastGroup", ""),
-            "trmBGWMSiteEnabled": vrf_template_config.get("trmBGWMSiteEnabled", False),
-            "advertiseHostRouteFlag": vrf_template_config.get("advertiseHostRouteFlag", False),
-            "advertiseDefaultRouteFlag": vrf_template_config.get("advertiseDefaultRouteFlag", True),
-            "configureStaticDefaultRouteFlag": vrf_template_config.get("configureStaticDefaultRouteFlag", True),
-            "bgpPassword": vrf_template_config.get("bgpPassword", ""),
-            "bgpPasswordKeyType": vrf_template_config.get("bgpPasswordKeyType", 3),
-        }
+        vrf_template_config.update({"vrfVlanId": vlan_id})
+        vrf_template_config.update({"vrfSegmentId": vrf.get("vrfId")})
 
-        t_conf.update(isRPAbsent=vrf_template_config.get("isRPAbsent", False))
-        t_conf.update(ENABLE_NETFLOW=vrf_template_config.get("ENABLE_NETFLOW", False))
-        t_conf.update(NETFLOW_MONITOR=vrf_template_config.get("NETFLOW_MONITOR", ""))
-        t_conf.update(disableRtAuto=vrf_template_config.get("disableRtAuto", False))
-        t_conf.update(routeTargetImport=vrf_template_config.get("routeTargetImport", ""))
-        t_conf.update(routeTargetExport=vrf_template_config.get("routeTargetExport", ""))
-        t_conf.update(routeTargetImportEvpn=vrf_template_config.get("routeTargetImportEvpn", ""))
-        t_conf.update(routeTargetExportEvpn=vrf_template_config.get("routeTargetExportEvpn", ""))
-        t_conf.update(routeTargetImportMvpn=vrf_template_config.get("routeTargetImportMvpn", ""))
-        t_conf.update(routeTargetExportMvpn=vrf_template_config.get("routeTargetExportMvpn", ""))
-
-        msg = f"Returning t_conf: {json.dumps(t_conf)}"
+        msg = f"Returning vrf_template_config: {json.dumps(vrf_template_config)}"
         self.log.debug(msg)
-        return json.dumps(t_conf)
+        return json.dumps(vrf_template_config)
 
     def push_diff_create(self, is_rollback=False) -> None:
         """
