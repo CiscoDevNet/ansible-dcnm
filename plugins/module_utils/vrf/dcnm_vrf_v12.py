@@ -1002,7 +1002,7 @@ class NdfcVrf12:
 
         return copy.deepcopy(vrf_objects)
 
-    def get_vrf_lite_objects(self, attach) -> dict:
+    def get_vrf_lite_objects(self, attach: dict) -> dict:
         """
         # Summary
 
@@ -1128,6 +1128,11 @@ class NdfcVrf12:
             attach_list: list[dict] = vrf_attach["lanAttachList"]
             vrf_to_deploy: str = ""
             for attach in attach_list:
+                if not isinstance(attach, dict):
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}: "
+                    msg += "attach is not a dict."
+                    self.module.fail_json(msg=msg)
                 attach_state = not attach["lanAttachState"] == "NA"
                 deploy = attach["isLanAttached"]
                 deployed: bool = False
@@ -1663,6 +1668,8 @@ class NdfcVrf12:
             attempt += 1
             path = self.paths["GET_VRF_ID"].format(fabric)
             vrf_id_obj = dcnm_send(self.module, "GET", path)
+            msg = f"vrf_id_obj: {json.dumps(vrf_id_obj, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             generic_response = ControllerResponseGenericV12(**vrf_id_obj)
             missing_fabric, not_ok = self.handle_response(generic_response, "query")
 
@@ -2176,23 +2183,24 @@ class NdfcVrf12:
                         msg2 += f"fabric: {self.fabric}"
                         self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-                    if not get_vrf_attach_response.get("DATA", []):
-                        return
-
-                    for vrf_attach in get_vrf_attach_response["DATA"]:
-                        if want_c["vrfName"] != vrf_attach["vrfName"]:
+                    for vrf_attach in response.data:
+                        if want_c["vrfName"] != vrf_attach.vrf_name:
                             continue
-                        if not vrf_attach.get("lanAttachList"):
+                        if not vrf_attach.lan_attach_list:
                             continue
-                        attach_list = vrf_attach["lanAttachList"]
-
+                        attach_list = vrf_attach.lan_attach_list
+                        msg = f"attach_list_model: {attach_list}"
+                        self.log.debug(msg)
                         for attach in attach_list:
-                            # copy attach and update it with the keys that
-                            # get_vrf_lite_objects() expects.
-                            attach_copy = copy.deepcopy(attach)
-                            attach_copy.update({"fabric": self.fabric})
-                            attach_copy.update({"serialNumber": attach["switchSerialNo"]})
-                            lite_objects = self.get_vrf_lite_objects(attach_copy)
+                            params = {}
+                            params["fabric"] = self.fabric
+                            params["serialNumber"] = attach.switch_serial_no
+                            params["vrfName"] = attach.vrf_name
+                            msg = f"Calling get_vrf_lite_objects with: {params}"
+                            self.log.debug(msg)
+                            lite_objects = self.get_vrf_lite_objects(params)
+                            msg = f"lite_objects: {lite_objects}"
+                            self.log.debug(msg)
                             if not lite_objects.get("DATA"):
                                 return
                             data = lite_objects.get("DATA")
@@ -2201,6 +2209,7 @@ class NdfcVrf12:
                         query.append(item)
 
         else:
+
             query = []
             # Query the VRF
             for vrf in vrf_objects["DATA"]:
@@ -2238,32 +2247,38 @@ class NdfcVrf12:
                     # at the top and remove this return
                     return
 
-                if not get_vrf_attach_response["DATA"]:
-                    return
-
-                for vrf_attach in get_vrf_attach_response["DATA"]:
-                    if not vrf_attach.get("lanAttachList"):
+                for vrf_attach in response.data:
+                    if not vrf_attach.lan_attach_list:
                         continue
-                    attach_list = vrf_attach["lanAttachList"]
-
+                    attach_list = vrf_attach.lan_attach_list
+                    msg = f"attach_list_model: {attach_list}"
+                    self.log.debug(msg)
                     for attach in attach_list:
-                        # copy attach and update it with the keys that
-                        # get_vrf_lite_objects() expects.
-                        attach_copy = copy.deepcopy(attach)
-                        attach_copy.update({"fabric": self.fabric})
-                        attach_copy.update({"serialNumber": attach["switchSerialNo"]})
-                        lite_objects = self.get_vrf_lite_objects(attach_copy)
-
-                        lite_objects_data: list = lite_objects.get("DATA", [])
-                        if not lite_objects_data:
+                        params = {}
+                        params["fabric"] = self.fabric
+                        params["serialNumber"] = attach.switch_serial_no
+                        params["vrfName"] = attach.vrf_name
+                        msg = f"Calling get_vrf_lite_objects with: {params}"
+                        self.log.debug(msg)
+                        lite_objects = self.get_vrf_lite_objects(params)
+                        msg = f"lite_objects: {lite_objects}"
+                        self.log.debug(msg)
+                        if not lite_objects.get("DATA"):
                             return
+                        lite_objects_data = lite_objects.get("DATA")
                         if not isinstance(lite_objects_data, list):
+                            msg = f"{self.class_name}.{method_name}: "
+                            msg += f"{caller}: "
                             msg = "lite_objects_data is not a list."
                             self.module.fail_json(msg=msg)
-                        item["attach"].append(lite_objects_data[0])
+                        if lite_objects_data is not None:
+                            item["attach"].append(lite_objects_data[0])
                     query.append(item)
 
         self.query = copy.deepcopy(query)
+        msg = "self.query: "
+        msg += f"{json.dumps(self.query, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def push_diff_create_update(self, is_rollback=False) -> None:
         """
