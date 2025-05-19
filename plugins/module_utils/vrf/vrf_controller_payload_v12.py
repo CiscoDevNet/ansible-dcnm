@@ -6,10 +6,10 @@ Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name
 Verb: POST
 """
 
-from typing import Union
 import warnings
+from typing import Union
 
-from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, field_serializer, field_validator, model_validator
 from typing_extensions import Self
 
 from .vrf_template_config_v12 import VrfTemplateConfigV12
@@ -106,6 +106,10 @@ class VrfPayloadV12(BaseModel):
     vrf_name: str = Field(..., alias="vrfName", min_length=1, max_length=32, description="Name of the VRF, 1-32 characters.")
     vrf_template: str = Field(alias="vrfTemplate", default="Default_VRF_Universal")
     vrf_template_config: VrfTemplateConfigV12 = Field(alias="vrfTemplateConfig")
+
+    @field_serializer("vrf_template_config")
+    def serialize_vrf_template_config(self, vrf_template_config: VrfTemplateConfigV12) -> str:
+        return vrf_template_config.model_dump_json(exclude_none=True, by_alias=True)
 
     @field_validator("service_vrf_template", mode="before")
     @classmethod

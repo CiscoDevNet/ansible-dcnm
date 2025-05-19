@@ -52,6 +52,7 @@ from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAtta
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
+from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
@@ -2529,7 +2530,7 @@ class NdfcVrf12:
 
         msg = f"Returning updated_vrf_template_config: {json.dumps(updated_vrf_template_config)}"
         self.log.debug(msg)
-        return json.dumps(updated_vrf_template_config)
+        return updated_vrf_template_config
 
     def update_vrf_template_config(self, vrf: dict) -> dict:
         vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
@@ -2576,8 +2577,14 @@ class NdfcVrf12:
             vrf_model = VrfObjectV12(**vrf)
             msg = f"HERE1: vrf_model: {json.dumps(vrf_model.model_dump(exclude_unset=True), indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            vrf_model.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_template_model(vrf_model.vrfId, vrf_model.vrfTemplateConfig)
+            updated_vrf_template_config = self.update_vrf_template_config_from_vrf_template_model(vrf_model.vrfId, vrf_model.vrfTemplateConfig)
+            msg = f"type(updated_vrf_template_config): {type(updated_vrf_template_config)}"
+            self.log.debug(msg)
+            vrf_model.vrfTemplateConfig = updated_vrf_template_config
             msg = f"HERE2: vrf_model: {json.dumps(vrf_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            vrf_payload_model = VrfPayloadV12(**vrf_model.model_dump(exclude_unset=True, by_alias=True))
+            msg = f"HERE3: vrf_payload_model: {vrf_payload_model.model_dump(exclude_unset=True, by_alias=True)}"
             self.log.debug(msg)
 
             msg = "Sending vrf create request."
@@ -2589,7 +2596,7 @@ class NdfcVrf12:
                 action="create",
                 path=endpoint.path,
                 verb=endpoint.verb,
-                payload=vrf_model.model_dump(exclude_unset=True, by_alias=True),
+                payload=vrf_payload_model.model_dump(exclude_unset=True, by_alias=True),
                 log_response=True,
                 is_rollback=is_rollback,
             )
