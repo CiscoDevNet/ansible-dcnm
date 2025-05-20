@@ -4076,13 +4076,15 @@ class DcnmIntf:
                             for ik in if_keys:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
-                                    if "SPEED" in nv_keys:
-                                        # Remove 'SPEED' only if it is not included in 'have'.
-                                        if (
-                                            d[k][index][ik].get("SPEED", None)
-                                            is None
-                                        ):
-                                            nv_keys.remove("SPEED")
+                                    # List of keys to check and potentially remove from nv_keys
+                                    # Some keys are not present in the first GET and must be removed
+                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE"]
+
+                                    for key in keys_to_check:
+                                        # Remove the key from nv_keys only if it exists and is not present in 'have'
+                                        if key in nv_keys and d[k][index][ik].get(key, None) is None:
+                                            nv_keys.remove(key)
+
                                     for nk in nv_keys:
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
