@@ -1115,6 +1115,7 @@ class NdfcVrf12:
         for vrf in vrf_objects_model.DATA:
             msg = f"vrf.PRE.update: {json.dumps(vrf.model_dump(by_alias=True), indent=4, sort_keys=True)}"
             self.log.debug(msg)
+
             vrf.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_model(vrf)
 
             vrf_dump = vrf.model_dump(by_alias=True)
@@ -2481,20 +2482,30 @@ class NdfcVrf12:
         self.log.debug(msg)
         return vlan_id
 
-    def update_vrf_template_config_from_vrf_model(self, vrf_model: VrfObjectV12) -> dict:
+    def update_vrf_template_config_from_vrf_model(self, vrf_model: VrfObjectV12) -> VrfTemplateConfigV12:
         """
         # Summary
 
         Update the following fields in vrfTemplateConfig and return
         vrfTemplateConfig as a dict.
 
-        - vrfVlanId
+        - vrfVlanId (vlan_id)
           - if 0, get the next available vlan_id from the controller
           - else, use the vlan_id in vrfTemplateConfig
-        - vrfSegmentId
+        - vrfSegmentId (vrf_id)
           - use the vrfId in the vrf_model top-level object
             to populate vrfSegmentId in vrfTemplateConfig
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
+        # Out of paranoia, work on a copy of the caller's model so as not to
+        # modify the caller's copy.
+        vrf_model = copy.deepcopy(vrf_model)
+
         vrf_segment_id = vrf_model.vrfId
         vlan_id = vrf_model.vrfTemplateConfig.vlan_id
 
@@ -2504,14 +2515,20 @@ class NdfcVrf12:
             msg += f"Using next available controller-generated vlan_id: {vlan_id}"
             self.log.debug(msg)
 
-        updated_vrf_template_config = vrf_model.vrfTemplateConfig.model_dump(by_alias=True)
-        updated_vrf_template_config["vrfVlanId"] = vlan_id
-        updated_vrf_template_config["vrfSegmentId"] = vrf_segment_id
+        vrf_model.vrfTemplateConfig.vlan_id = vlan_id
+        vrf_model.vrfTemplateConfig.vrf_id = vrf_segment_id
+        return vrf_model.vrfTemplateConfig
+        # working return
+        # return vrf_model.vrfTemplateConfig.model_dump_json(by_alias=True)
+        # Original code
+        # updated_vrf_template_config = vrf_model.vrfTemplateConfig.model_dump(by_alias=True)
+        # updated_vrf_template_config["vrfVlanId"] = vlan_id
+        # updated_vrf_template_config["vrfSegmentId"] = vrf_segment_id
 
-        msg = "Returning updated_vrf_template_config: "
-        msg += f"{json.dumps(updated_vrf_template_config)}"
-        self.log.debug(msg)
-        return updated_vrf_template_config
+        # msg = "Returning updated_vrf_template_config: "
+        # msg += f"{json.dumps(updated_vrf_template_config)}"
+        # self.log.debug(msg)
+        # return updated_vrf_template_config
 
     def update_vrf_template_config(self, vrf: dict) -> dict:
         vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
