@@ -2553,7 +2553,7 @@ class NdfcVrf12:
         """
         # Summary
 
-        Send diff_create to the controller
+        Update the VRFs in self.diff_create and send them to the controller
         """
         caller = inspect.stack()[1][3]
 
@@ -2569,22 +2569,17 @@ class NdfcVrf12:
             return
 
         for vrf in self.diff_create:
-            msg = f"ZZZ vrf_push_diff_create: {json.dumps(vrf, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            # vrf.update({"vrfTemplateConfig": self.update_vrf_template_config(vrf)})
-
-            # HERE1
             vrf_model = VrfObjectV12(**vrf)
-            msg = f"HERE1: vrf_model: {json.dumps(vrf_model.model_dump(exclude_unset=True), indent=4, sort_keys=True)}"
+            vrf_model.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_template_model(vrf_model.vrfId, vrf_model.vrfTemplateConfig)
+
+            msg = "vrf_model POST UPDATE: "
+            msg += f"{json.dumps(vrf_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
             self.log.debug(msg)
-            updated_vrf_template_config = self.update_vrf_template_config_from_vrf_template_model(vrf_model.vrfId, vrf_model.vrfTemplateConfig)
-            msg = f"type(updated_vrf_template_config): {type(updated_vrf_template_config)}"
-            self.log.debug(msg)
-            vrf_model.vrfTemplateConfig = updated_vrf_template_config
-            msg = f"HERE2: vrf_model: {json.dumps(vrf_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+
             vrf_payload_model = VrfPayloadV12(**vrf_model.model_dump(exclude_unset=True, by_alias=True))
-            msg = f"HERE3: vrf_payload_model: {vrf_payload_model.model_dump(exclude_unset=True, by_alias=True)}"
+
+            msg = "vrf_payload_model: "
+            msg += f"{json.dumps(vrf_payload_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             msg = "Sending vrf create request."
@@ -2600,14 +2595,6 @@ class NdfcVrf12:
                 log_response=True,
                 is_rollback=is_rollback,
             )
-            # args = SendToControllerArgs(
-            #     action="create",
-            #     path=endpoint.path,
-            #     verb=endpoint.verb,
-            #     payload=copy.deepcopy(vrf),
-            #     log_response=True,
-            #     is_rollback=is_rollback,
-            # )
             self.send_to_controller(args)
 
     def is_border_switch(self, serial_number) -> bool:
