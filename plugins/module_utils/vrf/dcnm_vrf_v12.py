@@ -2304,21 +2304,25 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.diff_create_update, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+        if not self.diff_create_update:
+            msg = "Early return. self.diff_create_update is empty."
+            self.log.debug(msg)
+            return
+
         action: str = "create"
         endpoint = EpVrfPost()
         endpoint.fabric_name = self.fabric
 
-        if self.diff_create_update:
-            for payload in self.diff_create_update:
-                args = SendToControllerArgs(
-                    action=action,
-                    path=f"{endpoint.path}/{payload['vrfName']}",
-                    verb=RequestVerb.PUT,
-                    payload=payload,
-                    log_response=True,
-                    is_rollback=is_rollback,
-                )
-                self.send_to_controller(args)
+        for payload in self.diff_create_update:
+            args = SendToControllerArgs(
+                action=action,
+                path=f"{endpoint.path}/{payload['vrfName']}",
+                verb=RequestVerb.PUT,
+                payload=payload,
+                log_response=True,
+                is_rollback=is_rollback,
+            )
+            self.send_to_controller(args)
 
     def push_diff_detach(self, is_rollback=False) -> None:
         """
