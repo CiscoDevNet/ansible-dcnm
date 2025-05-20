@@ -1350,6 +1350,39 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.want_deploy, indent=4)}"
         self.log.debug(msg)
 
+    @staticmethod
+    def get_items_to_detach(attach_list: list[dict]) -> list[dict]:
+        """
+        # Summary
+
+        Given a list of attachment objects, return a list of
+        attachment objects that are to be detached.
+
+        This is done by checking for the presence of the
+        "isAttached" key in the attachment object and
+        checking if the value is True.
+
+        If the "isAttached" key is present and True, it
+        indicates that the attachment is attached to a
+        VRF and needs to be detached.  In this case,
+        remove the "isAttached" key and set the
+        "deployment" key to False.
+
+        The modified attachment object is added to the
+        detach_list.
+
+        Finally, return the detach_list.
+        """
+        detach_list = []
+        for item in attach_list:
+            if "isAttached" not in item:
+                continue
+            if item["isAttached"]:
+                del item["isAttached"]
+                item.update({"deployment": False})
+                detach_list.append(item)
+        return detach_list
+
     def get_diff_delete(self) -> None:
         """
         # Summary
@@ -1366,37 +1399,6 @@ class NdfcVrf12:
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
-
-        def get_items_to_detach(attach_list: list[dict]) -> list[dict]:
-            """
-            # Summary
-
-            Given a list of attachment objects, return a list of
-            attachment objects that are to be detached.
-
-            This is done by checking for the presence of the
-            "isAttached" key in the attachment object and
-            checking if the value is True.
-
-            If the "isAttached" key is present and True, it
-            indicates that the attachment is attached to a
-            VRF and needs to be detached.  In this case,
-            remove the "isAttached" key and set the
-            "deployment" key to False.
-
-            The modified attachment object is added to the
-            detach_list.
-
-            Finally, return the detach_list.
-            """
-            detach_list = []
-            for item in attach_list:
-                if "isAttached" in item:
-                    if item["isAttached"]:
-                        del item["isAttached"]
-                        item.update({"deployment": False})
-                        detach_list.append(item)
-            return detach_list
 
         diff_detach: list[dict] = []
         diff_undeploy: dict = {}
@@ -1419,7 +1421,7 @@ class NdfcVrf12:
                 if not have_a:
                     continue
 
-                detach_items = get_items_to_detach(have_a["lanAttachList"])
+                detach_items = self.get_items_to_detach(have_a["lanAttachList"])
                 if detach_items:
                     have_a.update({"lanAttachList": detach_items})
                     diff_detach.append(have_a)
@@ -1430,7 +1432,7 @@ class NdfcVrf12:
         else:
 
             for have_a in self.have_attach:
-                detach_items = get_items_to_detach(have_a["lanAttachList"])
+                detach_items = self.get_items_to_detach(have_a["lanAttachList"])
                 if detach_items:
                     have_a.update({"lanAttachList": detach_items})
                     diff_detach.append(have_a)
@@ -1488,15 +1490,8 @@ class NdfcVrf12:
         for have_a in self.have_attach:
             found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a["vrfName"])
 
-            detach_list = []
             if not found:
-                for item in have_a.get("lanAttachList"):
-                    if "isAttached" not in item:
-                        continue
-                    if item["isAttached"]:
-                        del item["isAttached"]
-                        item.update({"deployment": False})
-                        detach_list.append(item)
+                detach_list = self.get_items_to_detach(have_a["lanAttachList"])
 
                 if detach_list:
                     have_a.update({"lanAttachList": detach_list})
