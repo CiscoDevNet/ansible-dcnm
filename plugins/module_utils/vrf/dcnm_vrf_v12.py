@@ -1171,7 +1171,12 @@ class NdfcVrf12:
         """
         # Summary
 
-        Given a ControllerResponseVrfsV12 model, populate self.have_create
+        Given a ControllerResponseVrfsV12 model, populate self.have_create,
+        which is a list of VRF dictionaries used later to generate payloads
+        to send to the controller (e.g. diff_create, diff_create_update).
+
+        - Remove vrfStatus
+        - Convert vrfTemplateConfig to a JSON string
 
         ## Raises
 
@@ -1186,16 +1191,11 @@ class NdfcVrf12:
         have_create: list[dict] = []
 
         for vrf in vrf_objects_model.DATA:
-            msg = f"vrf.PRE.update: {json.dumps(vrf.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
             vrf.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_model(vrf)
 
             vrf_dump = vrf.model_dump(by_alias=True)
             del vrf_dump["vrfStatus"]
             vrf_dump.update({"vrfTemplateConfig": vrf.vrfTemplateConfig.model_dump_json(by_alias=True)})
-            msg = f"vrf.POST.update: {json.dumps(vrf_dump, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
 
             have_create.append(vrf_dump)
 
@@ -1212,7 +1212,7 @@ class NdfcVrf12:
         Retrieve all VRF objects and attachment objects from the
         controller. Update the following with this information:
 
-        -   self.have_create
+        -   self.have_create, see populate_have_create()
         -   self.have_attach
         -   self.have_deploy
         """
@@ -1223,7 +1223,6 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        # have_create: list[dict] = []
         have_deploy: dict = {}
 
         vrf_objects, vrf_objects_model = self.get_vrf_objects()
@@ -1263,20 +1262,6 @@ class NdfcVrf12:
 
         if not get_vrf_attach_response.get("DATA"):
             return
-
-        # for vrf in vrf_objects_model.DATA:
-        #     msg = f"vrf.PRE.update: {json.dumps(vrf.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-        #     self.log.debug(msg)
-
-        #     vrf.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_model(vrf)
-
-        #     vrf_dump = vrf.model_dump(by_alias=True)
-        #     del vrf_dump["vrfStatus"]
-        #     vrf_dump.update({"vrfTemplateConfig": vrf.vrfTemplateConfig.model_dump_json(by_alias=True)})
-        #     msg = f"vrf.POST.update: {json.dumps(vrf_dump, indent=4, sort_keys=True)}"
-        #     self.log.debug(msg)
-
-        #     have_create.append(vrf_dump)
 
         vrfs_to_update: set[str] = set()
 
@@ -1399,13 +1384,8 @@ class NdfcVrf12:
         if vrfs_to_update:
             have_deploy.update({"vrfNames": ",".join(vrfs_to_update)})
 
-        # self.have_create = copy.deepcopy(have_create)
         self.have_attach = copy.deepcopy(have_attach)
         self.have_deploy = copy.deepcopy(have_deploy)
-
-        # msg = "self.have_create: "
-        # msg += f"{json.dumps(self.have_create, indent=4)}"
-        # self.log.debug(msg)
 
         # json.dumps() here breaks unit tests since self.have_attach is
         # a MagicMock and not JSON serializable.
@@ -1868,8 +1848,14 @@ class NdfcVrf12:
             if vrf_id is not None:
                 diff_create.append(want_c)
             else:
-                # vrfId is not provided by user.
-                # Fetch the next available vrfId and use it here.
+                # Special case:
+                # 1. Auto generate vrfId since it is not provided in the playbook task:
+                #    - In this case, query the controller for a vrfId and
+                #      use it in the payload.
+                #    - This vrf create request needs to be pushed individually
+                #      i.e. not as a bulk operation.
+                # TODO: arobel: review this with Mike to understand why this
+                #       couldn't be moved to a method called by push_to_remote().
                 vrf_id = self.get_next_fabric_vrf_id(self.fabric)
 
                 want_c.update({"vrfId": vrf_id})
@@ -2021,13 +2007,6 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         msg += f"replace == {replace}"
         self.log.debug(msg)
-
-        # Special cases:
-        # 1. Auto generate vrfId if its not mentioned by user:
-        #    - In this case, query the controller for a vrfId and
-        #      use it in the payload.
-        #    - Any such vrf create requests need to be pushed individually
-        #      (not bulk operation).
 
         self.diff_merge_create(replace)
         self.diff_merge_attach(replace)
