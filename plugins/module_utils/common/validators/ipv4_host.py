@@ -31,9 +31,7 @@ def validate_ipv4_host(value: str) -> bool:
     try:
         __, prefixlen = value.split("/")
     except (AttributeError, ValueError):
-        if prefixlen != "":
-            # prefixlen is not empty
-            return False
+        pass
 
     if isinstance(value, int):
         # value is an int and IPv4Address accepts int as a valid address.
