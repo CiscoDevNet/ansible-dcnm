@@ -1256,8 +1256,6 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        # have_deploy: dict = {}
-
         vrf_objects, vrf_objects_model = self.get_vrf_objects()
 
         msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
@@ -1291,14 +1289,11 @@ class NdfcVrf12:
         msg += f"{get_vrf_attach_response}"
         self.log.debug(msg)
 
-        vrfs_to_update: set[str] = set()
-
         vrf_attach: dict = {}
         for vrf_attach in get_vrf_attach_response["DATA"]:
             if not vrf_attach.get("lanAttachList"):
                 continue
             attach_list: list[dict] = vrf_attach["lanAttachList"]
-            # vrf_to_deploy: str = ""
             for attach in attach_list:
                 if not isinstance(attach, dict):
                     msg = f"{self.class_name}.{method_name}: "
@@ -1312,9 +1307,6 @@ class NdfcVrf12:
                     deployed = False
                 else:
                     deployed = True
-
-                # if deployed:
-                #     vrf_to_deploy = attach["vrfName"]
 
                 switch_serial_number: str = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
@@ -1404,30 +1396,19 @@ class NdfcVrf12:
                         ff_config: str = epv.get("freeformConfig", "")
                         attach.update({"freeformConfig": ff_config})
 
-            # if vrf_to_deploy:
-            #     vrfs_to_update.add(vrf_to_deploy)
-
         msg = "get_vrf_attach_response.POST_UPDATE: "
         msg += f"{get_vrf_attach_response}"
         self.log.debug(msg)
 
         have_attach = get_vrf_attach_response["DATA"]
 
-        # if vrfs_to_update:
-        #     have_deploy.update({"vrfNames": ",".join(vrfs_to_update)})
-
         self.have_attach = copy.deepcopy(have_attach)
-        # self.have_deploy = copy.deepcopy(have_deploy)
 
         # json.dumps() here breaks unit tests since self.have_attach is
         # a MagicMock and not JSON serializable.
         msg = "self.have_attach: "
         msg += f"{self.have_attach}"
         self.log.debug(msg)
-
-        # msg = "self.have_deploy: "
-        # msg += f"{json.dumps(self.have_deploy, indent=4)}"
-        # self.log.debug(msg)
 
     def get_want(self) -> None:
         """
