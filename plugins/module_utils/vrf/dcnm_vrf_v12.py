@@ -1235,20 +1235,12 @@ class NdfcVrf12:
 
         self.populate_have_create(vrf_objects_model)
 
-        curr_vrfs: set = set()
-        for vrf in vrf_objects_model.DATA:
-            curr_vrfs.add(vrf.vrfName)
-
-        msg = f"curr_vrfs: {curr_vrfs}"
-        self.log.debug(msg)
-
-        vrf: dict = {}
-
+        current_vrfs_set = {vrf.vrfName for vrf in vrf_objects_model.DATA}
         get_vrf_attach_response = dcnm_get_url(
             module=self.module,
             fabric=self.fabric,
             path=self.paths["GET_VRF_ATTACH"],
-            items=",".join(curr_vrfs),
+            items=",".join(current_vrfs_set),
             module_name="vrfs",
         )
 
