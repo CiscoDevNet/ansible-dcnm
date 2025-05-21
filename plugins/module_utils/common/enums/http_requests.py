@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @author: Allen Robel
-# @file: plugins/module_utils/common/enums/request.py
+# @file: plugins/module_utils/common/enums/http_requests.py
 """
 Enumerations related to HTTP requests
 """
