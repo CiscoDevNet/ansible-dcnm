@@ -1205,6 +1205,39 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_create, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
+    def populate_have_deploy(self, get_vrf_attach_response: dict) -> None:
+        """
+        Populate self.have_deploy using get_vrf_attach_response.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        vrfs_to_update: set[str] = set()
+
+        for vrf_attach in get_vrf_attach_response.get("DATA", []):
+            if not vrf_attach.get("lanAttachList"):
+                continue
+            attach_list = vrf_attach["lanAttachList"]
+            for attach in attach_list:
+                deploy = attach.get("isLanAttached")
+                deployed = not (deploy and attach.get("lanAttachState") in ("OUT-OF-SYNC", "PENDING"))
+                if deployed:
+                    vrf_to_deploy = attach.get("vrfName")
+                    if vrf_to_deploy:
+                        vrfs_to_update.add(vrf_to_deploy)
+
+        have_deploy = {}
+        if vrfs_to_update:
+            have_deploy["vrfNames"] = ",".join(vrfs_to_update)
+        self.have_deploy = copy.deepcopy(have_deploy)
+
+        msg = "self.have_deploy: "
+        msg += f"{json.dumps(self.have_deploy, indent=4)}"
+        self.log.debug(msg)
+
     def get_have(self) -> None:
         """
         # Summary
@@ -1214,7 +1247,7 @@ class NdfcVrf12:
 
         -   self.have_create, see populate_have_create()
         -   self.have_attach
-        -   self.have_deploy
+        -   self.have_deploy, see populate_have_deploy()
         """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
@@ -1223,7 +1256,7 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        have_deploy: dict = {}
+        # have_deploy: dict = {}
 
         vrf_objects, vrf_objects_model = self.get_vrf_objects()
 
@@ -1249,11 +1282,14 @@ class NdfcVrf12:
             msg += f"caller: {caller}: unable to set get_vrf_attach_response."
             raise ValueError(msg)
 
-        msg = f"get_vrf_attach_response: {get_vrf_attach_response}"
-        self.log.debug(msg)
-
         if not get_vrf_attach_response.get("DATA"):
             return
+
+        self.populate_have_deploy(get_vrf_attach_response)
+
+        msg = "get_vrf_attach_response.PRE_UPDATE: "
+        msg += f"{get_vrf_attach_response}"
+        self.log.debug(msg)
 
         vrfs_to_update: set[str] = set()
 
@@ -1262,7 +1298,7 @@ class NdfcVrf12:
             if not vrf_attach.get("lanAttachList"):
                 continue
             attach_list: list[dict] = vrf_attach["lanAttachList"]
-            vrf_to_deploy: str = ""
+            # vrf_to_deploy: str = ""
             for attach in attach_list:
                 if not isinstance(attach, dict):
                     msg = f"{self.class_name}.{method_name}: "
@@ -1277,8 +1313,8 @@ class NdfcVrf12:
                 else:
                     deployed = True
 
-                if deployed:
-                    vrf_to_deploy = attach["vrfName"]
+                # if deployed:
+                #     vrf_to_deploy = attach["vrfName"]
 
                 switch_serial_number: str = attach["switchSerialNo"]
                 vlan = attach["vlanId"]
@@ -1368,16 +1404,20 @@ class NdfcVrf12:
                         ff_config: str = epv.get("freeformConfig", "")
                         attach.update({"freeformConfig": ff_config})
 
-            if vrf_to_deploy:
-                vrfs_to_update.add(vrf_to_deploy)
+            # if vrf_to_deploy:
+            #     vrfs_to_update.add(vrf_to_deploy)
+
+        msg = "get_vrf_attach_response.POST_UPDATE: "
+        msg += f"{get_vrf_attach_response}"
+        self.log.debug(msg)
 
         have_attach = get_vrf_attach_response["DATA"]
 
-        if vrfs_to_update:
-            have_deploy.update({"vrfNames": ",".join(vrfs_to_update)})
+        # if vrfs_to_update:
+        #     have_deploy.update({"vrfNames": ",".join(vrfs_to_update)})
 
         self.have_attach = copy.deepcopy(have_attach)
-        self.have_deploy = copy.deepcopy(have_deploy)
+        # self.have_deploy = copy.deepcopy(have_deploy)
 
         # json.dumps() here breaks unit tests since self.have_attach is
         # a MagicMock and not JSON serializable.
@@ -1385,9 +1425,9 @@ class NdfcVrf12:
         msg += f"{self.have_attach}"
         self.log.debug(msg)
 
-        msg = "self.have_deploy: "
-        msg += f"{json.dumps(self.have_deploy, indent=4)}"
-        self.log.debug(msg)
+        # msg = "self.have_deploy: "
+        # msg += f"{json.dumps(self.have_deploy, indent=4)}"
+        # self.log.debug(msg)
 
     def get_want(self) -> None:
         """
