@@ -8,6 +8,9 @@ from pydantic import BaseModel, model_validator, Field
 # Format: ModuleMethodSchema
 # 1. DcnmNetworkQuerySchema
 
+# replace None with default value if it throws an error
+# this can happen if fields are unevenly defined across different networks
+# eg: in one network, vrf is defined, in the other it is not
 class DcnmNetworkQuerySchema(BaseModel):
 
     class SwitchAttach(BaseModel):
@@ -27,7 +30,19 @@ class DcnmNetworkQuerySchema(BaseModel):
     class NetworkTemplateConfig(BaseModel):
         gatewayIpAddress: Optional[str] = None
         vlanId: Optional[int] = None
-        vrfName: Optional[str] = None
+        vrfName: Optional[str] = "NA"
+        dhcpServerAddr1: Optional[str] = None
+        dhcpServerAddr2: Optional[str] = None
+        dhcpServerAddr3: Optional[str] = None
+        vrfDhcp: Optional[str] = None
+        vrfDhcp2: Optional[str] = None
+        vrfDhcp3: Optional[str] = None
+        surpressArp: Optional[bool] = None
+        isLayer2Only: Optional[bool] = False
+        mtu: Optional[int] = None
+        vlanName: Optional[str] = None
+        intfDescription: Optional[str] = None
+
 
     class Parent(BaseModel):
         fabric: Optional[str] = None
@@ -36,7 +51,7 @@ class DcnmNetworkQuerySchema(BaseModel):
         networkTemplate: Optional[str] = None
         networkTemplateConfig: Optional["DcnmNetworkQuerySchema.NetworkTemplateConfig"] = None
         networkStatus: Optional[str] = None
-        vrf: Optional[str] = None
+        vrf: Optional[str] = "NA"
 
     class Network(BaseModel):
         attach: Optional[List["DcnmNetworkQuerySchema.SwitchAttach"]] = None
@@ -92,6 +107,28 @@ class DcnmNetworkQuerySchema(BaseModel):
                     network_dict["parent"]["networkTemplateConfig"]["vlanId"] = network['vlan_id']
                 if 'vrf_name' in network:
                     network_dict["parent"]["networkTemplateConfig"]["vrfName"] = network['vrf_name']
+                if 'dhcp_srvr1_ip' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["dhcpServerAddr1"] = network['dhcp_srvr1_ip']
+                if 'dhcp_srvr2_ip' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["dhcpServerAddr2"] = network['dhcp_srvr2_ip']
+                if 'dhcp_srvr3_ip' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["dhcpServerAddr3"] = network['dhcp_srvr3_ip']
+                if 'dhcp_srvr1_vrf' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["vrfDhcp"] = network['dhcp_srvr1_vrf']
+                if 'dhcp_srvr2_vrf' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["vrfDhcp2"] = network['dhcp_srvr2_vrf']
+                if 'dhcp_srvr3_vrf' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["vrfDhcp3"] = network['dhcp_srvr3_vrf']
+                if 'arp_surpress' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["surpressArp"] = network['arp_surpress']
+                if 'is_l2only' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["isLayer2Only"] = network['is_l2only']
+                if 'mtu_l3intf' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["mtu"] = network['mtu_l3intf']
+                if 'vlan_name' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["vlanName"] = network['vlan_name']
+                if 'int_desc' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["intfDescription"] = network['int_desc']
             if 'vrf_name' in network:
                 network_dict["parent"]["vrf"] = network['vrf_name']
             # if deploy:

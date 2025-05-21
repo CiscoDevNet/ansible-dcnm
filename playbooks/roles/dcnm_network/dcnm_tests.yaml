@@ -88,9 +88,16 @@
     #---
     # config files for test cases (provide only file name)
     #---
+    # SANITY
     ansible_sanity_merged_conf: dcnm_network_sanity_merged_conf.j2
     ansible_sanity_overridden_conf: dcnm_network_sanity_overridden_conf.j2
     ansible_sanity_replaced_conf: dcnm_network_sanity_replaced_conf.j2
-
+    #---
+    # DELETED
+    ansible_deleted_net1_conf: dcnm_network_deleted_net1_conf.j2
+    ansible_deleted_net2_conf: dcnm_network_deleted_net2_conf.j2
+    ansible_deleted_double_net_conf: dcnm_network_deleted_double_net_conf.j2
+    ansible_deleted_l2only_net_conf: dcnm_network_deleted_l2only_net_conf.j2
+    ansible_deleted_l2_l3_net_conf: dcnm_network_deleted_l2_l3_net_conf.j2
   roles:
     - dcnm_network

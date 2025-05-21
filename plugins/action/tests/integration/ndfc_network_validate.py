@@ -19,37 +19,97 @@ class ActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
-
-        ndfc_data = self._task.args['ndfc_data']
-        if ndfc_data is None:
+        
+        if'ndfc_data' not in self._task.args:            
             results['failed'] = True
             results['msg'] = 'No data found in ndfc_data'
             return results
+        else:
+            ndfc_data = self._task.args['ndfc_data']
+            # removes ansible embeddings and converts to native python types
+            native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
 
-        # removes ansible embeddings and converts to native python types
-        native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
-
-        config_path = self._task.args['config_path']
-        if config_path is None:
-            results['failed'] = True
-            results['msg'] = 'No path is loaded into config_path'
-            return results
-        
-        test_data = self._task.args['test_data']
-        if test_data is None:
+        if "test_data" not in self._task.args:
             results['failed'] = True
             results['msg'] = 'No test data is found in test_data'
             return results
+        else:
+            test_data = self._task.args['test_data']
         
-        expected_config_data = load_yaml_file(config_path)
+        if "config_path" not in self._task.args:
+            results['failed'] = True
+            results['msg'] = 'No path is loaded into config_path'
+        else:
+            config_path = self._task.args['config_path']
+        
+        if 'check_deleted' in self._task.args:
+            check_deleted = self._task.args['check_deleted']
+        else:
+            check_deleted = False
         
         test_fabric = test_data['test_fabric']
-        # Convert the config yaml file to a dictionary
+        if config_path != "":
+            # only parse if config file exists
+            expected_config_data = load_yaml_file(config_path)
+            expected_data = DcnmNetworkQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric, deploy=test_data.get('deploy', False))
+            expected_data_parsed = DcnmNetworkQuerySchema.parse_obj(expected_data).dict(exclude_none=True)
         
-        expected_data = DcnmNetworkQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric, deploy=test_data.get('deploy', False))
-        expected_data_parsed = DcnmNetworkQuerySchema.parse_obj(expected_data).dict(exclude_none=True)
         ndfc_data_parsed = DcnmNetworkQuerySchema.parse_obj(native_ndfc_data).dict(exclude_none=True)
         
+
+        if check_deleted:
+            results['failed'] = False
+            results['msg'] = ""
+
+            existing_networks = set()
+            for network in ndfc_data_parsed["response"]:
+                existing_networks.add(network["parent"]["networkName"])
+                
+            if config_path == "":
+                # check for full delete
+                if not ndfc_data_parsed["failed"] and len(existing_networks) == 0:
+                    results['msg'] = 'All networks are deleted'
+                else:
+                    print("Networks still existing: ")
+                    print(existing_networks)
+                    results['failed'] = True
+                    results['msg'] = 'Error: Expected full delete as config_path is empty but networks still exist.'
+                    if ndfc_data_parsed["failed"]:
+                        results['msg'] += '\n\nError: ' + ndfc_data_parsed["error"]
+                    return results
+                return results
+            else:
+                # checks for a partial delete
+                deleted_networks = set()
+                for network in expected_data_parsed["response"]:
+                    deleted_networks.add(network["parent"]["networkName"])
+                
+                remaining_networks = existing_networks.intersection(deleted_networks)
+
+                if len(remaining_networks) > 0:
+                    results['failed'] = True
+                    print("Expected networks to be deleted: ")
+                    print(deleted_networks)
+                    print("\nNetworks present in NDFC: ")
+                    print(existing_networks)
+                    print("\nNetworks still not deleted: ")
+                    print(remaining_networks)
+                    results['msg'] = 'All networks are not deleted'
+                    return results
+                
+                
+                print("Expected networks to be deleted: ")
+                print(deleted_networks)
+                print("\n\nNetworks present in NDFC: ")
+                print(existing_networks)
+                print("Networks still not deleted: ")
+                print(remaining_networks)
+                results['failed'] = False
+                results['msg'] = 'Provided networks are deleted'
+                return results
+        
+        
+        # non deleted checking
         validity = DeepDiff(
             expected_data_parsed,
             ndfc_data_parsed,

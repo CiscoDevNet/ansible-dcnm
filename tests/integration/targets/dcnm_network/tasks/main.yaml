@@ -22,11 +22,12 @@
       setup_vrf_conf_file: "{{ role_path }}/files/dcnm_network_setup_vrf_conf.yaml"
       #----------------------------------
   delegate_to: localhost
-  tags: sanity
+  tags: always
 
 # maintaining backward compatibility until all test cases are updated
 - set_fact:
     controller_version: "Unable to determine controller version"
+  tags: always
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
@@ -34,11 +35,13 @@
     path: /appcenter/cisco/ndfc/api/about/version
   register: result
   ignore_errors: yes
+  tags: always
 
 - set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
   ignore_errors: yes
+  tags: always
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
@@ -46,16 +49,19 @@
     path: /fm/fmrest/about/version
   register: result
   ignore_errors: yes
+  tags: always
 
 - set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
   ignore_errors: yes
+  tags: always
 
 
 - assert:
     that:
     - 'controller_version != "Unable to determine controller version"'
+  tags: always
 
 # new version below
 
@@ -65,12 +71,13 @@
     config:
       - FABRIC_NAME: "{{ test_data.test_fabric }}"
   register: verify_result
-  tags: sanity
+  tags: always
 
 - name: MAIN - DELETED - Remove all existing networks to start with a clean state
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
+  tags: always
 
 
 - name: MAIN - Create VRF Config File using J2 Template
@@ -78,19 +85,20 @@
     src: "{{ test_data.setup_vrf_conf_template }}"
     dest: "{{ test_data.setup_vrf_conf_file }}"
   delegate_to: localhost
+  tags: always
 
 - name: MAIN - Load VRF Configuration
   ansible.builtin.set_fact:
     dcnm_network_setup_vrf_conf: "{{ lookup('file', '{{ test_data.setup_vrf_conf_file }}') | from_yaml }}"
   delegate_to: localhost
-  tags: sanity
+  tags: always
 
 - name: MAIN - OVERRIDDEN - Create vrfs required for this test and remove all other vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_data.test_fabric }}"
     state: overridden
     config: "{{ dcnm_network_setup_vrf_conf }}"
-  tags: sanity
+  tags: always
 
 - name: MAIN - Collect DCNM Network Test Cases
   find:
@@ -99,19 +107,19 @@
   connection: local
   register: dcnm_cases
   delegate_to: localhost
-  tags: sanity
+  tags: always
 
 - name: MAIN - Set Test Cases Fact
   set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
   delegate_to: localhost
-  tags: sanity
+  tags: always
 
 - name: MAIN - Build List of Test Items
   set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
   delegate_to: localhost
-  tags: sanity
+  tags: always
 
 - name: MAIN - Run Test Cases
   include_tasks: "{{ test_case_to_run }}"
@@ -119,10 +127,10 @@
   loop_control:
     loop_var: test_case_to_run
 
-  tags: sanity
+  tags: always
 
 - name: MAIN - DELETED - Clean Up Any Existing VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ ansible_test_fabric }}"
     state: deleted
-  tags: sanity
+  tags: always
