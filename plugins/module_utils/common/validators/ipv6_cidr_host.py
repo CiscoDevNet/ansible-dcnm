@@ -33,7 +33,7 @@ def validate_ipv6_cidr_host(value: str) -> bool:
         return False
 
     if int(prefixlen) == 128:
-        # A /128 prefix length is always a host address for our purposees,
+        # A /128 prefix length is always a host address for our purposes,
         # but the IPv4Interface module treats it as a network_address,
         # as shown below.
         #

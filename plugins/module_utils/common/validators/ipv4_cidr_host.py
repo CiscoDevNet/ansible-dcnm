@@ -33,7 +33,7 @@ def validate_ipv4_cidr_host(value: str) -> bool:
         return False
 
     if int(prefixlen) == 32:
-        # A /32 prefix length is always a host address for our purposees,
+        # A /32 prefix length is always a host address for our purposes,
         # but the IPv4Interface module treats it as a network_address,
         # as shown below.
         #
