@@ -1238,6 +1238,89 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_deploy, indent=4)}"
         self.log.debug(msg)
 
+    def populate_have_attach(self, get_vrf_attach_response: dict) -> None:
+        """
+        Populate self.have_attach using get_vrf_attach_response.
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        msg = "get_vrf_attach_response.PRE_UPDATE: "
+        msg += f"{get_vrf_attach_response}"
+        self.log.debug(msg)
+
+        have_attach = copy.deepcopy(get_vrf_attach_response.get("DATA", []))
+
+        for vrf_attach in have_attach:
+            if not vrf_attach.get("lanAttachList"):
+                continue
+            attach_list = vrf_attach["lanAttachList"]
+            for attach in attach_list:
+                if not isinstance(attach, dict):
+                    msg = f"{self.class_name}.{caller}: attach is not a dict."
+                    self.module.fail_json(msg=msg)
+                attach_state = not attach["lanAttachState"] == "NA"
+                deploy = attach["isLanAttached"]
+                deployed = not (deploy and attach["lanAttachState"] in ("OUT-OF-SYNC", "PENDING"))
+
+                switch_serial_number = attach["switchSerialNo"]
+                vlan = attach["vlanId"]
+                inst_values = attach.get("instanceValues", None)
+
+                # Update keys to align with outgoing payload requirements
+                for key in ["vlanId", "switchSerialNo", "switchName", "switchRole", "ipAddress", "lanAttachState", "isLanAttached", "vrfId", "fabricName"]:
+                    if key in attach:
+                        del attach[key]
+
+                attach.update({"fabric": self.fabric})
+                attach.update({"vlan": vlan})
+                attach.update({"serialNumber": switch_serial_number})
+                attach.update({"deployment": deploy})
+                attach.update({"extensionValues": ""})
+                attach.update({"instanceValues": inst_values})
+                attach.update({"isAttached": attach_state})
+                attach.update({"is_deploy": deployed})
+
+                # Get the VRF LITE extension template and update it
+                lite_objects = self.get_vrf_lite_objects(attach)
+                if not lite_objects.get("DATA"):
+                    self.log.debug(f"caller: {caller}: Continuing. No vrf_lite_objects.")
+                    continue
+
+                for sdl in lite_objects["DATA"]:
+                    for epv in sdl["switchDetailsList"]:
+                        if not epv.get("extensionValues"):
+                            attach.update({"freeformConfig": ""})
+                            continue
+                        ext_values = json.loads(epv["extensionValues"])
+                        if ext_values.get("VRF_LITE_CONN") is None:
+                            continue
+                        ext_values = json.loads(ext_values["VRF_LITE_CONN"])
+                        extension_values = {"VRF_LITE_CONN": {"VRF_LITE_CONN": []}}
+                        for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
+                            ev_dict = copy.deepcopy(extension_values_dict)
+                            ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
+                            ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
+                            extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].append(ev_dict)
+                        extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+                        ms_con = {"MULTISITE_CONN": []}
+                        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+                        e_values = json.dumps(extension_values).replace(" ", "")
+                        attach.update({"extensionValues": e_values})
+                        ff_config = epv.get("freeformConfig", "")
+                        attach.update({"freeformConfig": ff_config})
+
+        msg = "get_vrf_attach_response.POST_UPDATE: "
+        msg += f"{get_vrf_attach_response}"
+        self.log.debug(msg)
+
+        self.have_attach = copy.deepcopy(have_attach)
+        msg = "self.have_attach: "
+        msg += f"{self.have_attach}"
+        self.log.debug(msg)
+
     def get_have(self) -> None:
         """
         # Summary
@@ -1246,7 +1329,7 @@ class NdfcVrf12:
         controller. Update the following with this information:
 
         -   self.have_create, see populate_have_create()
-        -   self.have_attach
+        -   self.have_attach, see populate_have_attach()
         -   self.have_deploy, see populate_have_deploy()
         """
         caller = inspect.stack()[1][3]
@@ -1285,130 +1368,132 @@ class NdfcVrf12:
 
         self.populate_have_deploy(get_vrf_attach_response)
 
-        msg = "get_vrf_attach_response.PRE_UPDATE: "
-        msg += f"{get_vrf_attach_response}"
-        self.log.debug(msg)
+        self.populate_have_attach(get_vrf_attach_response)
 
-        vrf_attach: dict = {}
-        for vrf_attach in get_vrf_attach_response["DATA"]:
-            if not vrf_attach.get("lanAttachList"):
-                continue
-            attach_list: list[dict] = vrf_attach["lanAttachList"]
-            for attach in attach_list:
-                if not isinstance(attach, dict):
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"caller: {caller}: "
-                    msg += "attach is not a dict."
-                    self.module.fail_json(msg=msg)
-                attach_state = not attach["lanAttachState"] == "NA"
-                deploy = attach["isLanAttached"]
-                deployed: bool = False
-                if deploy and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
-                    deployed = False
-                else:
-                    deployed = True
+        # msg = "get_vrf_attach_response.PRE_UPDATE: "
+        # msg += f"{get_vrf_attach_response}"
+        # self.log.debug(msg)
 
-                switch_serial_number: str = attach["switchSerialNo"]
-                vlan = attach["vlanId"]
-                inst_values = attach.get("instanceValues", None)
+        # vrf_attach: dict = {}
+        # for vrf_attach in get_vrf_attach_response["DATA"]:
+        #     if not vrf_attach.get("lanAttachList"):
+        #         continue
+        #     attach_list: list[dict] = vrf_attach["lanAttachList"]
+        #     for attach in attach_list:
+        #         if not isinstance(attach, dict):
+        #             msg = f"{self.class_name}.{method_name}: "
+        #             msg += f"caller: {caller}: "
+        #             msg += "attach is not a dict."
+        #             self.module.fail_json(msg=msg)
+        #         attach_state = not attach["lanAttachState"] == "NA"
+        #         deploy = attach["isLanAttached"]
+        #         deployed: bool = False
+        #         if deploy and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
+        #             deployed = False
+        #         else:
+        #             deployed = True
 
-                # The deletes and updates below are done to update the incoming
-                # dictionary format to align with the outgoing payload requirements.
-                # Ex: 'vlanId' in the attach section of the incoming payload needs to
-                # be changed to 'vlan' on the attach section of outgoing payload.
+        #         switch_serial_number: str = attach["switchSerialNo"]
+        #         vlan = attach["vlanId"]
+        #         inst_values = attach.get("instanceValues", None)
 
-                del attach["vlanId"]
-                del attach["switchSerialNo"]
-                del attach["switchName"]
-                del attach["switchRole"]
-                del attach["ipAddress"]
-                del attach["lanAttachState"]
-                del attach["isLanAttached"]
-                del attach["vrfId"]
-                del attach["fabricName"]
+        #         # The deletes and updates below are done to update the incoming
+        #         # dictionary format to align with the outgoing payload requirements.
+        #         # Ex: 'vlanId' in the attach section of the incoming payload needs to
+        #         # be changed to 'vlan' on the attach section of outgoing payload.
 
-                attach.update({"fabric": self.fabric})
-                attach.update({"vlan": vlan})
-                attach.update({"serialNumber": switch_serial_number})
-                attach.update({"deployment": deploy})
-                attach.update({"extensionValues": ""})
-                attach.update({"instanceValues": inst_values})
-                attach.update({"isAttached": attach_state})
-                attach.update({"is_deploy": deployed})
+        #         del attach["vlanId"]
+        #         del attach["switchSerialNo"]
+        #         del attach["switchName"]
+        #         del attach["switchRole"]
+        #         del attach["ipAddress"]
+        #         del attach["lanAttachState"]
+        #         del attach["isLanAttached"]
+        #         del attach["vrfId"]
+        #         del attach["fabricName"]
 
-                # Get the VRF LITE extension template and update it
-                # with the attach['extensionvalues']
+        #         attach.update({"fabric": self.fabric})
+        #         attach.update({"vlan": vlan})
+        #         attach.update({"serialNumber": switch_serial_number})
+        #         attach.update({"deployment": deploy})
+        #         attach.update({"extensionValues": ""})
+        #         attach.update({"instanceValues": inst_values})
+        #         attach.update({"isAttached": attach_state})
+        #         attach.update({"is_deploy": deployed})
 
-                lite_objects = self.get_vrf_lite_objects(attach)
+        #         # Get the VRF LITE extension template and update it
+        #         # with the attach['extensionvalues']
 
-                if not lite_objects.get("DATA"):
-                    msg = f"caller: {caller}: "
-                    msg += "Continuing. No vrf_lite_objects."
-                    self.log.debug(msg)
-                    continue
+        #         lite_objects = self.get_vrf_lite_objects(attach)
 
-                    # This original code does not make sense since it
-                    # will skip attachments that do not have lite_objects
-                    # Leaving it commented out and replacing it with the
-                    # above continue statement.
-                    # msg = "Early return. lite_objects missing DATA"
-                    # self.log.debug(msg)
-                    # return
+        #         if not lite_objects.get("DATA"):
+        #             msg = f"caller: {caller}: "
+        #             msg += "Continuing. No vrf_lite_objects."
+        #             self.log.debug(msg)
+        #             continue
 
-                msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
+        #             # This original code does not make sense since it
+        #             # will skip attachments that do not have lite_objects
+        #             # Leaving it commented out and replacing it with the
+        #             # above continue statement.
+        #             # msg = "Early return. lite_objects missing DATA"
+        #             # self.log.debug(msg)
+        #             # return
 
-                sdl: dict = {}
-                epv: dict = {}
-                extension_values_dict: dict = {}
-                ms_con: dict = {}
-                for sdl in lite_objects["DATA"]:
-                    for epv in sdl["switchDetailsList"]:
-                        if not epv.get("extensionValues"):
-                            attach.update({"freeformConfig": ""})
-                            continue
-                        ext_values = json.loads(epv["extensionValues"])
-                        if ext_values.get("VRF_LITE_CONN") is None:
-                            continue
-                        ext_values = json.loads(ext_values["VRF_LITE_CONN"])
-                        extension_values: dict = {}
-                        extension_values["VRF_LITE_CONN"] = []
-                        extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": []}
+        #         msg = f"lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+        #         self.log.debug(msg)
 
-                        for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
-                            ev_dict = copy.deepcopy(extension_values_dict)
-                            ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
-                            ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
+        #         sdl: dict = {}
+        #         epv: dict = {}
+        #         extension_values_dict: dict = {}
+        #         ms_con: dict = {}
+        #         for sdl in lite_objects["DATA"]:
+        #             for epv in sdl["switchDetailsList"]:
+        #                 if not epv.get("extensionValues"):
+        #                     attach.update({"freeformConfig": ""})
+        #                     continue
+        #                 ext_values = json.loads(epv["extensionValues"])
+        #                 if ext_values.get("VRF_LITE_CONN") is None:
+        #                     continue
+        #                 ext_values = json.loads(ext_values["VRF_LITE_CONN"])
+        #                 extension_values: dict = {}
+        #                 extension_values["VRF_LITE_CONN"] = []
+        #                 extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": []}
 
-                            if extension_values["VRF_LITE_CONN"]:
-                                extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend([ev_dict])
-                            else:
-                                extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": [ev_dict]}
+        #                 for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
+        #                     ev_dict = copy.deepcopy(extension_values_dict)
+        #                     ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
+        #                     ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
 
-                        extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+        #                     if extension_values["VRF_LITE_CONN"]:
+        #                         extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].extend([ev_dict])
+        #                     else:
+        #                         extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": [ev_dict]}
 
-                        ms_con["MULTISITE_CONN"] = []
-                        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-                        e_values = json.dumps(extension_values).replace(" ", "")
+        #                 extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
 
-                        attach.update({"extensionValues": e_values})
+        #                 ms_con["MULTISITE_CONN"] = []
+        #                 extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+        #                 e_values = json.dumps(extension_values).replace(" ", "")
 
-                        ff_config: str = epv.get("freeformConfig", "")
-                        attach.update({"freeformConfig": ff_config})
+        #                 attach.update({"extensionValues": e_values})
 
-        msg = "get_vrf_attach_response.POST_UPDATE: "
-        msg += f"{get_vrf_attach_response}"
-        self.log.debug(msg)
+        #                 ff_config: str = epv.get("freeformConfig", "")
+        #                 attach.update({"freeformConfig": ff_config})
 
-        have_attach = get_vrf_attach_response["DATA"]
+        # msg = "get_vrf_attach_response.POST_UPDATE: "
+        # msg += f"{get_vrf_attach_response}"
+        # self.log.debug(msg)
 
-        self.have_attach = copy.deepcopy(have_attach)
+        # have_attach = get_vrf_attach_response["DATA"]
 
-        # json.dumps() here breaks unit tests since self.have_attach is
-        # a MagicMock and not JSON serializable.
-        msg = "self.have_attach: "
-        msg += f"{self.have_attach}"
-        self.log.debug(msg)
+        # self.have_attach = copy.deepcopy(have_attach)
+
+        # # json.dumps() here breaks unit tests since self.have_attach is
+        # # a MagicMock and not JSON serializable.
+        # msg = "self.have_attach: "
+        # msg += f"{self.have_attach}"
+        # self.log.debug(msg)
 
     def get_want(self) -> None:
         """
