@@ -23,7 +23,6 @@ __author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen R
 # pylint: enable=invalid-name
 """
 """
-import ast
 import copy
 import inspect
 import json
@@ -1323,10 +1322,10 @@ class NdfcVrf12:
                         if not epv.get("extensionValues"):
                             attach.update({"freeformConfig": ""})
                             continue
-                        ext_values = ast.literal_eval(epv["extensionValues"])
+                        ext_values = json.loads(epv["extensionValues"])
                         if ext_values.get("VRF_LITE_CONN") is None:
                             continue
-                        ext_values = ast.literal_eval(ext_values["VRF_LITE_CONN"])
+                        ext_values = json.loads(ext_values["VRF_LITE_CONN"])
                         extension_values: dict = {}
                         extension_values["VRF_LITE_CONN"] = []
                         extension_values["VRF_LITE_CONN"] = {"VRF_LITE_CONN": []}
@@ -2647,7 +2646,7 @@ class NdfcVrf12:
             if str(item.get("extensionType")) != "VRF_LITE":
                 continue
             extension_values = item["extensionValues"]
-            extension_values = ast.literal_eval(extension_values)
+            extension_values = json.loads(extension_values)
             extension_values_list.append(extension_values)
 
         msg = "Returning extension_values_list: "
