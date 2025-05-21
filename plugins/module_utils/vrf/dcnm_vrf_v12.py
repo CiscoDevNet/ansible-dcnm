@@ -611,8 +611,6 @@ class NdfcVrf12:
                         want["deployment"] = True
                         attach_list.append(want)
                         if want_is_deploy is True:
-                            if "isAttached" in want:
-                                del want["isAttached"]
                             deploy_vrf = True
                         continue
 
