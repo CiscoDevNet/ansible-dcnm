@@ -514,8 +514,8 @@ class NdfcVrf12:
                 want_inst_values: dict = {}
                 have_inst_values: dict = {}
                 if want.get("instanceValues") is not None and have.get("instanceValues") is not None:
-                    want_inst_values = ast.literal_eval(want["instanceValues"])
-                    have_inst_values = ast.literal_eval(have["instanceValues"])
+                    want_inst_values = json.loads(want["instanceValues"])
+                    have_inst_values = json.loads(have["instanceValues"])
 
                     # update unsupported parameters using have
                     # Only need ipv4 or ipv6. Don't require both, but both can be supplied (as per the GUI)
@@ -532,11 +532,11 @@ class NdfcVrf12:
                     want_ext_values = want["extensionValues"]
                     have_ext_values = have["extensionValues"]
 
-                    want_ext_values_dict: dict = ast.literal_eval(want_ext_values)
-                    have_ext_values_dict: dict = ast.literal_eval(have_ext_values)
+                    want_ext_values_dict: dict = json.loads(want_ext_values)
+                    have_ext_values_dict: dict = json.loads(have_ext_values)
 
-                    want_e: dict = ast.literal_eval(want_ext_values_dict["VRF_LITE_CONN"])
-                    have_e: dict = ast.literal_eval(have_ext_values_dict["VRF_LITE_CONN"])
+                    want_e: dict = json.loads(want_ext_values_dict["VRF_LITE_CONN"])
+                    have_e: dict = json.loads(have_ext_values_dict["VRF_LITE_CONN"])
 
                     if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
                         # In case of replace/override if the length of want and have lite attach of a switch
