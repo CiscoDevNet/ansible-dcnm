@@ -2182,176 +2182,176 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.diff_input_format, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def get_diff_query(self) -> None:
-        """
-        # Summary
+    # def get_diff_query(self) -> None:
+    #     """
+    #     # Summary
 
-        Query the DCNM for the current state of the VRFs in the fabric.
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
+    #     Query the DCNM for the current state of the VRFs in the fabric.
+    #     """
+    #     method_name = inspect.stack()[0][3]
+    #     caller = inspect.stack()[1][3]
 
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        self.log.debug(msg)
+    #     msg = "ENTERED. "
+    #     msg += f"caller: {caller}. "
+    #     self.log.debug(msg)
 
-        path_get_vrf_attach: str
+    #     path_get_vrf_attach: str
 
-        vrf_objects, vrf_objects_model = self.get_vrf_objects()
+    #     vrf_objects, vrf_objects_model = self.get_vrf_objects()
 
-        msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+    #     msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+    #     self.log.debug(msg)
 
-        if not vrf_objects["DATA"]:
-            return
+    #     if not vrf_objects_model.DATA:
+    #         return
 
-        query: list
-        vrf: dict
-        if self.config:
-            query = []
-            for want_c in self.want_create:
-                # Query the VRF
-                for vrf in vrf_objects["DATA"]:
+    #     query: list
+    #     vrf: dict
+    #     if self.config:
+    #         query = []
+    #         for want_c in self.want_create:
+    #             # Query the VRF
+    #             for vrf in vrf_objects["DATA"]:
 
-                    if want_c["vrfName"] != vrf["vrfName"]:
-                        continue
+    #                 if want_c["vrfName"] != vrf["vrfName"]:
+    #                     continue
 
-                    item: dict = {"parent": {}, "attach": []}
-                    item["parent"] = vrf
+    #                 item: dict = {"parent": {}, "attach": []}
+    #                 item["parent"] = vrf
 
-                    # Query the Attachment for the found VRF
-                    path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+    #                 # Query the Attachment for the found VRF
+    #                 path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
-                    get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+    #                 get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
 
-                    msg = f"path_get_vrf_attach: {path_get_vrf_attach}"
-                    self.log.debug(msg)
+    #                 msg = f"path_get_vrf_attach: {path_get_vrf_attach}"
+    #                 self.log.debug(msg)
 
-                    msg = "get_vrf_attach_response: "
-                    msg += f"{json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}"
-                    self.log.debug(msg)
+    #                 msg = "get_vrf_attach_response: "
+    #                 msg += f"{json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}"
+    #                 self.log.debug(msg)
 
-                    if get_vrf_attach_response is None:
-                        msg = f"{self.class_name}.{method_name}: "
-                        msg += f"{caller}: Unable to retrieve endpoint: verb GET, path {path_get_vrf_attach}"
-                        raise ValueError(msg)
+    #                 if get_vrf_attach_response is None:
+    #                     msg = f"{self.class_name}.{method_name}: "
+    #                     msg += f"{caller}: Unable to retrieve endpoint: verb GET, path {path_get_vrf_attach}"
+    #                     raise ValueError(msg)
 
-                    response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+    #                 response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
 
-                    msg = "ControllerResponseVrfsAttachmentsV12: "
-                    msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-                    self.log.debug(msg)
+    #                 msg = "ControllerResponseVrfsAttachmentsV12: "
+    #                 msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+    #                 self.log.debug(msg)
 
-                    generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
+    #                 generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
 
-                    missing_fabric, not_ok = self.handle_response(generic_response, "query")
+    #                 missing_fabric, not_ok = self.handle_response(generic_response, "query")
 
-                    if missing_fabric or not_ok:
-                        # arobel: TODO: Not covered by UT
-                        msg0 = f"{self.class_name}.{method_name}:"
-                        msg0 += f"caller: {caller}. "
-                        msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
-                        msg2 = f"{msg0} Unable to find attachments for "
-                        msg2 += f"vrfs: {vrf['vrfName']} under "
-                        msg2 += f"fabric: {self.fabric}"
-                        self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+    #                 if missing_fabric or not_ok:
+    #                     # arobel: TODO: Not covered by UT
+    #                     msg0 = f"{self.class_name}.{method_name}:"
+    #                     msg0 += f"caller: {caller}. "
+    #                     msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+    #                     msg2 = f"{msg0} Unable to find attachments for "
+    #                     msg2 += f"vrfs: {vrf['vrfName']} under "
+    #                     msg2 += f"fabric: {self.fabric}"
+    #                     self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-                    for vrf_attach in response.data:
-                        if want_c["vrfName"] != vrf_attach.vrf_name:
-                            continue
-                        if not vrf_attach.lan_attach_list:
-                            continue
-                        attach_list = vrf_attach.lan_attach_list
-                        msg = f"attach_list_model: {attach_list}"
-                        self.log.debug(msg)
-                        for attach in attach_list:
-                            params = {}
-                            params["fabric"] = self.fabric
-                            params["serialNumber"] = attach.switch_serial_no
-                            params["vrfName"] = attach.vrf_name
-                            msg = f"Calling get_vrf_lite_objects with: {params}"
-                            self.log.debug(msg)
-                            lite_objects = self.get_vrf_lite_objects(params)
-                            msg = f"lite_objects: {lite_objects}"
-                            self.log.debug(msg)
-                            if not lite_objects.get("DATA"):
-                                return
-                            data = lite_objects.get("DATA")
-                            if data is not None:
-                                item["attach"].append(data[0])
-                        query.append(item)
+    #                 for vrf_attach in response.data:
+    #                     if want_c["vrfName"] != vrf_attach.vrf_name:
+    #                         continue
+    #                     if not vrf_attach.lan_attach_list:
+    #                         continue
+    #                     attach_list = vrf_attach.lan_attach_list
+    #                     msg = f"attach_list_model: {attach_list}"
+    #                     self.log.debug(msg)
+    #                     for attach in attach_list:
+    #                         params = {}
+    #                         params["fabric"] = self.fabric
+    #                         params["serialNumber"] = attach.switch_serial_no
+    #                         params["vrfName"] = attach.vrf_name
+    #                         msg = f"Calling get_vrf_lite_objects with: {params}"
+    #                         self.log.debug(msg)
+    #                         lite_objects = self.get_vrf_lite_objects(params)
+    #                         msg = f"lite_objects: {lite_objects}"
+    #                         self.log.debug(msg)
+    #                         if not lite_objects.get("DATA"):
+    #                             return
+    #                         data = lite_objects.get("DATA")
+    #                         if data is not None:
+    #                             item["attach"].append(data[0])
+    #                     query.append(item)
 
-        else:
+    #     else:
 
-            query = []
-            # Query the VRF
-            for vrf in vrf_objects["DATA"]:
-                item = {"parent": {}, "attach": []}
-                item["parent"] = vrf
+    #         query = []
+    #         # Query the VRF
+    #         for vrf in vrf_objects["DATA"]:
+    #             item = {"parent": {}, "attach": []}
+    #             item["parent"] = vrf
 
-                # Query the Attachment for the found VRF
-                path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+    #             # Query the Attachment for the found VRF
+    #             path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
 
-                get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+    #             get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
 
-                if get_vrf_attach_response is None:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"{caller}: Unable to retrieve endpoint. "
-                    msg += f"verb GET, path {path_get_vrf_attach}"
-                    raise ValueError(msg)
+    #             if get_vrf_attach_response is None:
+    #                 msg = f"{self.class_name}.{method_name}: "
+    #                 msg += f"{caller}: Unable to retrieve endpoint. "
+    #                 msg += f"verb GET, path {path_get_vrf_attach}"
+    #                 raise ValueError(msg)
 
-                response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+    #             response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
 
-                msg = "ControllerResponseVrfsAttachmentsV12: "
-                msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-                self.log.debug(msg)
+    #             msg = "ControllerResponseVrfsAttachmentsV12: "
+    #             msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+    #             self.log.debug(msg)
 
-                generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
-                missing_fabric, not_ok = self.handle_response(generic_response, "query")
+    #             generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
+    #             missing_fabric, not_ok = self.handle_response(generic_response, "query")
 
-                if missing_fabric or not_ok:
-                    msg0 = f"caller: {caller}. "
-                    msg1 = f"{msg0} Fabric {self.fabric} not present on DCNM"
-                    msg2 = f"{msg0} Unable to find attachments for "
-                    msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
+    #             if missing_fabric or not_ok:
+    #                 msg0 = f"caller: {caller}. "
+    #                 msg1 = f"{msg0} Fabric {self.fabric} not present on DCNM"
+    #                 msg2 = f"{msg0} Unable to find attachments for "
+    #                 msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
 
-                    self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-                    # TODO: add a _pylint_: disable=inconsistent-return
-                    # at the top and remove this return
-                    return
+    #                 self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+    #                 # TODO: add a _pylint_: disable=inconsistent-return
+    #                 # at the top and remove this return
+    #                 return
 
-                for vrf_attach in response.data:
-                    if not vrf_attach.lan_attach_list:
-                        continue
-                    attach_list = vrf_attach.lan_attach_list
-                    msg = f"attach_list_model: {attach_list}"
-                    self.log.debug(msg)
-                    for attach in attach_list:
-                        params = {}
-                        params["fabric"] = self.fabric
-                        params["serialNumber"] = attach.switch_serial_no
-                        params["vrfName"] = attach.vrf_name
-                        msg = f"Calling get_vrf_lite_objects with: {params}"
-                        self.log.debug(msg)
-                        lite_objects = self.get_vrf_lite_objects(params)
-                        msg = f"lite_objects: {lite_objects}"
-                        self.log.debug(msg)
-                        if not lite_objects.get("DATA"):
-                            return
-                        lite_objects_data = lite_objects.get("DATA")
-                        if not isinstance(lite_objects_data, list):
-                            msg = f"{self.class_name}.{method_name}: "
-                            msg += f"{caller}: "
-                            msg = "lite_objects_data is not a list."
-                            self.module.fail_json(msg=msg)
-                        if lite_objects_data is not None:
-                            item["attach"].append(lite_objects_data[0])
-                    query.append(item)
+    #             for vrf_attach in response.data:
+    #                 if not vrf_attach.lan_attach_list:
+    #                     continue
+    #                 attach_list = vrf_attach.lan_attach_list
+    #                 msg = f"attach_list_model: {attach_list}"
+    #                 self.log.debug(msg)
+    #                 for attach in attach_list:
+    #                     params = {}
+    #                     params["fabric"] = self.fabric
+    #                     params["serialNumber"] = attach.switch_serial_no
+    #                     params["vrfName"] = attach.vrf_name
+    #                     msg = f"Calling get_vrf_lite_objects with: {params}"
+    #                     self.log.debug(msg)
+    #                     lite_objects = self.get_vrf_lite_objects(params)
+    #                     msg = f"lite_objects: {lite_objects}"
+    #                     self.log.debug(msg)
+    #                     if not lite_objects.get("DATA"):
+    #                         return
+    #                     lite_objects_data = lite_objects.get("DATA")
+    #                     if not isinstance(lite_objects_data, list):
+    #                         msg = f"{self.class_name}.{method_name}: "
+    #                         msg += f"{caller}: "
+    #                         msg = "lite_objects_data is not a list."
+    #                         self.module.fail_json(msg=msg)
+    #                     if lite_objects_data is not None:
+    #                         item["attach"].append(lite_objects_data[0])
+    #                 query.append(item)
 
-        self.query = copy.deepcopy(query)
-        msg = "self.query: "
-        msg += f"{json.dumps(self.query, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+    #     self.query = copy.deepcopy(query)
+    #     msg = "self.query: "
+    #     msg += f"{json.dumps(self.query, indent=4, sort_keys=True)}"
+    #     self.log.debug(msg)
 
     def push_diff_create_update(self, is_rollback=False) -> None:
         """
@@ -2507,6 +2507,178 @@ class NdfcVrf12:
             msg += f"Deletion of vrfs {','.join(del_failure)} has failed"
             self.result["response"].append(msg)
             self.module.fail_json(msg=self.result)
+
+    def get_diff_query_for_vrfs_in_want(self, vrf_objects: dict, vrf_objects_model: ControllerResponseVrfsV12) -> list:
+        """
+        Query the controller for the current state of the VRFs in the fabric
+        that are present in self.want_create.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+        query = []
+
+        for want_c in self.want_create:
+            # Query the VRF
+            for vrf in vrf_objects["DATA"]:
+                if want_c["vrfName"] != vrf["vrfName"]:
+                    continue
+
+                item = {"parent": vrf, "attach": []}
+
+                # Query the Attachment for the found VRF
+                path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+                get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+
+                msg = f"path_get_vrf_attach: {path_get_vrf_attach}"
+                self.log.debug(msg)
+                msg = "get_vrf_attach_response: "
+                msg += f"{json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                if get_vrf_attach_response is None:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"{caller}: Unable to retrieve endpoint: verb GET, path {path_get_vrf_attach}"
+                    raise ValueError(msg)
+
+                response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+                msg = "ControllerResponseVrfsAttachmentsV12: "
+                msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
+                missing_fabric, not_ok = self.handle_response(generic_response, "query")
+
+                if missing_fabric or not_ok:
+                    msg0 = f"{self.class_name}.{method_name}:"
+                    msg0 += f"caller: {caller}. "
+                    msg1 = f"{msg0} Fabric {self.fabric} not present on the controller"
+                    msg2 = f"{msg0} Unable to find attachments for "
+                    msg2 += f"vrfs: {vrf['vrfName']} under "
+                    msg2 += f"fabric: {self.fabric}"
+                    self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+
+                for vrf_attach in response.data:
+                    if want_c["vrfName"] != vrf_attach.vrf_name:
+                        continue
+                    if not vrf_attach.lan_attach_list:
+                        continue
+                    attach_list = vrf_attach.lan_attach_list
+                    msg = f"attach_list_model: {attach_list}"
+                    self.log.debug(msg)
+                    for attach in attach_list:
+                        params = {
+                            "fabric": self.fabric,
+                            "serialNumber": attach.switch_serial_no,
+                            "vrfName": attach.vrf_name,
+                        }
+                        msg = f"Calling get_vrf_lite_objects with: {params}"
+                        self.log.debug(msg)
+                        lite_objects = self.get_vrf_lite_objects(params)
+                        msg = f"lite_objects: {lite_objects}"
+                        self.log.debug(msg)
+                        if not lite_objects.get("DATA"):
+                            return query
+                        data = lite_objects.get("DATA")
+                        if data is not None:
+                            item["attach"].append(data[0])
+                    query.append(item)
+        return query
+
+    def get_diff_query_for_all_controller_vrfs(self, vrf_objects: dict, vrf_objects_model: ControllerResponseVrfsV12) -> list:
+        """
+        Query the controller for the current state of all VRFs in the fabric.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+        query = []
+
+        for vrf in vrf_objects["DATA"]:
+            item = {"parent": vrf, "attach": []}
+
+            # Query the Attachment for the found VRF
+            path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf["vrfName"])
+            get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+
+            if get_vrf_attach_response is None:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"{caller}: Unable to retrieve endpoint. "
+                msg += f"verb GET, path {path_get_vrf_attach}"
+                raise ValueError(msg)
+
+            response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+            msg = "ControllerResponseVrfsAttachmentsV12: "
+            msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
+            missing_fabric, not_ok = self.handle_response(generic_response, "query")
+
+            if missing_fabric or not_ok:
+                msg0 = f"caller: {caller}. "
+                msg1 = f"{msg0} Fabric {self.fabric} not present on DCNM"
+                msg2 = f"{msg0} Unable to find attachments for "
+                msg2 += f"vrfs: {vrf['vrfName']} under fabric: {self.fabric}"
+                self.module.fail_json(msg=msg1 if missing_fabric else msg2)
+                return query
+
+            for vrf_attach in response.data:
+                if not vrf_attach.lan_attach_list:
+                    continue
+                attach_list = vrf_attach.lan_attach_list
+                msg = f"attach_list_model: {attach_list}"
+                self.log.debug(msg)
+                for attach in attach_list:
+                    params = {
+                        "fabric": self.fabric,
+                        "serialNumber": attach.switch_serial_no,
+                        "vrfName": attach.vrf_name,
+                    }
+                    msg = f"Calling get_vrf_lite_objects with: {params}"
+                    self.log.debug(msg)
+                    lite_objects = self.get_vrf_lite_objects(params)
+                    msg = f"lite_objects: {lite_objects}"
+                    self.log.debug(msg)
+                    if not lite_objects.get("DATA"):
+                        return query
+                    lite_objects_data = lite_objects.get("DATA")
+                    if not isinstance(lite_objects_data, list):
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"{caller}: "
+                        msg = "lite_objects_data is not a list."
+                        self.module.fail_json(msg=msg)
+                    if lite_objects_data is not None:
+                        item["attach"].append(lite_objects_data[0])
+                query.append(item)
+        return query
+
+    def get_diff_query(self) -> None:
+        """
+        Query the controller for the current state of the VRFs in the fabric.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        vrf_objects, vrf_objects_model = self.get_vrf_objects()
+
+        msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if not vrf_objects_model.DATA:
+            return
+
+        if self.config:
+            query = self.get_diff_query_for_vrfs_in_want(vrf_objects, vrf_objects_model)
+        else:
+            query = self.get_diff_query_for_all_controller_vrfs(vrf_objects, vrf_objects_model)
+
+        self.query = copy.deepcopy(query)
+        msg = "self.query: "
+        msg += f"{json.dumps(self.query, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def update_vrf_template_config_from_vrf_model(self, vrf_model: VrfObjectV12) -> VrfTemplateConfigV12:
         """
