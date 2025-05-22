@@ -1371,57 +1371,109 @@ class NdfcVrf12:
         self.populate_have_deploy(get_vrf_attach_response)
         self.populate_have_attach(get_vrf_attach_response)
 
-    def get_want(self) -> None:
-        """
-        # Summary
+    # def get_want(self) -> None:
+    #     """
+    #     # Summary
 
-        Parse the playbook config and populate the following.
+    #     Parse the playbook config and populate the following.
 
-        -  self.want_create : list of dictionaries
-        -  self.want_attach : list of dictionaries
-        -  self.want_deploy : dictionary
+    #     -  self.want_create : list of dictionaries
+    #     -  self.want_attach : list of dictionaries
+    #     -  self.want_deploy : dictionary
+    #     """
+    #     method_name = inspect.stack()[0][3]
+    #     caller = inspect.stack()[1][3]
+
+    #     msg = "ENTERED. "
+    #     msg += f"caller: {caller}. "
+    #     self.log.debug(msg)
+
+    #     want_create: list[dict[str, Any]] = []
+    #     want_attach: list[dict[str, Any]] = []
+    #     want_deploy: dict[str, Any] = {}
+
+    #     msg = "self.config "
+    #     msg += f"{json.dumps(self.config, indent=4)}"
+    #     self.log.debug(msg)
+
+    #     all_vrfs: set = set()
+
+    #     msg = "self.validated: "
+    #     msg += f"{json.dumps(self.validated, indent=4, sort_keys=True)}"
+    #     self.log.debug(msg)
+
+    #     vrf: dict[str, Any]
+    #     for vrf in self.validated:
+    #         try:
+    #             vrf_name: str = vrf["vrf_name"]
+    #         except KeyError:
+    #             msg = f"{self.class_name}.{method_name}: "
+    #             msg += f"vrf missing mandatory key vrf_name: {vrf}"
+    #             self.module.fail_json(msg=msg)
+
+    #         all_vrfs.add(vrf_name)
+    #         vrf_attach: dict[Any, Any] = {}
+    #         vrfs: list[dict[Any, Any]] = []
+
+    #         vrf_deploy: bool = vrf.get("deploy", True)
+
+    #         vlan_id: int = 0
+    #         if vrf.get("vlan_id"):
+    #             vlan_id = vrf["vlan_id"]
+
+    #         want_create.append(self.update_create_params(vrf=vrf))
+
+    #         if not vrf.get("attach"):
+    #             msg = f"No attachments for vrf {vrf_name}. Skipping."
+    #             self.log.debug(msg)
+    #             continue
+    #         for attach in vrf["attach"]:
+    #             deploy = vrf_deploy
+    #             vrfs.append(self.update_attach_params(attach, vrf_name, deploy, vlan_id))
+
+    #         if vrfs:
+    #             vrf_attach.update({"vrfName": vrf_name})
+    #             vrf_attach.update({"lanAttachList": vrfs})
+    #             want_attach.append(vrf_attach)
+
+    #     if len(all_vrfs) != 0:
+    #         vrf_names = ",".join(all_vrfs)
+    #         want_deploy.update({"vrfNames": vrf_names})
+
+    #     self.want_create = copy.deepcopy(want_create)
+    #     self.want_attach = copy.deepcopy(want_attach)
+    #     self.want_deploy = copy.deepcopy(want_deploy)
+
+    #     msg = "self.want_create: "
+    #     msg += f"{json.dumps(self.want_create, indent=4)}"
+    #     self.log.debug(msg)
+
+    #     msg = "self.want_attach: "
+    #     msg += f"{json.dumps(self.want_attach, indent=4)}"
+    #     self.log.debug(msg)
+
+    #     msg = "self.want_deploy: "
+    #     msg += f"{json.dumps(self.want_deploy, indent=4)}"
+    #     self.log.debug(msg)
+
+    def get_want_attach(self) -> None:
         """
-        method_name = inspect.stack()[0][3]
+        Populate self.want_attach from self.validated.
+        """
         caller = inspect.stack()[1][3]
-
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        want_create: list[dict[str, Any]] = []
         want_attach: list[dict[str, Any]] = []
-        want_deploy: dict[str, Any] = {}
 
-        msg = "self.config "
-        msg += f"{json.dumps(self.config, indent=4)}"
-        self.log.debug(msg)
-
-        all_vrfs: set = set()
-
-        msg = "self.validated: "
-        msg += f"{json.dumps(self.validated, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        vrf: dict[str, Any]
         for vrf in self.validated:
-            try:
-                vrf_name: str = vrf["vrf_name"]
-            except KeyError:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"vrf missing mandatory key vrf_name: {vrf}"
-                self.module.fail_json(msg=msg)
-
-            all_vrfs.add(vrf_name)
+            vrf_name: str = vrf.get("vrf_name")
             vrf_attach: dict[Any, Any] = {}
             vrfs: list[dict[Any, Any]] = []
 
             vrf_deploy: bool = vrf.get("deploy", True)
-
-            vlan_id: int = 0
-            if vrf.get("vlan_id"):
-                vlan_id = vrf["vlan_id"]
-
-            want_create.append(self.update_create_params(vrf=vrf))
+            vlan_id: int = vrf.get("vlan_id", 0)
 
             if not vrf.get("attach"):
                 msg = f"No attachments for vrf {vrf_name}. Skipping."
@@ -1436,25 +1488,72 @@ class NdfcVrf12:
                 vrf_attach.update({"lanAttachList": vrfs})
                 want_attach.append(vrf_attach)
 
-        if len(all_vrfs) != 0:
-            vrf_names = ",".join(all_vrfs)
-            want_deploy.update({"vrfNames": vrf_names})
-
-        self.want_create = copy.deepcopy(want_create)
         self.want_attach = copy.deepcopy(want_attach)
-        self.want_deploy = copy.deepcopy(want_deploy)
-
-        msg = "self.want_create: "
-        msg += f"{json.dumps(self.want_create, indent=4)}"
-        self.log.debug(msg)
-
         msg = "self.want_attach: "
         msg += f"{json.dumps(self.want_attach, indent=4)}"
         self.log.debug(msg)
 
+    def get_want_create(self) -> None:
+        """
+        Populate self.want_create from self.validated.
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        want_create: list[dict[str, Any]] = []
+
+        for vrf in self.validated:
+            want_create.append(self.update_create_params(vrf=vrf))
+
+        self.want_create = copy.deepcopy(want_create)
+        msg = "self.want_create: "
+        msg += f"{json.dumps(self.want_create, indent=4)}"
+        self.log.debug(msg)
+
+    def get_want_deploy(self) -> None:
+        """
+        Populate self.want_deploy from self.validated.
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        want_deploy: dict[str, Any] = {}
+        all_vrfs: set = set()
+
+        for vrf in self.validated:
+            try:
+                vrf_name: str = vrf["vrf_name"]
+            except KeyError:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"caller: {caller}. "
+                msg += f"vrf missing mandatory key vrf_name: {vrf}"
+                self.module.fail_json(msg=msg)
+            all_vrfs.add(vrf_name)
+
+        if len(all_vrfs) != 0:
+            vrf_names = ",".join(all_vrfs)
+            want_deploy.update({"vrfNames": vrf_names})
+
+        self.want_deploy = copy.deepcopy(want_deploy)
         msg = "self.want_deploy: "
         msg += f"{json.dumps(self.want_deploy, indent=4)}"
         self.log.debug(msg)
+
+    def get_want(self) -> None:
+        """
+        Parse the playbook config and populate:
+        - self.want_attach, see get_want_attach()
+        - self.want_create, see get_want_create()
+        - self.want_deploy, see get_want_deploy()
+        """
+        self.get_want_create()
+        self.get_want_attach()
+        self.get_want_deploy()
 
     @staticmethod
     def get_items_to_detach(attach_list: list[dict]) -> list[dict]:
