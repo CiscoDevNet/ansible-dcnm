@@ -1243,6 +1243,7 @@ class NdfcVrf12:
         Populate self.have_attach using get_vrf_attach_response.
         """
         caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
@@ -1259,7 +1260,8 @@ class NdfcVrf12:
             attach_list = vrf_attach["lanAttachList"]
             for attach in attach_list:
                 if not isinstance(attach, dict):
-                    msg = f"{self.class_name}.{caller}: attach is not a dict."
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"{caller}: attach is not a dict."
                     self.module.fail_json(msg=msg)
                 attach_state = not attach["lanAttachState"] == "NA"
                 deploy = attach["isLanAttached"]
@@ -1308,8 +1310,7 @@ class NdfcVrf12:
                         extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
                         ms_con = {"MULTISITE_CONN": []}
                         extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-                        e_values = json.dumps(extension_values).replace(" ", "")
-                        attach.update({"extensionValues": e_values})
+                        attach.update({"extensionValues": json.dumps(extension_values).replace(" ", "")})
                         ff_config = epv.get("freeformConfig", "")
                         attach.update({"freeformConfig": ff_config})
 
