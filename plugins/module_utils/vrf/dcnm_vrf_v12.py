@@ -1286,7 +1286,8 @@ class NdfcVrf12:
                 # Get the VRF LITE extension template and update it
                 lite_objects = self.get_vrf_lite_objects(attach)
                 if not lite_objects.get("DATA"):
-                    self.log.debug(f"caller: {caller}: Continuing. No vrf_lite_objects.")
+                    msg = f"caller: {caller}: Continuing. No vrf_lite_objects."
+                    self.log.debug(msg)
                     continue
 
                 for sdl in lite_objects["DATA"]:
