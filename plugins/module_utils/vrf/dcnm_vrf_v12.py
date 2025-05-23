@@ -2329,7 +2329,7 @@ class NdfcVrf12:
             action=action,
             path=f"{endpoint.path}/deployments",
             verb=endpoint.verb,
-            payload=self.diff_undeploy,
+            payload=json.dumps(self.diff_undeploy),
             log_response=True,
             is_rollback=is_rollback,
         )
