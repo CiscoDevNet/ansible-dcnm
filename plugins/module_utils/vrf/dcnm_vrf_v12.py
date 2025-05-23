@@ -2641,6 +2641,24 @@ class NdfcVrf12:
         self.log.debug(msg)
         return json.dumps(vrf_template_config)
 
+    def vrf_model_to_payload(self, vrf_model: VrfObjectV12) -> dict:
+        """
+        # Summary
+
+        Convert a VrfObjectV12 model to a VrfPayloadV12 model and return
+        as a dictionary suitable for sending to the controller.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"vrf_model: {json.dumps(vrf_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        vrf_payload = VrfPayloadV12(**vrf_model.model_dump(exclude_unset=True, by_alias=True))
+
+        return vrf_payload.model_dump_json(exclude_unset=True, by_alias=True)
+
     def push_diff_create(self, is_rollback=False) -> None:
         """
         # Summary
@@ -2664,16 +2682,6 @@ class NdfcVrf12:
             vrf_model = VrfObjectV12(**vrf)
             vrf_model.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_model(vrf_model)
 
-            msg = "vrf_model POST UPDATE: "
-            msg += f"{json.dumps(vrf_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            vrf_payload_model = VrfPayloadV12(**vrf_model.model_dump(exclude_unset=True, by_alias=True))
-
-            msg = "vrf_payload_model: "
-            msg += f"{json.dumps(vrf_payload_model.model_dump(exclude_unset=True, by_alias=True), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
             msg = "Sending vrf create request."
             self.log.debug(msg)
 
@@ -2683,7 +2691,7 @@ class NdfcVrf12:
                 action="create",
                 path=endpoint.path,
                 verb=endpoint.verb,
-                payload=vrf_payload_model.model_dump(exclude_unset=True, by_alias=True),
+                payload=self.vrf_model_to_payload(vrf_model),
                 log_response=True,
                 is_rollback=is_rollback,
             )
@@ -2965,6 +2973,10 @@ class NdfcVrf12:
 
         Update self.response with the response from the controller.
 
+        ## Raises
+
+        -   ValueError: If the response from the controller is None.
+
         ## params
 
         args: instance of SendToControllerArgs containing the following
@@ -2975,6 +2987,11 @@ class NdfcVrf12:
         -   `log_response`: If True, log the response in the result, else
             do not include the response in the result
         -   `is_rollback`: If True, attempt to rollback on failure
+
+        ## Notes
+
+        1. send_to_controller sends the payload, if provided, as-is. Hence,
+           it is the caller's responsibility to ensure payload integrity.
         """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
@@ -2984,18 +3001,21 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         msg = "TX controller: "
-        msg += f"action: {args.action}, "
-        msg += f"verb: {args.verb.value}, "
+        self.log.debug(msg)
+        msg = f"action: {args.action}, "
+        self.log.debug(msg)
+        msg = f"verb: {args.verb.value}, "
         msg += f"path: {args.path}, "
         msg += f"log_response: {args.log_response}, "
         msg += "type(payload): "
         msg += f"{type(args.payload)}, "
-        msg += "payload: "
-        msg += f"{json.dumps(args.payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = "payload: "
+        msg += f"{args.payload}"
         self.log.debug(msg)
 
         if args.payload is not None:
-            response = dcnm_send(self.module, args.verb.value, args.path, json.dumps(args.payload))
+            response = dcnm_send(self.module, args.verb.value, args.path, args.payload)
         else:
             response = dcnm_send(self.module, args.verb.value, args.path)
 
@@ -3008,10 +3028,12 @@ class NdfcVrf12:
 
         self.response = copy.deepcopy(response)
 
-        msg = "RX controller: "
-        msg += f"verb: {args.verb.value}, "
-        msg += f"path: {args.path}, "
-        msg += "response: "
+        msg = "RX controller:"
+        self.log.debug(msg)
+        msg = f"verb: {args.verb.value}, "
+        msg += f"path: {args.path}"
+        self.log.debug(msg)
+        msg = "response: "
         msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -3031,8 +3053,9 @@ class NdfcVrf12:
         fail, self.result["changed"] = self.handle_response(generic_response, args.action)
 
         msg = f"caller: {caller}, "
-        msg += "Calling self.handle_response. DONE. "
-        msg += f"changed: {self.result['changed']}"
+        msg += "RESULT self.handle_response:"
+        self.log.debug(msg)
+        msg = f"fail: {fail}, changed: {self.result['changed']}"
         self.log.debug(msg)
 
         if fail:
