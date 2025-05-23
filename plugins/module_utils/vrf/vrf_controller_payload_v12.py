@@ -33,6 +33,10 @@ class VrfPayloadV12(BaseModel):
     Validation model for payloads conforming the expectations of the
     following endpoint:
 
+    On model_dump, the model will convert the vrfTemplateConfig
+    parameter into a JSON string, which is the expected format for
+    the controller.
+
     Verb: POST
     Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs
 
