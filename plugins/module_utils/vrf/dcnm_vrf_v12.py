@@ -2252,7 +2252,7 @@ class NdfcVrf12:
                 action=action,
                 path=f"{endpoint.path}/{payload['vrfName']}",
                 verb=RequestVerb.PUT,
-                payload=payload,
+                payload=json.dumps(payload),
                 log_response=True,
                 is_rollback=is_rollback,
             )
