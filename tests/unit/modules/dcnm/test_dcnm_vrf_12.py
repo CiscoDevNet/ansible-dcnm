@@ -1135,7 +1135,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["switchDetailsList"][0]["vlan"],
-            "202",
+            202,
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["lanAttachedState"],
@@ -1143,7 +1143,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["vlan"],
-            "202",
+            202,
         )
 
     def test_dcnm_vrf_12_query_vrf_lite(self):
@@ -1165,7 +1165,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["switchDetailsList"][0]["vlan"],
-            "202",
+            202,
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["switchDetailsList"][0]["extensionValues"],
@@ -1177,7 +1177,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["vlan"],
-            "202",
+            202,
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["extensionValues"],
@@ -1196,7 +1196,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["switchDetailsList"][0]["vlan"],
-            "202",
+            202,
         )
         self.assertEqual(
             result.get("response")[0]["attach"][0]["switchDetailsList"][0]["extensionValues"],
@@ -1208,7 +1208,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["vlan"],
-            "202",
+            202,
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["extensionValues"],
