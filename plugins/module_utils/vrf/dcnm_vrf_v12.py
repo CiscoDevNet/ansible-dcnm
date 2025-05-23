@@ -2367,7 +2367,7 @@ class NdfcVrf12:
                 action="delete",
                 path=f"{endpoint.path}/{vrf}",
                 verb=RequestVerb.DELETE,
-                payload=self.diff_delete,
+                payload=json.dumps(self.diff_delete),
                 log_response=True,
                 is_rollback=is_rollback,
             )
