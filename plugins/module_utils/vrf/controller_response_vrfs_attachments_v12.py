@@ -17,7 +17,7 @@ class LanAttachItem(BaseModel):
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
 
-class DataItem(BaseModel):
+class VrfsAttachmentsDataItem(BaseModel):
     lan_attach_list: List[LanAttachItem] = Field(alias="lanAttachList")
     vrf_name: str = Field(alias="vrfName")
 
@@ -43,7 +43,7 @@ class ControllerResponseVrfsAttachmentsV12(BaseModel):
         validate_by_alias=True,
         validate_by_name=True,
     )
-    data: List[DataItem] = Field(alias="DATA")
+    data: List[VrfsAttachmentsDataItem] = Field(alias="DATA")
     message: str = Field(alias="MESSAGE")
     method: str = Field(alias="METHOD")
     return_code: int = Field(alias="RETURN_CODE")

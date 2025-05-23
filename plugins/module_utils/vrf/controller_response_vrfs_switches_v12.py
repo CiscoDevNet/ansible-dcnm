@@ -217,7 +217,7 @@ class SwitchDetails(BaseModel):
         return data
 
 
-class DataItem(BaseModel):
+class VrfsSwitchesDataItem(BaseModel):
     switch_details_list: List[SwitchDetails] = Field(alias="switchDetailsList")
     template_name: str = Field(alias="templateName")
     vrf_name: str = Field(alias="vrfName")
@@ -232,7 +232,7 @@ class ControllerResponseVrfsSwitchesV12(BaseModel):
         validate_by_name=True,
     )
 
-    data: List[DataItem] = Field(alias="DATA")
+    data: List[VrfsSwitchesDataItem] = Field(alias="DATA")
     message: str = Field(alias="MESSAGE")
     method: str = Field(alias="METHOD")
     return_code: int = Field(alias="RETURN_CODE")
