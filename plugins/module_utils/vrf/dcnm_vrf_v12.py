@@ -2297,7 +2297,7 @@ class NdfcVrf12:
             action=action,
             path=f"{endpoint.path}/attachments",
             verb=endpoint.verb,
-            payload=self.diff_detach,
+            payload=json.dumps(self.diff_detach),
             log_response=True,
             is_rollback=is_rollback,
         )
