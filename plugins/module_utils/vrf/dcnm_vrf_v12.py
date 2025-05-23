@@ -1902,16 +1902,15 @@ class NdfcVrf12:
                 endpoint = EpVrfPost()
                 endpoint.fabric_name = self.fabric
 
-                resp = dcnm_send(self.module, endpoint.verb.value, endpoint.path, json.dumps(want_c))
-                self.result["response"].append(resp)
-                msg = f"resp: {json.dumps(resp, indent=4)}"
-                self.log.debug(msg)
-
-                generic_response = ControllerResponseGenericV12(**resp)
-                fail, self.result["changed"] = self.handle_response(generic_response, "create")
-
-                if fail:
-                    self.failure(resp)
+                args = SendToControllerArgs(
+                    action="attach",
+                    path=endpoint.path,
+                    verb=endpoint.verb,
+                    payload=json.dumps(want_c),
+                    log_response=True,
+                    is_rollback=True,
+                )
+                self.send_to_controller(args)
 
         self.diff_create = copy.deepcopy(diff_create)
         self.diff_create_update = copy.deepcopy(diff_create_update)
