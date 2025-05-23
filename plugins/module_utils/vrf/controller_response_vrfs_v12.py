@@ -40,12 +40,28 @@ class VrfObjectV12(BaseModel):
 
     ValueError if validation fails
 
+    ## Details
+
+    Note, vrfTemplateConfig is received as a JSON string and converted by
+    VrfObjectV12 into a dictionary so that its parameters can be validated.
+    It should be converted back into a JSON string before sending to the
+    controller.
+
+    One way to do this is to dump this model into VrfPayloadV12, which will
+    convert the vrfTemplateConfig into a JSON string when it is dumped.
+
+    For example:
+
+    ```python
+    from .vrf_controller_payload_v12 import VrfPayloadV12
+    from .controller_response_vrfs_v12 import VrfObjectV12
+
+    vrf_object = VrfObjectV12(**vrf_object_dict)
+    vrf_payload = VrfPayloadV12(**vrf_object.model_dump(exclude_unset=True, by_alias=True))
+    dcnm_send(self.module, "POST", url, vrf_payload.model_dump(exclude_unset=True, by_alias=True))
+    ```
+
     ## Structure
-
-    Note, vrfTemplateConfig is received as a JSON string and converted by the model
-    into a dictionary so that its parameters can be validated.  It should be
-    converted back into a JSON string before sending to the controller.
-
     ```json
     {
         "fabric": "fabric_1",
