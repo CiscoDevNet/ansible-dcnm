@@ -3144,7 +3144,6 @@ class NdfcVrf12:
     def update_lan_attach_list(self, diff_attach: dict) -> list:
         """
         # Summary
-        
         Update the lanAttachList in diff_attach and return the updated
         list.
 
