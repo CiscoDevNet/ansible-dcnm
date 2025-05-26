@@ -673,7 +673,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
 
-        self.log.debug(f"ENTERED. caller: {caller}. replace == {replace}")
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"replace == {replace}"
+        self.log.debug(msg)
 
         attach_list = []
         deploy_vrf = False
@@ -743,7 +746,7 @@ class NdfcVrf12:
                     if self.to_bool("is_deploy", want):
                         deploy_vrf = True
 
-        msg = f"Returning deploy_vrf: "
+        msg = "Returning deploy_vrf: "
         msg += f"{deploy_vrf}, "
         msg += "attach_list: "
         msg += f"{json.dumps(attach_list, indent=4, sort_keys=True)}"
