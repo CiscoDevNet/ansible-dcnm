@@ -13,7 +13,7 @@
     fabric: "{{ test_data.test_fabric }}"
     state: merged
     config: "{{ ndfc_fabric_base_conf }}"
-    deploy : "{{ test_data.deploy }}"
+    deploy: "{{ test_data.deploy }}"
   register: merged_result
   tags: overridden
 

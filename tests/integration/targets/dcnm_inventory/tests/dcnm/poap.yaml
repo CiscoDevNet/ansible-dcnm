@@ -12,9 +12,9 @@
     test_data:
       test_fabric: "{{ ansible_it_fabric }}"
       sw1: "{{ ansible_switch1 }}"
-      sw1_serial : "1ABC23DEFGH"
+      sw1_serial: "1ABC23DEFGH"
       sw2: "{{ ansible_switch2 }}"
-      sw2_serial : "1ABC23DEFHI"
+      sw2_serial: "1ABC23DEFHI"
       poap_model: "ABC-D1230a"
       poap_version: "1.2(3)"
       poap_hostname: "Poap-SW"
@@ -63,7 +63,7 @@
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-    -   FABRIC_NAME: "{{ test_data.test_fabric }}"
+    - FABRIC_NAME: "{{ test_data.test_fabric }}"
   register: query_result
   tags: poap
 
@@ -129,7 +129,7 @@
         password: '{{ switch_password }}'
         role: border
         poap:
-          - preprovision_serial : "{{ test_data.sw2_serial }}"
+          - preprovision_serial: "{{ test_data.sw2_serial }}"
             model: "{{ test_data.poap_model }}"
             version: "{{ test_data.poap_version }}"
             hostname: "{{ test_data.poap_hostname }}"

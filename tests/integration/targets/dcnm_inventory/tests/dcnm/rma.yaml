@@ -12,7 +12,7 @@
     test_data:
       test_fabric: "{{ ansible_it_fabric }}"
       sw1: "{{ ansible_switch1 }}"
-      sw1_serial : "1ABC23DEFGH"
+      sw1_serial: "1ABC23DEFGH"
       sw1_rma_serial: "1ABC23DERMA"
       rma_model: "SW1-K1234v"
       rma_version: "12.3(4)"

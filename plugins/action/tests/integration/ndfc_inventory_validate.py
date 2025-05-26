@@ -1,14 +1,27 @@
 from __future__ import absolute_import, division, print_function
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
-from pydantic import BaseModel, model_validator, validator, ValidationError
+from ansible.module_utils.six import raise_from
+from ansible.errors import AnsibleError
 from typing import List, Dict, Optional, Union
 import re
 import json
 
+try:
+    from pydantic import BaseModel, model_validator, validator, ValidationError
+except ImportError as imp_exc:
+    PYDANTIC_LIBRARY_IMPORT_ERROR = imp_exc
+else:
+    PYDANTIC_LIBRARY_IMPORT_ERROR = None
+
 __metaclass__ = type
 
 display = Display()
+
+if PYDANTIC_LIBRARY_IMPORT_ERROR:
+    raise_from(
+        AnsibleError('Pydantic must be installed to use this plugin'),
+        PYDANTIC_LIBRARY_IMPORT_ERROR)
 
 
 class ConfigData(BaseModel):
@@ -25,10 +38,10 @@ class NDFCData(BaseModel):
 class InventoryValidate(BaseModel):
     config_data: Optional[List[ConfigData]] = None
     ndfc_data: Optional[Union[List[NDFCData], str]] = None
-    ignore_fields: Optional[Dict[str, int]] = None 
+    ignore_fields: Optional[Dict[str, int]] = None
 
     @validator('config_data', pre=True)
-    def parse_config_data(cls, value):
+    def parse_config_data(self, value):
         if isinstance(value, dict):
             return [ConfigData.parse_obj(value)]
         if isinstance(value, list):
@@ -42,7 +55,7 @@ class InventoryValidate(BaseModel):
             raise ValueError("Config Data must be a single/list of dictionary, or None.")
 
     @validator('ndfc_data', pre=True)
-    def parse_ndfc_data(cls, value):
+    def parse_ndfc_data(self, value):
         if isinstance(value, str):
             return value
         if isinstance(value, list):
@@ -54,7 +67,7 @@ class InventoryValidate(BaseModel):
             raise ValueError("NDFC Response must be a list of dictionaries or an error string")
 
     @model_validator(mode='after')
-    def validate_lists_equality(cls, values):
+    def validate_lists_equality(self, values):
         config_data = values.config_data
         ndfc_data = values.ndfc_data
         ignore_fields = values.ignore_fields
