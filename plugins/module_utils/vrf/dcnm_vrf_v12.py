@@ -471,7 +471,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return int(str(vrf_id))
 
-    def diff_for_attach_deploy(self, want_a: list[dict], have_a: list[dict], replace=False) -> tuple[list, bool]:
+    def diff_for_attach_deploy_orig(self, want_a: list[dict], have_a: list[dict], replace=False) -> tuple[list, bool]:
         """
         # Summary
 
@@ -661,6 +661,181 @@ class NdfcVrf12:
         msg += f"{json.dumps(attach_list, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         return attach_list, deploy_vrf
+
+    def diff_for_attach_deploy(self, want_a: list[dict], have_a: list[dict], replace=False) -> tuple[list, bool]:
+        """
+        Return attach_list, deploy_vrf
+
+        Where:
+        - attach_list is a list of attachment differences
+        - deploy_vrf is a boolean
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+
+        self.log.debug(f"ENTERED. caller: {caller}. replace == {replace}")
+
+        attach_list = []
+        deploy_vrf = False
+
+        if not want_a:
+            return attach_list, deploy_vrf
+
+        for want in want_a:
+            if not have_a:
+                # No have, so always attach
+                if self.to_bool("isAttached", want):
+                    want = self._prepare_attach_for_deploy(want)
+                    attach_list.append(want)
+                    if self.to_bool("is_deploy", want):
+                        deploy_vrf = True
+                continue
+
+            found = False
+            for have in have_a:
+                if want.get("serialNumber") != have.get("serialNumber"):
+                    continue
+
+                # Copy freeformConfig from have
+                want.update({"freeformConfig": have.get("freeformConfig", "")})
+
+                # Compare instanceValues
+                want_inst_values, have_inst_values = {}, {}
+                if want.get("instanceValues") and have.get("instanceValues"):
+                    want_inst_values = json.loads(want["instanceValues"])
+                    have_inst_values = json.loads(have["instanceValues"])
+                    for key in ["loopbackId", "loopbackIpAddress", "loopbackIpV6Address"]:
+                        if key in have_inst_values:
+                            want_inst_values[key] = have_inst_values[key]
+                    want["instanceValues"] = json.dumps(want_inst_values)
+
+                # Compare extensionValues
+                if want.get("extensionValues") and have.get("extensionValues"):
+                    if not self._extension_values_match(want, have, replace):
+                        continue
+                elif want.get("extensionValues") and not have.get("extensionValues"):
+                    continue
+                elif not want.get("extensionValues") and have.get("extensionValues"):
+                    if not replace:
+                        found = True
+                    continue
+
+                # Compare deployment/attachment status
+                if not self._deployment_status_match(want, have):
+                    want = self._prepare_attach_for_deploy(want)
+                    attach_list.append(want)
+                    if self.to_bool("is_deploy", want):
+                        deploy_vrf = True
+                    found = True
+                    break
+
+                # Compare instanceValues deeply
+                if self.dict_values_differ(dict1=want_inst_values, dict2=have_inst_values):
+                    continue
+
+                found = True
+                break
+
+            if not found:
+                if self.to_bool("isAttached", want):
+                    want = self._prepare_attach_for_deploy(want)
+                    attach_list.append(want)
+                    if self.to_bool("is_deploy", want):
+                        deploy_vrf = True
+
+        msg = f"Returning deploy_vrf: "
+        msg += f"{deploy_vrf}, "
+        msg += "attach_list: "
+        msg += f"{json.dumps(attach_list, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        return attach_list, deploy_vrf
+
+    def _prepare_attach_for_deploy(self, want: dict) -> dict:
+        """
+        # Summary
+
+        Prepare an attachment dictionary for deployment.
+
+        - Removes the "isAttached" key if present.
+        - Sets the "deployment" key to True.
+
+        ## Parameters
+
+        - want: dict
+            The attachment dictionary to update.
+
+        ## Returns
+
+        - dict: The updated attachment dictionary.
+        """
+        if "isAttached" in want:
+            del want["isAttached"]
+        want["deployment"] = True
+        return want
+
+    def _extension_values_match(self, want: dict, have: dict, replace: bool) -> bool:
+        """
+        # Summary
+
+        Compare the extensionValues of two attachment dictionaries to determine if they match.
+
+        - Parses and compares the VRF_LITE_CONN lists in both want and have.
+        - If replace is True, also checks that the lengths of the VRF_LITE_CONN lists are equal.
+        - Compares each interface (IF_NAME) and their properties.
+
+        ## Parameters
+
+        - want: dict
+            The desired attachment dictionary.
+        - have: dict
+            The current attachment dictionary from the controller.
+        - replace: bool
+            Whether this is a replace/override operation.
+
+        ## Returns
+
+        - bool: True if the extension values match, False otherwise.
+        """
+        want_ext = json.loads(want["extensionValues"])
+        want_ext = json.loads(want["extensionValues"])
+        have_ext = json.loads(have["extensionValues"])
+        want_e = json.loads(want_ext["VRF_LITE_CONN"])
+        have_e = json.loads(have_ext["VRF_LITE_CONN"])
+        if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
+            return False
+        for wlite in want_e["VRF_LITE_CONN"]:
+            for hlite in have_e["VRF_LITE_CONN"]:
+                if wlite["IF_NAME"] == hlite["IF_NAME"]:
+                    if self.compare_properties(wlite, hlite, self.vrf_lite_properties):
+                        return True
+        return False
+
+    def _deployment_status_match(self, want: dict, have: dict) -> bool:
+        """
+        # Summary
+
+        Compare the deployment and attachment status between two attachment dictionaries.
+
+        - Checks if "isAttached", "deployment", and "is_deploy" keys are equal in both dictionaries.
+
+        ## Parameters
+
+        - want: dict
+            The desired attachment dictionary.
+        - have: dict
+            The current attachment dictionary from the controller.
+
+        ## Returns
+
+        - bool: True if all status flags match, False otherwise.
+        """
+        want_is_deploy = self.to_bool("is_deploy", want)
+        have_is_deploy = self.to_bool("is_deploy", have)
+        want_is_attached = self.to_bool("isAttached", want)
+        have_is_attached = self.to_bool("isAttached", have)
+        want_deployment = self.to_bool("deployment", want)
+        have_deployment = self.to_bool("deployment", have)
+        return want_is_attached == have_is_attached and want_deployment == have_deployment and want_is_deploy == have_is_deploy
 
     def update_attach_params_extension_values(self, attach: dict) -> dict:
         """
