@@ -2062,7 +2062,7 @@ class DcnmNetwork:
             # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
             for net in all_nets:
                 want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
-                if want_net_data.get("deploy") is False:
+                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
                     modified_all_nets.remove(net)
 
         if modified_all_nets:
