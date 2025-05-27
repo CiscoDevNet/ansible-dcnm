@@ -1760,7 +1760,7 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
         self.log.debug(msg)
 
-    def get_diff_replace(self) -> None:
+    def get_diff_replace_orig(self) -> None:
         """
         # Summary
 
@@ -1871,6 +1871,89 @@ class NdfcVrf12:
             return
 
         vrf: str
+        for vrf in self.diff_deploy.get("vrfNames", "").split(","):
+            all_vrfs.add(vrf)
+        diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        self.diff_attach = copy.deepcopy(diff_attach)
+        self.diff_deploy = copy.deepcopy(diff_deploy)
+
+        msg = "self.diff_attach: "
+        msg += f"{json.dumps(self.diff_attach, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_deploy: "
+        msg += f"{json.dumps(self.diff_deploy, indent=4)}"
+        self.log.debug(msg)
+
+    def get_diff_replace(self) -> None:
+        """
+        # Summary
+
+        For replace state, update the attachment objects in self.have_attach
+        that are not in the want list.
+
+        - diff_attach: a list of attachment objects to attach
+        - diff_deploy: a dictionary of vrf names to deploy
+        - diff_delete: a dictionary of vrf names to delete
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        all_vrfs: set = set()
+        self.get_diff_merge(replace=True)
+        diff_attach = self.diff_attach
+        diff_deploy = self.diff_deploy
+
+        for have_a in self.have_attach:
+            replace_vrf_list = []
+
+            # Find matching want_a by vrfName
+            want_a = next((w for w in self.want_attach if w.get("vrfName") == have_a.get("vrfName")), None)
+
+            if want_a:
+                have_lan_attach_list = have_a.get("lanAttachList", [])
+                want_lan_attach_list = want_a.get("lanAttachList", [])
+
+                for have_lan_attach in have_lan_attach_list:
+                    if have_lan_attach.get("isAttached") is False:
+                        continue
+                    # Check if this have_lan_attach exists in want_lan_attach_list by serialNumber
+                    if not any(have_lan_attach.get("serialNumber") == want_lan_attach.get("serialNumber") for want_lan_attach in want_lan_attach_list):
+                        if "isAttached" in have_lan_attach:
+                            del have_lan_attach["isAttached"]
+                        have_lan_attach["deployment"] = False
+                        replace_vrf_list.append(have_lan_attach)
+            else:
+                # If have_a is not in want_attach but is in want_create, detach all attached
+                found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a.get("vrfName"))
+                if found:
+                    for a_h in have_a.get("lanAttachList", []):
+                        if a_h.get("isAttached"):
+                            del a_h["isAttached"]
+                            a_h["deployment"] = False
+                            replace_vrf_list.append(a_h)
+
+            if replace_vrf_list:
+                # Find or create the diff_attach entry for this VRF
+                d_attach = next((d for d in diff_attach if d.get("vrfName") == have_a.get("vrfName")), None)
+                if d_attach:
+                    d_attach["lanAttachList"].extend(replace_vrf_list)
+                else:
+                    attachment = {
+                        "vrfName": have_a["vrfName"],
+                        "lanAttachList": replace_vrf_list,
+                    }
+                    diff_attach.append(attachment)
+                all_vrfs.add(have_a["vrfName"])
+
+        if not all_vrfs:
+            self.diff_attach = copy.deepcopy(diff_attach)
+            self.diff_deploy = copy.deepcopy(diff_deploy)
+            return
+
         for vrf in self.diff_deploy.get("vrfNames", "").split(","):
             all_vrfs.add(vrf)
         diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
