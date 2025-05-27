@@ -1262,7 +1262,7 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_deploy, indent=4)}"
         self.log.debug(msg)
 
-    def populate_have_attach(self, get_vrf_attach_response: dict) -> None:
+    def populate_have_attach_orig(self, get_vrf_attach_response: dict) -> None:
         """
         Populate self.have_attach using get_vrf_attach_response.
         """
@@ -1346,6 +1346,92 @@ class NdfcVrf12:
         msg = "self.have_attach: "
         msg += f"{self.have_attach}"
         self.log.debug(msg)
+
+    def populate_have_attach(self, get_vrf_attach_response: dict) -> None:
+        """
+        Populate self.have_attach using get_vrf_attach_response.
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        have_attach = copy.deepcopy(get_vrf_attach_response.get("DATA", []))
+
+        msg = "have_attach.PRE_UPDATE: "
+        msg += f"{have_attach}"
+        self.log.debug(msg)
+
+        for vrf_attach in have_attach:
+            if not vrf_attach.get("lanAttachList"):
+                continue
+            new_attach_list = []
+            for attach in vrf_attach["lanAttachList"]:
+                if not isinstance(attach, dict):
+                    msg = f"{self.class_name}.{method_name}: {caller}: attach is not a dict."
+                    self.module.fail_json(msg=msg)
+
+                # Prepare new attachment dict
+                attach_state = attach.get("lanAttachState") != "NA"
+                deploy = attach.get("isLanAttached")
+                deployed = not (deploy and attach.get("lanAttachState") in ("OUT-OF-SYNC", "PENDING"))
+                switch_serial_number = attach.get("switchSerialNo")
+                vlan = attach.get("vlanId")
+                inst_values = attach.get("instanceValues", None)
+                vrf_name = attach.get("vrfName", "")
+
+                # Build new attach dict with required keys
+                new_attach = {
+                    "fabric": self.fabric,
+                    "deployment": deploy,
+                    "extensionValues": "",
+                    "instanceValues": inst_values,
+                    "isAttached": attach_state,
+                    "is_deploy": deployed,
+                    "serialNumber": switch_serial_number,
+                    "vlan": vlan,
+                    "vrfName": vrf_name,
+                }
+
+                self._update_vrf_lite_extension(new_attach)
+
+                new_attach_list.append(new_attach)
+            vrf_attach["lanAttachList"] = new_attach_list
+
+        self.have_attach = copy.deepcopy(have_attach)
+
+    def _update_vrf_lite_extension(self, attach: dict) -> None:
+        """
+        Update the attach dict with VRF Lite extension values if present.
+        """
+        lite_objects = self.get_vrf_lite_objects(attach)
+        if not lite_objects.get("DATA"):
+            msg = "No vrf_lite_objects found. Update freeformConfig and return."
+            self.log.debug(msg)
+            attach["freeformConfig"] = ""
+            return
+
+        for sdl in lite_objects["DATA"]:
+            for epv in sdl["switchDetailsList"]:
+                if not epv.get("extensionValues"):
+                    attach["freeformConfig"] = ""
+                    continue
+                ext_values = json.loads(epv["extensionValues"])
+                if ext_values.get("VRF_LITE_CONN") is None:
+                    continue
+                ext_values = json.loads(ext_values["VRF_LITE_CONN"])
+                extension_values = {"VRF_LITE_CONN": {"VRF_LITE_CONN": []}}
+                for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
+                    ev_dict = copy.deepcopy(extension_values_dict)
+                    ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
+                    ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
+                    extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].append(ev_dict)
+                extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+                ms_con = {"MULTISITE_CONN": []}
+                extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+                attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
+                attach["freeformConfig"] = epv.get("freeformConfig", "")
 
     def get_have(self) -> None:
         """
