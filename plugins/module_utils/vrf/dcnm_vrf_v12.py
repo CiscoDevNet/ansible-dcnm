@@ -480,7 +480,6 @@ class NdfcVrf12:
         - deploy_vrf is a boolean
         """
         caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
@@ -508,14 +507,17 @@ class NdfcVrf12:
                 if want.get("serialNumber") != have.get("serialNumber"):
                     continue
 
-                # Copy freeformConfig from have
+                # Copy freeformConfig from have since the playbook doesn't
+                # currently support it.
                 want.update({"freeformConfig": have.get("freeformConfig", "")})
 
-                # Compare instanceValues
+                # Copy unsupported instanceValues keys from have to want
                 want_inst_values, have_inst_values = {}, {}
                 if want.get("instanceValues") and have.get("instanceValues"):
                     want_inst_values = json.loads(want["instanceValues"])
                     have_inst_values = json.loads(have["instanceValues"])
+                    # These keys are not currently supported in the playbook,
+                    # so copy them from have to want.
                     for key in ["loopbackId", "loopbackIpAddress", "loopbackIpV6Address"]:
                         if key in have_inst_values:
                             want_inst_values[key] = have_inst_values[key]
@@ -541,7 +543,7 @@ class NdfcVrf12:
                     found = True
                     break
 
-                # Compare instanceValues deeply
+                # Continue if instanceValues differ
                 if self.dict_values_differ(dict1=want_inst_values, dict2=have_inst_values):
                     continue
 
