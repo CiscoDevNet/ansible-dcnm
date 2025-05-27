@@ -2026,7 +2026,7 @@ class NdfcVrf12:
         self.diff_merge_create(replace)
         self.diff_merge_attach(replace)
 
-    def format_diff(self) -> None:
+    def format_diff_orig(self) -> None:
         """
         # Summary
 
@@ -2205,6 +2205,150 @@ class NdfcVrf12:
 
         self.diff_input_format = copy.deepcopy(diff)
 
+        msg = "self.diff_input_format: "
+        msg += f"{json.dumps(self.diff_input_format, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def format_diff_attach(self, diff_attach: list, diff_deploy: list) -> list:
+        """
+        Populate the diff list with remaining attachment entries.
+        """
+        diff = []
+        for vrf in diff_attach:
+            new_attach_list = [
+                {
+                    "ip_address": next((k for k, v in self.ip_sn.items() if v == lan_attach["serialNumber"]), None),
+                    "vlan_id": lan_attach["vlan"],
+                    "deploy": lan_attach["deployment"],
+                }
+                for lan_attach in vrf["lanAttachList"]
+            ]
+            if new_attach_list:
+                if diff_deploy and vrf["vrfName"] in diff_deploy:
+                    diff_deploy.remove(vrf["vrfName"])
+                new_attach_dict = {
+                    "attach": new_attach_list,
+                    "vrf_name": vrf["vrfName"],
+                }
+                diff.append(new_attach_dict)
+        return diff
+
+    def format_diff_create(self, diff_create: list, diff_attach: list, diff_deploy: list) -> list:
+        """
+        # Summary
+
+        Populate the diff list with VRF create/update entries.
+
+        ## Raises
+
+        - fail_json if vrfTemplateConfig fails validation
+        """
+        diff = []
+        for want_d in diff_create:
+            found_attach = self.find_dict_in_list_by_key_value(search=diff_attach, key="vrfName", value=want_d["vrfName"])
+            found_create = copy.deepcopy(want_d)
+
+            found_create.update(
+                {
+                    "attach": [],
+                    "service_vrf_template": found_create["serviceVrfTemplate"],
+                    "vrf_extension_template": found_create["vrfExtensionTemplate"],
+                    "vrf_id": found_create["vrfId"],
+                    "vrf_name": found_create["vrfName"],
+                    "vrf_template": found_create["vrfTemplate"],
+                }
+            )
+
+            json_to_dict = json.loads(found_create["vrfTemplateConfig"])
+            try:
+                vrf_controller_to_playbook = VrfControllerToPlaybookV12Model(**json_to_dict)
+                found_create.update(vrf_controller_to_playbook.model_dump(by_alias=False))
+            except pydantic.ValidationError as error:
+                msg = f"{self.class_name}.format_diff_create: Validation error: {error}"
+                self.module.fail_json(msg=msg)
+
+            for key in ["fabric", "serviceVrfTemplate", "vrfExtensionTemplate", "vrfId", "vrfName", "vrfTemplate", "vrfTemplateConfig"]:
+                found_create.pop(key, None)
+
+            if diff_deploy and found_create["vrf_name"] in diff_deploy:
+                diff_deploy.remove(found_create["vrf_name"])
+            if not found_attach:
+                diff.append(found_create)
+                continue
+
+            found_create["attach"] = [
+                {
+                    "ip_address": next((k for k, v in self.ip_sn.items() if v == lan_attach["serialNumber"]), None),
+                    "vlan_id": lan_attach["vlan"],
+                    "deploy": lan_attach["deployment"],
+                }
+                for lan_attach in found_attach["lanAttachList"]
+            ]
+            diff.append(found_create)
+            diff_attach.remove(found_attach)
+        return diff
+
+    def format_diff_deploy(self, diff_deploy) -> list:
+        """
+        # Summary
+
+        Populate the diff list with deploy/undeploy entries.
+
+        ## Raises
+
+        - None
+        """
+        diff = []
+        for vrf in diff_deploy:
+            new_deploy_dict = {"vrf_name": vrf}
+            diff.append(copy.deepcopy(new_deploy_dict))
+        return diff
+
+    def format_diff(self) -> None:
+        """
+        # Summary
+
+        Populate self.diff_input_format, which represents the
+        difference to the controller configuration after the playbook
+        has run, from the information in the following lists:
+
+        - self.diff_create
+        - self.diff_create_quick
+        - self.diff_create_update
+        - self.diff_attach
+        - self.diff_detach
+        - self.diff_deploy
+        - self.diff_undeploy
+
+        self.diff_input_format is formatted using keys a user
+        would use in a playbook.  The keys in the above lists
+        are those used by the controller API.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        diff_create = copy.deepcopy(self.diff_create)
+        diff_create_quick = copy.deepcopy(self.diff_create_quick)
+        diff_create_update = copy.deepcopy(self.diff_create_update)
+        diff_attach = copy.deepcopy(self.diff_attach)
+        diff_detach = copy.deepcopy(self.diff_detach)
+        diff_deploy = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
+        diff_undeploy = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
+
+        diff_create.extend(diff_create_quick)
+        diff_create.extend(diff_create_update)
+        diff_attach.extend(diff_detach)
+        diff_deploy.extend(diff_undeploy)
+
+        diff = []
+        diff.extend(self.format_diff_create(diff_create, diff_attach, diff_deploy))
+        diff.extend(self.format_diff_attach(diff_attach, diff_deploy))
+        diff.extend(self.format_diff_deploy(diff_deploy))
+
+        self.diff_input_format = copy.deepcopy(diff)
         msg = "self.diff_input_format: "
         msg += f"{json.dumps(self.diff_input_format, indent=4, sort_keys=True)}"
         self.log.debug(msg)
