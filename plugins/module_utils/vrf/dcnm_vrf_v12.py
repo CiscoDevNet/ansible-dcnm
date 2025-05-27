@@ -1212,24 +1212,19 @@ class NdfcVrf12:
         None
         """
         caller = inspect.stack()[1][3]
-
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        have_create: list[dict] = []
-
+        have_create = []
         for vrf in vrf_objects_model.DATA:
-            vrf.vrfTemplateConfig = self.update_vrf_template_config_from_vrf_model(vrf)
-
-            vrf_dump = vrf.model_dump(by_alias=True)
-            del vrf_dump["vrfStatus"]
-            vrf_dump.update({"vrfTemplateConfig": vrf.vrfTemplateConfig.model_dump_json(by_alias=True)})
-
-            have_create.append(vrf_dump)
+            vrf_template_config = self.update_vrf_template_config_from_vrf_model(vrf)
+            vrf_dict = vrf.model_dump(by_alias=True)
+            vrf_dict["vrfTemplateConfig"] = vrf_template_config.model_dump_json(by_alias=True)
+            vrf_dict.pop("vrfStatus", None)
+            have_create.append(vrf_dict)
 
         self.have_create = copy.deepcopy(have_create)
-
         msg = "self.have_create: "
         msg += f"{json.dumps(self.have_create, indent=4, sort_keys=True)}"
         self.log.debug(msg)
