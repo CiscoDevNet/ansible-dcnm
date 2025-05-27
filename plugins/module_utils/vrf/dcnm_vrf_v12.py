@@ -1533,7 +1533,7 @@ class NdfcVrf12:
                 detach_list.append(item)
         return detach_list
 
-    def get_diff_delete(self) -> None:
+    def get_diff_delete_orig(self) -> None:
         """
         # Summary
 
@@ -1607,6 +1607,97 @@ class NdfcVrf12:
         msg = "self.diff_delete: "
         msg += f"{json.dumps(self.diff_delete, indent=4)}"
         self.log.debug(msg)
+
+    def get_diff_delete(self) -> None:
+        """
+        # Summary
+
+        Using self.have_create, and self.have_attach, update
+        the following:
+
+        - diff_detach: a list of attachment objects to detach
+        - diff_undeploy: a dictionary of vrf names to undeploy
+        - diff_delete: a dictionary of vrf names to delete
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        if self.config:
+            self._get_diff_delete_with_config()
+        else:
+            self._get_diff_delete_without_config()
+
+        msg = "self.diff_detach: "
+        msg += f"{json.dumps(self.diff_detach, indent=4)}"
+        self.log.debug(msg)
+        msg = "self.diff_undeploy: "
+        msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
+        self.log.debug(msg)
+        msg = "self.diff_delete: "
+        msg += f"{json.dumps(self.diff_delete, indent=4)}"
+        self.log.debug(msg)
+
+    def _get_diff_delete_with_config(self) -> None:
+        """
+        Handle diff_delete logic when self.config is not empty.
+
+        In this case, we detach, undeploy, and delete the VRFs
+        specified in self.config.
+        """
+        diff_detach: list[dict] = []
+        diff_undeploy: dict = {}
+        diff_delete: dict = {}
+        all_vrfs = set()
+
+        for want_c in self.want_create:
+            if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_c["vrfName"]) == {}:
+                continue
+
+            diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
+
+            have_a = self.find_dict_in_list_by_key_value(search=self.have_attach, key="vrfName", value=want_c["vrfName"])
+            if not have_a:
+                continue
+
+            detach_items = self.get_items_to_detach(have_a["lanAttachList"])
+            if detach_items:
+                have_a.update({"lanAttachList": detach_items})
+                diff_detach.append(have_a)
+                all_vrfs.add(have_a["vrfName"])
+        if len(all_vrfs) != 0:
+            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        self.diff_detach = copy.deepcopy(diff_detach)
+        self.diff_undeploy = copy.deepcopy(diff_undeploy)
+        self.diff_delete = copy.deepcopy(diff_delete)
+
+    def _get_diff_delete_without_config(self) -> None:
+        """
+        Handle diff_delete logic when self.config is empty or None.
+
+        In this case, we detach, undeploy, and delete all VRFs.
+        """
+        diff_detach: list[dict] = []
+        diff_undeploy: dict = {}
+        diff_delete: dict = {}
+        all_vrfs = set()
+
+        for have_a in self.have_attach:
+            detach_items = self.get_items_to_detach(have_a["lanAttachList"])
+            if detach_items:
+                have_a.update({"lanAttachList": detach_items})
+                diff_detach.append(have_a)
+                all_vrfs.add(have_a.get("vrfName"))
+
+            diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
+        if len(all_vrfs) != 0:
+            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        self.diff_detach = copy.deepcopy(diff_detach)
+        self.diff_undeploy = copy.deepcopy(diff_undeploy)
+        self.diff_delete = copy.deepcopy(diff_delete)
 
     def get_diff_override(self):
         """
