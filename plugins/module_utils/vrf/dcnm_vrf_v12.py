@@ -2422,10 +2422,8 @@ class NdfcVrf12:
 
         ## Raises
 
-        - ValueError: If the response from the controller is not valid.
-        - fail_json: If lite_objects_data is not a list.
+        - ValueError: If any controller response is not valid.
         """
-        method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
         query: list[dict] = []
 
@@ -2441,42 +2439,45 @@ class NdfcVrf12:
             self.log.debug(msg)
             return query
 
+        # Lookup controller VRFs by name, used in for loop below.
+        vrf_lookup = {vrf.vrfName: vrf for vrf in vrf_objects_model.DATA}
+
         for want_c in self.want_create:
-            for vrf in vrf_objects_model.DATA:
-                if want_c["vrfName"] != vrf.vrfName:
+            vrf = vrf_lookup.get(want_c["vrfName"])
+            if not vrf:
+                continue
+
+            item = {"parent": vrf.model_dump(by_alias=True), "attach": []}
+            response = self.get_vrf_lan_attach_list(vrf.vrfName)
+
+            for vrf_attach in response.data:
+                if want_c["vrfName"] != vrf_attach.vrf_name or not vrf_attach.lan_attach_list:
                     continue
 
-                item = {"parent": vrf.model_dump(by_alias=True), "attach": []}
+                for attach in vrf_attach.lan_attach_list:
+                    params = {
+                        "fabric": self.fabric,
+                        "serialNumber": attach.switch_serial_no,
+                        "vrfName": attach.vrf_name,
+                    }
 
-                response = self.get_vrf_lan_attach_list(vrf.vrfName)
-                for vrf_attach in response.data:
-                    if want_c["vrfName"] != vrf_attach.vrf_name:
-                        continue
-                    if not vrf_attach.lan_attach_list:
-                        continue
-                    attach_list = vrf_attach.lan_attach_list
-                    msg = f"attach_list_model: {attach_list}"
+                    lite_objects = self.get_vrf_lite_objects_model(params)
+
+                    msg = f"Caller {caller}. Called get_vrf_lite_objects_model with params: "
+                    msg += f"{json.dumps(params, indent=4, sort_keys=True)}"
                     self.log.debug(msg)
-                    for attach in attach_list:
-                        params = {
-                            "fabric": self.fabric,
-                            "serialNumber": attach.switch_serial_no,
-                            "vrfName": attach.vrf_name,
-                        }
-                        msg = f"Calling get_vrf_lite_objects_model with: {params}"
-                        self.log.debug(msg)
+                    msg = f"Caller {caller}. lite_objects: "
+                    msg += f"{lite_objects.model_dump(by_alias=True)}"
+                    self.log.debug(msg)
 
-                        lite_objects = self.get_vrf_lite_objects_model(params)
-
-                        msg = f"lite_objects: {lite_objects.model_dump(by_alias=True)}"
-                        self.log.debug(msg)
-                        if not lite_objects.data:
-                            continue
+                    if lite_objects.data:
                         item["attach"].append(lite_objects.data[0].model_dump(by_alias=True))
-                    query.append(item)
-        msg = f"Returning query: {query}"
+            query.append(item)
+
+        msg = f"Caller {caller}. Returning query: "
+        msg += f"{json.dumps(query, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        return query
+        return copy.deepcopy(query)
 
     def get_diff_query_for_all_controller_vrfs(self, vrf_objects_model: ControllerResponseVrfsV12) -> list[dict]:
         """
