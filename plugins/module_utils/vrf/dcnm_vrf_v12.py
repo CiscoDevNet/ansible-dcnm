@@ -1309,23 +1309,25 @@ class NdfcVrf12:
                     "vrfName": vrf_name,
                 }
 
-                self._update_vrf_lite_extension(new_attach)
+                new_attach = self._update_vrf_lite_extension(new_attach)
 
                 new_attach_list.append(new_attach)
             vrf_attach["lanAttachList"] = new_attach_list
 
         self.have_attach = copy.deepcopy(have_attach)
 
-    def _update_vrf_lite_extension(self, attach: dict) -> None:
+    def _update_vrf_lite_extension(self, attach: dict) -> dict:
         """
-        Update the attach dict with VRF Lite extension values if present.
+        Return updated attach dict with VRF Lite extension values if present.
+
+        Update freeformConfig, if present, else set to an empty string.
         """
         lite_objects = self.get_vrf_lite_objects(attach)
         if not lite_objects.get("DATA"):
             msg = "No vrf_lite_objects found. Update freeformConfig and return."
             self.log.debug(msg)
             attach["freeformConfig"] = ""
-            return
+            return copy.deepcopy(attach)
 
         for sdl in lite_objects["DATA"]:
             for epv in sdl["switchDetailsList"]:
@@ -1347,6 +1349,7 @@ class NdfcVrf12:
                 extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
                 attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
                 attach["freeformConfig"] = epv.get("freeformConfig", "")
+        return copy.deepcopy(attach)
 
     def get_have(self) -> None:
         """
