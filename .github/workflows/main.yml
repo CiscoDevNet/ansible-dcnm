@@ -65,6 +65,12 @@ jobs:
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+    
+    - name: Install Pydantic
+      run: pip install pydantic
+
+    - name: Install deepdiff
+      run: pip install deepdiff
 
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
@@ -100,6 +106,12 @@ jobs:
     - name: Install coverage (v7.3.4)
       run: pip install coverage==7.3.4
     
+    - name: Install Pydantic
+      run: pip install pydantic
+
+    - name: Install deepdiff
+      run: pip install deepdiff
+
     - name: Install pytest (v7.4.4)
       run: pip install pytest==7.4.4
 

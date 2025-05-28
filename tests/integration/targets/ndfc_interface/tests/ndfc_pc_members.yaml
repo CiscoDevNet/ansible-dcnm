@@ -105,7 +105,7 @@
 # Validate Test Data
 # ----------------------------------------------
 - name: Validate Test Data
-  cisco.dcnm.tests.unit.ndfc_pc_members_validate:
+  cisco.dcnm.tests.integration.ndfc_pc_members_validate:
     ndfc_data: "{{ pc_state }}"
     test_data: "{{ test_data }}"
   register: result
