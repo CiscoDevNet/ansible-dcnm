@@ -34,6 +34,7 @@ if not PYDANTIC_LIBRARY_IMPORT_ERROR:
         ignore_fields: Optional[Dict[str, int]] = None
 
         @validator('config_data', pre=True)
+        @classmethod
         def parse_config_data(cls, value):
             if isinstance(value, dict):
                 return [ConfigData.parse_obj(value)]
@@ -48,6 +49,7 @@ if not PYDANTIC_LIBRARY_IMPORT_ERROR:
                 raise ValueError("Config Data must be a single/list of dictionary, or None.")
 
         @validator('ndfc_data', pre=True)
+        @classmethod
         def parse_ndfc_data(cls, value):
             if isinstance(value, str):
                 return value
@@ -60,6 +62,7 @@ if not PYDANTIC_LIBRARY_IMPORT_ERROR:
                 raise ValueError("NDFC Response must be a list of dictionaries or an error string")
 
         @model_validator(mode='after')
+        @classmethod
         def validate_lists_equality(cls, values):
             config_data = values.config_data
             ndfc_data = values.ndfc_data
