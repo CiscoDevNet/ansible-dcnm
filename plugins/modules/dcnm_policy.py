@@ -1144,7 +1144,7 @@ class DcnmPolicy:
 
         return resp
 
-   def dcnm_policy_delete_policy(self, policy, mark_del):
+    def dcnm_policy_delete_policy(self, policy, mark_del):
  
         if mark_del is True:
             if policy["templateName"] == "switch_freeform":
