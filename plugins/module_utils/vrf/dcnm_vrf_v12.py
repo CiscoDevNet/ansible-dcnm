@@ -49,7 +49,7 @@ from ...module_utils.network.dcnm.dcnm import (
 from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
-from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12
+from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
@@ -221,6 +221,11 @@ class NdfcVrf12:
         # Controller responses
         self.response: dict = {}
         self.log.debug("DONE")
+
+    def log_list_of_models(self, model_list):
+        for index, model in enumerate(model_list):
+            msg = f"{index}. {json.dumps(model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
     @staticmethod
     def get_list_of_lists(lst: list, size: int) -> list[list]:
@@ -2638,7 +2643,7 @@ class NdfcVrf12:
                 is_border = True
         return is_border
 
-    def get_extension_values_from_lite_objects(self, lite: list[dict]) -> list:
+    def get_extension_values_from_lite_objects_orig(self, lite: list[dict]) -> list:
         """
         # Summary
 
@@ -2672,7 +2677,39 @@ class NdfcVrf12:
 
         return extension_values_list
 
-    def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite) -> dict:
+    def get_extension_values_from_lite_objects(self, lite: list[ExtensionPrototypeValue]) -> list[VrfLiteConnProtoItem]:
+        """
+        # Summary
+
+        Given a list of lite objects, return:
+
+        -   A list containing the extensionValues, if any, from these
+            lite objects.
+        -   An empty list, if the lite objects have no extensionValues
+
+        ## Raises
+
+        None
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        extension_values_list: list[VrfLiteConnProtoItem] = []
+        for item in lite:
+            if item.extension_type != "VRF_LITE":
+                continue
+            extension_values_list.append(item.extension_values)
+
+        msg = f"Returning list of {len(extension_values_list)} extension_values: "
+        self.log.debug(msg)
+        self.log_list_of_models(extension_values_list)
+
+        return extension_values_list
+
+    def update_vrf_attach_vrf_lite_extensions_orig(self, vrf_attach, lite) -> dict:
         """
         # Summary
 
@@ -2745,10 +2782,10 @@ class NdfcVrf12:
         user_vrf_lite_interfaces = []
         switch_vrf_lite_interfaces = []
         for item in vrf_attach.get("vrf_lite"):
-            item_interface = item.get("interface")
+            item_interface = item.if_name
             user_vrf_lite_interfaces.append(item_interface)
             for ext_value in ext_values:
-                ext_value_interface = ext_value.get("IF_NAME")
+                ext_value_interface = ext_value.if_name
                 switch_vrf_lite_interfaces.append(ext_value_interface)
                 msg = f"item_interface: {item_interface}, "
                 msg += f"ext_value_interface: {ext_value_interface}"
@@ -2800,6 +2837,151 @@ class NdfcVrf12:
                 "IPV6_NEIGHBOR": user.get("neighbor_ipv6") or switch.get("IPV6_NEIGHBOR", ""),
                 "AUTO_VRF_LITE_FLAG": switch.get("AUTO_VRF_LITE_FLAG", ""),
                 "PEER_VRF_NAME": user.get("peer_vrf") or switch.get("PEER_VRF_NAME", ""),
+                "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+            }
+            extension_values["VRF_LITE_CONN"].append(nbr_dict)
+
+        ms_con = {"MULTISITE_CONN": []}
+        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+        extension_values["VRF_LITE_CONN"] = json.dumps({"VRF_LITE_CONN": extension_values["VRF_LITE_CONN"]})
+        vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
+        if vrf_attach.get("vrf_lite") is not None:
+            del vrf_attach["vrf_lite"]
+
+        msg = "Returning modified vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        return copy.deepcopy(vrf_attach)
+
+    def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite: list[ExtensionPrototypeValue]) -> dict:
+        """
+        # Summary
+
+        ## params
+            -   vrf_attach
+                A vrf_attach object containing a vrf_lite extension
+                to update
+            -   lite: A list of current vrf_lite extension objects from
+                the switch (ExtensionPrototypeValue objects)
+
+        ## Description
+
+        1.  Merge the values from the vrf_attach object into a matching
+            vrf_lite extension object (if any) from the switch.
+        2,  Update the vrf_attach object with the merged result.
+        3.  Return the updated vrf_attach object.
+
+        If no matching vrf_lite extension object is found on the switch,
+        return the unmodified vrf_attach object.
+
+        "matching" in this case means:
+
+        1. The extensionType of the switch's extension object is VRF_LITE
+        2. The IF_NAME in the extensionValues of the extension object
+        matches the interface in vrf_attach.vrf_lite.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += "vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        serial_number = vrf_attach.get("serialNumber")
+
+        msg = f"serial_number: {serial_number}"
+        self.log.debug(msg)
+
+        if vrf_attach.get("vrf_lite") is None:
+            if "vrf_lite" in vrf_attach:
+                del vrf_attach["vrf_lite"]
+            vrf_attach["extensionValues"] = ""
+            msg = f"serial_number: {serial_number}, "
+            msg += "vrf_attach does not contain a vrf_lite configuration. "
+            msg += "Returning it with empty extensionValues. "
+            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            return copy.deepcopy(vrf_attach)
+
+        msg = f"serial_number: {serial_number}, "
+        msg += f"Received list of {len(lite)} lite objects: "
+        self.log.debug(msg)
+        self.log_list_of_models(lite)
+
+        ext_values = self.get_extension_values_from_lite_objects(lite)
+        if ext_values is None:
+            ip_address = self.serial_number_to_ip(serial_number)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "No VRF LITE capable interfaces found on "
+            msg += "this switch. "
+            msg += f"ip: {ip_address}, "
+            msg += f"serial_number: {serial_number}"
+            self.log.debug(msg)
+            self.module.fail_json(msg=msg)
+
+        matches: dict = {}
+        user_vrf_lite_interfaces = []
+        switch_vrf_lite_interfaces = []
+        for item in vrf_attach.get("vrf_lite"):
+            item_interface = item.get("interface")
+            user_vrf_lite_interfaces.append(item_interface)
+            for ext_value in ext_values:
+                ext_value_interface = ext_value.if_name
+                switch_vrf_lite_interfaces.append(ext_value_interface)
+                msg = f"item_interface: {item_interface}, "
+                msg += f"ext_value_interface: {ext_value_interface}"
+                self.log.debug(msg)
+                if item_interface != ext_value_interface:
+                    continue
+                msg = "Found item: "
+                msg += f"item[interface] {item_interface}, == "
+                msg += f"ext_values.if_name {ext_value_interface}, "
+                msg += f"{json.dumps(item)}"
+                self.log.debug(msg)
+                matches[item_interface] = {"user": item, "switch": ext_value}
+        if not matches:
+            ip_address = self.serial_number_to_ip(serial_number)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "No matching interfaces with vrf_lite extensions "
+            msg += f"found on switch {ip_address} ({serial_number}). "
+            msg += "playbook vrf_lite_interfaces: "
+            msg += f"{','.join(sorted(user_vrf_lite_interfaces))}. "
+            msg += "switch vrf_lite_interfaces: "
+            msg += f"{','.join(sorted(switch_vrf_lite_interfaces))}."
+            self.log.debug(msg)
+            self.module.fail_json(msg)
+
+        msg = "Matching extension object(s) found on the switch. "
+        msg += "Proceeding to convert playbook vrf_lite configuration "
+        msg += "to payload format. "
+
+        extension_values = {"VRF_LITE_CONN": [], "MULTISITE_CONN": []}
+
+        for interface, item in matches.items():
+            user = item["user"]
+            switch = item["switch"]
+            msg = f"interface: {interface}: "
+            self.log.debug(msg)
+            msg = "item.user: "
+            msg += f"{json.dumps(user, indent=4, sort_keys=True)}, "
+            msg += "item.switch: "
+            msg += f"{json.dumps(switch.model_dump(), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            nbr_dict = {
+                "IF_NAME": user.get("interface"),
+                "DOT1Q_ID": str(user.get("dot1q") or switch.dot1q_id),
+                "IP_MASK": user.get("ipv4_addr") or switch.ip_mask,
+                "NEIGHBOR_IP": user.get("neighbor_ipv4") or switch.neighbor_ip,
+                "NEIGHBOR_ASN": switch.neighbor_asn,
+                "IPV6_MASK": user.get("ipv6_addr") or switch.ipv6_mask,
+                "IPV6_NEIGHBOR": user.get("neighbor_ipv6") or switch.ipv6_neighbor,
+                "AUTO_VRF_LITE_FLAG": switch.auto_vrf_lite_flag,
+                "PEER_VRF_NAME": user.get("peer_vrf") or switch.peer_vrf_name,
                 "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
             }
             extension_values["VRF_LITE_CONN"].append(nbr_dict)
@@ -3023,7 +3205,7 @@ class NdfcVrf12:
 
         return copy.deepcopy(vrf_attach)
 
-    def update_lan_attach_list(self, diff_attach: dict) -> list:
+    def update_lan_attach_list_orig(self, diff_attach: dict) -> list:
         """
         # Summary
         Update the lanAttachList in diff_attach and return the updated
@@ -3112,6 +3294,110 @@ class NdfcVrf12:
             msg += "lite: "
             msg += f"{json.dumps(lite, indent=4, sort_keys=True)}"
             self.log.debug(msg)
+
+            msg = f"ip_address {ip_address} ({serial_number}), "
+            msg += "old vrf_attach: "
+            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            vrf_attach = self.update_vrf_attach_vrf_lite_extensions(vrf_attach, lite)
+            msg = f"ip_address {ip_address} ({serial_number}), "
+            msg += "new vrf_attach: "
+            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            new_lan_attach_list.append(vrf_attach)
+        return copy.deepcopy(new_lan_attach_list)
+
+    def update_lan_attach_list(self, diff_attach: dict) -> list:
+        """
+        # Summary
+        Update the lanAttachList in diff_attach and return the updated
+        list.
+
+        - Set vrf_attach.vlan to 0
+        - If vrf_attach.vrf_lite is null, delete it
+        - If the switch is not a border switch, fail the module
+        - Get associated vrf_lite objects from the switch
+        - Update vrf lite extensions with information from the vrf_lite objects
+
+        ## Raises
+
+        - fail_json: If the switch is not a border switch
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+
+        msg = f"caller {caller}, "
+        msg += "ENTERED. "
+        self.log.debug(msg)
+
+        new_lan_attach_list = []
+        for vrf_attach in diff_attach["lanAttachList"]:
+            vrf_attach.update(vlan=0)
+
+            serial_number = vrf_attach.get("serialNumber")
+            ip_address = self.serial_number_to_ip(serial_number)
+            msg = f"ip_address {ip_address} ({serial_number}), "
+            msg += "vrf_attach: "
+            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            vrf_attach = self.update_vrf_attach_fabric_name(vrf_attach)
+
+            if "is_deploy" in vrf_attach:
+                del vrf_attach["is_deploy"]
+            # if vrf_lite is null, delete it.
+            if not vrf_attach.get("vrf_lite"):
+                if "vrf_lite" in vrf_attach:
+                    msg = "vrf_lite exists, but is null. Delete it."
+                    self.log.debug(msg)
+                    del vrf_attach["vrf_lite"]
+                new_lan_attach_list.append(vrf_attach)
+                msg = f"ip_address {ip_address} ({serial_number}), "
+                msg += "deleted null vrf_lite in vrf_attach and "
+                msg += "skipping VRF Lite processing. "
+                msg += "updated vrf_attach: "
+                msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+                continue
+
+            # VRF Lite processing
+
+            msg = f"ip_address {ip_address} ({serial_number}), "
+            msg += "vrf_attach.get(vrf_lite): "
+            msg += f"{json.dumps(vrf_attach.get('vrf_lite'), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            if not self.is_border_switch(serial_number):
+                # arobel TODO: Not covered by UT
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"caller {caller}. "
+                msg += "VRF LITE cannot be attached to "
+                msg += "non-border switch. "
+                msg += f"ip: {ip_address}, "
+                msg += f"serial number: {serial_number}"
+                self.module.fail_json(msg=msg)
+
+            lite_objects_model = self.get_vrf_lite_objects_model(vrf_attach)
+
+            msg = f"ip_address {ip_address} ({serial_number}), "
+            msg += "lite_objects: "
+            msg += f"{json.dumps(lite_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            if not lite_objects_model.data:
+                msg = f"ip_address {ip_address} ({serial_number}), "
+                msg += "No lite objects. Append vrf_attach and continue."
+                self.log.debug(msg)
+                new_lan_attach_list.append(vrf_attach)
+                continue
+
+            lite = lite_objects_model.data[0].switch_details_list[0].extension_prototype_values
+            msg = f"ip_address {ip_address} ({serial_number}), "
+            msg += f"lite extension_prototype_values contains {len(lite)} items: "
+            self.log.debug(msg)
+            self.log_list_of_models(lite)
 
             msg = f"ip_address {ip_address} ({serial_number}), "
             msg += "old vrf_attach: "
