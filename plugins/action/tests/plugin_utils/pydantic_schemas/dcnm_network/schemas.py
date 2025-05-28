@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function
-from ansible.module_utils.six import raise_from
-
 from typing import List, Optional
+from ansible.module_utils.six import raise_from
+from ansible.errors import AnsibleError
 
 try:
     from pydantic import BaseModel, model_validator
@@ -36,6 +36,7 @@ class DcnmNetworkQuerySchema(BaseModel):
         lanAttachState: Optional[str] = None
 
         @model_validator(mode="after")
+        @classmethod
         def sort_portNames(cls, values):
             if getattr(values, "portNames") is not None:
                 setattr(values, "portNames", ",".join(sorted(getattr(values, "portNames").split(","))))

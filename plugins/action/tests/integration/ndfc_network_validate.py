@@ -3,13 +3,14 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
+from pprint import pprint
+import json
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
-import json
-from ansible.module_utils.common.text.converters import to_native
-from pprint import pprint
-from ..plugin_utils.tools import load_yaml_file, process_deepdiff
 from ansible.module_utils.six import raise_from
+from ansible.errors import AnsibleError
+from ansible.module_utils.common.text.converters import to_native
+from ..plugin_utils.tools import load_yaml_file, process_deepdiff
 from ..plugin_utils.pydantic_schemas.dcnm_network.schemas import DcnmNetworkQuerySchema
 
 try:
@@ -33,7 +34,7 @@ class ActionModule(ActionBase):
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
 
-        if 'ndfc_data' not in self._task.args:            
+        if 'ndfc_data' not in self._task.args:
             results['failed'] = True
             results['msg'] = 'No data found in ndfc_data'
             return results

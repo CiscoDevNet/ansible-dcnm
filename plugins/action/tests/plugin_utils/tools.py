@@ -58,9 +58,9 @@ def process_deepdiff(deepdiff_output, ignore_extra_fields=False):
                 values[norm_path] = []
             values[norm_path].append(str(data))
         return values
-    
+
     processed_diff = {}
-    
+
     # Copy all items except iterable_item_added and iterable_item_removed
     # If ignore_extra_fields is True, also exclude dictionary_item_added
     for diff_type, diff_data in deepdiff_output.items():
