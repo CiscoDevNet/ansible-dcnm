@@ -6,65 +6,78 @@ __metaclass__ = type
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
 import json
-from deepdiff import DeepDiff
 from ansible.module_utils.common.text.converters import to_native
 from pprint import pprint
-from ..plugin_utils.pydantic_schemas.dcnm_network.schemas import DcnmNetworkQuerySchema
 from ..plugin_utils.tools import load_yaml_file, process_deepdiff
+from ansible.module_utils.six import raise_from
+from ..plugin_utils.pydantic_schemas.dcnm_network.schemas import DcnmNetworkQuerySchema
+
+try:
+    from deepdiff import DeepDiff
+except ImportError as imp_exc:
+    DEEPDIFF_IMPORT_ERROR = imp_exc
+else:
+    DEEPDIFF_IMPORT_ERROR = None
+
+if DEEPDIFF_IMPORT_ERROR:
+    raise_from(
+        AnsibleError('DeepDiff must be installed to use this plugin. Use pip or install test-requirements.'),
+        DEEPDIFF_IMPORT_ERROR)
 
 display = Display()
 
+
 class ActionModule(ActionBase):
-    
+
     def run(self, tmp=None, task_vars=None):
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
-        
-        if'ndfc_data' not in self._task.args:            
+
+        if 'ndfc_data' not in self._task.args:            
             results['failed'] = True
             results['msg'] = 'No data found in ndfc_data'
             return results
-        else:
-            ndfc_data = self._task.args['ndfc_data']
-            # removes ansible embeddings and converts to native python types
-            native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
+
+        ndfc_data = self._task.args['ndfc_data']
+        # removes ansible embeddings and converts to native python types
+        native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
 
         if "test_data" not in self._task.args:
             results['failed'] = True
             results['msg'] = 'No test data is found in test_data'
             return results
-        else:
-            test_data = self._task.args['test_data']
-        
+
+        test_data = self._task.args['test_data']
+
         if "config_path" not in self._task.args:
             results['failed'] = True
             results['msg'] = 'No path is loaded into config_path'
-        else:
-            config_path = self._task.args['config_path']
-        
+            return results
+
+        config_path = self._task.args['config_path']
+
         if 'check_deleted' in self._task.args:
             check_deleted = self._task.args['check_deleted']
-        else:
-            check_deleted = False
-        
+
+        check_deleted = False
+
         test_fabric = test_data['test_fabric']
         if config_path != "":
             # only parse if config file exists
             expected_config_data = load_yaml_file(config_path)
-            expected_data = DcnmNetworkQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric, deploy=test_data.get('deploy', False))
+            expected_data = DcnmNetworkQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric)
+
             expected_data_parsed = DcnmNetworkQuerySchema.parse_obj(expected_data).dict(exclude_none=True)
-        
+
         ndfc_data_parsed = DcnmNetworkQuerySchema.parse_obj(native_ndfc_data).dict(exclude_none=True)
-        
 
         if check_deleted:
             results['failed'] = False
             results['msg'] = ""
-
             existing_networks = set()
             for network in ndfc_data_parsed["response"]:
                 existing_networks.add(network["parent"]["networkName"])
-                
+
             if config_path == "":
                 # check for full delete
                 if not ndfc_data_parsed["failed"] and len(existing_networks) == 0:
@@ -78,37 +91,34 @@ class ActionModule(ActionBase):
                         results['msg'] += '\n\nError: ' + ndfc_data_parsed["error"]
                     return results
                 return results
-            else:
-                # checks for a partial delete
-                deleted_networks = set()
-                for network in expected_data_parsed["response"]:
-                    deleted_networks.add(network["parent"]["networkName"])
-                
-                remaining_networks = existing_networks.intersection(deleted_networks)
 
-                if len(remaining_networks) > 0:
-                    results['failed'] = True
-                    print("Expected networks to be deleted: ")
-                    print(deleted_networks)
-                    print("\nNetworks present in NDFC: ")
-                    print(existing_networks)
-                    print("\nNetworks still not deleted: ")
-                    print(remaining_networks)
-                    results['msg'] = 'All networks are not deleted'
-                    return results
-                
-                
+            # checks for a partial delete
+            deleted_networks = set()
+            for network in expected_data_parsed["response"]:
+                deleted_networks.add(network["parent"]["networkName"])
+
+            remaining_networks = existing_networks.intersection(deleted_networks)
+            if len(remaining_networks) > 0:
+                results['failed'] = True
                 print("Expected networks to be deleted: ")
                 print(deleted_networks)
-                print("\n\nNetworks present in NDFC: ")
+                print("\nNetworks present in NDFC: ")
                 print(existing_networks)
-                print("Networks still not deleted: ")
+                print("\nNetworks still not deleted: ")
                 print(remaining_networks)
-                results['failed'] = False
-                results['msg'] = 'Provided networks are deleted'
+                results['msg'] = 'All networks are not deleted'
                 return results
-        
-        
+
+            print("Expected networks to be deleted: ")
+            print(deleted_networks)
+            print("\n\nNetworks present in NDFC: ")
+            print(existing_networks)
+            print("Networks still not deleted: ")
+            print(remaining_networks)
+            results['failed'] = False
+            results['msg'] = 'Provided networks are deleted'
+            return results
+
         # non deleted checking
         validity = DeepDiff(
             expected_data_parsed,
@@ -125,7 +135,7 @@ class ActionModule(ActionBase):
         processed_validity = process_deepdiff(validity, ignore_extra_fields=True)
         if processed_validity == {}:
             results['failed'] = False
-            results['msg'] = 'Data is valid. \n\n Expected data: \n\n{}\n\nActual data: \n\n{}'.format(
+            results['msg'] = f'Data is valid. \n\n Expected data: \n\n{expected_data}\n\nActual data: \n\n{ndfc_data_parsed}'.format(
                 expected_data_parsed,
                 ndfc_data_parsed
             )
@@ -140,4 +150,3 @@ class ActionModule(ActionBase):
             results['msg'] = 'Data is not valid.'
 
         return results
-    

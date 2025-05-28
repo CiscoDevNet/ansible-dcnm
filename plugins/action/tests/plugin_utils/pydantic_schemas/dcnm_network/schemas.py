@@ -1,8 +1,19 @@
 from __future__ import absolute_import, division, print_function
+from ansible.module_utils.six import raise_from
 
 from typing import List, Optional
-from pydantic import BaseModel, model_validator, Field
 
+try:
+    from pydantic import BaseModel, model_validator
+except ImportError as imp_exc:
+    PYDANTIC_IMPORT_ERROR = imp_exc
+else:
+    PYDANTIC_IMPORT_ERROR = None
+
+if PYDANTIC_IMPORT_ERROR:
+    raise_from(
+        AnsibleError('Pydantic must be installed to use this plugin. Use pip or install test-requirements.'),
+        PYDANTIC_IMPORT_ERROR)
 
 # Top level schema
 # Format: ModuleMethodSchema
@@ -11,6 +22,8 @@ from pydantic import BaseModel, model_validator, Field
 # replace None with default value if it throws an error
 # this can happen if fields are unevenly defined across different networks
 # eg: in one network, vrf is defined, in the other it is not
+
+
 class DcnmNetworkQuerySchema(BaseModel):
 
     class SwitchAttach(BaseModel):
@@ -21,6 +34,7 @@ class DcnmNetworkQuerySchema(BaseModel):
         networkName: Optional[str] = None
         vlanId: Optional[int] = None
         lanAttachState: Optional[str] = None
+
         @model_validator(mode="after")
         def sort_portNames(cls, values):
             if getattr(values, "portNames") is not None:
@@ -43,7 +57,6 @@ class DcnmNetworkQuerySchema(BaseModel):
         vlanName: Optional[str] = None
         intfDescription: Optional[str] = None
 
-
     class Parent(BaseModel):
         fabric: Optional[str] = None
         networkId: Optional[int] = None
@@ -58,15 +71,16 @@ class DcnmNetworkQuerySchema(BaseModel):
         parent: Optional["DcnmNetworkQuerySchema.Parent"] = None
 
         @model_validator(mode="after")
+        @classmethod
         def remove_none(cls, values):
             if getattr(values, "attach") is not None:
                 setattr(values, "attach", [sw for sw in getattr(values, "attach") if sw.portNames is not None])
             return values
-        
+
     failed: Optional[bool] = None
     response: Optional[List[Network]] = None
 
-    def yaml_config_to_dict(expected_config_data, test_fabric, deploy=False):
+    def yaml_config_to_dict(self, expected_config_data, test_fabric):
         expected_data = {}
         expected_data["failed"] = False
         expected_data["response"] = []
