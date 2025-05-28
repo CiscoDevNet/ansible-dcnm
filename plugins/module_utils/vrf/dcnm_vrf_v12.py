@@ -2672,7 +2672,7 @@ class NdfcVrf12:
 
         return extension_values_list
 
-    def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite) -> dict:
+    def update_vrf_attach_vrf_lite_extensions_orig(self, vrf_attach, lite) -> dict:
         """
         # Summary
 
@@ -2848,6 +2848,150 @@ class NdfcVrf12:
             extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
 
             extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+        vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
+        if vrf_attach.get("vrf_lite") is not None:
+            del vrf_attach["vrf_lite"]
+
+        msg = "Returning modified vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        return copy.deepcopy(vrf_attach)
+
+    def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite) -> dict:
+        """
+        # Summary
+
+        ## params
+            -   vrf_attach
+                A vrf_attach object containing a vrf_lite extension
+                to update
+            -   lite: A list of current vrf_lite extension objects from
+                the switch
+
+        ## Description
+
+        1.  Merge the values from the vrf_attach object into a matching
+            vrf_lite extension object (if any) from the switch.
+        2,  Update the vrf_attach object with the merged result.
+        3.  Return the updated vrf_attach object.
+
+        If no matching vrf_lite extension object is found on the switch,
+        return the unmodified vrf_attach object.
+
+        "matching" in this case means:
+
+        1. The extensionType of the switch's extension object is VRF_LITE
+        2. The IF_NAME in the extensionValues of the extension object
+        matches the interface in vrf_attach.vrf_lite.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += "vrf_attach: "
+        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        serial_number = vrf_attach.get("serialNumber")
+
+        msg = f"serial_number: {serial_number}"
+        self.log.debug(msg)
+
+        if vrf_attach.get("vrf_lite") is None:
+            if "vrf_lite" in vrf_attach:
+                del vrf_attach["vrf_lite"]
+            vrf_attach["extensionValues"] = ""
+            msg = f"serial_number: {serial_number}, "
+            msg += "vrf_attach does not contain a vrf_lite configuration. "
+            msg += "Returning it with empty extensionValues. "
+            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            return copy.deepcopy(vrf_attach)
+
+        msg = f"serial_number: {serial_number}, "
+        msg += "Received lite: "
+        msg += f"{json.dumps(lite, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        ext_values = self.get_extension_values_from_lite_objects(lite)
+        if ext_values is None:
+            ip_address = self.serial_number_to_ip(serial_number)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "No VRF LITE capable interfaces found on "
+            msg += "this switch. "
+            msg += f"ip: {ip_address}, "
+            msg += f"serial_number: {serial_number}"
+            self.log.debug(msg)
+            self.module.fail_json(msg=msg)
+
+        matches: dict = {}
+        user_vrf_lite_interfaces = []
+        switch_vrf_lite_interfaces = []
+        for item in vrf_attach.get("vrf_lite"):
+            item_interface = item.get("interface")
+            user_vrf_lite_interfaces.append(item_interface)
+            for ext_value in ext_values:
+                ext_value_interface = ext_value.get("IF_NAME")
+                switch_vrf_lite_interfaces.append(ext_value_interface)
+                msg = f"item_interface: {item_interface}, "
+                msg += f"ext_value_interface: {ext_value_interface}"
+                self.log.debug(msg)
+                if item_interface != ext_value_interface:
+                    continue
+                msg = "Found item: "
+                msg += f"item[interface] {item_interface}, == "
+                msg += f"ext_values[IF_NAME] {ext_value_interface}, "
+                msg += f"{json.dumps(item)}"
+                self.log.debug(msg)
+                matches[item_interface] = {"user": item, "switch": ext_value}
+        if not matches:
+            ip_address = self.serial_number_to_ip(serial_number)
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += "No matching interfaces with vrf_lite extensions "
+            msg += f"found on switch {ip_address} ({serial_number}). "
+            msg += "playbook vrf_lite_interfaces: "
+            msg += f"{','.join(sorted(user_vrf_lite_interfaces))}. "
+            msg += "switch vrf_lite_interfaces: "
+            msg += f"{','.join(sorted(switch_vrf_lite_interfaces))}."
+            self.log.debug(msg)
+            self.module.fail_json(msg)
+
+        msg = "Matching extension object(s) found on the switch. "
+        msg += "Proceeding to convert playbook vrf_lite configuration "
+        msg += "to payload format. "
+        msg += f"matches: {json.dumps(matches, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        extension_values = {"VRF_LITE_CONN": [], "MULTISITE_CONN": []}
+
+        for interface, item in matches.items():
+            msg = f"interface: {interface}: "
+            msg += "item: "
+            msg += f"{json.dumps(item, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            user = item["user"]
+            switch = item["switch"]
+            nbr_dict = {
+                "IF_NAME": user.get("interface"),
+                "DOT1Q_ID": str(user.get("dot1q") or switch.get("DOT1Q_ID", "")),
+                "IP_MASK": user.get("ipv4_addr") or switch.get("IP_MASK", ""),
+                "NEIGHBOR_IP": user.get("neighbor_ipv4") or switch.get("NEIGHBOR_IP", ""),
+                "NEIGHBOR_ASN": switch.get("NEIGHBOR_ASN", ""),
+                "IPV6_MASK": user.get("ipv6_addr") or switch.get("IPV6_MASK", ""),
+                "IPV6_NEIGHBOR": user.get("neighbor_ipv6") or switch.get("IPV6_NEIGHBOR", ""),
+                "AUTO_VRF_LITE_FLAG": switch.get("AUTO_VRF_LITE_FLAG", ""),
+                "PEER_VRF_NAME": user.get("peer_vrf") or switch.get("PEER_VRF_NAME", ""),
+                "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+            }
+            extension_values["VRF_LITE_CONN"].append(nbr_dict)
+
+        ms_con = {"MULTISITE_CONN": []}
+        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+        extension_values["VRF_LITE_CONN"] = json.dumps({"VRF_LITE_CONN": extension_values["VRF_LITE_CONN"]})
         vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
         if vrf_attach.get("vrf_lite") is not None:
             del vrf_attach["vrf_lite"]
