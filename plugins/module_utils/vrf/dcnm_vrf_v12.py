@@ -476,7 +476,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return int(str(vrf_id))
 
-    def diff_for_attach_deploy(self, want_a: list[dict], have_a: list[dict], replace=False) -> tuple[list, bool]:
+    def diff_for_attach_deploy(self, want_attach_list: list[dict], have_attach_list: list[dict], replace=False) -> tuple[list, bool]:
         """
         Return attach_list, deploy_vrf
 
@@ -494,56 +494,56 @@ class NdfcVrf12:
         attach_list = []
         deploy_vrf = False
 
-        if not want_a:
+        if not want_attach_list:
             return attach_list, deploy_vrf
 
-        for want in want_a:
-            if not have_a:
-                # No have, so always attach
-                if self.to_bool("isAttached", want):
-                    want = self._prepare_attach_for_deploy(want)
-                    attach_list.append(want)
-                    if self.to_bool("is_deploy", want):
+        for want_attach in want_attach_list:
+            if not have_attach_list:
+                # No have_attach, so always attach
+                if self.to_bool("isAttached", want_attach):
+                    want_attach = self._prepare_attach_for_deploy(want_attach)
+                    attach_list.append(want_attach)
+                    if self.to_bool("is_deploy", want_attach):
                         deploy_vrf = True
                 continue
 
             found = False
-            for have in have_a:
-                if want.get("serialNumber") != have.get("serialNumber"):
+            for have_attach in have_attach_list:
+                if want_attach.get("serialNumber") != have_attach.get("serialNumber"):
                     continue
 
                 # Copy freeformConfig from have since the playbook doesn't
                 # currently support it.
-                want.update({"freeformConfig": have.get("freeformConfig", "")})
+                want_attach.update({"freeformConfig": have_attach.get("freeformConfig", "")})
 
-                # Copy unsupported instanceValues keys from have to want
+                # Copy unsupported instanceValues keys from have to want_attach
                 want_inst_values, have_inst_values = {}, {}
-                if want.get("instanceValues") and have.get("instanceValues"):
-                    want_inst_values = json.loads(want["instanceValues"])
-                    have_inst_values = json.loads(have["instanceValues"])
+                if want_attach.get("instanceValues") and have_attach.get("instanceValues"):
+                    want_inst_values = json.loads(want_attach["instanceValues"])
+                    have_inst_values = json.loads(have_attach["instanceValues"])
                     # These keys are not currently supported in the playbook,
                     # so copy them from have to want.
                     for key in ["loopbackId", "loopbackIpAddress", "loopbackIpV6Address"]:
                         if key in have_inst_values:
                             want_inst_values[key] = have_inst_values[key]
-                    want["instanceValues"] = json.dumps(want_inst_values)
+                    want_attach["instanceValues"] = json.dumps(want_inst_values)
 
                 # Compare extensionValues
-                if want.get("extensionValues") and have.get("extensionValues"):
-                    if not self._extension_values_match(want, have, replace):
+                if want_attach.get("extensionValues") and have_attach.get("extensionValues"):
+                    if not self._extension_values_match(want_attach, have_attach, replace):
                         continue
-                elif want.get("extensionValues") and not have.get("extensionValues"):
+                elif want_attach.get("extensionValues") and not have_attach.get("extensionValues"):
                     continue
-                elif not want.get("extensionValues") and have.get("extensionValues"):
+                elif not want_attach.get("extensionValues") and have_attach.get("extensionValues"):
                     if not replace:
                         found = True
                     continue
 
                 # Compare deployment/attachment status
-                if not self._deployment_status_match(want, have):
-                    want = self._prepare_attach_for_deploy(want)
-                    attach_list.append(want)
-                    if self.to_bool("is_deploy", want):
+                if not self._deployment_status_match(want_attach, have_attach):
+                    want_attach = self._prepare_attach_for_deploy(want_attach)
+                    attach_list.append(want_attach)
+                    if self.to_bool("is_deploy", want_attach):
                         deploy_vrf = True
                     found = True
                     break
@@ -556,10 +556,10 @@ class NdfcVrf12:
                 break
 
             if not found:
-                if self.to_bool("isAttached", want):
-                    want = self._prepare_attach_for_deploy(want)
-                    attach_list.append(want)
-                    if self.to_bool("is_deploy", want):
+                if self.to_bool("isAttached", want_attach):
+                    want_attach = self._prepare_attach_for_deploy(want_attach)
+                    attach_list.append(want_attach)
+                    if self.to_bool("is_deploy", want_attach):
                         deploy_vrf = True
 
         msg = "Returning deploy_vrf: "
@@ -1902,8 +1902,8 @@ class NdfcVrf12:
                     continue
                 attach_found = True
                 diff, deploy_vrf_bool = self.diff_for_attach_deploy(
-                    want_attach = want_attach["lanAttachList"],
-                    have_attach = have_attach["lanAttachList"],
+                    want_attach_list = want_attach["lanAttachList"],
+                    have_attach_list = have_attach["lanAttachList"],
                     replace=replace,
                 )
                 if diff:
