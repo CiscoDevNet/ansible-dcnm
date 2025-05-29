@@ -1,25 +1,12 @@
 ---
 - name: MAIN - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
-    test_data:
-      test_fabric: "{{ ansible_test_fabric }}"
-      sw1: "{{ ansible_switch1 }}"
-      sw2: "{{ ansible_switch2 }}"
-      vrf_1: "{{ ansible_vrf_1 }}"
-      vrf_1_id: "{{ ansible_vrf_1_id }}"
-      vrf_1_vlan_id: "{{ ansible_vrf_1_vlan_id }}"
-      vrf_2: "{{ ansible_vrf_2 }}"
-      vrf_2_id: "{{ ansible_vrf_2_id }}"
-      vrf_2_vlan_id: "{{ ansible_vrf_2_vlan_id }}"
-      vrf_3: "{{ ansible_vrf_3 }}"
-      vrf_3_id: "{{ ansible_vrf_3_id }}"
-      vrf_3_vlan_id: "{{ ansible_vrf_3_vlan_id }}"
-      deploy: "{{ ansible_deploy | bool }}"
+    test_data_setup:
       #----------------------------------  
       # config template for vrf setup
       #----------------------------------
-      setup_vrf_conf_template: "{{ ansible_setup_vrf_conf }}" 
-      setup_vrf_conf_file: "{{ role_path }}/files/dcnm_network_setup_vrf_conf.yaml"
+      vrf_conf_template: "dcnm_network_setup_vrf_conf.j2" 
+      vrf_conf_file: "{{ role_path }}/files/dcnm_network_setup_vrf_conf.yaml"
       #----------------------------------
   delegate_to: localhost
   tags: always
@@ -69,33 +56,33 @@
   cisco.dcnm.dcnm_fabric:
     state: query
     config:
-      - FABRIC_NAME: "{{ test_data.test_fabric }}"
-  register: verify_result
+      - FABRIC_NAME: "{{ test_data_common.fabric }}"
+  register: result
   tags: always
 
-- name: MAIN - DELETED - Remove all existing networks to start with a clean state
-  cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
-    state: deleted
+- name: MAIN - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.result[0].found == true
+    fail_msg: "Fabric '{{ test_data_common.fabric }}' not found."
   tags: always
-
 
 - name: MAIN - Create VRF Config File using J2 Template
   ansible.builtin.template:
-    src: "{{ test_data.setup_vrf_conf_template }}"
-    dest: "{{ test_data.setup_vrf_conf_file }}"
+    src: "{{ test_data_setup.vrf_conf_template }}"
+    dest: "{{ test_data_setup.vrf_conf_file }}"
   delegate_to: localhost
   tags: always
 
 - name: MAIN - Load VRF Configuration
   ansible.builtin.set_fact:
-    dcnm_network_setup_vrf_conf: "{{ lookup('file', '{{ test_data.setup_vrf_conf_file }}') | from_yaml }}"
+    dcnm_network_setup_vrf_conf: "{{ lookup('file', '{{ test_data_setup.vrf_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: always
 
 - name: MAIN - OVERRIDDEN - Create vrfs required for this test and remove all other vrfs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden
     config: "{{ dcnm_network_setup_vrf_conf }}"
   tags: always
@@ -126,11 +113,10 @@
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
-
   tags: always
 
 - name: MAIN - DELETED - Clean Up Any Existing VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
   tags: always

@@ -15,128 +15,87 @@
 ##############################################
 - name: DELETED - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
-    test_data:
-      # Resources
-      #------------------------------------------
-      test_fabric: "{{ ansible_test_fabric }}"
-      sw1: "{{ ansible_switch1 }}"
-      sw2: "{{ ansible_switch2 }}"
-      sw1_int_1: "{{ ansible_sw1_int1 }}"
-      sw1_int_2: "{{ ansible_sw1_int2 }}"
-      sw2_int_1: "{{ ansible_sw2_int1 }}"
-      sw2_int_2: "{{ ansible_sw2_int2 }}"
-      sw2_int_3: "{{ ansible_sw2_int3 }}"
-      sw2_int_4: "{{ ansible_sw2_int4 }}"
-      net1: "{{ ansible_net1 }}"
-      net1_net_id: "{{ ansible_net1_net_id }}"
-      net1_default_net_template: "{{ ansible_net1_default_net_template }}"
-      net1_net_extension_template: "{{ ansible_net1_net_extension_template }}"
-      net1_vlan_id: "{{ ansible_net1_vlan_id }}"
-      net1_gw_ip_subnet: "{{ ansible_net1_gw_ip_subnet }}"
-      net1_vrf: "{{ ansible_net1_vrf }}"
-      net2: "{{ ansible_net2 }}"
-      net2_net_id: "{{ ansible_net2_net_id }}"
-      net2_default_net_template: "{{ ansible_net2_default_net_template }}"
-      net2_net_extension_template: "{{ ansible_net2_net_extension_template }}"
-      net2_vlan_id: "{{ ansible_net2_vlan_id }}"
-      net2_gw_ip_subnet: "{{ ansible_net2_gw_ip_subnet }}"
-      net2_vrf: "{{ ansible_net2_vrf }}"
-      deploy: "{{ ansible_deploy | bool }}"
+    test_data_deleted:
       #----------------------------------  
       # config templates and auto generated file location for test cases
       #----------------------------------
       # COMMON - Create, Attach and Deploy Single Network with multiple switch Attach
-      deleted_net1_conf_template: "{{ ansible_deleted_net1_conf }}"
-      deleted_net1_conf_file: "{{ role_path }}/files/dcnm_network_deleted_net1_conf.yaml"
+      net1_conf_template: "deleted/dcnm_network_deleted_net1_conf.j2"
+      net1_conf_file: "{{ role_path }}/files/dcnm_network_deleted_net1_conf.yaml"
       # TC1 - Delete Single Network with deleted state
-      deleted_net2_conf_template: "{{ ansible_deleted_net2_conf }}"
-      deleted_net2_conf_file: "{{ role_path }}/files/dcnm_network_deleted_net2_conf.yaml"
+      net2_conf_template: "deleted/dcnm_network_deleted_net2_conf.j2"
+      net2_conf_file: "{{ role_path }}/files/dcnm_network_deleted_net2_conf.yaml"
       # TC2 - Delete Single Network with deleted state and verify other network is still there
-      deleted_double_net_conf_template: "{{ ansible_deleted_double_net_conf }}"
-      deleted_double_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_double_net_conf.yaml"
+      double_net_conf_template: "deleted/dcnm_network_deleted_double_net_conf.j2"
+      double_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_double_net_conf.yaml"
       # TC4 - Create L2 only networks along with all dhcp, arp options
-      deleted_l2only_net_conf_template: "{{ ansible_deleted_l2only_net_conf }}"
-      deleted_l2only_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_l2only_net_conf.yaml"
+      l2only_net_conf_template: "deleted/dcnm_network_deleted_l2only_net_conf.j2"
+      l2only_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_l2only_net_conf.yaml"
       # TC5 - Create a L2 only and L3 networks along with all dhcp, arp options
-      deleted_l2_l3_net_conf_template: "{{ ansible_deleted_l2_l3_net_conf }}"
-      deleted_l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_l2_l3_net_conf.yaml"
+      l2_l3_net_conf_template: "deleted/dcnm_network_deleted_l2_l3_net_conf.j2"
+      l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_l2_l3_net_conf.yaml"
   delegate_to: localhost
-  tags: deleted
-
-- name: DELETED - QUERY - Verify Fabric Deployment
-  cisco.dcnm.dcnm_fabric:
-    state: query
-    config:
-      - FABRIC_NAME: "{{ test_data.test_fabric }}"
-  tags: deleted
-
-
-##############################################
-##            Reseting the Fabric           ##
-##############################################
-
-- name: DELETED - setup - Clean up any existing networks
-  cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
-    state: deleted
-    config:
-      - net_name: "{{ test_data.net1 }}"
-        deploy: "{{ test_data.deploy }}"
-      - net_name: "{{ test_data.net2 }}"
-        deploy: "{{ test_data.deploy }}"
   tags: deleted
 
 ##############################################
 ## Create Module Payloads using J2 Template ##
 ##############################################
+
 - name: DELETED - COMMON - Create Module Payloads using J2 Template
   ansible.builtin.template:
-    src: "{{ test_data.deleted_net1_conf_template }}"
-    dest: "{{ test_data.deleted_net1_conf_file }}"
+    src: "{{ test_data_deleted.net1_conf_template }}"
+    dest: "{{ test_data_deleted.net1_conf_file }}"
   delegate_to: localhost
   tags: deleted
 
 - name: DELETED - TC1 - Create Module Payloads using J2 Template
   ansible.builtin.template:
-    src: "{{ test_data.deleted_net2_conf_template }}"
-    dest: "{{ test_data.deleted_net2_conf_file }}"
+    src: "{{ test_data_deleted.net2_conf_template }}"
+    dest: "{{ test_data_deleted.net2_conf_file }}"
   delegate_to: localhost
   tags: deleted
 
 - name: DELETED - TC2 - Create Module Payloads using J2 Template
   ansible.builtin.template:
-    src: "{{ test_data.deleted_double_net_conf_template }}"
-    dest: "{{ test_data.deleted_double_net_conf_file }}"
+    src: "{{ test_data_deleted.double_net_conf_template }}"
+    dest: "{{ test_data_deleted.double_net_conf_file }}"
   delegate_to: localhost
   tags: deleted
 
 - name: DELETED - TC4 - Create Module Payloads using J2 Template
   ansible.builtin.template:
-    src: "{{ test_data.deleted_l2only_net_conf_template }}"
-    dest: "{{ test_data.deleted_l2only_net_conf_file }}"
+    src: "{{ test_data_deleted.l2only_net_conf_template }}"
+    dest: "{{ test_data_deleted.l2only_net_conf_file }}"
   delegate_to: localhost
   tags: deleted
 
 - name: DELETED - TC5 - Create Module Payloads using J2 Template
   ansible.builtin.template:
-    src: "{{ test_data.deleted_l2_l3_net_conf_template }}"
-    dest: "{{ test_data.deleted_l2_l3_net_conf_file }}"
+    src: "{{ test_data_deleted.l2_l3_net_conf_template }}"
+    dest: "{{ test_data_deleted.l2_l3_net_conf_file }}"
   delegate_to: localhost
   tags: deleted
 
 ###############################################
 ###                DELETED                   ##
 ###############################################
+
 # TC1
 - name: DELETED - TC1 - Load Network 1 Config File
   ansible.builtin.set_fact:
-    dcnm_network_deleted_net1_conf: "{{ lookup('file', '{{ test_data.deleted_net1_conf_file }}') | from_yaml }}"
+    dcnm_network_deleted_net1_conf: "{{ lookup('file', '{{ test_data_deleted.net1_conf_file }}') | from_yaml }}"
   delegate_to: localhost
+  tags: deleted
+
+- name: DELETED - TC1 - DELETED - Delete all the networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
   tags: deleted
 
 - name: DELETED - TC1 - MERGED - Create, Attach and Deploy Single Network with multiple switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_deleted_net1_conf }}"
   register: result
@@ -151,23 +110,22 @@
 - name: DELETED - TC1 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC1 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_net1_conf_file }}"
+    config_path: "{{ test_data_deleted.net1_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   delegate_to: localhost
   tags: deleted
 
 
-- name: DELETED - TC1 - Delete Single Network with deleted state
+- name: DELETED - TC1 - DELETED - Delete Single Network with deleted state
   cisco.dcnm.dcnm_network: &conf
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config: "{{ dcnm_network_deleted_net1_conf }}"
   register: result
@@ -182,26 +140,26 @@
 - name: DELETED - TC1 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC1 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_net1_conf_file }}"
+    config_path: "{{ test_data_deleted.net1_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
     check_deleted: true
-  register: result
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - conf - Idempotence
+- name: DELETED - TC1 - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf
   register: result
   tags: deleted
 
-- assert:
+- name: DELETED - TC1 - ASSERT - Check changed flag is false
+  assert:
     that:
     - result.changed == false
     - result.diff|length == 0
@@ -211,19 +169,19 @@
 # TC2
 - name: DELETED - TC2 - Load Double Network Config File
   ansible.builtin.set_fact:
-    dcnm_network_deleted_double_net_conf: "{{ lookup('file', '{{ test_data.deleted_double_net_conf_file }}') | from_yaml }}"
+    dcnm_network_deleted_double_net_conf: "{{ lookup('file', '{{ test_data_deleted.double_net_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: deleted
 
 - name: DELETED - TC2 - Load Network 2 Config File
   ansible.builtin.set_fact:
-    dcnm_network_deleted_net2_conf: "{{ lookup('file', '{{ test_data.deleted_net2_conf_file }}') | from_yaml }}"
+    dcnm_network_deleted_net2_conf: "{{ lookup('file', '{{ test_data_deleted.net2_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - TC2 - Create, Attach and Deploy Multiple Network with single switch Attach
+- name: DELETED - TC2 - MERGED - Create, Attach and Deploy Multiple Network with single switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_deleted_double_net_conf }}"
   register: result
@@ -238,22 +196,21 @@
 - name: DELETED - TC2 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC2 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_double_net_conf_file }}"
+    config_path: "{{ test_data_deleted.double_net_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - TC2 - Delete Single Network with deleted state and verify other network is still there
+- name: DELETED - TC2 - DELETED - Delete Single Network with deleted state and verify other network is still there
   cisco.dcnm.dcnm_network: &conf1
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config: "{{ dcnm_network_deleted_net2_conf }}"
   register: result
@@ -268,26 +225,24 @@
 - name: DELETED - TC2 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC1 - VALIDITY CHECK - Verify network is deleted in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_net2_conf_file }}"
+    config_path: "{{ test_data_deleted.net2_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
     check_deleted: true
-  register: result
   delegate_to: localhost
   tags: deleted
 
 - name: DELETED - TC2 - VALIDITY CHECK - Verify other network is still present in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_net1_conf_file }}"
+    config_path: "{{ test_data_deleted.net1_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   delegate_to: localhost
   tags: deleted
 
@@ -306,7 +261,7 @@
 
 - name: DELETED - TC2 - Delete the other Single Network with deleted state
   cisco.dcnm.dcnm_network: &conf2
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config: "{{ dcnm_network_deleted_net1_conf }}"
   register: result
@@ -318,20 +273,19 @@
     - 'result.changed == true'
   tags: deleted
 
-- name: DELETED - TC1 - QUERY - Get network state in NDFC
+- name: DELETED - TC2 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
-- name: DELETED - TC1 - VALIDITY CHECK - Verify all networks are deleted in NDFC
+- name: DELETED - TC2 - VALIDITY CHECK - Verify all networks are deleted in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
     config_path: ""
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
     check_deleted: true
-  register: result
   delegate_to: localhost
   tags: deleted
 
@@ -350,9 +304,9 @@
 
 # TC3
 
-- name: DELETED - TC3 - Create, Attach and Deploy Multiple Network with single switch Attach
+- name: DELETED - TC3 - MERGED - Create, Attach and Deploy Multiple Network with single switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_deleted_double_net_conf }}"
   tags: deleted
@@ -360,29 +314,34 @@
 - name: DELETED - TC3 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC3 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_double_net_conf_file }}"
+    config_path: "{{ test_data_deleted.double_net_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
+  tags: deleted
+
+- name: DELETED - TC3 - DELETED - Delete all the networks
+  cisco.dcnm.dcnm_network: &conf3
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
   register: result
   tags: deleted
 
-- name: DELETED - TC3 - Delete all the networks
-  cisco.dcnm.dcnm_network: &conf3
-    fabric: "{{ test_fabric }}"
-    state: deleted
-  register: result
+- name: DELETED - TC3 - ASSERT - Check changed flag is true
+  assert:
+    that:
+    - 'result.changed == true'
   tags: deleted
 
 - name: DELETED - TC3 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
@@ -390,9 +349,8 @@
   cisco.dcnm.tests.integration.ndfc_network_validate:
     config_path: ""
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
     check_deleted: true
-  register: result
   tags: deleted
 
 - name: DELETED - TC3 - conf3 - Idempotence
@@ -412,13 +370,13 @@
 # TC4
 - name: DELETED - TC4 - Load L2 only Network Config File
   ansible.builtin.set_fact:
-    dcnm_network_deleted_l2only_net_conf: "{{ lookup('file', '{{ test_data.deleted_l2only_net_conf_file }}') | from_yaml }}"
+    dcnm_network_deleted_l2only_net_conf: "{{ lookup('file', '{{ test_data_deleted.l2only_net_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - TC4 - Create L2 only networks along with all dhcp, arp options
+- name: DELETED - TC4 - MERGED - Create L2 only networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_deleted_l2only_net_conf }}"
 
@@ -434,28 +392,27 @@
 - name: DELETED - TC4 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC4 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_l2only_net_conf_file }}"
+    config_path: "{{ test_data_deleted.l2only_net_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - TC4 - Clean up l2_only existing network
+- name: DELETED - TC4 - DELETED - Clean up l2_only existing network
   cisco.dcnm.dcnm_network: &conf4
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config: "{{ dcnm_network_deleted_l2only_net_conf }}"
   register: result
   tags: deleted
 
-- name: DELETED - TC4 - assert - Check changed flag is true
+- name: DELETED - TC4 - ASSERT - Check changed flag is true
   assert:
     that:
     - 'result.changed == true'
@@ -464,17 +421,16 @@
 - name: DELETED - TC4 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC4 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_l2only_net_conf_file }}"
+    config_path: "{{ test_data_deleted.l2only_net_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
     check_deleted: true
-  register: result
   delegate_to: localhost
   tags: deleted
 
@@ -483,7 +439,7 @@
   register: result
   tags: deleted
 
-- name: DELETED - TC4 - assert - Check changed flag is false
+- name: DELETED - TC4 - ASSERT - Check changed flag is false
   assert:
     that:
     - result.changed == false
@@ -492,19 +448,17 @@
   tags: deleted
 
 # TC5
-
 - name: DELETED - TC5 - Load L2 and L3 Network Config File
   ansible.builtin.set_fact:
-    dcnm_network_deleted_l2_l3_net_conf: "{{ lookup('file', '{{ test_data.deleted_l2_l3_net_conf_file }}') | from_yaml }}"
+    dcnm_network_deleted_l2_l3_net_conf: "{{ lookup('file', '{{ test_data_deleted.l2_l3_net_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - TC5 - Create a L2 only and L3 networks along with all dhcp, arp options
+- name: DELETED - TC5 - MERGED - Create a L2 only and L3 networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_deleted_l2_l3_net_conf }}"
-
   register: result
   tags: deleted
 
@@ -517,22 +471,21 @@
 - name: DELETED - TC5 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
 - name: DELETED - TC5 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.deleted_l2_l3_net_conf_file }}"
+    config_path: "{{ test_data_deleted.l2_l3_net_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   delegate_to: localhost
   tags: deleted
 
-- name: DELETED - Delete all the networks
+- name: DELETED - DELETED - Delete all the networks
   cisco.dcnm.dcnm_network: &conf5
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
   register: result
   tags: deleted
@@ -546,7 +499,7 @@
 - name: DELETED - TC5 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: deleted
 
@@ -554,9 +507,8 @@
   cisco.dcnm.tests.integration.ndfc_network_validate:
     config_path: ""
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
+    test_data: "{{ test_data_common }}"
     check_deleted: true
-  register: result
   delegate_to: localhost
   tags: deleted
 
@@ -576,7 +528,7 @@
 # TC6 - invalid configs
 - name: DELETED - TC6 -  Delete Single Network with no network name
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config:
     - net_name:
@@ -598,7 +550,7 @@
 
 - name: DELETED - TC6 - Delete Single Network with invalid network name which is not configured
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
     config:
     - net_name: invalid-name
@@ -622,8 +574,8 @@
 ###                 CLEAN-UP                 ##
 ###############################################
 
-- name: DELETED - Cleanup - remove networks
+- name: DELETED - END - remove networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
   tags: deleted

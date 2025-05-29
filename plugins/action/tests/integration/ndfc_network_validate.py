@@ -30,6 +30,53 @@ display = Display()
 
 class ActionModule(ActionBase):
 
+    def verify_deleted(self, results, check_deleted, expected_data, ndfc_data, config_path):
+        if not check_deleted:
+            return None
+        existing_networks = set()
+        for network in ndfc_data["response"]:
+            existing_networks.add(network["parent"]["networkName"])
+
+        if config_path == "":
+            # check for full delete
+            if not ndfc_data["failed"] and len(existing_networks) == 0:
+                results['msg'] = 'All networks are deleted'
+            else:
+                print("Networks still existing: ")
+                print(existing_networks)
+                results['failed'] = True
+                results['msg'] = 'Error: Expected full delete as config_path is empty but networks still exist.'
+                if ndfc_data["failed"]:
+                    results['msg'] += '\n\nError: ' + ndfc_data["error"]
+                return results
+            return results
+        # checks for a partial delete
+        deleted_networks = set()
+        for network in expected_data["response"]:
+            deleted_networks.add(network["parent"]["networkName"])
+
+        remaining_networks = existing_networks.intersection(deleted_networks)
+        if len(remaining_networks) > 0:
+            results['failed'] = True
+            print("Expected networks to be deleted: ")
+            print(deleted_networks)
+            print("\nNetworks present in NDFC: ")
+            print(existing_networks)
+            print("\nNetworks still not deleted: ")
+            print(remaining_networks)
+            results['msg'] = 'All networks are not deleted'
+            return results
+
+        print("Expected networks to be deleted: ")
+        print(deleted_networks)
+        print("\n\nNetworks present in NDFC: ")
+        print(existing_networks)
+        print("Networks still not deleted: ")
+        print(remaining_networks)
+        results['failed'] = False
+        results['msg'] = 'Provided networks are deleted'
+        return results
+
     def run(self, tmp=None, task_vars=None):
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
@@ -57,12 +104,12 @@ class ActionModule(ActionBase):
 
         config_path = self._task.args['config_path']
 
+        check_deleted = False
+
         if 'check_deleted' in self._task.args:
             check_deleted = self._task.args['check_deleted']
 
-        check_deleted = False
-
-        test_fabric = test_data['test_fabric']
+        test_fabric = test_data['fabric']
         if config_path != "":
             # only parse if config file exists
             expected_config_data = load_yaml_file(config_path)
@@ -72,55 +119,10 @@ class ActionModule(ActionBase):
 
         ndfc_data_parsed = DcnmNetworkQuerySchema.parse_obj(native_ndfc_data).dict(exclude_none=True)
 
-        if check_deleted:
-            results['failed'] = False
-            results['msg'] = ""
-            existing_networks = set()
-            for network in ndfc_data_parsed["response"]:
-                existing_networks.add(network["parent"]["networkName"])
+        if deleted_results := self.verify_deleted(results, check_deleted, expected_data_parsed, ndfc_data_parsed, config_path):
+            return deleted_results
 
-            if config_path == "":
-                # check for full delete
-                if not ndfc_data_parsed["failed"] and len(existing_networks) == 0:
-                    results['msg'] = 'All networks are deleted'
-                else:
-                    print("Networks still existing: ")
-                    print(existing_networks)
-                    results['failed'] = True
-                    results['msg'] = 'Error: Expected full delete as config_path is empty but networks still exist.'
-                    if ndfc_data_parsed["failed"]:
-                        results['msg'] += '\n\nError: ' + ndfc_data_parsed["error"]
-                    return results
-                return results
-
-            # checks for a partial delete
-            deleted_networks = set()
-            for network in expected_data_parsed["response"]:
-                deleted_networks.add(network["parent"]["networkName"])
-
-            remaining_networks = existing_networks.intersection(deleted_networks)
-            if len(remaining_networks) > 0:
-                results['failed'] = True
-                print("Expected networks to be deleted: ")
-                print(deleted_networks)
-                print("\nNetworks present in NDFC: ")
-                print(existing_networks)
-                print("\nNetworks still not deleted: ")
-                print(remaining_networks)
-                results['msg'] = 'All networks are not deleted'
-                return results
-
-            print("Expected networks to be deleted: ")
-            print(deleted_networks)
-            print("\n\nNetworks present in NDFC: ")
-            print(existing_networks)
-            print("Networks still not deleted: ")
-            print(remaining_networks)
-            results['failed'] = False
-            results['msg'] = 'Provided networks are deleted'
-            return results
-
-        # non deleted checking
+        # normal checking when check_delete is false
         validity = DeepDiff(
             expected_data_parsed,
             ndfc_data_parsed,
@@ -136,10 +138,7 @@ class ActionModule(ActionBase):
         processed_validity = process_deepdiff(validity, ignore_extra_fields=True)
         if processed_validity == {}:
             results['failed'] = False
-            results['msg'] = f'Data is valid. \n\n Expected data: \n\n{expected_data}\n\nActual data: \n\n{ndfc_data_parsed}'.format(
-                expected_data_parsed,
-                ndfc_data_parsed
-            )
+            results['msg'] = f'Data is valid. \n\n Expected data: \n\n{expected_data}\n\nActual data: \n\n{ndfc_data_parsed}'
         else:
             results['failed'] = True
             print("\n\nExpected: ")

@@ -15,106 +15,73 @@
 ##############################################
 - name: SANITY - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
-    test_data:
-      # Resources
-      #------------------------------------------
-      test_fabric: "{{ ansible_test_fabric }}"
-      sw1: "{{ ansible_switch1 }}"
-      sw2: "{{ ansible_switch2 }}"
-      sw1_int_1: "{{ ansible_sw1_int1 }}"
-      sw1_int_2: "{{ ansible_sw1_int2 }}"
-      sw2_int_3: "{{ ansible_sw2_int3 }}"
-      sw2_int_4: "{{ ansible_sw2_int4 }}"
-      sw2_int_5: "{{ ansible_sw2_int5 }}"
-      sw2_int_6: "{{ ansible_sw2_int6 }}"
-      net1: "{{ ansible_net1 }}"
-      net1_net_id: "{{ ansible_net1_net_id }}"
-      net1_default_net_template: "{{ ansible_net1_default_net_template }}"
-      net1_net_extension_template: "{{ ansible_net1_net_extension_template }}"
-      net1_vlan_id: "{{ ansible_net1_vlan_id }}"
-      net1_gw_ip_subnet: "{{ ansible_net1_gw_ip_subnet }}"
-      net1_vrf: "{{ ansible_net1_vrf }}"
-      net2: "{{ ansible_net2 }}"
-      net2_net_id: "{{ ansible_net2_net_id }}"
-      net2_default_net_template: "{{ ansible_net2_default_net_template }}"
-      net2_net_extension_template: "{{ ansible_net2_net_extension_template }}"
-      net2_vlan_id: "{{ ansible_net2_vlan_id }}"
-      net2_gw_ip_subnet: "{{ ansible_net2_gw_ip_subnet }}"
-      net2_vrf: "{{ ansible_net2_vrf }}"
-      deploy: "{{ ansible_deploy | bool }}"
+    test_data_sanity:
       #----------------------------------  
       # config templates and auto generated file location for test cases
       #----------------------------------
       # TC1 - MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
-      merged_conf_template: "{{ ansible_sanity_merged_conf }}" 
+      merged_conf_template: "sanity/dcnm_network_sanity_merged_conf.j2" 
       merged_conf_file: "{{ role_path }}/files/dcnm_network_sanity_merged_conf.yaml"
       # TC2 - OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
-      overridden_conf_template: "{{ ansible_sanity_overridden_conf }}"
+      overridden_conf_template: "sanity/dcnm_network_sanity_overridden_conf.j2"
       overridden_conf_file: "{{ role_path }}/files/dcnm_network_sanity_overridden_conf.yaml"
       # TC3 - REPLACED - Update Network using replace - Delete Attachments
-      replaced_conf_template: "{{ ansible_sanity_replaced_conf }}"
+      replaced_conf_template: "sanity/dcnm_network_sanity_replaced_conf.j2"
       replaced_conf_file: "{{ role_path }}/files/dcnm_network_sanity_replaced_conf.yaml"
       #----------------------------------
 
   delegate_to: localhost
   tags: sanity
 
-- name: SANITY - QUERY - Verify Fabric Deployment
-  cisco.dcnm.dcnm_fabric:
-    state: query
-    config:
-      - FABRIC_NAME: "{{ test_data.test_fabric }}"
-  tags: sanity
-
-
-##############################################
-##            Reseting the Fabric           ##
-##############################################
-
-- name: SANITY - DELETED - Clean up any existing networks
-  cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
-    state: deleted
-  tags: sanity
-
-
 ##############################################
 ## Create Module Payloads using J2 Template ##
 ##############################################
+
 - name: SANITY - TC1 - Create Network Config File using J2 Template (Merged)
   ansible.builtin.template:
-    src: "{{ test_data.merged_conf_template }}"
-    dest: "{{ test_data.merged_conf_file }}"
+    src: "{{ test_data_sanity.merged_conf_template }}"
+    dest: "{{ test_data_sanity.merged_conf_file }}"
   delegate_to: localhost
   tags: sanity
 
 - name: SANITY - TC2 - Create Network Config File using J2 Template (Overridden)
   ansible.builtin.template:
-    src: "{{ test_data.overridden_conf_template }}"
-    dest: "{{ test_data.overridden_conf_file }}"
+    src: "{{ test_data_sanity.overridden_conf_template }}"
+    dest: "{{ test_data_sanity.overridden_conf_file }}"
   delegate_to: localhost
   tags: sanity
 
 - name: SANITY - TC3 - Create Network Config File using J2 Template (Replaced)
   ansible.builtin.template:
-    src: "{{ test_data.replaced_conf_template }}"
-    dest: "{{ test_data.replaced_conf_file }}"
+    src: "{{ test_data_sanity.replaced_conf_template }}"
+    dest: "{{ test_data_sanity.replaced_conf_file }}"
   delegate_to: localhost
   tags: sanity
 
 ##############################################
-##                  Merged                  ##
+##                  DELETED                 ##
+##############################################
+
+- name: SANITY - DELETED - Clean up any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: sanity
+
+
+##############################################
+##                  MERGED                  ##
 ##############################################
 
 - name: SANITY - TC1 - Load Network Config File
   ansible.builtin.set_fact:
-    dcnm_network_sanity_merged_conf: "{{ lookup('file', '{{ test_data.merged_conf_file }}') | from_yaml }}"
+    dcnm_network_sanity_merged_conf: "{{ lookup('file', '{{ test_data_sanity.merged_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: sanity
 
 - name: SANITY - TC1 - MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_sanity_merged_conf }}"
   register: result
@@ -129,31 +96,30 @@
 - name: SANITY - TC1 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: sanity
 
 - name: SANITY - TC1 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.merged_conf_file }}"
+    config_path: "{{ test_data_sanity.merged_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   tags: sanity
 
 ##############################################
 ##                OVERRIDDEN                ##
 ##############################################
 
-- name: SANITY - TC2 - OVERRIDDEN - Load Network Config File
+- name: SANITY - TC2 - Load Network Config File
   ansible.builtin.set_fact:
-    dcnm_network_sanity_overridden_conf: "{{ lookup('file', '{{ test_data.overridden_conf_file }}') | from_yaml }}"
+    dcnm_network_sanity_overridden_conf: "{{ lookup('file', '{{ test_data_sanity.overridden_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: sanity
 
 - name: SANITY - TC2 - OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network: &conf1
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden
     config: "{{ dcnm_network_sanity_overridden_conf }}"
   register: result
@@ -168,16 +134,15 @@
 - name: SANITY - TC2 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: sanity
 
 - name: SANITY - TC2 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.overridden_conf_file }}"
+    config_path: "{{ test_data_sanity.overridden_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   tags: sanity
 
 - name: SANITY - TC2 - OVERRIDDEN - conf1 - Idempotence
@@ -197,25 +162,16 @@
 ##                 REPLACED                 ##
 ##############################################
 
-- name: SANITY - TC3 - REPLACED - Load Network Config File
+- name: SANITY - TC3 - Load Network Config File
   ansible.builtin.set_fact:
-    dcnm_network_sanity_replaced_conf: "{{ lookup('file', '{{ test_data.replaced_conf_file }}') | from_yaml }}"
+    dcnm_network_sanity_replaced_conf: "{{ lookup('file', '{{ test_data_sanity.replaced_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: sanity
 
-- name: SANITY - TC3 - setup - Clean up any existing networks
+- name: SANITY - TC3 - OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
-    state: deleted
-    config: 
-      - net_name: "{{ test_data.net1 }}"
-        deploy: "{{ test_data.deploy }}"
-  tags: sanity
-
-- name: SANITY - TC3 - MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
-  cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
-    state: merged
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
     config: "{{ dcnm_network_sanity_merged_conf }}"
   register: result
   tags: sanity
@@ -229,26 +185,27 @@
 - name: SANITY - TC3 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: sanity
 
 - name: SANITY - TC3 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.merged_conf_file }}"
+    config_path: "{{ test_data_sanity.merged_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   tags: sanity
 
 - name: SANITY - TC3 - REPLACED - Update Network using replace - Delete Attachments
   cisco.dcnm.dcnm_network: &conf2
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: replaced
     config: "{{ dcnm_network_sanity_replaced_conf }}"
   register: result
   tags: sanity
 
+# This assert is failing
+# This is a bug, the changed flag should be true but is returned as false
 # - name: SANITY - TC3 - ASSERT - Check changed flag is true
 #   assert:
 #     that:
@@ -258,16 +215,15 @@
 - name: SANITY - TC3 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
     state: query
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
   register: verify_result
   tags: sanity
 
 - name: SANITY - TC3 - VALIDITY CHECK - Verify network state in NDFC
   cisco.dcnm.tests.integration.ndfc_network_validate:
-    config_path: "{{ test_data.replaced_conf_file }}"
+    config_path: "{{ test_data_sanity.replaced_conf_file }}"
     ndfc_data: "{{ verify_result }}"
-    test_data: "{{ test_data }}"
-  register: result
+    test_data: "{{ test_data_common }}"
   tags: sanity
 
 - name: SANITY - TC3 - REPLACED - conf1 - Idempotence
@@ -283,8 +239,8 @@
     - result.response|length == 0
   tags: sanity
 
-- name: SANITY - end - Clean up any existing networks
+- name: SANITY - END - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_data.test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
   tags: sanity

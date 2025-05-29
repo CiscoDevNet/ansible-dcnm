@@ -4,4 +4,5 @@ pexpect
 yamllint
 pytest-xdist
 coverage==4.5.4
-deepdiff
+deepdiff==8.5.0
+pydantic==2.11.4

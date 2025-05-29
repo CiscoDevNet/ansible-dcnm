@@ -1,10 +1,10 @@
 from __future__ import absolute_import, division, print_function
-from typing import List, Optional
+from typing import List, Optional, Annotated
 from ansible.module_utils.six import raise_from
 from ansible.errors import AnsibleError
 
 try:
-    from pydantic import BaseModel, model_validator
+    from pydantic import BaseModel, model_validator, BeforeValidator
 except ImportError as imp_exc:
     PYDANTIC_IMPORT_ERROR = imp_exc
 else:
@@ -24,27 +24,40 @@ if PYDANTIC_IMPORT_ERROR:
 # eg: in one network, vrf is defined, in the other it is not
 
 
+def coerce_int_to_str(data):
+    """Transform input int to str, return other types as is"""
+    if isinstance(data, int):
+        return str(data)
+    return data
+
+
+CoercedStr = Annotated[str, BeforeValidator(coerce_int_to_str)]
+
+
 class DcnmNetworkQuerySchema(BaseModel):
 
     class SwitchAttach(BaseModel):
         ipAddress: Optional[str] = None
         portNames: Optional[str] = None
         fabricName: Optional[str] = None
-        networkId: Optional[int] = None
+        networkId: Optional[CoercedStr] = None
         networkName: Optional[str] = None
-        vlanId: Optional[int] = None
+        vlanId: Optional[CoercedStr] = None
         lanAttachState: Optional[str] = None
 
         @model_validator(mode="after")
         @classmethod
         def sort_portNames(cls, values):
             if getattr(values, "portNames") is not None:
-                setattr(values, "portNames", ",".join(sorted(getattr(values, "portNames").split(","))))
+                if getattr(values, "portNames") == "":
+                    setattr(values, "portNames", None)
+                else:
+                    setattr(values, "portNames", ",".join(sorted(getattr(values, "portNames").split(","))))
             return values
 
     class NetworkTemplateConfig(BaseModel):
         gatewayIpAddress: Optional[str] = None
-        vlanId: Optional[int] = None
+        vlanId: Optional[CoercedStr] = None
         vrfName: Optional[str] = "NA"
         dhcpServerAddr1: Optional[str] = None
         dhcpServerAddr2: Optional[str] = None
@@ -54,13 +67,13 @@ class DcnmNetworkQuerySchema(BaseModel):
         vrfDhcp3: Optional[str] = None
         surpressArp: Optional[bool] = None
         isLayer2Only: Optional[bool] = False
-        mtu: Optional[int] = None
+        mtu: Optional[CoercedStr] = ""
         vlanName: Optional[str] = None
         intfDescription: Optional[str] = None
 
     class Parent(BaseModel):
         fabric: Optional[str] = None
-        networkId: Optional[int] = None
+        networkId: Optional[CoercedStr] = None
         networkName: Optional[str] = None
         networkTemplate: Optional[str] = None
         networkTemplateConfig: Optional["DcnmNetworkQuerySchema.NetworkTemplateConfig"] = None
@@ -81,7 +94,8 @@ class DcnmNetworkQuerySchema(BaseModel):
     failed: Optional[bool] = None
     response: Optional[List[Network]] = None
 
-    def yaml_config_to_dict(self, expected_config_data, test_fabric):
+    @classmethod
+    def yaml_config_to_dict(cls, expected_config_data, test_fabric):
         expected_data = {}
         expected_data["failed"] = False
         expected_data["response"] = []
