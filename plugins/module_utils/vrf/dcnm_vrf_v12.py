@@ -1344,7 +1344,8 @@ class NdfcVrf12:
 
         vrf_object_models = self.get_controller_vrf_object_models()
 
-        msg = f"vrf_objects_models. length {len(vrf_object_models)}."
+        msg = f"vrf_object_models: length {len(vrf_object_models)}."
+        self.log.debug(msg)
         self.log_list_of_models(vrf_object_models)
 
         if not vrf_object_models:
@@ -2468,7 +2469,7 @@ class NdfcVrf12:
 
         vrf_object_models = self.get_controller_vrf_object_models()
 
-        msg = f"vrf_object_models: length {len(vrf_object_models)}"
+        msg = f"vrf_object_models: length {len(vrf_object_models)}."
         self.log.debug(msg)
         self.log_list_of_models(vrf_object_models)
 
