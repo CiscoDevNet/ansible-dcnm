@@ -47,7 +47,7 @@ from ...module_utils.network.dcnm.dcnm import (
     get_sn_fabric_dict,
 )
 from .controller_response_generic_v12 import ControllerResponseGenericV12
-from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12
+from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
@@ -2271,13 +2271,13 @@ class NdfcVrf12:
             self.result["response"].append(msg)
             self.module.fail_json(msg=self.result)
 
-    def get_vrf_lan_attach_list(self, vrf_name: str) -> ControllerResponseVrfsAttachmentsV12:
+    def get_controller_vrf_attachment_models(self, vrf_name: str) -> list[VrfsAttachmentsDataItem]:
         """
         ## Summary
 
         Given a vrf_name, query the controller for the attachment list
-        for that vrf and return a ControllerResponseVrfsAttachmentsV12
-        object containing the attachment list.
+        for that vrf and return a list of VrfsAttachmentsDataItem
+        models.
 
         ## Raises
 
@@ -2320,7 +2320,7 @@ class NdfcVrf12:
             msg2 = f"{msg0} Unable to find attachments for "
             msg2 += f"vrf {vrf_name} under fabric {self.fabric}"
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-        return response
+        return response.data
 
     def get_diff_query_for_vrfs_in_want(self, vrf_object_models: list[VrfObjectV12]) -> list[dict]:
         """
@@ -2355,13 +2355,17 @@ class NdfcVrf12:
                 continue
 
             item = {"parent": vrf.model_dump(by_alias=True), "attach": []}
-            response = self.get_vrf_lan_attach_list(vrf.vrfName)
+            vrf_attachment_models = self.get_controller_vrf_attachment_models(vrf.vrfName)
 
-            for vrf_attach in response.data:
-                if want_c["vrfName"] != vrf_attach.vrf_name or not vrf_attach.lan_attach_list:
+            msg = f"caller: {caller}. vrf_attachment_models: length {len(vrf_attachment_models)}."
+            self.log.debug(msg)
+            self.log_list_of_models(vrf_attachment_models)
+
+            for vrf_attach_model in vrf_attachment_models:
+                if want_c["vrfName"] != vrf_attach_model.vrf_name or not vrf_attach_model.lan_attach_list:
                     continue
 
-                for attach in vrf_attach.lan_attach_list:
+                for attach in vrf_attach_model.lan_attach_list:
                     params = {
                         "fabric": self.fabric,
                         "serialNumber": attach.switch_serial_no,
@@ -2425,8 +2429,13 @@ class NdfcVrf12:
 
             item = {"parent": vrf.model_dump(by_alias=True), "attach": []}
 
-            response = self.get_vrf_lan_attach_list(vrf.vrfName)
-            for vrf_attach in response.data:
+            vrf_attachment_models = self.get_controller_vrf_attachment_models(vrf.vrfName)
+
+            msg = f"caller: {caller}. vrf_attachment_models: length {len(vrf_attachment_models)}."
+            self.log.debug(msg)
+            self.log_list_of_models(vrf_attachment_models)
+
+            for vrf_attach in vrf_attachment_models:
                 if not vrf_attach.lan_attach_list:
                     continue
                 attach_list = vrf_attach.lan_attach_list
