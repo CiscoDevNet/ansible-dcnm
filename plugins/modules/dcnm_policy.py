@@ -1145,11 +1145,15 @@ class DcnmPolicy:
         return resp
 
     def dcnm_policy_delete_policy(self, policy, mark_del):
-
         if mark_del is True:
-            path = self.paths["POLICY_DELETE"].format(policy["policyId"])
-            json_payload = ""
-            command = "DELETE"
+            if policy["templateName"] == "switch_freeform":
+                path = self.paths["POLICY_DELETE"].format(policy["policyId"])
+                json_payload = ""
+                command = "DELETE"
+            else:
+                path = self.paths["POLICY_MARK_DELETE"].format(policy["policyId"])
+                json_payload = ""
+                command = "PUT"
         else:
             path = self.paths["POLICY_WITH_POLICY_ID"].format(policy)
             json_payload = ""
