@@ -1902,8 +1902,8 @@ class NdfcVrf12:
                     continue
                 attach_found = True
                 diff, deploy_vrf_bool = self.diff_for_attach_deploy(
-                    want_attach_list = want_attach["lanAttachList"],
-                    have_attach_list = have_attach["lanAttachList"],
+                    want_attach_list=want_attach["lanAttachList"],
+                    have_attach_list=have_attach["lanAttachList"],
                     replace=replace,
                 )
                 if diff:
