@@ -49,7 +49,7 @@ from ...module_utils.network.dcnm.dcnm import (
 from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
-from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem
+from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
@@ -1108,7 +1108,7 @@ class NdfcVrf12:
 
         return response
 
-    def get_vrf_lite_objects_model(self, attach: dict) -> ControllerResponseVrfsSwitchesV12:
+    def get_list_of_vrfs_switches_data_item_model(self, attach: dict) -> list[VrfsSwitchesDataItem]:
         """
         # Summary
 
@@ -1148,60 +1148,11 @@ class NdfcVrf12:
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
 
-        msg = "Returning ControllerResponseVrfsSwitchesV12: "
-        msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        msg = f"Returning list of VrfSwitchesDataItem. length {len(response.data)}."
         self.log.debug(msg)
+        self.log_list_of_models(response.data)
 
-        return copy.deepcopy(response)
-
-    def get_vrf_lite_objects(self, attach: dict) -> dict:
-        """
-        # Summary
-
-        Retrieve the IP/Interface that is connected to the switch with serial_number
-
-        attach must contain at least the following keys:
-
-        - fabric: The fabric to search
-        - serialNumber: The serial_number of the switch
-        - vrfName: The vrf to search
-        """
-        caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}"
-        self.log.debug(msg)
-
-        msg = f"attach: {json.dumps(attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        verb = "GET"
-        path = self.paths["GET_VRF_SWITCH"].format(attach["fabric"], attach["vrfName"], attach["serialNumber"])
-        msg = f"verb: {verb}, path: {path}"
-        self.log.debug(msg)
-        lite_objects = dcnm_send(self.module, verb, path)
-
-        if lite_objects is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{caller}: Unable to retrieve lite_objects."
-            raise ValueError(msg)
-
-        try:
-            response = ControllerResponseVrfsSwitchesV12(**lite_objects)
-        except pydantic.ValidationError as error:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"{caller}: Unable to parse response: {error}"
-            raise ValueError(msg) from error
-
-        msg = "ControllerResponseVrfsSwitchesV12: "
-        msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        msg = f"Returning lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        return copy.deepcopy(lite_objects)
+        return response.data
 
     def populate_have_create(self, vrf_objects_model: ControllerResponseVrfsV12) -> None:
         """
@@ -1340,18 +1291,18 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        lite_objects = self.get_vrf_lite_objects_model(attach)
-        if not lite_objects.data:
+        lite_objects = self.get_list_of_vrfs_switches_data_item_model(attach)
+        if not lite_objects:
             msg = "No vrf_lite_objects found. Update freeformConfig and return."
             self.log.debug(msg)
             attach["freeformConfig"] = ""
             return copy.deepcopy(attach)
 
-        msg = "lite_objects: "
-        msg += f"{json.dumps(lite_objects.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        msg = f"lite_objects: length {len(lite_objects)}."
         self.log.debug(msg)
+        self.log_list_of_models(lite_objects)
 
-        for sdl in lite_objects.data:
+        for sdl in lite_objects:
             for epv in sdl.switch_details_list:
                 if not epv.extension_values:
                     attach["freeformConfig"] = ""
@@ -2417,17 +2368,17 @@ class NdfcVrf12:
                         "vrfName": attach.vrf_name,
                     }
 
-                    lite_objects = self.get_vrf_lite_objects_model(params)
+                    lite_objects = self.get_list_of_vrfs_switches_data_item_model(params)
 
-                    msg = f"Caller {caller}. Called get_vrf_lite_objects_model with params: "
+                    msg = f"Caller {caller}. Called get_list_of_vrfs_switches_data_item_model with params: "
                     msg += f"{json.dumps(params, indent=4, sort_keys=True)}"
                     self.log.debug(msg)
-                    msg = f"Caller {caller}. lite_objects: "
-                    msg += f"{lite_objects.model_dump(by_alias=True)}"
+                    msg = f"Caller {caller}. lite_objects: length: {len(lite_objects)}."
                     self.log.debug(msg)
+                    self.log_list_of_models(lite_objects)
 
-                    if lite_objects.data:
-                        item["attach"].append(lite_objects.data[0].model_dump(by_alias=True))
+                    if lite_objects:
+                        item["attach"].append(lite_objects[0].model_dump(by_alias=True))
             query.append(item)
 
         msg = f"Caller {caller}. Returning query: "
@@ -2487,16 +2438,18 @@ class NdfcVrf12:
                         "serialNumber": attach.switch_serial_no,
                         "vrfName": attach.vrf_name,
                     }
-                    msg = f"Calling get_vrf_lite_objects_model with: {params}"
+                    msg = f"Calling get_list_of_vrfs_switches_data_item_model with: {params}"
                     self.log.debug(msg)
 
-                    lite_objects = self.get_vrf_lite_objects_model(params)
+                    lite_objects = self.get_list_of_vrfs_switches_data_item_model(params)
 
-                    msg = f"lite_objects: {lite_objects.model_dump(by_alias=True)}"
+                    msg = f"Caller {caller}. lite_objects: length: {len(lite_objects)}."
                     self.log.debug(msg)
-                    if not lite_objects.data:
+                    self.log_list_of_models(lite_objects)
+
+                    if not lite_objects:
                         continue
-                    item["attach"].append(lite_objects.data[0].model_dump(by_alias=True))
+                    item["attach"].append(lite_objects[0].model_dump(by_alias=True))
                 query.append(item)
 
         msg = f"Returning query: {query}"
@@ -3114,21 +3067,20 @@ class NdfcVrf12:
                 msg += f"serial number: {serial_number}"
                 self.module.fail_json(msg=msg)
 
-            lite_objects_model = self.get_vrf_lite_objects_model(vrf_attach)
+            lite_objects_model = self.get_list_of_vrfs_switches_data_item_model(vrf_attach)
 
             msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += "lite_objects: "
-            msg += f"{json.dumps(lite_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+            msg += f"lite_objects: length {len(lite_objects_model)}."
+            self.log_list_of_models(lite_objects_model)
 
-            if not lite_objects_model.data:
+            if not lite_objects_model:
                 msg = f"ip_address {ip_address} ({serial_number}), "
                 msg += "No lite objects. Append vrf_attach and continue."
                 self.log.debug(msg)
                 new_lan_attach_list.append(vrf_attach)
                 continue
 
-            lite = lite_objects_model.data[0].switch_details_list[0].extension_prototype_values
+            lite = lite_objects_model[0].switch_details_list[0].extension_prototype_values
             msg = f"ip_address {ip_address} ({serial_number}), "
             msg += f"lite extension_prototype_values contains {len(lite)} items: "
             self.log.debug(msg)
