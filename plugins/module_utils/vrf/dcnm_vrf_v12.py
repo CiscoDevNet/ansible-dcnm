@@ -1325,37 +1325,52 @@ class NdfcVrf12:
 
     def _update_vrf_lite_extension(self, attach: dict) -> dict:
         """
-        Return updated attach dict with VRF Lite extension values if present.
+        # Summary
 
-        Update freeformConfig, if present, else set to an empty string.
+        - Return updated attach dict with VRF Lite extension values if present.
+        - Update freeformConfig, if present, else set to an empty string.
+
+        ## Raises
+
+        - None
         """
-        lite_objects = self.get_vrf_lite_objects(attach)
-        if not lite_objects.get("DATA"):
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        lite_objects = self.get_vrf_lite_objects_model(attach)
+        if not lite_objects.data:
             msg = "No vrf_lite_objects found. Update freeformConfig and return."
             self.log.debug(msg)
             attach["freeformConfig"] = ""
             return copy.deepcopy(attach)
 
-        for sdl in lite_objects["DATA"]:
-            for epv in sdl["switchDetailsList"]:
-                if not epv.get("extensionValues"):
+        msg = "lite_objects: "
+        msg += f"{json.dumps(lite_objects.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        for sdl in lite_objects.data:
+            for epv in sdl.switch_details_list:
+                if not epv.extension_values:
                     attach["freeformConfig"] = ""
                     continue
-                ext_values = json.loads(epv["extensionValues"])
-                if ext_values.get("VRF_LITE_CONN") is None:
+                ext_values = epv.extension_values
+                if ext_values.vrf_lite_conn is None:
                     continue
-                ext_values = json.loads(ext_values["VRF_LITE_CONN"])
+                ext_values = ext_values.vrf_lite_conn
                 extension_values = {"VRF_LITE_CONN": {"VRF_LITE_CONN": []}}
-                for extension_values_dict in ext_values.get("VRF_LITE_CONN"):
-                    ev_dict = copy.deepcopy(extension_values_dict)
-                    ev_dict.update({"AUTO_VRF_LITE_FLAG": "false"})
+                for vrf_lite_conn_model in ext_values.vrf_lite_conn:
+                    ev_dict = copy.deepcopy(vrf_lite_conn_model.model_dump(by_alias=True))
+                    ev_dict.update({"AUTO_VRF_LITE_FLAG": vrf_lite_conn_model.auto_vrf_lite_flag or "false"})
                     ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
                     extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].append(ev_dict)
                 extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
                 ms_con = {"MULTISITE_CONN": []}
                 extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
                 attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
-                attach["freeformConfig"] = epv.get("freeformConfig", "")
+                attach["freeformConfig"] = epv.freeform_config or ""
         return copy.deepcopy(attach)
 
     def get_have(self) -> None:
