@@ -39,7 +39,6 @@
     state: deleted
     config:
     - seed_ip: "{{ test_data.sw1 }}"
-    deploy: "{{ test_data.deploy }}"
   register: delete_result
   tags: deleted
 
@@ -81,7 +80,6 @@
   cisco.dcnm.dcnm_inventory: &conf_del_all
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: delete_result
   tags: deleted
 

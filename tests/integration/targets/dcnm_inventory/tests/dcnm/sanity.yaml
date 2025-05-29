@@ -145,7 +145,6 @@
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
     config: "{{ ndfc_fabric_sanity_conf }}"
-    deploy: "{{ test_data.deploy }}"
   register: deleted_result
   tags: sanity
 

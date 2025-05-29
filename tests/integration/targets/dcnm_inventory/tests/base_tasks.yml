@@ -65,4 +65,3 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"

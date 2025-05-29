@@ -48,7 +48,6 @@
 - name: Merged TC3 - Clean up Existing Switches
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
-    deploy: "{{ test_data.deploy }}"
     state: deleted
   register: delete_result
   tags: merged
@@ -133,7 +132,6 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: deleted_result
   tags: merged
 
@@ -200,7 +198,6 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: deleted_result
   tags: merged
 
@@ -265,7 +262,6 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: deleted_result
   tags: merged
 
@@ -326,7 +322,6 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: deleted_result
   tags: merged
 
@@ -452,6 +447,5 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: result
   tags: merged

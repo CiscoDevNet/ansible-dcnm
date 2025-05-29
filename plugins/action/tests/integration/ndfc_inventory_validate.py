@@ -1,36 +1,25 @@
 from __future__ import absolute_import, division, print_function
 from ansible.utils.display import Display
 from ansible.plugins.action import ActionBase
-from ansible.module_utils.six import raise_from
-from ansible.errors import AnsibleError
 from typing import List, Dict, Optional, Union
+from pydantic import BaseModel, model_validator, validator, ValidationError
 import re
 import json
-
-try:
-    from pydantic import BaseModel, model_validator, validator, ValidationError
-except ImportError as imp_exc:
-    PYDANTIC_LIBRARY_IMPORT_ERROR = imp_exc
-else:
-    PYDANTIC_LIBRARY_IMPORT_ERROR = None
-
 __metaclass__ = type
 
 display = Display()
-
-if PYDANTIC_LIBRARY_IMPORT_ERROR:
-    raise_from(
-        AnsibleError('Pydantic must be installed to use this plugin. Use pip or install test-requirements.'), PYDANTIC_LIBRARY_IMPORT_ERROR)
 
 
 class ConfigData(BaseModel):
     role: Optional[str] = None
     seed_ip: Optional[str] = None
 
+
 class NDFCData(BaseModel):
     ipAddress: Optional[str] = None
     switchRoleEnum: Optional[str] = None
     switchRole: Optional[str] = None
+
 
 class InventoryValidate(BaseModel):
     config_data: Optional[List[ConfigData]] = None
@@ -40,6 +29,19 @@ class InventoryValidate(BaseModel):
     @validator('config_data', pre=True)
     @classmethod
     def parse_config_data(cls, value):
+        """
+        Validates and transforms the config_data input.
+        Accepts a dictionary or list of dictionaries and converts them to ConfigData objects.
+        
+        Args:
+            value: The input data to validate (dict, list, or None)
+            
+        Returns:
+            List of ConfigData objects or None
+            
+        Raises:
+            ValueError: If the input format is invalid
+        """
         if isinstance(value, dict):
             return [ConfigData.parse_obj(value)]
         if isinstance(value, list):
@@ -55,6 +57,19 @@ class InventoryValidate(BaseModel):
     @validator('ndfc_data', pre=True)
     @classmethod
     def parse_ndfc_data(cls, value):
+        """
+        Validates and transforms the ndfc_data input.
+        Accepts a string (error message) or list of dictionaries and converts to NDFCData objects.
+        
+        Args:
+            value: The NDFC response data (str or list)
+            
+        Returns:
+            List of NDFCData objects or the original error string
+            
+        Raises:
+            ValueError: If the input format is invalid
+        """
         if isinstance(value, str):
             return value
         if isinstance(value, list):
@@ -68,6 +83,16 @@ class InventoryValidate(BaseModel):
     @model_validator(mode='after')
     @classmethod
     def validate_lists_equality(cls, values):
+        """
+        Validates that the configuration data matches the NDFC response data.
+        Performs matching based on seed_ip and role, respecting ignore_fields settings.
+        
+        Args:
+            values: The model instance after individual field validation
+            
+        Returns:
+            "True" if validation is successful, "False" otherwise
+        """
         config_data = values.config_data
         ndfc_data = values.ndfc_data
         ignore_fields = values.ignore_fields
@@ -137,9 +162,24 @@ class InventoryValidate(BaseModel):
                 print(json.dumps(role_mismatches, indent=2))
         return response
 
+
 class ActionModule(ActionBase):
+    """
+    Ansible action plugin for validating NDFC inventory data.
+    Compares test data against NDFC response data and validates according to specified mode.
+    """
 
     def run(self, tmp=None, task_vars=None):
+        """
+        Execute the action plugin logic.
+        
+        Args:
+            tmp: Temporary directory
+            task_vars: Variables available to the task
+            
+        Returns:
+            dict: Results dictionary with success/failure status and appropriate messages
+        """
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
         ndfc_data = self._task.args['ndfc_data']
@@ -162,8 +202,10 @@ class ActionModule(ActionBase):
         if 'mode' in self._task.args:
             mode = self._task.args['mode'].lower()
             if mode == 'ip':
+                # In IP mode, we ignore role matching
                 ignore_fields['role'] = 1
             elif mode == 'role':
+                # In role mode, we ignore IP matching
                 ignore_fields['seed_ip'] = 1
 
         validation_result = InventoryValidate(config_data=test_data, ndfc_data=ndfc_data['response'], ignore_fields=ignore_fields)

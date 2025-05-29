@@ -140,7 +140,6 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: deleted_result
   tags: query
 
@@ -235,6 +234,5 @@
   cisco.dcnm.dcnm_inventory:
     fabric: "{{ test_data.test_fabric }}"
     state: deleted
-    deploy: "{{ test_data.deploy }}"
   register: result
   tags: query
