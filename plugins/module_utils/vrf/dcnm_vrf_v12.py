@@ -1680,12 +1680,12 @@ class NdfcVrf12:
         for have_attach in self.have_attach:
             replace_vrf_list = []
 
-            # Find matching want_a by vrfName
-            want_a = next((w for w in self.want_attach if w.get("vrfName") == have_attach.get("vrfName")), None)
+            # Find matching want_attach by vrfName
+            want_attach = next((w for w in self.want_attach if w.get("vrfName") == have_attach.get("vrfName")), None)
 
-            if want_a:
+            if want_attach:
                 have_lan_attach_list = have_attach.get("lanAttachList", [])
-                want_lan_attach_list = want_a.get("lanAttachList", [])
+                want_lan_attach_list = want_attach.get("lanAttachList", [])
 
                 for have_lan_attach in have_lan_attach_list:
                     if have_lan_attach.get("isAttached") is False:
