@@ -349,7 +349,7 @@ class NdfcVrf12:
 
     # pylint: enable=inconsistent-return-statements
     @staticmethod
-    def compare_properties(dict1: dict[Any, Any], dict2: dict[Any, Any], property_list: list) -> bool:
+    def property_values_match(dict1: dict[Any, Any], dict2: dict[Any, Any], property_list: list) -> bool:
         """
         Given two dictionaries and a list of keys:
 
@@ -625,7 +625,7 @@ class NdfcVrf12:
         for wlite in want_e["VRF_LITE_CONN"]:
             for hlite in have_e["VRF_LITE_CONN"]:
                 if wlite["IF_NAME"] == hlite["IF_NAME"]:
-                    if self.compare_properties(wlite, hlite, self.vrf_lite_properties):
+                    if self.property_values_match(wlite, hlite, self.vrf_lite_properties):
                         return True
         return False
 
