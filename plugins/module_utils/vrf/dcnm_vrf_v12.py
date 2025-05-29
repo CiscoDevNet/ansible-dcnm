@@ -1677,14 +1677,14 @@ class NdfcVrf12:
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
-        for have_a in self.have_attach:
+        for have_attach in self.have_attach:
             replace_vrf_list = []
 
             # Find matching want_a by vrfName
-            want_a = next((w for w in self.want_attach if w.get("vrfName") == have_a.get("vrfName")), None)
+            want_a = next((w for w in self.want_attach if w.get("vrfName") == have_attach.get("vrfName")), None)
 
             if want_a:
-                have_lan_attach_list = have_a.get("lanAttachList", [])
+                have_lan_attach_list = have_attach.get("lanAttachList", [])
                 want_lan_attach_list = want_a.get("lanAttachList", [])
 
                 for have_lan_attach in have_lan_attach_list:
@@ -1697,27 +1697,27 @@ class NdfcVrf12:
                         have_lan_attach["deployment"] = False
                         replace_vrf_list.append(have_lan_attach)
             else:
-                # If have_a is not in want_attach but is in want_create, detach all attached
-                found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a.get("vrfName"))
+                # If have_attach is not in want_attach but is in want_create, detach all attached
+                found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach.get("vrfName"))
                 if found:
-                    for a_h in have_a.get("lanAttachList", []):
-                        if a_h.get("isAttached"):
-                            del a_h["isAttached"]
-                            a_h["deployment"] = False
-                            replace_vrf_list.append(a_h)
+                    for lan_attach in have_attach.get("lanAttachList", []):
+                        if lan_attach.get("isAttached"):
+                            del lan_attach["isAttached"]
+                            lan_attach["deployment"] = False
+                            replace_vrf_list.append(lan_attach)
 
             if replace_vrf_list:
                 # Find or create the diff_attach entry for this VRF
-                d_attach = next((d for d in diff_attach if d.get("vrfName") == have_a.get("vrfName")), None)
+                d_attach = next((d for d in diff_attach if d.get("vrfName") == have_attach.get("vrfName")), None)
                 if d_attach:
                     d_attach["lanAttachList"].extend(replace_vrf_list)
                 else:
                     attachment = {
-                        "vrfName": have_a["vrfName"],
+                        "vrfName": have_attach["vrfName"],
                         "lanAttachList": replace_vrf_list,
                     }
                     diff_attach.append(attachment)
-                all_vrfs.add(have_a["vrfName"])
+                all_vrfs.add(have_attach["vrfName"])
 
         if not all_vrfs:
             self.diff_attach = copy.deepcopy(diff_attach)
