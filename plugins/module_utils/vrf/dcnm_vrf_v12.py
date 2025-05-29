@@ -1891,47 +1891,47 @@ class NdfcVrf12:
         diff_deploy: dict = {}
         all_vrfs: set = set()
 
-        for want_a in self.want_attach:
+        for want_attach in self.want_attach:
             # Check user intent for this VRF and don't add it to the all_vrfs
             # set if the user has not requested a deploy.
-            want_config = self.find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=want_a["vrfName"])
+            want_config = self.find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=want_attach["vrfName"])
             vrf_to_deploy: str = ""
             attach_found = False
-            for have_a in self.have_attach:
-                if want_a["vrfName"] != have_a["vrfName"]:
+            for have_attach in self.have_attach:
+                if want_attach["vrfName"] != have_attach["vrfName"]:
                     continue
                 attach_found = True
                 diff, deploy_vrf_bool = self.diff_for_attach_deploy(
-                    want_a=want_a["lanAttachList"],
-                    have_a=have_a["lanAttachList"],
+                    want_attach = want_attach["lanAttachList"],
+                    have_attach = have_attach["lanAttachList"],
                     replace=replace,
                 )
                 if diff:
-                    base = want_a.copy()
+                    base = want_attach.copy()
                     del base["lanAttachList"]
                     base.update({"lanAttachList": diff})
 
                     diff_attach.append(base)
                     if (want_config["deploy"] is True) and (deploy_vrf_bool is True):
-                        vrf_to_deploy = want_a["vrfName"]
+                        vrf_to_deploy = want_attach["vrfName"]
                 else:
-                    if want_config["deploy"] is True and (deploy_vrf_bool or self.conf_changed.get(want_a["vrfName"], False)):
-                        vrf_to_deploy = want_a["vrfName"]
+                    if want_config["deploy"] is True and (deploy_vrf_bool or self.conf_changed.get(want_attach["vrfName"], False)):
+                        vrf_to_deploy = want_attach["vrfName"]
 
             msg = f"attach_found: {attach_found}"
             self.log.debug(msg)
 
-            if not attach_found and want_a.get("lanAttachList"):
+            if not attach_found and want_attach.get("lanAttachList"):
                 attach_list = []
-                for attach in want_a["lanAttachList"]:
-                    if attach.get("isAttached"):
-                        del attach["isAttached"]
-                    if attach.get("is_deploy") is True:
-                        vrf_to_deploy = want_a["vrfName"]
-                    attach["deployment"] = True
-                    attach_list.append(copy.deepcopy(attach))
+                for lan_attach in want_attach["lanAttachList"]:
+                    if lan_attach.get("isAttached"):
+                        del lan_attach["isAttached"]
+                    if lan_attach.get("is_deploy") is True:
+                        vrf_to_deploy = want_attach["vrfName"]
+                    lan_attach["deployment"] = True
+                    attach_list.append(copy.deepcopy(lan_attach))
                 if attach_list:
-                    base = want_a.copy()
+                    base = want_attach.copy()
                     del base["lanAttachList"]
                     base.update({"lanAttachList": attach_list})
                     diff_attach.append(base)
