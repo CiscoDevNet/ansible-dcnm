@@ -1069,7 +1069,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return vrf_upd
 
-    def get_vrf_objects(self) -> ControllerResponseVrfsV12:
+    def get_controller_vrf_object_models(self) -> list[VrfObjectV12]:
         """
         # Summary
 
@@ -1106,7 +1106,7 @@ class NdfcVrf12:
             msg2 = f"{msg0} Unable to find vrfs under fabric: {self.fabric}"
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-        return response
+        return response.DATA
 
     def get_list_of_vrfs_switches_data_item_model(self, attach: dict) -> list[VrfsSwitchesDataItem]:
         """
@@ -1154,11 +1154,11 @@ class NdfcVrf12:
 
         return response.data
 
-    def populate_have_create(self, vrf_objects_model: ControllerResponseVrfsV12) -> None:
+    def populate_have_create(self, vrf_object_models: list[VrfObjectV12]) -> None:
         """
         # Summary
 
-        Given a ControllerResponseVrfsV12 model, populate self.have_create,
+        Given a list of VrfObjectV12 models, populate self.have_create,
         which is a list of VRF dictionaries used later to generate payloads
         to send to the controller (e.g. diff_create, diff_create_update).
 
@@ -1175,7 +1175,7 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         have_create = []
-        for vrf in vrf_objects_model.DATA:
+        for vrf in vrf_object_models:
             vrf_template_config = self.update_vrf_template_config_from_vrf_model(vrf)
             vrf_dict = vrf.model_dump(by_alias=True)
             vrf_dict["vrfTemplateConfig"] = vrf_template_config.model_dump_json(by_alias=True)
@@ -1342,17 +1342,17 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        vrf_objects_model = self.get_vrf_objects()
+        vrf_object_models = self.get_controller_vrf_object_models()
 
-        msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        msg = f"vrf_objects_models. length {len(vrf_object_models)}."
+        self.log_list_of_models(vrf_object_models)
 
-        if not vrf_objects_model.DATA:
+        if not vrf_object_models:
             return
 
-        self.populate_have_create(vrf_objects_model)
+        self.populate_have_create(vrf_object_models)
 
-        current_vrfs_set = {vrf.vrfName for vrf in vrf_objects_model.DATA}
+        current_vrfs_set = {vrf.vrfName for vrf in vrf_object_models}
         get_vrf_attach_response = dcnm_get_url(
             module=self.module,
             fabric=self.fabric,
@@ -2322,7 +2322,7 @@ class NdfcVrf12:
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
         return response
 
-    def get_diff_query_for_vrfs_in_want(self, vrf_objects_model: ControllerResponseVrfsV12) -> list[dict]:
+    def get_diff_query_for_vrfs_in_want(self, vrf_object_models: list[VrfObjectV12]) -> list[dict]:
         """
         Query the controller for the current state of the VRFs in the fabric
         that are present in self.want_create.
@@ -2340,14 +2340,14 @@ class NdfcVrf12:
             self.log.debug(msg)
             return query
 
-        if not vrf_objects_model.DATA:
+        if not vrf_object_models:
             msg = f"caller: {caller}. "
             msg += f"Early return. No VRFs exist in fabric {self.fabric}."
             self.log.debug(msg)
             return query
 
         # Lookup controller VRFs by name, used in for loop below.
-        vrf_lookup = {vrf.vrfName: vrf for vrf in vrf_objects_model.DATA}
+        vrf_lookup = {vrf.vrfName: vrf for vrf in vrf_object_models}
 
         for want_c in self.want_create:
             vrf = vrf_lookup.get(want_c["vrfName"])
@@ -2386,7 +2386,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return copy.deepcopy(query)
 
-    def get_diff_query_for_all_controller_vrfs(self, vrf_objects_model: ControllerResponseVrfsV12) -> list[dict]:
+    def get_diff_query_for_all_controller_vrfs(self, vrf_object_models: list[VrfObjectV12]) -> list[dict]:
         """
         Query the controller for the current state of all VRFs in the fabric.
 
@@ -2415,13 +2415,13 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
         query: list[dict] = []
 
-        if not vrf_objects_model.DATA:
+        if not vrf_object_models:
             msg = f"caller: {caller}. "
             msg += f"Early return. No VRFs exist in fabric {self.fabric}."
             self.log.debug(msg)
             return query
 
-        for vrf in vrf_objects_model.DATA:
+        for vrf in vrf_object_models:
 
             item = {"parent": vrf.model_dump(by_alias=True), "attach": []}
 
@@ -2466,18 +2466,19 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        vrf_objects_model = self.get_vrf_objects()
+        vrf_object_models = self.get_controller_vrf_object_models()
 
-        msg = f"vrf_objects_model: {json.dumps(vrf_objects_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        msg = f"vrf_object_models: length {len(vrf_object_models)}"
         self.log.debug(msg)
+        self.log_list_of_models(vrf_object_models)
 
-        if not vrf_objects_model.DATA:
+        if not vrf_object_models:
             return
 
         if self.config:
-            query = self.get_diff_query_for_vrfs_in_want(vrf_objects_model)
+            query = self.get_diff_query_for_vrfs_in_want(vrf_object_models)
         else:
-            query = self.get_diff_query_for_all_controller_vrfs(vrf_objects_model)
+            query = self.get_diff_query_for_all_controller_vrfs(vrf_object_models)
 
         self.query = copy.deepcopy(query)
         msg = f"self.query: {query}"
