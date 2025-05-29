@@ -32,13 +32,11 @@ class InventoryValidate(BaseModel):
         """
         Validates and transforms the config_data input.
         Accepts a dictionary or list of dictionaries and converts them to ConfigData objects.
-        
+
         Args:
             value: The input data to validate (dict, list, or None)
-            
         Returns:
             List of ConfigData objects or None
-            
         Raises:
             ValueError: If the input format is invalid
         """
@@ -60,13 +58,10 @@ class InventoryValidate(BaseModel):
         """
         Validates and transforms the ndfc_data input.
         Accepts a string (error message) or list of dictionaries and converts to NDFCData objects.
-        
         Args:
             value: The NDFC response data (str or list)
-            
         Returns:
             List of NDFCData objects or the original error string
-            
         Raises:
             ValueError: If the input format is invalid
         """
@@ -85,11 +80,10 @@ class InventoryValidate(BaseModel):
     def validate_lists_equality(cls, values):
         """
         Validates that the configuration data matches the NDFC response data.
+        Ensures there is no trailing whitespace in the entire file.
         Performs matching based on seed_ip and role, respecting ignore_fields settings.
-        
         Args:
             values: The model instance after individual field validation
-            
         Returns:
             "True" if validation is successful, "False" otherwise
         """
@@ -172,11 +166,9 @@ class ActionModule(ActionBase):
     def run(self, tmp=None, task_vars=None):
         """
         Execute the action plugin logic.
-        
         Args:
             tmp: Temporary directory
             task_vars: Variables available to the task
-            
         Returns:
             dict: Results dictionary with success/failure status and appropriate messages
         """
