@@ -616,7 +616,6 @@ class NdfcVrf12:
         - bool: True if the extension values match, False otherwise.
         """
         want_ext = json.loads(want["extensionValues"])
-        want_ext = json.loads(want["extensionValues"])
         have_ext = json.loads(have["extensionValues"])
         want_e = json.loads(want_ext["VRF_LITE_CONN"])
         have_e = json.loads(have_ext["VRF_LITE_CONN"])
