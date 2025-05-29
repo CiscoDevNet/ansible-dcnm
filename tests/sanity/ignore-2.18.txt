@@ -23,5 +23,4 @@ plugins/module_utils/common/sender_requests.py import-3.10 # TODO remove this if
 plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
 plugins/action/tests/integration/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
 plugins/action/tests/integration/ndfc_inventory_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
-plugins/action/tests/integration/ndfc_inventory_validate.py import-3.10!skip
 plugins/action/tests/integration/ndfc_inventory_validate.py import-3.11!skip
