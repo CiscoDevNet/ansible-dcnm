@@ -2361,15 +2361,15 @@ class NdfcVrf12:
             self.log.debug(msg)
             self.log_list_of_models(vrf_attachment_models)
 
-            for vrf_attach_model in vrf_attachment_models:
-                if want_c["vrfName"] != vrf_attach_model.vrf_name or not vrf_attach_model.lan_attach_list:
+            for vrf_attachment_model in vrf_attachment_models:
+                if want_c["vrfName"] != vrf_attachment_model.vrf_name or not vrf_attachment_model.lan_attach_list:
                     continue
 
-                for attach in vrf_attach_model.lan_attach_list:
+                for lan_attach_model in vrf_attachment_model.lan_attach_list:
                     params = {
                         "fabric": self.fabric,
-                        "serialNumber": attach.switch_serial_no,
-                        "vrfName": attach.vrf_name,
+                        "serialNumber": lan_attach_model.switch_serial_no,
+                        "vrfName": lan_attach_model.vrf_name,
                     }
 
                     lite_objects = self.get_list_of_vrfs_switches_data_item_model(params)
@@ -2438,14 +2438,16 @@ class NdfcVrf12:
             for vrf_attach in vrf_attachment_models:
                 if not vrf_attach.lan_attach_list:
                     continue
-                attach_list = vrf_attach.lan_attach_list
-                msg = f"attach_list_model: {attach_list}"
+                lan_attach_models = vrf_attach.lan_attach_list
+                msg = f"lan_attach_models: length: {len(lan_attach_models)}"
                 self.log.debug(msg)
-                for attach in attach_list:
+                self.log_list_of_models(lan_attach_models)
+
+                for lan_attach_model in lan_attach_models:
                     params = {
                         "fabric": self.fabric,
-                        "serialNumber": attach.switch_serial_no,
-                        "vrfName": attach.vrf_name,
+                        "serialNumber": lan_attach_model.switch_serial_no,
+                        "vrfName": lan_attach_model.vrf_name,
                     }
                     msg = f"Calling get_list_of_vrfs_switches_data_item_model with: {params}"
                     self.log.debug(msg)
