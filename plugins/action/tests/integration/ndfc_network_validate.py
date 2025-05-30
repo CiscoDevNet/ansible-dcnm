@@ -81,33 +81,19 @@ class ActionModule(ActionBase):
         results = super(ActionModule, self).run(tmp, task_vars)
         results['failed'] = False
 
-        if 'ndfc_data' not in self._task.args:
-            results['failed'] = True
-            results['msg'] = 'No data found in ndfc_data'
-            return results
+        ndfc_data = self._task.args.get('ndfc_data', None)
+        test_data = self._task.args.get('test_data', None)
+        config_path = self._task.args.get('config_path', None)
+        check_deleted = self._task.args.get('check_deleted', False)
 
-        ndfc_data = self._task.args['ndfc_data']
+        for input_item in [ndfc_data, test_data, config_path]:
+            if input_item is None:
+                results['failed'] = True
+                results['msg'] = f"Required input parameter not found: '{input_item}'"
+                return results
+
         # removes ansible embeddings and converts to native python types
         native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
-
-        if "test_data" not in self._task.args:
-            results['failed'] = True
-            results['msg'] = 'No test data is found in test_data'
-            return results
-
-        test_data = self._task.args['test_data']
-
-        if "config_path" not in self._task.args:
-            results['failed'] = True
-            results['msg'] = 'No path is loaded into config_path'
-            return results
-
-        config_path = self._task.args['config_path']
-
-        check_deleted = False
-
-        if 'check_deleted' in self._task.args:
-            check_deleted = self._task.args['check_deleted']
 
         test_fabric = test_data['fabric']
         if config_path != "":
