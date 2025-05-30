@@ -1232,7 +1232,7 @@ class NdfcVrf12:
         have_attach = copy.deepcopy(get_vrf_attach_response.get("DATA", []))
 
         msg = "have_attach.PRE_UPDATE: "
-        msg += f"{have_attach}"
+        msg += f"{json.dumps(have_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         for vrf_attach in have_attach:
@@ -2498,7 +2498,7 @@ class NdfcVrf12:
             query = self.get_diff_query_for_all_controller_vrfs(vrf_object_models)
 
         self.query = copy.deepcopy(query)
-        msg = f"self.query: {query}"
+        msg = f"self.query: {json.dumps(self.query, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def update_vrf_template_config_from_vrf_model(self, vrf_model: VrfObjectV12) -> VrfTemplateConfigV12:
@@ -2550,7 +2550,7 @@ class NdfcVrf12:
         vrf_template_config.update({"vrfVlanId": vlan_id})
         vrf_template_config.update({"vrfSegmentId": vrf.get("vrfId")})
 
-        msg = f"Returning vrf_template_config: {json.dumps(vrf_template_config)}"
+        msg = f"Returning vrf_template_config: {json.dumps(vrf_template_config, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         return json.dumps(vrf_template_config)
 
@@ -2655,7 +2655,7 @@ class NdfcVrf12:
                 continue
             extension_values_list.append(item.extension_values)
 
-        msg = f"Returning list of {len(extension_values_list)} extension_values: "
+        msg = f"Returning extension_values_list (list[VrfLiteConnProtoItem]). length: {len(extension_values_list)}."
         self.log.debug(msg)
         self.log_list_of_models(extension_values_list)
 
@@ -2715,7 +2715,7 @@ class NdfcVrf12:
             return copy.deepcopy(vrf_attach)
 
         msg = f"serial_number: {serial_number}, "
-        msg += f"Received list of {len(lite)} lite objects: "
+        msg += f"Received list of lite_objects (list[ExtensionPrototypeValue]). length: {len(lite)}."
         self.log.debug(msg)
         self.log_list_of_models(lite)
 
@@ -2747,8 +2747,9 @@ class NdfcVrf12:
                     continue
                 msg = "Found item: "
                 msg += f"item[interface] {item_interface}, == "
-                msg += f"ext_values.if_name {ext_value_interface}, "
-                msg += f"{json.dumps(item)}"
+                msg += f"ext_values.if_name {ext_value_interface}."
+                self.log.debug(msg)
+                msg = f"{json.dumps(item, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 matches[item_interface] = {"user": item, "switch": ext_value}
         if not matches:
@@ -2776,8 +2777,9 @@ class NdfcVrf12:
             msg = f"interface: {interface}: "
             self.log.debug(msg)
             msg = "item.user: "
-            msg += f"{json.dumps(user, indent=4, sort_keys=True)}, "
-            msg += "item.switch: "
+            msg += f"{json.dumps(user, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = "item.switch: "
             msg += f"{json.dumps(switch.model_dump(), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
@@ -2883,7 +2885,10 @@ class NdfcVrf12:
         msg += f"{type(args.payload)}, "
         self.log.debug(msg)
         msg = "payload: "
-        msg += f"{args.payload}"
+        if args.payload is None:
+            msg += f"{args.payload}"
+        else:
+            msg += f"{json.dumps(json.loads(args.payload), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if args.payload is not None:
@@ -3072,7 +3077,10 @@ class NdfcVrf12:
 
             msg = f"ip_address {ip_address} ({serial_number}), "
             msg += "vrf_attach.get(vrf_lite): "
-            msg += f"{json.dumps(vrf_attach.get('vrf_lite'), indent=4, sort_keys=True)}"
+            if vrf_attach.get("vrf_lite"):
+                msg += f"{json.dumps(vrf_attach.get('vrf_lite'), indent=4, sort_keys=True)}"
+            else:
+                msg += f"{vrf_attach.get('vrf_lite')}"
             self.log.debug(msg)
 
             if not self.is_border_switch(serial_number):
@@ -3100,7 +3108,7 @@ class NdfcVrf12:
 
             lite = lite_objects_model[0].switch_details_list[0].extension_prototype_values
             msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += f"lite extension_prototype_values contains {len(lite)} items: "
+            msg += f"lite (list[ExtensionPrototypeValue]). length: {len(lite)}."
             self.log.debug(msg)
             self.log_list_of_models(lite)
 
@@ -3644,10 +3652,10 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         try:
-            msg = f"res: {json.dumps(response_model.model_dump(), indent=4, sort_keys=True)}"
+            msg = f"response_model: {json.dumps(response_model.model_dump(), indent=4, sort_keys=True)}"
             self.log.debug(msg)
         except TypeError:
-            msg = f"res: {response_model.model_dump()}"
+            msg = f"response_model: {response_model.model_dump()}"
             self.log.debug(msg)
 
         fail = False
