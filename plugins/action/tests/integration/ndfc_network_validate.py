@@ -96,6 +96,8 @@ class ActionModule(ActionBase):
         native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
 
         test_fabric = test_data['fabric']
+
+        expected_data_parsed = None
         if config_path != "":
             # only parse if config file exists
             expected_config_data = load_yaml_file(config_path)
