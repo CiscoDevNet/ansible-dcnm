@@ -85,7 +85,7 @@ class ActionModule(ActionBase):
         test_data = self._task.args.get('test_data', None)
         config_path = self._task.args.get('config_path', None)
         check_deleted = self._task.args.get('check_deleted', False)
-
+        ignore_fields = list(self._task.args.get('ignore_fields', []))
         for input_item in [ndfc_data, test_data, config_path]:
             if input_item is None:
                 results['failed'] = True
@@ -108,7 +108,6 @@ class ActionModule(ActionBase):
         if deleted_results := self.verify_deleted(results, check_deleted, expected_data_parsed, ndfc_data_parsed, config_path):
             return deleted_results
 
-        # normal checking when check_delete is false
         validity = DeepDiff(
             expected_data_parsed,
             ndfc_data_parsed,
@@ -121,7 +120,8 @@ class ActionModule(ActionBase):
         # Effects the iterable_item_added and iterable_item_removed to remove unneeded fields
         # ignore_extra_fields=True will ignore dictionary_item_added changes
         # This is useful when the the actual data has more fields than the expected data
-        processed_validity = process_deepdiff(validity, ignore_extra_fields=True)
+        # keys_to_ignore is a list of fields to ignore, useful for auto provisioned fields which are not known
+        processed_validity = process_deepdiff(validity, keys_to_ignore=ignore_fields, ignore_extra_fields=True)
         if processed_validity == {}:
             results['failed'] = False
             results['msg'] = f'Data is valid. \n\n Expected data: \n\n{expected_data}\n\nActual data: \n\n{ndfc_data_parsed}'

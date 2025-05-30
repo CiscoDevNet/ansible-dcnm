@@ -70,6 +70,7 @@ class DcnmNetworkQuerySchema(BaseModel):
         mtu: Optional[CoercedStr] = ""
         vlanName: Optional[str] = None
         intfDescription: Optional[str] = None
+        tag: Optional[CoercedStr] = None
 
     class Parent(BaseModel):
         fabric: Optional[str] = None
@@ -158,6 +159,8 @@ class DcnmNetworkQuerySchema(BaseModel):
                     network_dict["parent"]["networkTemplateConfig"]["vlanName"] = network['vlan_name']
                 if 'int_desc' in network:
                     network_dict["parent"]["networkTemplateConfig"]["intfDescription"] = network['int_desc']
+                if 'routing_tag' in network:
+                    network_dict["parent"]["networkTemplateConfig"]["tag"] = network['routing_tag']
             if 'vrf_name' in network:
                 network_dict["parent"]["vrf"] = network['vrf_name']
             # if deploy:

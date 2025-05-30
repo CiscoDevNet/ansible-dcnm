@@ -18,7 +18,7 @@ def load_yaml_file(file_path):
             raise ValueError(f"Error parsing YAML file '{file_path}': {e}") from e
 
 
-def process_deepdiff(deepdiff_output, ignore_extra_fields=False):
+def process_deepdiff(deepdiff_output, keys_to_ignore, ignore_extra_fields=False):
     """
     Process deepdiff output to extract paths ignoring indices and find differences.
     Returns a dictionary with the same structure as deepdiff output but with
@@ -134,6 +134,12 @@ def process_deepdiff(deepdiff_output, ignore_extra_fields=False):
 
         for path in paths_to_remove:
             del diff_paths['added_values'][path]
+
+        diff_paths_keys = list(diff_paths['added_values'].keys())
+        for path in diff_paths_keys:
+            for field in keys_to_ignore:
+                if field in path:
+                    del diff_paths['added_values'][path]
 
         # Remove added_values if it becomes empty after filtering
         if not diff_paths['added_values']:
