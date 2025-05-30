@@ -39,7 +39,6 @@ from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs im
 from ...module_utils.common.enums.http_requests import RequestVerb
 from ...module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info,
-    dcnm_get_url,
     dcnm_send,
     get_fabric_details,
     get_fabric_inventory_details,
@@ -55,6 +54,7 @@ from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
+from .vrf_utils import get_endpoint_with_long_query_string
 
 dcnm_vrf_paths: dict = {
     "GET_VRF_ATTACH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/attachments?vrf-names={}",
@@ -1353,12 +1353,12 @@ class NdfcVrf12:
         self.populate_have_create(vrf_object_models)
 
         current_vrfs_set = {vrf.vrfName for vrf in vrf_object_models}
-        get_vrf_attach_response = dcnm_get_url(
+        get_vrf_attach_response = get_endpoint_with_long_query_string(
             module=self.module,
-            fabric=self.fabric,
+            fabric_name=self.fabric,
             path=self.paths["GET_VRF_ATTACH"],
-            items=",".join(current_vrfs_set),
-            module_name="vrfs",
+            query_string_items=",".join(current_vrfs_set),
+            caller=f"{self.class_name}.{method_name}",
         )
 
         if get_vrf_attach_response is None:
@@ -1366,7 +1366,13 @@ class NdfcVrf12:
             msg += f"caller: {caller}: unable to set get_vrf_attach_response."
             raise ValueError(msg)
 
-        if not get_vrf_attach_response.get("DATA"):
+        get_vrf_attach_response_model = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
+
+        msg = "get_vrf_attach_response_model: "
+        msg += f"{json.dumps(get_vrf_attach_response_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if not get_vrf_attach_response_model.data:
             return
 
         self.populate_have_deploy(get_vrf_attach_response)
