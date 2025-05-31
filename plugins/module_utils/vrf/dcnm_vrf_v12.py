@@ -1259,7 +1259,7 @@ class NdfcVrf12:
         ```json
             {
                 "deployment": true,
-                "extensionValues": "{\"VRF_LITE_CONN\":\"{\\\"VRF_LITE_CONN\\\":[{\\\"AUTO_VRF_LITE_FLAG\\\":\\\"false\\\",\\\"DOT1Q_ID\\\":\\\"2\\\",\\\"IF_NAME\\\":\\\"Ethernet1/16\\\",\\\"IP_MASK\\\":\\\"10.33.0.2/30\\\",\\\"IPV6_MASK\\\":\\\"2010::10:34:0:7/64\\\",\\\"IPV6_NEIGHBOR\\\":\\\"2010::10:34:0:3\\\",\\\"NEIGHBOR_ASN\\\":\\\"65535\\\",\\\"NEIGHBOR_IP\\\":\\\"10.33.0.1\\\",\\\"PEER_VRF_NAME\\\":\\\"test_vrf_1\\\",\\\"VRF_LITE_JYTHON_TEMPLATE\\\":\\\"Ext_VRF_Lite_Jython\\\"}]}\",\"MULTISITE_CONN\":\"{\\\"MULTISITE_CONN\\\":[]}\"}",
+                "extensionValues": "{contents removed for brevity}",
                 "fabric": "test_fabric",
                 "freeformConfig": "",
                 "instanceValues": null,
