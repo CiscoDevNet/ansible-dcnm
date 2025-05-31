@@ -154,6 +154,7 @@ class NdfcVrf12:
         # "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick: list = []
         self.have_attach: list = []
+        self.have_attach_model: list[HaveAttachPostMutate] = []
         self.want_attach: list = []
         self.diff_attach: list = []
         self.validated: list = []
@@ -1447,6 +1448,7 @@ class NdfcVrf12:
         updated_vrf_attach_models_dicts = [model.model_dump(by_alias=True) for model in updated_vrf_attach_models]
 
         self.have_attach = copy.deepcopy(updated_vrf_attach_models_dicts)
+        self.have_attach_model = updated_vrf_attach_models
         msg = f"self.have_attach.POST_UPDATE: length: {len(self.have_attach)}."
         self.log.debug(msg)
         msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
