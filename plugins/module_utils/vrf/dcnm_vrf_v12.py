@@ -649,6 +649,16 @@ class NdfcVrf12:
 
         - bool: True if all status flags match, False otherwise.
         """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+        msg = f"type(want): {type(want)}, type(have): {type(have)}"
+        self.log.debug(msg)
+        msg = f"want: {json.dumps(want, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = f"have: {json.dumps(have, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         want_is_deploy = self.to_bool("is_deploy", want)
         have_is_deploy = self.to_bool("is_deploy", have)
         want_is_attached = self.to_bool("isAttached", want)
@@ -1402,7 +1412,7 @@ class NdfcVrf12:
                 msg = "lan_attach_item: "
                 msg += f"{json.dumps(lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-                # Prepare new attachment model
+                # Mutate attachment
                 new_attach_dict = {
                     "deployment": lan_attach_item.is_lan_attached,
                     "extensionValues": "",
