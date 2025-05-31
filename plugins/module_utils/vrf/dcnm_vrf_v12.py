@@ -2100,14 +2100,24 @@ class NdfcVrf12:
         diff_deploy: dict = {}
         all_vrfs: set = set()
 
+        msg = "self.want_attach: "
+        msg += f"{json.dumps(self.want_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = "self.have_attach: "
+        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         for want_attach in self.want_attach:
+            msg = f"ZZZ: type(want_attach): {type(want_attach)}, "
+            msg += f"want_attach: {json.dumps(want_attach, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             # Check user intent for this VRF and don't add it to the all_vrfs
             # set if the user has not requested a deploy.
             want_config = self.find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=want_attach["vrfName"])
             vrf_to_deploy: str = ""
             attach_found = False
             for have_attach in self.have_attach:
-                msg = f"ZZZ: type(have_attach): {type(have_attach)}"
+                msg = f"ZZZ: type(have_attach): {type(have_attach)}, "
+                msg += f"have_attach: {json.dumps(have_attach, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 if want_attach["vrfName"] != have_attach["vrfName"]:
                     continue
