@@ -1399,7 +1399,7 @@ class NdfcVrf12:
                 continue
             new_attach_list = []
             for lan_attach_item in vrf_attach_model.lan_attach_list:
-                msg = f"lan_attach_item: "
+                msg = "lan_attach_item: "
                 msg += f"{json.dumps(lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 # Prepare new attachment model
@@ -1416,13 +1416,13 @@ class NdfcVrf12:
                 }
 
                 new_lan_attach_item = HaveLanAttachItem(**new_attach)
-                msg = f"new_lan_attach_item: "
+                msg = "new_lan_attach_item: "
                 msg += f"{json.dumps(new_lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
 
                 new_attach = self._update_vrf_lite_extension_model(new_lan_attach_item)
 
-                msg = f"new_attach: "
+                msg = "new_attach: "
                 msg += f"{json.dumps(new_attach.model_dump(by_alias=False), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
 
@@ -1555,7 +1555,6 @@ class NdfcVrf12:
             msg += f"caller: {caller}: unable to set get_vrf_attach_response."
             raise ValueError(msg)
 
-        self.log.debug(f"ZZZ: get_vrf_attach_response: {json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}")
         get_vrf_attach_response_model = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
 
         msg = "get_vrf_attach_response_model: "
