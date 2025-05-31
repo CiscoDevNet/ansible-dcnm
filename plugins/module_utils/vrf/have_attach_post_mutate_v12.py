@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class HaveLanAttachItem(BaseModel):
+    """
+    # Summary
+
+    A single lan attach item within lanAttachList.
+    """
     deployment: bool = Field(alias="deployment")
     extension_values: Optional[str] = Field(alias="extensionValues", default="")
     fabric: str = Field(alias="fabricName", min_length=1, max_length=64)
@@ -13,11 +18,18 @@ class HaveLanAttachItem(BaseModel):
     is_attached: bool = Field(alias="isAttached")
     is_deploy: bool = Field(alias="is_deploy")
     serial_number: str = Field(alias="serialNumber")
-    vlan: int = Field(alias="vlanId")
+    vlan: Union[int | None] = Field(alias="vlanId")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
 
 class HaveAttachPostMutate(BaseModel):
+    """
+    # Summary
+
+    Validates a mutated VRF attachment.
+
+    See NdfcVrf12.populate_have_attach_model
+    """
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,
