@@ -46,10 +46,11 @@ from ...module_utils.network.dcnm.dcnm import (
     get_sn_fabric_dict,
 )
 from .controller_response_generic_v12 import ControllerResponseGenericV12
-from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
+from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, LanAttachItem, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
+from .have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
@@ -1222,6 +1223,53 @@ class NdfcVrf12:
     def populate_have_attach(self, get_vrf_attach_response: dict) -> None:
         """
         Populate self.have_attach using get_vrf_attach_response.
+
+        Mutates items in lanAttachList per the examples below.  Specifically:
+
+        -  Generates deployment from vrf_attach.lanAttachList.isLanAttached
+        -  Generates extensionValues from lite_objects (see _update_vrf_lite_extension)
+        -  Generates fabric from self.fabric
+        -  Generates freeformConfig from SwitchDetails.freeform_config (if exists) or from "" (see _update_vrf_lite_extension)
+        -  Generates instanceValues from vrf_attach.lanAttachList.instanceValues
+        -  Generates isAttached from vrf_attach.lanAttachList.lanAttachState
+        -  Generates is_deploy from vrf_attach.lanAttachList.isLanAttached and vrf_attach.lanAttachList.lanAttachState
+        -  Generates serialNumber from vrf_attach.lanAttachList.switchSerialNo
+        -  Generates vlan from vrf_attach.lanAttachList.vlanId
+        -  Generates vrfName from vrf_attach.lanAttachList.vrfName
+
+        ## PRE Mutation Example
+
+        ```json
+            {
+                "fabricName": "test-fabric",
+                "ipAddress": "10.10.10.227",
+                "isLanAttached": true,
+                "lanAttachState": "DEPLOYED",
+                "switchName": "n9kv_leaf4",
+                "switchRole": "border",
+                "switchSerialNo": "XYZKSJHSMK4",
+                "vlanId": "202",
+                "vrfId": "9008011",
+                "vrfName": "test_vrf_1"
+            }
+        ```
+
+        ## POST Mutation Example
+
+        ```json
+            {
+                "deployment": true,
+                "extensionValues": "{\"VRF_LITE_CONN\":\"{\\\"VRF_LITE_CONN\\\":[{\\\"AUTO_VRF_LITE_FLAG\\\":\\\"false\\\",\\\"DOT1Q_ID\\\":\\\"2\\\",\\\"IF_NAME\\\":\\\"Ethernet1/16\\\",\\\"IP_MASK\\\":\\\"10.33.0.2/30\\\",\\\"IPV6_MASK\\\":\\\"2010::10:34:0:7/64\\\",\\\"IPV6_NEIGHBOR\\\":\\\"2010::10:34:0:3\\\",\\\"NEIGHBOR_ASN\\\":\\\"65535\\\",\\\"NEIGHBOR_IP\\\":\\\"10.33.0.1\\\",\\\"PEER_VRF_NAME\\\":\\\"test_vrf_1\\\",\\\"VRF_LITE_JYTHON_TEMPLATE\\\":\\\"Ext_VRF_Lite_Jython\\\"}]}\",\"MULTISITE_CONN\":\"{\\\"MULTISITE_CONN\\\":[]}\"}",
+                "fabric": "test_fabric",
+                "freeformConfig": "",
+                "instanceValues": null,
+                "isAttached": true,
+                "is_deploy": true,
+                "serialNumber": "XYZKSJHSMK4",
+                "vlan": "202",
+                "vrfName": "test_vrf_1"
+            }
+        ```
         """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
@@ -1255,9 +1303,9 @@ class NdfcVrf12:
 
                 # Build new attach dict with required keys
                 new_attach = {
-                    "fabric": self.fabric,
                     "deployment": deploy,
                     "extensionValues": "",
+                    "fabric": self.fabric,
                     "instanceValues": inst_values,
                     "isAttached": attach_state,
                     "is_deploy": deployed,
@@ -1270,6 +1318,10 @@ class NdfcVrf12:
 
                 new_attach_list.append(new_attach)
             vrf_attach["lanAttachList"] = new_attach_list
+
+        msg = "have_attach.POST_UPDATE: "
+        msg += f"{json.dumps(have_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         self.have_attach = copy.deepcopy(have_attach)
 
@@ -1288,6 +1340,10 @@ class NdfcVrf12:
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        msg = "attach: "
+        msg += f"{json.dumps(attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         lite_objects = self.get_list_of_vrfs_switches_data_item_model(attach)
@@ -1322,6 +1378,139 @@ class NdfcVrf12:
                 attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
                 attach["freeformConfig"] = epv.freeform_config or ""
         return copy.deepcopy(attach)
+
+    def populate_have_attach_model(self, vrf_attach_models: list[VrfsAttachmentsDataItem]) -> None:
+        """
+        Populate self.have_attach using get_vrf_attach_response.
+        """
+        caller = inspect.stack()[1][3]
+        method_name = inspect.stack()[0][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        msg = f"vrf_attach_models.PRE_UPDATE: length: {len(vrf_attach_models)}."
+        self.log.debug(msg)
+        self.log_list_of_models(vrf_attach_models)
+
+        updated_vrf_attach_models = []
+        for vrf_attach_model in vrf_attach_models:
+            if not vrf_attach_model.lan_attach_list:
+                continue
+            new_attach_list = []
+            for lan_attach_item in vrf_attach_model.lan_attach_list:
+                msg = f"lan_attach_item: "
+                msg += f"{json.dumps(lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+                # Prepare new attachment model
+                new_attach = {
+                    "deployment": lan_attach_item.is_lan_attached,
+                    "extensionValues": "",
+                    "fabricName": self.fabric,
+                    "instanceValues": lan_attach_item.instance_values,
+                    "isAttached": lan_attach_item.lan_attach_state != "NA",
+                    "is_deploy": not (lan_attach_item.is_lan_attached and lan_attach_item.lan_attach_state in ("OUT-OF-SYNC", "PENDING")),
+                    "serialNumber": lan_attach_item.switch_serial_no,
+                    "vlanId": lan_attach_item.vlan_id,
+                    "vrfName": lan_attach_item.vrf_name,
+                }
+
+                new_lan_attach_item = HaveLanAttachItem(**new_attach)
+                msg = f"new_lan_attach_item: "
+                msg += f"{json.dumps(new_lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                new_attach = self._update_vrf_lite_extension_model(new_lan_attach_item)
+
+                msg = f"new_attach: "
+                msg += f"{json.dumps(new_attach.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                new_attach_list.append(new_attach)
+
+            msg = f"new_attach_list: length: {len(new_attach_list)}."
+            self.log.debug(msg)
+            self.log_list_of_models(new_attach_list)
+
+            # vrf_attach_model.lan_attach_list = new_attach_list
+            new_attach_dict = {
+                "lanAttachList": new_attach_list,
+                "vrfName": vrf_attach_model.vrf_name,
+            }
+            new_vrf_attach_model = HaveAttachPostMutate(**new_attach_dict)
+            new_vrf_attach_model.lan_attach_list = new_attach_list
+            updated_vrf_attach_models.append(new_vrf_attach_model)
+
+            msg = f"updated_vrf_attach_models: length: {len(updated_vrf_attach_models)}."
+            self.log.debug(msg)
+            self.log_list_of_models(updated_vrf_attach_models)
+
+        updated_vrf_attach_models_dicts = [model.model_dump(by_alias=True) for model in updated_vrf_attach_models]
+
+        self.have_attach = copy.deepcopy(updated_vrf_attach_models_dicts)
+        msg = f"self.have_attach.POST_UPDATE: length: {len(self.have_attach)}."
+        self.log.debug(msg)
+        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def _update_vrf_lite_extension_model(self, attach: HaveLanAttachItem) -> LanAttachItem:
+        """
+        # Summary
+
+        - Return updated attach model with VRF Lite extension values if present.
+        - Update freeformConfig, if present, else set to an empty string.
+
+        ## Raises
+
+        - None
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        msg = "attach: "
+        msg += f"{json.dumps(attach.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        params = {
+            "fabric": attach.fabric,
+            "serialNumber": attach.serial_number,
+            "vrfName": attach.vrf_name,
+        }
+        lite_objects = self.get_list_of_vrfs_switches_data_item_model(params)
+        if not lite_objects:
+            msg = "No vrf_lite_objects found. Update freeformConfig and return."
+            self.log.debug(msg)
+            attach.freeform_config = ""
+            return attach
+
+        msg = f"lite_objects: length {len(lite_objects)}."
+        self.log.debug(msg)
+        self.log_list_of_models(lite_objects)
+
+        for sdl in lite_objects:
+            for epv in sdl.switch_details_list:
+                if not epv.extension_values:
+                    attach.freeform_config = ""
+                    continue
+                ext_values = epv.extension_values
+                if ext_values.vrf_lite_conn is None:
+                    continue
+                ext_values = ext_values.vrf_lite_conn
+                extension_values = {"VRF_LITE_CONN": {"VRF_LITE_CONN": []}}
+                for vrf_lite_conn_model in ext_values.vrf_lite_conn:
+                    ev_dict = copy.deepcopy(vrf_lite_conn_model.model_dump(by_alias=True))
+                    ev_dict.update({"AUTO_VRF_LITE_FLAG": vrf_lite_conn_model.auto_vrf_lite_flag or "false"})
+                    ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
+                    extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].append(ev_dict)
+                extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
+                ms_con = {"MULTISITE_CONN": []}
+                extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+                attach.extension_values = json.dumps(extension_values).replace(" ", "")
+                attach.freeform_config = epv.freeform_config or ""
+        return attach
 
     def get_have(self) -> None:
         """
@@ -1366,6 +1555,7 @@ class NdfcVrf12:
             msg += f"caller: {caller}: unable to set get_vrf_attach_response."
             raise ValueError(msg)
 
+        self.log.debug(f"ZZZ: get_vrf_attach_response: {json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}")
         get_vrf_attach_response_model = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
 
         msg = "get_vrf_attach_response_model: "
@@ -1376,7 +1566,8 @@ class NdfcVrf12:
             return
 
         self.populate_have_deploy(get_vrf_attach_response)
-        self.populate_have_attach(get_vrf_attach_response)
+        # self.populate_have_attach(get_vrf_attach_response)
+        self.populate_have_attach_model(get_vrf_attach_response_model.data)
 
     def get_want_attach(self) -> None:
         """
@@ -1684,6 +1875,8 @@ class NdfcVrf12:
         diff_deploy = self.diff_deploy
 
         for have_attach in self.have_attach:
+            msg = f"ZZZ: type(have_attach): {type(have_attach)}"
+            self.log.debug(msg)
             replace_vrf_list = []
 
             # Find matching want_attach by vrfName
@@ -1904,6 +2097,8 @@ class NdfcVrf12:
             vrf_to_deploy: str = ""
             attach_found = False
             for have_attach in self.have_attach:
+                msg = f"ZZZ: type(have_attach): {type(have_attach)}"
+                self.log.debug(msg)
                 if want_attach["vrfName"] != have_attach["vrfName"]:
                     continue
                 attach_found = True
@@ -1984,10 +2179,12 @@ class NdfcVrf12:
         """
         diff = []
         for vrf in diff_attach:
+            # TODO: arobel: using models, we get a KeyError for lan_attach[vlan], so we try lan_attach[vlanId] too.
+            # TODO: arobel: remove this once we've fixed the model to dump what is expected here.
             new_attach_list = [
                 {
                     "ip_address": next((k for k, v in self.ip_sn.items() if v == lan_attach["serialNumber"]), None),
-                    "vlan_id": lan_attach["vlan"],
+                    "vlan_id": lan_attach.get("vlan") or lan_attach.get("vlanId"),
                     "deploy": lan_attach["deployment"],
                 }
                 for lan_attach in vrf["lanAttachList"]
@@ -2045,10 +2242,12 @@ class NdfcVrf12:
                 diff.append(found_create)
                 continue
 
+            # TODO: arobel: using models, we get a KeyError for lan_attach[vlan], so we try lan_attach[vlanId] too.
+            # TODO: arobel: remove this once we've fixed the model to dump what is expected here.
             found_create["attach"] = [
                 {
                     "ip_address": next((k for k, v in self.ip_sn.items() if v == lan_attach["serialNumber"]), None),
-                    "vlan_id": lan_attach["vlan"],
+                    "vlan_id": lan_attach.get("vlan") or lan_attach.get("vlanId"),
                     "deploy": lan_attach["deployment"],
                 }
                 for lan_attach in found_attach["lanAttachList"]
@@ -2103,6 +2302,9 @@ class NdfcVrf12:
         diff_create_quick = copy.deepcopy(self.diff_create_quick)
         diff_create_update = copy.deepcopy(self.diff_create_update)
         diff_attach = copy.deepcopy(self.diff_attach)
+        msg = "ZZZ: diff_attach: "
+        msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         diff_detach = copy.deepcopy(self.diff_detach)
         diff_deploy = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
         diff_undeploy = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []

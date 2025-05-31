@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class LanAttachItem(BaseModel):
+    freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
+    extension_values: Optional[str] = Field(alias="extensionValues", default="")
     fabric_name: str = Field(alias="fabricName", max_length=64)
+    instance_values: Optional[str] = Field(alias="instanceValues", default="")
     ip_address: str = Field(alias="ipAddress")
     is_lan_attached: bool = Field(alias="isLanAttached")
     lan_attach_state: str = Field(alias="lanAttachState")
