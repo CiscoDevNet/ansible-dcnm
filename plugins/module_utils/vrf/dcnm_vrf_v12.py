@@ -46,7 +46,7 @@ from ...module_utils.network.dcnm.dcnm import (
     get_sn_fabric_dict,
 )
 from .controller_response_generic_v12 import ControllerResponseGenericV12
-from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, LanAttachItem, VrfsAttachmentsDataItem
+from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
