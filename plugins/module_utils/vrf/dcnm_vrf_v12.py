@@ -1384,7 +1384,6 @@ class NdfcVrf12:
         Populate self.have_attach using get_vrf_attach_response.
         """
         caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
@@ -1393,17 +1392,17 @@ class NdfcVrf12:
         self.log.debug(msg)
         self.log_list_of_models(vrf_attach_models)
 
-        updated_vrf_attach_models = []
+        updated_vrf_attach_models: list[HaveAttachPostMutate] = []
         for vrf_attach_model in vrf_attach_models:
             if not vrf_attach_model.lan_attach_list:
                 continue
-            new_attach_list = []
+            new_attach_list: list[HaveLanAttachItem] = []
             for lan_attach_item in vrf_attach_model.lan_attach_list:
                 msg = "lan_attach_item: "
                 msg += f"{json.dumps(lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 # Prepare new attachment model
-                new_attach = {
+                new_attach_dict = {
                     "deployment": lan_attach_item.is_lan_attached,
                     "extensionValues": "",
                     "fabricName": self.fabric,
@@ -1415,7 +1414,7 @@ class NdfcVrf12:
                     "vrfName": lan_attach_item.vrf_name,
                 }
 
-                new_lan_attach_item = HaveLanAttachItem(**new_attach)
+                new_lan_attach_item = HaveLanAttachItem(**new_attach_dict)
                 msg = "new_lan_attach_item: "
                 msg += f"{json.dumps(new_lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
@@ -1453,7 +1452,7 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def _update_vrf_lite_extension_model(self, attach: HaveLanAttachItem) -> LanAttachItem:
+    def _update_vrf_lite_extension_model(self, attach: HaveLanAttachItem) -> HaveLanAttachItem:
         """
         # Summary
 
