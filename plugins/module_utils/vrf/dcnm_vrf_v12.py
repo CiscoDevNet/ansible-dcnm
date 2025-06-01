@@ -1732,7 +1732,6 @@ class NdfcVrf12:
         self.get_want_attach()
         self.get_want_deploy()
 
-    @staticmethod
     def get_items_to_detach(self, attach_list: list[dict]) -> list[dict]:
         """
         # Summary
