@@ -1733,7 +1733,7 @@ class NdfcVrf12:
         self.get_want_deploy()
 
     @staticmethod
-    def get_items_to_detach(attach_list: list[dict]) -> list[dict]:
+    def get_items_to_detach(self, attach_list: list[dict]) -> list[dict]:
         """
         # Summary
 
@@ -1755,6 +1755,11 @@ class NdfcVrf12:
 
         Finally, return the detach_list.
         """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
         detach_list = []
         for item in attach_list:
             if "isAttached" not in item:
@@ -1786,11 +1791,25 @@ class NdfcVrf12:
 
         Finally, return the DetachList model.
         """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
         lan_detach_items: list[LanDetachItem] = []
+
+        msg = f"attach_list: length {len(attach_list)}."
+        self.log.debug(msg)
+        self.log_list_of_models(attach_list)
+
         for have_lan_attach_item in attach_list:
             if not have_lan_attach_item.is_attached:
                 continue
-            # Mutate HaveLanAttachItem to LanDetachItem
+            msg = "have_lan_attach_item: "
+            msg += f"{json.dumps(have_lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = "Mutating HaveLanAttachItem to LanDetachItem."
+            self.log.debug(msg)
             lan_detach_item = LanDetachItem(
                 deployment=False,
                 extensionValues=have_lan_attach_item.extension_values,
@@ -1802,6 +1821,9 @@ class NdfcVrf12:
                 vlanId=have_lan_attach_item.vlan,
                 vrfName=have_lan_attach_item.vrf_name,
             )
+            msg = "Mutating HaveLanAttachItem to LanDetachItem. DONE."
+            self.log.debug(msg)
+
             vrf_name = have_lan_attach_item.vrf_name
             lan_detach_items.append(lan_detach_item)
         # Create DetachList model
