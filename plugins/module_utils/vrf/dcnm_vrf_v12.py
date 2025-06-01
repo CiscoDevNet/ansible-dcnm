@@ -1825,11 +1825,15 @@ class NdfcVrf12:
 
             vrf_name = have_lan_attach_item.vrf_name
             lan_detach_items.append(lan_detach_item)
-        # Create DetachList model
+
+        msg = "Creating DetachList model."
+        self.log.debug(msg)
         detach_list_model = DetachList(
             lan_attach_list=lan_detach_items,
             vrf_name=vrf_name,
         )
+        msg = "Creating DetachList model. DONE."
+        self.log.debug(msg)
 
         msg = f"Returning detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
         self.log.debug(msg)
