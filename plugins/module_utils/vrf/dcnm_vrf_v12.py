@@ -51,6 +51,7 @@ from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDepl
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
+from .model_detach_list_v12 import DetachList, LanDetachItem
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
@@ -105,6 +106,14 @@ class NdfcVrf12:
         self.class_name: str = self.__class__.__name__
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
+        # Temporary hack to determine of usage of Pydantic models is enabled.
+        # If True, model-based methods are used.
+        # If False, legacy methods are used.
+        # Do not set this to True here.  It's set/unset strategically
+        # as needed and will be removed once all methods are modified
+        # to use Pydantic models.
+        self.model_enabled: bool = False
 
         self.module: AnsibleModule = module
         self.params: dict[str, Any] = module.params
@@ -224,9 +233,9 @@ class NdfcVrf12:
         self.response: dict = {}
         self.log.debug("DONE")
 
-    def log_list_of_models(self, model_list):
+    def log_list_of_models(self, model_list, by_alias: bool = False) -> None:
         for index, model in enumerate(model_list):
-            msg = f"{index}. {json.dumps(model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+            msg = f"{index}. {json.dumps(model.model_dump(by_alias=by_alias), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
     @staticmethod
@@ -306,6 +315,47 @@ class NdfcVrf12:
             if match == value:
                 return item
         return {}
+
+    def find_model_in_list_by_key_value(self, search: Optional[list], key: str, value: str) -> Any:
+        """
+        # Summary
+
+        Find a model in a list of models and return the matching model.
+
+
+        ## Raises
+
+        None
+
+        ## Parameters
+
+        -   search: A list of models, or None
+        -   key: The key to lookup in each model
+        -   value: The desired matching value for key
+
+        ## Raises
+
+        - None
+
+        ## Returns
+
+        Either the first matching model or None
+        """
+        if search is None:
+            return None
+        msg = "ENTERED. "
+        msg += f"key: {key}, value: {value}. model_list: length {len(search)}."
+        self.log.debug(msg)
+        self.log_list_of_models(search, by_alias=False)
+
+        for item in search:
+            try:
+                match = getattr(item, key)
+            except AttributeError:
+                return None
+            if match == value:
+                return item
+        return None
 
     # pylint: disable=inconsistent-return-statements
     def to_bool(self, key: Any, dict_with_key: dict[Any, Any]) -> bool:
@@ -1461,7 +1511,7 @@ class NdfcVrf12:
         self.have_attach_model = updated_vrf_attach_models
         msg = f"self.have_attach.POST_UPDATE: length: {len(self.have_attach)}."
         self.log.debug(msg)
-        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        msg = f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
     def _update_vrf_lite_extension_model(self, attach: HaveLanAttachItem) -> HaveLanAttachItem:
@@ -1578,6 +1628,10 @@ class NdfcVrf12:
         self.populate_have_deploy(get_vrf_attach_response)
         # self.populate_have_attach(get_vrf_attach_response)
         self.populate_have_attach_model(get_vrf_attach_response_model.data)
+
+        msg = "self.have_attach: "
+        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
     def get_want_attach(self) -> None:
         """
@@ -1711,6 +1765,57 @@ class NdfcVrf12:
                 detach_list.append(item)
         return detach_list
 
+    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> DetachList:
+        """
+        # Summary
+
+        Given a list of HaveLanAttachItem objects, return a list of
+        DetachList models.
+
+        This is done by checking if the isAttached field in each
+        HaveLanAttachItem is True.
+
+        If HaveLanAttachItem.isAttached field is True, it indicates that the
+        attachment is attached to a VRF and needs to be detached.  In this case,
+        mutate the HaveLanAttachItem to a LanDetachItem which will:
+
+        - Remove the isAttached field
+        - Set the deployment field to False
+
+        The LanDetachItem is added to DetachList.lan_attach_list.
+
+        Finally, return the DetachList model.
+        """
+        lan_detach_items: list[LanDetachItem] = []
+        for have_lan_attach_item in attach_list:
+            if not have_lan_attach_item.is_attached:
+                continue
+            # Mutate HaveLanAttachItem to LanDetachItem
+            lan_detach_item = LanDetachItem(
+                deployment=False,
+                extensionValues=have_lan_attach_item.extension_values,
+                fabric=have_lan_attach_item.fabric,
+                freeformConfig=have_lan_attach_item.freeform_config,
+                instanceValues=have_lan_attach_item.instance_values,
+                is_deploy=have_lan_attach_item.is_deploy,
+                serialNumber=have_lan_attach_item.serial_number,
+                vlanId=have_lan_attach_item.vlan,
+                vrfName=have_lan_attach_item.vrf_name,
+            )
+            vrf_name = have_lan_attach_item.vrf_name
+            lan_detach_items.append(lan_detach_item)
+        # Create DetachList model
+        detach_list_model = DetachList(
+            lan_attach_list=lan_detach_items,
+            vrf_name=vrf_name,
+        )
+
+        msg = f"Returning detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
+        self.log.debug(msg)
+        msg = f"{json.dumps(detach_list_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        return detach_list_model
+
     def get_diff_delete(self) -> None:
         """
         # Summary
@@ -1727,14 +1832,20 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
+        self.model_enabled = True
+
         if self.config:
             self._get_diff_delete_with_config()
         else:
             self._get_diff_delete_without_config()
 
         msg = "self.diff_detach: "
-        msg += f"{json.dumps(self.diff_detach, indent=4)}"
-        self.log.debug(msg)
+        if not self.model_enabled:
+            msg += f"{json.dumps(self.diff_detach, indent=4)}"
+            self.log.debug(msg)
+        else:
+            self.log_list_of_models(self.diff_detach, by_alias=False)
+
         msg = "self.diff_undeploy: "
         msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
         self.log.debug(msg)
@@ -1749,10 +1860,22 @@ class NdfcVrf12:
         In this case, we detach, undeploy, and delete the VRFs
         specified in self.config.
         """
+        if self.model_enabled:
+            self._get_diff_delete_with_config_model()
+            return
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
         diff_detach: list[dict] = []
         diff_undeploy: dict = {}
         diff_delete: dict = {}
         all_vrfs = set()
+
+        msg = "self.have_attach: "
+        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         for want_c in self.want_create:
             if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_c["vrfName"]) == {}:
@@ -1782,6 +1905,9 @@ class NdfcVrf12:
 
         In this case, we detach, undeploy, and delete all VRFs.
         """
+        if self.model_enabled:
+            self._get_diff_delete_without_config_model()
+            return
         diff_detach: list[dict] = []
         diff_undeploy: dict = {}
         diff_delete: dict = {}
@@ -1799,6 +1925,98 @@ class NdfcVrf12:
             diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_detach = copy.deepcopy(diff_detach)
+        self.diff_undeploy = copy.deepcopy(diff_undeploy)
+        self.diff_delete = copy.deepcopy(diff_delete)
+
+    def _get_diff_delete_with_config_model(self) -> None:
+        """
+        Handle diff_delete logic when self.config is not empty.
+
+        In this case, we detach, undeploy, and delete the VRFs
+        specified in self.config.
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        diff_detach: list[DetachList] = []
+        diff_undeploy: dict = {}
+        diff_delete: dict = {}
+        all_vrfs = set()
+
+        msg = "self.have_attach_model: "
+        self.log.debug(msg)
+        self.log_list_of_models(self.have_attach_model, by_alias=True)
+
+        for want_c in self.want_create:
+            if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_c["vrfName"]) == {}:
+                continue
+
+            diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
+
+            have_attach_model: HaveAttachPostMutate = self.find_model_in_list_by_key_value(
+                search=self.have_attach_model, key="vrf_name", value=want_c["vrfName"]
+            )
+            if not have_attach_model:
+                msg = f"ZZZ: have_attach_model not found for vrfName: {want_c['vrfName']}. "
+                msg += "Continuing."
+                self.log.debug(msg)
+                continue
+
+            msg = "ZZZ: have_attach_model: "
+            msg += f"{json.dumps(have_attach_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            detach_list_model: DetachList = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
+            msg = f"ZZZ: detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
+            self.log.debug(msg)
+            msg = f"{json.dumps(detach_list_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            if detach_list_model.lan_attach_list:
+                diff_detach.append(detach_list_model)
+                all_vrfs.add(detach_list_model.vrf_name)
+        if len(all_vrfs) != 0:
+            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        self.diff_detach = diff_detach
+        self.diff_undeploy = copy.deepcopy(diff_undeploy)
+        self.diff_delete = copy.deepcopy(diff_delete)
+
+    def _get_diff_delete_without_config_model(self) -> None:
+        """
+        Handle diff_delete logic when self.config is empty or None.
+
+        In this case, we detach, undeploy, and delete all VRFs.
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        diff_detach: list[DetachList] = []
+        diff_undeploy: dict = {}
+        diff_delete: dict = {}
+        all_vrfs = set()
+
+        msg = "self.have_attach_model: "
+        self.log.debug(msg)
+        self.log_list_of_models(self.have_attach_model, by_alias=True)
+
+        have_attach_model: HaveAttachPostMutate
+        for have_attach_model in self.have_attach_model:
+            msg = f"ZZZ: type(have_attach_model): {type(have_attach_model)}"
+            self.log.debug(msg)
+            diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
+            detach_list_model = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
+            if detach_list_model.lan_attach_list:
+                diff_detach.append(detach_list_model)
+                all_vrfs.add(detach_list_model.vrf_name)
+
+        if len(all_vrfs) != 0:
+            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        self.diff_detach = diff_detach
         self.diff_undeploy = copy.deepcopy(diff_undeploy)
         self.diff_delete = copy.deepcopy(diff_delete)
 
@@ -2209,6 +2427,11 @@ class NdfcVrf12:
                 }
                 for lan_attach in vrf["lanAttachList"]
             ]
+            msg = "ZZZ: new_attach_list: "
+            msg += f"{json.dumps(new_attach_list, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            msg = f"ZZZ: diff_deploy: {diff_deploy}"
+            self.log.debug(msg)
             if new_attach_list:
                 if diff_deploy and vrf["vrfName"] in diff_deploy:
                     diff_deploy.remove(vrf["vrfName"])
@@ -2217,6 +2440,10 @@ class NdfcVrf12:
                     "vrf_name": vrf["vrfName"],
                 }
                 diff.append(new_attach_dict)
+
+        msg = "ZZZ: returning diff: "
+        msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return diff
 
     def format_diff_create(self, diff_create: list, diff_attach: list, diff_deploy: list) -> list:
@@ -2318,6 +2545,10 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
+        if self.model_enabled:
+            self.format_diff_model()
+            return
+
         diff_create = copy.deepcopy(self.diff_create)
         diff_create_quick = copy.deepcopy(self.diff_create_quick)
         diff_create_update = copy.deepcopy(self.diff_create_update)
@@ -2326,12 +2557,70 @@ class NdfcVrf12:
         msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         diff_detach = copy.deepcopy(self.diff_detach)
+        msg = "ZZZ: diff_detach: "
+        msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         diff_deploy = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
         diff_undeploy = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
 
         diff_create.extend(diff_create_quick)
         diff_create.extend(diff_create_update)
         diff_attach.extend(diff_detach)
+        diff_deploy.extend(diff_undeploy)
+
+        diff = []
+        diff.extend(self.format_diff_create(diff_create, diff_attach, diff_deploy))
+        diff.extend(self.format_diff_attach(diff_attach, diff_deploy))
+        diff.extend(self.format_diff_deploy(diff_deploy))
+
+        self.diff_input_format = copy.deepcopy(diff)
+        msg = "self.diff_input_format: "
+        msg += f"{json.dumps(self.diff_input_format, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def format_diff_model(self) -> None:
+        """
+        # Summary
+
+        Populate self.diff_input_format, which represents the
+        difference to the controller configuration after the playbook
+        has run, from the information in the following lists:
+
+        - self.diff_create
+        - self.diff_create_quick
+        - self.diff_create_update
+        - self.diff_attach
+        - self.diff_detach
+        - self.diff_deploy
+        - self.diff_undeploy
+
+        self.diff_input_format is formatted using keys a user
+        would use in a playbook.  The keys in the above lists
+        are those used by the controller API.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        diff_create = copy.deepcopy(self.diff_create)
+        diff_create_quick = copy.deepcopy(self.diff_create_quick)
+        diff_create_update = copy.deepcopy(self.diff_create_update)
+        diff_attach = copy.deepcopy(self.diff_attach)
+        msg = "ZZZ: diff_attach: "
+        msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        diff_detach = copy.deepcopy(self.diff_detach)
+        msg = "ZZZ: diff_detach: "
+        self.log.debug(msg)
+        self.log_list_of_models(diff_detach, by_alias=False)
+        diff_deploy = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
+        diff_undeploy = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
+
+        diff_create.extend(diff_create_quick)
+        diff_create.extend(diff_create_update)
+        diff_attach.extend([model.model_dump(by_alias=True) for model in diff_detach])
         diff_deploy.extend(diff_undeploy)
 
         diff = []
@@ -2384,6 +2673,10 @@ class NdfcVrf12:
 
         Send diff_detach to the controller
         """
+        if self.model_enabled:
+            self.push_diff_detach_model(is_rollback)
+            return
+
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
@@ -2418,6 +2711,58 @@ class NdfcVrf12:
             path=f"{endpoint.path}/attachments",
             verb=endpoint.verb,
             payload=json.dumps(self.diff_detach),
+            log_response=True,
+            is_rollback=is_rollback,
+        )
+        self.send_to_controller(args)
+
+    def push_diff_detach_model(self, is_rollback=False) -> None:
+        """
+        # Summary
+
+        Send diff_detach to the controller
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += "self.diff_detach: "
+        self.log.debug(msg)
+        self.log_list_of_models(self.diff_detach, by_alias=False)
+
+        if not self.diff_detach:
+            msg = "Early return. self.diff_detach is empty."
+            self.log.debug(msg)
+            return
+
+        # For multisite fabric, update the fabric name to the child fabric
+        # containing the switches
+        if self.fabric_type == "MFD":
+            for model in self.diff_detach:
+                for lan_attach_item in model.lan_attach_list:
+                    lan_attach_item.fabric = self.sn_fab[lan_attach_item.serial_number]
+
+        for diff_attach_model in self.diff_detach:
+            for lan_attach_item in diff_attach_model.lan_attach_list:
+                try:
+                    del lan_attach_item.is_deploy
+                except AttributeError:
+                    # If the model does not have is_deploy, skip the deletion
+                    msg = "is_deploy not found in lan_attach_item. "
+                    msg += "Continuing without deleting is_deploy."
+                    self.log.debug(msg)
+
+        action: str = "attach"
+        endpoint = EpVrfPost()
+        endpoint.fabric_name = self.fabric
+
+        payload = [model.model_dump(by_alias=True, exclude_none=True, exclude_unset=True) for model in self.diff_detach]
+
+        args = SendToControllerArgs(
+            action=action,
+            path=f"{endpoint.path}/attachments",
+            verb=endpoint.verb,
+            payload=json.dumps(payload),
             log_response=True,
             is_rollback=is_rollback,
         )
@@ -3152,8 +3497,7 @@ class NdfcVrf12:
         fail, self.result["changed"] = self.handle_response(generic_response, args.action)
 
         msg = f"caller: {caller}, "
-        msg += "RESULT self.handle_response:"
-        self.log.debug(msg)
+        msg += "RESULT self.handle_response: "
         msg = f"fail: {fail}, changed: {self.result['changed']}"
         self.log.debug(msg)
 
@@ -3594,6 +3938,42 @@ class NdfcVrf12:
         msg += f"caller: {caller}."
         self.log.debug(msg)
 
+        if self.model_enabled:
+            self.push_to_remote_model(is_rollback=is_rollback)
+            return
+
+        self.push_diff_create_update(is_rollback=is_rollback)
+
+        # The detach and un-deploy operations are executed before the
+        # create,attach and deploy to address cases where a VLAN for vrf
+        # attachment being deleted is re-used on a new vrf attachment being
+        # created. This is needed specially for state: overridden
+
+        self.push_diff_detach(is_rollback=is_rollback)
+        self.push_diff_undeploy(is_rollback=is_rollback)
+
+        msg = "Calling self.push_diff_delete"
+        self.log.debug(msg)
+
+        self.push_diff_delete(is_rollback=is_rollback)
+        for vrf_name in self.diff_delete:
+            self.release_orphaned_resources(vrf=vrf_name, is_rollback=is_rollback)
+
+        self.push_diff_create(is_rollback=is_rollback)
+        self.push_diff_attach(is_rollback=is_rollback)
+        self.push_diff_deploy(is_rollback=is_rollback)
+
+    def push_to_remote_model(self, is_rollback=False) -> None:
+        """
+        # Summary
+
+        Send all diffs to the controller
+        """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}."
+        self.log.debug(msg)
+
         self.push_diff_create_update(is_rollback=is_rollback)
 
         # The detach and un-deploy operations are executed before the
@@ -3631,6 +4011,10 @@ class NdfcVrf12:
         msg += f"vrf_name: {vrf_name}"
         self.log.debug(msg)
 
+        msg = "self.diff_delete: "
+        msg += f"{json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         for vrf in self.diff_delete:
             ok_to_delete: bool = False
             path: str = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
@@ -3646,13 +4030,17 @@ class NdfcVrf12:
                 )
                 self.send_to_controller(args)
 
-                resp = copy.deepcopy(self.response)
+                response = copy.deepcopy(self.response)
                 ok_to_delete = True
-                if resp.get("DATA") is None:
+                if response.get("DATA") is None:
                     time.sleep(self.wait_time_for_delete_loop)
                     continue
 
-                attach_list: list = resp["DATA"][0]["lanAttachList"]
+                msg = "response: "
+                msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                attach_list: list = response["DATA"][0]["lanAttachList"]
                 msg = f"ok_to_delete: {ok_to_delete}, "
                 msg += f"attach_list: {json.dumps(attach_list, indent=4)}"
                 self.log.debug(msg)
