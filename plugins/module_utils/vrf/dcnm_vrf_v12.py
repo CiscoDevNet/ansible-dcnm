@@ -2482,6 +2482,21 @@ class NdfcVrf12:
         """
         Populate the diff list with remaining attachment entries.
         """
+        caller = inspect.stack()[1][3]
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        msg = "ZZZ: diff_attach: "
+        msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        msg = "ZZZ: diff_deploy: "
+        msg += f"{json.dumps(diff_deploy, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+        if not diff_attach:
+            msg = "ZZZ: No diff_attach entries to process. Returning empty list."
+            self.log.debug(msg)
+            return []
         diff = []
         for vrf in diff_attach:
             # TODO: arobel: using models, we get a KeyError for lan_attach[vlan], so we try lan_attach[vlanId] too.
@@ -3664,10 +3679,14 @@ class NdfcVrf12:
         - If the switch is not a border switch, fail the module
         - Get associated vrf_lite objects from the switch
         - Update vrf lite extensions with information from the vrf_lite objects
+        - If vrf_attach.fabricName is present, replace it with vrf_attach.fabric
+        - If, after replacing vrf_attach.fabricName, vrf_attach.fabric is None, fail the module
 
         ## Raises
 
         - fail_json: If the switch is not a border switch
+        - fail_json: If vrf_attach.fabric is None after processing
+        - fail_json: If vrf_attach does not contain a fabric key after processing
         """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
@@ -3688,6 +3707,21 @@ class NdfcVrf12:
             self.log.debug(msg)
 
             vrf_attach = self.update_vrf_attach_fabric_name(vrf_attach)
+
+            if "fabric" not in vrf_attach and "fabricName" in vrf_attach:
+                vrf_attach["fabric"] = vrf_attach.pop("fabricName", None)
+            if "fabric" not in vrf_attach:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"caller {caller}. "
+                msg += "vrf_attach does not contain a fabric key. "
+                msg += f"ip: {ip_address}, serial number: {serial_number}"
+                self.module.fail_json(msg=msg)
+            if vrf_attach.get("fabric") is None:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"caller {caller}. "
+                msg += "vrf_attach.fabric is None. "
+                msg += f"ip: {ip_address}, serial number: {serial_number}"
+                self.module.fail_json(msg=msg)
 
             if "is_deploy" in vrf_attach:
                 del vrf_attach["is_deploy"]
