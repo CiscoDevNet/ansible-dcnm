@@ -2393,11 +2393,11 @@ class NdfcVrf12:
                 msg += f"have_attach: {json.dumps(have_attach, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
 
-                msg = f"want_attach[vrfName]: {want_attach.get("vrfName")}"
+                msg = f"want_attach[vrfName]: {want_attach.get('vrfName')}"
                 self.log.debug(msg)
-                msg = f"have_attach[vrfName]: {have_attach.get("vrfName")}"
+                msg = f"have_attach[vrfName]: {have_attach.get('vrfName')}"
                 self.log.debug(msg)
-                msg = f"want_config[deploy]: {want_config.get("deploy")}"
+                msg = f"want_config[deploy]: {want_config.get('deploy')}"
                 self.log.debug(msg)
 
                 if want_attach.get("vrfName") != have_attach.get("vrfName"):
