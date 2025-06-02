@@ -2772,6 +2772,17 @@ class NdfcVrf12:
             self.log.debug(msg)
             return
 
+        # Replace fabricName key (if present) with fabric key
+        for diff_attach in self.diff_detach:
+            for lan_attach_item in diff_attach["lanAttachList"]:
+                if "fabricName" in lan_attach_item:
+                    lan_attach_item["fabric"] = lan_attach_item.pop("fabricName", None)
+                if lan_attach_item.get("fabric") is None:
+                    msg = "lan_attach_item.fabric is None. "
+                    msg += f"Setting it to self.fabric ({self.fabric})."
+                    self.log.debug(msg)
+                    lan_attach_item["fabric"] = self.fabric
+
         # For multisite fabric, update the fabric name to the child fabric
         # containing the switches
         if self.fabric_type == "MFD":
@@ -2783,6 +2794,10 @@ class NdfcVrf12:
             for vrf_attach in diff_attach["lanAttachList"]:
                 if "is_deploy" in vrf_attach.keys():
                     del vrf_attach["is_deploy"]
+
+        msg = "self.diff_detach after processing: "
+        msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         action: str = "attach"
         endpoint = EpVrfPost()
