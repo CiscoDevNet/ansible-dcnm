@@ -1842,8 +1842,8 @@ class NdfcVrf12:
         self.log_list_of_models(lan_detach_items)
 
         detach_list_model = DetachList(
-            lan_attach_list=lan_detach_items,
-            vrf_name=vrf_name,
+            lanAttachList=lan_detach_items,
+            vrfName=vrf_name,
         )
 
         msg = "Creating DetachList model. DONE."
