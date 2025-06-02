@@ -1780,7 +1780,7 @@ class NdfcVrf12:
                 detach_list.append(item)
         return detach_list
 
-    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> DetachList:
+    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> Union[DetachList, None]:
         """
         # Summary
 
@@ -1799,7 +1799,15 @@ class NdfcVrf12:
 
         The LanDetachItem is added to DetachList.lan_attach_list.
 
-        Finally, return the DetachList model.
+        ## Raises
+
+        - fail_json if the vrf_name is not found in lan_detach_items
+        - fail_json if multiple different vrf_names are found in lan_detach_items
+
+        ## Returns
+
+        - A DetachList model containing the list of LanDetachItem objects.
+        - None, if no items are to be detached.
         """
         caller = inspect.stack()[1][3]
         msg = "ENTERED. "
@@ -1836,6 +1844,11 @@ class NdfcVrf12:
 
             vrf_name = have_lan_attach_item.vrf_name
             lan_detach_items.append(lan_detach_item)
+
+        if not lan_detach_items:
+            msg = "No items to detach found in attach_list. Returning None."
+            self.log.debug(msg)
+            return None
 
         msg = "Creating DetachList model."
         self.log.debug(msg)
@@ -2019,6 +2032,10 @@ class NdfcVrf12:
             self.log.debug(msg)
 
             detach_list_model: DetachList = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
+            if not detach_list_model:
+                msg = "detach_list_model is None. continuing."
+                self.log.debug(msg)
+                continue
             msg = f"ZZZ: detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
             self.log.debug(msg)
             msg = f"{json.dumps(detach_list_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
@@ -2059,6 +2076,10 @@ class NdfcVrf12:
             self.log.debug(msg)
             diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
             detach_list_model = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
+            if not detach_list_model:
+                msg = "detach_list_model is None. continuing."
+                self.log.debug(msg)
+                continue
             if detach_list_model.lan_attach_list:
                 diff_detach.append(detach_list_model)
                 all_vrfs.add(detach_list_model.vrf_name)
