@@ -2380,7 +2380,7 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         for want_attach in self.want_attach:
-            msg = f"ZZZ: type(want_attach): {type(want_attach)}, "
+            msg = f"type(want_attach): {type(want_attach)}, "
             msg += f"want_attach: {json.dumps(want_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             # Check user intent for this VRF and don't add it to the all_vrfs
@@ -2389,10 +2389,18 @@ class NdfcVrf12:
             vrf_to_deploy: str = ""
             attach_found = False
             for have_attach in self.have_attach:
-                msg = f"ZZZ: type(have_attach): {type(have_attach)}, "
+                msg = f"type(have_attach): {type(have_attach)}, "
                 msg += f"have_attach: {json.dumps(have_attach, indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-                if want_attach["vrfName"] != have_attach["vrfName"]:
+
+                msg = f"want_attach[vrfName]: {want_attach.get("vrfName")}"
+                self.log.debug(msg)
+                msg = f"have_attach[vrfName]: {have_attach.get("vrfName")}"
+                self.log.debug(msg)
+                msg = f"want_config[deploy]: {want_config.get("deploy")}"
+                self.log.debug(msg)
+
+                if want_attach.get("vrfName") != have_attach.get("vrfName"):
                     continue
                 attach_found = True
                 diff, deploy_vrf_bool = self.diff_for_attach_deploy(
@@ -2410,11 +2418,11 @@ class NdfcVrf12:
                     base["lanAttachList"] = diff
 
                     diff_attach.append(base)
-                    if (want_config["deploy"] is True) and (deploy_vrf_bool is True):
-                        vrf_to_deploy = want_attach["vrfName"]
+                    if (want_config.get("deploy") is True) and (deploy_vrf_bool is True):
+                        vrf_to_deploy = want_attach.get("vrfName")
                 else:
-                    if want_config["deploy"] is True and (deploy_vrf_bool or self.conf_changed.get(want_attach["vrfName"], False)):
-                        vrf_to_deploy = want_attach["vrfName"]
+                    if want_config.get("deploy") is True and (deploy_vrf_bool or self.conf_changed.get(want_attach.get("vrfName"), False)):
+                        vrf_to_deploy = want_attach.get("vrfName")
 
             msg = f"attach_found: {attach_found}"
             self.log.debug(msg)
