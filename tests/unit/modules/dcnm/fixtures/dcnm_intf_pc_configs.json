@@ -153,6 +153,7 @@
         "policy": "int_port_channel_access_host_11_1",
         "admin_state": "True",
         "access_vlan": 200,
+	      "orphan_port": false,
         "cmds": [
           "no shutdown"
         ],
@@ -214,6 +215,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
+      	"native_vlan": "10",
+        "orphan_port": false,
+	      "speed": "Auto",
+	      "duplex": "auto",
         "cmds": [
           "no shutdown"
         ],
@@ -243,6 +248,7 @@
         "policy": "int_port_channel_access_host_11_1",
         "admin_state": "False",
         "ifname": "Port-channel301",
+        "orphan_port": false,
         "cmds": [
           "no shutdown"
         ],
@@ -466,6 +472,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "False",
         "allowed_vlans": "all",
+	      "native_vlan": "10",
+        "orphan_port": false,
+      	"speed": "Auto",
+	      "duplex": "auto",
         "cmds": [
           "no shutdown",
         "no shutdown"
@@ -483,7 +493,7 @@
       ],
       "profile": {
         "access_vlan": 301,
-        "description": "port channel acting as accesa - replaceds",
+        "description": "port channel acting as access - replaced",
         "bpdu_guard": "False",
         "sno": "SAL1819SAN8",
         "mtu": "jumbo",
@@ -496,6 +506,7 @@
         "policy": "int_port_channel_access_host_11_1",
         "admin_state": "True",
         "ifname": "Port-channel301",
+	      "orphan_port": false,
         "cmds": [
           "no shutdown",
         "no shutdown"
@@ -571,6 +582,10 @@
         "policy": "int_port_channel_trunk_host_11_1",
         "admin_state": "True",
         "allowed_vlans": "none",
+	      "native_vlan": "10",
+        "orphan_port": false,
+	      "speed": "Auto",
+	      "duplex": "auto",
         "cmds": [
           "no shutdown"
         ],

@@ -61,7 +61,7 @@
 
 - assert:
     that:
-    - 'result.response.DATA != None'
+    - result.response.DATA != None
 
 - name: SETUP.2 - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -113,17 +113,17 @@
 
 - assert:
     that:
-    - 'result_1.changed == true'
-    - 'result_1.response[0].RETURN_CODE == 200'
-    - 'result_1.response[1].RETURN_CODE == 200'
-    - 'result_1.response[2].RETURN_CODE == 200'
-    - '(result_1.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_1.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1.diff[0].attach[0].deploy == true'
-    - 'result_1.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_1.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_1.diff[0].attach[1].ip_address'
-    - 'result_1.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_1.changed == true
+    - result_1.response[0].RETURN_CODE == 200
+    - result_1.response[1].RETURN_CODE == 200
+    - result_1.response[2].RETURN_CODE == 200
+    - (result_1.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_1.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - result_1.diff[0].attach[0].deploy == true
+    - result_1.diff[0].attach[1].deploy == true
+    - switch_1 in result_1.diff[0].attach[0].ip_address
+    - switch_2 in result_1.diff[0].attach[1].ip_address
+    - result_1.diff[0].vrf_name == "ansible-vrf-int1"
 
 - name: TEST.1c - MERGED - [merged] conf1 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf1
@@ -135,8 +135,8 @@
 
 - assert:
     that:
-    - 'result_1c.changed == false'
-    - 'result_1c.response|length == 0'
+    - result_1c.changed == false
+    - result_1c.response|length == 0
 
 - name: TEST.1e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -183,17 +183,17 @@
 
 - assert:
     that:
-    - 'result_2.changed == true'
-    - 'result_2.response[0].RETURN_CODE == 200'
-    - 'result_2.response[1].RETURN_CODE == 200'
-    - 'result_2.response[2].RETURN_CODE == 200'
-    - '(result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_2.diff[0].attach[0].deploy == true'
-    - 'result_2.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_2.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
-    - 'result_2.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_2.changed == true
+    - result_2.response[0].RETURN_CODE == 200
+    - result_2.response[1].RETURN_CODE == 200
+    - result_2.response[2].RETURN_CODE == 200
+    - (result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - result_2.diff[0].attach[0].deploy == true
+    - result_2.diff[0].attach[1].deploy == true
+    - switch_1 in result_2.diff[0].attach[0].ip_address
+    - switch_2 in result_2.diff[0].attach[1].ip_address
+    - result_2.diff[0].vrf_name == "ansible-vrf-int1"
 
 - name: TEST.2c - MERGED - [merged] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -205,8 +205,8 @@
 
 - assert:
     that:
-    - 'result_2c.changed == false'
-    - 'result_2c.response|length == 0'
+    - result_2c.changed == false
+    - result_2c.response|length == 0
 
 - name: TEST.2e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -259,17 +259,17 @@
 
 - assert:
     that:
-    - 'result_3.changed == true'
-    - 'result_3.response[0].RETURN_CODE == 200'
-    - 'result_3.response[1].RETURN_CODE == 200'
-    - 'result_3.response[2].RETURN_CODE == 200'
-    - '(result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_3.diff[0].attach[0].deploy == true'
-    - 'result_3.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_3.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_3.diff[0].attach[1].ip_address'
-    - 'result_3.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_3.changed == true
+    - result_3.response[0].RETURN_CODE == 200
+    - result_3.response[1].RETURN_CODE == 200
+    - result_3.response[2].RETURN_CODE == 200
+    - (result_3.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_3.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - result_3.diff[0].attach[0].deploy == true
+    - result_3.diff[0].attach[1].deploy == true
+    - switch_1 in result_3.diff[0].attach[0].ip_address
+    - switch_2 in result_3.diff[0].attach[1].ip_address
+    - result_3.diff[0].vrf_name == "ansible-vrf-int1"
 
 - name: TEST.3c - MERGED - [merged] conf3 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf3
@@ -281,8 +281,8 @@
 
 - assert:
     that:
-    - 'result_3c.changed == false'
-    - 'result_3c.response|length == 0'
+    - result_3c.changed == false
+    - result_3c.response|length == 0
 
 - name: TEST.3e - MERGED - [deleted] Delete all VRFs
   cisco.dcnm.dcnm_vrf:
@@ -330,17 +330,17 @@
 
 - assert:
     that:
-    - 'result_4.changed == true'
-    - 'result_4.response[0].RETURN_CODE == 200'
-    - 'result_4.response[1].RETURN_CODE == 200'
-    - 'result_4.response[2].RETURN_CODE == 200'
-    - '(result_4.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_4.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_4.diff[0].attach[0].deploy == true'
-    - 'result_4.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_4.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_4.diff[0].attach[1].ip_address'
-    - 'result_4.diff[0].vrf_name == "ansible-vrf-int1"'
+    - result_4.changed == true
+    - result_4.response[0].RETURN_CODE == 200
+    - result_4.response[1].RETURN_CODE == 200
+    - result_4.response[2].RETURN_CODE == 200
+    - (result_4.response[1].DATA|dict2items)[0].value == "SUCCESS"
+    - (result_4.response[1].DATA|dict2items)[1].value == "SUCCESS"
+    - result_4.diff[0].attach[0].deploy == true
+    - result_4.diff[0].attach[1].deploy == true
+    - switch_1 in result_4.diff[0].attach[0].ip_address
+    - switch_2 in result_4.diff[0].attach[1].ip_address
+    - result_4.diff[0].vrf_name == "ansible-vrf-int1"
 
 - name: TEST.5 - MERGED - [merged] Create, Attach, Deploy VRF - Update with incorrect VRF ID.
   cisco.dcnm.dcnm_vrf:
@@ -362,10 +362,14 @@
   ansible.builtin.debug:
     var: result_5
 
+- name: set fact
+  set_fact:
+    TEST_PHRASE: "cannot be updated to a different value"
+
 - assert:
     that:
-    - 'result_5.changed == false'
-    - '"cannot be updated to a different value" in result_5.msg'
+    - result_5.changed == false
+    - TEST_PHRASE in result_5.msg
 
 - name: TEST.6 - MERGED - [merged] Create, Attach, Deploy VRF - Update with Out of Range VRF ID.
   cisco.dcnm.dcnm_vrf:
@@ -387,10 +391,14 @@
   ansible.builtin.debug:
     var: result_6
 
+- name: set fact
+  set_fact:
+    TEST_PHRASE: "The item exceeds the allowed range of max"
+
 - assert:
     that:
-    - 'result_6.changed == false'
-    - '"The item exceeds the allowed range of max" in result_6.msg'
+    - result_6.changed == false
+    - TEST_PHRASE in result_6.msg
 
 - name: TEST.7 - MERGED - [merged] Create, Attach, Deploy VRF - VRF LITE missing required parameter
   cisco.dcnm.dcnm_vrf:
@@ -415,10 +423,14 @@
   ansible.builtin.debug:
     var: result_7
 
+- name: set fact
+  set_fact:
+    TEST_PHRASE: "Invalid parameters in playbook: interface : Required parameter not found"
+
 - assert:
     that:
-    - 'result_7.changed == false'
-    - '"Invalid parameters in playbook: interface : Required parameter not found" in result_7.msg'
+    - result_7.changed == false
+    - TEST_PHRASE in result_7.msg
 
 - name: TEST.8 - MERGED - [merged] Create, Attach and Deploy VRF - configure VRF LITE on non border switch
   cisco.dcnm.dcnm_vrf:
@@ -448,10 +460,14 @@
   ansible.builtin.debug:
     var: result_8
 
+- name: set fact
+  set_fact:
+    TEST_PHRASE: "VRF LITE attachments are appropriate only for switches with Border roles"
+
 - assert:
     that:
-    - 'result_8.changed == false'
-    - '"VRF LITE cannot be attached to switch" in result_8.msg'
+    - result_8.changed == false
+    - TEST_PHRASE in result_8.msg
 
 ###############################################
 ###                 CLEAN-UP                 ##

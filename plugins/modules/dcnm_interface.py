@@ -16,7 +16,7 @@
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
-__author__ = "Mallik Mudigonda"
+__author__ = "Mallik Mudigonda, Mike Wiebe"
 
 DOCUMENTATION = """
 ---
@@ -69,7 +69,7 @@ options:
     type: list
     required: false
     elements: str
-    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex"]
+    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex", "breakout"]
     default: []
   config:
     description:
@@ -97,7 +97,7 @@ options:
         - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', 'breakout']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -113,7 +113,7 @@ options:
           mode:
             description:
             - Interface mode
-            choices: ['trunk', 'access', 'l3', 'monitor']
+            choices: ['trunk', 'access', 'l3', 'dot1q', 'monitor']
             type: str
             required: true
           members:
@@ -124,7 +124,13 @@ options:
             required: true
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
           int_vrf:
@@ -164,6 +170,17 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          orphan_port:
+            description:
+            - interface orphan port behavior when switch is in vPC
+            type: bool
+            default: false
+          duplex:
+            description:
+            - Duplex of the interface. Speed must be set to use duplex.
+            type: str
+            choices: ['auto', 'full', 'half']
+            default: auto
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -241,6 +258,18 @@ options:
             type: str
             choices: ['none', 'all', 'vlan-range(e.g., 1-2, 3-40)']
             default: none
+          peer1_native_vlan:
+            description:
+            - Vlan used as native vlan of first peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
+            type: str
+            default: ""
+          peer2_native_vlan:
+            description:
+            - Vlan used as native vlan of second peer.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'
+            type: str
+            default: ""
           peer1_access_vlan:
             description:
             - Vlan for the interface of first peer.
@@ -348,6 +377,11 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          route_tag:
+            description:
+            - Route tag associated with the interface IP.
+            type: str
+            default: ""
       profile_lo:
         description:
         - Though the key shown here is 'profile_lo' the actual key to be used in playbook
@@ -419,7 +453,10 @@ options:
           mode:
             description:
             - Interface mode
-            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed']
+            - When ethernet interface is a PortChannel or vPC member, mode is ignored.
+              The only properties that can be managed for PortChannel or vPC member interfaces
+              are 'admin_state', 'description' and 'cmds'. All other properties are ignored.
+            choices: ['trunk', 'access', 'routed', 'monitor', 'epl_routed', 'dot1q']
             type: str
             required: true
           bpdu_guard:
@@ -451,7 +488,13 @@ options:
             default: none
           access_vlan:
             description:
-            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access'
+            - Vlan for the interface. This option is applicable only for interfaces whose 'mode' is 'access' or 'dot1q'
+            type: str
+            default: ""
+          native_vlan:
+            description:
+            - Vlan used as native vlan.
+              This option is applicable only for interfaces whose 'mode' is 'trunk'.
             type: str
             default: ""
           speed:
@@ -459,6 +502,17 @@ options:
             - Speed of the interface.
             type: str
             default: Auto
+          orphan_port:
+            description:
+            - interface orphan port behavior when switch is in vPC
+            type: bool
+            default: false
+          duplex:
+            description:
+            - Duplex of the interface. Speed must be set to use duplex.
+            type: str
+            choices: ['auto', 'full', 'half']
+            default: auto
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
@@ -778,7 +832,19 @@ options:
             - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
             type: str
             default: ""
-
+      profile_breakout:
+        description:
+        - Though the key shown here is 'profile_breakout' the actual key to be used in playbook
+          is 'profile'. The key 'profile_breakout' is used here to logically segregate the interface
+          objects applicable for this profile
+        - "Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported."
+        suboptions:
+          map:
+            description:
+            - type of breakout
+            type: str
+            required: true
+            choices: ["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]
 """
 
 EXAMPLES = """
@@ -1577,6 +1643,71 @@ EXAMPLES = """
           enable_netflow: false                     # optional, flag to enable netflow, default is false
           mode: port_channel_st                     # choose from [port_channel_st], default is "port_channel_st"
 
+# Dot1q Tunnel host
+
+- name: Configure dot1q on interface E1/12
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_fabric }}"
+    state: merged
+    config:
+      - name: eth1/12
+        type: eth
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+        admin_state: true
+        mode: dot1q
+        access_vlan: 41
+        description: "ETH 1/12 Dot1q Tunnel"
+
+# Breakout interfaces
+
+- name: Configure breakout interface
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_svi_fabric }}"
+    state: merged
+    config:
+      - name: ethernet1/100
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+      - name: ethernet1/101
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+      - name: ethernet1/102
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+
+- name: Configure breakout interface
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_svi_fabric }}"
+    state: deleted
+    config:
+      - name: ethernet1/100
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+      - name: ethernet1/101
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+      - name: ethernet1/102
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+
 # QUERY
 
 - name: Query interface details
@@ -1604,11 +1735,14 @@ EXAMPLES = """
 
 """
 
-import time
-import json
-import re
 import copy
+import inspect
+import json
+import logging
+import re
 import sys
+import time
+
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
@@ -1618,10 +1752,22 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     validate_list_of_dicts,
     get_ip_sn_dict,
     dcnm_version_supported,
+    find_dict_in_list_by_key_value,
 )
+from ..module_utils.common.log_v2 import Log
+
+
+def json_pretty(msg):
+    """
+    Return a pretty-printed JSON string for logging messages
+    """
+    return json.dumps(msg, indent=4, sort_keys=True)
 
 
 class DcnmIntf:
+    """
+    Dcnm Interface methods, properties, and resources for all states.
+    """
 
     dcnm_intf_paths = {
         11: {
@@ -1643,10 +1789,14 @@ class DcnmIntf:
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
+            "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
         },
     }
 
     def __init__(self, module):
+        self.class_name = self.__class__.__name__
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.module = module
         self.params = module.params
         self.fabric = module.params["fabric"]
@@ -1660,11 +1810,10 @@ class DcnmIntf:
         self.have_all_list = []
         self.diff_create = []
         self.diff_replace = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_query = []
-        self.log_verbosity = 0
         self.fd = None
         self.vpc_ip_sn = {}
         self.ip_sn = {}
@@ -1742,7 +1891,9 @@ class DcnmIntf:
             "PORTTYPE_FAST_ENABLED": "port_type_fast",
             "MTU": "mtu",
             "SPEED": "speed",
+            "PORT_DUPLEX_MODE": "duplex",
             "ALLOWED_VLANS": "allowed_vlans",
+            "NATIVE_VLAN": "native_vlan",
             "ACCESS_VLAN": "access_vlan",
             "INTF_NAME": "ifname",
             "PO_ID": "ifname",
@@ -1752,6 +1903,8 @@ class DcnmIntf:
             "PEER2_MEMBER_INTERFACES": "peer2_members",
             "PEER1_ALLOWED_VLANS": "peer1_allowed_vlans",
             "PEER2_ALLOWED_VLANS": "peer2_allowed_vlans",
+            "PEER1_NATIVE_VLAN": "peer1_native_vlan",
+            "PEER2_NATIVE_VLAN": "peer2_native_vlan",
             "PO_DESC": "po_description",
             "PEER1_PO_DESC": "peer1_description",
             "PEER2_PO_DESC": "peer2_description",
@@ -1761,6 +1914,7 @@ class DcnmIntf:
             "PEER2_ACCESS_VLAN": "peer2_access_vlan",
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
+            "ENABLE_ORPHAN_PORT": "orphan_port",
         }
 
         # New Interfaces
@@ -1789,6 +1943,7 @@ class DcnmIntf:
                 "pc_trunk": "int_port_channel_trunk_host",
                 "pc_access": "int_port_channel_access_host",
                 "pc_l3": "int_l3_port_channel",
+                "pc_dot1q": "int_port_channel_dot1q_tunnel_host",
                 "sub_int_subint": "int_subif",
                 "lo_lo": "int_loopback",
                 "lo_fabric": "int_fabric_loopback_11_1",
@@ -1798,12 +1953,37 @@ class DcnmIntf:
                 "eth_routed": "int_routed_host",
                 "eth_monitor": "int_monitor_ethernet",
                 "eth_epl_routed": "epl_routed_intf",
+                "eth_dot1q": "int_dot1q_tunnel_host",
                 "vpc_trunk": "int_vpc_trunk_host",
                 "vpc_access": "int_vpc_access_host",
                 "svi_vlan": "int_vlan",
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
                 "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
+                "breakout": "breakout_interface",
+            },
+        }
+
+        self.pol_pc_member_types = {
+            11: {
+                "pc_access_member": "int_port_channel_access_member_11_1",
+                "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
+                "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
+                "vpc_access_member": "int_vpc_access_po_member_11_1",
+                "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
+                "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
+            },
+            12: {
+                "pc_access_member": "int_port_channel_access_member_11_1",
+                "pc_trunk_member": "int_port_channel_trunk_member_11_1",
+                "pc_dot1q_tunnel_member": "int_port_channel_dot1q_tunnel_member_11_1",
+                "vpc_peer_link_member": "int_vpc_peer_link_po_member_11_1",
+                "vpc_access_member": "int_vpc_access_po_member_11_1",
+                "vpc_trunk_member": "int_vpc_trunk_po_member_11_1",
+                "vpc_dot1q_tunnel_member": "int_vpc_dot1q_tunnel_po_member_11_1",
+                "l3_pc_member": "int_l3_port_channel_member",
             },
         }
 
@@ -1817,6 +1997,7 @@ class DcnmIntf:
             "svi": "INTERFACE_VLAN",
             "st_fex": "STRAIGHT_TROUGH_FEX",
             "aa_fex": "AA_FEX",
+            "breakout": "BREAKOUT",
         }
 
         # New Interfaces
@@ -1829,16 +2010,11 @@ class DcnmIntf:
             "INTERFACE_VLAN": 5,
             "STRAIGHT_TROUGH_FEX": 6,
             "AA_FEX": 7,
+            "BREAKOUT": 8,
         }
 
-    def log_msg(self, msg):
-
-        if self.fd is None:
-            self.fd = open("dcnm_intf.log", "a+")
-        if self.fd is not None:
-            self.fd.write(msg)
-            self.fd.write("\n")
-            self.fd.flush()
+        msg = "ENTERED DcnmIntf: "
+        self.log.debug(msg)
 
     def dcnm_intf_dump_have_all(self):
 
@@ -1860,7 +2036,9 @@ class DcnmIntf:
                     "UNDERLAY POLICIES": have["underlayPolicies"],
                 }
             )
-        self.log_msg(f"HAVE ALL = {lhave_all}")
+        msg = "HAVE ALL = "
+        msg += f"{json_pretty(lhave_all)}"
+        self.log.debug(msg)
 
     def dcnm_intf_xlate_speed(self, speed):
 
@@ -1897,8 +2075,13 @@ class DcnmIntf:
             port_id = re.findall(r"\d+", name)
             return ("Loopback" + str(port_id[0]), port_id[0])
         if "eth" == if_type:
-            port_id = re.findall(r"\d+\/\d+", name)
-            return ("Ethernet" + str(port_id[0]), port_id[0])
+            # add regex for breakout Ex: Ethernet1/49/1
+            if re.findall(r"\d+\/\d+\/\d+", name):
+                port_id = re.findall(r"\d+\/\d+\/\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
+            if re.findall(r"\d+\/\d+", name):
+                port_id = re.findall(r"\d+\/\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
         if "svi" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vlan" + str(port_id[0]), port_id[0])
@@ -1908,6 +2091,9 @@ class DcnmIntf:
         if "aa_fex" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vPC" + str(port_id[0]), port_id[0])
+        if "breakout" == if_type:
+            port_id = re.findall(r"\d+\/\d+", name)
+            return ("Ethernet" + str(port_id[0]), port_id[0])
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
@@ -1919,7 +2105,7 @@ class DcnmIntf:
         else:
             return ""
 
-    # Flatten the incoming config database and have the required fileds updated.
+    # Flatten the incoming config database and have the required fields updated.
     # This modified config DB will be used while creating payloads. To avoid
     # messing up the incoming config make a copy of it.
     def dcnm_intf_copy_config(self):
@@ -1958,7 +2144,9 @@ class DcnmIntf:
                         ifname, port_id = self.dcnm_intf_get_if_name(
                             c["name"], c["type"]
                         )
-
+                        # No need to copy when we break interface, because parent interface will be removed
+                        if "breakout" in cfg["type"]:
+                            continue
                         if "mode" not in cfg["profile"]:
                             self.module.fail_json(
                                 msg="Invalid parameters in playbook: while processing interface "
@@ -2036,9 +2224,13 @@ class DcnmIntf:
             mtu=dict(type="str", default="jumbo"),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
+            native_vlan=dict(type="str", default=""),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         pc_prof_spec_access = dict(
@@ -2053,6 +2245,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2070,6 +2265,20 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        pc_prof_spec_dot1q = dict(
+            mode=dict(required=True, type="str"),
+            members=dict(type="list"),
+            pc_mode=dict(type="str", default="active"),
+            bpdu_guard=dict(type="str", default="true"),
+            port_type_fast=dict(type="bool", default=True),
+            mtu=dict(type="str", default="jumbo"),
+            speed=dict(type="str", default="Auto"),
+            access_vlan=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            description=dict(type="str", default=""),
+            admin_state=dict(type="bool", default=True),
+        )
+
         if "trunk" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_trunk
@@ -2081,6 +2290,10 @@ class DcnmIntf:
         if "l3" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 config, pc_spec, pc_prof_spec_l3
+            )
+        if "dot1q" == config[0]["profile"]["mode"]:
+            self.dcnm_intf_validate_interface_input(
+                config, pc_spec, pc_prof_spec_dot1q
             )
         if "monitor" == config[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(config, pc_spec, None)
@@ -2112,6 +2325,8 @@ class DcnmIntf:
             speed=dict(type="str", default="Auto"),
             peer1_allowed_vlans=dict(type="str", default="none"),
             peer2_allowed_vlans=dict(type="str", default="none"),
+            peer1_native_vlan=dict(type="str", default=""),
+            peer2_native_vlan=dict(type="str", default=""),
             peer1_cmds=dict(type="list"),
             peer2_cmds=dict(type="list"),
             peer1_description=dict(type="str", default=""),
@@ -2175,6 +2390,7 @@ class DcnmIntf:
                 type="int", range_min=64, range_max=127, default=64
             ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
+            route_tag=dict(type="str", default=""),
             speed=dict(type="str", default="Auto"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
@@ -2227,9 +2443,13 @@ class DcnmIntf:
             ),
             speed=dict(type="str", default="Auto"),
             allowed_vlans=dict(type="str", default="none"),
+            native_vlan=dict(type="str", default=""),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         eth_prof_spec_access = dict(
@@ -2244,6 +2464,9 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         eth_prof_spec_routed_host = dict(
@@ -2274,6 +2497,20 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
         )
 
+        eth_prof_spec_dot1q_tunnel_host = dict(
+            mode=dict(required=True, type="str"),
+            bpdu_guard=dict(type="str", default="true"),
+            port_type_fast=dict(type="bool", default=True),
+            mtu=dict(
+                type="str", default="jumbo", choices=["jumbo", "default"]
+            ),
+            speed=dict(type="str", default="Auto"),
+            access_vlan=dict(type="str", default=""),
+            cmds=dict(type="list", elements="str"),
+            description=dict(type="str", default=""),
+            admin_state=dict(type="bool", default=True),
+        )
+
         if "trunk" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_trunk
@@ -2291,6 +2528,10 @@ class DcnmIntf:
         if "epl_routed" == cfg[0]["profile"]["mode"]:
             self.dcnm_intf_validate_interface_input(
                 cfg, eth_spec, eth_prof_spec_epl_routed_host
+            )
+        if "dot1q" == cfg[0]["profile"]["mode"]:
+            self.dcnm_intf_validate_interface_input(
+                cfg, eth_spec, eth_prof_spec_dot1q_tunnel_host
             )
 
     def dcnm_intf_validate_vlan_interface_input(self, cfg):
@@ -2426,6 +2667,22 @@ class DcnmIntf:
 
         self.dcnm_intf_validate_interface_input(cfg, fex_spec, fex_prof_spec)
 
+    def dcnm_intf_validate_breakout_interface_input(self, cfg):
+        breakout_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        breakout_prof_spec = dict(
+            map=dict(required=True, type="str",
+                     default="",
+                     choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
+        )
+        self.dcnm_intf_validate_interface_input(cfg, breakout_spec, breakout_prof_spec)
+
     def dcnm_intf_validate_delete_state_input(self, cfg):
 
         del_spec = dict(
@@ -2506,6 +2763,8 @@ class DcnmIntf:
                     self.dcnm_intf_validate_st_fex_interface_input(cfg)
                 if item["type"] == "aa_fex":
                     self.dcnm_intf_validate_aa_fex_interface_input(cfg)
+                if item["type"] == "breakout":
+                    self.dcnm_intf_validate_breakout_interface_input(cfg)
             cfg.remove(citem)
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
@@ -2539,7 +2798,14 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
             ]
+            intf["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = delem[profile][
+                "native_vlan"
+            ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2563,6 +2829,10 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2592,6 +2862,31 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["MTU"] = str(
                 delem[profile]["mtu"]
             )
+
+        if delem[profile]["mode"] == "dot1q":
+            if delem[profile]["members"] is None:
+                intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
+            else:
+                intf["interfaces"][0]["nvPairs"][
+                    "MEMBER_INTERFACES"
+                ] = ",".join(delem[profile]["members"])
+            intf["interfaces"][0]["nvPairs"]["PC_MODE"] = delem[profile][
+                "pc_mode"
+            ]
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
+            intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
+                delem[profile]["port_type_fast"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
+                "access_vlan"
+            ]
+            intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
+
         if delem[profile]["mode"] == "monitor":
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
@@ -2661,7 +2956,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["PEER2_ALLOWED_VLANS"] = delem[
                 profile
             ]["peer2_allowed_vlans"]
-
+            intf["interfaces"][0]["nvPairs"]["PEER1_NATIVE_VLAN"] = delem[
+                profile
+            ]["peer1_native_vlan"]
+            intf["interfaces"][0]["nvPairs"]["PEER2_NATIVE_VLAN"] = delem[
+                profile
+            ]["peer2_native_vlan"]
             if delem[profile]["peer1_pcid"] == 0:
                 intf["interfaces"][0]["nvPairs"]["PEER1_PCID"] = str(port_id)
             else:
@@ -2774,6 +3074,9 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
             delem[profile]["ipv4_mask_len"]
         )
+        intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
+            "route_tag"
+        ]
         if delem[profile]["ipv6_addr"]:
             intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
                 delem[profile]["ipv6_addr"]
@@ -2893,7 +3196,14 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = delem[profile][
                 "allowed_vlans"
             ]
+            intf["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = delem[profile][
+                "native_vlan"
+            ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -2908,6 +3218,10 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -2969,6 +3283,20 @@ class DcnmIntf:
             ] = self.dcnm_intf_xlate_speed(
                 str(delem[profile].get("speed", ""))
             )
+        if delem[profile]["mode"] == "dot1q":
+            intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
+                profile
+            ]["bpdu_guard"].lower()
+            intf["interfaces"][0]["nvPairs"]["PORTTYPE_FAST_ENABLED"] = str(
+                delem[profile]["port_type_fast"]
+            ).lower()
+            intf["interfaces"][0]["nvPairs"]["MTU"] = str(
+                delem[profile]["mtu"]
+            )
+            intf["interfaces"][0]["nvPairs"]["ACCESS_VLAN"] = delem[profile][
+                "access_vlan"
+            ]
+            intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
     def dcnm_intf_get_st_fex_payload(self, delem, intf, profile):
 
@@ -3222,6 +3550,26 @@ class DcnmIntf:
         # Monitor ports are not put into diff_deploy, since they don't have any
         # commands to be executed on switch. This will affect the idempotence
         # check
+
+        if delem["type"] == "breakout":
+            ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+
+            intf = {
+                "deploy": delem["deploy"],
+                "policy": "breakout_interface",
+                "interfaceType": "breakout_interface",
+                "interfaces": [
+                    {
+                        "serialNumber": str(self.ip_sn[sw]),
+                        "ifName": ifname,
+                        "map": str(delem["profile"]["map"]),
+                        "interfaceType": self.int_types[delem["type"]],
+                        "fabricName": self.fabric,
+                    }
+                ]
+            }
+            return intf
+
         if delem["profile"]["mode"] == "monitor":
             intf.update({"deploy": False})
         else:
@@ -3549,8 +3897,114 @@ class DcnmIntf:
                 return match_have[0], False
         return [], True
 
-    def dcnm_intf_compare_want_and_have(self, state):
+    def dcnm_intf_replace_pc_members(self, want, have):
+        """
+        ### Summary
+        Search ``self.want`` for any port-channel member interfaces that are also
+        found in ``self.have`` and if found will replace the member interfaces in
+        self.want with the correct policy and properties that can be managed.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
 
+        # Get supported port-channel member policies
+        member_policy_names = []
+        for key in self.pol_pc_member_types[self.dcnm_version].keys():
+            member_policy_names.append(self.pol_pc_member_types[self.dcnm_version][key])
+
+        # List of keys in nvPairs to protect
+        protected_keys = ["PO_ID", "PC_MODE", "INTF_NAME", "ALLOWED_VLANS", "DESC", "ADMIN_STATE", "CONF", "PRIMARY_INTF"]
+
+        for have_int in have:
+            if have_int["policy"] in member_policy_names:
+                # We have a port-channel member interface. Find the corresponding port-channel
+                # interface on the same device in want and replace the member interfaces
+                have_pc_name = have_int["interfaces"][0]["ifName"]
+                have_pc_serial = have_int["interfaces"][0]["serialNumber"]
+
+                for want_int in want:
+                    match_int = find_dict_in_list_by_key_value(search=want_int['interfaces'], key='ifName', value=have_pc_name)
+                    if match_int and match_int['serialNumber'] == have_pc_serial:
+                        msg = "\nHave Interface Info: "
+                        msg += f"{json_pretty(have_int)}"
+                        msg += "Want Interface Info Before Update: "
+                        msg += f"{json_pretty(want_int)}"
+                        self.log.debug(msg)
+                        # Rewrite want nvPairs and policy with the correct information
+                        want_int['interfaces'][0]['nvPairs']['PO_ID'] = have_int['interfaces'][0]['nvPairs']['PO_ID']
+                        want_int['interfaces'][0]['nvPairs']['INTF_NAME'] = have_int['interfaces'][0]['nvPairs']['INTF_NAME']
+
+                        # The following keys may or may not be present for PC member interfaces
+                        for key in ['PC_MODE', 'ALLOWED_VLANS', 'PRIMARY_INTF']:
+                            want_int['interfaces'][0]['nvPairs'][key] = have_int['interfaces'][0]['nvPairs'].get(key)
+                            if want_int['interfaces'][0]['nvPairs'][key] is None and key in protected_keys:
+                                protected_keys.remove(key)
+
+                        # Delete unprotected keys from want_int nvPairs
+                        for key in list(want_int['interfaces'][0]['nvPairs'].keys()):
+                            if key not in protected_keys:
+                                want_int['interfaces'][0]['nvPairs'].pop(key)
+
+                        # Update want_int policy to be the same as have_int policy
+                        want_int['policy'] = have_int['policy']
+
+                        msg += "Want Interface Info After Update: "
+                        msg += f"{json_pretty(want_int)}"
+                        self.log.debug(msg)
+
+        self.want = want
+        self.have = have
+
+    def dcnm_intf_compare_want_and_have(self, state):
+        """
+        ### Summary
+        Compare want and have states for each interface
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: entered"
+        self.log.debug(msg)
+
+        # Special Case Handling for PortChannnel (PC) and Virtual PortChannel (vPC) Member Interfaces.
+        # Member interfaces are added to a PC or vPC when the PC or vPC is created and the
+        # policy is applied to the member interface based on the type of PC or vPC.
+        #
+        # Once this policy is applied to the member interface, only the following properties
+        # can be modified on the member interface:
+        #   - Interface Description
+        #   - Interface Admin State
+        #   - Interface Freeform Configuration
+        #
+        # The following logic will search self.have for any member interfaces that are also
+        # found in self.want and if found will replace the member interfaces in self.want
+        # with the correct policy and properties that can be managed. After that we process
+        # the new self.want as usual.
+        have_member = {}
+        msg = "Member Policy Types: "
+        msg += f"{self.pol_pc_member_types[self.dcnm_version]}"
+        self.log.debug(msg)
+        for key in self.pol_pc_member_types[self.dcnm_version].keys():
+            # Potential Keys:
+            # [
+            #   'pc_access_member',
+            #   'pc_trunk_member',
+            #   'vpc_peer_link_member',
+            #   'vpc_access_member',
+            #   'vpc_trunk_member',
+            #   'l3_pc_member',
+            #   'pc_dot1q_tunnel_member',
+            # ]
+            # NOTE: pvlan interface types are currently not supported by this module.
+            policy_name = self.pol_pc_member_types[self.dcnm_version][key]
+            have_member = find_dict_in_list_by_key_value(search=self.have, key='policy', value=policy_name)
+
+            # If we find any member in self.have that matches a policy in self.pol_pc_member_types[self.dcnm_version].keys()
+            # then call the self.dcnm_intf_replace_pc_members function to process all PC and vPC members.
+            if have_member:
+                self.dcnm_intf_replace_pc_members(self.want, self.have)
+                break
+
+        # --------------------------------------------------------------------------------------------------------------------
         for want in self.want:
 
             delem = {}
@@ -3573,6 +4027,10 @@ class DcnmIntf:
             ]
 
             if not match_have:
+                # Match when interface is a breakout, is not possible because
+                # parent interface doesn't exist.
+                if "breakout_interface" in want['policy']:
+                    continue
                 changed_dict = copy.deepcopy(want)
 
                 if (
@@ -3618,13 +4076,15 @@ class DcnmIntf:
                             for ik in if_keys:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
-                                    if "SPEED" in nv_keys:
-                                        # Remove 'SPEED' only if it is not included in 'have'.
-                                        if (
-                                            d[k][index][ik].get("SPEED", None)
-                                            is None
-                                        ):
-                                            nv_keys.remove("SPEED")
+                                    # List of keys to check and potentially remove from nv_keys
+                                    # Some keys are not present in the first GET and must be removed
+                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE"]
+
+                                    for key in keys_to_check:
+                                        # Remove the key from nv_keys only if it exists and is not present in 'have'
+                                        if key in nv_keys and d[k][index][ik].get(key, None) is None:
+                                            nv_keys.remove(key)
+
                                     for nk in nv_keys:
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
@@ -3714,6 +4174,15 @@ class DcnmIntf:
                                 changed_dict.pop(k)
 
             if action == "add":
+                # If E1/x/y do not create. Interface is created with breakout
+                if re.search(r"\d+\/\d+\/\d+", name):
+                    found, parent_type = self.dcnm_intf_get_parent(self.config, name)
+                    if found and parent_type == "breakout":
+                        if want.get("interfaceType", None) is not None:
+                            want.pop("interfaceType")
+                        self.diff_replace.append(want)
+                        self.changed_dict[0][state].append(changed_dict)
+                    continue
                 self.dcnm_intf_merge_intf_info(want, self.diff_create)
                 # Add the changed_dict to self.changed_dict
                 self.changed_dict[0][state].append(changed_dict)
@@ -3851,6 +4320,11 @@ class DcnmIntf:
                 != str(have_nv.get("ALLOWED_VLANS")).lower()
             ):
                 return "DCNM_INTF_NOT_MATCH"
+            if (
+                str(intf_nv.get("NATIVE_VLAN")).lower()
+                != str(have_nv.get("NATIVE_VLAN")).lower()
+            ):
+                return "DCNM_INTF_NOT_MATCH"
         return "DCNM_INTF_MATCH"
 
     def dcnm_intf_get_default_eth_payload(self, ifname, sno, fabric):
@@ -3894,6 +4368,7 @@ class DcnmIntf:
                 "PORTTYPE_FAST_ENABLED"
             ] = True
             eth_payload["interfaces"][0]["nvPairs"]["ALLOWED_VLANS"] = "none"
+            eth_payload["interfaces"][0]["nvPairs"]["NATIVE_VLAN"] = ""
             eth_payload["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
 
             eth_payload["interfaces"][0]["ifName"] = ifname
@@ -3974,12 +4449,27 @@ class DcnmIntf:
                 ):
                     self.dcnm_intf_get_have_all(sw)
 
+    def dcnm_intf_get_parent(self, cfg, name):
+        # Extract the parent interface ID (e.g., "1/2" from "1/2/3")
+        match = re.search(r"(\d+/\d+)/\d+", name)
+        if not match:
+            return False, None  # Return early if the pattern doesn't match
+
+        parent_port_id = f"ethernet{match.group(1)}"
+
+        # Search for the parent interface in the configuration
+        for interface in cfg:
+            if interface.get("name") == parent_port_id:
+                return True, interface.get("type", None)
+
+        return False, None
+
     def dcnm_intf_get_diff_overridden(self, cfg):
 
         deploy = False
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4088,6 +4578,20 @@ class DcnmIntf:
                     self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
+                    # In case of breakout, check if parent interface is in cfg
+                    # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
+                    # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
+                    if re.search(r"\d+\/\d+\/\d+", name):
+                        found, parent_type = self.dcnm_intf_get_parent(cfg, name)
+
+                        if not (found and parent_type == "breakout"):
+                            payload = {
+                                "serialNumber": have["serialNo"],
+                                "ifName": have["ifName"]
+                            }
+                            breakout_index = self.int_index[self.int_types["breakout"]]
+                            self.diff_delete[breakout_index].append(payload)
+                            self.changed_dict[0]["deleted"].append(copy.deepcopy(payload))
                     continue
 
                 if uelem is not None:
@@ -4265,8 +4769,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_deleted(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4294,6 +4798,27 @@ class DcnmIntf:
                         intf = {}
                         delem = {}
 
+                        # If interface type is breakout, we rewrite payload.
+                        # We append "/1" to the parent interface to create delete payload.
+                        # Delete payload:
+                        # [
+                        #     {
+                        #         "serialNumber": "xxxxxx",
+                        #         "ifName": "Ethernet1/100/1"
+                        #     }
+                        # ]
+                        if cfg.get("type", None) is not None:
+                            if cfg['type'] == "breakout":
+                                payload = {"serialNumber": self.ip_sn[sw],
+                                           "ifName": cfg["name"] + "/1"}
+                                if_type = cfg['type']
+                                self.diff_delete[
+                                    self.int_index[self.int_types[cfg['type']]]
+                                ].append(payload)
+                                self.changed_dict[0]["deleted"].append(
+                                    copy.deepcopy(payload)
+                                )
+                                continue
                         if_name, if_type = self.dcnm_extract_if_name(cfg)
 
                         # Check if the interface is present in DCNM
@@ -4716,10 +5241,16 @@ class DcnmIntf:
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
 
+        delete_index = 0
         for delem in self.diff_delete:
 
             if delem == []:
+                delete_index = delete_index + 1
                 continue
+
+            # index 8 is used for breakout interface
+            if delete_index == 8:
+                path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
 
             json_payload = json.dumps(delem)
 
@@ -4763,7 +5294,7 @@ class DcnmIntf:
 
             delete = changed
             self.result["response"].append(resp)
-
+            delete_index = delete_index + 1
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
@@ -4798,12 +5329,20 @@ class DcnmIntf:
             self.result["response"].append(resp)
 
         resp = None
-
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
-
-            json_payload = json.dumps(payload)
-            resp = dcnm_send(self.module, "PUT", path, json_payload)
+            # breakout interface
+            if "breakout_interface" in payload["policy"]:
+                path = self.paths["BREAKOUT"]
+                for breakout in payload['interfaces']:
+                    breakout.pop("fabricName")
+                    breakout.pop("interfaceType")
+                json_payload = json.dumps(payload['interfaces'])
+                resp = dcnm_send(self.module, "POST", path, json_payload)
+            else:
+                path = self.paths["INTERFACE"]
+                json_payload = json.dumps(payload)
+                resp = dcnm_send(self.module, "PUT", path, json_payload)
 
             self.result["response"].append(resp)
 
@@ -4819,7 +5358,9 @@ class DcnmIntf:
 
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
-
+            # Do not create interface E1/x/y directly.
+            if re.search(r"\d+\/\d+\/\d+", payload['interfaces'][0]['ifName']):
+                continue
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -5106,6 +5647,7 @@ def main():
                 "svi",
                 "st_fex",
                 "aa_fex",
+                "breakout",
             ],
             default=[],
         ),
@@ -5115,6 +5657,13 @@ def main():
     module = AnsibleModule(
         argument_spec=element_spec, supports_check_mode=True
     )
+
+    # Logging setup
+    try:
+        log = Log()
+        log.commit()
+    except (TypeError, ValueError):
+        pass
 
     dcnm_intf = DcnmIntf(module)
 

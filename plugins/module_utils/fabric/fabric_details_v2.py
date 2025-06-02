@@ -362,6 +362,32 @@ class FabricDetails:
             return None
 
     @property
+    def per_vrf_loopback_auto_provision(self):
+        """
+        ### Summary
+        The ``nvPairs.PER_VRF_LOOPBACK_AUTO_PROVISION`` value of the fabric
+        specified with filter.
+
+        ### Raises
+        None
+
+        ### Type
+        boolean
+
+        ### Returns
+        - True
+        - False
+        - None
+        """
+        try:
+            return self._get_nv_pair("PER_VRF_LOOPBACK_AUTO_PROVISION")
+        except ValueError as error:
+            msg = "Failed to retrieve per_vrf_loopback_auto_provision: "
+            msg += f"Error detail: {error}"
+            self.log.debug(msg)
+            return None
+
+    @property
     def replication_mode(self):
         """
         ### Summary

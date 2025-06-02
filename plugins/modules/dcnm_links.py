@@ -3032,7 +3032,7 @@ class DcnmLinks:
                     {
                         "ENABLE_MACSEC_MISMATCH": [
                             str(wlink["nvPairs"]["ENABLE_MACSEC"]).lower(),
-                            str(hlink["nvPairs"]["ENABLE_MACSEC"]).lower(),
+                            str(hlink["nvPairs"].get("ENABLE_MACSEC")).lower(),
                         ]
                     }
                 )

@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/CiscoDevNet/ansible-dcnm/workflows/CI/badge.svg)](https://github.com/CiscoDevNet/ansible-dcnm/actions)
+[![Actions Status](https://github.com/CiscoDevNet/ansible-dcnm/workflows/CI/badge.svg)](https://github.com/CiscoDevNet/ansible-dcnm/actions?branch=develop)
 
 
 # Cisco DCNM Collection
@@ -71,7 +71,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.7.0
+    version: 3.8.0
 ```
 ## Using this collection
 
