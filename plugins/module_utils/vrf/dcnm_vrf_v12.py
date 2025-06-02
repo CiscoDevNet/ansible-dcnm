@@ -395,7 +395,7 @@ class NdfcVrf12:
             msg += f"key: {key}, "
             msg += f"value ({str(value)}), "
             msg += f"with type {type(value)} "
-            msg += "is not convertable to boolean. "
+            msg += "is not convertable to boolean."
             self.log.debug(msg)
             raise ValueError(msg)
         return result
@@ -594,6 +594,8 @@ class NdfcVrf12:
 
                 # Compare deployment/attachment status
                 if not self._deployment_status_match(want_attach, have_attach):
+                    msg = "self._deployment_status_match() returned False."
+                    self.log.debug(msg)
                     want_attach = self._prepare_attach_for_deploy(want_attach)
                     attach_list.append(want_attach)
                     if self.to_bool("is_deploy", want_attach):
@@ -615,7 +617,7 @@ class NdfcVrf12:
                     if self.to_bool("is_deploy", want_attach):
                         deploy_vrf = True
 
-        msg = "Returning deploy_vrf: "
+        msg = f"Caller {caller}: Returning deploy_vrf: "
         msg += f"{deploy_vrf}, "
         msg += "attach_list: "
         msg += f"{json.dumps(attach_list, indent=4, sort_keys=True)}"
@@ -2366,11 +2368,17 @@ class NdfcVrf12:
         all_vrfs: set = set()
 
         msg = "self.want_attach: "
-        msg += f"{json.dumps(self.want_attach, indent=4, sort_keys=True)}"
+        msg += f"type: {type(self.want_attach)}"
         self.log.debug(msg)
+        msg = f"value: {json.dumps(self.want_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         msg = "self.have_attach: "
-        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        msg += f"type: {type(self.have_attach)}"
         self.log.debug(msg)
+        msg = f"value: {json.dumps(self.have_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         for want_attach in self.want_attach:
             msg = f"ZZZ: type(want_attach): {type(want_attach)}, "
             msg += f"want_attach: {json.dumps(want_attach, indent=4, sort_keys=True)}"
@@ -2392,10 +2400,14 @@ class NdfcVrf12:
                     have_attach_list=have_attach["lanAttachList"],
                     replace=replace,
                 )
+                msg = "diff_for_attach_deploy() returned with: "
+                msg += f"deploy_vrf_bool {deploy_vrf_bool}, "
+                msg += f"diff {json.dumps(diff, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
                 if diff:
-                    base = want_attach.copy()
-                    del base["lanAttachList"]
-                    base.update({"lanAttachList": diff})
+                    base = copy.deepcopy(want_attach)
+                    base["lanAttachList"] = diff
 
                     diff_attach.append(base)
                     if (want_config["deploy"] is True) and (deploy_vrf_bool is True):
@@ -2417,9 +2429,8 @@ class NdfcVrf12:
                     lan_attach["deployment"] = True
                     attach_list.append(copy.deepcopy(lan_attach))
                 if attach_list:
-                    base = want_attach.copy()
-                    del base["lanAttachList"]
-                    base.update({"lanAttachList": attach_list})
+                    base = copy.deepcopy(want_attach)
+                    base["lanAttachList"] = attach_list
                     diff_attach.append(base)
 
             if vrf_to_deploy:
