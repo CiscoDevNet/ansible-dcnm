@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class LanAttachListItemV12(BaseModel):
@@ -17,14 +17,10 @@ class LanAttachListItemV12(BaseModel):
     - fabric: str (min_length=1, max_length=64), alias: fabric
     - freeform_config: Optional[str], alias: freeformConfig, default=""
     - instance_values: Optional[str], alias: instanceValues, default=""
-    - is_deploy: Optional[bool], alias: is_deploy
     - serial_number: str, alias: serialNumber
-    - vlan: Union(int | None), alias: vlan
+    - vlan_id: int, alias: vlanId
     - vrf_name: str (min_length=1, max_length=32), alias: vrfName
 
-    ## Notes
-    - `deployment` - False indicates that attachment should be detached.
-      This model unconditionally forces `deployment` to False.
     """
 
     deployment: bool = Field(alias="deployment")
@@ -33,8 +29,18 @@ class LanAttachListItemV12(BaseModel):
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
     instance_values: Optional[str] = Field(alias="instanceValues", default="")
     serial_number: str = Field(alias="serialNumber")
-    vlan: Union[int | None] = Field(alias="vlanId")
+    vlan_id: int = Field(alias="vlanId")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
+
+    @model_validator(mode="before")
+    @classmethod
+    def fix_vlan_field(cls, data: dict) -> dict:
+        """
+        Convert vlan field, if present, to vlanId
+        """
+        if "vlan" in data and "vlanId" not in data:
+            data["vlanId"] = data.pop("vlan")
+        return data
 
 
 class VrfAttachPayloadV12(BaseModel):
@@ -44,6 +50,8 @@ class VrfAttachPayloadV12(BaseModel):
     Represents a POST payload for the following endpoint:
 
     api.v1.lan_fabric.rest.top_down.fabrics.vrfs.Vrfs.EpVrfPost
+
+    /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/attachments
 
     See NdfcVrf12.push_diff_attach
 

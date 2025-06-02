@@ -3771,6 +3771,11 @@ class NdfcVrf12:
         msg += "ENTERED. "
         self.log.debug(msg)
 
+        self.model_enabled = True
+
+        msg = f"self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         if self.model_enabled:
             self.push_diff_attach_model(is_rollback)
             return
@@ -3828,16 +3833,16 @@ class NdfcVrf12:
         msg += "ENTERED. "
         self.log.debug(msg)
 
-        msg = f"type(self.diff_attach): {type(self.diff_attach)}."
-        self.log.debug(msg)
-        msg = f"self.diff_attach: PRE_UPDATE: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
         if not self.diff_attach:
             msg = "Early return. self.diff_attach is empty. "
             msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
+
+        msg = f"type(self.diff_attach): {type(self.diff_attach)}."
+        self.log.debug(msg)
+        msg = f"self.diff_attach: PRE_UPDATE: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
         new_diff_attach_list: list = []
         for diff_attach in self.diff_attach:
@@ -3849,7 +3854,7 @@ class NdfcVrf12:
 
             new_lan_attach_list = self.update_lan_attach_list(diff_attach)
 
-            msg = "Updating diff_attach[lanAttachList] with: "
+            msg = "Updating diff_attach[lanAttachList] with new_lan_attach_list: "
             msg += f"{json.dumps(new_lan_attach_list, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
@@ -3861,8 +3866,8 @@ class NdfcVrf12:
             self.log.debug(msg)
 
         # Transmute new_diff_attach_list to a list of VrfAttachPayloadV12 models
-        payload = [VrfAttachPayloadV12(**item).model_dump_json(exclude_unset=True, by_alias=True) for item in new_diff_attach_list]
-        msg = f"payload: length: {len(payload)}."
+        payload = [VrfAttachPayloadV12(**item) for item in new_diff_attach_list]
+        msg = f"payload: type(payload[0]): {type(payload[0])} length: {len(payload)}."
         self.log.debug(msg)
         self.log_list_of_models(payload)
 
@@ -3872,7 +3877,7 @@ class NdfcVrf12:
             action="attach",
             path=f"{endpoint.path}/attachments",
             verb=endpoint.verb,
-            payload=json.dumps(payload.model_dump(exclude_unset=True, by_alias=True)),
+            payload=json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload]),
             log_response=True,
             is_rollback=is_rollback,
         )
