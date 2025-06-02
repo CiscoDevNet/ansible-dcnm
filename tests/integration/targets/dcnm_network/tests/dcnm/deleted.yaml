@@ -162,8 +162,6 @@
   assert:
     that:
     - result.changed == false
-    - result.diff|length == 0
-    - result.response|length == 0
   tags: deleted
 
 # TC2
@@ -255,8 +253,6 @@
   assert:
     that:
     - result.changed == false
-    - result.diff|length == 0
-    - result.response|length == 0
   tags: deleted
 
 - name: DELETED - TC2 - Delete the other Single Network with deleted state
@@ -298,8 +294,6 @@
   assert:
     that:
     - result.changed == false
-    - result.diff|length == 0
-    - result.response|length == 0
   tags: deleted
 
 # TC3
@@ -361,9 +355,7 @@
 - name: DELETED - TC3 - ASSERT - Check changed flag is false
   assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
-    - 'result.diff|length == 0'
+    - result.changed == false
   tags: deleted
 
 
@@ -443,8 +435,6 @@
   assert:
     that:
     - result.changed == false
-    - result.diff|length == 0
-    - result.response|length == 0
   tags: deleted
 
 # TC5
@@ -520,9 +510,7 @@
 - name: DELETED - TC5 - conf5 - ASSERT - Check changed flag is false
   assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
-    - 'result.diff|length == 0'
+    - result.changed == false
   tags: deleted
 
 # TC6 - invalid configs

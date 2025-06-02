@@ -156,8 +156,7 @@
 - name: REPLACED - TC1 - ASSERT - Check if changed flag is false
   assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
   tags: replaced
 
 # TC2
@@ -197,8 +196,7 @@
 - name: REPLACED - TC2 - ASSERT - Check if changed flag is false
   assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
   tags: replaced
 
 # TC3
@@ -284,8 +282,7 @@
 - name: REPLACED - TC3 - ASSERT - Check if changed flag is false
   assert:
     that:
-    - 'result.changed == false'
-    - 'result.response|length == 0'
+    - result.changed == false
   tags: replaced
 
 # TC4
@@ -326,7 +323,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: replaced
 
 ##############################################

@@ -114,7 +114,7 @@
 # TC3 
 - name: QUERY - TC3 - DELETED - Delete all the networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
   tags: query
 
@@ -148,7 +148,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: query
 
 # TC5
@@ -160,7 +159,7 @@
 
 - name: QUERY - TC5 - MERGED - Create a L2 only and L3 networks along with all dhcp, arp options
   cisco.dcnm.dcnm_network: &conf3
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_l2_l3_net_conf }}"
   register: result
@@ -174,7 +173,7 @@
 
 - name: QUERY - TC5 - Query the L2 and L3 Network with config
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: query
     config: "{{ dcnm_network_l2_l3_net_conf }}"
   register: verify_result

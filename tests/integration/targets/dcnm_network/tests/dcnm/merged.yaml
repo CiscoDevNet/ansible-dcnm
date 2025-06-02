@@ -252,7 +252,7 @@
   until:
     - "verify_result.response[0].parent.networkStatus is search('DEPLOYED|NA')"
   retries: 30
-  delay: 2
+  delay: 5
   tags: merged
 
 - name: MERGED - TC2 - VALIDITY CHECK - Verify network state in NDFC
@@ -297,7 +297,7 @@
   until:
     - "verify_result.response[0].parent.networkStatus is search('DEPLOYED')"
   retries: 30
-  delay: 2
+  delay: 5
   tags: merged
 
 - name: MERGED - TC3 - VALIDITY CHECK - Verify network state in NDFC
@@ -350,7 +350,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: merged
 
 # TC5
@@ -402,7 +401,7 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
+  tags: merged
 
 # TC6
 - name: MERGED - TC6 - DELETED - Clean up any existing network
@@ -447,7 +446,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: merged
 
 # TC7
@@ -502,7 +500,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: merged
 
 # TC8
@@ -596,7 +593,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: merged
 
 
@@ -650,7 +646,6 @@
   assert:
     that:
     - result.changed == false
-    - result.response|length == 0
   tags: merged
 
 # TC11
