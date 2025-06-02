@@ -9,6 +9,19 @@ class HaveLanAttachItem(BaseModel):
     # Summary
 
     A single lan attach item within lanAttachList.
+
+    ## Structure
+
+    - deployment: bool, alias: deployment
+    - extension_values: Optional[str], alias: extensionValues, default=""
+    - fabric: str (min_length=1, max_length=64), alias: fabricName
+    - freeform_config: Optional[str], alias: freeformConfig, default=""
+    - instance_values: Optional[str], alias: instanceValues, default=""
+    - is_attached: bool, alias: isAttached
+    - is_deploy: bool, alias: is_deploy
+    - serial_number: str, alias: serialNumber
+    - vlan: Union(int | None), alias: vlanId
+    - vrf_name: str (min_length=1, max_length=32), alias: vrfName
     """
     deployment: bool = Field(alias="deployment")
     extension_values: Optional[str] = Field(alias="extensionValues", default="")
