@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Optional
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LanAttachListItemV12(BaseModel):
@@ -29,18 +29,18 @@ class LanAttachListItemV12(BaseModel):
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
     instance_values: Optional[str] = Field(alias="instanceValues", default="")
     serial_number: str = Field(alias="serialNumber")
-    vlan_id: int = Field(alias="vlanId")
+    vlan: int = Field(alias="vlan")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
-    @model_validator(mode="before")
-    @classmethod
-    def fix_vlan_field(cls, data: dict) -> dict:
-        """
-        Convert vlan field, if present, to vlanId
-        """
-        if "vlan" in data and "vlanId" not in data:
-            data["vlanId"] = data.pop("vlan")
-        return data
+    # @model_validator(mode="before")
+    # @classmethod
+    # def fix_vlan_field(cls, data: dict) -> dict:
+    #     """
+    #     Convert vlan field, if present, to vlanId
+    #     """
+    #     if "vlan" in data and "vlanId" not in data:
+    #         data["vlanId"] = data.pop("vlan")
+    #     return data
 
 
 class VrfAttachPayloadV12(BaseModel):
