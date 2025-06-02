@@ -1828,10 +1828,24 @@ class NdfcVrf12:
 
         msg = "Creating DetachList model."
         self.log.debug(msg)
+
+        vrf_name = lan_detach_items[0].vrf_name if lan_detach_items else ""
+        if not vrf_name:
+            msg = "vrf_name not found in lan_detach_items. Cannot create DetachList model."
+            self.module.fail_json(msg=msg)
+        if len(set(item.vrf_name for item in lan_detach_items)) > 1:
+            msg = "Multiple VRF names found in lan_detach_items. Cannot create DetachList model."
+            self.module.fail_json(msg=msg)
+        
+        msg = f"lan_detach_items for DetachList: length {len(lan_detach_items)}."
+        self.log.debug(msg)
+        self.log_list_of_models(lan_detach_items)
+
         detach_list_model = DetachList(
             lan_attach_list=lan_detach_items,
             vrf_name=vrf_name,
         )
+
         msg = "Creating DetachList model. DONE."
         self.log.debug(msg)
 
