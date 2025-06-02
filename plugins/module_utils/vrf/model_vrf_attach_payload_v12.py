@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class LanAttachListItemV12(BaseModel):
