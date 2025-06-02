@@ -25,6 +25,7 @@ class InventoryValidate(BaseModel):
     config_data: Optional[List[ConfigData]] = None
     ndfc_data: Optional[Union[List[NDFCData], str]] = None
     ignore_fields: Optional[Dict[str, int]] = None
+    response: Union[bool, str] = None
 
     @validator('config_data', pre=True)
     @classmethod
@@ -80,7 +81,6 @@ class InventoryValidate(BaseModel):
     def validate_lists_equality(cls, values):
         """
         Validates that the configuration data matches the NDFC response data.
-        Ensures there is no trailing whitespace in the entire file.
         Performs matching based on seed_ip and role, respecting ignore_fields settings.
         Args:
             values: The model instance after individual field validation
@@ -90,15 +90,15 @@ class InventoryValidate(BaseModel):
         config_data = values.config_data
         ndfc_data = values.ndfc_data
         ignore_fields = values.ignore_fields
-        response = "False"
+        response = values.response
 
         if isinstance(ndfc_data, str):
             if config_data is None and ndfc_data == "The queried switch is not part of the fabric configured":
-                response = "True"
-                return response
+                values.response = "True"
+                return values
             else:
                 print(" NDFC Query returned an Invalid Response\n")
-                return response
+                return values
 
         missing_ips = []
         role_mismatches = {}
@@ -147,14 +147,14 @@ class InventoryValidate(BaseModel):
                 missing_ips.append(config_data_item_dict.get('seed_ip'))
 
         if not missing_ips and not role_mismatches:
-            response = "True"
+            values.response = True
         else:
             print("Invalid Data:\n ")
             if not missing_ips:
                 print(missing_ips)
             if not role_mismatches:
                 print(json.dumps(role_mismatches, indent=2))
-        return response
+        return values
 
 
 class ActionModule(ActionBase):
@@ -176,6 +176,7 @@ class ActionModule(ActionBase):
         results['failed'] = False
         ndfc_data = self._task.args['ndfc_data']
         test_data = self._task.args['test_data']
+        response = False
 
         if 'changed' in self._task.args:
             changed = self._task.args['changed']
@@ -200,10 +201,10 @@ class ActionModule(ActionBase):
                 # In role mode, we ignore IP matching
                 ignore_fields['seed_ip'] = 1
 
-        validation_result = InventoryValidate(config_data=test_data, ndfc_data=ndfc_data['response'], ignore_fields=ignore_fields)
+        validation_result = InventoryValidate(config_data=test_data, ndfc_data=ndfc_data['response'], ignore_fields=ignore_fields, response=response)
         validation_output = InventoryValidate.model_validate(validation_result)
 
-        if validation_output == "True":
+        if validation_output.response:
             results['failed'] = False
             results['msg'] = 'Validation Successful!'
         else:

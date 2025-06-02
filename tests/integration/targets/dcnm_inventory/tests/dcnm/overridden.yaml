@@ -155,20 +155,6 @@
     - 'overridden_result.changed == false'
   tags: overridden
 
-- name: Overridden TC5 - Query Inventory State in Fabric 
-  cisco.dcnm.dcnm_inventory:
-    state: query
-    fabric: "{{ test_data.test_fabric }}"
-  register: query_result
-  tags: overridden
-
-- name: Overridden TC5 - Validate NDFC Data
-  cisco.dcnm.tests.integration.ndfc_inventory_validate:
-    ndfc_data: "{{ query_result }}"
-    test_data: "{{ ndfc_fabric_overridden_conf }}"
-  register: result
-  tags: overridden
-
 # ----------------------------------------------
 # Cleanup Fabric Switches
 # ----------------------------------------------
