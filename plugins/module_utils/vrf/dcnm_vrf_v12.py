@@ -52,7 +52,7 @@ from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitche
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .model_detach_list_v12 import DetachList, LanDetachItem
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
-from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12
+from .model_vrf_attach_payload_v12 import VrfAttachPayloadV12
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
