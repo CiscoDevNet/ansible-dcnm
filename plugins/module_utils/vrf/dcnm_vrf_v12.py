@@ -371,7 +371,7 @@ class NdfcVrf12:
 
         ## Raises
 
-        -   Call fail_json() if the value is not convertable to boolean.
+        -   ValueError if the value is not convertable to boolean.
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -395,8 +395,9 @@ class NdfcVrf12:
             msg += f"key: {key}, "
             msg += f"value ({str(value)}), "
             msg += f"with type {type(value)} "
-            msg += "is not convertable to boolean"
-            self.module.fail_json(msg=msg)
+            msg += "is not convertable to boolean. "
+            self.log.debug(msg)
+            raise ValueError(msg)
         return result
 
     # pylint: enable=inconsistent-return-statements
@@ -709,13 +710,20 @@ class NdfcVrf12:
         self.log.debug(msg)
         msg = f"have: {json.dumps(have, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        want_is_deploy = self.to_bool("is_deploy", want)
-        have_is_deploy = self.to_bool("is_deploy", have)
-        want_is_attached = self.to_bool("isAttached", want)
-        have_is_attached = self.to_bool("isAttached", have)
-        want_deployment = self.to_bool("deployment", want)
-        have_deployment = self.to_bool("deployment", have)
-        return want_is_attached == have_is_attached and want_deployment == have_deployment and want_is_deploy == have_is_deploy
+        try:
+            want_is_deploy = self.to_bool("is_deploy", want)
+            have_is_deploy = self.to_bool("is_deploy", have)
+            want_is_attached = self.to_bool("isAttached", want)
+            have_is_attached = self.to_bool("isAttached", have)
+            want_deployment = self.to_bool("deployment", want)
+            have_deployment = self.to_bool("deployment", have)
+            return want_is_attached == have_is_attached and want_deployment == have_deployment and want_is_deploy == have_is_deploy
+        except ValueError as error:
+            msg += f"caller: {caller}. "
+            msg += f"{error}. "
+            msg += "Returning False."
+            self.log.debug(msg)
+            return False
 
     def update_attach_params_extension_values(self, attach: dict) -> dict:
         """
