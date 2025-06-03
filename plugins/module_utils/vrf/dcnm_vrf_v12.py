@@ -437,7 +437,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         vlan_path = self.paths["GET_VLAN"].format(fabric)
@@ -494,7 +494,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         attempt = 0
@@ -541,8 +541,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += f"replace == {replace}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = f"replace == {replace}"
         self.log.debug(msg)
 
         attach_list = []
@@ -643,6 +645,12 @@ class NdfcVrf12:
 
         - dict: The updated attachment dictionary.
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         if "isAttached" in want:
             del want["isAttached"]
         want["deployment"] = True
@@ -671,6 +679,12 @@ class NdfcVrf12:
 
         - bool: True if the extension values match, False otherwise.
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         want_ext = json.loads(want["extensionValues"])
         have_ext = json.loads(have["extensionValues"])
         want_e = json.loads(want_ext["VRF_LITE_CONN"])
@@ -704,9 +718,11 @@ class NdfcVrf12:
         - bool: True if all status flags match, False otherwise.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
+
         msg = f"type(want): {type(want)}, type(have): {type(have)}"
         self.log.debug(msg)
         msg = f"want: {json.dumps(want, indent=4, sort_keys=True)}"
@@ -784,7 +800,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if not attach["vrf_lite"]:
@@ -877,7 +893,7 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if not attach:
@@ -979,7 +995,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if skip_keys is None:
@@ -1050,7 +1066,7 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         configuration_changed = False
@@ -1114,7 +1130,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if not vrf:
@@ -1151,7 +1167,7 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         endpoint = EpVrfGet()
@@ -1196,7 +1212,7 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = f"attach: {json.dumps(attach, indent=4, sort_keys=True)}"
@@ -1242,8 +1258,9 @@ class NdfcVrf12:
         None
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         have_create = []
@@ -1266,7 +1283,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         vrfs_to_update: set[str] = set()
@@ -1345,8 +1362,9 @@ class NdfcVrf12:
         """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         have_attach = copy.deepcopy(get_vrf_attach_response.get("DATA", []))
@@ -1411,7 +1429,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = "attach: "
@@ -1456,8 +1474,9 @@ class NdfcVrf12:
         Populate self.have_attach using get_vrf_attach_response.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = f"vrf_attach_models.PRE_UPDATE: length: {len(vrf_attach_models)}."
@@ -1539,7 +1558,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = "attach: "
@@ -1599,7 +1618,7 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         vrf_object_models = self.get_controller_vrf_object_models()
@@ -1637,6 +1656,9 @@ class NdfcVrf12:
             return
 
         self.populate_have_deploy(get_vrf_attach_response)
+        #self.model_enabled = True
+        msg = f"self.model_enabled (populate_have_attach): {self.model_enabled}"
+        self.log.debug(msg)
         # self.populate_have_attach(get_vrf_attach_response)
         self.populate_have_attach_model(get_vrf_attach_response_model.data)
 
@@ -1649,8 +1671,9 @@ class NdfcVrf12:
         Populate self.want_attach from self.validated.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         want_attach: list[dict[str, Any]] = []
@@ -1686,8 +1709,9 @@ class NdfcVrf12:
         Populate self.want_create from self.validated.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         want_create: list[dict[str, Any]] = []
@@ -1706,8 +1730,9 @@ class NdfcVrf12:
         """
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         want_deploy: dict[str, Any] = {}
@@ -1739,6 +1764,12 @@ class NdfcVrf12:
         - self.want_create, see get_want_create()
         - self.want_deploy, see get_want_deploy()
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         self.get_want_create()
         self.get_want_attach()
         self.get_want_deploy()
@@ -1766,8 +1797,9 @@ class NdfcVrf12:
         Finally, return the detach_list.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         detach_list = []
@@ -1810,9 +1842,11 @@ class NdfcVrf12:
         - None, if no items are to be detached.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
+
         lan_detach_items: list[LanDetachListItemV12] = []
 
         msg = f"attach_list: length {len(attach_list)}."
@@ -1891,8 +1925,9 @@ class NdfcVrf12:
         - diff_delete: a dictionary of vrf names to delete
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         self.model_enabled = True
@@ -1923,13 +1958,15 @@ class NdfcVrf12:
         In this case, we detach, undeploy, and delete the VRFs
         specified in self.config.
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         if self.model_enabled:
             self._get_diff_delete_with_config_model()
             return
-        caller = inspect.stack()[1][3]
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        self.log.debug(msg)
 
         diff_detach: list[dict] = []
         diff_undeploy: dict = {}
@@ -1968,6 +2005,12 @@ class NdfcVrf12:
 
         In this case, we detach, undeploy, and delete all VRFs.
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         if self.model_enabled:
             self._get_diff_delete_without_config_model()
             return
@@ -1999,8 +2042,9 @@ class NdfcVrf12:
         specified in self.config.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         diff_detach: list[VrfDetachPayloadV12] = []
@@ -2057,8 +2101,9 @@ class NdfcVrf12:
         In this case, we detach, undeploy, and delete all VRFs.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         diff_detach: list[VrfDetachPayloadV12] = []
@@ -2113,7 +2158,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         all_vrfs = set()
@@ -2168,8 +2213,9 @@ class NdfcVrf12:
         - diff_delete: a dictionary of vrf names to delete
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         all_vrfs: set = set()
@@ -2265,7 +2311,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         self.conf_changed = {}
@@ -2378,8 +2424,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += f"replace == {replace}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = f"replace == {replace}."
         self.log.debug(msg)
 
         if not self.want_attach:
@@ -2496,8 +2544,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += f"replace == {replace}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = f"replace == {replace}"
         self.log.debug(msg)
 
         self.diff_merge_create(replace)
@@ -2508,8 +2558,9 @@ class NdfcVrf12:
         Populate the diff list with remaining attachment entries.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = f"ZZZ: type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
@@ -2563,6 +2614,12 @@ class NdfcVrf12:
 
         - fail_json if vrfTemplateConfig fails validation
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         diff = []
         for want_d in diff_create:
             found_attach = self.find_dict_in_list_by_key_value(search=diff_attach, key="vrfName", value=want_d["vrfName"])
@@ -2620,6 +2677,12 @@ class NdfcVrf12:
 
         - None
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         diff = []
         for vrf in diff_deploy:
             new_deploy_dict = {"vrf_name": vrf}
@@ -2648,8 +2711,10 @@ class NdfcVrf12:
         """
         caller = inspect.stack()[1][3]
 
+        # self.model_enabled = False
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if self.model_enabled:
@@ -2711,7 +2776,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         diff_create = copy.deepcopy(self.diff_create)
@@ -2759,8 +2824,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_create_update: "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = "self.diff_create_update: "
         msg += f"{json.dumps(self.diff_create_update, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -2790,15 +2857,17 @@ class NdfcVrf12:
 
         Send diff_detach to the controller
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         if self.model_enabled:
             self.push_diff_detach_model(is_rollback)
             return
 
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_detach: "
+        msg = "self.diff_detach: "
         msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -2857,8 +2926,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_detach: "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = "self.diff_detach: "
         self.log.debug(msg)
         self.log_list_of_models(self.diff_detach, by_alias=False)
 
@@ -2909,8 +2980,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_undeploy: "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = "self.diff_undeploy: "
         msg += f"{json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -2941,8 +3014,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_delete: "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = "self.diff_delete: "
         msg += f"{json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -2992,8 +3067,9 @@ class NdfcVrf12:
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf_name)
@@ -3037,17 +3113,20 @@ class NdfcVrf12:
         - ValueError: If any controller response is not valid.
         """
         caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         query: list[dict] = []
 
         if not self.want_create:
-            msg = f"caller: {caller}. "
-            msg += "Early return. No VRFs to process."
+            msg = "Early return. No VRFs to process."
             self.log.debug(msg)
             return query
 
         if not vrf_object_models:
-            msg = f"caller: {caller}. "
-            msg += f"Early return. No VRFs exist in fabric {self.fabric}."
+            msg = f"Early return. No VRFs exist in fabric {self.fabric}."
             self.log.debug(msg)
             return query
 
@@ -3122,11 +3201,15 @@ class NdfcVrf12:
         ]
         """
         caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         query: list[dict] = []
 
         if not vrf_object_models:
-            msg = f"caller: {caller}. "
-            msg += f"Early return. No VRFs exist in fabric {self.fabric}."
+            msg = f"Early return. No VRFs exist in fabric {self.fabric}."
             self.log.debug(msg)
             return query
 
@@ -3179,7 +3262,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         vrf_object_models = self.get_controller_vrf_object_models()
@@ -3217,7 +3300,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         # Don't modify the caller's copy
@@ -3237,6 +3320,12 @@ class NdfcVrf12:
         return vrf_model.vrfTemplateConfig
 
     def update_vrf_template_config(self, vrf: dict) -> dict:
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         vrf_template_config = json.loads(vrf["vrfTemplateConfig"])
         vlan_id = vrf_template_config.get("vrfVlanId", 0)
 
@@ -3263,8 +3352,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += f"vrf_model: {json.dumps(vrf_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = f"vrf_model: {json.dumps(vrf_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         vrf_payload = VrfPayloadV12(**vrf_model.model_dump(exclude_unset=True, by_alias=True))
@@ -3280,8 +3371,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "self.diff_create: "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = "self.diff_create: "
         msg += f"{json.dumps(self.diff_create, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -3345,7 +3438,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         extension_values_list: list[VrfLiteConnProtoItem] = []
@@ -3392,8 +3485,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
-        msg += "vrf_attach: "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = "vrf_attach: "
         msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -3531,8 +3626,10 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}, "
-        msg += f"serial_number: {serial_number}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = f"serial_number: {serial_number}. "
         msg += f"Returning ip: {self.sn_ip.get(serial_number)}."
         self.log.debug(msg)
 
@@ -3570,7 +3667,7 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = "TX controller: "
@@ -3663,7 +3760,7 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
-        msg += f"caller: {caller}. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         msg = "Received vrf_attach: "
@@ -3741,8 +3838,8 @@ class NdfcVrf12:
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
 
-        msg = f"caller {caller}, "
-        msg += "ENTERED. "
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         new_lan_attach_list = []
@@ -3849,15 +3946,12 @@ class NdfcVrf12:
 
         Send diff_attach to the controller
         """
-        caller = inspect.stack()[1][3]
-
-        msg = f"caller {caller}, "
-        msg += "ENTERED. "
-        self.log.debug(msg)
-
         self.model_enabled = True
 
-        msg = f"self.model_enabled: {self.model_enabled}."
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if self.model_enabled:
@@ -3913,8 +4007,8 @@ class NdfcVrf12:
         """
         caller = inspect.stack()[1][3]
 
-        msg = f"caller {caller}, "
-        msg += "ENTERED. "
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if not self.diff_attach:
@@ -3975,8 +4069,8 @@ class NdfcVrf12:
         """
         caller = inspect.stack()[1][3]
 
-        msg = f"caller: {caller}. "
-        msg += "ENTERED."
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if not self.diff_deploy:
@@ -4010,8 +4104,8 @@ class NdfcVrf12:
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
 
-        msg = f"caller: {caller}. "
-        msg += "ENTERED."
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if id_list is None:
@@ -4104,7 +4198,11 @@ class NdfcVrf12:
         ]
         ```
         """
-        self.log.debug("ENTERED")
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
 
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
         path += f"resource-manager/fabric/{self.fabric}/"
@@ -4156,8 +4254,9 @@ class NdfcVrf12:
         Send all diffs to the controller
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         if self.model_enabled:
@@ -4192,8 +4291,9 @@ class NdfcVrf12:
         Send all diffs to the controller
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         self.push_diff_create_update(is_rollback=is_rollback)
@@ -4228,9 +4328,12 @@ class NdfcVrf12:
         Calls fail_json if VRF has associated network attachments.
         """
         caller = inspect.stack()[1][3]
+
         msg = "ENTERED. "
-        msg += f"caller: {caller}, "
-        msg += f"vrf_name: {vrf_name}"
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        msg = f"vrf_name: {vrf_name}"
         self.log.debug(msg)
 
         msg = "self.diff_delete: "
@@ -4297,7 +4400,11 @@ class NdfcVrf12:
 
     def validate_input(self) -> None:
         """Parse the playbook values, validate to param specs."""
-        self.log.debug("ENTERED")
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
 
         if self.state == "deleted":
             self.validate_input_deleted_state()
@@ -4322,6 +4429,12 @@ class NdfcVrf12:
         -   Calls fail_json() if the input is invalid
 
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         if self.config is None:
             return
         for vrf_config in self.config:
@@ -4423,6 +4536,12 @@ class NdfcVrf12:
         -   changed: True if the response indicates a change, else False
 
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         changed: bool = True
         fail: bool = False
         try:
@@ -4480,7 +4599,7 @@ class NdfcVrf12:
 
         """
         caller = inspect.stack()[1][3]
-        msg = f"ENTERED. caller {caller}, action {action}"
+        msg = f"ENTERED. caller {caller}, action {action}, self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
         try:
@@ -4525,6 +4644,12 @@ class NdfcVrf12:
 
         Handle failures.
         """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
         # Do not Rollback for Multi-site fabrics
         if self.fabric_type == "MFD":
             self.failed_to_rollback = True
