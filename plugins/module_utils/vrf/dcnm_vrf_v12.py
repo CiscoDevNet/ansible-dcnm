@@ -50,9 +50,9 @@ from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAtta
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
-from .model_detach_list_v12 import DetachList, LanDetachItem
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .model_vrf_attach_payload_v12 import VrfAttachPayloadV12
+from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
@@ -1780,24 +1780,24 @@ class NdfcVrf12:
                 detach_list.append(item)
         return detach_list
 
-    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> Union[DetachList, None]:
+    def get_items_to_detach_model(self, attach_list: list[HaveLanAttachItem]) -> Union[VrfDetachPayloadV12, None]:
         """
         # Summary
 
         Given a list of HaveLanAttachItem objects, return a list of
-        DetachList models.
+        VrfDetachPayloadV12 models, or None if no items are to be detached.
 
         This is done by checking if the isAttached field in each
         HaveLanAttachItem is True.
 
         If HaveLanAttachItem.isAttached field is True, it indicates that the
         attachment is attached to a VRF and needs to be detached.  In this case,
-        mutate the HaveLanAttachItem to a LanDetachItem which will:
+        mutate the HaveLanAttachItem to a LanDetachListItemV12 which will:
 
         - Remove the isAttached field
         - Set the deployment field to False
 
-        The LanDetachItem is added to DetachList.lan_attach_list.
+        The LanDetachListItemV12 is added to VrfDetachPayloadV12.lan_attach_list.
 
         ## Raises
 
@@ -1806,14 +1806,14 @@ class NdfcVrf12:
 
         ## Returns
 
-        - A DetachList model containing the list of LanDetachItem objects.
+        - A VrfDetachPayloadV12 model containing the list of LanDetachListItemV12 objects.
         - None, if no items are to be detached.
         """
         caller = inspect.stack()[1][3]
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
-        lan_detach_items: list[LanDetachItem] = []
+        lan_detach_items: list[LanDetachListItemV12] = []
 
         msg = f"attach_list: length {len(attach_list)}."
         self.log.debug(msg)
@@ -1826,9 +1826,9 @@ class NdfcVrf12:
             msg += f"{json.dumps(have_lan_attach_item.model_dump(by_alias=False), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            msg = "Mutating HaveLanAttachItem to LanDetachItem."
+            msg = "Mutating HaveLanAttachItem to LanDetachListItemV12."
             self.log.debug(msg)
-            lan_detach_item = LanDetachItem(
+            lan_detach_item = LanDetachListItemV12(
                 deployment=False,
                 extensionValues=have_lan_attach_item.extension_values,
                 fabric=have_lan_attach_item.fabric,
@@ -1839,7 +1839,7 @@ class NdfcVrf12:
                 vlanId=have_lan_attach_item.vlan,
                 vrfName=have_lan_attach_item.vrf_name,
             )
-            msg = "Mutating HaveLanAttachItem to LanDetachItem. DONE."
+            msg = "Mutating HaveLanAttachItem to LanDetachListItemV12. DONE."
             self.log.debug(msg)
 
             vrf_name = have_lan_attach_item.vrf_name
@@ -1850,27 +1850,27 @@ class NdfcVrf12:
             self.log.debug(msg)
             return None
 
-        msg = "Creating DetachList model."
+        msg = "Creating VrfDetachPayloadV12 model."
         self.log.debug(msg)
 
         vrf_name = lan_detach_items[0].vrf_name if lan_detach_items else ""
         if not vrf_name:
-            msg = "vrf_name not found in lan_detach_items. Cannot create DetachList model."
+            msg = "vrf_name not found in lan_detach_items. Cannot create VrfDetachPayloadV12 model."
             self.module.fail_json(msg=msg)
         if len(set(item.vrf_name for item in lan_detach_items)) > 1:
-            msg = "Multiple VRF names found in lan_detach_items. Cannot create DetachList model."
+            msg = "Multiple VRF names found in lan_detach_items. Cannot create VrfDetachPayloadV12 model."
             self.module.fail_json(msg=msg)
 
-        msg = f"lan_detach_items for DetachList: length {len(lan_detach_items)}."
+        msg = f"lan_detach_items for VrfDetachPayloadV12: length {len(lan_detach_items)}."
         self.log.debug(msg)
         self.log_list_of_models(lan_detach_items)
 
-        detach_list_model = DetachList(
+        detach_list_model = VrfDetachPayloadV12(
             lanAttachList=lan_detach_items,
             vrfName=vrf_name,
         )
 
-        msg = "Creating DetachList model. DONE."
+        msg = "Creating VrfDetachPayloadV12 model. DONE."
         self.log.debug(msg)
 
         msg = f"Returning detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
@@ -2003,7 +2003,7 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        diff_detach: list[DetachList] = []
+        diff_detach: list[VrfDetachPayloadV12] = []
         diff_undeploy: dict = {}
         diff_delete: dict = {}
         all_vrfs = set()
@@ -2031,12 +2031,12 @@ class NdfcVrf12:
             msg += f"{json.dumps(have_attach_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            detach_list_model: DetachList = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
+            detach_list_model: VrfDetachPayloadV12 = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
             if not detach_list_model:
                 msg = "detach_list_model is None. continuing."
                 self.log.debug(msg)
                 continue
-            msg = f"ZZZ: detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
+            msg = f"detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
             self.log.debug(msg)
             msg = f"{json.dumps(detach_list_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -2061,7 +2061,7 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        diff_detach: list[DetachList] = []
+        diff_detach: list[VrfDetachPayloadV12] = []
         diff_undeploy: dict = {}
         diff_delete: dict = {}
         all_vrfs = set()
@@ -2072,7 +2072,7 @@ class NdfcVrf12:
 
         have_attach_model: HaveAttachPostMutate
         for have_attach_model in self.have_attach_model:
-            msg = f"ZZZ: type(have_attach_model): {type(have_attach_model)}"
+            msg = f"type(have_attach_model): {type(have_attach_model)}"
             self.log.debug(msg)
             diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
             detach_list_model = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
@@ -2080,6 +2080,10 @@ class NdfcVrf12:
                 msg = "detach_list_model is None. continuing."
                 self.log.debug(msg)
                 continue
+            msg = f"detach_list_model: length(lan_attach_list): {len(detach_list_model.lan_attach_list)}."
+            self.log.debug(msg)
+            msg = f"{json.dumps(detach_list_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
             if detach_list_model.lan_attach_list:
                 diff_detach.append(detach_list_model)
                 all_vrfs.add(detach_list_model.vrf_name)
@@ -2174,7 +2178,7 @@ class NdfcVrf12:
         diff_deploy = self.diff_deploy
 
         for have_attach in self.have_attach:
-            msg = f"ZZZ: type(have_attach): {type(have_attach)}"
+            msg = f"type(have_attach): {type(have_attach)}"
             self.log.debug(msg)
             replace_vrf_list = []
 
@@ -2508,14 +2512,14 @@ class NdfcVrf12:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        msg = "ZZZ: diff_attach: "
+        msg = f"ZZZ: type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
         msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        msg = "ZZZ: diff_deploy: "
+        msg = "diff_deploy: "
         msg += f"{json.dumps(diff_deploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         if not diff_attach:
-            msg = "ZZZ: No diff_attach entries to process. Returning empty list."
+            msg = "No diff_attach entries to process. Returning empty list."
             self.log.debug(msg)
             return []
         diff = []
@@ -2655,14 +2659,17 @@ class NdfcVrf12:
         diff_create = copy.deepcopy(self.diff_create)
         diff_create_quick = copy.deepcopy(self.diff_create_quick)
         diff_create_update = copy.deepcopy(self.diff_create_update)
+
         diff_attach = copy.deepcopy(self.diff_attach)
-        msg = "ZZZ: diff_attach: "
+        msg = f"ZZZ: type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
         msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
         diff_detach = copy.deepcopy(self.diff_detach)
-        msg = "ZZZ: diff_detach: "
+        msg = f"ZZZ: type(self.diff_detach): {type(self.diff_detach)}, length {len(self.diff_detach)}, "
         msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
         diff_deploy = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
         diff_undeploy = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
 
@@ -2711,13 +2718,20 @@ class NdfcVrf12:
         diff_create_quick = copy.deepcopy(self.diff_create_quick)
         diff_create_update = copy.deepcopy(self.diff_create_update)
         diff_attach = copy.deepcopy(self.diff_attach)
-        msg = "ZZZ: diff_attach: "
-        msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
+
+        msg = f"ZZZ: type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
         self.log.debug(msg)
+        if len(diff_attach) > 0:
+            msg = f"ZZZ: type(diff_attach[0]): {type(diff_attach[0])}"
+            self.log.debug(msg)
+        msg = f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         diff_detach = copy.deepcopy(self.diff_detach)
-        msg = "ZZZ: diff_detach: "
+        msg = f"ZZZ: type(diff_detach): {type(diff_detach)}, length {len(diff_detach)}, "
         self.log.debug(msg)
         self.log_list_of_models(diff_detach, by_alias=False)
+
         diff_deploy = self.diff_deploy["vrfNames"].split(",") if self.diff_deploy else []
         diff_undeploy = self.diff_undeploy["vrfNames"].split(",") if self.diff_undeploy else []
 

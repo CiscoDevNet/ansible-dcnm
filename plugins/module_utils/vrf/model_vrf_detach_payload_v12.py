@@ -4,11 +4,11 @@ from typing import List, Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-class LanDetachItem(BaseModel):
+class LanDetachListItemV12(BaseModel):
     """
     # Summary
 
-    A single lan detach item within DetachList.lan_attach_list.
+    A single lan detach item within VrfDetachPayloadV12.lan_attach_list.
 
     ## Structure
 
@@ -19,7 +19,7 @@ class LanDetachItem(BaseModel):
     - instance_values: Optional[str], alias: instanceValues, default=""
     - is_deploy: Optional[bool], alias: is_deploy
     - serial_number: str, alias: serialNumber
-    - vlan: Union(int | None), alias: vlan
+    - vlan: Union(int | None), alias: vlanId
     - vrf_name: str (min_length=1, max_length=32), alias: vrfName
 
     ## Notes
@@ -47,7 +47,7 @@ class LanDetachItem(BaseModel):
         return False
 
 
-class DetachList(BaseModel):
+class VrfDetachPayloadV12(BaseModel):
     """
     # Summary
 
@@ -57,8 +57,28 @@ class DetachList(BaseModel):
 
     ## Structure
 
-    - lan_attach_list: List[LanDetachItem]
+    - lan_attach_list: List[LanDetachListItemV12]
     - vrf_name: str
+
+    ## Example payload
+
+    ```json
+    {
+        "lanAttachList": [
+            {
+                "deployment": false,
+                "extensionValues": "",
+                "fabric": "test_fabric",
+                "freeformConfig": "",
+                "instanceValues": "{\"loopbackId\":\"\"}", # content removed for brevity
+                "serialNumber": "XYZKSJHSMK2",
+                "vlanId": 202,
+                "vrfName": "test_vrf_1"
+            }
+        ],
+        "vrfName": "test_vrf"
+    }
+    ```
     """
 
     model_config = ConfigDict(
@@ -68,5 +88,5 @@ class DetachList(BaseModel):
         validate_by_name=True,
     )
 
-    lan_attach_list: List[LanDetachItem] = Field(alias="lanAttachList")
+    lan_attach_list: List[LanDetachListItemV12] = Field(alias="lanAttachList")
     vrf_name: str = Field(alias="vrfName")

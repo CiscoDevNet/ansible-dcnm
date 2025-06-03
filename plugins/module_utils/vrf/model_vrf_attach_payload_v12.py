@@ -32,16 +32,6 @@ class LanAttachListItemV12(BaseModel):
     vlan: int = Field(alias="vlan")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
-    # @model_validator(mode="before")
-    # @classmethod
-    # def fix_vlan_field(cls, data: dict) -> dict:
-    #     """
-    #     Convert vlan field, if present, to vlanId
-    #     """
-    #     if "vlan" in data and "vlanId" not in data:
-    #         data["vlanId"] = data.pop("vlan")
-    #     return data
-
 
 class VrfAttachPayloadV12(BaseModel):
     """
@@ -59,6 +49,26 @@ class VrfAttachPayloadV12(BaseModel):
 
     - lan_attach_list: List[LanAttachListItemV12]
     - vrf_name: str
+
+    ## Example payload
+
+    ```json
+    {
+        "lanAttachList": [
+            {
+                "deployment": true,
+                "extensionValues": "",
+                "fabric": "test_fabric",
+                "freeformConfig": "",
+                "instanceValues": "{\"loopbackId\":\"\"}", # content removed for brevity
+                "serialNumber": "XYZKSJHSMK1",
+                "vlan": 0,
+                "vrfName": "test_vrf_1"
+            },
+       ],
+        "vrfName": "test_vrf"
+    }
+    ```
     """
 
     model_config = ConfigDict(
