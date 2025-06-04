@@ -1797,7 +1797,8 @@ class NdfcVrf12:
         self.want_attach_vrf_lite = {self.ip_to_serial_number(attach.ip_address): attach.vrf_lite for attach in self.validated_model.attach if attach.vrf_lite}
 
         for serial_number, vrf_lite in self.want_attach_vrf_lite.items():
-            msg = f"self.want_attach_vrf_lite: serial_number: {serial_number} -> {json.dumps([model.model_dump() for model in vrf_lite], indent=4, sort_keys=True)}"
+            msg = f"self.want_attach_vrf_lite: serial_number: {serial_number} -> "
+            msg += f"{json.dumps([model.model_dump() for model in vrf_lite], indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
     def get_want_create(self) -> None:
