@@ -3823,16 +3823,16 @@ class NdfcVrf12:
             self.log.debug(msg)
 
             nbr_dict = {
-                "IF_NAME": user.get("interface"),
-                "DOT1Q_ID": str(user.get("dot1q") or switch.dot1q_id),
-                "IP_MASK": user.get("ipv4_addr") or switch.ip_mask,
-                "NEIGHBOR_IP": user.get("neighbor_ipv4") or switch.neighbor_ip,
+                "IF_NAME": user.get("IF_NAME"),
+                "DOT1Q_ID": str(user.get("DOT1Q_ID") or switch.dot1q_id),
+                "IP_MASK": user.get("IP_MASK") or switch.ip_mask,
+                "NEIGHBOR_IP": user.get("NEIGHBOR_IP") or switch.neighbor_ip,
                 "NEIGHBOR_ASN": switch.neighbor_asn,
-                "IPV6_MASK": user.get("ipv6_addr") or switch.ipv6_mask,
-                "IPV6_NEIGHBOR": user.get("neighbor_ipv6") or switch.ipv6_neighbor,
+                "IPV6_MASK": user.get("IPV6_MASK") or switch.ipv6_mask,
+                "IPV6_NEIGHBOR": user.get("IPV6_NEIGHBOR") or switch.ipv6_neighbor,
                 "AUTO_VRF_LITE_FLAG": switch.auto_vrf_lite_flag,
-                "PEER_VRF_NAME": user.get("peer_vrf") or switch.peer_vrf_name,
-                "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
+                "PEER_VRF_NAME": user.get("PEER_VRF_NAME") or switch.peer_vrf_name,
+                "VRF_LITE_JYTHON_TEMPLATE": user.get("Ext_VRF_Lite_Jython") or switch.vrf_lite_jython_template or "Ext_VRF_Lite_Jython",
             }
             extension_values["VRF_LITE_CONN"].append(nbr_dict)
 
