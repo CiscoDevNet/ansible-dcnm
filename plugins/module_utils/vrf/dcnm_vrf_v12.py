@@ -4044,213 +4044,6 @@ class NdfcVrf12:
 
         return child_fabric_name
 
-    def update_vrf_attach_fabric_name(self, vrf_attach: dict) -> dict:
-        """
-        # Summary
-
-        For multisite fabrics, replace `vrf_attach.fabric` with the name of
-        the child fabric returned by `self.sn_fab[vrf_attach.serialNumber]`
-
-        ## params
-
-        - `vrf_attach`
-
-        A `vrf_attach` dictionary containing the following keys:
-
-            - `fabric` : fabric name
-            - `serialNumber` : switch serial number
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        msg = "Received vrf_attach: "
-        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if self.fabric_type != "MFD":
-            msg = "Early return. "
-            msg += f"FABRIC_TYPE {self.fabric_type} is not MFD. "
-            msg += "Returning unmodified vrf_attach."
-            self.log.debug(msg)
-            return copy.deepcopy(vrf_attach)
-
-        parent_fabric_name = vrf_attach.get("fabric")
-
-        msg = f"fabric_type: {self.fabric_type}, "
-        msg += "replacing parent_fabric_name "
-        msg += f"({parent_fabric_name}) "
-        msg += "with child fabric name."
-        self.log.debug(msg)
-
-        serial_number = vrf_attach.get("serialNumber")
-
-        if serial_number is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += "Unable to parse serial_number from vrf_attach. "
-            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            self.module.fail_json(msg)
-
-        child_fabric_name = self.sn_fab[serial_number]
-
-        if child_fabric_name is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += "Unable to determine child fabric name for serial_number "
-            msg += f"{serial_number}."
-            self.log.debug(msg)
-            self.module.fail_json(msg)
-
-        msg = f"serial_number: {serial_number}, "
-        msg += f"child fabric name: {child_fabric_name}. "
-        self.log.debug(msg)
-
-        vrf_attach["fabric"] = child_fabric_name
-
-        msg += "Updated vrf_attach: "
-        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        return copy.deepcopy(vrf_attach)
-
-    def update_lan_attach_list(self, diff_attach: dict) -> list:
-        """
-        # Summary
-
-        Update the lanAttachList in diff_attach and return the updated
-        list.
-
-        - Set vrf_attach.vlan to 0
-        - If vrf_attach.vrf_lite is null, delete it
-        - If the switch is not a border switch, fail the module
-        - Get associated vrf_lite objects from the switch
-        - Update vrf lite extensions with information from the vrf_lite objects
-        - If vrf_attach.fabricName is present, replace it with vrf_attach.fabric
-        - If, after replacing vrf_attach.fabricName, vrf_attach.fabric is None, fail the module
-
-        ## Raises
-
-        - fail_json: If the switch is not a border switch
-        - fail_json: If vrf_attach.fabric is None after processing
-        - fail_json: If vrf_attach does not contain a fabric key after processing
-        """
-        caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        if self.model_enabled:
-            self.update_lan_attach_list_model(diff_attach)
-            return
-
-        new_lan_attach_list = []
-        msg = f"len(diff_attach['lanAttachList']): {len(diff_attach['lanAttachList'])}"
-        self.log.debug(msg)
-
-        for vrf_attach in diff_attach["lanAttachList"]:
-            vrf_attach.update(vlan=0)
-
-            serial_number = vrf_attach.get("serialNumber")
-            ip_address = self.serial_number_to_ip(serial_number)
-            msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += "vrf_attach: "
-            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            vrf_attach = self.update_vrf_attach_fabric_name(vrf_attach)
-
-            if "fabric" not in vrf_attach and "fabricName" in vrf_attach:
-                vrf_attach["fabric"] = vrf_attach.pop("fabricName", None)
-            if "fabric" not in vrf_attach:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"caller {caller}. "
-                msg += "vrf_attach does not contain a fabric key. "
-                msg += f"ip: {ip_address}, serial number: {serial_number}"
-                self.module.fail_json(msg=msg)
-            if vrf_attach.get("fabric") is None:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"caller {caller}. "
-                msg += "vrf_attach.fabric is None. "
-                msg += f"ip: {ip_address}, serial number: {serial_number}"
-                self.module.fail_json(msg=msg)
-
-            if "is_deploy" in vrf_attach:
-                del vrf_attach["is_deploy"]
-            # if vrf_lite is null, delete it.
-            if not vrf_attach.get("vrf_lite"):
-                if "vrf_lite" in vrf_attach:
-                    msg = "vrf_lite exists, but is null. Delete it."
-                    self.log.debug(msg)
-                    del vrf_attach["vrf_lite"]
-                new_lan_attach_list.append(vrf_attach)
-                msg = f"ip_address {ip_address} ({serial_number}), "
-                msg += "deleted null vrf_lite in vrf_attach and "
-                msg += "skipping VRF Lite processing. "
-                msg += "updated vrf_attach: "
-                msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-                continue
-
-            # VRF Lite processing
-
-            msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += "vrf_attach.get(vrf_lite): "
-            if vrf_attach.get("vrf_lite"):
-                msg += f"{json.dumps(vrf_attach.get('vrf_lite'), indent=4, sort_keys=True)}"
-            else:
-                msg += f"{vrf_attach.get('vrf_lite')}"
-            self.log.debug(msg)
-
-            if not self.is_border_switch(serial_number):
-                # arobel TODO: Not covered by UT
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"caller {caller}. "
-                msg += "VRF LITE cannot be attached to "
-                msg += "non-border switch. "
-                msg += f"ip: {ip_address}, "
-                msg += f"serial number: {serial_number}"
-                self.module.fail_json(msg=msg)
-
-            lite_objects_model = self.get_list_of_vrfs_switches_data_item_model(vrf_attach)
-
-            msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += f"lite_objects: length {len(lite_objects_model)}."
-            self.log_list_of_models(lite_objects_model)
-
-            if not lite_objects_model:
-                msg = f"ip_address {ip_address} ({serial_number}), "
-                msg += "No lite objects. Append vrf_attach and continue."
-                self.log.debug(msg)
-                new_lan_attach_list.append(vrf_attach)
-                continue
-
-            lite = lite_objects_model[0].switch_details_list[0].extension_prototype_values
-            msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += f"lite (list[ExtensionPrototypeValue]). length: {len(lite)}."
-            self.log.debug(msg)
-            self.log_list_of_models(lite)
-
-            msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += "old vrf_attach: "
-            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            vrf_attach = self.update_vrf_attach_vrf_lite_extensions(vrf_attach, lite)
-            msg = f"ip_address {ip_address} ({serial_number}), "
-            msg += "new vrf_attach: "
-            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            new_lan_attach_list.append(vrf_attach)
-        return copy.deepcopy(new_lan_attach_list)
-
     def update_lan_attach_list_model(self, diff_attach: VrfAttachPayloadV12) -> list[LanAttachListItemV12]:
         """
         # Summary
@@ -4392,66 +4185,6 @@ class NdfcVrf12:
         msg = f"Returning updated diff_attach: {json.dumps(diff_attach.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
         return diff_attach
-
-    def push_diff_attach(self, is_rollback=False) -> None:
-        """
-        # Summary
-
-        Send diff_attach to the controller
-        """
-        # MODEL_ENABLED
-        self.model_enabled = True
-
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        if self.model_enabled:
-            self.push_diff_attach_model(is_rollback)
-            return
-
-        msg = "self.diff_attach PRE: "
-        msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        if not self.diff_attach:
-            msg = "Early return. self.diff_attach is empty. "
-            msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            return
-
-        new_diff_attach_list: list = []
-        for diff_attach in self.diff_attach:
-            msg = "diff_attach: "
-            msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            new_lan_attach_list = self.update_lan_attach_list(diff_attach)
-
-            msg = "Updating diff_attach[lanAttachList] with: "
-            msg += f"{json.dumps(new_lan_attach_list, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            diff_attach["lanAttachList"] = copy.deepcopy(new_lan_attach_list)
-            new_diff_attach_list.append(copy.deepcopy(diff_attach))
-
-            msg = "new_diff_attach_list: "
-            msg += f"{json.dumps(new_diff_attach_list, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-        endpoint = EpVrfPost()
-        endpoint.fabric_name = self.fabric
-        args = SendToControllerArgs(
-            action="attach",
-            path=f"{endpoint.path}/attachments",
-            verb=endpoint.verb,
-            payload=json.dumps(new_diff_attach_list),
-            log_response=True,
-            is_rollback=is_rollback,
-        )
-        self.send_to_controller(args)
 
     def transmute_diff_attach_to_controller_payload(self, diff_attach: list[dict]) -> str:
         """
@@ -4761,7 +4494,7 @@ class NdfcVrf12:
             self.release_orphaned_resources(vrf=vrf_name, is_rollback=is_rollback)
 
         self.push_diff_create(is_rollback=is_rollback)
-        self.push_diff_attach(is_rollback=is_rollback)
+        self.push_diff_attach_model(is_rollback=is_rollback)
         self.push_diff_deploy(is_rollback=is_rollback)
 
     def push_to_remote_model(self, is_rollback=False) -> None:
@@ -4794,7 +4527,7 @@ class NdfcVrf12:
             self.release_orphaned_resources(vrf=vrf_name, is_rollback=is_rollback)
 
         self.push_diff_create(is_rollback=is_rollback)
-        self.push_diff_attach(is_rollback=is_rollback)
+        self.push_diff_attach_model(is_rollback=is_rollback)
         self.push_diff_deploy(is_rollback=is_rollback)
 
     def wait_for_vrf_del_ready(self, vrf_name: str = "not_supplied") -> None:
