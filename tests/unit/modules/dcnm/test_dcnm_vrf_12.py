@@ -1261,7 +1261,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         """
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True)
-        msg = "NdfcVrf12.validate_input_merged_state: "
+        msg = "NdfcVrf12.validate_playbook_config_merged_state: "
         msg += "config element is mandatory for merged state"
         self.assertEqual(result.get("msg"), msg)
 
