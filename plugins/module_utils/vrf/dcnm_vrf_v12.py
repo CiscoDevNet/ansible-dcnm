@@ -4343,59 +4343,50 @@ class NdfcVrf12:
         self.log.debug(msg)
         self.log_list_of_models(diff_attach.lan_attach_list)
 
-        for vrf_attach in diff_attach.lan_attach_list:
-            serial_number = vrf_attach.serial_number
+        for lan_attach_item in diff_attach.lan_attach_list:
+            serial_number = lan_attach_item.serial_number
 
             if self.want_attach_vrf_lite.get(serial_number) is None:
-                new_lan_attach_list.append(vrf_attach)
+                new_lan_attach_list.append(lan_attach_item)
                 continue
 
             # VRF Lite processing
 
-            msg = f"vrf_attach.extension_values: {vrf_attach.extension_values}."
+            msg = f"lan_attach_item.extension_values: {lan_attach_item.extension_values}."
             self.log.debug(msg)
 
-            ip_address = self.serial_number_to_ip(vrf_attach.serial_number)
-            if not self.is_border_switch(vrf_attach.serial_number):
+            ip_address = self.serial_number_to_ip(lan_attach_item.serial_number)
+            if not self.is_border_switch(lan_attach_item.serial_number):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"caller {caller}. "
                 msg += "VRF LITE cannot be attached to "
                 msg += "non-border switch. "
                 msg += f"ip: {ip_address}, "
-                msg += f"serial number: {vrf_attach.serial_number}"
+                msg += f"serial number: {lan_attach_item.serial_number}"
                 self.module.fail_json(msg=msg)
 
-            lite_objects_model = self.get_list_of_vrfs_switches_data_item_model_new(vrf_attach)
+            lite_objects_model = self.get_list_of_vrfs_switches_data_item_model_new(lan_attach_item)
 
-            msg = f"ip_address {ip_address} ({vrf_attach.serial_number}), "
+            msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
             msg += f"lite_objects: length {len(lite_objects_model)}."
             self.log_list_of_models(lite_objects_model)
 
             if not lite_objects_model:
-                msg = f"ip_address {ip_address} ({vrf_attach.serial_number}), "
-                msg += "No lite objects. Append vrf_attach to new_attach_list and continue."
+                msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
+                msg += "No lite objects. Append lan_attach_item to new_attach_list and continue."
                 self.log.debug(msg)
-                new_lan_attach_list.append(vrf_attach)
+                new_lan_attach_list.append(lan_attach_item)
                 continue
 
-            lite = lite_objects_model[0].switch_details_list[0].extension_prototype_values
-            msg = f"ip_address {ip_address} ({vrf_attach.serial_number}), "
-            msg += f"lite (list[ExtensionPrototypeValue]). length: {len(lite)}."
+            extension_prototype_values = lite_objects_model[0].switch_details_list[0].extension_prototype_values
+            msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
+            msg += f"lite (list[ExtensionPrototypeValue]). length: {len(extension_prototype_values)}."
             self.log.debug(msg)
-            self.log_list_of_models(lite)
+            self.log_list_of_models(extension_prototype_values)
 
-            msg = f"ip_address {ip_address} ({vrf_attach.serial_number}), "
-            msg += "old vrf_attach: "
-            msg += f"{json.dumps(vrf_attach.model_dump(by_alias=False), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+            vrf_attach = self.update_vrf_attach_vrf_lite_extensions_new(lan_attach_item, extension_prototype_values)
 
-            vrf_attach = self.update_vrf_attach_vrf_lite_extensions_new(vrf_attach, lite)
-            msg = f"ip_address {ip_address} ({vrf_attach.serial_number}), "
-            msg += "new vrf_attach: "
-            msg += f"{json.dumps(vrf_attach.model_dump(by_alias=False), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            new_lan_attach_list.append(vrf_attach)
+            new_lan_attach_list.append(lan_attach_item)
         diff_attach.lan_attach_list = new_lan_attach_list
 
         msg = f"Returning updated diff_attach: {json.dumps(diff_attach.model_dump(), indent=4, sort_keys=True)}"
