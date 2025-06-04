@@ -4481,7 +4481,7 @@ class NdfcVrf12:
                         freeformConfig=lan_attach.get("freeformConfig"),
                         instanceValues=lan_attach.get("instanceValues"),
                         serialNumber=lan_attach.get("serialNumber"),
-                        vlan=lan_attach.get("vlan") or lan_attach.get("vlanId"),
+                        vlan=lan_attach.get("vlan") or lan_attach.get("vlanId") or 0,
                         vrfName=lan_attach.get("vrfName"),
                     )
                     for lan_attach in item.get("lanAttachList")
