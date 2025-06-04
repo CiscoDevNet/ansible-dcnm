@@ -4252,6 +4252,18 @@ class NdfcVrf12:
         return copy.deepcopy(new_lan_attach_list)
 
     def update_lan_attach_list_model(self, diff_attach: VrfAttachPayloadV12) -> list[LanAttachListItemV12]:
+        """
+        # Summary
+
+        - Update the lan_attach_list in each VrfAttachPayloadV12
+          - Set vlan to 0
+          - Set the fabric name to the child fabric name, if fabric is MSD
+          - Update vrf_lite extensions with information from the switch
+
+        ## Raises
+
+        - ValueError if diff_attach cannot be mutated
+        """
         diff_attach = self.update_lan_attach_list_vlan(diff_attach)
         diff_attach = self.update_lan_attach_list_fabric_name(diff_attach)
         diff_attach = self.update_lan_attach_list_vrf_lite(diff_attach)
@@ -4263,6 +4275,10 @@ class NdfcVrf12:
 
         Set VrfAttachPayloadV12.lan_attach_list.vlan to 0 and return the updated
         VrfAttachPayloadV12 instance.
+
+        ## Raises
+
+        - None
         """
         new_lan_attach_list = []
         for vrf_attach in diff_attach.lan_attach_list:
@@ -4446,6 +4462,62 @@ class NdfcVrf12:
         )
         self.send_to_controller(args)
 
+    def transmute_diff_attach_to_controller_payload(self, diff_attach: list[dict]) -> str:
+        """
+        # Summary
+
+        - Transmute diff_attach to a list of VrfAttachPayloadV12 models.
+        - For each model, update its lan_attach_list
+          - Set vlan to 0
+          - Set the fabric name to the child fabric name, if fabric is MSD
+          - Update vrf_lite extensions with information from the switch
+
+        ## Raises
+
+        - ValueError if diff_attach cannot be mutated
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+        msg = f"Received diff_attach: {json.dumps(diff_attach, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        diff_attach_list: list[VrfAttachPayloadV12] = [
+            VrfAttachPayloadV12(
+                vrfName=item.get("vrfName"),
+                lanAttachList=[
+                    LanAttachListItemV12(
+                        deployment=lan_attach.get("deployment"),
+                        extensionValues=lan_attach.get("extensionValues"),
+                        fabric=lan_attach.get("fabric") or lan_attach.get("fabricName"),
+                        freeformConfig=lan_attach.get("freeformConfig"),
+                        instanceValues=lan_attach.get("instanceValues"),
+                        serialNumber=lan_attach.get("serialNumber"),
+                        vlan=lan_attach.get("vlan") or lan_attach.get("vlanId") or 0,
+                        vrfName=lan_attach.get("vrfName"),
+                    )
+                    for lan_attach in item.get("lanAttachList")
+                    if item.get("lanAttachList") is not None
+                ],
+            )
+            for item in diff_attach
+            if diff_attach
+        ]
+
+        payload: list[VrfAttachPayloadV12] = []
+        for vrf_attach_payload in diff_attach_list:
+            new_lan_attach_list = self.update_lan_attach_list_model(vrf_attach_payload)
+            vrf_attach_payload.lan_attach_list = new_lan_attach_list
+            payload.append(vrf_attach_payload)
+
+        msg = f"Returning payload: type(payload[0]): {type(payload[0])} length: {len(payload)}."
+        self.log.debug(msg)
+        self.log_list_of_models(payload)
+
+        return json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload])
+
     def push_diff_attach_model(self, is_rollback=False) -> None:
         """
         # Summary
@@ -4464,57 +4536,7 @@ class NdfcVrf12:
             self.log.debug(msg)
             return
 
-        msg = f"type(self.diff_attach): {type(self.diff_attach)}."
-        self.log.debug(msg)
-        msg = f"self.diff_attach: PRE_UPDATE: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        # Transmute self.diff_attach to a list of VrfAttachPayloadV12 models
-        diff_attach_list = [
-            VrfAttachPayloadV12(
-                vrfName=item.get("vrfName"),
-                lanAttachList=[
-                    LanAttachListItemV12(
-                        deployment=lan_attach.get("deployment"),
-                        extensionValues=lan_attach.get("extensionValues"),
-                        fabric=lan_attach.get("fabric") or lan_attach.get("fabricName"),
-                        freeformConfig=lan_attach.get("freeformConfig"),
-                        instanceValues=lan_attach.get("instanceValues"),
-                        serialNumber=lan_attach.get("serialNumber"),
-                        vlan=lan_attach.get("vlan") or lan_attach.get("vlanId") or 0,
-                        vrfName=lan_attach.get("vrfName"),
-                    )
-                    for lan_attach in item.get("lanAttachList")
-                    if item.get("lanAttachList") is not None
-                ],
-            )
-            for item in self.diff_attach
-            if self.diff_attach
-        ]
-        msg = f"payload: type(payload[0]): {type(diff_attach_list[0])} length: {len(diff_attach_list)}."
-        self.log.debug(msg)
-        self.log_list_of_models(diff_attach_list, by_alias=True)
-
-        payload: list = []
-        for diff_attach in diff_attach_list:
-            msg = f"type(diff_attach): {type(diff_attach)}."
-            self.log.debug(msg)
-            msg = "diff_attach: "
-            msg += f"{json.dumps(diff_attach.model_dump(by_alias=True), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            new_lan_attach_list = self.update_lan_attach_list_model(diff_attach)
-
-            msg = "Updating diff_attach[lanAttachList] with new_lan_attach_list: "
-            self.log.debug(msg)
-            self.log_list_of_models(new_lan_attach_list, by_alias=True)
-
-            diff_attach.lan_attach_list = new_lan_attach_list
-            payload.append(copy.deepcopy(diff_attach))
-
-        msg = f"payload: type(payload[0]): {type(payload[0])} length: {len(payload)}."
-        self.log.debug(msg)
-        self.log_list_of_models(payload)
+        payload = self.transmute_diff_attach_to_controller_payload(copy.deepcopy(self.diff_attach))
 
         endpoint = EpVrfPost()
         endpoint.fabric_name = self.fabric
@@ -4522,69 +4544,7 @@ class NdfcVrf12:
             action="attach",
             path=f"{endpoint.path}/attachments",
             verb=endpoint.verb,
-            payload=json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload]),
-            log_response=True,
-            is_rollback=is_rollback,
-        )
-        self.send_to_controller(args)
-
-    def push_diff_attach_model_orig(self, is_rollback=False) -> None:
-        """
-        # Summary
-
-        Send diff_attach to the controller
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        if not self.diff_attach:
-            msg = "Early return. self.diff_attach is empty. "
-            msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            return
-
-        msg = f"type(self.diff_attach): {type(self.diff_attach)}."
-        self.log.debug(msg)
-        msg = f"self.diff_attach: PRE_UPDATE: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        new_diff_attach_list: list = []
-        for diff_attach in self.diff_attach:
-            msg = f"type(diff_attach): {type(diff_attach)}."
-            self.log.debug(msg)
-            msg = "diff_attach: "
-            msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            new_lan_attach_list = self.update_lan_attach_list(diff_attach)
-
-            msg = "Updating diff_attach[lanAttachList] with new_lan_attach_list: "
-            msg += f"{json.dumps(new_lan_attach_list, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            diff_attach["lanAttachList"] = copy.deepcopy(new_lan_attach_list)
-            new_diff_attach_list.append(copy.deepcopy(diff_attach))
-
-            msg = "new_diff_attach_list: "
-            msg += f"{json.dumps(new_diff_attach_list, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-        # Transmute new_diff_attach_list to a list of VrfAttachPayloadV12 models
-        payload = [VrfAttachPayloadV12(**item) for item in new_diff_attach_list]
-        msg = f"payload: type(payload[0]): {type(payload[0])} length: {len(payload)}."
-        self.log.debug(msg)
-        self.log_list_of_models(payload)
-
-        endpoint = EpVrfPost()
-        endpoint.fabric_name = self.fabric
-        args = SendToControllerArgs(
-            action="attach",
-            path=f"{endpoint.path}/attachments",
-            verb=endpoint.verb,
-            payload=json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload]),
+            payload=payload,
             log_response=True,
             is_rollback=is_rollback,
         )
