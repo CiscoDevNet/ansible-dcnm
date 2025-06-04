@@ -1920,6 +1920,13 @@ class DcnmIntf:
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
             "ENABLE_ORPHAN_PORT": "orphan_port",
+            "NETFLOW_SAMPLER": "netflow_sampler",
+            "ENABLE_PFC": "enable_pfc",
+            "ENABLE_QOS": "enable_qos",
+            "QOS_POLICY": "qos_policy",
+            "QUEUING_POLICY": "queuing_policy",
+            "ENABLE_MONITOR": "enable_monitor",
+            "CDP_ENABLE": "enable_cdp",
         }
 
         # New Interfaces
