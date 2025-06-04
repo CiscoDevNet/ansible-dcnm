@@ -48,13 +48,7 @@ from ...module_utils.network.dcnm.dcnm import (
 from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
-from .controller_response_vrfs_switches_v12 import (
-    ControllerResponseVrfsSwitchesV12,
-    ExtensionPrototypeValue,
-    ExtensionValuesOuter,
-    VrfLiteConnProtoItem,
-    VrfsSwitchesDataItem,
-)
+from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12
@@ -4328,7 +4322,7 @@ class NdfcVrf12:
         new_lan_attach_list = []
         msg = f"len(diff_attach.lan_attach_list): {len(diff_attach.lan_attach_list)}"
         self.log.debug(msg)
-        msg = f"diff_attach.lan_attach_list: "
+        msg = "diff_attach.lan_attach_list: "
         self.log.debug(msg)
         self.log_list_of_models(diff_attach.lan_attach_list)
 
