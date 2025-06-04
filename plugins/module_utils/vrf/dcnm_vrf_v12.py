@@ -4495,7 +4495,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         self.log_list_of_models(diff_attach_list, by_alias=True)
 
-        new_diff_attach_list: list = []
+        payload: list = []
         for diff_attach in diff_attach_list:
             msg = f"type(diff_attach): {type(diff_attach)}."
             self.log.debug(msg)
@@ -4510,13 +4510,8 @@ class NdfcVrf12:
             self.log_list_of_models(new_lan_attach_list, by_alias=True)
 
             diff_attach.lan_attach_list = new_lan_attach_list
-            new_diff_attach_list.append(copy.deepcopy(diff_attach))
+            payload.append(copy.deepcopy(diff_attach))
 
-            msg = "new_diff_attach_list: "
-            self.log.debug(msg)
-            self.log_list_of_models(new_diff_attach_list, by_alias=True)
-
-        payload = new_diff_attach_list
         msg = f"payload: type(payload[0]): {type(payload[0])} length: {len(payload)}."
         self.log.debug(msg)
         self.log_list_of_models(payload)
