@@ -1233,8 +1233,8 @@ class TestDcnmVrfModule12(TestDcnmModule):
         - ip_address
         - vrf_name
 
-        The Pydantic model VrfPlaybookModel() is used for validation in the
-        method DcnmVrf.validate_input_merged_state().
+        The Pydantic model VrfPlaybookModelV12() is used for validation in the
+        method DcnmVrf.validate_playbook_config_model().
         """
         playbook = self.test_data.get("playbook_config_input_validation")
         set_module_args(

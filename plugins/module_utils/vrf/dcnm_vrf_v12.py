@@ -238,7 +238,12 @@ class NdfcVrf12:
         self.response: dict = {}
         self.log.debug("DONE")
 
-    def log_list_of_models(self, model_list, by_alias: bool = False) -> None:
+    def log_list_of_models(self, model_list: list, by_alias: bool = False) -> None:
+        """
+        # Summary
+
+        Log a list of Pydantic models.
+        """
         caller = inspect.stack()[1][3]
         for index, model in enumerate(model_list):
             msg = f"caller: {caller}: by_alias={by_alias}, index {index}. "
@@ -1362,166 +1367,6 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_deploy, indent=4)}"
         self.log.debug(msg)
 
-    def populate_have_attach(self, get_vrf_attach_response: dict) -> None:
-        """
-        Populate self.have_attach using get_vrf_attach_response.
-
-        Mutates items in lanAttachList per the examples below.  Specifically:
-
-        -  Generates deployment from vrf_attach.lanAttachList.isLanAttached
-        -  Generates extensionValues from lite_objects (see _update_vrf_lite_extension)
-        -  Generates fabric from self.fabric
-        -  Generates freeformConfig from SwitchDetails.freeform_config (if exists) or from "" (see _update_vrf_lite_extension)
-        -  Generates instanceValues from vrf_attach.lanAttachList.instanceValues
-        -  Generates isAttached from vrf_attach.lanAttachList.lanAttachState
-        -  Generates is_deploy from vrf_attach.lanAttachList.isLanAttached and vrf_attach.lanAttachList.lanAttachState
-        -  Generates serialNumber from vrf_attach.lanAttachList.switchSerialNo
-        -  Generates vlan from vrf_attach.lanAttachList.vlanId
-        -  Generates vrfName from vrf_attach.lanAttachList.vrfName
-
-        ## PRE Mutation Example
-
-        ```json
-            {
-                "fabricName": "test-fabric",
-                "ipAddress": "10.10.10.227",
-                "isLanAttached": true,
-                "lanAttachState": "DEPLOYED",
-                "switchName": "n9kv_leaf4",
-                "switchRole": "border",
-                "switchSerialNo": "XYZKSJHSMK4",
-                "vlanId": "202",
-                "vrfId": "9008011",
-                "vrfName": "test_vrf_1"
-            }
-        ```
-
-        ## POST Mutation Example
-
-        ```json
-            {
-                "deployment": true,
-                "extensionValues": "{contents removed for brevity}",
-                "fabric": "test_fabric",
-                "freeformConfig": "",
-                "instanceValues": null,
-                "isAttached": true,
-                "is_deploy": true,
-                "serialNumber": "XYZKSJHSMK4",
-                "vlan": "202",
-                "vrfName": "test_vrf_1"
-            }
-        ```
-        """
-        caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        have_attach = copy.deepcopy(get_vrf_attach_response.get("DATA", []))
-
-        msg = "have_attach.PRE_UPDATE: "
-        msg += f"{json.dumps(have_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        for vrf_attach in have_attach:
-            if not vrf_attach.get("lanAttachList"):
-                continue
-            new_attach_list = []
-            for attach in vrf_attach["lanAttachList"]:
-                if not isinstance(attach, dict):
-                    msg = f"{self.class_name}.{method_name}: {caller}: attach is not a dict."
-                    self.module.fail_json(msg=msg)
-
-                # Prepare new attachment dict
-                attach_state = attach.get("lanAttachState") != "NA"
-                deploy = attach.get("isLanAttached")
-                deployed = not (deploy and attach.get("lanAttachState") in ("OUT-OF-SYNC", "PENDING"))
-                switch_serial_number = attach.get("switchSerialNo")
-                vlan = attach.get("vlanId")
-                inst_values = attach.get("instanceValues", None)
-                vrf_name = attach.get("vrfName", "")
-
-                # Build new attach dict with required keys
-                new_attach = {
-                    "deployment": deploy,
-                    "extensionValues": "",
-                    "fabric": self.fabric,
-                    "instanceValues": inst_values,
-                    "isAttached": attach_state,
-                    "is_deploy": deployed,
-                    "serialNumber": switch_serial_number,
-                    "vlan": vlan,
-                    "vrfName": vrf_name,
-                }
-
-                new_attach = self._update_vrf_lite_extension(new_attach)
-
-                new_attach_list.append(new_attach)
-            vrf_attach["lanAttachList"] = new_attach_list
-
-        msg = "have_attach.POST_UPDATE: "
-        msg += f"{json.dumps(have_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        self.have_attach = copy.deepcopy(have_attach)
-
-    def _update_vrf_lite_extension(self, attach: dict) -> dict:
-        """
-        # Summary
-
-        - Return updated attach dict with VRF Lite extension values if present.
-        - Update freeformConfig, if present, else set to an empty string.
-
-        ## Raises
-
-        - None
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        msg = "attach: "
-        msg += f"{json.dumps(attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        lite_objects = self.get_list_of_vrfs_switches_data_item_model(attach)
-        if not lite_objects:
-            msg = "No vrf_lite_objects found. Update freeformConfig and return."
-            self.log.debug(msg)
-            attach["freeformConfig"] = ""
-            return copy.deepcopy(attach)
-
-        msg = f"lite_objects: length {len(lite_objects)}."
-        self.log.debug(msg)
-        self.log_list_of_models(lite_objects)
-
-        for sdl in lite_objects:
-            for epv in sdl.switch_details_list:
-                if not epv.extension_values:
-                    attach["freeformConfig"] = ""
-                    continue
-                ext_values = epv.extension_values
-                if ext_values.vrf_lite_conn is None:
-                    continue
-                ext_values = ext_values.vrf_lite_conn
-                extension_values = {"VRF_LITE_CONN": {"VRF_LITE_CONN": []}}
-                for vrf_lite_conn_model in ext_values.vrf_lite_conn:
-                    ev_dict = copy.deepcopy(vrf_lite_conn_model.model_dump(by_alias=True))
-                    ev_dict.update({"AUTO_VRF_LITE_FLAG": vrf_lite_conn_model.auto_vrf_lite_flag or "false"})
-                    ev_dict.update({"VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"})
-                    extension_values["VRF_LITE_CONN"]["VRF_LITE_CONN"].append(ev_dict)
-                extension_values["VRF_LITE_CONN"] = json.dumps(extension_values["VRF_LITE_CONN"])
-                ms_con = {"MULTISITE_CONN": []}
-                extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-                attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
-                attach["freeformConfig"] = epv.freeform_config or ""
-        return copy.deepcopy(attach)
-
     def populate_have_attach_model(self, vrf_attach_models: list[VrfsAttachmentsDataItem]) -> None:
         """
         Populate self.have_attach using get_vrf_attach_response.
@@ -1575,7 +1420,6 @@ class NdfcVrf12:
             self.log.debug(msg)
             self.log_list_of_models(new_attach_list)
 
-            # vrf_attach_model.lan_attach_list = new_attach_list
             new_attach_dict = {
                 "lanAttachList": new_attach_list,
                 "vrfName": vrf_attach_model.vrf_name,
@@ -1592,10 +1436,9 @@ class NdfcVrf12:
 
         self.have_attach = copy.deepcopy(updated_vrf_attach_models_dicts)
         self.have_attach_model = updated_vrf_attach_models
-        msg = f"self.have_attach.POST_UPDATE: length: {len(self.have_attach)}."
+        msg = f"self.have_attach_model.POST_UPDATE: length: {len(self.have_attach_model)}."
         self.log.debug(msg)
-        msg = f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        self.log_list_of_models(self.have_attach_model)
 
     def _update_vrf_lite_extension_model(self, attach: HaveLanAttachItem) -> HaveLanAttachItem:
         """
@@ -1709,7 +1552,6 @@ class NdfcVrf12:
             return
 
         self.populate_have_deploy(get_vrf_attach_response)
-        # self.populate_have_attach(get_vrf_attach_response)
         self.populate_have_attach_model(get_vrf_attach_response_model.data)
 
         msg = "self.have_attach: "
@@ -1786,12 +1628,12 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         if not self.validated_playbook_config_models:
-            msg = "No validated VRFs found. Skipping build_want_attach_vrf_lite."
+            msg = "Early return. No validated VRFs found."
             self.log.debug(msg)
             return
         vrf_config_models_with_attachments = [model for model in self.validated_playbook_config_models if model.attach]
         if not vrf_config_models_with_attachments:
-            msg = "No playbook configs containing VRF attachments found. Skipping build_want_attach_vrf_lite."
+            msg = "Early return. No playbook configs containing VRF attachments found."
             self.log.debug(msg)
             return
 
@@ -3446,6 +3288,9 @@ class NdfcVrf12:
         return vrf_model.vrfTemplateConfig
 
     def update_vrf_template_config(self, vrf: dict) -> dict:
+        """
+        TODO: Legacy method.  Remove when all callers are updated to use update_vrf_template_config_from_vrf_model.
+        """
         caller = inspect.stack()[1][3]
 
         msg = "ENTERED. "
@@ -4206,7 +4051,8 @@ class NdfcVrf12:
             self.log.debug(msg)
             self.log_list_of_models(extension_prototype_values)
 
-            vrf_attach = self.update_vrf_attach_vrf_lite_extensions_new(lan_attach_item, extension_prototype_values)
+            # HERE1
+            lan_attach_item = self.update_vrf_attach_vrf_lite_extensions_new(lan_attach_item, extension_prototype_values)
 
             new_lan_attach_list.append(lan_attach_item)
         diff_attach.lan_attach_list = new_lan_attach_list
@@ -4688,8 +4534,8 @@ class NdfcVrf12:
                 msg += f"{json.dumps(validated_playbook_config.model_dump(), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
             except pydantic.ValidationError as error:
-                f"Failed to validate playbook configuration. Error detail: {error}"
-                self.module.fail_json(msg=error)
+                msg = f"Failed to validate playbook configuration. Error detail: {error}"
+                self.module.fail_json(msg=msg)
 
             self.validated_playbook_config.append(validated_playbook_config.model_dump())
 
@@ -4726,9 +4572,11 @@ class NdfcVrf12:
                 self.log.debug(msg)
                 validated_playbook_config = VrfPlaybookModelV12(**config)
             except pydantic.ValidationError as error:
-                f"Failed to validate playbook configuration. Error detail: {error}"
+                # We need to pass the unaltered pydantic.ValidationError
+                # directly to the fail_json method for unit tests to pass.
                 self.module.fail_json(msg=error)
             self.validated_playbook_config_models.append(validated_playbook_config)
+
         msg = "self.validated_playbook_config_models: "
         self.log.debug(msg)
         self.log_list_of_models(self.validated_playbook_config_models)
@@ -4743,8 +4591,8 @@ class NdfcVrf12:
             return
         if not self.config:
             return
-        self.validate_playbook_config()
         self.validate_playbook_config_model()
+        self.validate_playbook_config()
 
     def validate_playbook_config_merged_state(self) -> None:
         """
@@ -4764,8 +4612,8 @@ class NdfcVrf12:
             msg += "config element is mandatory for merged state"
             self.module.fail_json(msg=msg)
 
-        self.validate_playbook_config()
         self.validate_playbook_config_model()
+        self.validate_playbook_config()
 
     def validate_playbook_config_overridden_state(self) -> None:
         """
@@ -4777,8 +4625,8 @@ class NdfcVrf12:
             return
         if not self.config:
             return
-        self.validate_playbook_config()
         self.validate_playbook_config_model()
+        self.validate_playbook_config()
 
     def validate_playbook_config_query_state(self) -> None:
         """
@@ -4790,8 +4638,8 @@ class NdfcVrf12:
             return
         if not self.config:
             return
-        self.validate_playbook_config()
         self.validate_playbook_config_model()
+        self.validate_playbook_config()
 
     def validate_playbook_config_replaced_state(self) -> None:
         """
@@ -4803,8 +4651,8 @@ class NdfcVrf12:
             return
         if not self.config:
             return
-        self.validate_playbook_config()
         self.validate_playbook_config_model()
+        self.validate_playbook_config()
 
     def handle_response_deploy(self, controller_response: ControllerResponseGenericV12) -> tuple:
         """
