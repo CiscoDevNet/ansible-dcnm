@@ -71,6 +71,12 @@ class DcnmNetworkQuerySchema(BaseModel):
         vlanName: Optional[str] = None
         intfDescription: Optional[str] = None
         tag: Optional[CoercedStr] = None
+        secondaryGW1: Optional[str] = None
+        secondaryGW2: Optional[str] = None
+        secondaryGW3: Optional[str] = None
+        secondaryGW4: Optional[str] = None
+        gatewayIpV6Address: Optional[str] = None
+        enableL3OnBorder: Optional[bool] = None
 
     class Parent(BaseModel):
         fabric: Optional[str] = None
@@ -97,6 +103,52 @@ class DcnmNetworkQuerySchema(BaseModel):
 
     @classmethod
     def yaml_config_to_dict(cls, expected_config_data, test_fabric):
+
+        # Mapping of fields in the yaml config to the fields in the DCNM API response
+        # Format: {yaml_field: api_field}
+        # adding fields places them in pydantic model and is checked by deepdiff
+        # removing/commenting fields removes them from pydantic model
+        # response.parent
+        network_parent_fields = {
+            "net_id": "networkId",
+            "net_name": "networkName",
+            "net_template": "networkTemplate",
+            "vrf_name": "vrf",
+            # "deploy": "networkStatus"
+        }
+        # response.parent.networkTemplateConfig
+        network_template_config_fields = {
+            "gw_ip_subnet": "gatewayIpAddress",
+            "vlan_id": "vlanId",
+            "vrf_name": "vrfName",
+            "dhcp_srvr1_ip": "dhcpServerAddr1",
+            "dhcp_srvr2_ip": "dhcpServerAddr2",
+            "dhcp_srvr3_ip": "dhcpServerAddr3",
+            "dhcp_srvr1_vrf": "vrfDhcp",
+            "dhcp_srvr2_vrf": "vrfDhcp2",
+            "dhcp_srvr3_vrf": "vrfDhcp3",
+            "arp_surpress": "surpressArp",
+            "is_l2only": "isLayer2Only",
+            "mtu_l3intf": "mtu",
+            "vlan_name": "vlanName",
+            "int_desc": "intfDescription",
+            "routing_tag": "tag",
+            "secondary_ip_gw1": "secondaryGW1",
+            "secondary_ip_gw2": "secondaryGW2",
+            "secondary_ip_gw3": "secondaryGW3",
+            "secondary_ip_gw4": "secondaryGW4",
+            "gw_ipv6_subnet": "gatewayIpV6Address",
+            "l3gw_on_border": "enableL3OnBorder"
+        }
+        # response.attach
+        network_attach_fields = {
+            "ip_address": "ipAddress",
+            "fabric": "fabricName",
+            "net_id": "networkId",
+            "net_name": "networkName",
+            "vlan_id": "vlanId",
+            # "lan_attach_state": "lanAttachState"
+        }
         expected_data = {}
         expected_data["failed"] = False
         expected_data["response"] = []
@@ -105,67 +157,24 @@ class DcnmNetworkQuerySchema(BaseModel):
             network_dict["attach"] = []
             for switch in network.get('attach', []):
                 switch_dict = {}
-                if 'ip_address' in switch:
-                    switch_dict["ipAddress"] = switch['ip_address']
+                switch_dict["fabricName"] = test_fabric
                 if 'ports' in switch:
                     switch_dict["portNames"] = ",".join(switch['ports'])
-                switch_dict["fabricName"] = test_fabric
-                if 'net_id' in network:
-                    switch_dict["networkId"] = network['net_id']
-                if 'net_name' in network:
-                    switch_dict["networkName"] = network['net_name']
-                if 'vlan_id' in network:
-                    switch_dict["vlanId"] = network['vlan_id']
-                # if deploy:
-                #     switch_dict["lanAttachState"] = "DEPLOYED"
-                # else:
-                #     switch_dict["lanAttachState"] = "PENDING"
+                for key, value in network_attach_fields.items():
+                    if key in switch:
+                        switch_dict[value] = switch[key]
+
                 network_dict["attach"].append(switch_dict)
             network_dict["parent"] = {}
             network_dict["parent"]["fabric"] = test_fabric
-            if 'net_id' in network:
-                network_dict["parent"]["networkId"] = network['net_id']
-            if 'net_name' in network:
-                network_dict["parent"]["networkName"] = network['net_name']
-            if 'net_template' in network:
-                network_dict["parent"]["networkTemplate"] = network['net_template']
-            if 'gw_ip_subnet' in network or 'vlan_id' in network or 'vrf_name' in network:
-                network_dict["parent"]["networkTemplateConfig"] = {}
-                if 'gw_ip_subnet' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["gatewayIpAddress"] = network['gw_ip_subnet']
-                if 'vlan_id' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["vlanId"] = network['vlan_id']
-                if 'vrf_name' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["vrfName"] = network['vrf_name']
-                if 'dhcp_srvr1_ip' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["dhcpServerAddr1"] = network['dhcp_srvr1_ip']
-                if 'dhcp_srvr2_ip' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["dhcpServerAddr2"] = network['dhcp_srvr2_ip']
-                if 'dhcp_srvr3_ip' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["dhcpServerAddr3"] = network['dhcp_srvr3_ip']
-                if 'dhcp_srvr1_vrf' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["vrfDhcp"] = network['dhcp_srvr1_vrf']
-                if 'dhcp_srvr2_vrf' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["vrfDhcp2"] = network['dhcp_srvr2_vrf']
-                if 'dhcp_srvr3_vrf' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["vrfDhcp3"] = network['dhcp_srvr3_vrf']
-                if 'arp_surpress' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["surpressArp"] = network['arp_surpress']
-                if 'is_l2only' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["isLayer2Only"] = network['is_l2only']
-                if 'mtu_l3intf' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["mtu"] = network['mtu_l3intf']
-                if 'vlan_name' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["vlanName"] = network['vlan_name']
-                if 'int_desc' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["intfDescription"] = network['int_desc']
-                if 'routing_tag' in network:
-                    network_dict["parent"]["networkTemplateConfig"]["tag"] = network['routing_tag']
-            if 'vrf_name' in network:
-                network_dict["parent"]["vrf"] = network['vrf_name']
-            # if deploy:
-            #     network_dict["parent"]["networkStatus"] = "DEPLOYED"
-            # else:
-            #     network_dict["parent"]["networkStatus"] = "PENDING"
+            for key, value in network_parent_fields.items():
+                if key in network:
+                    network_dict["parent"][value] = network[key]
+
+            network_dict["parent"]["networkTemplateConfig"] = {}
+            for key, value in network_template_config_fields.items():
+                if key in network:
+                    network_dict["parent"]["networkTemplateConfig"][value] = network[key]
+
             expected_data["response"].append(network_dict)
         return expected_data
