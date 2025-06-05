@@ -155,6 +155,8 @@ class NdfcVrf12:
         self.check_mode: bool = False
         self.have_create: list[dict] = []
         self.want_create: list[dict] = []
+        # Will eventually replace self.want_create
+        self.want_create_model: Union[VrfPlaybookModelV12, None] = None
         self.diff_create: list = []
         self.diff_create_update: list = []
         # self.diff_create_quick holds all the create payloads which are
@@ -169,7 +171,7 @@ class NdfcVrf12:
         self.want_attach_vrf_lite: dict = {}
         self.diff_attach: list = []
         self.validated_playbook_config: list = []
-        self.validated_playbook_config_model: Union[VrfPlaybookModelV12, None] = None
+        self.validated_playbook_config_models: list[VrfPlaybookModelV12] = []
         # diff_detach contains all attachments of a vrf being deleted,
         # especially for state: OVERRIDDEN
         # The diff_detach and delete operations have to happen before
@@ -237,8 +239,9 @@ class NdfcVrf12:
         self.log.debug("DONE")
 
     def log_list_of_models(self, model_list, by_alias: bool = False) -> None:
+        caller = inspect.stack()[1][3]
         for index, model in enumerate(model_list):
-            msg = f"{index}. by_alias={by_alias}. "
+            msg = f"caller: {caller}: by_alias={by_alias}, index {index}. "
             msg += f"{json.dumps(model.model_dump(by_alias=by_alias), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
@@ -1755,7 +1758,7 @@ class NdfcVrf12:
 
     def build_want_attach_vrf_lite(self) -> None:
         """
-        From self.validated_playbook_config_model, build a dictionary, keyed on switch serial_number,
+        From self.validated_playbook_config_models, build a dictionary, keyed on switch serial_number,
         containing a list of VrfLiteModel.
 
         ## Example structure
@@ -1782,28 +1785,46 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        if self.validated_playbook_config_model is None:
+        if not self.validated_playbook_config_models:
             msg = "No validated VRFs found. Skipping build_want_attach_vrf_lite."
             self.log.debug(msg)
             return
-        if not self.validated_playbook_config_model.attach:
-            msg = "No attachments found in validated VRFs. Skipping build_want_attach_vrf_lite."
+        vrf_config_models_with_attachments = [model for model in self.validated_playbook_config_models if model.attach]
+        if not vrf_config_models_with_attachments:
+            msg = "No playbook configs containing VRF attachments found. Skipping build_want_attach_vrf_lite."
             self.log.debug(msg)
             return
 
-        msg = f"self.validated_playbook_config_model: {json.dumps(self.validated_playbook_config_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+        for model in vrf_config_models_with_attachments:
+            for attachment in model.attach:
+                if not attachment.vrf_lite:
+                    msg = f"switch {attachment.ip_address} VRF attachment does not contain vrf_lite. Skipping."
+                    self.log.debug(msg)
+                    continue
+                ip_address = attachment.ip_address
+                self.want_attach_vrf_lite.update({self.ip_to_serial_number(ip_address): attachment.vrf_lite})
+
+        msg = f"self.want_attach_vrf_lite: length: {len(self.want_attach_vrf_lite)}."
+        self.log.debug(msg)
+        for serial_number, vrf_lite_list in self.want_attach_vrf_lite.items():
+            msg = f"serial_number {serial_number}: -> {json.dumps([model.model_dump(by_alias=True) for model in vrf_lite_list], indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+    def populate_want_create_model(self) -> None:
+        """
+        Populate self.want_create_model from self.validated_playbook_config_models.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        # pylint: disable=not-an-iterable
-        self.want_attach_vrf_lite = {
-            self.ip_to_serial_number(attach.ip_address): attach.vrf_lite for attach in self.validated_playbook_config_model.attach if attach.vrf_lite
-        }
-        # pylint: enable=not-an-iterable
+        self.want_create_model: list[VrfPlaybookModelV12] = list(self.validated_playbook_config_models)
 
-        for serial_number, vrf_lite in self.want_attach_vrf_lite.items():
-            msg = f"self.want_attach_vrf_lite: serial_number: {serial_number} -> "
-            msg += f"{json.dumps([model.model_dump() for model in vrf_lite], indent=4, sort_keys=True)}"
-            self.log.debug(msg)
+        msg = f"self.want_create_model: length {len(self.want_create_model)}."
+        self.log.debug(msg)
+        self.log_list_of_models(self.want_create_model)
 
     def get_want_create(self) -> None:
         """
@@ -1871,7 +1892,11 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
+        # We're populating both self.want_create and self.want_create_model
+        # so that we can gradually replace self.want_create, one method at
+        # a time.
         self.get_want_create()
+        self.populate_want_create_model()
         self.get_want_attach()
         self.get_want_deploy()
 
@@ -4643,7 +4668,7 @@ class NdfcVrf12:
 
         ## Raises
 
-        -   Calls fail_json() if the input is invalid
+        -   Calls fail_json() if the playbook configuration could not be validated
 
         """
         caller = inspect.stack()[1][3]
@@ -4666,12 +4691,47 @@ class NdfcVrf12:
                 f"Failed to validate playbook configuration. Error detail: {error}"
                 self.module.fail_json(msg=error)
 
-            self.validated_playbook_config_model = validated_playbook_config
             self.validated_playbook_config.append(validated_playbook_config.model_dump())
 
-            msg = "self.validated_playbook_config_model: "
-            msg += f"{json.dumps(self.validated_playbook_config_model.model_dump(), indent=4, sort_keys=True)}"
+            msg = "self.validated_playbook_config: "
+            msg += f"{json.dumps(self.validated_playbook_config, indent=4, sort_keys=True)}"
             self.log.debug(msg)
+
+    def validate_playbook_config_model(self) -> None:
+        """
+        # Summary
+
+        Validate self.config against VrfPlaybookModelV12 and updates
+        self.validated_playbook_config_models with the validated config.
+
+        ## Raises
+
+        -   Calls fail_json() if the playbook configuration could not be validated
+
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        if not self.config:
+            msg = "Early return. self.config is empty."
+            self.log.debug(msg)
+            return
+
+        for config in self.config:
+            try:
+                msg = "Validating playbook configuration."
+                self.log.debug(msg)
+                validated_playbook_config = VrfPlaybookModelV12(**config)
+            except pydantic.ValidationError as error:
+                f"Failed to validate playbook configuration. Error detail: {error}"
+                self.module.fail_json(msg=error)
+            self.validated_playbook_config_models.append(validated_playbook_config)
+        msg = "self.validated_playbook_config_models: "
+        self.log.debug(msg)
+        self.log_list_of_models(self.validated_playbook_config_models)
 
     def validate_playbook_config_deleted_state(self) -> None:
         """
@@ -4684,6 +4744,7 @@ class NdfcVrf12:
         if not self.config:
             return
         self.validate_playbook_config()
+        self.validate_playbook_config_model()
 
     def validate_playbook_config_merged_state(self) -> None:
         """
@@ -4704,6 +4765,7 @@ class NdfcVrf12:
             self.module.fail_json(msg=msg)
 
         self.validate_playbook_config()
+        self.validate_playbook_config_model()
 
     def validate_playbook_config_overridden_state(self) -> None:
         """
@@ -4716,6 +4778,7 @@ class NdfcVrf12:
         if not self.config:
             return
         self.validate_playbook_config()
+        self.validate_playbook_config_model()
 
     def validate_playbook_config_query_state(self) -> None:
         """
@@ -4728,6 +4791,7 @@ class NdfcVrf12:
         if not self.config:
             return
         self.validate_playbook_config()
+        self.validate_playbook_config_model()
 
     def validate_playbook_config_replaced_state(self) -> None:
         """
@@ -4740,6 +4804,7 @@ class NdfcVrf12:
         if not self.config:
             return
         self.validate_playbook_config()
+        self.validate_playbook_config_model()
 
     def handle_response_deploy(self, controller_response: ControllerResponseGenericV12) -> tuple:
         """
