@@ -587,7 +587,7 @@ class DiffAttachToControllerPayload:
             self.log.debug(msg)
             return vrf_attach.fabric
 
-        msg += f"fabric_type: {self.fabric_type}, "
+        msg = f"fabric_type: {self.fabric_type}, "
         msg += f"vrf_attach.fabric: {vrf_attach.fabric}."
         self.log.debug(msg)
 
