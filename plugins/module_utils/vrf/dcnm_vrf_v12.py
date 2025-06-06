@@ -45,14 +45,13 @@ from ...module_utils.network.dcnm.dcnm import (
     get_ip_sn_dict,
     get_sn_fabric_dict,
 )
-
 from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
-from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
+from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
-from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12
+from .model_vrf_attach_payload_v12 import LanAttachListItemV12
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
 from .transmute_diff_attach_to_payload import DiffAttachToControllerPayload
 from .vrf_controller_payload_v12 import VrfPayloadV12
@@ -918,7 +917,7 @@ class NdfcVrf12:
         # hostnames, etc, to ip addresses.
         attach["ip_address"] = dcnm_get_ip_addr_info(self.module, attach["ip_address"], None, None)
 
-        serial = self.ip_to_serial_number(attach["ip_address"])
+        serial = self.ipv4_address_to_serial_number(attach["ip_address"])
 
         msg = "ip_address: "
         msg += f"{attach['ip_address']}, "
@@ -1646,7 +1645,7 @@ class NdfcVrf12:
                     self.log.debug(msg)
                     continue
                 ip_address = attachment.ip_address
-                self.want_attach_vrf_lite.update({self.ip_to_serial_number(ip_address): attachment.vrf_lite})
+                self.want_attach_vrf_lite.update({self.ipv4_address_to_serial_number(ip_address): attachment.vrf_lite})
 
         msg = f"self.want_attach_vrf_lite: length: {len(self.want_attach_vrf_lite)}."
         self.log.debug(msg)
@@ -2036,12 +2035,12 @@ class NdfcVrf12:
                 search=self.have_attach_model, key="vrf_name", value=want_c["vrfName"]
             )
             if not have_attach_model:
-                msg = f"ZZZ: have_attach_model not found for vrfName: {want_c['vrfName']}. "
+                msg = f"have_attach_model not found for vrfName: {want_c['vrfName']}. "
                 msg += "Continuing."
                 self.log.debug(msg)
                 continue
 
-            msg = "ZZZ: have_attach_model: "
+            msg = "have_attach_model: "
             msg += f"{json.dumps(have_attach_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
@@ -2131,6 +2130,11 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
+        self.model_enabled = True
+        if self.model_enabled:
+            self.get_diff_override_model()
+            self.model_enabled = False
+            return
         all_vrfs = set()
         diff_delete = {}
 
@@ -2170,6 +2174,107 @@ class NdfcVrf12:
         msg = "self.diff_undeploy: "
         msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
         self.log.debug(msg)
+
+    def get_diff_override_model(self):
+        """
+        # Summary
+
+        For override state, we delete existing attachments and vrfs
+        (self.have_attach) that are not in the want list.
+
+        Using self.have_attach and self.want_create, update
+        the following:
+
+        - diff_detach: a list of attachment objects to detach (see append_to_diff_detach)
+        - diff_undeploy: a dictionary with single key "vrfNames" and value of a comma-separated list of vrf_names to undeploy
+        - diff_delete: a dictionary keyed on vrf_name with value set to "DEPLOYED". These VRFs will be deleted.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        all_vrfs = set()
+        diff_delete = {}
+
+        self.get_diff_replace()
+
+        diff_undeploy = copy.deepcopy(self.diff_undeploy)
+
+        for have_attach_model in self.have_attach_model:
+            # found = self.find_model_in_list_by_key_value(
+            #     search=self.want_create_model, key="vrf_name", value=have_attach_model.vrf_name]
+            # )
+            found_in_want = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach_model.vrf_name)
+
+            if not found_in_want:
+                # VRF exists on the controller but is not in the want list.  Detach and delete it.
+                vrf_detach_payload = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
+                if vrf_detach_payload:
+                    have_attach_model = self.update_have_attach_lan_detach_list(have_attach_model, vrf_detach_payload)
+                    self.diff_detach.append(have_attach_model)
+                    all_vrfs.add(have_attach_model.vrf_name)
+                    diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
+
+        if len(all_vrfs) != 0:
+            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        self.diff_delete = copy.deepcopy(diff_delete)
+        self.diff_undeploy = copy.deepcopy(diff_undeploy)
+
+        msg = "self.diff_delete: "
+        msg += f"{json.dumps(self.diff_delete, indent=4)}"
+        self.log.debug(msg)
+
+        msg = "self.diff_detach: "
+        self.log.debug(msg)
+        self.log_list_of_models(self.diff_detach, by_alias=False)
+
+        msg = "self.diff_undeploy: "
+        msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
+        self.log.debug(msg)
+
+    def update_have_attach_lan_detach_list(self, have_attach_model: HaveAttachPostMutate, vrf_detach_payload: VrfDetachPayloadV12) -> HaveAttachPostMutate:
+        """
+        # Summary
+
+        For each VRF attachment in the vrf_detach_payload.lan_attach_list:
+
+        - Create a HaveLanAttachItem from each LanDetachListItemV12
+        - In each HaveLanAttachItem, set isAttached to True
+        - Append the HaveLanAttachItem to have_lan_attach_list
+        - Replace the have_attach_model.lan_attach_list with this have_lan_attach_list
+
+        ## Returns
+
+        - The updated have_attach_model containing the attachments to detach.
+        """
+        msg = "detach_list.lan_attach_list: "
+        self.log.debug(msg)
+        self.log_list_of_models(vrf_detach_payload.lan_attach_list, by_alias=False)
+        have_lan_attach_list: list[HaveLanAttachItem] = []
+        for model in vrf_detach_payload.lan_attach_list:
+            have_lan_attach_list.append(
+                HaveLanAttachItem(
+                    deployment=model.deployment,
+                    extensionValues=model.extension_values,
+                    fabricName=model.fabric,
+                    freeformConfig=model.freeform_config,
+                    instanceValues=model.instance_values,
+                    is_deploy=model.is_deploy,
+                    serialNumber=model.serial_number,
+                    vlanId=model.vlan,
+                    vrfName=model.vrf_name,
+                    isAttached=True,
+                )
+            )
+        have_attach_model.lan_attach_list = have_lan_attach_list
+        msg = f"Returning HaveAttachPostMutate with updated detach list of length {len(have_attach_model.lan_attach_list)}."
+        self.log.debug(msg)
+        # Wrap in a list for logging, since this is a single model instance
+        self.log_list_of_models([have_attach_model], by_alias=True)
+        return have_attach_model
 
     def get_diff_replace(self) -> None:
         """
@@ -2569,7 +2674,7 @@ class NdfcVrf12:
                 }
                 diff.append(new_attach_dict)
 
-        msg = "ZZZ: returning diff: "
+        msg = "returning diff: "
         msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         return diff
@@ -2681,7 +2786,7 @@ class NdfcVrf12:
         """
         caller = inspect.stack()[1][3]
 
-        # self.model_enabled = False
+        self.model_enabled = True
 
         msg = "ENTERED. "
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
@@ -2752,18 +2857,21 @@ class NdfcVrf12:
         diff_create = copy.deepcopy(self.diff_create)
         diff_create_quick = copy.deepcopy(self.diff_create_quick)
         diff_create_update = copy.deepcopy(self.diff_create_update)
-        diff_attach = copy.deepcopy(self.diff_attach)
 
-        msg = f"ZZZ: type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
-        self.log.debug(msg)
+        diff_attach = copy.deepcopy(self.diff_attach)
         if len(diff_attach) > 0:
-            msg = f"ZZZ: type(diff_attach[0]): {type(diff_attach[0])}"
-            self.log.debug(msg)
+            msg = f"type(diff_attach[0]): {type(diff_attach[0])} length {len(diff_attach)}"
+        else:
+            msg = f"type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
+        self.log.debug(msg)
         msg = f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         diff_detach = copy.deepcopy(self.diff_detach)
-        msg = f"ZZZ: type(diff_detach): {type(diff_detach)}, length {len(diff_detach)}, "
+        if len(diff_detach) > 0:
+            msg = f"type(diff_detach[0]): {type(diff_detach[0])}, length {len(diff_detach)}."
+        else:
+            msg = f"type(diff_detach): {type(diff_detach)}, length {len(diff_detach)}."
         self.log.debug(msg)
         self.log_list_of_models(diff_detach, by_alias=False)
 
@@ -3394,335 +3502,7 @@ class NdfcVrf12:
                 is_border = True
         return is_border
 
-    def get_extension_values_from_lite_objects(self, lite: list[ExtensionPrototypeValue]) -> list[VrfLiteConnProtoItem]:
-        """
-        # Summary
-
-        Given a list of lite objects (ExtensionPrototypeValue), return:
-
-        -   A list containing the extensionValues (VrfLiteConnProtoItem),
-            if any, from these lite objects.
-        -   An empty list, if the lite objects have no extensionValues
-
-        ## Raises
-
-        None
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        extension_values_list: list[VrfLiteConnProtoItem] = []
-        for item in lite:
-            if item.extension_type != "VRF_LITE":
-                continue
-            extension_values_list.append(item.extension_values)
-
-        msg = f"Returning extension_values_list (list[VrfLiteConnProtoItem]). length: {len(extension_values_list)}."
-        self.log.debug(msg)
-        self.log_list_of_models(extension_values_list)
-
-        return extension_values_list
-
-    def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite: list[ExtensionPrototypeValue]) -> dict:
-        """
-        # Summary
-
-        ## params
-
-        -   vrf_attach
-            A vrf_attach object containing a vrf_lite extension
-            to update
-        -   lite: A list of current vrf_lite extension models
-            (ExtensionPrototypeValue) from the switch
-
-        ## Description
-
-        1.  Merge the values from the vrf_attach object into a matching
-            vrf_lite extension object (if any) from the switch.
-        2.  Update the vrf_attach object with the merged result.
-        3.  Return the updated vrf_attach object.
-
-        If no matching ExtensionPrototypeValue model is found,
-        return the unmodified vrf_attach object.
-
-        "matching" in this case means:
-
-        1.  The extensionType of the switch's extension object is VRF_LITE
-        2.  The IF_NAME in the extensionValues of the extension object
-            matches the interface in vrf_attach.vrf_lite.
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        msg = "vrf_attach: "
-        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        serial_number = vrf_attach.get("serialNumber")
-
-        msg = f"serial_number: {serial_number}"
-        self.log.debug(msg)
-
-        if vrf_attach.get("vrf_lite") is None:
-            if "vrf_lite" in vrf_attach:
-                del vrf_attach["vrf_lite"]
-            vrf_attach["extensionValues"] = ""
-            msg = f"serial_number: {serial_number}, "
-            msg += "vrf_attach does not contain a vrf_lite configuration. "
-            msg += "Returning it with empty extensionValues. "
-            msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            return copy.deepcopy(vrf_attach)
-
-        msg = f"serial_number: {serial_number}, "
-        msg += f"Received list of lite_objects (list[ExtensionPrototypeValue]). length: {len(lite)}."
-        self.log.debug(msg)
-        self.log_list_of_models(lite)
-
-        ext_values = self.get_extension_values_from_lite_objects(lite)
-        if ext_values is None:
-            ip_address = self.serial_number_to_ip(serial_number)
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += "No VRF LITE capable interfaces found on "
-            msg += "this switch. "
-            msg += f"ip: {ip_address}, "
-            msg += f"serial_number: {serial_number}"
-            self.log.debug(msg)
-            self.module.fail_json(msg=msg)
-
-        matches: dict = {}
-        user_vrf_lite_interfaces = []
-        switch_vrf_lite_interfaces = []
-        for item in vrf_attach.get("vrf_lite"):
-            item_interface = item.get("interface")
-            user_vrf_lite_interfaces.append(item_interface)
-            for ext_value in ext_values:
-                ext_value_interface = ext_value.if_name
-                switch_vrf_lite_interfaces.append(ext_value_interface)
-                msg = f"item_interface: {item_interface}, "
-                msg += f"ext_value_interface: {ext_value_interface}"
-                self.log.debug(msg)
-                if item_interface != ext_value_interface:
-                    continue
-                msg = "Found item: "
-                msg += f"item[interface] {item_interface}, == "
-                msg += f"ext_values.if_name {ext_value_interface}."
-                self.log.debug(msg)
-                msg = f"{json.dumps(item, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-                matches[item_interface] = {"user": item, "switch": ext_value}
-        if not matches:
-            ip_address = self.serial_number_to_ip(serial_number)
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += "No matching interfaces with vrf_lite extensions "
-            msg += f"found on switch {ip_address} ({serial_number}). "
-            msg += "playbook vrf_lite_interfaces: "
-            msg += f"{','.join(sorted(user_vrf_lite_interfaces))}. "
-            msg += "switch vrf_lite_interfaces: "
-            msg += f"{','.join(sorted(switch_vrf_lite_interfaces))}."
-            self.log.debug(msg)
-            self.module.fail_json(msg)
-
-        msg = "Matching extension object(s) found on the switch. "
-        msg += "Proceeding to convert playbook vrf_lite configuration "
-        msg += "to payload format. "
-
-        extension_values = {"VRF_LITE_CONN": [], "MULTISITE_CONN": []}
-
-        for interface, item in matches.items():
-            user = item["user"]
-            switch = item["switch"]
-            msg = f"interface: {interface}: "
-            self.log.debug(msg)
-            msg = "item.user: "
-            msg += f"{json.dumps(user, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = "item.switch: "
-            msg += f"{json.dumps(switch.model_dump(), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            nbr_dict = {
-                "IF_NAME": user.get("interface"),
-                "DOT1Q_ID": str(user.get("dot1q") or switch.dot1q_id),
-                "IP_MASK": user.get("ipv4_addr") or switch.ip_mask,
-                "NEIGHBOR_IP": user.get("neighbor_ipv4") or switch.neighbor_ip,
-                "NEIGHBOR_ASN": switch.neighbor_asn,
-                "IPV6_MASK": user.get("ipv6_addr") or switch.ipv6_mask,
-                "IPV6_NEIGHBOR": user.get("neighbor_ipv6") or switch.ipv6_neighbor,
-                "AUTO_VRF_LITE_FLAG": switch.auto_vrf_lite_flag,
-                "PEER_VRF_NAME": user.get("peer_vrf") or switch.peer_vrf_name,
-                "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython",
-            }
-            extension_values["VRF_LITE_CONN"].append(nbr_dict)
-
-        ms_con = {"MULTISITE_CONN": []}
-        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-        extension_values["VRF_LITE_CONN"] = json.dumps({"VRF_LITE_CONN": extension_values["VRF_LITE_CONN"]})
-        vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
-        if vrf_attach.get("vrf_lite") is not None:
-            del vrf_attach["vrf_lite"]
-
-        msg = "Returning modified vrf_attach: "
-        msg += f"{json.dumps(vrf_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        return copy.deepcopy(vrf_attach)
-
-    def update_vrf_attach_vrf_lite_extensions_new(self, vrf_attach: LanAttachListItemV12, lite: list[ExtensionPrototypeValue]) -> LanAttachListItemV12:
-        """
-        # Summary
-
-        Will replace update_vrf_attach_vrf_lite_extensions in the future.
-
-        ## params
-
-        -   vrf_attach
-            A LanAttachListItemV12 model containing extension_values to update.
-        -   lite: A list of current vrf_lite extension models
-            (ExtensionPrototypeValue) from the switch
-
-        ## Description
-
-        1.  Merge the values from the vrf_attach object into a matching
-            vrf_lite extension object (if any) from the switch.
-        2.  Update the vrf_attach object with the merged result.
-        3.  Return the updated vrf_attach object.
-
-        If no matching ExtensionPrototypeValue model is found,
-        return the unmodified vrf_attach object.
-
-        "matching" in this case means:
-
-        1.  The extensionType of the switch's extension object is VRF_LITE
-        2.  The IF_NAME in the extensionValues of the extension object
-            matches the interface in vrf_attach.extension_values.
-        """
-        method_name = inspect.stack()[0][3]
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        msg = "vrf_attach: "
-        msg += f"{json.dumps(vrf_attach.model_dump(by_alias=False), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        serial_number = vrf_attach.serial_number
-
-        msg = f"serial_number: {serial_number}, "
-        msg += f"Received list of lite_objects (list[ExtensionPrototypeValue]). length: {len(lite)}."
-        self.log.debug(msg)
-        self.log_list_of_models(lite)
-
-        ext_values = self.get_extension_values_from_lite_objects(lite)
-        if ext_values is None:
-            ip_address = self.serial_number_to_ip(serial_number)
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += "No VRF LITE capable interfaces found on "
-            msg += "this switch. "
-            msg += f"ip: {ip_address}, "
-            msg += f"serial_number: {serial_number}"
-            self.log.debug(msg)
-            self.module.fail_json(msg=msg)
-
-        extension_values = json.loads(vrf_attach.extension_values)
-        vrf_lite_conn = json.loads(extension_values.get("VRF_LITE_CONN", []))
-        multisite_conn = json.loads(extension_values.get("MULTISITE_CONN", []))
-        msg = f"type(extension_values): {type(extension_values)}, type(vrf_lite_conn): {type(vrf_lite_conn)}, type(multisite_conn): {type(multisite_conn)}"
-        self.log.debug(msg)
-        msg = f"vrf_attach.extension_values: {json.dumps(extension_values, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        msg = f"vrf_lite_conn: {json.dumps(vrf_lite_conn, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        msg = f"multisite_conn: {json.dumps(multisite_conn, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        matches: dict = {}
-        user_vrf_lite_interfaces = []
-        switch_vrf_lite_interfaces = []
-        for item in vrf_lite_conn.get("VRF_LITE_CONN", []):
-            item_interface = item.get("IF_NAME")
-            user_vrf_lite_interfaces.append(item_interface)
-            for ext_value in ext_values:
-                ext_value_interface = ext_value.if_name
-                switch_vrf_lite_interfaces.append(ext_value_interface)
-                msg = f"item_interface: {item_interface}, "
-                msg += f"ext_value_interface: {ext_value_interface}"
-                self.log.debug(msg)
-                if item_interface != ext_value_interface:
-                    continue
-                msg = "Found item: "
-                msg += f"item[interface] {item_interface}, == "
-                msg += f"ext_values.if_name {ext_value_interface}."
-                self.log.debug(msg)
-                msg = f"{json.dumps(item, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-                matches[item_interface] = {"user": item, "switch": ext_value}
-        if not matches:
-            ip_address = self.serial_number_to_ip(serial_number)
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}. "
-            msg += "No matching interfaces with vrf_lite extensions "
-            msg += f"found on switch {ip_address} ({serial_number}). "
-            msg += "playbook vrf_lite_interfaces: "
-            msg += f"{','.join(sorted(user_vrf_lite_interfaces))}. "
-            msg += "switch vrf_lite_interfaces: "
-            msg += f"{','.join(sorted(switch_vrf_lite_interfaces))}."
-            self.log.debug(msg)
-            self.module.fail_json(msg)
-
-        msg = "Matching extension object(s) found on the switch. "
-        self.log.debug(msg)
-
-        extension_values = {"VRF_LITE_CONN": [], "MULTISITE_CONN": []}
-
-        for interface, item in matches.items():
-            user = item["user"]
-            switch = item["switch"]
-            msg = f"interface: {interface}: "
-            self.log.debug(msg)
-            msg = "item.user: "
-            msg += f"{json.dumps(user, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            msg = "item.switch: "
-            msg += f"{json.dumps(switch.model_dump(), indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-
-            nbr_dict = {
-                "IF_NAME": user.get("IF_NAME"),
-                "DOT1Q_ID": str(user.get("DOT1Q_ID") or switch.dot1q_id),
-                "IP_MASK": user.get("IP_MASK") or switch.ip_mask,
-                "NEIGHBOR_IP": user.get("NEIGHBOR_IP") or switch.neighbor_ip,
-                "NEIGHBOR_ASN": switch.neighbor_asn,
-                "IPV6_MASK": user.get("IPV6_MASK") or switch.ipv6_mask,
-                "IPV6_NEIGHBOR": user.get("IPV6_NEIGHBOR") or switch.ipv6_neighbor,
-                "AUTO_VRF_LITE_FLAG": switch.auto_vrf_lite_flag,
-                "PEER_VRF_NAME": user.get("PEER_VRF_NAME") or switch.peer_vrf_name,
-                "VRF_LITE_JYTHON_TEMPLATE": user.get("Ext_VRF_Lite_Jython") or switch.vrf_lite_jython_template or "Ext_VRF_Lite_Jython",
-            }
-            extension_values["VRF_LITE_CONN"].append(nbr_dict)
-
-        ms_con = {"MULTISITE_CONN": []}
-        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-        extension_values["VRF_LITE_CONN"] = json.dumps({"VRF_LITE_CONN": extension_values["VRF_LITE_CONN"]})
-        vrf_attach.extension_values = json.dumps(extension_values).replace(" ", "")
-
-        msg = "Returning modified vrf_attach: "
-        msg += f"{json.dumps(vrf_attach.model_dump(), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        return vrf_attach
-
-    def ip_to_serial_number(self, ip_address):
+    def ipv4_address_to_serial_number(self, ip_address):
         """
         Given a switch ip_address, return the switch serial number.
 
@@ -3735,24 +3515,6 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         return self.ip_sn.get(ip_address)
-
-    def serial_number_to_ip(self, serial_number):
-        """
-        Given a switch serial_number, return the switch ip address.
-
-        If serial_number is not found, return None.
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        msg = f"serial_number: {serial_number}. "
-        msg += f"Returning ip: {self.sn_ip.get(serial_number)}."
-        self.log.debug(msg)
-
-        return self.sn_ip.get(serial_number)
 
     def send_to_controller(self, args: SendToControllerArgs) -> None:
         """
@@ -3920,204 +3682,6 @@ class NdfcVrf12:
 
         return child_fabric_name
 
-    def update_lan_attach_list_model(self, diff_attach: VrfAttachPayloadV12) -> list[LanAttachListItemV12]:
-        """
-        # Summary
-
-        - Update the lan_attach_list in each VrfAttachPayloadV12
-          - Set vlan to 0
-          - Set the fabric name to the child fabric name, if fabric is MSD
-          - Update vrf_lite extensions with information from the switch
-
-        ## Raises
-
-        - ValueError if diff_attach cannot be mutated
-        """
-        diff_attach = self.update_lan_attach_list_vlan(diff_attach)
-        diff_attach = self.update_lan_attach_list_fabric_name(diff_attach)
-        diff_attach = self.update_lan_attach_list_vrf_lite(diff_attach)
-        return diff_attach.lan_attach_list
-
-    def update_lan_attach_list_vlan(self, diff_attach: VrfAttachPayloadV12) -> VrfAttachPayloadV12:
-        """
-        # Summary
-
-        Set VrfAttachPayloadV12.lan_attach_list.vlan to 0 and return the updated
-        VrfAttachPayloadV12 instance.
-
-        ## Raises
-
-        - None
-        """
-        new_lan_attach_list = []
-        for vrf_attach in diff_attach.lan_attach_list:
-            vrf_attach.vlan = 0
-            new_lan_attach_list.append(vrf_attach)
-        diff_attach.lan_attach_list = new_lan_attach_list
-        msg = f"Returning updated diff_attach: {json.dumps(diff_attach.model_dump(), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        return diff_attach
-
-    def update_lan_attach_list_fabric_name(self, diff_attach: VrfAttachPayloadV12) -> VrfAttachPayloadV12:
-        """
-        # Summary
-
-        Update VrfAttachPayloadV12.lan_attach_list.fabric and return the updated
-        VrfAttachPayloadV12 instance.
-
-        - If fabric_type is not MFD, return the diff_attach unchanged
-        - If fabric_type is MFD, replace diff_attach.lan_attach_list.fabric with child fabric name
-
-        ## Raises
-
-        - None
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        new_lan_attach_list = []
-        for vrf_attach in diff_attach.lan_attach_list:
-            vrf_attach.fabric = self.get_vrf_attach_fabric_name(vrf_attach)
-            new_lan_attach_list.append(vrf_attach)
-
-        diff_attach.lan_attach_list = new_lan_attach_list
-        msg = f"Returning updated diff_attach: {json.dumps(diff_attach.model_dump(), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        return diff_attach
-
-    def update_lan_attach_list_vrf_lite(self, diff_attach: VrfAttachPayloadV12) -> VrfAttachPayloadV12:
-        """
-        - If the switch is not a border switch, fail the module
-        - Get associated extension_prototype_values (ExtensionPrototypeValue) from the switch
-        - Update vrf lite extensions with information from the extension_prototype_values
-
-        ## Raises
-
-        - fail_json: If the switch is not a border switch
-        """
-        caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        new_lan_attach_list = []
-        msg = f"len(diff_attach.lan_attach_list): {len(diff_attach.lan_attach_list)}"
-        self.log.debug(msg)
-        msg = "diff_attach.lan_attach_list: "
-        self.log.debug(msg)
-        self.log_list_of_models(diff_attach.lan_attach_list)
-
-        for lan_attach_item in diff_attach.lan_attach_list:
-            serial_number = lan_attach_item.serial_number
-
-            if self.want_attach_vrf_lite.get(serial_number) is None:
-                new_lan_attach_list.append(lan_attach_item)
-                continue
-
-            # VRF Lite processing
-
-            msg = f"lan_attach_item.extension_values: {lan_attach_item.extension_values}."
-            self.log.debug(msg)
-
-            ip_address = self.serial_number_to_ip(lan_attach_item.serial_number)
-            if not self.is_border_switch(lan_attach_item.serial_number):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"caller {caller}. "
-                msg += "VRF LITE cannot be attached to "
-                msg += "non-border switch. "
-                msg += f"ip: {ip_address}, "
-                msg += f"serial number: {lan_attach_item.serial_number}"
-                self.module.fail_json(msg=msg)
-
-            lite_objects_model = self.get_list_of_vrfs_switches_data_item_model_new(lan_attach_item)
-
-            msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
-            msg += f"lite_objects: length {len(lite_objects_model)}."
-            self.log_list_of_models(lite_objects_model)
-
-            if not lite_objects_model:
-                msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
-                msg += "No lite objects. Append lan_attach_item to new_attach_list and continue."
-                self.log.debug(msg)
-                new_lan_attach_list.append(lan_attach_item)
-                continue
-
-            extension_prototype_values = lite_objects_model[0].switch_details_list[0].extension_prototype_values
-            msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
-            msg += f"lite (list[ExtensionPrototypeValue]). length: {len(extension_prototype_values)}."
-            self.log.debug(msg)
-            self.log_list_of_models(extension_prototype_values)
-
-            lan_attach_item = self.update_vrf_attach_vrf_lite_extensions_new(lan_attach_item, extension_prototype_values)
-
-            new_lan_attach_list.append(lan_attach_item)
-        diff_attach.lan_attach_list = new_lan_attach_list
-
-        msg = f"Returning updated diff_attach: {json.dumps(diff_attach.model_dump(), indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        return diff_attach
-
-    def transmute_diff_attach_to_controller_payload(self, diff_attach: list[dict]) -> str:
-        """
-        # Summary
-
-        - Transmute diff_attach to a list of VrfAttachPayloadV12 models.
-        - For each model, update its lan_attach_list
-          - Set vlan to 0
-          - Set the fabric name to the child fabric name, if fabric is MSD
-          - Update vrf_lite extensions with information from the switch
-
-        ## Raises
-
-        - ValueError if diff_attach cannot be mutated
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-        msg = f"Received diff_attach: {json.dumps(diff_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
-        diff_attach_list: list[VrfAttachPayloadV12] = [
-            VrfAttachPayloadV12(
-                vrfName=item.get("vrfName"),
-                lanAttachList=[
-                    LanAttachListItemV12(
-                        deployment=lan_attach.get("deployment"),
-                        extensionValues=lan_attach.get("extensionValues"),
-                        fabric=lan_attach.get("fabric") or lan_attach.get("fabricName"),
-                        freeformConfig=lan_attach.get("freeformConfig"),
-                        instanceValues=lan_attach.get("instanceValues"),
-                        serialNumber=lan_attach.get("serialNumber"),
-                        vlan=lan_attach.get("vlan") or lan_attach.get("vlanId") or 0,
-                        vrfName=lan_attach.get("vrfName"),
-                    )
-                    for lan_attach in item.get("lanAttachList")
-                    if item.get("lanAttachList") is not None
-                ],
-            )
-            for item in diff_attach
-            if diff_attach
-        ]
-
-        payload: list[VrfAttachPayloadV12] = []
-        for vrf_attach_payload in diff_attach_list:
-            new_lan_attach_list = self.update_lan_attach_list_model(vrf_attach_payload)
-            vrf_attach_payload.lan_attach_list = new_lan_attach_list
-            payload.append(vrf_attach_payload)
-
-        msg = f"Returning payload: type(payload[0]): {type(payload[0])} length: {len(payload)}."
-        self.log.debug(msg)
-        self.log_list_of_models(payload)
-
-        return json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload])
-
     def push_diff_attach_model(self, is_rollback=False) -> None:
         """
         # Summary
@@ -4136,7 +3700,6 @@ class NdfcVrf12:
             self.log.debug(msg)
             return
 
-        # payload = self.transmute_diff_attach_to_controller_payload(copy.deepcopy(self.diff_attach))
         try:
             instance = DiffAttachToControllerPayload()
             instance.ansible_module = self.module
