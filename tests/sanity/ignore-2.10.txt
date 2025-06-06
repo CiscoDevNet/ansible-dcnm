@@ -53,6 +53,12 @@ plugins/module_utils/vrf/model_vrf_attach_payload_v12.py import-3.11!skip
 plugins/module_utils/vrf/model_vrf_detach_payload_v12.py import-3.9!skip
 plugins/module_utils/vrf/model_vrf_detach_payload_v12.py import-3.10!skip
 plugins/module_utils/vrf/model_vrf_detach_payload_v12.py import-3.11!skip
+plugins/module_utils/vrf/serial_number_to_vrf_lite.py import-3.9!skip
+plugins/module_utils/vrf/serial_number_to_vrf_lite.py import-3.10!skip
+plugins/module_utils/vrf/serial_number_to_vrf_lite.py import-3.11!skip
+plugins/module_utils/vrf/transmute_diff_attach_to_payload.py import-3.9!skip
+plugins/module_utils/vrf/transmute_diff_attach_to_payload.py import-3.10!skip
+plugins/module_utils/vrf/transmute_diff_attach_to_payload.py import-3.11!skip
 plugins/module_utils/vrf/vrf_controller_payload_v12.py import-3.9!skip
 plugins/module_utils/vrf/vrf_controller_payload_v12.py import-3.10!skip
 plugins/module_utils/vrf/vrf_controller_payload_v12.py import-3.11!skip
