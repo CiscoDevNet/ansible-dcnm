@@ -1407,30 +1407,40 @@
   },
   "vrf_inv_data": {
     "10.10.10.224":{
+      "fabricName": "MS-fabric",
+      "fabricTechnology": "VXLANFabric",
       "ipAddress": "10.10.10.224",
       "logicalName": "dt-n9k1",
       "serialNumber": "XYZKSJHSMK1",
       "switchRole": "leaf"
     },
     "10.10.10.225":{
+      "fabricName": "MS-fabric",
+      "fabricTechnology": "VXLANFabric",
       "ipAddress": "10.10.10.225",
       "logicalName": "dt-n9k2",
       "serialNumber": "XYZKSJHSMK2",
       "switchRole": "leaf"
     },
     "10.10.10.226":{
+      "fabricName": "MS-fabric",
+      "fabricTechnology": "VXLANFabric",
       "ipAddress": "10.10.10.226",
       "logicalName": "dt-n9k3",
       "serialNumber": "XYZKSJHSMK3",
       "switchRole": "leaf"
     },
     "10.10.10.227":{
+      "fabricName": "MS-fabric",
+      "fabricTechnology": "VXLANFabric",
       "ipAddress": "10.10.10.227",
       "logicalName": "dt-n9k4",
       "serialNumber": "XYZKSJHSMK4",
       "switchRole": "border spine"
     },
     "10.10.10.228":{
+      "fabricName": "MS-fabric",
+      "fabricTechnology": "VXLANFabric",
       "ipAddress": "10.10.10.228",
       "logicalName": "dt-n9k5",
       "serialNumber": "XYZKSJHSMK5",

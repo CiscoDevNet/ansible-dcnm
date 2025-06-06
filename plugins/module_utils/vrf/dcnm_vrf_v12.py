@@ -45,6 +45,7 @@ from ...module_utils.network.dcnm.dcnm import (
     get_ip_sn_dict,
     get_sn_fabric_dict,
 )
+
 from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
@@ -53,6 +54,7 @@ from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV1
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
+from .transmute_diff_attach_to_payload import DiffAttachToControllerPayload
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
@@ -4051,7 +4053,6 @@ class NdfcVrf12:
             self.log.debug(msg)
             self.log_list_of_models(extension_prototype_values)
 
-            # HERE1
             lan_attach_item = self.update_vrf_attach_vrf_lite_extensions_new(lan_attach_item, extension_prototype_values)
 
             new_lan_attach_list.append(lan_attach_item)
@@ -4135,7 +4136,20 @@ class NdfcVrf12:
             self.log.debug(msg)
             return
 
-        payload = self.transmute_diff_attach_to_controller_payload(copy.deepcopy(self.diff_attach))
+        # payload = self.transmute_diff_attach_to_controller_payload(copy.deepcopy(self.diff_attach))
+        try:
+            instance = DiffAttachToControllerPayload()
+            instance.ansible_module = self.module
+            instance.diff_attach = copy.deepcopy(self.diff_attach)
+            instance.fabric_inventory = self.inventory_data
+            # TODO: remove once we use fabricTechnology in DiffAttachToControllerPayload
+            instance.fabric_type = self.fabric_type
+            instance.playbook_models = self.validated_playbook_config_models
+            instance.sender = dcnm_send
+            instance.commit()
+            payload = instance.payload
+        except ValueError as error:
+            self.module.fail_json(error)
 
         endpoint = EpVrfPost()
         endpoint.fabric_name = self.fabric
