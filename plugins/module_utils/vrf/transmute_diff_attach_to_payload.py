@@ -59,7 +59,8 @@ class DiffAttachToControllerPayload:
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._sender: callable = list # set to list to avoid pylint not-callable error
+        # Set self._sender to list to avoid pylint not-callable error
+        self._sender: callable = list
         self._diff_attach: list[dict] = []
         self._fabric_name: str = ""
         # TODO: remove self.fabric_type once we use fabric_inventory.fabricTechnology for fabric_type
