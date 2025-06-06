@@ -89,7 +89,7 @@ class SerialNumberToVrfLite:
                     self.log.debug(msg)
                     continue
                 ip_address = attachment.ip_address
-                self.serial_number_to_vrf_lite.update({self.ip_to_serial_number(ip_address): attachment.vrf_lite})
+                self.serial_number_to_vrf_lite.update({self.ipv4_address_to_serial_number(ip_address): attachment.vrf_lite})
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.serial_number_to_vrf_lite: length: {len(self.serial_number_to_vrf_lite)}."
@@ -99,7 +99,7 @@ class SerialNumberToVrfLite:
             msg += f"serial_number {serial_number}: -> {json.dumps([model.model_dump(by_alias=True) for model in vrf_lite_list], indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-    def ip_to_serial_number(self, ip_address) -> str:
+    def ipv4_address_to_serial_number(self, ip_address) -> str:
         """
         Given a switch ip_address, return the switch serial number.
 
