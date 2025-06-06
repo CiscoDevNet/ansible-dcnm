@@ -713,7 +713,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         )
         result = self.execute_module(changed=False, failed=True)
         msg = "NdfcVrf12.update_attach_params_extension_values: "
-        msg += "caller: update_attach_params. "
+        msg += "caller: transmute_attach_params_to_payload. "
         msg += "VRF LITE attachments are appropriate only for switches "
         msg += "with Border roles e.g. Border Gateway, Border Spine, etc. "
         msg += "The playbook and/or controller settings for "

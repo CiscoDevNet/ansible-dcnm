@@ -887,11 +887,11 @@ class NdfcVrf12:
 
         return copy.deepcopy(extension_values)
 
-    def update_attach_params(self, attach: dict, vrf_name: str, deploy: bool, vlan_id: int) -> dict:
+    def transmute_attach_params_to_payload(self, attach: dict, vrf_name: str, deploy: bool, vlan_id: int) -> dict:
         """
         # Summary
 
-        Turn an attachment object (attach) into a payload for the controller.
+        Turn an attachment dict (attach) into a payload for the controller.
 
         ## Raises
 
@@ -1585,7 +1585,7 @@ class NdfcVrf12:
                 continue
             for attach in vrf["attach"]:
                 deploy = vrf_deploy
-                vrfs.append(self.update_attach_params(attach, vrf_name, deploy, vlan_id))
+                vrfs.append(self.transmute_attach_params_to_payload(attach, vrf_name, deploy, vlan_id))
 
             if vrfs:
                 vrf_attach.update({"vrfName": vrf_name})
