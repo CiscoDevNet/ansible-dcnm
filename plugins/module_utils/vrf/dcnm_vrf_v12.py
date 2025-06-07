@@ -37,19 +37,16 @@ from ansible.module_utils.basic import AnsibleModule
 
 from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
-from ...module_utils.network.dcnm.dcnm import (
-    dcnm_get_ip_addr_info,
-    dcnm_send,
-    get_fabric_details,
-    get_fabric_inventory_details,
-    get_ip_sn_dict,
-    get_sn_fabric_dict,
-)
+from ...module_utils.network.dcnm.dcnm import dcnm_get_ip_addr_info, dcnm_send, get_fabric_details, get_fabric_inventory_details, get_sn_fabric_dict
 from .controller_response_generic_v12 import ControllerResponseGenericV12
 from .controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
 from .controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, VrfsSwitchesDataItem
 from .controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
+from .inventory_ipv4_to_serial_number import InventoryIpv4ToSerialNumber
+from .inventory_ipv4_to_switch_role import InventoryIpv4ToSwitchRole
+from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
+from .inventory_serial_number_to_switch_role import InventorySerialNumberToSwitchRole
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .model_vrf_attach_payload_v12 import LanAttachListItemV12
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
@@ -190,15 +187,20 @@ class NdfcVrf12:
         self.query: list = []
 
         self.inventory_data: dict = get_fabric_inventory_details(self.module, self.fabric)
+        self.ipv4_to_serial_number = InventoryIpv4ToSerialNumber()
+        self.ipv4_to_switch_role = InventoryIpv4ToSwitchRole()
+        self.serial_number_to_ipv4 = InventorySerialNumberToIpv4()
+        self.serial_number_to_switch_role = InventorySerialNumberToSwitchRole()
+
+        self.ipv4_to_serial_number.fabric_inventory = self.inventory_data
+        self.ipv4_to_switch_role.fabric_inventory = self.inventory_data
+        self.serial_number_to_ipv4.fabric_inventory = self.inventory_data
+        self.serial_number_to_switch_role.fabric_inventory = self.inventory_data
 
         msg = "self.inventory_data: "
         msg += f"{json.dumps(self.inventory_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self.ip_sn: dict = {}
-        self.hn_sn: dict = {}
-        self.ip_sn, self.hn_sn = get_ip_sn_dict(self.inventory_data)
-        self.sn_ip: dict = {value: key for (key, value) in self.ip_sn.items()}
         self.fabric_data: dict = get_fabric_details(self.module, self.fabric)
 
         msg = "self.fabric_data: "
@@ -829,19 +831,19 @@ class NdfcVrf12:
         # Before applying the vrf_lite config, verify that the
         # switch role begins with border
 
-        role: str = self.inventory_data[attach["ip_address"]].get("switchRole")
-
-        if not re.search(r"\bborder\b", role.lower()):
+        ip_address = attach.get("ip_address")
+        switch_role = self.ipv4_to_switch_role.convert(ip_address)
+        if not re.search(r"\bborder\b", switch_role.lower()):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
             msg += "VRF LITE attachments are appropriate only for switches "
             msg += "with Border roles e.g. Border Gateway, Border Spine, etc. "
             msg += "The playbook and/or controller settings for switch "
-            msg += f"{attach['ip_address']} with role {role} need review."
+            msg += f"{ip_address} with role {switch_role} need review."
             self.module.fail_json(msg=msg)
 
         item: dict
-        for item in attach["vrf_lite"]:
+        for item in attach.get("vrf_lite"):
 
             # If the playbook contains vrf lite parameters
             # update the extension values.
@@ -849,20 +851,20 @@ class NdfcVrf12:
             for param in self.vrf_lite_properties:
                 vrf_lite_conn[param] = ""
 
-            if item["interface"]:
-                vrf_lite_conn["IF_NAME"] = item["interface"]
-            if item["dot1q"]:
-                vrf_lite_conn["DOT1Q_ID"] = str(item["dot1q"])
-            if item["ipv4_addr"]:
-                vrf_lite_conn["IP_MASK"] = item["ipv4_addr"]
-            if item["neighbor_ipv4"]:
-                vrf_lite_conn["NEIGHBOR_IP"] = item["neighbor_ipv4"]
-            if item["ipv6_addr"]:
-                vrf_lite_conn["IPV6_MASK"] = item["ipv6_addr"]
-            if item["neighbor_ipv6"]:
-                vrf_lite_conn["IPV6_NEIGHBOR"] = item["neighbor_ipv6"]
-            if item["peer_vrf"]:
-                vrf_lite_conn["PEER_VRF_NAME"] = item["peer_vrf"]
+            if item.get("interface"):
+                vrf_lite_conn["IF_NAME"] = item.get("interface")
+            if item.get("dot1q"):
+                vrf_lite_conn["DOT1Q_ID"] = str(item.get("dot1q"))
+            if item.get("ipv4_addr"):
+                vrf_lite_conn["IP_MASK"] = item.get("ipv4_addr")
+            if item.get("neighbor_ipv4"):
+                vrf_lite_conn["NEIGHBOR_IP"] = item.get("neighbor_ipv4")
+            if item.get("ipv6_addr"):
+                vrf_lite_conn["IPV6_MASK"] = item.get("ipv6_addr")
+            if item.get("neighbor_ipv6"):
+                vrf_lite_conn["IPV6_NEIGHBOR"] = item.get("neighbor_ipv6")
+            if item.get("peer_vrf"):
+                vrf_lite_conn["PEER_VRF_NAME"] = item.get("peer_vrf")
 
             vrf_lite_conn["VRF_LITE_JYTHON_TEMPLATE"] = "Ext_VRF_Lite_Jython"
 
@@ -913,25 +915,23 @@ class NdfcVrf12:
             self.log.debug(msg)
             return {}
 
-        # dcnm_get_ip_addr_info converts serial_numbers,
-        # hostnames, etc, to ip addresses.
-        attach["ip_address"] = dcnm_get_ip_addr_info(self.module, attach["ip_address"], None, None)
+        # dcnm_get_ip_addr_info converts serial_numbers, hostnames, etc, to ip addresses.
+        ip_address = dcnm_get_ip_addr_info(self.module, attach.get("ip_address"), None, None)
+        serial_number = self.ipv4_to_serial_number.convert(attach.get("ip_address"))
 
-        serial = self.ipv4_address_to_serial_number(attach["ip_address"])
+        attach["ip_address"] = ip_address
 
-        msg = "ip_address: "
-        msg += f"{attach['ip_address']}, "
-        msg += "serial: "
-        msg += f"{serial}, "
+        msg = f"ip_address: {ip_address}, "
+        msg += f"serial_number: {serial_number}, "
         msg += "attach: "
         msg += f"{json.dumps(attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not serial:
+        if not serial_number:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
             msg += f"Fabric {self.fabric} does not contain switch "
-            msg += f"{attach['ip_address']}"
+            msg += f"{ip_address} ({serial_number})."
             self.module.fail_json(msg=msg)
 
         role = self.inventory_data[attach["ip_address"]].get("switchRole")
@@ -942,7 +942,7 @@ class NdfcVrf12:
             msg += "VRF attachments are not appropriate for "
             msg += "switches with Spine or Super Spine roles. "
             msg += "The playbook and/or controller settings for switch "
-            msg += f"{attach['ip_address']} with role {role} need review."
+            msg += f"{ip_address} with role {role} need review."
             self.module.fail_json(msg=msg)
 
         extension_values = self.update_attach_params_extension_values(attach)
@@ -959,7 +959,7 @@ class NdfcVrf12:
         # and set to False for detaching an attachment
         attach.update({"deployment": True})
         attach.update({"isAttached": True})
-        attach.update({"serialNumber": serial})
+        attach.update({"serialNumber": serial_number})
         attach.update({"is_deploy": deploy})
 
         # freeformConfig, loopbackId, loopbackIpAddress, and
@@ -972,16 +972,14 @@ class NdfcVrf12:
         }
         inst_values.update(
             {
-                "switchRouteTargetImportEvpn": attach["import_evpn_rt"],
-                "switchRouteTargetExportEvpn": attach["export_evpn_rt"],
+                "switchRouteTargetImportEvpn": attach.get("import_evpn_rt"),
+                "switchRouteTargetExportEvpn": attach.get("export_evpn_rt"),
             }
         )
         attach.update({"instanceValues": json.dumps(inst_values).replace(" ", "")})
 
-        if "deploy" in attach:
-            del attach["deploy"]
-        if "ip_address" in attach:
-            del attach["ip_address"]
+        attach.pop("deploy", None)
+        attach.pop("ip_address", None)
 
         msg = "Returning attach: "
         msg += f"{json.dumps(attach, indent=4, sort_keys=True)}"
@@ -1645,7 +1643,7 @@ class NdfcVrf12:
                     self.log.debug(msg)
                     continue
                 ip_address = attachment.ip_address
-                self.want_attach_vrf_lite.update({self.ipv4_address_to_serial_number(ip_address): attachment.vrf_lite})
+                self.want_attach_vrf_lite.update({self.ipv4_to_serial_number.convert(ip_address): attachment.vrf_lite})
 
         msg = f"self.want_attach_vrf_lite: length: {len(self.want_attach_vrf_lite)}."
         self.log.debug(msg)
@@ -2654,7 +2652,7 @@ class NdfcVrf12:
             # TODO: arobel: remove this once we've fixed the model to dump what is expected here.
             new_attach_list = [
                 {
-                    "ip_address": next((k for k, v in self.ip_sn.items() if v == lan_attach["serialNumber"]), None),
+                    "ip_address": self.serial_number_to_ipv4.convert(lan_attach.get("serialNumber")),
                     "vlan_id": lan_attach.get("vlan") or lan_attach.get("vlanId"),
                     "deploy": lan_attach["deployment"],
                 }
@@ -2732,7 +2730,7 @@ class NdfcVrf12:
             # TODO: arobel: remove this once we've fixed the model to dump what is expected here.
             found_create["attach"] = [
                 {
-                    "ip_address": next((k for k, v in self.ip_sn.items() if v == lan_attach["serialNumber"]), None),
+                    "ip_address": self.serial_number_to_ipv4.convert(lan_attach.get("serialNumber")),
                     "vlan_id": lan_attach.get("vlan") or lan_attach.get("vlanId"),
                     "deploy": lan_attach["deployment"],
                 }
@@ -3492,29 +3490,8 @@ class NdfcVrf12:
         -   Return True if the switch is a border switch
         -   Return False otherwise
         """
-        is_border = False
-        for ip_address, serial in self.ip_sn.items():
-            if serial != serial_number:
-                continue
-            role = self.inventory_data[ip_address].get("switchRole")
-            re_result = re.search(r"\bborder\b", role.lower())
-            if re_result:
-                is_border = True
-        return is_border
-
-    def ipv4_address_to_serial_number(self, ip_address):
-        """
-        Given a switch ip_address, return the switch serial number.
-
-        If ip_address is not found, return None.
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}"
-        self.log.debug(msg)
-
-        return self.ip_sn.get(ip_address)
+        switch_role = self.serial_number_to_switch_role.convert(serial_number)
+        return re.search(r"\bborder\b", switch_role.lower())
 
     def send_to_controller(self, args: SendToControllerArgs) -> None:
         """

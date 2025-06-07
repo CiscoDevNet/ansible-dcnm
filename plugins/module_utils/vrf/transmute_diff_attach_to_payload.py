@@ -4,6 +4,8 @@ import logging
 import re
 
 from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
+from .inventory_serial_number_to_fabric_name import InventorySerialNumberToFabricName
+from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
 from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12
 from .serial_number_to_vrf_lite import SerialNumberToVrfLite
 from .vrf_playbook_model_v12 import VrfPlaybookModelV12
@@ -71,6 +73,8 @@ class DiffAttachToControllerPayload:
         self._payload_model: list[VrfAttachPayloadV12] = []
         self._playbook_models: list = []
 
+        self.serial_number_to_fabric_name = InventorySerialNumberToFabricName()
+        self.serial_number_to_ipv4 = InventorySerialNumberToIpv4()
         self.serial_number_to_vrf_lite = SerialNumberToVrfLite()
 
     def log_list_of_models(self, model_list: list, by_alias: bool = False) -> None:
@@ -139,6 +143,9 @@ class DiffAttachToControllerPayload:
             msg += "Set instance.ansible_module before calling commit()."
             self.log.debug(msg)
             raise ValueError(msg)
+
+        self.serial_number_to_fabric_name.fabric_inventory = self.fabric_inventory
+        self.serial_number_to_ipv4.fabric_inventory = self.fabric_inventory
 
         self.serial_number_to_vrf_lite.playbook_models = self.playbook_models
         self.serial_number_to_vrf_lite.fabric_inventory = self.fabric_inventory
@@ -293,7 +300,7 @@ class DiffAttachToControllerPayload:
             msg = f"lan_attach_item.extension_values: {lan_attach_item.extension_values}."
             self.log.debug(msg)
 
-            ip_address = self.serial_number_to_ip_address(lan_attach_item.serial_number)
+            ip_address = self.serial_number_to_ipv4.convert(lan_attach_item.serial_number)
             if not self.is_border_switch(lan_attach_item.serial_number):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"caller {caller}. "
@@ -380,13 +387,10 @@ class DiffAttachToControllerPayload:
 
         ext_values = self.get_extension_values_from_lite_objects(lite)
         if ext_values is None:
-            ip_address = self.serial_number_to_ip_address(serial_number)
+            ip_address = self.serial_number_to_ipv4.convert(serial_number)
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
-            msg += "No VRF LITE capable interfaces found on "
-            msg += "this switch. "
-            msg += f"ip: {ip_address}, "
-            msg += f"serial_number: {serial_number}"
+            msg += f"No VRF LITE capable interfaces found on switch {ip_address} ({serial_number})."
             self.log.debug(msg)
             self.ansible_module.fail_json(msg=msg)
 
@@ -424,7 +428,7 @@ class DiffAttachToControllerPayload:
                 self.log.debug(msg)
                 matches[item_interface] = {"user": item, "switch": ext_value}
         if not matches:
-            ip_address = self.serial_number_to_ip_address(serial_number)
+            ip_address = self.serial_number_to_ipv4.convert(serial_number)
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
             msg += "No matching interfaces with vrf_lite extensions "
@@ -601,62 +605,21 @@ class DiffAttachToControllerPayload:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        child_fabric_name = self.serial_number_to_fabric_name(serial_number)
-
-        if child_fabric_name is None:
+        try:
+            child_fabric_name = self.serial_number_to_fabric_name.convert(serial_number)
+        except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
-            msg += "Unable to determine child_fabric_name for serial_number "
-            msg += f"{serial_number}."
+            msg += f"Error retrieving child fabric name for serial_number {serial_number}. "
+            msg += f"Error detail: {error}"
             self.log.debug(msg)
-            raise ValueError(msg)
+            raise ValueError(msg) from error
 
         msg = f"serial_number: {serial_number}. "
         msg += f"Returning child_fabric_name: {child_fabric_name}. "
         self.log.debug(msg)
 
         return child_fabric_name
-
-    def serial_number_to_fabric_name(self, serial_number: str) -> str:
-        """
-        Given a switch serial number, return the fabric name.
-
-        ## Raises
-
-        - ValueError: If instance.fabric_inventory is not set before calling this method.
-        - ValueError: If serial_number is not found in fabric_inventory.
-        """
-        caller = inspect.stack()[1][3]
-        method_name = inspect.stack()[0][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}"
-        self.log.debug(msg)
-
-        if not self.fabric_inventory:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "Set instance.fabric_inventory before calling instance.commit()."
-            raise ValueError(msg)
-
-        data = self.fabric_inventory.get(self.serial_number_to_ip_address(serial_number), None)
-        if not data:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"serial_number {serial_number} not found in fabric_inventory."
-            raise ValueError(msg)
-        serial_number = data.get("serialNumber", "")
-        if not serial_number:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"serial_number {serial_number} not found in fabric_inventory."
-            raise ValueError(msg)
-        fabric_name = data.get("fabricName", "")
-        if not fabric_name:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_name for serial_number {serial_number} not found in fabric_inventory."
-            raise ValueError(msg)
-        msg = f"serial_number {serial_number} found in fabric_inventory. "
-        msg += f"Returning fabric_name: {fabric_name}."
-        self.log.debug(msg)
-        return fabric_name
 
     def is_border_switch(self, serial_number) -> bool:
         """
@@ -668,61 +631,12 @@ class DiffAttachToControllerPayload:
         -   Return False otherwise
         """
         is_border = False
-        ip_address = self.serial_number_to_ip_address(serial_number)
+        ip_address = self.serial_number_to_ipv4.convert(serial_number)
         role = self.fabric_inventory[ip_address].get("switchRole", "")
         re_result = re.search(r"\bborder\b", role.lower())
         if re_result:
             is_border = True
         return is_border
-
-    def ip_address_to_serial_number(self, ip_address: str) -> str:
-        """
-        Given a switch ip_address, return the switch serial number.
-
-        If ip_address is not found, return an empty string.
-
-        ## Raises
-
-        - ValueError: If instance.fabric_inventory is not set before calling this method.
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}"
-        self.log.debug(msg)
-
-        if not self.fabric_inventory:
-            raise ValueError("Set instance.fabric_inventory before calling instance.commit().")
-
-        data = self.fabric_inventory.get(ip_address, None)
-        if not data:
-            raise ValueError(f"ip_address {ip_address} not found in fabric_inventory.")
-        return data.get("serialNumber", "")
-
-    def serial_number_to_ip_address(self, serial_number: str) -> str:
-        """
-        Given a switch serial number, return the switch ip_address.
-
-        If serial_number is not found, return an empty string.
-
-        ## Raises
-
-        - ValueError: If instance.fabric_inventory is not set before calling this method.
-        - ValueError: If serial_number is not found in fabric_inventory.
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}"
-        self.log.debug(msg)
-
-        if not self.fabric_inventory:
-            raise ValueError("Set instance.fabric_inventory before calling instance.commit().")
-
-        for ip_address, data in self.fabric_inventory.items():
-            if data.get("serialNumber") == serial_number:
-                return ip_address
-        raise ValueError(f"serial_number {serial_number} not found in fabric_inventory.")
 
     @property
     def diff_attach(self) -> list[dict]:

@@ -676,11 +676,10 @@ def main() -> None:
         dcnm_vrf = NdfcVrf12(module)
     else:
         dcnm_vrf = DcnmVrf11(module)
-
-    if not dcnm_vrf.ip_sn:
-        msg = f"Fabric {dcnm_vrf.fabric} missing on the controller or "
-        msg += "does not have any switches"
-        module.fail_json(msg=msg)
+        if not dcnm_vrf.ip_sn:
+            msg = f"Fabric {dcnm_vrf.fabric} missing on the controller or "
+            msg += "does not have any switches"
+            module.fail_json(msg=msg)
 
     dcnm_vrf.validate_input()
 
