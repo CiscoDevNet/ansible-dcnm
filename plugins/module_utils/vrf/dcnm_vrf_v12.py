@@ -2939,8 +2939,10 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
+        self.model_enabled = True
         if self.model_enabled:
             self.push_diff_detach_model(is_rollback)
+            self.model_enabled = False
             return
 
         msg = "self.diff_detach: "
