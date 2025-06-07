@@ -2193,12 +2193,8 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        all_vrfs = set()
-        diff_delete = {}
-
         self.get_diff_replace()
-
-        diff_undeploy = copy.deepcopy(self.diff_undeploy)
+        all_vrfs = set()
 
         for have_attach_model in self.have_attach_model:
             found_in_want = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach_model.vrf_name)
@@ -2209,13 +2205,10 @@ class NdfcVrf12:
                 if vrf_detach_payload:
                     self.diff_detach.append(vrf_detach_payload)
                     all_vrfs.add(vrf_detach_payload.vrf_name)
-                    diff_delete.update({vrf_detach_payload.vrf_name: "DEPLOYED"})
+                    self.diff_delete.update({vrf_detach_payload.vrf_name: "DEPLOYED"})
 
         if len(all_vrfs) != 0:
-            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
-
-        self.diff_delete = copy.deepcopy(diff_delete)
-        self.diff_undeploy = copy.deepcopy(diff_undeploy)
+            self.diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         msg = "self.diff_delete: "
         msg += f"{json.dumps(self.diff_delete, indent=4)}"
