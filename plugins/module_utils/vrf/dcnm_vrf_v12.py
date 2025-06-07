@@ -2201,19 +2201,12 @@ class NdfcVrf12:
         diff_undeploy = copy.deepcopy(self.diff_undeploy)
 
         for have_attach_model in self.have_attach_model:
-            # found = self.find_model_in_list_by_key_value(
-            #     search=self.want_create_model, key="vrf_name", value=have_attach_model.vrf_name]
-            # )
             found_in_want = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach_model.vrf_name)
 
             if not found_in_want:
                 # VRF exists on the controller but is not in the want list.  Detach and delete it.
                 vrf_detach_payload = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
                 if vrf_detach_payload:
-                    # have_attach_model = self.update_have_attach_lan_detach_list(have_attach_model, vrf_detach_payload)
-                    # self.diff_detach.append(have_attach_model)
-                    # all_vrfs.add(have_attach_model.vrf_name)
-                    # diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
                     self.diff_detach.append(vrf_detach_payload)
                     all_vrfs.add(vrf_detach_payload.vrf_name)
                     diff_delete.update({vrf_detach_payload.vrf_name: "DEPLOYED"})
@@ -2235,47 +2228,6 @@ class NdfcVrf12:
         msg = "self.diff_undeploy: "
         msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
         self.log.debug(msg)
-
-    def update_have_attach_lan_detach_list(self, have_attach_model: HaveAttachPostMutate, vrf_detach_payload: VrfDetachPayloadV12) -> HaveAttachPostMutate:
-        """
-        # Summary
-
-        For each VRF attachment in the vrf_detach_payload.lan_attach_list:
-
-        - Create a HaveLanAttachItem from each LanDetachListItemV12
-        - In each HaveLanAttachItem, set isAttached to True
-        - Append the HaveLanAttachItem to have_lan_attach_list
-        - Replace the have_attach_model.lan_attach_list with this have_lan_attach_list
-
-        ## Returns
-
-        - The updated have_attach_model containing the attachments to detach.
-        """
-        msg = "detach_list.lan_attach_list: "
-        self.log.debug(msg)
-        self.log_list_of_models(vrf_detach_payload.lan_attach_list, by_alias=False)
-        have_lan_attach_list: list[HaveLanAttachItem] = []
-        for model in vrf_detach_payload.lan_attach_list:
-            have_lan_attach_list.append(
-                HaveLanAttachItem(
-                    deployment=model.deployment,
-                    extensionValues=model.extension_values,
-                    fabricName=model.fabric,
-                    freeformConfig=model.freeform_config,
-                    instanceValues=model.instance_values,
-                    is_deploy=model.is_deploy,
-                    serialNumber=model.serial_number,
-                    vlanId=model.vlan,
-                    vrfName=model.vrf_name,
-                    isAttached=True,
-                )
-            )
-        have_attach_model.lan_attach_list = have_lan_attach_list
-        msg = f"Returning HaveAttachPostMutate with updated detach list of length {len(have_attach_model.lan_attach_list)}."
-        self.log.debug(msg)
-        # Wrap in a list for logging, since this is a single model instance
-        self.log_list_of_models([have_attach_model], by_alias=True)
-        return have_attach_model
 
     def get_diff_replace(self) -> None:
         """
