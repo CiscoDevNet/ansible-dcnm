@@ -2242,18 +2242,16 @@ class NdfcVrf12:
 
         all_vrfs: set = set()
         self.get_diff_merge(replace=True)
-        diff_attach = self.diff_attach
-        diff_deploy = self.diff_deploy
 
         for have_attach in self.have_attach:
             msg = f"type(have_attach): {type(have_attach)}"
             self.log.debug(msg)
             replace_vrf_list = []
 
-            # Find matching want_attach by vrfName
+            # Find want_attach whose vrfName matches have_attach
             want_attach = next((w for w in self.want_attach if w.get("vrfName") == have_attach.get("vrfName")), None)
 
-            if want_attach:
+            if want_attach:  # matches have_attach
                 have_lan_attach_list = have_attach.get("lanAttachList", [])
                 want_lan_attach_list = want_attach.get("lanAttachList", [])
 
@@ -2262,44 +2260,40 @@ class NdfcVrf12:
                         continue
                     # Check if this have_lan_attach exists in want_lan_attach_list by serialNumber
                     if not any(have_lan_attach.get("serialNumber") == want_lan_attach.get("serialNumber") for want_lan_attach in want_lan_attach_list):
-                        if "isAttached" in have_lan_attach:
-                            del have_lan_attach["isAttached"]
+                        have_lan_attach.pop("isAttached", None)
                         have_lan_attach["deployment"] = False
                         replace_vrf_list.append(have_lan_attach)
-            else:
+            else:  # have_attach is not in want_attach
+                have_attach_in_want_create = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach.get("vrfName"))
+                if not have_attach_in_want_create:
+                    continue
                 # If have_attach is not in want_attach but is in want_create, detach all attached
-                found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach.get("vrfName"))
-                if found:
-                    for lan_attach in have_attach.get("lanAttachList", []):
-                        if lan_attach.get("isAttached"):
-                            del lan_attach["isAttached"]
-                            lan_attach["deployment"] = False
-                            replace_vrf_list.append(lan_attach)
+                for lan_attach in have_attach.get("lanAttachList", []):
+                    if not lan_attach.get("isAttached"):
+                        continue
+                    lan_attach.pop("isAttached", None)
+                    lan_attach["deployment"] = False
+                    replace_vrf_list.append(lan_attach)
 
-            if replace_vrf_list:
-                # Find or create the diff_attach entry for this VRF
-                d_attach = next((d for d in diff_attach if d.get("vrfName") == have_attach.get("vrfName")), None)
-                if d_attach:
-                    d_attach["lanAttachList"].extend(replace_vrf_list)
-                else:
-                    attachment = {
-                        "vrfName": have_attach["vrfName"],
-                        "lanAttachList": replace_vrf_list,
-                    }
-                    diff_attach.append(attachment)
-                all_vrfs.add(have_attach["vrfName"])
+            if not replace_vrf_list:
+                continue
+            # Find or create the diff_attach entry for this VRF
+            diff_attach = next((d for d in self.diff_attach if d.get("vrfName") == have_attach.get("vrfName")), None)
+            if diff_attach:
+                diff_attach["lanAttachList"].extend(replace_vrf_list)
+            else:
+                attachment = {
+                    "vrfName": have_attach["vrfName"],
+                    "lanAttachList": replace_vrf_list,
+                }
+                self.diff_attach.append(attachment)
+            all_vrfs.add(have_attach["vrfName"])
 
         if not all_vrfs:
-            self.diff_attach = copy.deepcopy(diff_attach)
-            self.diff_deploy = copy.deepcopy(diff_deploy)
             return
 
-        for vrf in self.diff_deploy.get("vrfNames", "").split(","):
-            all_vrfs.add(vrf)
-        diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
-
-        self.diff_attach = copy.deepcopy(diff_attach)
-        self.diff_deploy = copy.deepcopy(diff_deploy)
+        all_vrfs.update({vrf for vrf in self.want_deploy.get("vrfNames", "").split(",") if vrf})
+        self.diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
 
         msg = "self.diff_attach: "
         msg += f"{json.dumps(self.diff_attach, indent=4)}"
