@@ -33,6 +33,7 @@ class LanDetachListItemV12(BaseModel):
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
     instance_values: Optional[str] = Field(alias="instanceValues", default="")
     is_deploy: Optional[bool] = Field(alias="is_deploy")
+    is_attached: Optional[bool] = Field(alias="isAttached", default=True)
     serial_number: str = Field(alias="serialNumber")
     vlan: Union[int | None] = Field(alias="vlanId")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)

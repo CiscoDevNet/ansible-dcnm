@@ -2210,10 +2210,13 @@ class NdfcVrf12:
                 # VRF exists on the controller but is not in the want list.  Detach and delete it.
                 vrf_detach_payload = self.get_items_to_detach_model(have_attach_model.lan_attach_list)
                 if vrf_detach_payload:
-                    have_attach_model = self.update_have_attach_lan_detach_list(have_attach_model, vrf_detach_payload)
-                    self.diff_detach.append(have_attach_model)
-                    all_vrfs.add(have_attach_model.vrf_name)
-                    diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
+                    # have_attach_model = self.update_have_attach_lan_detach_list(have_attach_model, vrf_detach_payload)
+                    # self.diff_detach.append(have_attach_model)
+                    # all_vrfs.add(have_attach_model.vrf_name)
+                    # diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
+                    self.diff_detach.append(vrf_detach_payload)
+                    all_vrfs.add(vrf_detach_payload.vrf_name)
+                    diff_delete.update({vrf_detach_payload.vrf_name: "DEPLOYED"})
 
         if len(all_vrfs) != 0:
             diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
