@@ -24,10 +24,9 @@ class DataVrfInfo(BaseModel):
         str_strip_whitespace=True,
         validate_assignment=True,
         validate_by_alias=True,
-        validate_by_name=True,
     )
 
-    l3_vni: int = Field(alias="l3_vni")
+    l3_vni: int = Field(alias="l3vni")
     vrf_prefix: str = Field(alias="vrf-prefix")
 
 
