@@ -3,6 +3,7 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+
 class DataVrfInfo(BaseModel):
     """
     # Summary

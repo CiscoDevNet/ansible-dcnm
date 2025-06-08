@@ -31,7 +31,7 @@ class ControllerResponseGetIntV12(BaseModel):
 
     DATA: int
     ERROR: Optional[str] = Field(default="")
-    MESSAGE: Optional[str] = Field( default="")
+    MESSAGE: Optional[str] = Field(default="")
     METHOD: Optional[str] = Field(default="")
     REQUEST_PATH: Optional[str] = Field(default="")
     RETURN_CODE: Optional[int] = Field(default=500)
