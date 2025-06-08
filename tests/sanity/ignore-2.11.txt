@@ -50,6 +50,12 @@ plugins/module_utils/vrf/controller_response_vrfs_v12.py import-3.11!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.9!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.10!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.11!skip
+plugins/module_utils/vrf/model_controller_response_get_fabrics_vrfinfo.py import-3.9!skip
+plugins/module_utils/vrf/model_controller_response_get_fabrics_vrfinfo.py import-3.10!skip
+plugins/module_utils/vrf/model_controller_response_get_fabrics_vrfinfo.py import-3.11!skip
+plugins/module_utils/vrf/model_controller_response_get_int.py import-3.9!skip
+plugins/module_utils/vrf/model_controller_response_get_int.py import-3.10!skip
+plugins/module_utils/vrf/model_controller_response_get_int.py import-3.11!skip
 plugins/module_utils/vrf/model_have_attach_post_mutate_v12.py import-3.9!skip
 plugins/module_utils/vrf/model_have_attach_post_mutate_v12.py import-3.10!skip
 plugins/module_utils/vrf/model_have_attach_post_mutate_v12.py import-3.11!skip
