@@ -455,11 +455,17 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         vlan_path = self.paths["GET_VLAN"].format(fabric)
-        vlan_data = dcnm_send(self.module, "GET", vlan_path)
+        args = SendToControllerArgs(
+            action="attach",
+            path = vlan_path,
+            verb="GET",
+            payload=None,
+            log_response=False,
+            is_rollback=False,
+        )
 
-        msg = "vlan_path: "
-        msg += f"{vlan_path}"
-        self.log.debug(msg)
+        self.send_to_controller(args)
+        vlan_data = copy.deepcopy(self.response)
 
         msg = "vlan_data: "
         msg += f"{json.dumps(vlan_data, indent=4, sort_keys=True)}"
@@ -511,12 +517,21 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
+        args = SendToControllerArgs(
+            action="attach",
+            path = self.paths["GET_VRF_ID"].format(fabric),
+            verb="GET",
+            payload=None,
+            log_response=False,
+            is_rollback=False,
+        )
+
         attempt = 0
         vrf_id: int = -1
         while attempt < 10:
             attempt += 1
-            path = self.paths["GET_VRF_ID"].format(fabric)
-            vrf_id_obj = dcnm_send(self.module, "GET", path)
+            self.send_to_controller(args)
+            vrf_id_obj = copy.deepcopy(self.response)
             msg = f"vrf_id_obj: {json.dumps(vrf_id_obj, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             generic_response = ControllerResponseGenericV12(**vrf_id_obj)
