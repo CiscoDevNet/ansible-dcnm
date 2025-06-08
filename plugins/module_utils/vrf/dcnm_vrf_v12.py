@@ -457,7 +457,7 @@ class NdfcVrf12:
         vlan_path = self.paths["GET_VLAN"].format(fabric)
         args = SendToControllerArgs(
             action="attach",
-            path = vlan_path,
+            path=vlan_path,
             verb="GET",
             payload=None,
             log_response=False,
@@ -519,7 +519,7 @@ class NdfcVrf12:
 
         args = SendToControllerArgs(
             action="attach",
-            path = self.paths["GET_VRF_ID"].format(fabric),
+            path=self.paths["GET_VRF_ID"].format(fabric),
             verb="GET",
             payload=None,
             log_response=False,
