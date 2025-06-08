@@ -3,14 +3,6 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-model_config = ConfigDict(
-    str_strip_whitespace=True,
-    validate_assignment=True,
-    validate_by_alias=True,
-    validate_by_name=True,
-)
-
-
 class DataVrfInfo(BaseModel):
     """
     # Summary
@@ -27,9 +19,14 @@ class DataVrfInfo(BaseModel):
     - vrf_prefix: str - The prefix for the VRF.
     """
 
-    model_config = model_config
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+        validate_by_alias=True,
+        validate_by_name=True,
+    )
 
-    l3_vni: int = Field(alias="l3vni")
+    l3_vni: int = Field(alias="l3_vni")
     vrf_prefix: str = Field(alias="vrf-prefix")
 
 
@@ -65,11 +62,14 @@ class ControllerResponseGetFabricsVrfinfoV12(BaseModel):
     - RETURN_CODE: Optional[int] - The HTTP return code, default is 500.
     """
 
-    model_config = model_config
+    model_config = ConfigDict(
+        str_strip_whitespace=True,
+        validate_assignment=True,
+    )
 
-    data: DataVrfInfo = Field(alias="DATA")
-    error: Optional[str] = Field(alias="ERROR", default="")
-    message: Optional[str] = Field(alias="MESSAGE", default="")
-    method: Optional[str] = Field(alias="METHOD", default="")
-    request_path: Optional[str] = Field(alias="REQUEST_PATH", default="")
-    return_code: Optional[int] = Field(alias="RETURN_CODE", default=500)
+    DATA: DataVrfInfo
+    ERROR: Optional[str] = Field(default="")
+    MESSAGE: Optional[str] = Field(default="")
+    METHOD: Optional[str] = Field(default="")
+    REQUEST_PATH: Optional[str] = Field(default="")
+    RETURN_CODE: Optional[int] = Field(default=500)

@@ -555,11 +555,11 @@ class DiffAttachToControllerPayload:
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
 
-        msg = f"Returning list of VrfSwitchesDataItem. length {len(response.data)}."
+        msg = f"Returning list of VrfSwitchesDataItem. length {len(response.DATA)}."
         self.log.debug(msg)
-        self.log_list_of_models(response.data)
+        self.log_list_of_models(response.DATA)
 
-        return response.data
+        return response.DATA
 
     def get_vrf_attach_fabric_name(self, vrf_attach: LanAttachListItemV12) -> str:
         """

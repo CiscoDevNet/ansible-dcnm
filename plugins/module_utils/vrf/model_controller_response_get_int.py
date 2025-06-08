@@ -29,9 +29,9 @@ class ControllerResponseGetIntV12(BaseModel):
         validate_assignment=True,
     )
 
-    data: int = Field(alias="DATA")
-    error: Optional[str] = Field(alias="ERROR", default="")
-    message: Optional[str] = Field(alias="MESSAGE", default="")
-    method: Optional[str] = Field(alias="METHOD", default="")
-    request_path: Optional[str] = Field(alias="REQUEST_PATH", default="")
-    return_code: Optional[int] = Field(alias="RETURN_CODE", default=500)
+    DATA: int
+    ERROR: Optional[str] = Field(default="")
+    MESSAGE: Optional[str] = Field( default="")
+    METHOD: Optional[str] = Field(default="")
+    REQUEST_PATH: Optional[str] = Field(default="")
+    RETURN_CODE: Optional[int] = Field(default=500)

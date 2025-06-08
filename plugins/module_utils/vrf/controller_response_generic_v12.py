@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Union
+from typing import Optional, Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -19,7 +19,7 @@ class ControllerResponseGenericV12(BaseModel):
         validate_assignment=True,
     )
 
-    DATA: Optional[Union[list, dict, str]] = Field(default="")
+    DATA: Optional[Any] = Field(default="")
     ERROR: Optional[str] = Field(default="")
     MESSAGE: Optional[str] = Field(default="")
     METHOD: Optional[str] = Field(default="")

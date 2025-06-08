@@ -46,7 +46,7 @@ class ControllerResponseVrfsAttachmentsV12(BaseModel):
         validate_by_alias=True,
         validate_by_name=True,
     )
-    data: List[VrfsAttachmentsDataItem] = Field(alias="DATA")
-    message: str = Field(alias="MESSAGE")
-    method: str = Field(alias="METHOD")
-    return_code: int = Field(alias="RETURN_CODE")
+    DATA: List[VrfsAttachmentsDataItem]
+    MESSAGE: str
+    METHOD: str
+    RETURN_CODE: int

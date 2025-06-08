@@ -226,13 +226,10 @@ class VrfsSwitchesDataItem(BaseModel):
 class ControllerResponseVrfsSwitchesV12(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
-        use_enum_values=True,
         validate_assignment=True,
-        validate_by_alias=True,
-        validate_by_name=True,
     )
 
-    data: List[VrfsSwitchesDataItem] = Field(alias="DATA")
-    message: str = Field(alias="MESSAGE")
-    method: str = Field(alias="METHOD")
-    return_code: int = Field(alias="RETURN_CODE")
+    DATA: List[VrfsSwitchesDataItem]
+    MESSAGE: str
+    METHOD: str
+    RETURN_CODE: int
