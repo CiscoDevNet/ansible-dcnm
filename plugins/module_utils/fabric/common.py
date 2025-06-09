@@ -133,17 +133,25 @@ class FabricCommon:
         """
         method_name = inspect.stack()[0][3]
 
-        fabric_name = payload.get("FABRIC_NAME", None)
+        if self.action == "child_fabric_add" or self.action == "child_fabric_delete":
+            fabric_name = payload.get("destFabric", None)
+            payload.update({'FABRIC_NAME': fabric_name})
+        else:
+            fabric_name = payload.get("FABRIC_NAME", None)
+
+        msg = f"{method_name}: action{self.action} payloads {payload} fab {fabric_name}"
+        self.log.debug(msg)
         if fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload is missing mandatory parameter: FABRIC_NAME."
             raise ValueError(msg)
 
-        if self.send_payload_result[fabric_name] is False:
-            # Skip config-save if send_payload failed
-            # Set config_save_result to False so that config_deploy is skipped
-            self.config_save_result[fabric_name] = False
-            return
+        if not (self.action == "child_fabric_add" or self.action == "child_fabric_delete"):
+            if self.send_payload_result[fabric_name] is False:
+                # Skip config-save if send_payload failed
+                # Set config_save_result to False so that config_deploy is skipped
+                self.config_save_result[fabric_name] = False
+                return
 
         self.config_save.payload = payload
         # pylint: disable=no-member
@@ -164,7 +172,11 @@ class FabricCommon:
         -   Raise ``ValueError`` if the payload is missing the FABRIC_NAME key.
         """
         method_name = inspect.stack()[0][3]
-        fabric_name = payload.get("FABRIC_NAME")
+        if self.action == "child_fabric_add":
+            fabric_name = payload.get("destFabric", None)
+            payload.update({'FABRIC_NAME': fabric_name})
+        else:
+            fabric_name = payload.get("FABRIC_NAME", None)
         if fabric_name is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payload is missing mandatory parameter: FABRIC_NAME."

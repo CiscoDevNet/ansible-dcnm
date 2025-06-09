@@ -1,0 +1,1992 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# 02:57.62
+################################################################################
+# DESCRIPTION - CHILD FABRIC TEST
+#
+# Test child Fabric configurations and verify results.
+# - config-save and config-deploy not tested here.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+################################################################################
+# 1. The following fabrics must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+# Delete fabrics under test, if they exist
+#    - msd_fabric_name_1
+#    - child_fabric_name_11
+#    - child_fabric_name_12
+#    - child_fabric_name_13
+#    - msd_fabric_name_2
+#    - child_fabric_name_21
+#    - child_fabric_name_22
+#    - child_fabric_name_23
+################################################################################
+# TEST
+################################################################################
+# 2. Create fabrics and verify result
+#    - msd_fabric_name_1
+#    - child_fabric_name_11
+#    - child_fabric_name_12
+#    - child_fabric_name_13
+#    - msd_fabric_name_2
+#    - child_fabric_name_21
+#    - child_fabric_name_22
+#    - child_fabric_name_23
+# 3. Merge 2 child Fabrics into each MSD Fabrics and verify.
+# 4. Add one more child fabric of type "ISN" to MSD Fabric and verify.
+# 5. Idempotence : Add one more child fabric of type "ISN" to MSD Fabric and verify.
+# 6. Query the MSD Fabrics to get the child Fabrics.
+# 7. Delete the child Fabrics from MSD fabrics and verify.
+# 8. Idempotence : Delete the child Fabrics from MSD fabrics and verify.
+# 9. Add Child fabrics into MSD with Config-save
+#10. Delete child fabrics from MSD with config-save
+#11. Add same child fabric into MSD Fabric twice - 2nd config is idempotent
+#12. Delete same child fabric from MSD Fabric twice - 2nd config is idempotent
+################################################################################
+# CLEANUP
+################################################################################
+# 11. Delete fabrics under test
+#    - msd_fabric_name_1
+#    - child_fabric_name_11
+#    - child_fabric_name_12
+#    - child_fabric_name_13
+#    - msd_fabric_name_2
+#    - child_fabric_name_21
+#    - child_fabric_name_22
+#    - child_fabric_name_23
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_member_merged
+#   msd_fabric_name_1: MSD_1
+#   MSD_fabric_type: VXLAN_EVPN_MSD
+#   child_fabric_name_11: child_11
+#   child_fabric_type: VXLAN_EVPN 
+#   child_fabric_name_12: child_12
+#   child_fabric_type: VXLAN_EVPN 
+#   child_fabric_name_13: child_13
+#   child_fabric_type_2: ISN
+#   msd_fabric_name_2: MSD_2
+#   child_fabric_name_21: child_21
+#   child_fabric_type: VXLAN_EVPN 
+#   child_fabric_name_22: child_22
+#   child_fabric_type: VXLAN_EVPN 
+#   child_fabric_name_23: child_23
+#   child_fabric_type_2: ISN
+################################################################################
+# MERGED - SETUP - Delete fabrics from Controller
+################################################################################
+- name: MERGED - SETUP - Delete fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_12 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_13 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_21 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_22 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_23 }}"
+  register: result
+  ignore_errors: true 
+- debug:
+    var: result
+################################################################################
+# MERGED - TEST - Create MSD fabric and child Fabrics
+################################################################################
+# Expected result
+## changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "FABRIC_NAME": "msd_3",
+#            "sequence_number": 1
+#        },
+#        {
+#            "BGP_AS": 72,
+#            "FABRIC_NAME": "child_11",
+#            "sequence_number": 1
+#        },
+#        {
+#            "BGP_AS": 144,
+#            "FABRIC_NAME": "child_12",
+#            "sequence_number": 2
+#        },
+
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "FABRIC_NAME": "msd_3",
+#                    "FABRIC_TYPE": "VXLAN_EVPN_MSD"
+#                },
+#                {
+#                    "BGP_AS": 72,
+#                    "FABRIC_NAME": "child_11",
+#                    "FABRIC_TYPE": "VXLAN_EVPN"
+#                },
+#                {
+#                    "BGP_AS": 144,
+#                    "FABRIC_NAME": "child_12",
+#                    "FABRIC_TYPE": "VXLAN_EVPN"
+#                }
+#            "skip_validation": false,
+#            "state": "merged"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "fabric_create",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "merged"
+#        },
+#        {
+#            "action": "fabric_create",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "merged"
+#        },
+#        {
+#            "action": "fabric_create",
+#            "check_mode": false,
+#            "sequence_number": 3,
+#            "state": "merged"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {
+#                "deviceType": "n9k",
+#                "fabricId": "FABRIC-25",
+#                "fabricName": "msd_3",
+#                "fabricTechnology": "VXLANFabric",
+#                "fabricTechnologyFriendly": "VXLAN EVPN",
+#                "fabricType": "MFD",
+#                "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+#                "id": 25,
+#                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                "networkTemplate": "Default_Network_Universal",
+#                "nvPairs": {
+#                ...
+#                },
+#                "provisionMode": "DCNMTopDown",
+#                "replicationMode": "IngressReplication",
+#                "templateFabricType": "",
+#                "templateName": "MSD_Fabric",
+#                "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                "vrfTemplate": "Default_VRF_Universal"
+#            },
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd_3/MSD_Fabric",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "DATA": {
+#                "asn": "72",
+#                "deviceType": "n9k",
+#                "fabricId": "FABRIC-25",
+#                "fabricName": "child_11",
+#                "fabricTechnology": "VXLANFabric",
+#                "fabricTechnologyFriendly": "VXLAN EVPN",
+#                "fabricType": "Switch_Fabric",
+#                "fabricTypeFriendly": "Switch Fabric",
+#                "id": 25,
+#                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                "networkTemplate": "Default_Network_Universal",
+#                "nvPairs": {
+#                ...
+#                },
+#                "provisionMode": "DCNMTopDown",
+#                "replicationMode": "Multicast",
+#                "siteId": "",
+#                "templateFabricType": "",
+#                "templateName": "Easy_Fabric",
+#                "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                "vrfTemplate": "Default_VRF_Universal"
+#            },
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/child_11/Easy_Fabric",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "DATA": {
+#                "asn": "144",
+#                "deviceType": "n9k",
+#                "fabricId": "FABRIC-26",
+#                "fabricName": "child_12",
+#                "fabricTechnology": "VXLANFabric",
+#                "fabricTechnologyFriendly": "VXLAN EVPN",
+#                "fabricType": "Switch_Fabric",
+#                "fabricTypeFriendly": "Switch Fabric",
+#                "id": 26,
+#                "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                "networkTemplate": "Default_Network_Universal",
+#                "nvPairs": {
+#                ...
+#                },
+#                "provisionMode": "DCNMTopDown",
+#                "replicationMode": "Multicast",
+#                "siteId": "",
+#                "templateFabricType": "",
+#                "templateName": "Easy_Fabric",
+#                "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                "vrfTemplate": "Default_VRF_Universal"
+#            },
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/child_12/Easy_Fabric",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": true,
+#            "sequence_number": 2,
+#            "success": true
+#        },
+#        {
+#            "changed": true,
+#            "sequence_number": 3,
+#            "success": true
+#        }
+#    ]
+#}
+#################################################################################
+- name: MERGED - TEST - Create MSD fabric and child Fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        FABRIC_TYPE: "{{ MSD_fabric_type }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ child_fabric_name_11 }}"
+        FABRIC_TYPE: "{{ child_fabric_type }}"
+        BGP_AS: 72
+        DEPLOY: true
+      - FABRIC_NAME: "{{ child_fabric_name_12 }}"
+        FABRIC_TYPE: "{{ child_fabric_type }}"
+        BGP_AS: 144
+        DEPLOY: true
+      - FABRIC_NAME: "{{ child_fabric_name_13 }}"
+        FABRIC_TYPE: "{{ child_fabric_type_2 }}"
+        BGP_AS: 216
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        FABRIC_TYPE: "{{ MSD_fabric_type }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ child_fabric_name_21 }}"
+        FABRIC_TYPE: "{{ child_fabric_type }}"
+        BGP_AS: 361
+        DEPLOY: true
+      - FABRIC_NAME: "{{ child_fabric_name_22 }}"
+        FABRIC_TYPE: "{{ child_fabric_type }}"
+        BGP_AS: 362
+        DEPLOY: true
+      - FABRIC_NAME: "{{ child_fabric_name_23 }}"
+        FABRIC_TYPE: "{{ child_fabric_type_2 }}"
+        BGP_AS: 363
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 8
+      - result.diff[0].FABRIC_NAME == msd_fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == child_fabric_name_11
+      - result.diff[1].sequence_number == 2
+      - result.diff[1].BGP_AS == 72
+      - result.diff[2].FABRIC_NAME == child_fabric_name_12
+      - result.diff[2].sequence_number == 3
+      - result.diff[2].BGP_AS == 144
+      - result.diff[3].FABRIC_NAME == child_fabric_name_13
+      - result.diff[3].sequence_number == 4
+      - result.diff[3].BGP_AS == 216
+      - result.diff[4].FABRIC_NAME == msd_fabric_name_2
+      - result.diff[4].sequence_number == 5
+      - result.diff[5].FABRIC_NAME == child_fabric_name_21
+      - result.diff[5].sequence_number == 6
+      - result.diff[5].BGP_AS == 361
+      - result.diff[6].FABRIC_NAME == child_fabric_name_22
+      - result.diff[6].sequence_number == 7
+      - result.diff[6].BGP_AS == 362
+      - result.diff[7].FABRIC_NAME == child_fabric_name_23
+      - result.diff[7].sequence_number == 8
+      - result.diff[7].BGP_AS == 363
+      - result.metadata[0].action == "fabric_create"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "fabric_create"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - result.metadata[2].action == "fabric_create"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "merged"
+      - result.metadata[3].action == "fabric_create"
+      - result.metadata[3].check_mode == False
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "merged"
+      - result.metadata[4].action == "fabric_create"
+      - result.metadata[4].check_mode == False
+      - result.metadata[4].sequence_number == 5
+      - result.metadata[4].state == "merged"
+      - result.metadata[5].action == "fabric_create"
+      - result.metadata[5].check_mode == False
+      - result.metadata[5].sequence_number == 6
+      - result.metadata[5].state == "merged"
+      - result.metadata[6].action == "fabric_create"
+      - result.metadata[6].check_mode == False
+      - result.metadata[6].sequence_number == 7
+      - result.metadata[6].state == "merged"
+      - result.metadata[7].action == "fabric_create"
+      - result.metadata[7].check_mode == False
+      - result.metadata[7].sequence_number == 8
+      - result.metadata[7].state == "merged"
+      - (result.response | length) == 8
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[3].MESSAGE == "OK"
+      - result.response[3].METHOD == "POST"
+      - result.response[3].RETURN_CODE == 200
+      - result.response[4].sequence_number == 5
+      - result.response[4].MESSAGE == "OK"
+      - result.response[4].METHOD == "POST"
+      - result.response[4].RETURN_CODE == 200
+      - result.response[5].sequence_number == 6
+      - result.response[5].MESSAGE == "OK"
+      - result.response[5].METHOD == "POST"
+      - result.response[5].RETURN_CODE == 200
+      - result.response[6].sequence_number == 7
+      - result.response[6].MESSAGE == "OK"
+      - result.response[6].METHOD == "POST"
+      - result.response[6].RETURN_CODE == 200
+      - result.response[7].sequence_number == 8
+      - result.response[7].MESSAGE == "OK"
+      - result.response[7].METHOD == "POST"
+      - result.response[7].RETURN_CODE == 200
+################################################################################
+# MERGED - TEST - Merge child Fabrics into MSD Fabric
+################################################################################
+# Expected result
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child1"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child1",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "deleted"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "deleted"
+#        },
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "deleted"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": true,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child1"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child1",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "merged"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "merged"
+#        },
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "merged"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": true,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+
+################################################################################
+- name: MERGED - TEST - Merge child fabrics into MSD Fabric
+  cisco.dcnm.dcnm_fabric_member:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_12 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_21 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_22 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 4
+      - result.diff[0].destFabric == msd_fabric_name_1
+      - result.diff[0].sourceFabric == child_fabric_name_11
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].destFabric == msd_fabric_name_1
+      - result.diff[1].sourceFabric == child_fabric_name_12
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].destFabric == msd_fabric_name_2
+      - result.diff[2].sourceFabric == child_fabric_name_21
+      - result.diff[2].sequence_number == 3
+      - result.diff[3].destFabric == msd_fabric_name_2
+      - result.diff[3].sourceFabric == child_fabric_name_22
+      - result.diff[3].sequence_number == 4
+      - (result.metadata | length) == 4
+      - result.metadata[0].action == "child_fabric_add"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "child_fabric_add"
+      - result.metadata[1].check_mode == false
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - result.metadata[2].action == "child_fabric_add"
+      - result.metadata[2].check_mode == false
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "merged"
+      - result.metadata[3].action == "child_fabric_add"
+      - result.metadata[3].check_mode == false
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "merged"
+      - (result.response | length) == 4
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[3].MESSAGE == "OK"
+      - result.response[3].METHOD == "POST"
+      - result.response[3].RETURN_CODE == 200
+      - (result.result | length) == 4
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+      - result.result[3].changed == true
+      - result.result[3].success == true
+      - result.result[3].sequence_number == 4
+
+#########################################################################################
+# - name: MERGED - TEST - Merge additional fabric child_fabric_name_13 into MSD Fabric
+#########################################################################################
+#Expected result:
+#ok: [10.78.210.227] => {
+#    "result": {
+#        "changed": true,
+#        "diff": [
+#            {
+#                "destFabric": "MSD_5",
+#                "sequence_number": 1,
+#                "sourceFabric": "child_13"
+#            }
+#        ],
+#        "failed": false,
+#        "metadata": [
+#            {
+#                "action": "child_fabric_add",
+#                "check_mode": false,
+#                "sequence_number": 1,
+#                "state": "merged"
+#            }
+#        ],
+#        "response": [
+#            {
+#                "DATA": {},
+#                "MESSAGE": "OK",
+#                "METHOD": "POST",
+#                "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 1
+#            }
+#        ],
+#        "result": [
+#            {
+#                "changed": true,
+#                "sequence_number": 1,
+#                "success": true
+#            }
+#        ]
+#    }
+#}
+#######################################################################################
+- name: MERGED - TEST - Merge additional fabric child_fabric_name_13 into MSD Fabric
+  cisco.dcnm.dcnm_fabric_member: &merge_child_fabric
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_13 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_23 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].destFabric == msd_fabric_name_1
+      - result.diff[0].sourceFabric == child_fabric_name_13
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].destFabric == msd_fabric_name_2
+      - result.diff[1].sourceFabric == child_fabric_name_23
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "child_fabric_add"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "child_fabric_add"
+      - result.metadata[1].check_mode == false
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+###################################################################################################
+#-name QUERY - TEST - Query child fabrics of MSD Fabric
+###################################################################################################
+- name: QUERY - TEST - Query child fabrics of MSD Fabric
+  cisco.dcnm.dcnm_fabric_member: 
+    state: query
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - child_fabric_name_11 in result.diff[0]
+      - child_fabric_name_12 in result.diff[0]
+      - child_fabric_name_13 in result.diff[0]
+      - child_fabric_name_21 in result.diff[0]
+      - child_fabric_name_22 in result.diff[0]
+      - child_fabric_name_23 in result.diff[0]
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "child_fabric_query"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "query"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "GET"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.result[0].found == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
+####################################################################################################
+# MERGED - TEST - Merge additional 3rd child fabric into MSD Fabric - idempotence
+#####################################################################################################
+## Expected result
+#ok: [10.78.210.227] => {
+#    "changed": false,
+#    "diff": [
+#        {
+#            "sequence_number": 1
+#        },
+#        {
+#            "sequence_number": 2
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child1",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "merged"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "merged"
+#        },
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "merged"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "MESSAGE": "Child fabric is already member of MSD fabric.",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "MESSAGE": "Child fabric is already member of MSD fabric.",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": false,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": false,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+#################################################################################
+- name: MERGED - TEST - Merge additional config into MSD fabric - idempotence
+  cisco.dcnm.dcnm_fabric_member: *merge_child_fabric
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "child_fabric_add"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "child_fabric_add"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "Child fabric is already member of MSD fabric."
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "Child fabric is already member of MSD fabric."
+      - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == false
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+################################################################################
+# MERGED - TEST - Delete child Fabrics from MSD Fabric
+################################################################################
+# Expected result
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child1"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child1",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "deleted"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "deleted"
+#        },
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "deleted"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": true,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+################################################################################
+- name: DELETED - SETUP - Delete child fabrics from MSD fabric
+  cisco.dcnm.dcnm_fabric_member: &delete_child_fabric
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_12 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_13 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_21 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_22 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_23 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 6
+      - result.diff[0].destFabric == msd_fabric_name_1
+      - result.diff[0].sourceFabric == child_fabric_name_11
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].destFabric == msd_fabric_name_1
+      - result.diff[1].sourceFabric == child_fabric_name_12
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].destFabric == msd_fabric_name_1
+      - result.diff[2].sourceFabric == child_fabric_name_13
+      - result.diff[2].sequence_number == 3
+      - result.diff[3].destFabric == msd_fabric_name_2
+      - result.diff[3].sourceFabric == child_fabric_name_21
+      - result.diff[3].sequence_number == 4
+      - result.diff[4].destFabric == msd_fabric_name_2
+      - result.diff[4].sourceFabric == child_fabric_name_22
+      - result.diff[4].sequence_number == 5
+      - result.diff[5].destFabric == msd_fabric_name_2
+      - result.diff[5].sourceFabric == child_fabric_name_23
+      - result.diff[5].sequence_number == 6
+      - (result.metadata | length) == 6
+      - result.metadata[0].action == "child_fabric_delete"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "child_fabric_delete"
+      - result.metadata[1].check_mode == false
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - result.metadata[2].action == "child_fabric_delete"
+      - result.metadata[2].check_mode == false
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "deleted"
+      - result.metadata[3].action == "child_fabric_delete"
+      - result.metadata[3].check_mode == false
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "deleted"
+      - result.metadata[4].action == "child_fabric_delete"
+      - result.metadata[4].check_mode == false
+      - result.metadata[4].sequence_number == 5
+      - result.metadata[4].state == "deleted"
+      - result.metadata[5].action == "child_fabric_delete"
+      - result.metadata[5].check_mode == false
+      - result.metadata[5].sequence_number == 6
+      - result.metadata[5].state == "deleted"
+      - (result.response | length) == 6
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[3].MESSAGE == "OK"
+      - result.response[3].METHOD == "POST"
+      - result.response[3].RETURN_CODE == 200
+      - result.response[4].sequence_number == 5
+      - result.response[4].MESSAGE == "OK"
+      - result.response[4].METHOD == "POST"
+      - result.response[4].RETURN_CODE == 200
+      - result.response[5].sequence_number == 6
+      - result.response[5].MESSAGE == "OK"
+      - result.response[5].METHOD == "POST"
+      - result.response[5].RETURN_CODE == 200
+      - (result.result | length) == 6
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+      - result.result[3].changed == true
+      - result.result[3].success == true
+      - result.result[3].sequence_number == 4
+      - result.result[4].changed == true
+      - result.result[4].success == true
+      - result.result[4].sequence_number == 5
+      - result.result[5].changed == true
+      - result.result[5].success == true
+      - result.result[5].sequence_number == 6
+#################################################################################
+#- name: DELETED - TEST - Delete child Fabrics From MSD fabric - idempotence
+#################################################################################
+#expected result:
+#ok: [10.78.210.227] => {
+#    "result": {
+#        "changed": false,
+#        "diff": [
+#            {
+#                "sequence_number": 1
+#            },
+#            {
+#                "sequence_number": 2
+#            },
+#            {
+#                "sequence_number": 3
+#            }
+#        ],
+#        "failed": false,
+#        "metadata": [
+#            {
+#                "action": "child_fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 1,
+#                "state": "deleted"
+#            },
+#            {
+#                "action": "child_fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 2,
+#                "state": "deleted"
+#            },
+#            {
+#                "action": "child_fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 3,
+#                "state": "deleted"
+#            }
+#        ],
+#        "response": [
+#            {
+#                "MESSAGE": "Given child fabric is already not a member of MSD fabric",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 1
+#            },
+#            {
+#                "MESSAGE": "Given child fabric is already not a member of MSD fabric",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 2
+#            },
+#            {
+#                "MESSAGE": "Given child fabric is already not a member of MSD fabric",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 3
+#            }
+#        ],
+#        "result": [
+#            {
+#                "changed": false,
+#                "sequence_number": 1,
+#                "success": true
+#            },
+#            {
+#                "changed": false,
+#                "sequence_number": 2,
+#                "success": true
+#            },
+#            {
+#                "changed": false,
+#                "sequence_number": 3,
+#                "success": true
+#            }
+#        ]
+#    }
+#}
+###############################################################################################
+- name: MERGED - TEST - Delete child Fabrics into MSD fabric - idempotence
+  cisco.dcnm.dcnm_fabric_member: *delete_child_fabric
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 6
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].sequence_number == 3
+      - result.diff[3].sequence_number == 4
+      - result.diff[4].sequence_number == 5
+      - result.diff[5].sequence_number == 6
+      - (result.metadata | length) == 6
+      - result.metadata[0].action == "child_fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "child_fabric_delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - result.metadata[2].action == "child_fabric_delete"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "deleted"
+      - result.metadata[3].action == "child_fabric_delete"
+      - result.metadata[3].check_mode == False
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "deleted"
+      - result.metadata[4].action == "child_fabric_delete"
+      - result.metadata[4].check_mode == False
+      - result.metadata[4].sequence_number == 5
+      - result.metadata[4].state == "deleted"
+      - result.metadata[5].action == "child_fabric_delete"
+      - result.metadata[5].check_mode == False
+      - result.metadata[5].sequence_number == 6
+      - result.metadata[5].state == "deleted"
+      - (result.response | length) == 6
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[3].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[3].RETURN_CODE == 200
+      - result.response[4].sequence_number == 5
+      - result.response[4].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[4].RETURN_CODE == 200
+      - result.response[5].sequence_number == 6
+      - result.response[5].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[5].RETURN_CODE == 200
+      - (result.result | length) == 6
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == false
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == false
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+      - result.result[3].changed == false
+      - result.result[3].success == true
+      - result.result[3].sequence_number == 4
+      - result.result[4].changed == false
+      - result.result[4].success == true
+      - result.result[4].sequence_number == 5
+      - result.result[5].changed == false
+      - result.result[5].success == true
+      - result.result[5].sequence_number == 6
+###############################################################################################
+#- name: MERGED - TEST - ADD child Fabrics into MSD fabric with Deploy
+################################################################################################
+- name: Merged - TEST - Merge child fabrics into MSD Fabric with Deploy flag - To save the config
+  cisco.dcnm.dcnm_fabric_member:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_12 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_21 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_22 }}"
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 8
+      - result.diff[0].destFabric == msd_fabric_name_1
+      - result.diff[0].sourceFabric == child_fabric_name_11
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == msd_fabric_name_1
+      - result.diff[1].config_save == "OK"
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].destFabric == msd_fabric_name_1
+      - result.diff[2].sourceFabric == child_fabric_name_12
+      - result.diff[2].sequence_number == 3
+      - result.diff[3].FABRIC_NAME == msd_fabric_name_1
+      - result.diff[3].config_save == "OK"
+      - result.diff[3].sequence_number == 4
+      - result.diff[4].destFabric == msd_fabric_name_2
+      - result.diff[4].sourceFabric == child_fabric_name_21
+      - result.diff[4].sequence_number == 5
+      - result.diff[5].FABRIC_NAME == msd_fabric_name_2
+      - result.diff[5].config_save == "OK"
+      - result.diff[5].sequence_number == 6
+      - result.diff[6].destFabric == msd_fabric_name_2
+      - result.diff[6].sourceFabric == child_fabric_name_22
+      - result.diff[6].sequence_number == 7
+      - result.diff[7].FABRIC_NAME == msd_fabric_name_2
+      - result.diff[7].config_save == "OK"
+      - result.diff[7].sequence_number == 8
+      - (result.metadata | length) == 8
+      - result.metadata[0].action == "child_fabric_add"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "config_save"
+      - result.metadata[1].check_mode == false
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - result.metadata[2].action == "child_fabric_add"
+      - result.metadata[2].check_mode == false
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "merged"
+      - result.metadata[3].action == "config_save"
+      - result.metadata[3].check_mode == false
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "merged"
+      - result.metadata[4].action == "child_fabric_add"
+      - result.metadata[4].check_mode == false
+      - result.metadata[4].sequence_number == 5
+      - result.metadata[4].state == "merged"
+      - result.metadata[5].action == "config_save"
+      - result.metadata[5].check_mode == false
+      - result.metadata[5].sequence_number == 6
+      - result.metadata[5].state == "merged"
+      - result.metadata[6].action == "child_fabric_add"
+      - result.metadata[6].check_mode == false
+      - result.metadata[6].sequence_number == 7
+      - result.metadata[6].state == "merged"
+      - result.metadata[7].action == "config_save"
+      - result.metadata[7].check_mode == false
+      - result.metadata[7].sequence_number == 8
+      - result.metadata[7].state == "merged"
+      - (result.response | length) == 8
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].DATA.status == "Config save is completed"
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[3].MESSAGE == "OK"
+      - result.response[3].METHOD == "POST"
+      - result.response[3].RETURN_CODE == 200
+      - result.response[3].DATA.status == "Config save is completed"
+      - result.response[4].sequence_number == 5
+      - result.response[4].MESSAGE == "OK"
+      - result.response[4].METHOD == "POST"
+      - result.response[4].RETURN_CODE == 200
+      - result.response[5].sequence_number == 6
+      - result.response[5].MESSAGE == "OK"
+      - result.response[5].METHOD == "POST"
+      - result.response[5].RETURN_CODE == 200
+      - result.response[5].DATA.status == "Config save is completed"
+      - result.response[6].sequence_number == 7
+      - result.response[6].MESSAGE == "OK"
+      - result.response[6].METHOD == "POST"
+      - result.response[6].RETURN_CODE == 200
+      - result.response[7].sequence_number == 8
+      - result.response[7].MESSAGE == "OK"
+      - result.response[7].METHOD == "POST"
+      - result.response[7].RETURN_CODE == 200
+      - result.response[7].DATA.status == "Config save is completed"
+      - (result.result | length) == 8
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+      - result.result[3].changed == true
+      - result.result[3].success == true
+      - result.result[3].sequence_number == 4
+      - result.result[4].changed == true
+      - result.result[4].success == true
+      - result.result[4].sequence_number == 5
+      - result.result[5].changed == true
+      - result.result[5].success == true
+      - result.result[5].sequence_number == 6
+      - result.result[6].changed == true
+      - result.result[6].success == true
+      - result.result[6].sequence_number == 7
+      - result.result[7].changed == true
+      - result.result[7].success == true
+      - result.result[7].sequence_number == 8
+
+###############################################################################################
+#- name: DELETED - TEST - Delete child Fabrics from MSD fabric with Deploy
+################################################################################################
+- name: Deleted - TEST - Delete child fabrics from MSD Fabric with Deploy flag - To save the config
+  cisco.dcnm.dcnm_fabric_member:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_12 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_21 }}"
+        DEPLOY: true
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_22 }}"
+        DEPLOY: true
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 8
+      - result.diff[0].destFabric == msd_fabric_name_1
+      - result.diff[0].sourceFabric == child_fabric_name_11
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == msd_fabric_name_1
+      - result.diff[1].config_save == "OK"
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].destFabric == msd_fabric_name_1
+      - result.diff[2].sourceFabric == child_fabric_name_12
+      - result.diff[2].sequence_number == 3
+      - result.diff[3].FABRIC_NAME == msd_fabric_name_1
+      - result.diff[3].config_save == "OK"
+      - result.diff[3].sequence_number == 4
+      - result.diff[4].destFabric == msd_fabric_name_2
+      - result.diff[4].sourceFabric == child_fabric_name_21
+      - result.diff[4].sequence_number == 5
+      - result.diff[5].FABRIC_NAME == msd_fabric_name_2
+      - result.diff[5].config_save == "OK"
+      - result.diff[5].sequence_number == 6
+      - result.diff[6].destFabric == msd_fabric_name_2
+      - result.diff[6].sourceFabric == child_fabric_name_22
+      - result.diff[6].sequence_number == 7
+      - result.diff[7].FABRIC_NAME == msd_fabric_name_2
+      - result.diff[7].config_save == "OK"
+      - result.diff[7].sequence_number == 8
+      - (result.metadata | length) == 8
+      - result.metadata[0].action == "child_fabric_delete"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "config_save"
+      - result.metadata[1].check_mode == false
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - result.metadata[2].action == "child_fabric_delete"
+      - result.metadata[2].check_mode == false
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "deleted"
+      - result.metadata[3].action == "config_save"
+      - result.metadata[3].check_mode == false
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "deleted"
+      - result.metadata[4].action == "child_fabric_delete"
+      - result.metadata[4].check_mode == false
+      - result.metadata[4].sequence_number == 5
+      - result.metadata[4].state == "deleted"
+      - result.metadata[5].action == "config_save"
+      - result.metadata[5].check_mode == false
+      - result.metadata[5].sequence_number == 6
+      - result.metadata[5].state == "deleted"
+      - result.metadata[6].action == "child_fabric_delete"
+      - result.metadata[6].check_mode == false
+      - result.metadata[6].sequence_number == 7
+      - result.metadata[6].state == "deleted"
+      - result.metadata[7].action == "config_save"
+      - result.metadata[7].check_mode == false
+      - result.metadata[7].sequence_number == 8
+      - result.metadata[7].state == "deleted"
+      - (result.response | length) == 8
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].DATA.status == "Config save is completed"
+      - result.response[2].sequence_number == 3
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "POST"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[3].MESSAGE == "OK"
+      - result.response[3].METHOD == "POST"
+      - result.response[3].RETURN_CODE == 200
+      - result.response[3].DATA.status == "Config save is completed"
+      - result.response[4].sequence_number == 5
+      - result.response[4].MESSAGE == "OK"
+      - result.response[4].METHOD == "POST"
+      - result.response[4].RETURN_CODE == 200
+      - result.response[5].sequence_number == 6
+      - result.response[5].MESSAGE == "OK"
+      - result.response[5].METHOD == "POST"
+      - result.response[5].RETURN_CODE == 200
+      - result.response[5].DATA.status == "Config save is completed"
+      - result.response[6].sequence_number == 7
+      - result.response[6].MESSAGE == "OK"
+      - result.response[6].METHOD == "POST"
+      - result.response[6].RETURN_CODE == 200
+      - result.response[7].sequence_number == 8
+      - result.response[7].MESSAGE == "OK"
+      - result.response[7].METHOD == "POST"
+      - result.response[7].RETURN_CODE == 200
+      - result.response[7].DATA.status == "Config save is completed"
+      - (result.result | length) == 8
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+      - result.result[3].changed == true
+      - result.result[3].success == true
+      - result.result[3].sequence_number == 4
+      - result.result[4].changed == true
+      - result.result[4].success == true
+      - result.result[4].sequence_number == 5
+      - result.result[5].changed == true
+      - result.result[5].success == true
+      - result.result[5].sequence_number == 6
+      - result.result[6].changed == true
+      - result.result[6].success == true
+      - result.result[6].sequence_number == 7
+      - result.result[7].changed == true
+      - result.result[7].success == true
+      - result.result[7].sequence_number == 8
+
+###########################################################################################
+# MERGED - Add same child fabric again in the same playbook. 2nd config should be idempotent 
+############################################################################################
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child2"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "merged"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "merged"
+#        },
+#        {
+#            "action": "child_fabric_add",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "merged"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdAdd",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "MESSAGE": "Child fabric is already member of MSD fabric.",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": false,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+###########################################################################################
+- name: Merged - TEST - Merge same child fabrics into MSD Fabric twice - 2nd config is idempotent
+  cisco.dcnm.dcnm_fabric_member:
+    state: merged
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].destFabric == "{{ msd_fabric_name_1 }}"
+      - result.diff[0].sourceFabric == "{{ child_fabric_name_11 }}"
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "child_fabric_add"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - result.metadata[1].action == "child_fabric_add"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "Child fabric is already member of MSD fabric."
+      - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == false
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+###########################################################################################
+# DELETED - Add same child fabric again in the same playbook. 2nd config should be idempotent 
+############################################################################################
+#changed: [10.78.210.227] => {
+#    "changed": true,
+#    "diff": [
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 1,
+#            "sourceFabric": "child2"
+#        },
+#        {
+#            "destFabric": "msd_2",
+#            "sequence_number": 2,
+#            "sourceFabric": "child2"
+#        }
+#    ],
+#    "invocation": {
+#        "module_args": {
+#            "config": [
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                },
+#                {
+#                    "CHILD_FABRIC_NAME": "child2",
+#                    "FABRIC_NAME": "msd_2"
+#                }
+#            ],
+#            "state": "deleted"
+#        }
+#    },
+#    "metadata": [
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 1,
+#            "state": "deleted"
+#        },
+#        {
+#            "action": "child_fabric_delete",
+#            "check_mode": false,
+#            "sequence_number": 2,
+#            "state": "deleted"
+#        }
+#    ],
+#    "response": [
+#        {
+#            "DATA": {},
+#            "MESSAGE": "OK",
+#            "METHOD": "POST",
+#            "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msdExit",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 1
+#        },
+#        {
+#            "MESSAGE": "Given child fabric is already not a member of MSD fabric",
+#            "RETURN_CODE": 200,
+#            "sequence_number": 2
+#        }
+#    ],
+#    "result": [
+#        {
+#            "changed": true,
+#            "sequence_number": 1,
+#            "success": true
+#        },
+#        {
+#            "changed": false,
+#            "sequence_number": 2,
+#            "success": true
+#        }
+#    ]
+#}
+#
+- name: Deleted - TEST - Delete same child fabric from MSD Fabric twice - 2nd config is idempotent
+  cisco.dcnm.dcnm_fabric_member:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+        CHILD_FABRIC_NAME: "{{ child_fabric_name_11 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[0].sequence_number == 1
+      - result.diff[0].destFabric == "{{ msd_fabric_name_1 }}"
+      - result.diff[0].sourceFabric == "{{ child_fabric_name_11 }}"
+      - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
+      - result.metadata[0].action == "child_fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "child_fabric_delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - (result.response | length) == 2
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "POST"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "Given child fabric is already not a member of MSD fabric"
+      - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == false
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+###############################################################################
+#  CLEANUP - Delete the fabrics
+################################################################################
+# Expected result
+#ok: [10.78.210.227] => {
+#    "result": {
+#        "changed": true,
+#        "diff": [
+#            {
+#                "FABRIC_NAME": "MSD_5",
+#                "sequence_number": 1
+#            },
+#            {
+#                "FABRIC_NAME": "child_11",
+#                "sequence_number": 2
+#            },
+#            {
+#                "FABRIC_NAME": "child_12",
+#                "sequence_number": 3
+#            },
+#            {
+#                "FABRIC_NAME": "child_13",
+#                "sequence_number": 4
+#            }
+#        ],
+#        "failed": false,
+#        "metadata": [
+#            {
+#                "action": "fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 1,
+#                "state": "deleted"
+#            },
+#            {
+#                "action": "fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 2,
+#                "state": "deleted"
+#            },
+#            {
+#                "action": "fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 3,
+#                "state": "deleted"
+#            },
+#            {
+#                "action": "fabric_delete",
+#                "check_mode": false,
+#                "sequence_number": 4,
+#                "state": "deleted"
+#            }
+#        ],
+#        "response": [
+#            {
+#                "DATA": "Invalid JSON response: Fabric 'MSD_5' is deleted successfully!",
+#                "MESSAGE": "OK",
+#                "METHOD": "DELETE",
+#                "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/MSD_5",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 1
+#            },
+#            {
+#                "DATA": "Invalid JSON response: Fabric 'child_11' is deleted successfully!",
+#                "MESSAGE": "OK",
+#                "METHOD": "DELETE",
+#                "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/child_11",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 2
+#            },
+#            {
+#                "DATA": "Invalid JSON response: Fabric 'child_12' is deleted successfully!",
+#                "MESSAGE": "OK",
+#                "METHOD": "DELETE",
+#                "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/child_12",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 3
+#            },
+#            {
+#                "DATA": "Invalid JSON response: Fabric 'child_13' is deleted successfully!",
+#                "MESSAGE": "OK",
+#                "METHOD": "DELETE",
+#                "REQUEST_PATH": "https://10.78.210.227:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/child_13",
+#                "RETURN_CODE": 200,
+#                "sequence_number": 4
+#            }
+#        ],
+#        "result": [
+#            {
+#                "changed": true,
+#                "sequence_number": 1,
+#                "success": true
+#            },
+#            {
+#                "changed": true,
+#                "sequence_number": 2,
+#                "success": true
+#            },
+#            {
+#                "changed": true,
+#                "sequence_number": 3,
+#                "success": true
+#            },
+#            {
+#                "changed": true,
+#                "sequence_number": 4,
+#                "success": true
+#            }
+#        ]
+#    }
+#}
+################################################################################
+- name: MERGED - CLEANUP - Delete the fabrics
+  cisco.dcnm.dcnm_fabric:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ msd_fabric_name_1 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_11 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_12 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_13 }}"
+      - FABRIC_NAME: "{{ msd_fabric_name_2 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_21 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_22 }}"
+      - FABRIC_NAME: "{{ child_fabric_name_23 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 8
+      - result.diff[0].FABRIC_NAME == msd_fabric_name_1
+      - result.diff[0].sequence_number == 1
+      - result.diff[1].FABRIC_NAME == child_fabric_name_11
+      - result.diff[1].sequence_number == 2
+      - result.diff[2].FABRIC_NAME == child_fabric_name_12
+      - result.diff[2].sequence_number == 3
+      - result.diff[3].FABRIC_NAME == child_fabric_name_13
+      - result.diff[3].sequence_number == 4
+      - result.diff[4].FABRIC_NAME == msd_fabric_name_2
+      - result.diff[4].sequence_number == 5
+      - result.diff[5].FABRIC_NAME == child_fabric_name_21
+      - result.diff[5].sequence_number == 6
+      - result.diff[6].FABRIC_NAME == child_fabric_name_22
+      - result.diff[6].sequence_number == 7
+      - result.diff[7].FABRIC_NAME == child_fabric_name_23
+      - result.diff[7].sequence_number == 8
+      - (result.metadata | length) == 8
+      - result.metadata[0].action == "fabric_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - result.metadata[1].action == "fabric_delete"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "deleted"
+      - result.metadata[2].action == "fabric_delete"
+      - result.metadata[2].check_mode == False
+      - result.metadata[2].sequence_number == 3
+      - result.metadata[2].state == "deleted"
+      - result.metadata[3].action == "fabric_delete"
+      - result.metadata[3].check_mode == False
+      - result.metadata[3].sequence_number == 4
+      - result.metadata[3].state == "deleted"
+      - result.metadata[4].action == "fabric_delete"
+      - result.metadata[4].check_mode == False
+      - result.metadata[4].sequence_number == 5
+      - result.metadata[4].state == "deleted"
+      - result.metadata[5].action == "fabric_delete"
+      - result.metadata[5].check_mode == False
+      - result.metadata[5].sequence_number == 6
+      - result.metadata[5].state == "deleted"
+      - result.metadata[6].action == "fabric_delete"
+      - result.metadata[6].check_mode == False
+      - result.metadata[6].sequence_number == 7
+      - result.metadata[6].state == "deleted"
+      - result.metadata[7].action == "fabric_delete"
+      - result.metadata[7].check_mode == False
+      - result.metadata[7].sequence_number == 8
+      - result.metadata[7].state == "deleted"
+      - (result.response | length) == 8
+      - result.response[0].DATA is match '.*deleted successfully.*'
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.response[1].DATA is match '.*deleted successfully.*'
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "DELETE"
+      - result.response[1].RETURN_CODE == 200
+      - result.response[1].sequence_number == 2
+      - result.response[2].DATA is match '.*deleted successfully.*'
+      - result.response[2].MESSAGE == "OK"
+      - result.response[2].METHOD == "DELETE"
+      - result.response[2].RETURN_CODE == 200
+      - result.response[2].sequence_number == 3
+      - result.response[3].DATA is match '.*deleted successfully.*'
+      - result.response[3].MESSAGE == "OK"
+      - result.response[3].METHOD == "DELETE"
+      - result.response[3].RETURN_CODE == 200
+      - result.response[3].sequence_number == 4
+      - result.response[4].DATA is match '.*deleted successfully.*'
+      - result.response[4].MESSAGE == "OK"
+      - result.response[4].METHOD == "DELETE"
+      - result.response[4].RETURN_CODE == 200
+      - result.response[4].sequence_number == 5
+      - result.response[5].DATA is match '.*deleted successfully.*'
+      - result.response[5].MESSAGE == "OK"
+      - result.response[5].METHOD == "DELETE"
+      - result.response[5].RETURN_CODE == 200
+      - result.response[5].sequence_number == 6
+      - result.response[6].DATA is match '.*deleted successfully.*'
+      - result.response[6].MESSAGE == "OK"
+      - result.response[6].METHOD == "DELETE"
+      - result.response[6].RETURN_CODE == 200
+      - result.response[6].sequence_number == 7
+      - result.response[7].DATA is match '.*deleted successfully.*'
+      - result.response[7].MESSAGE == "OK"
+      - result.response[7].METHOD == "DELETE"
+      - result.response[7].RETURN_CODE == 200
+      - result.response[7].sequence_number == 8
+      - (result.result | length) == 8
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+      - result.result[2].changed == true
+      - result.result[2].success == true
+      - result.result[2].sequence_number == 3
+      - result.result[3].changed == true
+      - result.result[3].success == true
+      - result.result[3].sequence_number == 4
+      - result.result[4].changed == true
+      - result.result[4].success == true
+      - result.result[4].sequence_number == 5
+      - result.result[5].changed == true
+      - result.result[5].success == true
+      - result.result[5].sequence_number == 6
+      - result.result[6].changed == true
+      - result.result[6].success == true
+      - result.result[6].sequence_number == 7
+      - result.result[7].changed == true
+      - result.result[7].success == true
+      - result.result[7].sequence_number == 8
