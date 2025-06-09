@@ -1246,7 +1246,7 @@ class NdfcVrf12:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
-        
+
         msg = f"ZZZ: ControllerResponseVrfsSwitchesV12: {json.dumps(response.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
