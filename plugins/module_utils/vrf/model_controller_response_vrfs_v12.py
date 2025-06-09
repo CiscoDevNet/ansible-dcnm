@@ -12,6 +12,7 @@ from typing import Optional, Union
 from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning, model_validator
 from typing_extensions import Self
 
+from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
 
 warnings.filterwarnings("ignore", category=PydanticExperimentalWarning)
@@ -136,7 +137,7 @@ class VrfObjectV12(BaseModel):
         return self
 
 
-class ControllerResponseVrfsV12(BaseModel):
+class ControllerResponseVrfsV12(ControllerResponseGenericV12):
     """
     # Summary
 

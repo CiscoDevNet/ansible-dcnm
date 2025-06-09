@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Validation model for controller responses related to the following endpoint:
 
@@ -9,6 +10,8 @@ import warnings
 from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, PydanticExperimentalWarning
+
+from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
 warnings.filterwarnings("ignore", category=PydanticExperimentalWarning)
 warnings.filterwarnings("ignore", category=UserWarning)
@@ -52,7 +55,7 @@ class VrfDeploymentsDataDictV12(BaseModel):
     )
 
 
-class ControllerResponseVrfsDeploymentsV12(BaseModel):
+class ControllerResponseVrfsDeploymentsV12(ControllerResponseGenericV12):
     """
     # Summary
 

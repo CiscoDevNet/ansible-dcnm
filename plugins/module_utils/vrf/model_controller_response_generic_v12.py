@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from typing import Optional, Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -14,6 +14,7 @@ class ControllerResponseGenericV12(BaseModel):
 
     ValueError if validation fails
     """
+
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,

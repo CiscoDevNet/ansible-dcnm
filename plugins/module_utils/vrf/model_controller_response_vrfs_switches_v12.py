@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
+"""
+Validation model for controller responses related to the following endpoint:
+
+Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/switches?vrf-names=ansible-vrf-int1&serial-numbers={serial1,serial2}
+Verb: GET
+"""
 import json
 from typing import Any, List, Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
 
 class VrfLiteConnProtoItem(BaseModel):
@@ -25,9 +33,7 @@ class ExtensionPrototypeValue(BaseModel):
     dest_interface_name: str = Field(alias="destInterfaceName")
     dest_switch_name: str = Field(alias="destSwitchName")
     extension_type: str = Field(alias="extensionType")
-    extension_values: Union[VrfLiteConnProtoItem, str] = Field(
-        default="", alias="extensionValues"
-    )
+    extension_values: Union[VrfLiteConnProtoItem, str] = Field(default="", alias="extensionValues")
     interface_name: str = Field(alias="interfaceName")
 
     @field_validator("extension_values", mode="before")
@@ -65,12 +71,8 @@ class InstanceValues(BaseModel):
     loopback_id: str = Field(alias="loopbackId")
     loopback_ip_address: str = Field(alias="loopbackIpAddress")
     loopback_ipv6_address: str = Field(alias="loopbackIpV6Address")
-    switch_route_target_export_evpn: Optional[str] = Field(
-        default="", alias="switchRouteTargetExportEvpn"
-    )
-    switch_route_target_import_evpn: Optional[str] = Field(
-        default="", alias="switchRouteTargetImportEvpn"
-    )
+    switch_route_target_export_evpn: Optional[str] = Field(default="", alias="switchRouteTargetExportEvpn")
+    switch_route_target_import_evpn: Optional[str] = Field(default="", alias="switchRouteTargetImportEvpn")
 
 
 class MultisiteConnOuterItem(BaseModel):
@@ -141,16 +143,10 @@ class ExtensionValuesOuter(BaseModel):
 
 class SwitchDetails(BaseModel):
     error_message: Union[str, None] = Field(alias="errorMessage")
-    extension_prototype_values: Union[List[ExtensionPrototypeValue], str] = Field(
-        default="", alias="extensionPrototypeValues"
-    )
-    extension_values: Union[ExtensionValuesOuter, str, None] = Field(
-        default="", alias="extensionValues"
-    )
+    extension_prototype_values: Union[List[ExtensionPrototypeValue], str] = Field(default="", alias="extensionPrototypeValues")
+    extension_values: Union[ExtensionValuesOuter, str, None] = Field(default="", alias="extensionValues")
     freeform_config: Union[str, None] = Field(alias="freeformConfig")
-    instance_values: Optional[Union[InstanceValues, str, None]] = Field(
-        default="", alias="instanceValues"
-    )
+    instance_values: Optional[Union[InstanceValues, str, None]] = Field(default="", alias="instanceValues")
     is_lan_attached: bool = Field(alias="islanAttached")
     lan_attached_state: str = Field(alias="lanAttachedState")
     peer_serial_number: Union[str, None] = Field(alias="peerSerialNumber")
@@ -223,7 +219,13 @@ class VrfsSwitchesDataItem(BaseModel):
     vrf_name: str = Field(alias="vrfName")
 
 
-class ControllerResponseVrfsSwitchesV12(BaseModel):
+class ControllerResponseVrfsSwitchesV12(ControllerResponseGenericV12):
+    """
+    # Summary
+    Validation model for the controller response to the following endpoint:
+    Verb: POST
+
+    """
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,

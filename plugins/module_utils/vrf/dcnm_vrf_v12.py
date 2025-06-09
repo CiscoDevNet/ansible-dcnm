@@ -32,8 +32,8 @@ import time
 from dataclasses import asdict, dataclass
 from typing import Any, Final, Optional, Union
 
-import pydantic
 from ansible.module_utils.basic import AnsibleModule
+from pydantic import BaseModel, ValidationError
 
 from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
@@ -1237,9 +1237,12 @@ class NdfcVrf12:
             msg += f"{caller}: Unable to retrieve lite_objects."
             raise ValueError(msg)
 
+        msg = f"ZZZ: lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         try:
             response = ControllerResponseVrfsSwitchesV12(**lite_objects)
-        except pydantic.ValidationError as error:
+        except ValidationError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
@@ -1286,7 +1289,7 @@ class NdfcVrf12:
 
         try:
             response = ControllerResponseVrfsSwitchesV12(**lite_objects)
-        except pydantic.ValidationError as error:
+        except ValidationError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
@@ -2654,7 +2657,7 @@ class NdfcVrf12:
             try:
                 vrf_controller_to_playbook = VrfControllerToPlaybookV12Model(**json_to_dict)
                 found_create.update(vrf_controller_to_playbook.model_dump(by_alias=False))
-            except pydantic.ValidationError as error:
+            except ValidationError as error:
                 msg = f"{self.class_name}.format_diff_create: Validation error: {error}"
                 self.module.fail_json(msg=msg)
 
@@ -4046,7 +4049,7 @@ class NdfcVrf12:
                 msg = "validated_playbook_config: "
                 msg += f"{json.dumps(validated_playbook_config.model_dump(), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
-            except pydantic.ValidationError as error:
+            except ValidationError as error:
                 msg = f"Failed to validate playbook configuration. Error detail: {error}"
                 self.module.fail_json(msg=msg)
 
@@ -4084,8 +4087,8 @@ class NdfcVrf12:
                 msg = "Validating playbook configuration."
                 self.log.debug(msg)
                 validated_playbook_config = VrfPlaybookModelV12(**config)
-            except pydantic.ValidationError as error:
-                # We need to pass the unaltered pydantic.ValidationError
+            except ValidationError as error:
+                # We need to pass the unaltered ValidationError
                 # directly to the fail_json method for unit tests to pass.
                 self.module.fail_json(msg=error)
             self.validated_playbook_config_models.append(validated_playbook_config)

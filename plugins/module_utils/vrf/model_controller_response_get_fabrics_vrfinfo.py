@@ -3,6 +3,8 @@ from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from .model_controller_response_generic_v12 import ControllerResponseGenericV12
+
 
 class DataVrfInfo(BaseModel):
     """
@@ -30,7 +32,7 @@ class DataVrfInfo(BaseModel):
     vrf_prefix: str = Field(alias="vrf-prefix")
 
 
-class ControllerResponseGetFabricsVrfinfoV12(BaseModel):
+class ControllerResponseGetFabricsVrfinfoV12(ControllerResponseGenericV12):
     """
     # Summary
 

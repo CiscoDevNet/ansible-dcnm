@@ -1,10 +1,12 @@
 # -*- coding: utf-8 -*-
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import ConfigDict, Field
+
+from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
 
-class ControllerResponseGetIntV12(BaseModel):
+class ControllerResponseGetIntV12(ControllerResponseGenericV12):
     """
     # Summary
 
