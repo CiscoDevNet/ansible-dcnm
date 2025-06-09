@@ -34,6 +34,7 @@ class LanAttachItem(BaseModel):
     - `vrf_id`: Union[int, None] = alias="vrfId", ge=1, le=16777214
     - `vrf_name`: str = alias="vrfName", min_length=1, max_length=32
     """
+
     extension_values: Optional[str] = Field(alias="extensionValues", default="")
     fabric_name: str = Field(alias="fabricName", max_length=64)
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
@@ -85,6 +86,7 @@ class VrfsAttachmentsDataItem(BaseModel):
     }
     ```
     """
+
     lan_attach_list: List[LanAttachItem] = Field(alias="lanAttachList")
     vrf_name: str = Field(alias="vrfName")
 
@@ -119,7 +121,7 @@ class ControllerResponseVrfsAttachmentsV12(ControllerResponseGenericV12):
     - switchRouteTargetImportEvpn
 
     ## Example
-    
+
     ```json
     {
         "DATA": [

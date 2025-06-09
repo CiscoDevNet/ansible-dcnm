@@ -33,7 +33,7 @@ from dataclasses import asdict, dataclass
 from typing import Any, Final, Optional, Union
 
 from ansible.module_utils.basic import AnsibleModule
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
 from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
