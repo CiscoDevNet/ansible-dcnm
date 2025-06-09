@@ -3,7 +3,7 @@ import json
 import logging
 import re
 
-from .controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
+from .model_controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .inventory_serial_number_to_fabric_name import InventorySerialNumberToFabricName
 from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
 from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12

@@ -54,7 +54,7 @@ class VrfObjectV12(BaseModel):
 
     ```python
     from .vrf_controller_payload_v12 import VrfPayloadV12
-    from .controller_response_vrfs_v12 import VrfObjectV12
+    from .model_controller_response_vrfs_v12 import VrfObjectV12
 
     vrf_object = VrfObjectV12(**vrf_object_dict)
     vrf_payload = VrfPayloadV12(**vrf_object.model_dump(exclude_unset=True, by_alias=True))
