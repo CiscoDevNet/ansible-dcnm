@@ -1181,20 +1181,26 @@ class NdfcVrf12:
         endpoint = EpVrfGet()
         endpoint.fabric_name = self.fabric
 
-        vrf_objects = dcnm_send(self.module, endpoint.verb.value, endpoint.path)
+        controller_response = dcnm_send(self.module, endpoint.verb.value, endpoint.path)
 
-        if vrf_objects is None:
+        if controller_response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to retrieve endpoint. "
             msg += f"verb {endpoint.verb.value} path {endpoint.path}"
             raise ValueError(msg)
 
-        response = ControllerResponseVrfsV12(**vrf_objects)
+        if isinstance(controller_response, Union[dict, list]):  # Avoid json.dumps(MagicMock) during unit tests
+            msg = "controller_response: "
+            msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
 
-        msg = f"ControllerResponseVrfsV12: {json.dumps(response.model_dump(), indent=4, sort_keys=True)}"
+        validated_response = ControllerResponseVrfsV12(**controller_response)
+
+        msg = "validated_response (ControllerResponseVrfsV12): "
+        msg += f"{json.dumps(validated_response.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        missing_fabric, not_ok = self.handle_response(response, "query")
+        missing_fabric, not_ok = self.handle_response(validated_response, "query")
 
         if missing_fabric or not_ok:
             msg0 = f"caller: {caller}. "
@@ -1202,7 +1208,7 @@ class NdfcVrf12:
             msg2 = f"{msg0} Unable to find vrfs under fabric: {self.fabric}"
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
 
-        return response.DATA
+        return validated_response.DATA
 
     def get_list_of_vrfs_switches_data_item_model(self, attach: dict) -> list[VrfsSwitchesDataItem]:
         """
@@ -1230,31 +1236,33 @@ class NdfcVrf12:
         path = self.paths["GET_VRF_SWITCH"].format(attach["fabric"], attach["vrfName"], attach["serialNumber"])
         msg = f"verb: {verb}, path: {path}"
         self.log.debug(msg)
-        lite_objects = dcnm_send(self.module, verb, path)
+        controller_response = dcnm_send(self.module, verb, path)
 
-        if lite_objects is None:
+        if controller_response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to retrieve lite_objects."
             raise ValueError(msg)
 
-        msg = f"ZZZ: lite_objects: {json.dumps(lite_objects, indent=4, sort_keys=True)}"
+        msg = "controller_response: "
+        msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         try:
-            response = ControllerResponseVrfsSwitchesV12(**lite_objects)
+            validated_response = ControllerResponseVrfsSwitchesV12(**controller_response)
         except ValidationError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
 
-        msg = f"ZZZ: ControllerResponseVrfsSwitchesV12: {json.dumps(response.model_dump(), indent=4, sort_keys=True)}"
+        msg = "validated_response (ControllerResponseVrfsSwitchesV12): "
+        msg += f"{json.dumps(validated_response.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = f"Returning list of VrfSwitchesDataItem. length {len(response.DATA)}."
+        msg = f"Returning list of VrfSwitchesDataItem. length {len(validated_response.DATA)}."
         self.log.debug(msg)
-        self.log_list_of_models(response.DATA)
+        self.log_list_of_models(validated_response.DATA)
 
-        return response.DATA
+        return validated_response.DATA
 
     def get_list_of_vrfs_switches_data_item_model_new(self, lan_attach_item: LanAttachListItemV12) -> list[VrfsSwitchesDataItem]:
         """
@@ -1283,25 +1291,33 @@ class NdfcVrf12:
         path = self.paths["GET_VRF_SWITCH"].format(lan_attach_item.fabric, lan_attach_item.vrf_name, lan_attach_item.serial_number)
         msg = f"verb: {verb}, path: {path}"
         self.log.debug(msg)
-        lite_objects = dcnm_send(self.module, verb, path)
+        controller_response = dcnm_send(self.module, verb, path)
 
-        if lite_objects is None:
+        if controller_response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to retrieve lite_objects."
             raise ValueError(msg)
 
+        msg = "controller_response: "
+        msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         try:
-            response = ControllerResponseVrfsSwitchesV12(**lite_objects)
+            validated_response = ControllerResponseVrfsSwitchesV12(**controller_response)
         except ValidationError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to parse response: {error}"
             raise ValueError(msg) from error
 
-        msg = f"Returning list of VrfSwitchesDataItem. length {len(response.DATA)}."
+        msg = "validated_response (ControllerResponseVrfsSwitchesV12): "
+        msg += f"{json.dumps(validated_response.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
-        self.log_list_of_models(response.DATA)
 
-        return response.DATA
+        msg = f"Returning list of VrfSwitchesDataItem. length {len(validated_response.DATA)}."
+        self.log.debug(msg)
+        self.log_list_of_models(validated_response.DATA)
+
+        return validated_response.DATA
 
     def populate_have_create(self, vrf_object_models: list[VrfObjectV12]) -> None:
         """
@@ -1520,18 +1536,18 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        vrf_object_models = self.get_controller_vrf_object_models()
+        validated_vrf_object_models = self.get_controller_vrf_object_models()
 
-        msg = f"vrf_object_models: length {len(vrf_object_models)}."
+        msg = f"validated_vrf_object_models: length {len(validated_vrf_object_models)}."
         self.log.debug(msg)
-        self.log_list_of_models(vrf_object_models)
+        self.log_list_of_models(validated_vrf_object_models)
 
-        if not vrf_object_models:
+        if not validated_vrf_object_models:
             return
 
-        self.populate_have_create(vrf_object_models)
+        self.populate_have_create(validated_vrf_object_models)
 
-        current_vrfs_set = {vrf.vrfName for vrf in vrf_object_models}
+        current_vrfs_set = {vrf.vrfName for vrf in validated_vrf_object_models}
         controller_response = get_endpoint_with_long_query_string(
             module=self.module,
             fabric_name=self.fabric,
@@ -3102,26 +3118,26 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         path_get_vrf_attach = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf_name)
-        get_vrf_attach_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
+        controller_response = dcnm_send(self.module, "GET", path_get_vrf_attach)
 
         msg = f"path_get_vrf_attach: {path_get_vrf_attach}"
         self.log.debug(msg)
-        msg = "get_vrf_attach_response: "
-        msg += f"{json.dumps(get_vrf_attach_response, indent=4, sort_keys=True)}"
+        msg = "controller_response: "
+        msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if get_vrf_attach_response is None:
+        if controller_response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{caller}: Unable to retrieve endpoint. "
             msg += f"verb GET, path {path_get_vrf_attach}"
             raise ValueError(msg)
 
-        response = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
-        msg = "ControllerResponseVrfsAttachmentsV12: "
-        msg += f"{json.dumps(response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        validated_response = ControllerResponseVrfsAttachmentsV12(**controller_response)
+        msg = "validated_response (ControllerResponseVrfsAttachmentsV12): "
+        msg += f"{json.dumps(validated_response.model_dump(by_alias=True), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        generic_response = ControllerResponseGenericV12(**get_vrf_attach_response)
+        generic_response = ControllerResponseGenericV12(**controller_response)
         missing_fabric, not_ok = self.handle_response(generic_response, "query")
 
         if missing_fabric or not_ok:
@@ -3130,7 +3146,7 @@ class NdfcVrf12:
             msg2 = f"{msg0} Unable to find attachments for "
             msg2 += f"vrf {vrf_name} under fabric {self.fabric}"
             self.module.fail_json(msg=msg1 if missing_fabric else msg2)
-        return response.DATA
+        return validated_response.DATA
 
     def get_diff_query_for_vrfs_in_want(self, vrf_object_models: list[VrfObjectV12]) -> list[dict]:
         """
@@ -3500,26 +3516,27 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         if args.payload is not None:
-            response = dcnm_send(self.module, args.verb.value, args.path, args.payload)
+            controller_response = dcnm_send(self.module, args.verb.value, args.path, args.payload)
         else:
-            response = dcnm_send(self.module, args.verb.value, args.path)
+            controller_response = dcnm_send(self.module, args.verb.value, args.path)
 
-        if response is None:
+        if controller_response is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
             msg += "Unable to retrieve endpoint. "
             msg += f"verb {args.verb.value}, path {args.path}"
             raise ValueError(msg)
 
-        self.response = copy.deepcopy(response)
+        self.response = copy.deepcopy(controller_response)
 
         msg = "RX controller:"
         self.log.debug(msg)
         msg = f"verb: {args.verb.value}, "
         msg += f"path: {args.path}"
         self.log.debug(msg)
-        msg = "response: "
-        msg += f"{json.dumps(response, indent=4, sort_keys=True)}"
+
+        msg = "controller_response: "
+        msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         msg = "Calling self.handle_response. "
@@ -3528,7 +3545,7 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         if args.log_response is True:
-            self.result["response"].append(response)
+            self.result["response"].append(controller_response)
 
         if args.response_model is None:
             response_model = ControllerResponseGenericV12
@@ -3536,17 +3553,16 @@ class NdfcVrf12:
             response_model = args.response_model
 
         try:
-            validated_response = response_model(**response)
+            validated_response = response_model(**controller_response)
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"caller: {caller}. "
-            msg += f"Unable to validate response from controller using model {response_model}. "
-            msg += f"response: {json.dumps(response, indent=4, sort_keys=True)}"
+            msg += f"Unable to validate controller_response using model {response_model.__name__}. "
+            msg += f"controller_response: {json.dumps(controller_response, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             self.module.fail_json(msg=msg, error=str(error))
 
-        # validated_response = ControllerResponseGenericV12(**response)
-        msg = "validated_response: "
+        msg = f"validated_response: ({response_model.__name__}), "
         msg += f"{json.dumps(validated_response.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
@@ -3565,7 +3581,7 @@ class NdfcVrf12:
             msg += f"caller: {caller}, "
             msg += "Calling self.failure."
             self.log.debug(msg)
-            self.failure(response)
+            self.failure(controller_response)
 
     def get_vrf_attach_fabric_name(self, vrf_attach: LanAttachListItemV12) -> str:
         """
