@@ -750,9 +750,6 @@
     }
   ],
   "mock_vrf_attach_object_del_not_ready": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE": "OK",
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -767,12 +764,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object_del_oos": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE": "OK",
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -785,12 +783,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object_del_ready": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE": "OK",
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -805,12 +804,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_object": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE":"OK",
     "DATA": [
       {
         "fabric": "test_fabric",
@@ -823,12 +823,14 @@
         "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
         "vrfStatus": "DEPLOYED"
       }
-    ]
+    ],
+    "ERROR": "",
+    "MESSAGE":"OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object" : {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -861,12 +863,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
    "mock_vrf_attach_object_query" : {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -897,12 +900,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE":"OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object2" : {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -933,12 +937,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object2_query" : {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -969,12 +974,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_lite_object" : {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -1002,12 +1008,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object_pending": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_1",
@@ -1038,12 +1045,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/attachments?vrf-names=test_vrf_1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_object_dcnm_only": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE": "OK",
     "DATA": [
       {
         "fabric": "test_fabric",
@@ -1056,12 +1064,14 @@
         "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_dcnm\"}",
         "vrfId": "9008013"
       }
-    ]
+    ],
+    "ERROR": "",
+    "MESSAGE":"OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_object_dcnm_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "vrfName": "test_vrf_dcnm",
@@ -1092,12 +1102,13 @@
           }
         ]
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test-fabric/vrfs/switches?vrf-names=test_vrf_dcnm&serial-numbers=XYZKSJHSMK1,XYZKSJHSMK2",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_get_ext_object_dcnm_att1_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "switchDetailsList": [
@@ -1120,12 +1131,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_dcnm"
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_dcnm&serial-numbers=XYZKSJHSMK1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_get_ext_object_dcnm_att2_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "switchDetailsList": [
@@ -1148,12 +1160,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_dcnm"
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_dcnm&serial-numbers=XYZKSJHSMK1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_get_ext_object_merge_att1_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "switchDetailsList": [
@@ -1176,12 +1189,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_1"
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_1&serial-numbers=XYZKSJHSMK1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_get_ext_object_merge_att2_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "switchDetailsList": [
@@ -1204,13 +1218,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_1"
       }
-    ]
-  },
-
-  "mock_vrf_attach_get_ext_object_ov_att1_only": {
+    ],
     "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_1&serial-numbers=XYZKSJHSMK2",
+    "RETURN_CODE": 200
+  },
+  "mock_vrf_attach_get_ext_object_ov_att1_only": {
     "DATA": [
       {
         "switchDetailsList": [
@@ -1233,12 +1247,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_1"
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_1&serial-numbers=XYZKSJHSMK2",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_get_ext_object_ov_att2_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "switchDetailsList": [
@@ -1261,13 +1276,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_1"
       }
-    ]
-  },
-
-  "mock_vrf_attach_get_ext_object_merge_att3_only": {
+    ],
     "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_1&serial-numbers=XYZKSJHSMK2",
+    "RETURN_CODE": 200
+  },
+  "mock_vrf_attach_get_ext_object_merge_att3_only": {
     "DATA": [
       {
         "switchDetailsList": [
@@ -1290,12 +1305,13 @@
         "templateName": "Default_VRF_Universal",
         "vrfName": "test_vrf_1"
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_1&serial-numbers=XYZKSJHSMK1",
+    "RETURN_CODE": 200
   },
   "mock_vrf_attach_get_ext_object_merge_att4_only": {
-    "MESSAGE": "OK",
-    "METHOD": "POST",
-    "RETURN_CODE": 200,
     "DATA": [
       {
         "switchDetailsList": [
@@ -1326,10 +1342,12 @@
         "templateName": "Default_VRF_Extension_Universal",
         "vrfName": "test_vrf_1"
       }
-    ]
+    ],
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches?vrf-names=test_vrf_1&serial-numbers=XYZKSJHSMK4",
+    "RETURN_CODE": 200
   },
-
-
   "attach_success_resp": {
     "DATA": {
       "test-vrf-1--XYZKSJHSMK1(leaf1)": "SUCCESS",
@@ -1337,6 +1355,7 @@
     },
     "MESSAGE": "OK",
     "METHOD": "POST",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/attachments",
     "RETURN_CODE": 200
   },
   "attach_success_resp2": {
@@ -1346,6 +1365,7 @@
     },
     "MESSAGE": "OK",
     "METHOD": "POST",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/attachments",
     "RETURN_CODE": 200
   },
   "attach_success_resp3": {
@@ -1355,12 +1375,16 @@
     },
     "MESSAGE": "OK",
     "METHOD": "POST",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/attachments",
     "RETURN_CODE": 200
   },
   "deploy_success_resp": {
-    "DATA": {"status": ""},
+    "DATA": {
+      "status": "Deployment of VRF(s) has been initiated successfully"
+    },
     "MESSAGE": "OK",
     "METHOD": "POST",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/deployments",
     "RETURN_CODE": 200
   },
   "blank_data": {
@@ -1388,16 +1412,18 @@
       "test-vrf-1--XYZKSJHSMK2(leaf2)": "SUCCESS"
     },
     "ERROR": "",
+    "MESSAGE": "OK",
     "METHOD": "POST",
-    "RETURN_CODE": 200,
-    "MESSAGE": "OK"
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/attachments",
+    "RETURN_CODE": 200
   },
   "error3": {
     "DATA": "No switches PENDING for deployment",
     "ERROR": "",
+    "MESSAGE": "OK",
     "METHOD": "POST",
-    "RETURN_CODE": 200,
-    "MESSAGE": "OK"
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/deployments",
+    "RETURN_CODE": 200
   },
   "delete_success_resp": {
     "ERROR": "",
@@ -1928,9 +1954,6 @@
     "vrfTemplate": "Default_VRF_Universal"
    },
    "mock_vrf12_object": {
-    "ERROR": "",
-    "RETURN_CODE": 200,
-    "MESSAGE":"OK",
     "DATA": [
       {
         "fabric": "test_fabric",
@@ -1943,7 +1966,12 @@
         "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008013\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"routeTargetExportMvpn\":\"\",\"ENABLE_NETFLOW\":\"false\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"routeTargetExportEvpn\":\"\",\"NETFLOW_MONITOR\":\"\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"routeTargetImportMvpn\":\"\",\"isRPAbsent\":\"false\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"52125\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\",\"routeTargetImportEvpn\":\"\"}",
         "vrfStatus": "DEPLOYED"
       }
-    ]
+    ],
+    "ERROR": "",
+    "MESSAGE":"OK",
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs",
+    "RETURN_CODE": 200
   },
   "mock_pools_top_down_vrf_vlan": {
     "ERROR": "",
@@ -1976,9 +2004,6 @@
     ]
   },
   "mock_vrf_lite_obj": {
-   "RETURN_CODE":200,
-   "METHOD":"GET",
-   "MESSAGE":"OK",
    "DATA": [
       {
         "vrfName":"test_vrf",
@@ -2016,6 +2041,10 @@
           }
         ]
       }
-    ]
+    ],
+   "METHOD":"GET",
+   "MESSAGE":"OK",
+   "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/switches?vrf-names=test_vrf&serial-numbers=9D2DAUJJFQQ",
+   "RETURN_CODE":200
   }
 }

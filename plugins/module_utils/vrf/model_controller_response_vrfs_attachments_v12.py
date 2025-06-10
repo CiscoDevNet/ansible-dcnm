@@ -164,4 +164,5 @@ class ControllerResponseVrfsAttachmentsV12(ControllerResponseGenericV12):
     DATA: List[VrfsAttachmentsDataItem]
     MESSAGE: str
     METHOD: str
+    REQUEST_PATH: str
     RETURN_CODE: int

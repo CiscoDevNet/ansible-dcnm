@@ -226,6 +226,7 @@ class ControllerResponseVrfsSwitchesV12(ControllerResponseGenericV12):
     Verb: POST
 
     """
+
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,
@@ -234,4 +235,5 @@ class ControllerResponseVrfsSwitchesV12(ControllerResponseGenericV12):
     DATA: List[VrfsSwitchesDataItem]
     MESSAGE: str
     METHOD: str
+    REQUEST_PATH: str
     RETURN_CODE: int

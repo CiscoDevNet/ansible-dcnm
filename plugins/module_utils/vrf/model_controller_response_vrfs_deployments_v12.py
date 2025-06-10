@@ -28,11 +28,13 @@ class VrfDeploymentsDataDictV12(BaseModel):
     """
     # Summary
 
-    Validation model for the DATA within the controller response to
+    Validation model for the DATA field within the controller response to
     the following endpoint, for the case where DATA is a dictionary.
 
-    Verb: GET
-    Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/deployments
+    ## Endpoint
+
+    - Verb: POST
+    - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/deployments
 
     ## Raises
 
@@ -42,7 +44,7 @@ class VrfDeploymentsDataDictV12(BaseModel):
 
     ```json
     {
-        "status": "",
+        "status": "Deployment of VRF(s) has been initiated successfully",
     }
     ```
     """
@@ -51,26 +53,49 @@ class VrfDeploymentsDataDictV12(BaseModel):
 
     status: str = Field(
         default="",
-        description="Status of the VRF deployment. Possible values: 'Success', 'Failure', 'In Progress'.",
+        description="Status of the VRF deployment.",
     )
 
 
 class ControllerResponseVrfsDeploymentsV12(ControllerResponseGenericV12):
     """
-    # Summary
+     # Summary
 
-    Validation model for the controller response to the following endpoint:
+     Validation model for the controller response to the following endpoint:
 
-    Verb: POST
-    Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs
+     ## Endpoint
 
-    ## Raises
+     - Verb: POST
+     - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/deployments
 
-    ValueError if validation fails
+     ## Raises
+
+     - `ValueError` if validation fails
+
+     ## Structure
+
+     ### NOTES
+
+     - DATA.status has been observed to contain the following values
+       - "Deployment of VRF(s) has been initiated successfully"
+       - "No switches PENDING for deployment."
+
+    ```json
+     {
+         "DATA": {
+             "status": "Deployment of VRF(s) has been initiated successfully"
+         },
+         "MESSAGE": "OK",
+         "METHOD": "POST",
+         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/f1/vrfs/deployments",
+         "RETURN_CODE": 200
+     }
+     ```
     """
 
     DATA: Optional[Union[VrfDeploymentsDataDictV12, str]] = Field(default="")
     ERROR: Optional[str] = Field(default="")
     MESSAGE: Optional[str] = Field(default="")
     METHOD: Optional[str] = Field(default="")
+    REQUEST_PATH: str
     RETURN_CODE: Optional[int] = Field(default=500)

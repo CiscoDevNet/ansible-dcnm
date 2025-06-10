@@ -653,7 +653,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_merged_lite_new_interface_without_extensions(self):
@@ -778,7 +778,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_merged_lite_vlan_update_interface_with_extensions(self):
@@ -801,7 +801,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_merged_lite_vlan_update_interface_without_extensions(self):
@@ -859,7 +859,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["attach"][1]["vlan_id"], 203)
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_replace_lite_changes_interface_with_extension_values(self):
@@ -878,7 +878,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["attach"][1]["vlan_id"], 202)
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_replace_lite_changes_interface_without_extensions(self):
@@ -912,7 +912,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertNotIn("vrf_id", result.get("diff")[0])
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_replace_lite_no_atch(self):
@@ -933,7 +933,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertNotIn("vrf_id", result.get("diff")[0])
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_replace_without_changes(self):
@@ -973,7 +973,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_lite_override_with_additions_interface_without_extensions(self):
@@ -1014,7 +1014,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
 
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_lite_override_with_deletions_interface_with_extensions(self):
@@ -1034,7 +1034,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
 
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_lite_override_with_deletions_interface_without_extensions(self):
@@ -1083,7 +1083,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
 
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_delete_std_lite(self):
@@ -1105,7 +1105,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
 
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_delete_dcnm_only(self):
@@ -1120,7 +1120,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
 
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_12_delete_failure(self):
@@ -1292,5 +1292,5 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)

@@ -1532,7 +1532,7 @@ class NdfcVrf12:
         self.populate_have_create(vrf_object_models)
 
         current_vrfs_set = {vrf.vrfName for vrf in vrf_object_models}
-        get_vrf_attach_response = get_endpoint_with_long_query_string(
+        controller_response = get_endpoint_with_long_query_string(
             module=self.module,
             fabric_name=self.fabric,
             path=self.paths["GET_VRF_ATTACH"],
@@ -1540,22 +1540,26 @@ class NdfcVrf12:
             caller=f"{self.class_name}.{method_name}",
         )
 
-        if get_vrf_attach_response is None:
+        if controller_response is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"caller: {caller}: unable to set get_vrf_attach_response."
+            msg += f"caller: {caller}: unable to set controller_response."
             raise ValueError(msg)
 
-        get_vrf_attach_response_model = ControllerResponseVrfsAttachmentsV12(**get_vrf_attach_response)
-
-        msg = "get_vrf_attach_response_model: "
-        msg += f"{json.dumps(get_vrf_attach_response_model.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+        msg = "controller_response: "
+        msg += f"{json.dumps(controller_response, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not get_vrf_attach_response_model.DATA:
+        validated_controller_response = ControllerResponseVrfsAttachmentsV12(**controller_response)
+
+        msg = "validated_controller_response: "
+        msg += f"{json.dumps(validated_controller_response.model_dump(by_alias=False), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        if not validated_controller_response.DATA:
             return
 
-        self.populate_have_deploy(get_vrf_attach_response)
-        self.populate_have_attach_model(get_vrf_attach_response_model.DATA)
+        self.populate_have_deploy(controller_response)
+        self.populate_have_attach_model(validated_controller_response.DATA)
 
         msg = "self.have_attach: "
         msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
