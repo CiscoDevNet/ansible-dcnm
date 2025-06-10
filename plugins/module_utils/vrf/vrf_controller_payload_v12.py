@@ -105,6 +105,7 @@ class VrfPayloadV12(BaseModel):
     fabric: str = Field(..., alias="fabric", max_length=64, description="Fabric name in which the VRF resides.")
     hierarchical_key: str = Field(alias="hierarchicalKey", default="", max_length=64)
     service_vrf_template: str = Field(alias="serviceVrfTemplate", default="")
+    source: Union[str, None] = Field(default=None)
     tenant_name: str = Field(alias="tenantName", default="")
     vrf_id: int = Field(..., alias="vrfId", ge=1, le=16777214)
     vrf_name: str = Field(..., alias="vrfName", min_length=1, max_length=32, description="Name of the VRF, 1-32 characters.")
@@ -113,6 +114,9 @@ class VrfPayloadV12(BaseModel):
 
     @field_serializer("vrf_template_config")
     def serialize_vrf_template_config(self, vrf_template_config: VrfTemplateConfigV12) -> str:
+        """
+        Serialize the vrfTemplateConfig field to a JSON string required by the controller.
+        """
         return vrf_template_config.model_dump_json(exclude_none=True, by_alias=True)
 
     @field_validator("service_vrf_template", mode="before")

@@ -158,7 +158,7 @@ class NdfcVrf12:
         self.have_create: list[dict] = []
         self.want_create: list[dict] = []
         # Will eventually replace self.want_create
-        self.want_create_model: Union[VrfPlaybookModelV12, None] = None
+        self.want_create_models: Union[VrfPlaybookModelV12, None] = None
         self.diff_create: list = []
         self.diff_create_update: list = []
         # self.diff_create_quick holds all the create payloads which are
@@ -1126,6 +1126,48 @@ class NdfcVrf12:
 
         return create, configuration_changed
 
+    def transmute_playbook_model_to_vrf_create_payload_model(self, vrf_playbook_model: VrfPlaybookModelV12) -> VrfPayloadV12:
+        """
+        # Summary
+
+        Given an instance of VrfPlaybookModelV12, return an instance of VrfPayloadV12
+        suitable for sending to the controller.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        if not vrf_playbook_model:
+            return vrf_playbook_model
+
+        msg = "vrf_playbook_model (VrfPlaybookModelV12): "
+        msg += f"{json.dumps(vrf_playbook_model.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        # Transmute VrfPlaybookModelV12 into a vrf_template_config dictionary
+        validated_template_config = VrfTemplateConfigV12.model_validate(vrf_playbook_model.model_dump())
+        vrf_template_config_dict = validated_template_config.model_dump_json(by_alias=True)
+
+        # Tramsmute VrfPlaybookModelV12 into VrfPayloadV12
+        vrf_payload_v12 = VrfPayloadV12(
+            fabric=self.fabric,
+            service_vrf_template=vrf_playbook_model.service_vrf_template or "",
+            source=None,
+            vrf_id=vrf_playbook_model.vrf_id or 0,
+            vrf_name=vrf_playbook_model.vrf_name,
+            vrf_extension_template=vrf_playbook_model.vrf_extension_template or "Default_VRF_Extension_Universal",
+            vrf_template=vrf_playbook_model.vrf_template or "Default_VRF_Universal",
+            vrf_template_config=vrf_template_config_dict,
+        )
+
+        msg = "Returning VrfPayloadV12 instance: "
+        msg += f"{json.dumps(vrf_payload_v12.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        return vrf_payload_v12
+
     def update_create_params(self, vrf: dict) -> dict:
         """
         # Summary
@@ -1144,8 +1186,13 @@ class NdfcVrf12:
         if not vrf:
             return vrf
 
-        msg = f"vrf: {json.dumps(vrf, indent=4, sort_keys=True)}"
+        msg = "type(vrf): "
+        msg += f"{type(vrf)}) "
+        msg += f"vrf: {json.dumps(vrf, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
+        validated_template_config = VrfTemplateConfigV12.model_validate(vrf)
+        template = validated_template_config.model_dump_json(by_alias=True)
 
         vrf_upd = {
             "fabric": self.fabric,
@@ -1155,11 +1202,8 @@ class NdfcVrf12:
             "vrfId": vrf.get("vrf_id", None),  # vrf_id will be auto generated in get_diff_merge()
             "serviceVrfTemplate": vrf.get("service_vrf_template", ""),
             "source": None,
+            "vrfTemplateConfig": template,
         }
-
-        validated_template_config = VrfTemplateConfigV12.model_validate(vrf)
-        template = validated_template_config.model_dump_json(by_alias=True)
-        vrf_upd.update({"vrfTemplateConfig": template})
 
         msg = f"Returning vrf_upd: {json.dumps(vrf_upd, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -1675,9 +1719,9 @@ class NdfcVrf12:
             msg = f"serial_number {serial_number}: -> {json.dumps([model.model_dump(by_alias=True) for model in vrf_lite_list], indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-    def populate_want_create_model(self) -> None:
+    def populate_want_create_models(self) -> None:
         """
-        Populate self.want_create_model from self.validated_playbook_config_models.
+        Populate self.want_create_models from self.validated_playbook_config_models.
         """
         caller = inspect.stack()[1][3]
 
@@ -1685,11 +1729,15 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        self.want_create_model: list[VrfPlaybookModelV12] = list(self.validated_playbook_config_models)
+        want_create_models: list[VrfPayloadV12] = []
 
-        msg = f"self.want_create_model: length {len(self.want_create_model)}."
+        for playbook_config_model in self.validated_playbook_config_models:
+            want_create_models.append(self.transmute_playbook_model_to_vrf_create_payload_model(playbook_config_model))
+
+        self.want_create_models = want_create_models
+        msg = f"self.want_create_models: length: {len(self.want_create_models)}."
         self.log.debug(msg)
-        self.log_list_of_models(self.want_create_model)
+        self.log_list_of_models(self.want_create_models)
 
     def get_want_create(self) -> None:
         """
@@ -1757,11 +1805,11 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        # We're populating both self.want_create and self.want_create_model
+        # We're populating both self.want_create and self.want_create_models
         # so that we can gradually replace self.want_create, one method at
         # a time.
         self.get_want_create()
-        self.populate_want_create_model()
+        self.populate_want_create_models()
         self.get_want_attach()
         self.get_want_deploy()
 
