@@ -181,6 +181,21 @@ options:
             type: str
             choices: ['auto', 'full', 'half']
             default: auto
+          enable_pfc:
+            description
+            - State of Priority Flow Control (PFC) on the interface
+            type: bool
+            default: false
+          enable_cdp:
+            description
+            - State of CDP protocol on the interface
+            type: bool
+            default: true
+          enable_monitor:
+            description
+            - State of Switchport Monitor for SPAN/ERSPAN
+            type: bool
+            default: false
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -564,6 +579,21 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          enable_pfc:
+            description
+            - State of Priority Flow Control (PFC) on the interface
+            type: bool
+            default: false
+          enable_cdp:
+            description
+            - State of CDP protocol on the interface
+            type: bool
+            default: true
+          enable_monitor:
+            description
+            - State of Switchport Monitor for SPAN/ERSPAN
+            type: bool
+            default: false
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -1920,11 +1950,7 @@ class DcnmIntf:
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
             "ENABLE_ORPHAN_PORT": "orphan_port",
-            "NETFLOW_SAMPLER": "netflow_sampler",
             "ENABLE_PFC": "enable_pfc",
-            "ENABLE_QOS": "enable_qos",
-            "QOS_POLICY": "qos_policy",
-            "QUEUING_POLICY": "queuing_policy",
             "ENABLE_MONITOR": "enable_monitor",
             "CDP_ENABLE": "enable_cdp",
         }
@@ -2275,6 +2301,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2292,6 +2321,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2494,6 +2526,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2511,6 +2546,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2851,6 +2889,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
             intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
@@ -2877,6 +2921,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "l3":
@@ -3249,6 +3299,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
             intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
@@ -3266,6 +3322,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "routed":

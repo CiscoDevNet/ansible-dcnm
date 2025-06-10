@@ -28,6 +28,9 @@
 						"ALLOWED_VLANS": "none",
 						"NATIVE_VLAN": "10",
 						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"ENABLE_CDP": true,
+						"ENABLE_MONITOR": false,
 						"DESC": "port channel acting as trunk"
 					}
 				}],
@@ -65,7 +68,10 @@
 						"ADMIN_STATE": "False",
 						"POLICY_ID": "POLICY-1849730",
 						"DESC": "port channel acting as access",
-						"ENABLE_ORPHAN_PORT": false
+						"ENABLE_ORPHAN_PORT": false,
+						"ENABLE_PFC": false,
+						"ENABLE_CDP": true,
+						"ENABLE_MONITOR": false
 					}
 				}],
         "skipResourceCheck": "True"
