@@ -97,17 +97,6 @@ class VrfTemplateConfigV12(BaseModel):
         description="If > 32 chars, enable 'system vlan long-name' for NX-OS. Not applicable to L3VNI w/o VLAN config",
     )
 
-    @field_validator("bgp_passwd_encrypt", mode="before")
-    @classmethod
-    def validate_bgp_passwd_encrypt(cls, data: Any) -> int:
-        """
-        If bgp_passwd_encrypt is not an integer, return BgpPasswordEncrypt.MD5.value
-        If bgp_passwd_encrypt is an integer, return it as-is.
-        """
-        if not isinstance(data, int):
-            return BgpPasswordEncrypt.MD5.value
-        return data
-
     @field_validator("rp_loopback_id", mode="before")
     @classmethod
     def validate_rp_loopback_id(cls, data: Any) -> Union[int, str]:
