@@ -31,7 +31,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     module = dcnm_vrf
 
-    test_data = loadPlaybookData("dcnm_vrf")
+    test_data = loadPlaybookData("dcnm_vrf_11")
 
     SUCCESS_RETURN_CODE = 200
 
