@@ -1818,7 +1818,8 @@ class NdfcVrf12:
         """
         Parse the playbook config and populate:
         - self.want_attach, see get_want_attach()
-        - self.want_create, see get_want_create()
+        - self.want_create, see get_want_create() (to be replaced by self.want_create_models)
+        - self.want_create_models, see populate_want_create_models()
         - self.want_deploy, see get_want_deploy()
         """
         caller = inspect.stack()[1][3]
@@ -2119,81 +2120,13 @@ class NdfcVrf12:
         self.diff_undeploy = copy.deepcopy(diff_undeploy)
         self.diff_delete = copy.deepcopy(diff_delete)
 
-    def get_diff_override(self):
+    def get_diff_override(self) -> None:
         """
         # Summary
 
-        For override state, we delete existing attachments and vrfs
-        (self.have_attach) that are not in the want list.
+        For override state, we delete existing attachments and vrfs (self.have_attach_model) that are not in self.want_create_models.
 
-        Using self.have_attach and self.want_create, update
-        the following:
-
-        - diff_detach: a list of attachment objects to detach
-        - diff_undeploy: a dictionary of vrf names to undeploy
-        - diff_delete: a dictionary keyed on vrf name indicating
-          the deployment status of the vrf e.g. "DEPLOYED"
-        """
-        caller = inspect.stack()[1][3]
-
-        msg = "ENTERED. "
-        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
-        self.log.debug(msg)
-
-        self.model_enabled = True
-        if self.model_enabled:
-            self.get_diff_override_model()
-            self.model_enabled = False
-            return
-        all_vrfs = set()
-        diff_delete = {}
-
-        self.get_diff_replace()
-
-        diff_detach = copy.deepcopy(self.diff_detach)
-        diff_undeploy = copy.deepcopy(self.diff_undeploy)
-
-        for have_a in self.have_attach:
-            found = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_a["vrfName"])
-
-            if not found:
-                detach_list = self.get_items_to_detach(have_a["lanAttachList"])
-
-                if detach_list:
-                    have_a.update({"lanAttachList": detach_list})
-                    diff_detach.append(have_a)
-                    all_vrfs.add(have_a["vrfName"])
-
-                diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
-
-        if len(all_vrfs) != 0:
-            diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
-
-        self.diff_delete = copy.deepcopy(diff_delete)
-        self.diff_detach = copy.deepcopy(diff_detach)
-        self.diff_undeploy = copy.deepcopy(diff_undeploy)
-
-        msg = "self.diff_delete: "
-        msg += f"{json.dumps(self.diff_delete, indent=4)}"
-        self.log.debug(msg)
-
-        msg = "self.diff_detach: "
-        msg += f"{json.dumps(self.diff_detach, indent=4)}"
-        self.log.debug(msg)
-
-        msg = "self.diff_undeploy: "
-        msg += f"{json.dumps(self.diff_undeploy, indent=4)}"
-        self.log.debug(msg)
-
-    def get_diff_override_model(self):
-        """
-        # Summary
-
-        For override state, we delete existing attachments and vrfs
-        (self.have_attach) that are not in the want list.
-
-        Using self.have_attach and self.want_create, update
-        the following:
+        Using self.have_attach and self.want_create_models, update the following:
 
         - diff_detach: a list of attachment objects to detach (see append_to_diff_detach)
         - diff_undeploy: a dictionary with single key "vrfNames" and value of a comma-separated list of vrf_names to undeploy
@@ -2209,7 +2142,7 @@ class NdfcVrf12:
         all_vrfs = set()
 
         for have_attach_model in self.have_attach_model:
-            found_in_want = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach_model.vrf_name)
+            found_in_want = self.find_model_in_list_by_key_value(search=self.want_create_models, key="vrf_name", value=have_attach_model.vrf_name)
 
             if found_in_want:
                 continue
@@ -4266,7 +4199,7 @@ class NdfcVrf12:
         self.get_have()
         self.get_diff_override()
 
-        self.push_to_remote(True)
+        self.push_to_remote(is_rollback=True)
 
         if self.failed_to_rollback:
             msg1 = "FAILED - Attempted rollback of the task has failed, "
