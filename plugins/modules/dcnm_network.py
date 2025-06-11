@@ -591,6 +591,8 @@ class DcnmNetwork:
         # -> None
         ```
         """
+        if search is None:
+            return None
         match = (d for d in search if d[key] == value)
         return next(match, None)
 
@@ -1457,7 +1459,10 @@ class DcnmNetwork:
             dep_net = ""
             for attach in attach_list:
                 torlist = []
-                attach_state = False if attach["lanAttachState"] == "NA" else True
+                if attach["lanAttachState"] == "NA" or (attach["lanAttachState"] == "PENDING" and attach["portNames"] == ""):
+                    attach_state = False
+                else:
+                    attach_state = True
                 deploy = attach["isLanAttached"]
                 deployed = False
                 if bool(deploy) and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
@@ -1485,6 +1490,8 @@ class DcnmNetwork:
                     attach.update({"torports": torlist})
                 else:
                     ports = attach["portNames"]
+                    if ports == "":
+                        ports = None
 
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
@@ -1790,6 +1797,15 @@ class DcnmNetwork:
                     diff_attach.append(r_net_dict)
                     all_nets += have_a["networkName"] + ","
 
+        if all_nets:
+            modified_all_nets = copy.deepcopy(all_nets[:-1].split(","))
+            # If the playbook sets the deploy key to False, then we need to remove the network from the deploy list.
+            for net in all_nets[:-1].split(","):
+                want_net_data = self.find_dict_in_list_by_key_value(search=self.config, key="net_name", value=net)
+                if (want_net_data is not None) and (want_net_data.get("deploy") is False):
+                    modified_all_nets.remove(net)
+            all_nets = ",".join(modified_all_nets)
+
         if not all_nets:
             self.diff_create = diff_create
             self.diff_attach = diff_attach
@@ -1797,9 +1813,9 @@ class DcnmNetwork:
             return warn_msg
 
         if not self.diff_deploy:
-            diff_deploy.update({"networkNames": all_nets[:-1]})
+            diff_deploy.update({"networkNames": all_nets})
         else:
-            nets = self.diff_deploy["networkNames"] + "," + all_nets[:-1]
+            nets = self.diff_deploy["networkNames"] + "," + all_nets
             diff_deploy.update({"networkNames": nets})
 
         self.diff_create = diff_create
@@ -2317,6 +2333,9 @@ class DcnmNetwork:
                             if atch["lanAttachState"] == "OUT-OF-SYNC" or atch["lanAttachState"] == "FAILED":
                                 self.diff_delete.update({net: "OUT-OF-SYNC"})
                                 break
+                            if atch["lanAttachState"] == "PENDING":
+                                self.diff_delete.update({net: "PENDING"})
+                                break
                             if atch["lanAttachState"] != "NA":
                                 self.diff_delete.update({net: "DEPLOYED"})
                                 state = False
@@ -2400,9 +2419,12 @@ class DcnmNetwork:
         method = "DELETE"
         del_failure = ""
         if self.diff_delete and self.wait_for_del_ready():
+            resp = ""
             for net, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC":
+                if state == "OUT-OF-SYNC" or state == "PENDING":
                     del_failure += net + ","
+                    if state == "PENDING":
+                        resp = "Cannot delete as some networks are undeployed"
                     continue
                 delete_path = path + "/" + net
                 resp = dcnm_send(self.module, method, delete_path)
