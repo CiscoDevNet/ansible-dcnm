@@ -157,8 +157,8 @@ class NdfcVrf12:
         self.check_mode: bool = False
         self.have_create: list[dict] = []
         self.want_create: list[dict] = []
-        # Will eventually replace self.want_create with self.want_create_models
-        self.want_create_models: list[VrfPayloadV12] = []
+        # Will eventually replace self.want_create with self.want_create_payload_models
+        self.want_create_payload_models: list[VrfPayloadV12] = []
         self.diff_create: list = []
         self.diff_create_update: list = []
         # self.diff_create_quick holds all the create payloads which are
@@ -1741,9 +1741,9 @@ class NdfcVrf12:
             msg = f"serial_number {serial_number}: -> {json.dumps([model.model_dump(by_alias=True) for model in vrf_lite_list], indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-    def populate_want_create_models(self) -> None:
+    def populate_want_create_payload_models(self) -> None:
         """
-        Populate self.want_create_models from self.validated_playbook_config_models.
+        Populate self.want_create_payload_models from self.validated_playbook_config_models.
         """
         caller = inspect.stack()[1][3]
 
@@ -1751,15 +1751,15 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        want_create_models: list[VrfPayloadV12] = []
+        want_create_payload_models: list[VrfPayloadV12] = []
 
         for playbook_config_model in self.validated_playbook_config_models:
-            want_create_models.append(self.transmute_playbook_model_to_vrf_create_payload_model(playbook_config_model))
+            want_create_payload_models.append(self.transmute_playbook_model_to_vrf_create_payload_model(playbook_config_model))
 
-        self.want_create_models = want_create_models
-        msg = f"self.want_create_models: length: {len(self.want_create_models)}."
+        self.want_create_payload_models = want_create_payload_models
+        msg = f"self.want_create_payload_models: length: {len(self.want_create_payload_models)}."
         self.log.debug(msg)
-        self.log_list_of_models(self.want_create_models)
+        self.log_list_of_models(self.want_create_payload_models)
 
     def get_want_create(self) -> None:
         """
@@ -1818,8 +1818,8 @@ class NdfcVrf12:
         """
         Parse the playbook config and populate:
         - self.want_attach, see get_want_attach()
-        - self.want_create, see get_want_create() (to be replaced by self.want_create_models)
-        - self.want_create_models, see populate_want_create_models()
+        - self.want_create, see get_want_create() (to be replaced by self.want_create_payload_models)
+        - self.want_create_payload_models, see populate_want_create_payload_models()
         - self.want_deploy, see get_want_deploy()
         """
         caller = inspect.stack()[1][3]
@@ -1828,11 +1828,11 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        # We're populating both self.want_create and self.want_create_models
+        # We're populating both self.want_create and self.want_create_payload_models
         # so that we can gradually replace self.want_create, one method at
         # a time.
         self.get_want_create()
-        self.populate_want_create_models()
+        self.populate_want_create_payload_models()
         self.get_want_attach()
         self.get_want_deploy()
 
@@ -2036,17 +2036,17 @@ class NdfcVrf12:
         self.log.debug(msg)
         self.log_list_of_models(self.have_attach_model, by_alias=True)
 
-        for want_create_model in self.want_create_models:
-            if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_create_model.vrf_name) == {}:
+        for want_create_payload_model in self.want_create_payload_models:
+            if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_create_payload_model.vrf_name) == {}:
                 continue
 
-            diff_delete.update({want_create_model.vrf_name: "DEPLOYED"})
+            diff_delete.update({want_create_payload_model.vrf_name: "DEPLOYED"})
 
             have_attach_model: HaveAttachPostMutate = self.find_model_in_list_by_key_value(
-                search=self.have_attach_model, key="vrf_name", value=want_create_model.vrf_name
+                search=self.have_attach_model, key="vrf_name", value=want_create_payload_model.vrf_name
             )
             if not have_attach_model:
-                msg = f"have_attach_model not found for vrfName: {want_create_model.vrf_name}. "
+                msg = f"have_attach_model not found for vrfName: {want_create_payload_model.vrf_name}. "
                 msg += "Continuing."
                 self.log.debug(msg)
                 continue
@@ -2124,9 +2124,9 @@ class NdfcVrf12:
         """
         # Summary
 
-        For override state, we delete existing attachments and vrfs (self.have_attach_model) that are not in self.want_create_models.
+        For override state, we delete existing attachments and vrfs (self.have_attach_model) that are not in self.want_create_payload_models.
 
-        Using self.have_attach and self.want_create_models, update the following:
+        Using self.have_attach and self.want_create_payload_models, update the following:
 
         - diff_detach: a list of attachment objects to detach (see append_to_diff_detach)
         - diff_undeploy: a dictionary with single key "vrfNames" and value of a comma-separated list of vrf_names to undeploy
@@ -2142,7 +2142,7 @@ class NdfcVrf12:
         all_vrfs = set()
 
         for have_attach_model in self.have_attach_model:
-            found_in_want = self.find_model_in_list_by_key_value(search=self.want_create_models, key="vrf_name", value=have_attach_model.vrf_name)
+            found_in_want = self.find_model_in_list_by_key_value(search=self.want_create_payload_models, key="vrf_name", value=have_attach_model.vrf_name)
 
             if found_in_want:
                 continue
@@ -2209,7 +2209,7 @@ class NdfcVrf12:
                         replace_vrf_list.append(have_lan_attach)
             else:  # have_attach is not in want_attach
                 have_attach_in_want_create = self.find_model_in_list_by_key_value(
-                    search=self.want_create_models, key="vrf_name", value=have_attach.get("vrfName")
+                    search=self.want_create_payload_models, key="vrf_name", value=have_attach.get("vrfName")
                 )
                 if not have_attach_in_want_create:
                     continue
@@ -3010,7 +3010,7 @@ class NdfcVrf12:
     def get_diff_query_for_vrfs_in_want(self, vrf_object_models: list[VrfObjectV12]) -> list[dict]:
         """
         Query the controller for the current state of the VRFs in the fabric
-        that are present in self.want_create_models.
+        that are present in self.want_create_payload_models.
 
         ## Raises
 
@@ -3024,8 +3024,8 @@ class NdfcVrf12:
 
         query: list[dict] = []
 
-        if not self.want_create_models:
-            msg = "Early return. No VRFs in self.want_create_models to process."
+        if not self.want_create_payload_models:
+            msg = "Early return. No VRFs in self.want_create_payload_models to process."
             self.log.debug(msg)
             return query
 
@@ -3036,8 +3036,8 @@ class NdfcVrf12:
 
         # Lookup controller VRFs by name, used in for loop below.
         vrf_object_model_lookup = {model.vrfName: model for model in vrf_object_models}
-        for want_create_model in self.want_create_models:
-            vrf_model = vrf_object_model_lookup.get(want_create_model.vrf_name)
+        for want_create_payload_model in self.want_create_payload_models:
+            vrf_model = vrf_object_model_lookup.get(want_create_payload_model.vrf_name)
             if not vrf_model:
                 continue
 
@@ -3049,7 +3049,7 @@ class NdfcVrf12:
             self.log_list_of_models(vrf_attachment_models)
 
             for vrf_attachment_model in vrf_attachment_models:
-                if want_create_model.vrf_name != vrf_attachment_model.vrf_name or not vrf_attachment_model.lan_attach_list:
+                if want_create_payload_model.vrf_name != vrf_attachment_model.vrf_name or not vrf_attachment_model.lan_attach_list:
                     continue
 
                 for lan_attach_model in vrf_attachment_model.lan_attach_list:
