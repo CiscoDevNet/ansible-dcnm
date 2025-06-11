@@ -3034,14 +3034,14 @@ class NdfcVrf12:
             return query
 
         # Lookup controller VRFs by name, used in for loop below.
-        vrf_lookup = {model.vrf_name: model for model in self.want_create_models}
+        vrf_object_model_lookup = {model.vrfName: model for model in vrf_object_models}
         for want_create_model in self.want_create_models:
-            vrf_model = vrf_lookup.get(want_create_model.vrf_name)
+            vrf_model = vrf_object_model_lookup.get(want_create_model.vrf_name)
             if not vrf_model:
                 continue
 
             query_item = {"parent": vrf_model.model_dump(by_alias=True), "attach": []}
-            vrf_attachment_models = self.get_controller_vrf_attachment_models(vrf_model.vrf_name)
+            vrf_attachment_models = self.get_controller_vrf_attachment_models(vrf_model.vrfName)
 
             msg = f"caller: {caller}. vrf_attachment_models: length {len(vrf_attachment_models)}."
             self.log.debug(msg)
