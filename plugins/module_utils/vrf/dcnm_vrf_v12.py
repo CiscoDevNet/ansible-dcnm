@@ -2515,7 +2515,7 @@ class NdfcVrf12:
         self.diff_merge_create(replace)
         self.diff_merge_attach(replace)
 
-    def format_diff_attach(self, diff_attach: list, diff_deploy: list) -> list:
+    def format_diff_attach(self, diff_attach: list[dict], diff_deploy: list[str]) -> list[dict]:
         """
         Populate the diff list with remaining attachment entries.
         """
@@ -2525,12 +2525,20 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        msg = f"ZZZ: type(diff_attach): {type(diff_attach)}, length {len(diff_attach)}, "
+        if len(diff_attach) > 0:
+            msg = f"type(diff_attach[0]): {type(diff_attach[0])}, length {len(diff_attach)}"
+            self.log.debug(msg)
+        msg = "diff_attach: "
         msg += f"{json.dumps(diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
+        if len(diff_deploy) > 0:
+            msg = f"type(diff_deploy[0]): {type(diff_deploy[0])}, length {len(diff_deploy)}"
+            self.log.debug(msg)
         msg = "diff_deploy: "
         msg += f"{json.dumps(diff_deploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
         if not diff_attach:
             msg = "No diff_attach entries to process. Returning empty list."
             self.log.debug(msg)
@@ -2561,7 +2569,7 @@ class NdfcVrf12:
                 }
                 diff.append(new_attach_dict)
 
-        msg = "returning diff: "
+        msg = "returning diff (diff_attach): "
         msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
         self.log.debug(msg)
         return diff
@@ -2598,9 +2606,9 @@ class NdfcVrf12:
                 }
             )
 
-            json_to_dict = json.loads(found_create["vrfTemplateConfig"])
+            vrf_template_config = json.loads(found_create["vrfTemplateConfig"])
             try:
-                vrf_controller_to_playbook = VrfControllerToPlaybookV12Model(**json_to_dict)
+                vrf_controller_to_playbook = VrfControllerToPlaybookV12Model(**vrf_template_config)
                 found_create.update(vrf_controller_to_playbook.model_dump(by_alias=False))
             except ValidationError as error:
                 msg = f"{self.class_name}.format_diff_create: Validation error: {error}"
@@ -2627,9 +2635,12 @@ class NdfcVrf12:
             ]
             diff.append(found_create)
             diff_attach.remove(found_attach)
+        msg = "Returning diff (diff_create): "
+        msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return diff
 
-    def format_diff_deploy(self, diff_deploy) -> list:
+    def format_diff_deploy(self, diff_deploy: list[str]) -> list:
         """
         # Summary
 
@@ -2638,6 +2649,10 @@ class NdfcVrf12:
         ## Raises
 
         - None
+
+        ## Notes
+
+        - Unit tests all return [] for diff_deploy.  Look into add a test case that returns a non-empty list.
         """
         caller = inspect.stack()[1][3]
 
@@ -2649,6 +2664,10 @@ class NdfcVrf12:
         for vrf in diff_deploy:
             new_deploy_dict = {"vrf_name": vrf}
             diff.append(copy.deepcopy(new_deploy_dict))
+
+        msg = "Returning diff (diff_deploy): "
+        msg += f"{json.dumps(diff, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return diff
 
     def format_diff(self) -> None:
