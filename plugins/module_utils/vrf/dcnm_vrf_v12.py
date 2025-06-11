@@ -3090,8 +3090,8 @@ class NdfcVrf12:
 
         query: list[dict] = []
 
-        if not self.want_create:
-            msg = "Early return. No VRFs to process."
+        if not self.want_create_models:
+            msg = "Early return. No VRFs in self.want_create_models to process."
             self.log.debug(msg)
             return query
 
@@ -3101,22 +3101,21 @@ class NdfcVrf12:
             return query
 
         # Lookup controller VRFs by name, used in for loop below.
-        vrf_lookup = {vrf.vrfName: vrf for vrf in vrf_object_models}
-
-        for want_c in self.want_create:
-            vrf = vrf_lookup.get(want_c["vrfName"])
-            if not vrf:
+        vrf_lookup = {model.vrf_name: model for model in self.want_create_models}
+        for want_create_model in self.want_create_models:
+            vrf_model = vrf_lookup.get(want_create_model.vrf_name)
+            if not vrf_model:
                 continue
 
-            item = {"parent": vrf.model_dump(by_alias=True), "attach": []}
-            vrf_attachment_models = self.get_controller_vrf_attachment_models(vrf.vrfName)
+            query_item = {"parent": vrf_model.model_dump(by_alias=True), "attach": []}
+            vrf_attachment_models = self.get_controller_vrf_attachment_models(vrf_model.vrf_name)
 
             msg = f"caller: {caller}. vrf_attachment_models: length {len(vrf_attachment_models)}."
             self.log.debug(msg)
             self.log_list_of_models(vrf_attachment_models)
 
             for vrf_attachment_model in vrf_attachment_models:
-                if want_c["vrfName"] != vrf_attachment_model.vrf_name or not vrf_attachment_model.lan_attach_list:
+                if want_create_model.vrf_name != vrf_attachment_model.vrf_name or not vrf_attachment_model.lan_attach_list:
                     continue
 
                 for lan_attach_model in vrf_attachment_model.lan_attach_list:
@@ -3136,8 +3135,8 @@ class NdfcVrf12:
                     self.log_list_of_models(lite_objects)
 
                     if lite_objects:
-                        item["attach"].append(lite_objects[0].model_dump(by_alias=True))
-            query.append(item)
+                        query_item["attach"].append(lite_objects[0].model_dump(by_alias=True))
+            query.append(query_item)
 
         msg = f"Caller {caller}. Returning query: "
         msg += f"{json.dumps(query, indent=4, sort_keys=True)}"
