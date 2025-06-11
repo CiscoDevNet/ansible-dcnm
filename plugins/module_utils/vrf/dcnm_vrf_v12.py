@@ -2172,8 +2172,7 @@ class NdfcVrf12:
         """
         # Summary
 
-        For replace state, update the attachment objects in self.have_attach
-        that are not in the want list.
+        For replace state, update the attachment objects in self.have_attach that are not in self.want_attach.
 
         - diff_attach: a list of attachment objects to attach
         - diff_deploy: a dictionary of vrf names to deploy
@@ -2209,7 +2208,9 @@ class NdfcVrf12:
                         have_lan_attach["deployment"] = False
                         replace_vrf_list.append(have_lan_attach)
             else:  # have_attach is not in want_attach
-                have_attach_in_want_create = self.find_dict_in_list_by_key_value(search=self.want_create, key="vrfName", value=have_attach.get("vrfName"))
+                have_attach_in_want_create = self.find_model_in_list_by_key_value(
+                    search=self.want_create_models, key="vrf_name", value=have_attach.get("vrfName")
+                )
                 if not have_attach_in_want_create:
                     continue
                 # If have_attach is not in want_attach but is in want_create, detach all attached
@@ -3009,7 +3010,7 @@ class NdfcVrf12:
     def get_diff_query_for_vrfs_in_want(self, vrf_object_models: list[VrfObjectV12]) -> list[dict]:
         """
         Query the controller for the current state of the VRFs in the fabric
-        that are present in self.want_create.
+        that are present in self.want_create_models.
 
         ## Raises
 
