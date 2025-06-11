@@ -53,6 +53,11 @@ class VrfPayloadV12(BaseModel):
     ```json
     {
         "fabric": "fabric_1",
+        "hierarchicalKey": "fabric_1"
+        "serviceVrfTemplate": "",
+        "tenantName": "",
+        "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+        "vrfId": 50011,
         "vrfName": "vrf_1",
         "vrfTemplate": "Default_VRF_Universal",
         "vrfTemplateConfig": {
@@ -91,11 +96,7 @@ class VrfPayloadV12(BaseModel):
             "vrfSegmentId": 50022,
             "vrfVlanId": 10,
             "vrfVlanName": "vlan10"
-        },
-        "tenantName": "",
-        "vrfId": 50011,
-        "serviceVrfTemplate": "",
-        "hierarchicalKey": "fabric_1"
+        }
     }
     ```
     """
@@ -107,6 +108,7 @@ class VrfPayloadV12(BaseModel):
     service_vrf_template: str = Field(alias="serviceVrfTemplate", default="")
     source: Union[str, None] = Field(default=None)
     tenant_name: str = Field(alias="tenantName", default="")
+    vrf_extension_template: str = Field(alias="vrfExtensionTemplate", default="Default_VRF_Extension_Universal")
     vrf_id: int = Field(..., alias="vrfId", ge=1, le=16777214)
     vrf_name: str = Field(..., alias="vrfName", min_length=1, max_length=32, description="Name of the VRF, 1-32 characters.")
     vrf_template: str = Field(alias="vrfTemplate", default="Default_VRF_Universal")
