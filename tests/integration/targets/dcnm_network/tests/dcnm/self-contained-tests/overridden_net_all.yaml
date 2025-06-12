@@ -1,126 +1,119 @@
 ##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: OVERRIDDEN_ALL - Test Entry Point - [ndfc_network]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_network]                +"
+      - "----------------------------------------------------------------"
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: OVERRIDDEN_ALL - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    test_data:
+      #----------------------------------  
+      # config templates and auto generated file location for test cases
+      #----------------------------------
+      net1_conf_template: "self-contained-tests/net1_conf.j2"
+      net1_conf_file: "{{ role_path }}/files/self_contained_overridden_all_net1_conf.yaml"
+      #----------------------------------
+      net2_conf_template: "self-contained-tests/net2_conf.j2"
+      net2_conf_file: "{{ role_path }}/files/self_contained_overridden_all_net2_conf.yaml"
+      #----------------------------------
+
+- name: OVERRIDDEN_ALL - Create Network Config File using J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data.net1_conf_template }}"
+    dest: "{{ test_data.net1_conf_file }}"
+  delegate_to: localhost
+
+- name: OVERRIDDEN_ALL - Create Network Config File using J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data.net2_conf_template }}"
+    dest: "{{ test_data.net2_conf_file }}"
+  delegate_to: localhost
+
+##############################################
 ##                MERGED                    ##
 ##############################################
+- name: OVERRIDDEN_ALL - Delete any existing networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  register: result
+
+- name: OVERRIDDEN_ALL - Load Network 1 Config File
+  ansible.builtin.set_fact:
+    dcnm_network_overridden_net1_conf: "{{ lookup('file', '{{ test_data.net1_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
 
 - name: OVERRIDDEN_ALL - Create New Network with many params
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
-    config:
-    - net_name: ansible-net13
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 1500
-      gw_ip_subnet: '192.168.30.1/24'
-      gw_ipv6_subnet: '2001::1/64'
-      secondary_ip_gw1: '192.0.2.1/24'
-      secondary_ip_gw2: '192.1.2.1/24'
-      secondary_ip_gw3: '192.2.2.1/24'
-      secondary_ip_gw4: '192.3.2.1/24'
-      route_target_both: true
-      l3gw_on_border: true
-      attach:
-      - ip_address: "{{ ansible_switch1 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
-      deploy: true
+    config: "{{ dcnm_network_overridden_net1_conf }}"
   register: result
 
-- name: OVERRIDDEN_ALL Query fabric for creation of Network Object
-  cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
-    state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.displayName is search('ansible-net13')"
-    - "query_result.response[0].parent.networkId is search('7005')"
-    - "query_result.response[0].parent.vrf is search('Tenant-1')"
-    - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
-  retries: 5
-  delay: 2
-
-- assert:
+- name: OVERRIDDEN_ALL - ASSERT - Check changed flag is true
+  assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - '"{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
-
-- name: OVERRIDDEN_ALL - Override Network with many params
-  cisco.dcnm.dcnm_network: &conf
-    fabric: "{{ test_fabric }}"
-    state: overridden
-    config:
-    - net_name: ansible-net14
-      vrf_name: Tenant-1
-      net_id: 7005
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      vlan_id: 1500
-      gw_ip_subnet: '192.168.30.1/24'
-      gw_ipv6_subnet: '2004::1/64'
-      secondary_ip_gw1: '192.0.3.1/24'
-      secondary_ip_gw2: '192.1.3.1/24'
-      secondary_ip_gw3: '192.2.3.1/24'
-      secondary_ip_gw4: '192.3.3.1/24'
-      route_target_both: true
-      l3gw_on_border: true
-      attach:
-      - ip_address: "{{ ansible_switch2 }}"
-        ports: ["{{ ansible_sw1_int1 }}", "{{ ansible_sw1_int2 }}"]
-        deploy: true
-      deploy: true
-  register: result
+    - result.changed == true
 
 - name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: query
-  register: query_result
-  until:
-    - "query_result.response[0].parent.displayName is search('ansible-net14')"
-    - "query_result.response[0].parent.networkId is search('7005')"
-    - "query_result.response[0].parent.vrf is search('Tenant-1')"
-    - "query_result.response[0].parent.networkStatus is search('DEPLOYED|PENDING')"
-  retries: 5
-  delay: 2
+  register: verify_result
 
-- assert:
+- name: OVERRIDDEN_ALL - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data.net1_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  delegate_to: localhost
+
+- name: OVERRIDDEN_ALL - Load Network 2 Config File
+  ansible.builtin.set_fact:
+    dcnm_network_overridden_net2_conf: "{{ lookup('file', '{{ test_data.net2_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+
+- name: OVERRIDDEN_ALL - Override Network with many params
+  cisco.dcnm.dcnm_network: &conf
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden
+    config: "{{ dcnm_network_overridden_net2_conf }}"
+  register: result
+
+- name: OVERRIDDEN_ALL - ASSERT - Check changed flag is true
+  assert:
     that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[4].RETURN_CODE == 200'
-    - 'result.response[5].RETURN_CODE == 200'
-    - '(result.response[0].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[4].DATA|dict2items)[0].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[1].attach[0].deploy == false'
-    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ ansible_switch2 }}" or "{{ ansible_switch1 }}" in result.diff[1].attach[0].ip_address'
-    - 'result.diff[0].net_name == "ansible-net14"'
-    - 'result.diff[1].net_name == "ansible-net13"'
-    - 'result.diff[0].net_id == 7005'
-    - 'result.diff[0].vrf_name == "Tenant-1"'
+    - result.changed == true
+
+- name: OVERRIDDEN_ALL - Query fabric for creation of Network Object
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: verify_result
+
+- name: OVERRIDDEN_ALL - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data.net2_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  delegate_to: localhost
 
 - name: OVERRIDDEN_ALL - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf
   register: result
 
-- assert:
+- name: OVERRIDDEN_ALL - ASSERT - Check changed flag is false
+  assert:
     that:
     - 'result.changed == false'
-    - 'result.response|length == 0'
 
 ##############################################
 ##                 CLEAN-UP                 ##
@@ -128,5 +121,5 @@
 
 - name: OVERRIDDEN_ALL - setup - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted

@@ -15,21 +15,6 @@
 
   vars:
 
-    # maintain backward compatibility with the old test structure until refactoring is done
-    test_fabric: fabric-stage
-    interface_1a: Ethernet1/15
-    interface_1b: Ethernet1/16
-    interface_1c: Ethernet1/17
-    interface_1d: Ethernet1/18
-    interface_2a: Ethernet1/15
-    interface_2b: Ethernet1/16
-    interface_2c: Ethernet1/17
-    interface_2d: Ethernet1/18
-    interface_2e: Ethernet1/19
-    interface_2f: Ethernet1/20
-    ansible_switch1: 192.168.1.1
-    ansible_switch2: 192.168.1.2
-    # new version below
     #----------------------------------
     # Uncomment testcase to run a specific test
     # testcase: replaced_net_all
