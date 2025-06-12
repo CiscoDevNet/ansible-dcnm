@@ -568,7 +568,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return vrf_id
 
-    def diff_for_attach_deploy(self, want_attach_list: list[dict], have_attach_list: list[dict], replace=False) -> tuple[list, bool]:
+    def diff_for_attach_deploy(self, want_attach_list: list[dict], lan_attach_list_models: list[HaveLanAttachItem], replace=False) -> tuple[list, bool]:
         """
         Return attach_list, deploy_vrf
 
@@ -591,6 +591,8 @@ class NdfcVrf12:
         if not want_attach_list:
             return attach_list, deploy_vrf
 
+        # TODO: Remove this conversion once this method is updated to use lan_attach_list_models directly.
+        have_attach_list = [model.model_dump(by_alias=True) for model in lan_attach_list_models]
         for want_attach in want_attach_list:
             if not have_attach_list:
                 # No have_attach, so always attach
@@ -2437,6 +2439,10 @@ class NdfcVrf12:
         - self.diff_attach
         - self.diff_deploy
 
+        By comparing the current state of attachments (self.have_attach_models)
+        with the desired state (self.want_attach) and determining which attachments
+        need to be updated.
+
         ## params
 
         - replace: Passed unaltered to self.diff_for_attach_deploy()
@@ -2467,11 +2473,9 @@ class NdfcVrf12:
         msg = f"value: {json.dumps(self.want_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        msg = "self.have_attach: "
-        msg += f"type: {type(self.have_attach)}"
+        msg = "self.have_attach_models: "
         self.log.debug(msg)
-        msg = f"value: {json.dumps(self.have_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        self.log_list_of_models(self.have_attach_models, by_alias=True)
 
         for want_attach in self.want_attach:
             msg = f"type(want_attach): {type(want_attach)}, "
@@ -2479,27 +2483,19 @@ class NdfcVrf12:
             self.log.debug(msg)
             # Check user intent for this VRF and don't add it to the all_vrfs
             # set if the user has not requested a deploy.
-            want_config = self.find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=want_attach["vrfName"])
+            want_config_model: VrfPlaybookModelV12 = self.find_model_in_list_by_key_value(
+                search=self.validated_playbook_config_models, key="vrf_name", value=want_attach["vrfName"]
+            )
+            want_config_deploy = want_config_model.deploy if want_config_model else False
             vrf_to_deploy: str = ""
             attach_found = False
-            for have_attach in self.have_attach:
-                msg = f"type(have_attach): {type(have_attach)}, "
-                msg += f"have_attach: {json.dumps(have_attach, indent=4, sort_keys=True)}"
-                self.log.debug(msg)
-
-                msg = f"want_attach[vrfName]: {want_attach.get('vrfName')}"
-                self.log.debug(msg)
-                msg = f"have_attach[vrfName]: {have_attach.get('vrfName')}"
-                self.log.debug(msg)
-                msg = f"want_config[deploy]: {want_config.get('deploy')}"
-                self.log.debug(msg)
-
-                if want_attach.get("vrfName") != have_attach.get("vrfName"):
+            for have_attach_model in self.have_attach_models:
+                if want_attach.get("vrfName") != have_attach_model.vrf_name:
                     continue
                 attach_found = True
                 diff, deploy_vrf_bool = self.diff_for_attach_deploy(
                     want_attach_list=want_attach["lanAttachList"],
-                    have_attach_list=have_attach["lanAttachList"],
+                    lan_attach_list_models=have_attach_model.lan_attach_list,
                     replace=replace,
                 )
                 msg = "diff_for_attach_deploy() returned with: "
@@ -2512,10 +2508,10 @@ class NdfcVrf12:
                     base["lanAttachList"] = diff
 
                     diff_attach.append(base)
-                    if (want_config.get("deploy") is True) and (deploy_vrf_bool is True):
+                    if (want_config_deploy is True) and (deploy_vrf_bool is True):
                         vrf_to_deploy = want_attach.get("vrfName")
                 else:
-                    if want_config.get("deploy") is True and (deploy_vrf_bool or self.conf_changed.get(want_attach.get("vrfName"), False)):
+                    if want_config_deploy is True and (deploy_vrf_bool or self.conf_changed.get(want_attach.get("vrfName"), False)):
                         vrf_to_deploy = want_attach.get("vrfName")
 
             msg = f"attach_found: {attach_found}"
