@@ -169,7 +169,7 @@ class NdfcVrf12:
         # "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick: list = []
         self.have_attach: list = []
-        self.have_attach_model: list[HaveAttachPostMutate] = []
+        self.have_attach_models: list[HaveAttachPostMutate] = []
         self.want_attach: list = []
         self.want_attach_vrf_lite: dict = {}
         self.diff_attach: list = []
@@ -184,9 +184,9 @@ class NdfcVrf12:
         # go out first and complain the VLAN is already in use.
         self.diff_detach: list = []
         self.have_deploy: dict = {}
-        self.have_deploy_model: PayloadfVrfsDeployments = PayloadfVrfsDeployments
+        self.have_deploy_model: PayloadfVrfsDeployments = None
         self.want_deploy: dict = {}
-        self.want_deploy_model: PayloadfVrfsDeployments = PayloadfVrfsDeployments
+        self.want_deploy_model: PayloadfVrfsDeployments = None
         # A playbook configuration model representing what was changed
         self.diff_deploy: dict = {}
         self.diff_undeploy: dict = {}
@@ -1462,7 +1462,7 @@ class NdfcVrf12:
         """
         Return PayloadfVrfsDeployments, which is a model representation of VRFs currently deployed on the controller.
 
-        Use vrf_attach_responses (list[VrfsAttachmentsDataItem]) to populate PayloadfVrfsDeployments.
+        Uses vrf_attach_responses (list[VrfsAttachmentsDataItem]) to populate PayloadfVrfsDeployments.
         """
         caller = inspect.stack()[1][3]
 
@@ -1560,10 +1560,10 @@ class NdfcVrf12:
         updated_vrf_attach_models_dicts = [model.model_dump(by_alias=True) for model in updated_vrf_attach_models]
 
         self.have_attach = copy.deepcopy(updated_vrf_attach_models_dicts)
-        self.have_attach_model = updated_vrf_attach_models
-        msg = f"self.have_attach_model.POST_UPDATE: length: {len(self.have_attach_model)}."
+        self.have_attach_models = updated_vrf_attach_models
+        msg = f"self.have_attach_models.POST_UPDATE: length: {len(self.have_attach_models)}."
         self.log.debug(msg)
-        self.log_list_of_models(self.have_attach_model)
+        self.log_list_of_models(self.have_attach_models)
 
     def _update_vrf_lite_extension_model(self, attach: HaveLanAttachItem) -> HaveLanAttachItem:
         """
@@ -2077,9 +2077,9 @@ class NdfcVrf12:
         diff_delete: dict = {}
         all_vrfs = set()
 
-        msg = "self.have_attach_model: "
+        msg = "self.have_attach_models: "
         self.log.debug(msg)
-        self.log_list_of_models(self.have_attach_model, by_alias=True)
+        self.log_list_of_models(self.have_attach_models, by_alias=True)
 
         for want_create_payload_model in self.want_create_payload_models:
             if self.find_dict_in_list_by_key_value(search=self.have_create, key="vrfName", value=want_create_payload_model.vrf_name) == {}:
@@ -2088,7 +2088,7 @@ class NdfcVrf12:
             diff_delete.update({want_create_payload_model.vrf_name: "DEPLOYED"})
 
             have_attach_model: HaveAttachPostMutate = self.find_model_in_list_by_key_value(
-                search=self.have_attach_model, key="vrf_name", value=want_create_payload_model.vrf_name
+                search=self.have_attach_models, key="vrf_name", value=want_create_payload_model.vrf_name
             )
             if not have_attach_model:
                 msg = f"have_attach_model not found for vrfName: {want_create_payload_model.vrf_name}. "
@@ -2136,12 +2136,12 @@ class NdfcVrf12:
         diff_delete: dict = {}
         all_vrfs = set()
 
-        msg = "self.have_attach_model: "
+        msg = "self.have_attach_models: "
         self.log.debug(msg)
-        self.log_list_of_models(self.have_attach_model, by_alias=True)
+        self.log_list_of_models(self.have_attach_models, by_alias=True)
 
         have_attach_model: HaveAttachPostMutate
-        for have_attach_model in self.have_attach_model:
+        for have_attach_model in self.have_attach_models:
             msg = f"type(have_attach_model): {type(have_attach_model)}"
             self.log.debug(msg)
             diff_delete.update({have_attach_model.vrf_name: "DEPLOYED"})
@@ -2169,9 +2169,9 @@ class NdfcVrf12:
         """
         # Summary
 
-        For override state, we delete existing attachments and vrfs (self.have_attach_model) that are not in self.want_create_payload_models.
+        For override state, we delete existing attachments and vrfs (self.have_attach_models) that are not in self.want_create_payload_models.
 
-        Using self.have_attach and self.want_create_payload_models, update the following:
+        Using self.have_attach_models and self.want_create_payload_models, update the following:
 
         - diff_detach: a list of attachment objects to detach (see append_to_diff_detach)
         - diff_undeploy: a dictionary with single key "vrfNames" and value of a comma-separated list of vrf_names to undeploy
@@ -2186,7 +2186,7 @@ class NdfcVrf12:
         self.get_diff_replace()
         all_vrfs = set()
 
-        for have_attach_model in self.have_attach_model:
+        for have_attach_model in self.have_attach_models:
             found_in_want = self.find_model_in_list_by_key_value(search=self.want_create_payload_models, key="vrf_name", value=have_attach_model.vrf_name)
 
             if found_in_want:
