@@ -50,6 +50,7 @@ from .model_controller_response_vrfs_deployments_v12 import ControllerResponseVr
 from .model_controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, VrfsSwitchesDataItem
 from .model_controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
+from .model_payload_vrfs_deployments import PayloadfVrfsDeployments
 from .model_vrf_attach_payload_v12 import LanAttachListItemV12
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
 from .transmute_diff_attach_to_payload import DiffAttachToControllerPayload
@@ -183,7 +184,10 @@ class NdfcVrf12:
         # go out first and complain the VLAN is already in use.
         self.diff_detach: list = []
         self.have_deploy: dict = {}
+        self.have_deploy_model: PayloadfVrfsDeployments = PayloadfVrfsDeployments
         self.want_deploy: dict = {}
+        self.want_deploy_model: PayloadfVrfsDeployments = PayloadfVrfsDeployments
+        # A playbook configuration model representing what was changed
         self.diff_deploy: dict = {}
         self.diff_undeploy: dict = {}
         self.diff_delete: dict = {}
@@ -1419,9 +1423,11 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_create, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def populate_have_deploy(self, get_vrf_attach_response: dict) -> None:
+    def populate_have_deploy(self, get_vrf_attach_response: dict) -> dict:
         """
-        Populate self.have_deploy using get_vrf_attach_response.
+        Return have_deploy, which is a dict representation of VRFs currently deployed on the controller.
+
+        Use get_vrf_attach_response dict to populate have_deploy.
         """
         caller = inspect.stack()[1][3]
 
@@ -1444,17 +1450,51 @@ class NdfcVrf12:
                         vrfs_to_update.add(vrf_to_deploy)
 
         have_deploy = {}
-        if vrfs_to_update:
-            have_deploy["vrfNames"] = ",".join(vrfs_to_update)
-        self.have_deploy = copy.deepcopy(have_deploy)
+        have_deploy["vrfNames"] = ",".join(vrfs_to_update)
 
-        msg = "self.have_deploy: "
-        msg += f"{json.dumps(self.have_deploy, indent=4)}"
+        msg = "Returning have_deploy: "
+        msg += f"{json.dumps(have_deploy, indent=4)}"
         self.log.debug(msg)
+
+        return copy.deepcopy(have_deploy)
+
+    def populate_have_deploy_model(self, vrf_attach_responses: list[VrfsAttachmentsDataItem]) -> PayloadfVrfsDeployments:
+        """
+        Return PayloadfVrfsDeployments, which is a model representation of VRFs currently deployed on the controller.
+
+        Use vrf_attach_responses (list[VrfsAttachmentsDataItem]) to populate PayloadfVrfsDeployments.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
+        self.log.debug(msg)
+
+        vrfs_to_update: set[str] = set()
+
+        for vrf_attach_model in vrf_attach_responses:
+            if not vrf_attach_model.lan_attach_list:
+                continue
+            attach_list_models = vrf_attach_model.lan_attach_list
+            for lan_attach_model in attach_list_models:
+                deploy = lan_attach_model.is_lan_attached
+                deployed = not (deploy and lan_attach_model.lan_attach_state in ("OUT-OF-SYNC", "PENDING"))
+                if deployed:
+                    vrf_to_deploy = lan_attach_model.vrf_name
+                    if vrf_to_deploy:
+                        vrfs_to_update.add(vrf_to_deploy)
+
+        have_deploy_model = PayloadfVrfsDeployments(vrf_names=vrfs_to_update)
+
+        msg = "Returning have_deploy_model: "
+        msg += f"{json.dumps(have_deploy_model.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        return have_deploy_model
 
     def populate_have_attach_model(self, vrf_attach_models: list[VrfsAttachmentsDataItem]) -> None:
         """
-        Populate self.have_attach using get_vrf_attach_response.
+        Populate self.have_attach using vrf_attach_models (list[VrfsAttachmentsDataItem]).
         """
         caller = inspect.stack()[1][3]
 
@@ -1640,7 +1680,12 @@ class NdfcVrf12:
         if not validated_controller_response.DATA:
             return
 
-        self.populate_have_deploy(controller_response)
+        self.have_deploy = self.populate_have_deploy(controller_response)
+        self.have_deploy_model = self.populate_have_deploy_model(validated_controller_response.DATA)
+        msg = "self.have_deploy_model (by_alias=True): "
+        msg += f"{json.dumps(self.have_deploy_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
         self.populate_have_attach_model(validated_controller_response.DATA)
 
         msg = "self.have_attach: "
