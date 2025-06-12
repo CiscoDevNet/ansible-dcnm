@@ -66,6 +66,7 @@ options:
                 - LAN_CLASSIC
                 - VXLAN_EVPN
                 - VXLAN_EVPN_MSD
+                - BGP
                 description:
                 - The type of fabric.
                 required: true
@@ -2528,6 +2529,7 @@ EXAMPLES = """
 # if they don't already exist.  If they exist, the playbook will
 # exit without doing anything.
 # - 1. VXLAN EVPN fabric
+# - 1. BGP fabric
 # - 1. VXLAN EVPN Multi-Site fabric
 # - 1. LAN Classic fabric
 
@@ -2538,6 +2540,9 @@ EXAMPLES = """
     -   FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
+    -   FABRIC_NAME: BGP_Fabric
+        FABRIC_TYPE: BGP
+        BGP_AS: 65001
     -   FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
     -   FABRIC_NAME: LAN_Fabric
@@ -2560,6 +2565,11 @@ EXAMPLES = """
         EXTRA_CONF_LEAF: |
           interface Ethernet1/1-16
             description managed by NDFC
+        DEPLOY: false
+    -   FABRIC_NAME: BGP_Fabric
+        FABRIC_TYPE: BGP
+        BGP_AS: 65001
+        SUPER_SPINE_BGP_AS: 65002
         DEPLOY: false
     -   FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
@@ -2604,6 +2614,10 @@ EXAMPLES = """
     -   FABRIC_NAME: VXLAN_Fabric
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
+        DEPLOY: false
+    -   FABRIC_NAME: BGP_Fabric
+        FABRIC_TYPE: BGP
+        BGP_AS: 65001
         DEPLOY: false
     -   FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD

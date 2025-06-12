@@ -78,6 +78,7 @@ class FabricTypes:
         self._fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
         self._fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN_MSD"] = "MSD_Fabric"
+        self._fabric_type_to_template_name_map["BGP"] = "Easy_Fabric_eBGP"
 
         # Map fabric type to the feature name that must be running
         # on the controller to enable the fabric type.
@@ -87,6 +88,7 @@ class FabricTypes:
         self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
+        self._fabric_type_to_feature_name_map["BGP"] = "vxlan"
 
         # Map fabric type to the value that the controller GUI displays
         # in the Fabric Type column at NDFC -> Manage -> Fabrics
@@ -127,8 +129,12 @@ class FabricTypes:
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
+        self._mandatory_parameters["BGP"] = copy.copy(
+            self._mandatory_parameters_all_fabrics
+        )
         self._mandatory_parameters["ISN"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN"].append("BGP_AS")
+        self._mandatory_parameters["BGP"].append("BGP_AS")
         self._mandatory_parameters["VXLAN_EVPN_MSD"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
@@ -138,6 +144,7 @@ class FabricTypes:
         self._mandatory_parameters["LAN_CLASSIC"].sort()
         self._mandatory_parameters["VXLAN_EVPN"].sort()
         self._mandatory_parameters["VXLAN_EVPN_MSD"].sort()
+        self._mandatory_parameters["BGP"].sort()
 
     def _init_properties(self) -> None:
         """
