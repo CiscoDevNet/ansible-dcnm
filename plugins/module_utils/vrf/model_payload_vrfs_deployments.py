@@ -31,7 +31,7 @@ class PayloadfVrfsDeployments(BaseModel):
     ## Example pre-serialization
 
     vrf_names=['vrf2', 'vrf1', 'vrf3']
-    
+
     ## Example post-serialization, model_dump(by_alias=True)
 
     ```json
