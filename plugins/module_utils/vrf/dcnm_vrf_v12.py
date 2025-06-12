@@ -168,6 +168,8 @@ class NdfcVrf12:
         # variable. The content stored here will be helpful for cases like
         # "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick: list = []
+        # self.have_attach is accessed only in self.failure() and is populated in populate_have_attach_models()
+        # It will eventually be removed.
         self.have_attach: list = []
         self.have_attach_models: list[HaveAttachPostMutate] = []
         self.want_attach: list = []
@@ -568,7 +570,7 @@ class NdfcVrf12:
         self.log.debug(msg)
         return vrf_id
 
-    def diff_for_attach_deploy(self, want_attach_list: list[dict], lan_attach_list_models: list[HaveLanAttachItem], replace=False) -> tuple[list, bool]:
+    def diff_for_attach_deploy(self, want_attach_list: list[dict], have_lan_attach_list_models: list[HaveLanAttachItem], replace=False) -> tuple[list, bool]:
         """
         Return attach_list, deploy_vrf
 
@@ -591,11 +593,9 @@ class NdfcVrf12:
         if not want_attach_list:
             return attach_list, deploy_vrf
 
-        # TODO: Remove this conversion once this method is updated to use lan_attach_list_models directly.
-        have_attach_list = [model.model_dump(by_alias=True) for model in lan_attach_list_models]
         for want_attach in want_attach_list:
-            if not have_attach_list:
-                # No have_attach, so always attach
+            if not have_lan_attach_list_models:
+                # No have_lan_attach, so always attach
                 if self.to_bool("isAttached", want_attach):
                     want_attach = self._prepare_attach_for_deploy(want_attach)
                     attach_list.append(want_attach)
@@ -604,19 +604,19 @@ class NdfcVrf12:
                 continue
 
             found = False
-            for have_attach in have_attach_list:
-                if want_attach.get("serialNumber") != have_attach.get("serialNumber"):
+            for have_lan_attach_model in have_lan_attach_list_models:
+                if want_attach.get("serialNumber") != have_lan_attach_model.serial_number:
                     continue
 
                 # Copy freeformConfig from have since the playbook doesn't
                 # currently support it.
-                want_attach.update({"freeformConfig": have_attach.get("freeformConfig", "")})
+                want_attach.update({"freeformConfig": have_lan_attach_model.freeform_config})
 
                 # Copy unsupported instanceValues keys from have to want_attach
                 want_inst_values, have_inst_values = {}, {}
-                if want_attach.get("instanceValues") and have_attach.get("instanceValues"):
+                if want_attach.get("instanceValues") and have_lan_attach_model.instance_values:
                     want_inst_values = json.loads(want_attach["instanceValues"])
-                    have_inst_values = json.loads(have_attach["instanceValues"])
+                    have_inst_values = json.loads(have_lan_attach_model.instance_values)
                     # These keys are not currently supported in the playbook,
                     # so copy them from have to want.
                     for key in ["loopbackId", "loopbackIpAddress", "loopbackIpV6Address"]:
@@ -625,18 +625,20 @@ class NdfcVrf12:
                     want_attach["instanceValues"] = json.dumps(want_inst_values)
 
                 # Compare extensionValues
-                if want_attach.get("extensionValues") and have_attach.get("extensionValues"):
-                    if not self._extension_values_match(want_attach, have_attach, replace):
+                want_extension_values = want_attach.get("extensionValues")
+                have_extension_values = have_lan_attach_model.extension_values
+                if want_extension_values and have_extension_values:
+                    if not self._extension_values_match(want_extension_values, have_extension_values, replace):
                         continue
-                elif want_attach.get("extensionValues") and not have_attach.get("extensionValues"):
+                elif want_extension_values and not have_extension_values:
                     continue
-                elif not want_attach.get("extensionValues") and have_attach.get("extensionValues"):
+                elif not want_extension_values and have_extension_values:
                     if not replace:
                         found = True
                     continue
 
                 # Compare deployment/attachment status
-                if not self._deployment_status_match(want_attach, have_attach):
+                if not self._deployment_status_match(want_attach, have_lan_attach_model):
                     msg = "self._deployment_status_match() returned False."
                     self.log.debug(msg)
                     want_attach = self._prepare_attach_for_deploy(want_attach)
@@ -696,24 +698,26 @@ class NdfcVrf12:
         want["deployment"] = True
         return want
 
-    def _extension_values_match(self, want: dict, have: dict, replace: bool) -> bool:
+    def _extension_values_match(self, want_extension_values: str, have_extension_values: str, replace: bool) -> bool:
         """
         # Summary
 
         Compare the extensionValues of two attachment dictionaries to determine if they match.
 
+        - Convert want and have from JSON strings to dictionaries.
         - Parses and compares the VRF_LITE_CONN lists in both want and have.
         - If replace is True, also checks that the lengths of the VRF_LITE_CONN lists are equal.
         - Compares each interface (IF_NAME) and their properties.
 
         ## Parameters
 
-        - want: dict
-            The desired attachment dictionary.
-        - have: dict
-            The current attachment dictionary from the controller.
+        - want_extension_values: str
+          - The desired extensionValues, as a JSON string.
+        - have_extension_values: str
+          - The extensionValues on the controller, as a JSON string.
         - replace: bool
-            Whether this is a replace/override operation.
+          - True if this is a replace/override operation.
+          - False otherwise.
 
         ## Returns
 
@@ -725,20 +729,21 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        want_ext = json.loads(want["extensionValues"])
-        have_ext = json.loads(have["extensionValues"])
-        want_e = json.loads(want_ext["VRF_LITE_CONN"])
-        have_e = json.loads(have_ext["VRF_LITE_CONN"])
-        if replace and (len(want_e["VRF_LITE_CONN"]) != len(have_e["VRF_LITE_CONN"])):
+        want_extension_values = json.loads(want_extension_values)
+        have_extension_values = json.loads(have_extension_values)
+
+        want_vrf_lite_conn = json.loads(want_extension_values["VRF_LITE_CONN"])
+        have_vrf_lite_conn = json.loads(have_extension_values["VRF_LITE_CONN"])
+        if replace and (len(want_vrf_lite_conn["VRF_LITE_CONN"]) != len(have_vrf_lite_conn["VRF_LITE_CONN"])):
             return False
-        for wlite in want_e["VRF_LITE_CONN"]:
-            for hlite in have_e["VRF_LITE_CONN"]:
-                if wlite["IF_NAME"] == hlite["IF_NAME"]:
-                    if self.property_values_match(wlite, hlite, self.vrf_lite_properties):
+        for want_vrf_lite in want_vrf_lite_conn["VRF_LITE_CONN"]:
+            for have_vrf_lite in have_vrf_lite_conn["VRF_LITE_CONN"]:
+                if want_vrf_lite["IF_NAME"] == have_vrf_lite["IF_NAME"]:
+                    if self.property_values_match(want_vrf_lite, have_vrf_lite, self.vrf_lite_properties):
                         return True
         return False
 
-    def _deployment_status_match(self, want: dict, have: dict) -> bool:
+    def _deployment_status_match(self, want: dict, have_lan_attach_model: HaveLanAttachItem) -> bool:
         """
         # Summary
 
@@ -762,6 +767,9 @@ class NdfcVrf12:
         msg = "ENTERED. "
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
+
+        # TODO: Remove this conversion once this method is updated to use lan_attach_list_model directly.
+        have = have_lan_attach_model.model_dump(by_alias=True)
 
         msg = f"type(want): {type(want)}, type(have): {type(have)}"
         self.log.debug(msg)
@@ -1637,7 +1645,7 @@ class NdfcVrf12:
         controller. Update the following with this information:
 
         -   self.have_create, see populate_have_create()
-        -   self.have_attach, see populate_have_attach_models()
+        -   self.have_attach_models, see populate_have_attach_models()
         -   self.have_deploy, see populate_have_deploy()
         """
         caller = inspect.stack()[1][3]
@@ -1692,10 +1700,6 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         self.populate_have_attach_models(validated_controller_response.DATA)
-
-        msg = "self.have_attach: "
-        msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
 
     def get_want_attach(self) -> None:
         """
@@ -2495,7 +2499,7 @@ class NdfcVrf12:
                 attach_found = True
                 diff, deploy_vrf_bool = self.diff_for_attach_deploy(
                     want_attach_list=want_attach["lanAttachList"],
-                    lan_attach_list_models=have_attach_model.lan_attach_list,
+                    have_lan_attach_list_models=have_attach_model.lan_attach_list,
                     replace=replace,
                 )
                 msg = "diff_for_attach_deploy() returned with: "
