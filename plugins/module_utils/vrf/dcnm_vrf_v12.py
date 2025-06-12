@@ -2220,11 +2220,14 @@ class NdfcVrf12:
         """
         # Summary
 
-        For replace state, update the attachment objects in self.have_attach that are not in self.want_attach.
+        For replace state, update the following:
 
-        - diff_attach: a list of attachment objects to attach
-        - diff_deploy: a dictionary of vrf names to deploy
-        - diff_delete: a dictionary of vrf names to delete
+        - self.diff_attach: a list of attachment objects to attach
+        - self.diff_deploy: a dictionary of vrf names to deploy
+
+        By comparing the current state of attachments (self.have_attach_models)
+        with the desired state (self.want_attach) and determining which attachments
+        need to be replaced or removed.
         """
         caller = inspect.stack()[1][3]
 
@@ -2235,55 +2238,62 @@ class NdfcVrf12:
         all_vrfs: set = set()
         self.get_diff_merge(replace=True)
 
-        for have_attach in self.have_attach:
-            msg = f"type(have_attach): {type(have_attach)}"
-            self.log.debug(msg)
-            replace_vrf_list = []
+        msg = f"self.have_attach_models: length: {len(self.have_attach_models)}."
+        self.log.debug(msg)
+        self.log_list_of_models(self.have_attach_models, by_alias=True)
+        for have_attach_model in self.have_attach_models:
+            replace_lan_attach_list = []
 
             # Find want_attach whose vrfName matches have_attach
-            want_attach = next((w for w in self.want_attach if w.get("vrfName") == have_attach.get("vrfName")), None)
+            want_attach = next((w for w in self.want_attach if w.get("vrfName") == have_attach_model.vrf_name), None)
 
             if want_attach:  # matches have_attach
-                have_lan_attach_list = have_attach.get("lanAttachList", [])
+                have_lan_attach_list = have_attach_model.lan_attach_list
                 want_lan_attach_list = want_attach.get("lanAttachList", [])
 
-                for have_lan_attach in have_lan_attach_list:
-                    if have_lan_attach.get("isAttached") is False:
+                for have_lan_attach_model in have_lan_attach_list:
+                    if have_lan_attach_model.is_attached is False:
                         continue
-                    # Check if this have_lan_attach exists in want_lan_attach_list by serialNumber
-                    if not any(have_lan_attach.get("serialNumber") == want_lan_attach.get("serialNumber") for want_lan_attach in want_lan_attach_list):
-                        have_lan_attach.pop("isAttached", None)
-                        have_lan_attach["deployment"] = False
-                        replace_vrf_list.append(have_lan_attach)
+                    # Check if this have_lan_attach_model exists in want_lan_attach_list by serialNumber
+                    if not any(have_lan_attach_model.serial_number == want_lan_attach.get("serialNumber") for want_lan_attach in want_lan_attach_list):
+                        have_lan_attach_model.deployment = False
+                        # Need to convert model to dict to remove isAttached key. TODO: revisit
+                        have_lan_attach_dict = have_lan_attach_model.model_dump(by_alias=True)
+                        have_lan_attach_dict.pop("isAttached", None)  # Remove isAttached key
+                        replace_lan_attach_list.append(have_lan_attach_dict)
             else:  # have_attach is not in want_attach
                 have_attach_in_want_create = self.find_model_in_list_by_key_value(
-                    search=self.want_create_payload_models, key="vrf_name", value=have_attach.get("vrfName")
+                    search=self.want_create_payload_models, key="vrf_name", value=have_attach_model.vrf_name
                 )
                 if not have_attach_in_want_create:
                     continue
                 # If have_attach is not in want_attach but is in want_create, detach all attached
-                for lan_attach in have_attach.get("lanAttachList", []):
-                    if not lan_attach.get("isAttached"):
+                for have_lan_attach_model in have_attach_model.lan_attach_list:
+                    if not have_lan_attach_model.is_attached:
                         continue
-                    lan_attach.pop("isAttached", None)
-                    lan_attach["deployment"] = False
-                    replace_vrf_list.append(lan_attach)
+                    have_lan_attach_model.deployment = False
+                    # Need to convert model to dict to remove isAttached key. TODO: revisit
+                    have_lan_attach_dict = have_lan_attach_model.model_dump(by_alias=True)
+                    have_lan_attach_dict.pop("isAttached", None)  # Remove isAttached key
+                    replace_lan_attach_list.append(have_lan_attach_dict)
 
-            if not replace_vrf_list:
+            if not replace_lan_attach_list:
                 continue
             # Find or create the diff_attach entry for this VRF
-            diff_attach = next((d for d in self.diff_attach if d.get("vrfName") == have_attach.get("vrfName")), None)
+            diff_attach = next((d for d in self.diff_attach if d.get("vrfName") == have_attach_model.vrf_name), None)
             if diff_attach:
-                diff_attach["lanAttachList"].extend(replace_vrf_list)
+                diff_attach["lanAttachList"].extend(replace_lan_attach_list)
             else:
                 attachment = {
-                    "vrfName": have_attach["vrfName"],
-                    "lanAttachList": replace_vrf_list,
+                    "vrfName": have_attach_model.vrf_name,
+                    "lanAttachList": replace_lan_attach_list,
                 }
                 self.diff_attach.append(attachment)
-            all_vrfs.add(have_attach["vrfName"])
+            all_vrfs.add(have_attach_model.vrf_name)
 
         if not all_vrfs:
+            msg = "Early return. No VRF attachments required modification for replaced state."
+            self.log.debug(msg)
             return
 
         all_vrfs.update({vrf for vrf in self.want_deploy.get("vrfNames", "").split(",") if vrf})
