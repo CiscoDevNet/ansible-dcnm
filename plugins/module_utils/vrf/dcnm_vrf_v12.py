@@ -1492,9 +1492,12 @@ class NdfcVrf12:
 
         return have_deploy_model
 
-    def populate_have_attach_model(self, vrf_attach_models: list[VrfsAttachmentsDataItem]) -> None:
+    def populate_have_attach_models(self, vrf_attach_models: list[VrfsAttachmentsDataItem]) -> None:
         """
-        Populate self.have_attach using vrf_attach_models (list[VrfsAttachmentsDataItem]).
+        Populate the following using vrf_attach_models (list[VrfsAttachmentsDataItem]):
+
+        - self.have_attach
+        - self.have_attach_models 
         """
         caller = inspect.stack()[1][3]
 
@@ -1632,7 +1635,7 @@ class NdfcVrf12:
         controller. Update the following with this information:
 
         -   self.have_create, see populate_have_create()
-        -   self.have_attach, see populate_have_attach_model()
+        -   self.have_attach, see populate_have_attach_models()
         -   self.have_deploy, see populate_have_deploy()
         """
         caller = inspect.stack()[1][3]
@@ -1686,7 +1689,7 @@ class NdfcVrf12:
         msg += f"{json.dumps(self.have_deploy_model.model_dump(by_alias=True), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        self.populate_have_attach_model(validated_controller_response.DATA)
+        self.populate_have_attach_models(validated_controller_response.DATA)
 
         msg = "self.have_attach: "
         msg += f"{json.dumps(self.have_attach, indent=4, sort_keys=True)}"
@@ -2027,7 +2030,7 @@ class NdfcVrf12:
 
         Called from modules/dcnm_vrf.py
 
-        Using self.have_create, and self.have_attach, update the following:
+        Using self.have_create, and self.have_attach_models, update the following:
 
         - diff_detach: a list of attachment objects to detach
         - diff_undeploy: a dictionary of vrf names to undeploy
