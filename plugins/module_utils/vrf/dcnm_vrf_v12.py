@@ -1497,7 +1497,7 @@ class NdfcVrf12:
         Populate the following using vrf_attach_models (list[VrfsAttachmentsDataItem]):
 
         - self.have_attach
-        - self.have_attach_models 
+        - self.have_attach_models
         """
         caller = inspect.stack()[1][3]
 
