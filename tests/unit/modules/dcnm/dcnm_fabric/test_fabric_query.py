@@ -413,8 +413,8 @@ def test_fabric_query_00030(fabric_query) -> None:
     assert instance.results.result[0].get("found", None) is False
     assert instance.results.result[0].get("success", None) is False
 
-    assert False in instance.results.failed
-    assert True not in instance.results.failed
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
 
@@ -522,8 +522,8 @@ def test_fabric_query_00031(fabric_query) -> None:
     assert instance.results.result[0].get("found", None) is False
     assert instance.results.result[0].get("success", None) is False
 
-    assert False in instance.results.failed
-    assert True not in instance.results.failed
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
 
