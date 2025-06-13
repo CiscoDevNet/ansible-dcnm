@@ -2,7 +2,7 @@ import inspect
 import json
 import logging
 
-from .vrf_playbook_model_v12 import VrfPlaybookModelV12
+from .model_playbook_vrf_v12 import PlaybookVrfModelV12
 
 
 class SerialNumberToVrfLite:
@@ -29,7 +29,7 @@ class SerialNumberToVrfLite:
         self.class_name = self.__class__.__name__
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
         self._fabric_inventory: dict = {}
-        self._playbook_models: list[VrfPlaybookModelV12] = []
+        self._playbook_models: list[PlaybookVrfModelV12] = []
         self.serial_number_to_vrf_lite: dict = {}
         self.commit_done: bool = False
 
@@ -145,16 +145,16 @@ class SerialNumberToVrfLite:
         self._fabric_inventory = value
 
     @property
-    def playbook_models(self) -> list[VrfPlaybookModelV12]:
+    def playbook_models(self) -> list[PlaybookVrfModelV12]:
         """
-        Return the list of playbook models (list[VrfPlaybookModelV12]).
+        Return the list of playbook models (list[PlaybookVrfModelV12]).
         """
         return self._playbook_models
 
     @playbook_models.setter
-    def playbook_models(self, value: list[VrfPlaybookModelV12]):
+    def playbook_models(self, value: list[PlaybookVrfModelV12]):
         if not isinstance(value, list):
-            msg = f"{self.class_name}: playbook_models must be list[VrfPlaybookModelV12]. "
+            msg = f"{self.class_name}: playbook_models must be list[PlaybookVrfModelV12]. "
             msg += f"Got {type(value).__name__}."
             raise TypeError(msg)
         self._playbook_models = value

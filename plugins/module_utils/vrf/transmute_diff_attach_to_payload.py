@@ -3,19 +3,24 @@ import json
 import logging
 import re
 
-from .model_controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, ExtensionPrototypeValue, VrfLiteConnProtoItem, VrfsSwitchesDataItem
 from .inventory_serial_number_to_fabric_name import InventorySerialNumberToFabricName
 from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
-from .model_vrf_attach_payload_v12 import LanAttachListItemV12, VrfAttachPayloadV12
+from .model_controller_response_vrfs_switches_v12 import (
+    ControllerResponseVrfsSwitchesDataItem,
+    ControllerResponseVrfsSwitchesExtensionPrototypeValue,
+    ControllerResponseVrfsSwitchesV12,
+    ControllerResponseVrfsSwitchesVrfLiteConnProtoItem,
+)
+from .model_payload_vrfs_attachments import PayloadVrfsAttachments, PayloadVrfsAttachmentsLanAttachListItem
+from .model_playbook_vrf_v12 import PlaybookVrfModelV12
 from .serial_number_to_vrf_lite import SerialNumberToVrfLite
-from .vrf_playbook_model_v12 import VrfPlaybookModelV12
 
 
 class DiffAttachToControllerPayload:
     """
     # Summary
 
-    - Transmute diff_attach to a list of VrfAttachPayloadV12 models.
+    - Transmute diff_attach to a list of PayloadVrfsAttachments models.
     - For each model, update its lan_attach_list
         - Set vlan to 0
         - Set the fabric name to the child fabric name, if fabric is MSD
@@ -70,7 +75,7 @@ class DiffAttachToControllerPayload:
         self._fabric_inventory: dict = {}
         self._ansible_module = None  # AndibleModule instance
         self._payload: str = ""
-        self._payload_model: list[VrfAttachPayloadV12] = []
+        self._payload_model: list[PayloadVrfsAttachments] = []
         self._playbook_models: list = []
 
         self.serial_number_to_fabric_name = InventorySerialNumberToFabricName()
@@ -93,7 +98,7 @@ class DiffAttachToControllerPayload:
         """
         # Summary
 
-        - Transmute diff_attach to a list of VrfAttachPayloadV12 models.
+        - Transmute diff_attach to a list of PayloadVrfsAttachments models.
         - For each model, update its lan_attach_list
           - Set vlan to 0
           - Set the fabric name to the child fabric name, if fabric is MSD
@@ -154,11 +159,11 @@ class DiffAttachToControllerPayload:
         msg = f"Received diff_attach: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        diff_attach_list: list[VrfAttachPayloadV12] = [
-            VrfAttachPayloadV12(
+        diff_attach_list: list[PayloadVrfsAttachments] = [
+            PayloadVrfsAttachments(
                 vrfName=item.get("vrfName"),
                 lanAttachList=[
-                    LanAttachListItemV12(
+                    PayloadVrfsAttachmentsLanAttachListItem(
                         deployment=lan_attach.get("deployment"),
                         extensionValues=lan_attach.get("extensionValues"),
                         fabric=lan_attach.get("fabric") or lan_attach.get("fabricName"),
@@ -176,7 +181,7 @@ class DiffAttachToControllerPayload:
             if self.diff_attach
         ]
 
-        payload_model: list[VrfAttachPayloadV12] = []
+        payload_model: list[PayloadVrfsAttachments] = []
         for vrf_attach_payload in diff_attach_list:
             new_lan_attach_list = self.update_lan_attach_list_model(vrf_attach_payload)
             vrf_attach_payload.lan_attach_list = new_lan_attach_list
@@ -189,11 +194,11 @@ class DiffAttachToControllerPayload:
         self._payload_model = payload_model
         self._payload = json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload_model])
 
-    def update_lan_attach_list_model(self, diff_attach: VrfAttachPayloadV12) -> list[LanAttachListItemV12]:
+    def update_lan_attach_list_model(self, diff_attach: PayloadVrfsAttachments) -> list[PayloadVrfsAttachmentsLanAttachListItem]:
         """
         # Summary
 
-        - Update the lan_attach_list in each VrfAttachPayloadV12
+        - Update the lan_attach_list in each PayloadVrfsAttachments
           - Set vlan to 0
           - Set the fabric name to the child fabric name, if fabric is MSD
           - Update vrf_lite extensions with information from the switch
@@ -207,12 +212,12 @@ class DiffAttachToControllerPayload:
         diff_attach = self.update_lan_attach_list_vrf_lite(diff_attach)
         return diff_attach.lan_attach_list
 
-    def update_lan_attach_list_vlan(self, diff_attach: VrfAttachPayloadV12) -> VrfAttachPayloadV12:
+    def update_lan_attach_list_vlan(self, diff_attach: PayloadVrfsAttachments) -> PayloadVrfsAttachments:
         """
         # Summary
 
-        Set VrfAttachPayloadV12.lan_attach_list.vlan to 0 and return the updated
-        VrfAttachPayloadV12 instance.
+        Set PayloadVrfsAttachments.lan_attach_list.vlan to 0 and return the updated
+        PayloadVrfsAttachments instance.
 
         ## Raises
 
@@ -233,12 +238,12 @@ class DiffAttachToControllerPayload:
         self.log.debug(msg)
         return diff_attach
 
-    def update_lan_attach_list_fabric_name(self, diff_attach: VrfAttachPayloadV12) -> VrfAttachPayloadV12:
+    def update_lan_attach_list_fabric_name(self, diff_attach: PayloadVrfsAttachments) -> PayloadVrfsAttachments:
         """
         # Summary
 
-        Update VrfAttachPayloadV12.lan_attach_list.fabric and return the updated
-        VrfAttachPayloadV12 instance.
+        Update PayloadVrfsAttachments.lan_attach_list.fabric and return the updated
+        PayloadVrfsAttachments instance.
 
         - If fabric_type is not MFD, return the diff_attach unchanged
         - If fabric_type is MFD, replace diff_attach.lan_attach_list.fabric with child fabric name
@@ -263,10 +268,10 @@ class DiffAttachToControllerPayload:
         self.log.debug(msg)
         return diff_attach
 
-    def update_lan_attach_list_vrf_lite(self, diff_attach: VrfAttachPayloadV12) -> VrfAttachPayloadV12:
+    def update_lan_attach_list_vrf_lite(self, diff_attach: PayloadVrfsAttachments) -> PayloadVrfsAttachments:
         """
         - If the switch is not a border switch, fail the module
-        - Get associated extension_prototype_values (ExtensionPrototypeValue) from the switch
+        - Get associated extension_prototype_values (ControllerResponseVrfsSwitchesExtensionPrototypeValue) from the switch
         - Update vrf lite extensions with information from the extension_prototype_values
 
         ## Raises
@@ -325,7 +330,7 @@ class DiffAttachToControllerPayload:
 
             extension_prototype_values = lite_objects_model[0].switch_details_list[0].extension_prototype_values
             msg = f"ip_address {ip_address} ({lan_attach_item.serial_number}), "
-            msg += f"lite (list[ExtensionPrototypeValue]). length: {len(extension_prototype_values)}."
+            msg += f"lite (list[ControllerResponseVrfsSwitchesExtensionPrototypeValue]). length: {len(extension_prototype_values)}."
             self.log.debug(msg)
             self.log_list_of_models(extension_prototype_values)
 
@@ -338,7 +343,9 @@ class DiffAttachToControllerPayload:
         self.log.debug(msg)
         return diff_attach
 
-    def update_vrf_attach_vrf_lite_extensions(self, vrf_attach: LanAttachListItemV12, lite: list[ExtensionPrototypeValue]) -> LanAttachListItemV12:
+    def update_vrf_attach_vrf_lite_extensions(
+        self, vrf_attach: PayloadVrfsAttachmentsLanAttachListItem, lite: list[ControllerResponseVrfsSwitchesExtensionPrototypeValue]
+    ) -> PayloadVrfsAttachmentsLanAttachListItem:
         """
         # Summary
 
@@ -347,9 +354,9 @@ class DiffAttachToControllerPayload:
         ## params
 
         -   vrf_attach
-            A LanAttachListItemV12 model containing extension_values to update.
+            A PayloadVrfsAttachmentsLanAttachListItem model containing extension_values to update.
         -   lite: A list of current vrf_lite extension models
-            (ExtensionPrototypeValue) from the switch
+            (ControllerResponseVrfsSwitchesExtensionPrototypeValue) from the switch
 
         ## Description
 
@@ -358,7 +365,7 @@ class DiffAttachToControllerPayload:
         2.  Update the vrf_attach object with the merged result.
         3.  Return the updated vrf_attach object.
 
-        If no matching ExtensionPrototypeValue model is found,
+        If no matching ControllerResponseVrfsSwitchesExtensionPrototypeValue model is found,
         return the unmodified vrf_attach object.
 
         "matching" in this case means:
@@ -381,7 +388,7 @@ class DiffAttachToControllerPayload:
         serial_number = vrf_attach.serial_number
 
         msg = f"serial_number: {serial_number}, "
-        msg += f"Received list of lite_objects (list[ExtensionPrototypeValue]). length: {len(lite)}."
+        msg += f"Received list of lite_objects (list[ControllerResponseVrfsSwitchesExtensionPrototypeValue]). length: {len(lite)}."
         self.log.debug(msg)
         self.log_list_of_models(lite)
 
@@ -481,13 +488,15 @@ class DiffAttachToControllerPayload:
         self.log.debug(msg)
         return vrf_attach
 
-    def get_extension_values_from_lite_objects(self, lite: list[ExtensionPrototypeValue]) -> list[VrfLiteConnProtoItem]:
+    def get_extension_values_from_lite_objects(
+        self, lite: list[ControllerResponseVrfsSwitchesExtensionPrototypeValue]
+    ) -> list[ControllerResponseVrfsSwitchesVrfLiteConnProtoItem]:
         """
         # Summary
 
-        Given a list of lite objects (ExtensionPrototypeValue), return:
+        Given a list of lite objects (ControllerResponseVrfsSwitchesExtensionPrototypeValue), return:
 
-        -   A list containing the extensionValues (VrfLiteConnProtoItem),
+        -   A list containing the extensionValues (ControllerResponseVrfsSwitchesVrfLiteConnProtoItem),
             if any, from these lite objects.
         -   An empty list, if the lite objects have no extensionValues
 
@@ -501,26 +510,28 @@ class DiffAttachToControllerPayload:
         msg += f"caller: {caller}"
         self.log.debug(msg)
 
-        extension_values_list: list[VrfLiteConnProtoItem] = []
+        extension_values_list: list[ControllerResponseVrfsSwitchesVrfLiteConnProtoItem] = []
         for item in lite:
             if item.extension_type != "VRF_LITE":
                 continue
             extension_values_list.append(item.extension_values)
 
-        msg = f"Returning extension_values_list (list[VrfLiteConnProtoItem]). length: {len(extension_values_list)}."
+        msg = f"Returning extension_values_list (list[ControllerResponseVrfsSwitchesVrfLiteConnProtoItem]). length: {len(extension_values_list)}."
         self.log.debug(msg)
         self.log_list_of_models(extension_values_list)
 
         return extension_values_list
 
-    def get_list_of_vrfs_switches_data_item_model(self, lan_attach_item: LanAttachListItemV12) -> list[VrfsSwitchesDataItem]:
+    def get_list_of_vrfs_switches_data_item_model(
+        self, lan_attach_item: PayloadVrfsAttachmentsLanAttachListItem
+    ) -> list[ControllerResponseVrfsSwitchesDataItem]:
         """
         # Summary
 
         Will replace get_list_of_vrfs_switches_data_item_model() in the future.
         Retrieve the IP/Interface that is connected to the switch with serial_number
 
-        LanAttachListItemV12 must contain at least the following fields:
+        PayloadVrfsAttachmentsLanAttachListItem must contain at least the following fields:
 
         - fabric: The fabric to search
         - serial_number: The serial_number of the switch
@@ -561,7 +572,7 @@ class DiffAttachToControllerPayload:
 
         return response.DATA
 
-    def get_vrf_attach_fabric_name(self, vrf_attach: LanAttachListItemV12) -> str:
+    def get_vrf_attach_fabric_name(self, vrf_attach: PayloadVrfsAttachmentsLanAttachListItem) -> str:
         """
         # Summary
 
@@ -572,7 +583,7 @@ class DiffAttachToControllerPayload:
 
         - `vrf_attach`
 
-        A LanAttachListItemV12 model.
+        A PayloadVrfsAttachmentsLanAttachListItem model.
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -698,9 +709,9 @@ class DiffAttachToControllerPayload:
         self._ansible_module = value
 
     @property
-    def payload_model(self) -> list[VrfAttachPayloadV12]:
+    def payload_model(self) -> list[PayloadVrfsAttachments]:
         """
-        Return the payload as a list of VrfAttachPayloadV12.
+        Return the payload as a list of PayloadVrfsAttachments.
         """
         if not self._payload_model:
             msg = f"{self.class_name}: payload_model is not set. Call commit() before accessing payload_model."
@@ -718,9 +729,9 @@ class DiffAttachToControllerPayload:
         return self._payload
 
     @property
-    def playbook_models(self) -> list[VrfPlaybookModelV12]:
+    def playbook_models(self) -> list[PlaybookVrfModelV12]:
         """
-        Return the list of playbook models (list[VrfPlaybookModelV12]).
+        Return the list of playbook models (list[PlaybookVrfModelV12]).
         This should be set before calling commit().
         """
         return self._playbook_models

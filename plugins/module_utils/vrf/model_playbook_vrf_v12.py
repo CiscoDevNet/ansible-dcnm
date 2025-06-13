@@ -30,7 +30,7 @@ from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
 from ..common.models.ipv6_host import IPv6HostModel
 
 
-class VrfLiteModel(BaseModel):
+class PlaybookVrfLiteModel(BaseModel):
     """
     # Summary
 
@@ -60,9 +60,9 @@ class VrfLiteModel(BaseModel):
 
     ```python
     from pydantic import ValidationError
-    from vrf_lite_module import VrfLiteModel
+    from vrf_lite_module import PlaybookVrfLiteModel
     try:
-        vrf_lite = VrfLiteModel(
+        vrf_lite = PlaybookVrfLiteModel(
             dot1q=100,
             interface="Ethernet1/1",
             ipv4_addr="10.1.1.1/24"
@@ -118,7 +118,7 @@ class VrfLiteModel(BaseModel):
         return self
 
 
-class VrfAttachModel(BaseModel):
+class PlaybookVrfAttachModel(BaseModel):
     """
     # Summary
 
@@ -132,7 +132,7 @@ class VrfAttachModel(BaseModel):
         - import_evpn_rt is not a string
         - ip_address is not a valid IPv4 host address
         - ip_address is not provided
-        - vrf_lite (if provided) is not a list of VrfLiteModel instances
+        - vrf_lite (if provided) is not a list of PlaybookVrfLiteModel instances
 
     ## Attributes:
 
@@ -140,22 +140,22 @@ class VrfAttachModel(BaseModel):
     - export_evpn_rt (str): Route target for EVPN export.
     - import_evpn_rt (str): Route target for EVPN import.
     - ip_address (str): IP address of the interface.
-    - vrf_lite (list[VrfLiteModel]): List of VRF Lite configurations.
+    - vrf_lite (list[PlaybookVrfLiteModel]): List of VRF Lite configurations.
     - vrf_lite (None): If not provided, defaults to None.
 
     ## Example usage:
 
     ```python
     from pydantic import ValidationError
-    from vrf_attach_module import VrfAttachModel
+    from vrf_attach_module import PlaybookVrfAttachModel
     try:
-        vrf_attach = VrfAttachModel(
+        vrf_attach = PlaybookVrfAttachModel(
             deploy=True,
             export_evpn_rt="target:1:1",
             import_evpn_rt="target:1:2",
             ip_address="10.1.1.1",
             vrf_lite=[
-                VrfLiteModel(
+                PlaybookVrfLiteModel(
                     dot1q=100,
                     interface="Ethernet1/1",
                     ipv4_addr="10.1.1.1/24"
@@ -171,7 +171,7 @@ class VrfAttachModel(BaseModel):
     export_evpn_rt: str = Field(default="")
     import_evpn_rt: str = Field(default="")
     ip_address: str
-    vrf_lite: Optional[list[VrfLiteModel]] = Field(default=None)
+    vrf_lite: Optional[list[PlaybookVrfLiteModel]] = Field(default=None)
 
     @model_validator(mode="after")
     def validate_ipv4_host(self) -> Self:
@@ -193,7 +193,7 @@ class VrfAttachModel(BaseModel):
         return self
 
 
-class VrfPlaybookModelV12(BaseModel):
+class PlaybookVrfModelV12(BaseModel):
     """
     # Summary
 
@@ -209,7 +209,7 @@ class VrfPlaybookModelV12(BaseModel):
     - ValueError if:
         - adv_default_routes is not a boolean
         - adv_host_routes is not a boolean
-        - attach (if provided) is not a list of VrfAttachModel instances
+        - attach (if provided) is not a list of PlaybookVrfAttachModel instances
         - bgp_passwd_encrypt is not a valid BgpPasswordEncrypt enum value
         - bgp_password is not a string
         - deploy is not a boolean
@@ -255,7 +255,7 @@ class VrfPlaybookModelV12(BaseModel):
     )
     adv_default_routes: bool = Field(default=True, alias="advertiseDefaultRouteFlag")
     adv_host_routes: bool = Field(default=False, alias="advertiseHostRouteFlag")
-    attach: Optional[list[VrfAttachModel]] = None
+    attach: Optional[list[PlaybookVrfAttachModel]] = None
     bgp_passwd_encrypt: Union[BgpPasswordEncrypt, int] = Field(default=BgpPasswordEncrypt.MD5.value, alias="bgpPasswordKeyType")
     bgp_password: str = Field(default="", alias="bgpPassword")
     deploy: bool = Field(default=True)
@@ -313,9 +313,9 @@ class VrfPlaybookModelV12(BaseModel):
         return self
 
 
-class VrfPlaybookConfigModelV12(BaseModel):
+class PlaybookVrfConfigModelV12(BaseModel):
     """
     Model for VRF playbook configuration.
     """
 
-    config: list[VrfPlaybookModelV12] = Field(default_factory=list[VrfPlaybookModelV12])
+    config: list[PlaybookVrfModelV12] = Field(default_factory=list[PlaybookVrfModelV12])

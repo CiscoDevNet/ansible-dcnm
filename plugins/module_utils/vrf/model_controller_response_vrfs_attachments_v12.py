@@ -1,32 +1,32 @@
 # -*- coding: utf-8 -*-
 """
-Validation model for controller responses related to the following endpoint:
+Validation model for controller responses for the following endpoint:
 
-Path:  /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/attachments?vrf-names={vrf1,vrf2,...}
+Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/attachments?vrf-names={vrf1,vrf2,...}
 Verb: GET
 """
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
 
-class LanAttachItem(BaseModel):
+class ControllerResponseLanAttachItem(BaseModel):
     """
     # Summary
 
-    A lanAttachList item (see VrfsAttachmentsDataItem in this file)
+    A lanAttachList item (see ControllerResponseVrfsAttachmentsDataItem in this file)
 
     ## Structure
 
-    - `extension_values`: Optional[str] - alias "extensionValues"
+    - `entity_name`: str = alias "entityName"
     - `fabric_name`: str - alias "fabricName", max_length=64
-    - `freeform_config`: Optional[str] = alias "freeformConfig"
     - `instance_values`: Optional[str] = alias="instanceValues"
     - `ip_address`: str = alias="ipAddress"
     - `is_lan_attached`: bool = alias="isLanAttached"
     - `lan_attach_state`: str = alias="lanAttachState"
+    - `peer_serial_no`: Optional[str] = alias="peerSerialNo", default=None
     - `switch_name`: str = alias="switchName"
     - `switch_role`: str = alias="switchRole"
     - `switch_serial_no`: str = alias="switchSerialNo"
@@ -35,13 +35,13 @@ class LanAttachItem(BaseModel):
     - `vrf_name`: str = alias="vrfName", min_length=1, max_length=32
     """
 
-    extension_values: Optional[str] = Field(alias="extensionValues", default="")
+    entity_name: Optional[str] = Field(alias="entityName", default="")
     fabric_name: str = Field(alias="fabricName", max_length=64)
-    freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
     instance_values: Optional[str] = Field(alias="instanceValues", default="")
     ip_address: str = Field(alias="ipAddress")
     is_lan_attached: bool = Field(alias="isLanAttached")
     lan_attach_state: str = Field(alias="lanAttachState")
+    peer_serial_no: Optional[str] = Field(alias="peerSerialNo", default=None)
     switch_name: str = Field(alias="switchName")
     switch_role: str = Field(alias="switchRole")
     switch_serial_no: str = Field(alias="switchSerialNo")
@@ -50,16 +50,27 @@ class LanAttachItem(BaseModel):
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
 
-class VrfsAttachmentsDataItem(BaseModel):
+class ControllerResponseVrfsAttachmentsDataItem(BaseModel):
     """
     # Summary
 
     A data item in the response for the VRFs attachments endpoint.
 
-    ## Structure
+    # Structure
 
-    - `lan_attach_list`: List[LanAttachItem] - alias "lanAttachList"
+    - `lan_attach_list`: list[ControllerResponseLanAttachItem] - alias "lanAttachList"
     - `vrf_name`: str - alias "vrfName"
+
+    ## Notes
+
+    `instanceValues` is shortened for brevity in the example.  It is a JSON string with the following fields:
+
+    - deviceSupportL3VniNoVlan
+    - loopbackId
+    - loopbackIpAddress
+    - loopbackIpV6Address
+    - switchRouteTargetExportEvpn
+    - switchRouteTargetImportEvpn
 
     ## Example
 
@@ -67,19 +78,19 @@ class VrfsAttachmentsDataItem(BaseModel):
     {
         "lanAttachList": [
             {
-                "extensionValues": "",
+                "entityName": "ansible-vrf-int2",
                 "fabricName": "f1",
-                "freeformConfig": "",
-                "instanceValues": "",
-                "ipAddress": "10.1.2.3",
+                "instanceValues": "{\"field1\": \"value1\", \"field2\": \"value2\"}",
+                "ipAddress": "172.22.150.112",
                 "isLanAttached": true,
                 "lanAttachState": "DEPLOYED",
+                "peerSerialNo": null,
                 "switchName": "cvd-1211-spine",
                 "switchRole": "border spine",
-                "switchSerialNo": "ABC1234DEFG",
-                "vlanId": 500,
-                "vrfId": 9008011,
-                "vrfName": "ansible-vrf-int1"
+                "switchSerialNo": "FOX2109PGCS",
+                "vlanId": 1500,
+                "vrfId": 9008012,
+                "vrfName": "ansible-vrf-int2"
             }
         ],
         "vrfName": "ansible-vrf-int1"
@@ -87,7 +98,7 @@ class VrfsAttachmentsDataItem(BaseModel):
     ```
     """
 
-    lan_attach_list: List[LanAttachItem] = Field(alias="lanAttachList")
+    lan_attach_list: list[ControllerResponseLanAttachItem] = Field(alias="lanAttachList")
     vrf_name: str = Field(alias="vrfName")
 
 
@@ -97,6 +108,8 @@ class ControllerResponseVrfsAttachmentsV12(ControllerResponseGenericV12):
 
     Controller response model for the following endpoint.
 
+    # Endpoint
+
     ## Verb
 
     GET
@@ -105,9 +118,11 @@ class ControllerResponseVrfsAttachmentsV12(ControllerResponseGenericV12):
 
     /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{fabric_name}/vrfs/attachments?vrf-names={vrf1,vrf2,...}
 
-    ## Raises
+    # Raises
 
     ValueError if validation fails
+
+    # Structure
 
     ## Notes
 
@@ -161,7 +176,7 @@ class ControllerResponseVrfsAttachmentsV12(ControllerResponseGenericV12):
         validate_by_alias=True,
         validate_by_name=True,
     )
-    DATA: List[VrfsAttachmentsDataItem]
+    DATA: list[ControllerResponseVrfsAttachmentsDataItem]
     MESSAGE: str
     METHOD: str
     REQUEST_PATH: str

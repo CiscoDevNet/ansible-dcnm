@@ -45,18 +45,18 @@ from .inventory_serial_number_to_switch_role import InventorySerialNumberToSwitc
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .model_controller_response_get_fabrics_vrfinfo import ControllerResponseGetFabricsVrfinfoV12
 from .model_controller_response_get_int import ControllerResponseGetIntV12
-from .model_controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsV12, VrfsAttachmentsDataItem
+from .model_controller_response_vrfs_attachments_v12 import ControllerResponseVrfsAttachmentsDataItem, ControllerResponseVrfsAttachmentsV12
 from .model_controller_response_vrfs_deployments_v12 import ControllerResponseVrfsDeploymentsV12
-from .model_controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesV12, VrfsSwitchesDataItem
+from .model_controller_response_vrfs_switches_v12 import ControllerResponseVrfsSwitchesDataItem, ControllerResponseVrfsSwitchesV12
 from .model_controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
+from .model_payload_vrfs_attachments import PayloadVrfsAttachmentsLanAttachListItem
 from .model_payload_vrfs_deployments import PayloadfVrfsDeployments
-from .model_vrf_attach_payload_v12 import LanAttachListItemV12
+from .model_playbook_vrf_v12 import PlaybookVrfAttachModel, PlaybookVrfModelV12
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
 from .transmute_diff_attach_to_payload import DiffAttachToControllerPayload
 from .vrf_controller_payload_v12 import VrfPayloadV12
 from .vrf_controller_to_playbook_v12 import VrfControllerToPlaybookV12Model
-from .vrf_playbook_model_v12 import VrfPlaybookModelV12
 from .vrf_template_config_v12 import VrfTemplateConfigV12
 from .vrf_utils import get_endpoint_with_long_query_string
 
@@ -176,7 +176,7 @@ class NdfcVrf12:
         self.want_attach_vrf_lite: dict = {}
         self.diff_attach: list = []
         self.validated_playbook_config: list = []
-        self.validated_playbook_config_models: list[VrfPlaybookModelV12] = []
+        self.validated_playbook_config_models: list[PlaybookVrfModelV12] = []
         # diff_detach contains all attachments of a vrf being deleted,
         # especially for state: OVERRIDDEN
         # The diff_detach and delete operations have to happen before
@@ -792,7 +792,7 @@ class NdfcVrf12:
             self.log.debug(msg)
             return False
 
-    def update_attach_params_extension_values(self, attach: dict) -> dict:
+    def update_attach_params_extension_values(self, vrf_attach_model: PlaybookVrfAttachModel) -> dict:
         """
         # Summary
 
@@ -850,6 +850,9 @@ class NdfcVrf12:
         msg = "ENTERED. "
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
+
+        # TODO: Remove this once the method is refactored to use Pydantic models.
+        attach = vrf_attach_model.model_dump()
 
         if not attach["vrf_lite"]:
             msg = "Early return. No vrf_lite extensions to process."
@@ -923,11 +926,11 @@ class NdfcVrf12:
 
         return copy.deepcopy(extension_values)
 
-    def transmute_attach_params_to_payload(self, attach: dict, vrf_name: str, deploy: bool, vlan_id: int) -> dict:
+    def transmute_attach_params_to_payload(self, vrf_attach_model: PlaybookVrfAttachModel, vrf_name: str, deploy: bool, vlan_id: int) -> dict:
         """
         # Summary
 
-        Turn an attachment dict (attach) into a payload for the controller.
+        Turn playbook vrf attachment config (PlaybookVrfAttachModel) into an attachment payload for the controller.
 
         ## Raises
 
@@ -944,21 +947,23 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        if not attach:
+        # TODO: Remove this once the method is refactored to use Pydantic models.
+        attach = vrf_attach_model.model_dump()
+        if not vrf_attach_model:
             msg = "Early return. No attachments to process."
             self.log.debug(msg)
             return {}
 
         # dcnm_get_ip_addr_info converts serial_numbers, hostnames, etc, to ip addresses.
-        ip_address = dcnm_get_ip_addr_info(self.module, attach.get("ip_address"), None, None)
-        serial_number = self.ipv4_to_serial_number.convert(attach.get("ip_address"))
+        ip_address = dcnm_get_ip_addr_info(self.module, vrf_attach_model.ip_address, None, None)
+        serial_number = self.ipv4_to_serial_number.convert(vrf_attach_model.ip_address)
 
-        attach["ip_address"] = ip_address
+        vrf_attach_model.ip_address = ip_address
 
         msg = f"ip_address: {ip_address}, "
         msg += f"serial_number: {serial_number}, "
-        msg += "attach: "
-        msg += f"{json.dumps(attach, indent=4, sort_keys=True)}"
+        msg += "vrf_attach_model: "
+        msg += f"{json.dumps(vrf_attach_model.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
         if not serial_number:
@@ -968,7 +973,10 @@ class NdfcVrf12:
             msg += f"{ip_address} ({serial_number})."
             self.module.fail_json(msg=msg)
 
-        role = self.inventory_data[attach["ip_address"]].get("switchRole")
+        role = self.inventory_data[vrf_attach_model.ip_address].get("switchRole")
+
+        msg = f"ZZZ: role: {role}, "
+        self.log.debug(msg)
 
         if role.lower() in ("spine", "super spine"):
             msg = f"{self.class_name}.{method_name}: "
@@ -979,7 +987,7 @@ class NdfcVrf12:
             msg += f"{ip_address} with role {role} need review."
             self.module.fail_json(msg=msg)
 
-        extension_values = self.update_attach_params_extension_values(attach)
+        extension_values = self.update_attach_params_extension_values(vrf_attach_model=vrf_attach_model)
         if extension_values:
             attach.update({"extensionValues": json.dumps(extension_values).replace(" ", "")})
         else:
@@ -1162,11 +1170,11 @@ class NdfcVrf12:
 
         return create, configuration_changed
 
-    def transmute_playbook_model_to_vrf_create_payload_model(self, vrf_playbook_model: VrfPlaybookModelV12) -> VrfPayloadV12:
+    def transmute_playbook_model_to_vrf_create_payload_model(self, vrf_playbook_model: PlaybookVrfModelV12) -> VrfPayloadV12:
         """
         # Summary
 
-        Given an instance of VrfPlaybookModelV12, return an instance of VrfPayloadV12
+        Given an instance of PlaybookVrfModelV12, return an instance of VrfPayloadV12
         suitable for sending to the controller.
         """
         caller = inspect.stack()[1][3]
@@ -1178,15 +1186,15 @@ class NdfcVrf12:
         if not vrf_playbook_model:
             return vrf_playbook_model
 
-        msg = "vrf_playbook_model (VrfPlaybookModelV12): "
+        msg = "vrf_playbook_model (PlaybookVrfModelV12): "
         msg += f"{json.dumps(vrf_playbook_model.model_dump(), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        # Transmute VrfPlaybookModelV12 into a vrf_template_config dictionary
+        # Transmute PlaybookVrfModelV12 into a vrf_template_config dictionary
         validated_template_config = VrfTemplateConfigV12.model_validate(vrf_playbook_model.model_dump())
         vrf_template_config_dict = validated_template_config.model_dump_json(by_alias=True)
 
-        # Tramsmute VrfPlaybookModelV12 into VrfPayloadV12
+        # Tramsmute PlaybookVrfModelV12 into VrfPayloadV12
         vrf_payload_v12 = VrfPayloadV12(
             fabric=self.fabric,
             service_vrf_template=vrf_playbook_model.service_vrf_template or "",
@@ -1290,7 +1298,7 @@ class NdfcVrf12:
 
         return validated_response.DATA
 
-    def get_list_of_vrfs_switches_data_item_model(self, attach: dict) -> list[VrfsSwitchesDataItem]:
+    def get_list_of_vrfs_switches_data_item_model(self, attach: dict) -> list[ControllerResponseVrfsSwitchesDataItem]:
         """
         # Summary
 
@@ -1344,14 +1352,16 @@ class NdfcVrf12:
 
         return validated_response.DATA
 
-    def get_list_of_vrfs_switches_data_item_model_new(self, lan_attach_item: LanAttachListItemV12) -> list[VrfsSwitchesDataItem]:
+    def get_list_of_vrfs_switches_data_item_model_new(
+        self, lan_attach_item: PayloadVrfsAttachmentsLanAttachListItem
+    ) -> list[ControllerResponseVrfsSwitchesDataItem]:
         """
         # Summary
 
         Will replace get_list_of_vrfs_switches_data_item_model() in the future.
         Retrieve the IP/Interface that is connected to the switch with serial_number
 
-        LanAttachListItemV12 must contain at least the following fields:
+        PayloadVrfsAttachmentsLanAttachListItem must contain at least the following fields:
 
         - fabric: The fabric to search
         - serial_number: The serial_number of the switch
@@ -1468,11 +1478,11 @@ class NdfcVrf12:
 
         return copy.deepcopy(have_deploy)
 
-    def populate_have_deploy_model(self, vrf_attach_responses: list[VrfsAttachmentsDataItem]) -> PayloadfVrfsDeployments:
+    def populate_have_deploy_model(self, vrf_attach_responses: list[ControllerResponseVrfsAttachmentsDataItem]) -> PayloadfVrfsDeployments:
         """
         Return PayloadfVrfsDeployments, which is a model representation of VRFs currently deployed on the controller.
 
-        Uses vrf_attach_responses (list[VrfsAttachmentsDataItem]) to populate PayloadfVrfsDeployments.
+        Uses vrf_attach_responses (list[ControllerResponseVrfsAttachmentsDataItem]) to populate PayloadfVrfsDeployments.
         """
         caller = inspect.stack()[1][3]
 
@@ -1502,9 +1512,9 @@ class NdfcVrf12:
 
         return have_deploy_model
 
-    def populate_have_attach_models(self, vrf_attach_models: list[VrfsAttachmentsDataItem]) -> None:
+    def populate_have_attach_models(self, vrf_attach_models: list[ControllerResponseVrfsAttachmentsDataItem]) -> None:
         """
-        Populate the following using vrf_attach_models (list[VrfsAttachmentsDataItem]):
+        Populate the following using vrf_attach_models (list[ControllerResponseVrfsAttachmentsDataItem]):
 
         - self.have_attach
         - self.have_attach_models
@@ -1713,25 +1723,25 @@ class NdfcVrf12:
 
         want_attach: list[dict[str, Any]] = []
 
-        for vrf in self.validated_playbook_config:
-            vrf_name: str = vrf.get("vrf_name")
+        for validated_playbook_config_model in self.validated_playbook_config_models:
+            vrf_name: str = validated_playbook_config_model.vrf_name
             vrf_attach: dict[Any, Any] = {}
-            vrfs: list[dict[Any, Any]] = []
+            vrf_attach_payloads: list[dict[Any, Any]] = []
 
-            vrf_deploy: bool = vrf.get("deploy", True)
-            vlan_id: int = vrf.get("vlan_id", 0)
+            vrf_deploy: bool = validated_playbook_config_model.deploy or False
+            vlan_id: int = validated_playbook_config_model.vlan_id or 0
 
-            if not vrf.get("attach"):
+            if not validated_playbook_config_model.attach:
                 msg = f"No attachments for vrf {vrf_name}. Skipping."
                 self.log.debug(msg)
                 continue
-            for attach in vrf["attach"]:
+            for vrf_attach_model in validated_playbook_config_model.attach:
                 deploy = vrf_deploy
-                vrfs.append(self.transmute_attach_params_to_payload(attach, vrf_name, deploy, vlan_id))
+                vrf_attach_payloads.append(self.transmute_attach_params_to_payload(vrf_attach_model, vrf_name, deploy, vlan_id))
 
-            if vrfs:
+            if vrf_attach_payloads:
                 vrf_attach.update({"vrfName": vrf_name})
-                vrf_attach.update({"lanAttachList": vrfs})
+                vrf_attach.update({"lanAttachList": vrf_attach_payloads})
                 want_attach.append(vrf_attach)
 
         self.want_attach = copy.deepcopy(want_attach)
@@ -2487,7 +2497,7 @@ class NdfcVrf12:
             self.log.debug(msg)
             # Check user intent for this VRF and don't add it to the all_vrfs
             # set if the user has not requested a deploy.
-            want_config_model: VrfPlaybookModelV12 = self.find_model_in_list_by_key_value(
+            want_config_model: PlaybookVrfModelV12 = self.find_model_in_list_by_key_value(
                 search=self.validated_playbook_config_models, key="vrf_name", value=want_attach["vrfName"]
             )
             want_config_deploy = want_config_model.deploy if want_config_model else False
@@ -3032,12 +3042,12 @@ class NdfcVrf12:
             self.result["response"].append(msg)
             self.module.fail_json(msg=self.result)
 
-    def get_controller_vrf_attachment_models(self, vrf_name: str) -> list[VrfsAttachmentsDataItem]:
+    def get_controller_vrf_attachment_models(self, vrf_name: str) -> list[ControllerResponseVrfsAttachmentsDataItem]:
         """
         ## Summary
 
         Given a vrf_name, query the controller for the attachment list
-        for that vrf and return a list of VrfsAttachmentsDataItem
+        for that vrf and return a list of ControllerResponseVrfsAttachmentsDataItem
         models.
 
         ## Raises
@@ -3518,7 +3528,7 @@ class NdfcVrf12:
             self.log.debug(msg)
             self.failure(controller_response)
 
-    def get_vrf_attach_fabric_name(self, vrf_attach: LanAttachListItemV12) -> str:
+    def get_vrf_attach_fabric_name(self, vrf_attach: PayloadVrfsAttachmentsLanAttachListItem) -> str:
         """
         # Summary
 
@@ -3529,7 +3539,7 @@ class NdfcVrf12:
 
         - `vrf_attach`
 
-        A LanAttachListItemV12 model.
+        A PayloadVrfsAttachmentsLanAttachListItem model.
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -3983,7 +3993,7 @@ class NdfcVrf12:
         """
         # Summary
 
-        Validate self.config against VrfPlaybookModelV12 and update
+        Validate self.config against PlaybookVrfModelV12 and update
         self.validated_playbook_config with the validated config.
 
         ## Raises
@@ -4003,7 +4013,7 @@ class NdfcVrf12:
             try:
                 msg = "Validating playbook configuration."
                 self.log.debug(msg)
-                validated_playbook_config = VrfPlaybookModelV12(**vrf_config)
+                validated_playbook_config = PlaybookVrfModelV12(**vrf_config)
                 msg = "validated_playbook_config: "
                 msg += f"{json.dumps(validated_playbook_config.model_dump(), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
@@ -4021,7 +4031,7 @@ class NdfcVrf12:
         """
         # Summary
 
-        Validate self.config against VrfPlaybookModelV12 and updates
+        Validate self.config against PlaybookVrfModelV12 and updates
         self.validated_playbook_config_models with the validated config.
 
         ## Raises
@@ -4044,7 +4054,7 @@ class NdfcVrf12:
             try:
                 msg = "Validating playbook configuration."
                 self.log.debug(msg)
-                validated_playbook_config = VrfPlaybookModelV12(**config)
+                validated_playbook_config = PlaybookVrfModelV12(**config)
             except ValidationError as error:
                 # We need to pass the unaltered ValidationError
                 # directly to the fail_json method for unit tests to pass.

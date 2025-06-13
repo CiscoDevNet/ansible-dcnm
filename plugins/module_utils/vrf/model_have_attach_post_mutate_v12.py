@@ -23,6 +23,7 @@ class HaveLanAttachItem(BaseModel):
     - vlan: Union(int | None), alias: vlanId
     - vrf_name: str (min_length=1, max_length=32), alias: vrfName
     """
+
     deployment: bool = Field(alias="deployment")
     extension_values: Optional[str] = Field(alias="extensionValues", default="")
     fabric: str = Field(alias="fabricName", min_length=1, max_length=64)
@@ -43,6 +44,7 @@ class HaveAttachPostMutate(BaseModel):
 
     See NdfcVrf12.populate_have_attach_model
     """
+
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,

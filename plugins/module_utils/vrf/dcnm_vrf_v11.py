@@ -65,6 +65,7 @@ from ...module_utils.network.dcnm.dcnm import (
 
 try:
     from ...module_utils.vrf.vrf_controller_to_playbook_v11 import VrfControllerToPlaybookV11Model
+
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error
@@ -72,7 +73,8 @@ except ImportError as import_error:
     FIRST_PARTY_FAILED_IMPORT.add("VrfControllerToPlaybookV11Model")
 
 try:
-    from ...module_utils.vrf.vrf_playbook_model_v11 import VrfPlaybookModelV11
+    from .model_playbook_vrf_v11 import VrfPlaybookModelV11
+
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     FIRST_PARTY_IMPORT_ERROR = import_error

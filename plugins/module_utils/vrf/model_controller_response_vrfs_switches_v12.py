@@ -13,7 +13,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
 
-class VrfLiteConnProtoItem(BaseModel):
+class ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(BaseModel):
     asn: str = Field(alias="asn")
     auto_vrf_lite_flag: str = Field(alias="AUTO_VRF_LITE_FLAG")
     dot1q_id: str = Field(alias="DOT1Q_ID")
@@ -29,11 +29,11 @@ class VrfLiteConnProtoItem(BaseModel):
     vrf_lite_jython_template: str = Field(alias="VRF_LITE_JYTHON_TEMPLATE")
 
 
-class ExtensionPrototypeValue(BaseModel):
+class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
     dest_interface_name: str = Field(alias="destInterfaceName")
     dest_switch_name: str = Field(alias="destSwitchName")
     extension_type: str = Field(alias="extensionType")
-    extension_values: Union[VrfLiteConnProtoItem, str] = Field(default="", alias="extensionValues")
+    extension_values: Union[ControllerResponseVrfsSwitchesVrfLiteConnProtoItem, str] = Field(default="", alias="extensionValues")
     interface_name: str = Field(alias="interfaceName")
 
     @field_validator("extension_values", mode="before")
@@ -43,19 +43,19 @@ class ExtensionPrototypeValue(BaseModel):
         Convert incoming data
 
         - If data is a JSON string, use json.loads() to convert to a dict.
-        - If data is a dict, convert it to an VrfLiteConnProtoItem instance.
-        - If data is already an VrfLiteConnProtoItem instance, return as-is.
+        - If data is a dict, convert it to an ControllerResponseVrfsSwitchesVrfLiteConnProtoItem instance.
+        - If data is already an ControllerResponseVrfsSwitchesVrfLiteConnProtoItem instance, return as-is.
         """
         if isinstance(data, str):
             if data == "":
                 return ""
             data = json.loads(data)
         if isinstance(data, dict):
-            data = VrfLiteConnProtoItem(**data)
+            data = ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(**data)
         return data
 
 
-class InstanceValues(BaseModel):
+class ControllerResponseVrfsSwitchesInstanceValues(BaseModel):
     """
     ```json
     {
@@ -75,7 +75,7 @@ class InstanceValues(BaseModel):
     switch_route_target_import_evpn: Optional[str] = Field(default="", alias="switchRouteTargetImportEvpn")
 
 
-class MultisiteConnOuterItem(BaseModel):
+class ControllerResponseVrfsSwitchesMultisiteConnOuterItem(BaseModel):
     pass
 
 
@@ -92,17 +92,17 @@ class VrfLiteConnOuterItem(BaseModel):
     vrf_lite_jython_template: str = Field(alias="VRF_LITE_JYTHON_TEMPLATE")
 
 
-class MultisiteConnOuter(BaseModel):
-    multisite_conn: List[MultisiteConnOuterItem] = Field(alias="MULTISITE_CONN")
+class ControllerResponseVrfsSwitchesMultisiteConnOuter(BaseModel):
+    multisite_conn: List[ControllerResponseVrfsSwitchesMultisiteConnOuterItem] = Field(alias="MULTISITE_CONN")
 
 
-class VrfLiteConnOuter(BaseModel):
+class ControllerResponseVrfsSwitchesVrfLiteConnOuter(BaseModel):
     vrf_lite_conn: List[VrfLiteConnOuterItem] = Field(alias="VRF_LITE_CONN")
 
 
-class ExtensionValuesOuter(BaseModel):
-    vrf_lite_conn: VrfLiteConnOuter = Field(alias="VRF_LITE_CONN")
-    multisite_conn: MultisiteConnOuter = Field(alias="MULTISITE_CONN")
+class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
+    vrf_lite_conn: ControllerResponseVrfsSwitchesVrfLiteConnOuter = Field(alias="VRF_LITE_CONN")
+    multisite_conn: ControllerResponseVrfsSwitchesMultisiteConnOuter = Field(alias="MULTISITE_CONN")
 
     @field_validator("multisite_conn", mode="before")
     @classmethod
@@ -111,15 +111,15 @@ class ExtensionValuesOuter(BaseModel):
         Convert incoming data
 
         - If data is a JSON string, use json.loads() to convert to a dict.
-        - If data is a dict, convert it to an MultisiteConnOuter instance.
-        - If data is already an MultisiteConnOuter instance, return as-is.
+        - If data is a dict, convert it to an ControllerResponseVrfsSwitchesMultisiteConnOuter instance.
+        - If data is already an ControllerResponseVrfsSwitchesMultisiteConnOuter instance, return as-is.
         """
         if isinstance(data, str):
             if data == "":
                 return ""
             data = json.loads(data)
         if isinstance(data, dict):
-            data = MultisiteConnOuter(**data)
+            data = ControllerResponseVrfsSwitchesMultisiteConnOuter(**data)
         return data
 
     @field_validator("vrf_lite_conn", mode="before")
@@ -129,24 +129,24 @@ class ExtensionValuesOuter(BaseModel):
         Convert incoming data
 
         - If data is a JSON string, use json.loads() to convert to a dict.
-        - If data is a dict, convert it to an VrfLiteConnOuter instance.
-        - If data is already an VrfLiteConnOuter instance, return as-is.
+        - If data is a dict, convert it to an ControllerResponseVrfsSwitchesVrfLiteConnOuter instance.
+        - If data is already an ControllerResponseVrfsSwitchesVrfLiteConnOuter instance, return as-is.
         """
         if isinstance(data, str):
             if data == "":
                 return ""
             data = json.loads(data)
         if isinstance(data, dict):
-            data = VrfLiteConnOuter(**data)
+            data = ControllerResponseVrfsSwitchesVrfLiteConnOuter(**data)
         return data
 
 
-class SwitchDetails(BaseModel):
+class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
     error_message: Union[str, None] = Field(alias="errorMessage")
-    extension_prototype_values: Union[List[ExtensionPrototypeValue], str] = Field(default="", alias="extensionPrototypeValues")
-    extension_values: Union[ExtensionValuesOuter, str, None] = Field(default="", alias="extensionValues")
+    extension_prototype_values: Union[List[ControllerResponseVrfsSwitchesExtensionPrototypeValue], str] = Field(default="", alias="extensionPrototypeValues")
+    extension_values: Union[ControllerResponseVrfsSwitchesExtensionValuesOuter, str, None] = Field(default="", alias="extensionValues")
     freeform_config: Union[str, None] = Field(alias="freeformConfig")
-    instance_values: Optional[Union[InstanceValues, str, None]] = Field(default="", alias="instanceValues")
+    instance_values: Optional[Union[ControllerResponseVrfsSwitchesInstanceValues, str, None]] = Field(default="", alias="instanceValues")
     is_lan_attached: bool = Field(alias="islanAttached")
     lan_attached_state: str = Field(alias="lanAttachedState")
     peer_serial_number: Union[str, None] = Field(alias="peerSerialNumber")
@@ -163,8 +163,8 @@ class SwitchDetails(BaseModel):
         Convert incoming data
 
         - If data is a JSON string, use json.loads() to convert to a dict.
-        - If data is a list, convert it to a list of ExtensionPrototypeValue instance.
-        - If data is already an ExtensionPrototypeValue model, return as-is.
+        - If data is a list, convert it to a list of ControllerResponseVrfsSwitchesExtensionPrototypeValue instance.
+        - If data is already an ControllerResponseVrfsSwitchesExtensionPrototypeValue model, return as-is.
         """
         if isinstance(data, str):
             if data == "":
@@ -173,7 +173,7 @@ class SwitchDetails(BaseModel):
         if isinstance(data, list):
             for instance in data:
                 if isinstance(instance, dict):
-                    instance = ExtensionPrototypeValue(**instance)
+                    instance = ControllerResponseVrfsSwitchesExtensionPrototypeValue(**instance)
         return data
 
     @field_validator("extension_values", mode="before")
@@ -183,15 +183,15 @@ class SwitchDetails(BaseModel):
         Convert incoming data
 
         - If data is a JSON string, use json.loads() to convert to a dict.
-        - If data is a dict, convert it to an ExtensionValuesOuter instance.
-        - If data is already an ExtensionValuesOuter instance, return as-is.
+        - If data is a dict, convert it to an ControllerResponseVrfsSwitchesExtensionValuesOuter instance.
+        - If data is already an ControllerResponseVrfsSwitchesExtensionValuesOuter instance, return as-is.
         """
         if isinstance(data, str):
             if data == "":
                 return ""
             data = json.loads(data)
         if isinstance(data, dict):
-            data = ExtensionValuesOuter(**data)
+            data = ControllerResponseVrfsSwitchesExtensionValuesOuter(**data)
         return data
 
     @field_validator("instance_values", mode="before")
@@ -201,20 +201,20 @@ class SwitchDetails(BaseModel):
         Convert incoming data
 
         - If data is a JSON string, use json.loads() to convert to a dict.
-        - If data is a dict, convert it to an InstanceValues instance.
-        - If data is already an InstanceValues instance, return as-is.
+        - If data is a dict, convert it to an ControllerResponseVrfsSwitchesInstanceValues instance.
+        - If data is already an ControllerResponseVrfsSwitchesInstanceValues instance, return as-is.
         """
         if isinstance(data, str):
             if data == "":
                 return ""
             data = json.loads(data)
         if isinstance(data, dict):
-            data = InstanceValues(**data)
+            data = ControllerResponseVrfsSwitchesInstanceValues(**data)
         return data
 
 
-class VrfsSwitchesDataItem(BaseModel):
-    switch_details_list: List[SwitchDetails] = Field(alias="switchDetailsList")
+class ControllerResponseVrfsSwitchesDataItem(BaseModel):
+    switch_details_list: List[ControllerResponseVrfsSwitchesSwitchDetails] = Field(alias="switchDetailsList")
     template_name: str = Field(alias="templateName")
     vrf_name: str = Field(alias="vrfName")
 
@@ -232,7 +232,7 @@ class ControllerResponseVrfsSwitchesV12(ControllerResponseGenericV12):
         validate_assignment=True,
     )
 
-    DATA: List[VrfsSwitchesDataItem]
+    DATA: List[ControllerResponseVrfsSwitchesDataItem]
     MESSAGE: str
     METHOD: str
     REQUEST_PATH: str
