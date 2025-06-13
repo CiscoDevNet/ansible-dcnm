@@ -56,6 +56,9 @@ plugins/module_utils/vrf/model_controller_response_vrfs_v12.py import-3.11!skip
 plugins/module_utils/vrf/model_have_attach_post_mutate_v12.py import-3.9!skip
 plugins/module_utils/vrf/model_have_attach_post_mutate_v12.py import-3.10!skip
 plugins/module_utils/vrf/model_have_attach_post_mutate_v12.py import-3.11!skip
+plugins/module_utils/vrf/model_payload_vrfs_attachments.py import-3.9!skip
+plugins/module_utils/vrf/model_payload_vrfs_attachments.py import-3.10!skip
+plugins/module_utils/vrf/model_payload_vrfs_attachments.py import-3.11!skip
 plugins/module_utils/vrf/model_payload_vrfs_deployments.py import-3.9!skip
 plugins/module_utils/vrf/model_payload_vrfs_deployments.py import-3.10!skip
 plugins/module_utils/vrf/model_payload_vrfs_deployments.py import-3.11!skip
