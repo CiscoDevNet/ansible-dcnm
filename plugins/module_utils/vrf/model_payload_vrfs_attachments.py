@@ -63,10 +63,10 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
     ```json
         {
             "deployment": true,
-            "extensionValues": "{\"VRF_LITE_CONN\":\"{\\\"VRF_LITE_CONN\\\":[{\\\"IF_NAME\\\":\\\"Ethernet2/10\\\",\\\"DOT1Q_ID\\\":\\\"2\\\",\\\"IP_MASK\\\":\\\"10.33.0.2/30\\\",\\\"NEIGHBOR_IP\\\":\\\"10.33.0.1\\\",\\\"NEIGHBOR_ASN\\\":\\\"65001\\\",\\\"IPV6_MASK\\\":\\\"2010::10:34:0:7/64\\\",\\\"IPV6_NEIGHBOR\\\":\\\"2010::10:34:0:3\\\",\\\"AUTO_VRF_LITE_FLAG\\\":\\\"true\\\",\\\"PEER_VRF_NAME\\\":\\\"ansible-vrf-int1\\\",\\\"VRF_LITE_JYTHON_TEMPLATE\\\":\\\"Ext_VRF_Lite_Jython\\\"}]}\",\"MULTISITE_CONN\":\"{\\\"MULTISITE_CONN\\\":[]}\"}",
+            "extensionValues": "{\"field1\":\"field1_value\",\"field2\":\"field2_value\"}",
             "fabric": "f1",
             "freeformConfig": "",
-            "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+            "instanceValues": "{\"field1\":\"field1_value\",\"field2\":\"field2_value\"}",
             "serialNumber": "FOX2109PGD0",
             "vlan": 0,
             "vrfName": "ansible-vrf-int1"
