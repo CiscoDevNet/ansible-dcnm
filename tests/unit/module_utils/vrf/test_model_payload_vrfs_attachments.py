@@ -4,8 +4,7 @@
 Unit tests for the PayloadVrfsAttachments model.
 """
 import pytest
-
-from .....plugins.module_utils.vrf.model_payload_vrfs_attachments import PayloadVrfsAttachments
+from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_payload_vrfs_attachments import PayloadVrfsAttachments
 
 
 def valid_payload_data() -> dict:
