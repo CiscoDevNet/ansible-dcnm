@@ -1,6 +1,10 @@
+"""
+Load fixtures for VRF module tests.
+"""
+
 from __future__ import absolute_import, division, print_function
 
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,24 +17,16 @@ from __future__ import absolute_import, division, print_function
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# See the following regarding *_fixture imports
-# https://pylint.pycqa.org/en/latest/user_guide/messages/warning/redefined-outer-name.html
-# Due to the above, we also need to disable unused-import
-# pylint: disable=unused-import
-# Some fixtures need to use *args to match the signature of the function they are mocking
-# pylint: disable=unused-argument
-# Some tests require calling protected methods
-# pylint: disable=protected-access
-
-__metaclass__ = type
-
-__copyright__ = "Copyright (c) 2025 Cisco and/or its affiliates."
-__author__ = "Allen Robel"
-
 import json
 import os
 import sys
+
+# pylint: disable=invalid-name
+__metaclass__ = type
+__copyright__ = "Copyright (c) 2025 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
+# pylint: enable=invalid-name
+
 
 fixture_path = os.path.join(os.path.dirname(__file__), "")
 
@@ -60,6 +56,7 @@ def load_fixture(filename):
         sys.exit(1)
 
     return fixture
+
 
 def playbooks(key: str) -> dict[str, str]:
     """
