@@ -17,7 +17,7 @@ Test cases for PlaybookVrfModelV12 and PlaybookVrfConfigModelV12.
 from typing import Union
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_playbook_vrf_v12 import PlaybookVrfConfigModelV12, PlaybookVrfModelV12
+from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_playbook_vrf_v12 import PlaybookVrfConfigModelV12, PlaybookVrfLiteModel, PlaybookVrfModelV12
 
 from ..common.common_utils import does_not_raise
 from .fixtures.load_fixture import playbooks
@@ -36,7 +36,7 @@ def test_full_config_00000() -> None:
 
 
 @pytest.mark.parametrize(
-    "vrf_name, expected",
+    "value, expected",
     [
         ("ansible-vrf-int1", True),
         ("vrf_5678901234567890123456789012", True),  # Valid, exactly 32 characters
@@ -44,19 +44,53 @@ def test_full_config_00000() -> None:
         ("vrf_56789012345678901234567890123", False),  # Invalid, longer than 32 characters
     ],
 )
-def test_vrf_name_00000(vrf_name: Union[str, int], expected: bool) -> None:
+def test_vrf_name_00000(value: Union[str, int], expected: bool) -> None:
     """
     Test the validation of VRF names.
 
-    :param vrf_name: The VRF name to validate.
+    :param value: The VRF name to validate.
     :param expected: Expected result of the validation.
     """
     playbook = playbooks("playbook_as_dict")
-    playbook["vrf_name"] = vrf_name
+    playbook["vrf_name"] = value
     if expected:
         with does_not_raise():
             instance = PlaybookVrfModelV12(**playbook)
-            assert instance.vrf_name == vrf_name
+            assert instance.vrf_name == value
     else:
         with pytest.raises(ValueError):
             PlaybookVrfModelV12(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
+        ("1", "1", True),
+        ("4094", "4094", True),
+        (1, "1", True),
+        (4094, "4094", True),
+        ("0", "", True),
+        (0, "", True),
+        ("4095", None, False),
+        (4095, None, False),
+        ("-1", None, False),
+        ("abc", None, False),
+    ],
+)
+def test_vrf_lite_dot1q_00000(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    Test the validation of vrf_lite.dot1q
+
+    :param value: The dot1q value to validate.
+    :param expected: Expected value after model conversion.
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("vrf_lite")
+    playbook["dot1q"] = value
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfLiteModel(**playbook)
+            assert instance.dot1q == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfLiteModel(**playbook)
