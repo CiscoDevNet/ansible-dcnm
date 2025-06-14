@@ -899,12 +899,7 @@ class NdfcVrf12:
                 vrf_lite_conn[param] = ""
 
             vrf_lite_conn["IF_NAME"] = playbook_vrf_lite_model.interface
-            if playbook_vrf_lite_model.dot1q == 0:
-                # If the dot1q field is 0, we set it to an empty string or the VRF never goes into DEPLOYED state.
-                # TODO: We should take care of this in the model in an "after" field_validator rather than here.
-                vrf_lite_conn["DOT1Q_ID"] = ""
-            else:
-                vrf_lite_conn["DOT1Q_ID"] = str(playbook_vrf_lite_model.dot1q)
+            vrf_lite_conn["DOT1Q_ID"] = playbook_vrf_lite_model.dot1q
             vrf_lite_conn["IP_MASK"] = playbook_vrf_lite_model.ipv4_addr
             vrf_lite_conn["NEIGHBOR_IP"] = playbook_vrf_lite_model.neighbor_ipv4
             vrf_lite_conn["IPV6_MASK"] = playbook_vrf_lite_model.ipv6_addr

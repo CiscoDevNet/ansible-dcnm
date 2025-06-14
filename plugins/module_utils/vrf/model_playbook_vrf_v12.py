@@ -20,8 +20,7 @@ Validation model for dcnm_vrf playbooks.
 """
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-from typing_extensions import Self
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
@@ -73,7 +72,7 @@ class PlaybookVrfLiteModel(BaseModel):
 
     """
 
-    dot1q: int = Field(default=0, ge=0, le=4094)
+    dot1q: str = Field(default="", max_length=4)
     interface: str
     ipv4_addr: Optional[str] = Field(default="")
     ipv6_addr: Optional[str] = Field(default="")
@@ -81,41 +80,69 @@ class PlaybookVrfLiteModel(BaseModel):
     neighbor_ipv6: Optional[str] = Field(default="")
     peer_vrf: Optional[str] = Field(default="")
 
-    @model_validator(mode="after")
-    def validate_ipv4_host(self) -> Self:
+    @field_validator("dot1q", mode="before")
+    @classmethod
+    def validate_dot1q_and_serialize_to_str(cls, value: Union[None, int, str]) -> str:
+        """
+        Validate dot1q and serialize it to a str.
+
+        - If value is any of [None, "", "0", 0], return an empty string.
+        - Else, if value cannot be converted to an int, raise ValueError.
+        - Convert to int and validate it is within the range 1-4094.
+        - If it is, return the value as a string.
+        - If it is not, raise ValueError.
+        """
+        if value in [None, "", "0", 0]:
+            return ""
+        try:
+            value = int(value)
+        except (ValueError, TypeError) as error:
+            msg = f"Invalid dot1q value: {value}. It must be an integer between 1 and 4094."
+            msg += f" Error detail: {error}"
+            raise ValueError(msg) from error
+        if value < 1 or value > 4094:
+            raise ValueError(f"Invalid dot1q value: {value}. It must be an integer between 1 and 4094.")
+        return str(value)
+
+    @field_validator("neighbor_ipv4", mode="before")
+    @classmethod
+    def validate_neighbor_ipv4(cls, value: str) -> str:
         """
         Validate neighbor_ipv4 is an IPv4 host address without prefix.
         """
-        if self.neighbor_ipv4 != "":
-            IPv4HostModel(ipv4_host=str(self.neighbor_ipv4))
-        return self
+        if value != "":
+            IPv4HostModel(ipv4_host=str(value))
+        return value
 
-    @model_validator(mode="after")
-    def validate_ipv6_host(self) -> Self:
+    @field_validator("neighbor_ipv6", mode="before")
+    @classmethod
+    def validate_neighbor_ipv6(cls, value: str) -> str:
         """
         Validate neighbor_ipv6 is an IPv6 host address without prefix.
         """
-        if self.neighbor_ipv6 != "":
-            IPv6HostModel(ipv6_host=str(self.neighbor_ipv6))
-        return self
+        if value != "":
+            IPv6HostModel(ipv6_host=str(value))
+        return value
 
-    @model_validator(mode="after")
-    def validate_ipv4_cidr_host(self) -> Self:
+    @field_validator("ipv4_addr", mode="before")
+    @classmethod
+    def validate_ipv4_addr(cls, value: str) -> str:
         """
         Validate ipv4_addr is a CIDR-format IPv4 host address.
         """
-        if self.ipv4_addr != "":
-            IPv4CidrHostModel(ipv4_cidr_host=str(self.ipv4_addr))
-        return self
+        if value != "":
+            IPv4CidrHostModel(ipv4_cidr_host=str(value))
+        return value
 
-    @model_validator(mode="after")
-    def validate_ipv6_cidr_host(self) -> Self:
+    @field_validator("ipv6_addr", mode="before")
+    @classmethod
+    def validate_ipv6_addr(cls, value: str) -> str:
         """
         Validate ipv6_addr is a CIDR-format IPv6 host address.
         """
-        if self.ipv6_addr != "":
-            IPv6CidrHostModel(ipv6_cidr_host=str(self.ipv6_addr))
-        return self
+        if value != "":
+            IPv6CidrHostModel(ipv6_cidr_host=str(value))
+        return value
 
 
 class PlaybookVrfAttachModel(BaseModel):
@@ -173,24 +200,26 @@ class PlaybookVrfAttachModel(BaseModel):
     ip_address: str
     vrf_lite: Optional[list[PlaybookVrfLiteModel]] = Field(default=None)
 
-    @model_validator(mode="after")
-    def validate_ipv4_host(self) -> Self:
+    @field_validator("ip_address", mode="before")
+    @classmethod
+    def validate_ip_address(cls, value: str) -> str:
         """
         Validate ip_address is an IPv4 host address without prefix.
         """
-        if self.ip_address != "":
-            IPv4HostModel(ipv4_host=self.ip_address)
-        return self
+        if value != "":
+            IPv4HostModel(ipv4_host=str(value))
+        return value
 
-    @model_validator(mode="after")
-    def vrf_lite_set_to_none_if_empty_list(self) -> Self:
+    @field_validator("vrf_lite", mode="before")
+    @classmethod
+    def vrf_lite_set_to_none_if_empty_list(cls, value: Union[None, list]) -> Optional[list[PlaybookVrfLiteModel]]:
         """
         Set vrf_lite to None if it is an empty list.
         This mimics the behavior of the original code.
         """
-        if not self.vrf_lite:
-            self.vrf_lite = None
-        return self
+        if not value:
+            return None
+        return value
 
 
 class PlaybookVrfModelV12(BaseModel):
@@ -294,23 +323,25 @@ class PlaybookVrfModelV12(BaseModel):
     vrf_template: str = Field(default="Default_VRF_Universal")
     vrf_vlan_name: str = Field(default="", alias="vrfVlanName")
 
-    @model_validator(mode="after")
-    def hardcode_source_to_none(self) -> Self:
+    @field_validator("source", mode="before")
+    @classmethod
+    def hardcode_source_to_none(cls, value) -> None:
         """
         To mimic original code, hardcode source to None.
         """
-        if self.source is not None:
-            self.source = None
-        return self
+        if value is not None:
+            value = None
+        return value
 
-    @model_validator(mode="after")
-    def validate_rp_address(self) -> Self:
+    @field_validator("rp_address", mode="before")
+    @classmethod
+    def validate_rp_address(cls, value: str) -> str:
         """
         Validate rp_address is an IPv4 host address without prefix.
         """
-        if self.rp_address != "":
-            IPv4HostModel(ipv4_host=self.rp_address)
-        return self
+        if value != "":
+            IPv4HostModel(ipv4_host=str(value))
+        return value
 
 
 class PlaybookVrfConfigModelV12(BaseModel):
