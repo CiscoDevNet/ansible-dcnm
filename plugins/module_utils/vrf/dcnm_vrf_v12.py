@@ -52,7 +52,7 @@ from .model_controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfOb
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .model_payload_vrfs_attachments import PayloadVrfsAttachmentsLanAttachListItem
 from .model_payload_vrfs_deployments import PayloadfVrfsDeployments
-from .model_playbook_vrf_v12 import PlaybookVrfAttachModel, PlaybookVrfModelV12
+from .model_playbook_vrf_v12 import PlaybookVrfAttachModel, PlaybookVrfModelV12, PlaybookVrfLiteModel
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
 from .transmute_diff_attach_to_payload import DiffAttachToControllerPayload
 from .vrf_controller_payload_v12 import VrfPayloadV12
@@ -792,57 +792,67 @@ class NdfcVrf12:
             self.log.debug(msg)
             return False
 
-    def update_attach_params_extension_values(self, vrf_attach_model: PlaybookVrfAttachModel) -> dict:
+    def update_attach_params_extension_values(self, playbook_vrf_attach_model: PlaybookVrfAttachModel) -> dict:
         """
         # Summary
 
-        Given an attachment object (see example below):
+        Given PlaybookVrfAttachModel return a dictionary of extension values that can be used in a payload:
 
-        -   Return a populated extension_values dictionary
-            if the attachment object's vrf_lite parameter is
-            not null.
-        -   Return an empty dictionary if the attachment object's
-            vrf_lite parameter is null.
+        -   Return a populated extension_values dictionary if the attachment object's vrf_lite parameter is is not null.
+        -   Return an empty dictionary if the attachment object's vrf_lite parameter is null.
 
         ## Raises
 
-        Calls fail_json() if the vrf_lite parameter is not null
-        and the role of the switch in the attachment object is not
-        one of the various border roles.
+        Calls fail_json() if the vrf_lite parameter is not null and the role of the switch in the playbook
+        attachment object is not one of the various border roles.
 
-        ## Example attach object
-
-        - extensionValues content removed for brevity
-        - instanceValues content removed for brevity
+        ## Example PlaybookVrfAttachModel contents
 
         ```json
-            {
-                "deployment": true,
-                "export_evpn_rt": "",
-                "extensionValues": "{}",
-                "fabric": "f1",
-                "freeformConfig": "",
-                "import_evpn_rt": "",
-                "instanceValues": "{}",
-                "isAttached": true,
-                "is_deploy": true,
-                "serialNumber": "FOX2109PGCS",
-                "vlan": 500,
-                "vrfName": "ansible-vrf-int1",
-                "vrf_lite": [
-                    {
-                        "dot1q": 2,
-                        "interface": "Ethernet1/2",
-                        "ipv4_addr": "10.33.0.2/30",
-                        "ipv6_addr": "2010::10:34:0:7/64",
-                        "neighbor_ipv4": "10.33.0.1",
-                        "neighbor_ipv6": "2010::10:34:0:3",
-                        "peer_vrf": "ansible-vrf-int1"
-                    }
-                ]
-            }
+        {
+            "deploy": true,
+            "export_evpn_rt": "5000:100",
+            "import_evpn_rt": "5000:100",
+            "ip_address": "10.10.10.227",
+            "vrf_lite": [
+                {
+                    "dot1q": 2,
+                    "interface": "Ethernet1/16",
+                    "ipv4_addr": "10.33.0.2/30",
+                    "ipv6_addr": "2010::10:34:0:7/64",
+                    "neighbor_ipv4": "10.33.0.1",
+                    "neighbor_ipv6": "2010::10:34:0:3",
+                    "peer_vrf": "test_vrf_1"
+                }
+            ]
+        }
+        ```
+        ## Returns
+
+        extension_values: a dictionary containing two keys whose values are JSON strings
+
+        -   "VRF_LITE_CONN": a list of dictionaries containing vrf_lite connection parameters
+            - Each dictionary contains the following
+                -   "DOT1Q_ID": the dot1q ID as a string
+                -   "IF_NAME": the interface name
+                -   "IP_MASK": the IPv4 address and mask
+                -   "IPV6_MASK": the IPv6 address and mask
+                -   "IPV6_NEIGHBOR": the IPv6 neighbor address
+                -   "NEIGHBOR_IP": the IPv4 neighbor address
+                -   "PEER_VRF_NAME": the peer VRF name
+                -   "VRF_LITE_JYTHON_TEMPLATE": the Jython template name for VRF Lite
+        -   "MULTISITE_CONN": a JSON string containing an empty MULTISITE_CONN dictionary
+
+        ```json
+        {
+            "MULTISITE_CONN": "{\"MULTISITE_CONN\": []}",
+            "VRF_LITE_CONN": "{\"VRF_LITE_CONN\": [{\"DOT1Q_ID\": \"2\", etc...}]}"
+        }
         ```
 
+        ## TODO
+
+        - We need to return a model instead of a dictionary with JSON strings.
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]
@@ -851,24 +861,17 @@ class NdfcVrf12:
         msg += f"caller: {caller}. self.model_enabled: {self.model_enabled}."
         self.log.debug(msg)
 
-        # TODO: Remove this once the method is refactored to use Pydantic models.
-        attach = vrf_attach_model.model_dump()
-
-        if not attach["vrf_lite"]:
-            msg = "Early return. No vrf_lite extensions to process."
+        if not playbook_vrf_attach_model.vrf_lite:
+            msg = "Early return. No vrf_lite extensions to process in playbook."
             self.log.debug(msg)
             return {}
 
-        extension_values: dict = {}
-        extension_values["VRF_LITE_CONN"] = []
-        ms_con: dict = {}
-        ms_con["MULTISITE_CONN"] = []
-        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+        msg = "playbook_vrf_attach_model: "
+        msg += f"{json.dumps(playbook_vrf_attach_model.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
 
-        # Before applying the vrf_lite config, verify that the
-        # switch role begins with border
-
-        ip_address = attach.get("ip_address")
+        # Before applying the vrf_lite config, verify that the switch role begins with border
+        ip_address = playbook_vrf_attach_model.ip_address
         switch_role = self.ipv4_to_switch_role.convert(ip_address)
         if not re.search(r"\bborder\b", switch_role.lower()):
             msg = f"{self.class_name}.{method_name}: "
@@ -879,30 +882,30 @@ class NdfcVrf12:
             msg += f"{ip_address} with role {switch_role} need review."
             self.module.fail_json(msg=msg)
 
-        item: dict
-        for item in attach.get("vrf_lite"):
+        msg = f"playbook_vrf_attach_model.vrf_lite: length: {len(playbook_vrf_attach_model.vrf_lite)}"
+        self.log.debug(msg)
+        self.log_list_of_models(playbook_vrf_attach_model.vrf_lite)
 
-            # If the playbook contains vrf lite parameters
-            # update the extension values.
+        extension_values: dict = {}
+        extension_values["VRF_LITE_CONN"] = []
+        ms_con: dict = {}
+        ms_con["MULTISITE_CONN"] = []
+        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
+
+        for playbook_vrf_lite_model in playbook_vrf_attach_model.vrf_lite:
+            # If the playbook contains vrf lite parameters update the extension values.
             vrf_lite_conn: dict = {}
             for param in self.vrf_lite_properties:
                 vrf_lite_conn[param] = ""
 
-            if item.get("interface"):
-                vrf_lite_conn["IF_NAME"] = item.get("interface")
-            if item.get("dot1q"):
-                vrf_lite_conn["DOT1Q_ID"] = str(item.get("dot1q"))
-            if item.get("ipv4_addr"):
-                vrf_lite_conn["IP_MASK"] = item.get("ipv4_addr")
-            if item.get("neighbor_ipv4"):
-                vrf_lite_conn["NEIGHBOR_IP"] = item.get("neighbor_ipv4")
-            if item.get("ipv6_addr"):
-                vrf_lite_conn["IPV6_MASK"] = item.get("ipv6_addr")
-            if item.get("neighbor_ipv6"):
-                vrf_lite_conn["IPV6_NEIGHBOR"] = item.get("neighbor_ipv6")
-            if item.get("peer_vrf"):
-                vrf_lite_conn["PEER_VRF_NAME"] = item.get("peer_vrf")
-
+            vrf_lite_conn["IF_NAME"] = playbook_vrf_lite_model.interface
+            # TODO: look into why this has to be a string for unit tests to pass.
+            vrf_lite_conn["DOT1Q_ID"] = str(playbook_vrf_lite_model.dot1q)
+            vrf_lite_conn["IP_MASK"] = playbook_vrf_lite_model.ipv4_addr
+            vrf_lite_conn["NEIGHBOR_IP"] = playbook_vrf_lite_model.neighbor_ipv4
+            vrf_lite_conn["IPV6_MASK"] = playbook_vrf_lite_model.ipv6_addr
+            vrf_lite_conn["IPV6_NEIGHBOR"] = playbook_vrf_lite_model.neighbor_ipv6
+            vrf_lite_conn["PEER_VRF_NAME"] = playbook_vrf_lite_model.peer_vrf
             vrf_lite_conn["VRF_LITE_JYTHON_TEMPLATE"] = "Ext_VRF_Lite_Jython"
 
             msg = "vrf_lite_conn: "
@@ -987,7 +990,7 @@ class NdfcVrf12:
             msg += f"{ip_address} with role {role} need review."
             self.module.fail_json(msg=msg)
 
-        extension_values = self.update_attach_params_extension_values(vrf_attach_model=vrf_attach_model)
+        extension_values = self.update_attach_params_extension_values(playbook_vrf_attach_model=vrf_attach_model)
         if extension_values:
             attach.update({"extensionValues": json.dumps(extension_values).replace(" ", "")})
         else:
