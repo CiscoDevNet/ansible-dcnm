@@ -900,8 +900,8 @@ class NdfcVrf12:
 
             vrf_lite_conn["IF_NAME"] = playbook_vrf_lite_model.interface
             if playbook_vrf_lite_model.dot1q == 0:
-               # If the dot1q field is 0, we set it to an empty string or the VRF never goes into DEPLOYED state.
-               # TODO: We should take care of this in the model in an "after" field_validator rather than here.
+                # If the dot1q field is 0, we set it to an empty string or the VRF never goes into DEPLOYED state.
+                # TODO: We should take care of this in the model in an "after" field_validator rather than here.
                 vrf_lite_conn["DOT1Q_ID"] = ""
             else:
                 vrf_lite_conn["DOT1Q_ID"] = str(playbook_vrf_lite_model.dot1q)
