@@ -1,0 +1,140 @@
+{
+    "playbook_as_dict": {
+        "adv_default_routes": true,
+        "adv_host_routes": false,
+        "attach": [
+            {
+                "deploy": true,
+                "export_evpn_rt": "",
+                "import_evpn_rt": "",
+                "ip_address": "172.22.150.112",
+                "vrf_lite": null
+            },
+            {
+                "deploy": true,
+                "export_evpn_rt": "",
+                "import_evpn_rt": "",
+                "ip_address": "172.22.150.113",
+                "vrf_lite": [
+                    {
+                        "dot1q": "2",
+                        "interface": "Ethernet2/10",
+                        "ipv4_addr": "10.33.0.2/30",
+                        "ipv6_addr": "2010::10:34:0:7/64",
+                        "neighbor_ipv4": "10.33.0.1",
+                        "neighbor_ipv6": "2010::10:34:0:3",
+                        "peer_vrf": "ansible-vrf-int1"
+                    }
+                ]
+            }
+        ],
+        "bgp_passwd_encrypt": 3,
+        "bgp_password": "",
+        "deploy": true,
+        "disable_rt_auto": false,
+        "export_evpn_rt": "",
+        "export_mvpn_rt": "",
+        "export_vpn_rt": "",
+        "import_evpn_rt": "",
+        "import_mvpn_rt": "",
+        "import_vpn_rt": "",
+        "ipv6_linklocal_enable": true,
+        "loopback_route_tag": 12345,
+        "max_bgp_paths": 1,
+        "max_ibgp_paths": 2,
+        "netflow_enable": false,
+        "nf_monitor": "",
+        "no_rp": false,
+        "overlay_mcast_group": "",
+        "redist_direct_rmap": "FABRIC-RMAP-REDIST-SUBNET",
+        "rp_address": "",
+        "rp_external": false,
+        "rp_loopback_id": "",
+        "service_vrf_template": null,
+        "source": null,
+        "static_default_route": true,
+        "trm_bgw_msite": false,
+        "trm_enable": false,
+        "underlay_mcast_ip": "",
+        "vlan_id": 500,
+        "vrf_description": "",
+        "vrf_extension_template": "Default_VRF_Extension_Universal",
+        "vrf_id": 9008011,
+        "vrf_int_mtu": 9216,
+        "vrf_intf_desc": "",
+        "vrf_name": "ansible-vrf-int1",
+        "vrf_template": "Default_VRF_Universal",
+        "vrf_vlan_name": ""
+    },
+    "playbook_full_config": {
+        "config": [
+            {
+                "adv_default_routes": true,
+                "adv_host_routes": false,
+                "attach": [
+                    {
+                        "deploy": true,
+                        "export_evpn_rt": "",
+                        "import_evpn_rt": "",
+                        "ip_address": "172.22.150.112",
+                        "vrf_lite": null
+                    },
+                    {
+                        "deploy": true,
+                        "export_evpn_rt": "",
+                        "import_evpn_rt": "",
+                        "ip_address": "172.22.150.113",
+                        "vrf_lite": [
+                            {
+                                "dot1q": "2",
+                                "interface": "Ethernet2/10",
+                                "ipv4_addr": "10.33.0.2/30",
+                                "ipv6_addr": "2010::10:34:0:7/64",
+                                "neighbor_ipv4": "10.33.0.1",
+                                "neighbor_ipv6": "2010::10:34:0:3",
+                                "peer_vrf": "ansible-vrf-int1"
+                            }
+                        ]
+                    }
+                ],
+                "bgp_passwd_encrypt": 3,
+                "bgp_password": "",
+                "deploy": true,
+                "disable_rt_auto": false,
+                "export_evpn_rt": "",
+                "export_mvpn_rt": "",
+                "export_vpn_rt": "",
+                "import_evpn_rt": "",
+                "import_mvpn_rt": "",
+                "import_vpn_rt": "",
+                "ipv6_linklocal_enable": true,
+                "loopback_route_tag": 12345,
+                "max_bgp_paths": 1,
+                "max_ibgp_paths": 2,
+                "netflow_enable": false,
+                "nf_monitor": "",
+                "no_rp": false,
+                "overlay_mcast_group": "",
+                "redist_direct_rmap": "FABRIC-RMAP-REDIST-SUBNET",
+                "rp_address": "",
+                "rp_external": false,
+                "rp_loopback_id": "",
+                "service_vrf_template": null,
+                "source": null,
+                "static_default_route": true,
+                "trm_bgw_msite": false,
+                "trm_enable": false,
+                "underlay_mcast_ip": "",
+                "vlan_id": 500,
+                "vrf_description": "",
+                "vrf_extension_template": "Default_VRF_Extension_Universal",
+                "vrf_id": 9008011,
+                "vrf_int_mtu": 9216,
+                "vrf_intf_desc": "",
+                "vrf_name": "ansible-vrf-int1",
+                "vrf_template": "Default_VRF_Universal",
+                "vrf_vlan_name": ""
+            }
+        ]
+    }
+}
