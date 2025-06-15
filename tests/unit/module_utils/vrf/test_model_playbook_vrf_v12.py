@@ -17,8 +17,7 @@ Test cases for PlaybookVrfModelV12 and PlaybookVrfConfigModelV12.
 from typing import Union
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_playbook_vrf_v12 import (
-    PlaybookVrfConfigModelV12, PlaybookVrfLiteModel, PlaybookVrfModelV12)
+from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_playbook_vrf_v12 import PlaybookVrfConfigModelV12, PlaybookVrfLiteModel, PlaybookVrfModelV12
 
 from ..common.common_utils import does_not_raise
 from .fixtures.load_fixture import playbooks
@@ -126,6 +125,38 @@ def test_vrf_lite_00010(value: Union[str, int], expected: str, valid: bool) -> N
         with does_not_raise():
             instance = PlaybookVrfLiteModel(**playbook)
             assert instance.ipv4_addr == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfLiteModel(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
+        ("2010::10:34:0:7/64", "2010::10:34:0:7/64", True),
+        ("2010::10::7/128", "2010::10::7/128", True),
+        ("2010::10::7", None, False),
+        ("172.1.1.1/30", None, False),
+        ("172.1.1.1", None, False),
+        ("255.255.255.255", None, False),
+        (1, None, False),
+        ("abc", None, False),
+    ],
+)
+def test_vrf_lite_00020(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    vrf_lite.ipv6_addr validation.
+
+    :param value: ipv6_addr value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("vrf_lite")
+    playbook["ipv6_addr"] = value
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfLiteModel(**playbook)
+            assert instance.ipv6_addr == expected
     else:
         with pytest.raises(ValueError):
             PlaybookVrfLiteModel(**playbook)
