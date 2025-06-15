@@ -99,6 +99,34 @@ def test_vrf_lite_00000(value: Union[str, int], expected: str, valid: bool) -> N
 @pytest.mark.parametrize(
     "value, expected, valid",
     [
+        ("Ethernet1/1", "Ethernet1/1", True),
+        ("Eth2/1", "Eth2/1", True),
+        ("foo", None, False),
+    ],
+)
+def test_vrf_lite_00010(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    vrf_lite.interface validation.
+
+    :param value: interface value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("vrf_lite")
+    if valid:
+        playbook["interface"] = value
+        with does_not_raise():
+            instance = PlaybookVrfLiteModel(**playbook)
+            assert instance.interface == expected
+    else:
+        del playbook["interface"]
+        with pytest.raises(ValueError):
+            PlaybookVrfLiteModel(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
         ("10.1.1.1/24", "10.1.1.1/24", True),
         ("168.1.1.1/30", "168.1.1.1/30", True),
         ("172.1.1.1/30", "172.1.1.1/30", True),
@@ -111,7 +139,7 @@ def test_vrf_lite_00000(value: Union[str, int], expected: str, valid: bool) -> N
         ("abc", None, False),
     ],
 )
-def test_vrf_lite_00010(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_lite_00020(value: Union[str, int], expected: str, valid: bool) -> None:
     """
     vrf_lite.ipv4_addr validation.
 
@@ -143,7 +171,7 @@ def test_vrf_lite_00010(value: Union[str, int], expected: str, valid: bool) -> N
         ("abc", None, False),
     ],
 )
-def test_vrf_lite_00020(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_lite_00030(value: Union[str, int], expected: str, valid: bool) -> None:
     """
     vrf_lite.ipv6_addr validation.
 
