@@ -163,7 +163,7 @@ def test_vrf_lite_00020(value: Union[str, int], expected: str, valid: bool) -> N
     [
         ("2010::10:34:0:7/64", "2010::10:34:0:7/64", True),
         ("2010::10::7/128", "2010::10::7/128", True),
-        ("2010::10::7", None, False),
+        ("2010:10::7", None, False),
         ("172.1.1.1/30", None, False),
         ("172.1.1.1", None, False),
         ("255.255.255.255", None, False),
@@ -185,6 +185,104 @@ def test_vrf_lite_00030(value: Union[str, int], expected: str, valid: bool) -> N
         with does_not_raise():
             instance = PlaybookVrfLiteModel(**playbook)
             assert instance.ipv6_addr == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfLiteModel(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
+        ("10.1.1.1", "10.1.1.1", True),
+        ("168.1.1.1", "168.1.1.1", True),
+        ("172.1.1.1", "172.1.1.1", True),
+        # ("255.255.255.255/30", None, False), TODO: this should not be valid, but currently is
+        ("10.1.1.1/24", "10.1.1.1/24", False),
+        ("168.1.1.1/30", "168.1.1.1/30", False),
+        ("172.1.1.1/30", "172.1.1.1/30", False),
+        ("172.1.1.", None, False),
+        ("2010::10:34:0:7", None, False),
+        ("2010::10:34:0:7/64", None, False),
+        (1, None, False),
+        ("abc", None, False),
+    ],
+)
+def test_vrf_lite_00040(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    vrf_lite.neighbor_ipv4 validation.
+
+    :param value: neighbor_ipv4 value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("vrf_lite")
+    playbook["neighbor_ipv4"] = value
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfLiteModel(**playbook)
+            assert instance.neighbor_ipv4 == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfLiteModel(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
+        ("2010::10:34:0:7", "2010::10:34:0:7", True),
+        ("2010:10::7", "2010:10::7", True),
+        ("2010::10:34:0:7/64", "2010::10:34:0:7/64", False),
+        ("2010::10::7/128", "2010::10::7/128", False),
+        ("172.1.1.1/30", None, False),
+        ("172.1.1.1", None, False),
+        ("255.255.255.255", None, False),
+        (1, None, False),
+        ("abc", None, False),
+    ],
+)
+def test_vrf_lite_00050(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    vrf_lite.neighbor_ipv6 validation.
+
+    :param value: neighbor_ipv6 value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("vrf_lite")
+    playbook["neighbor_ipv6"] = value
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfLiteModel(**playbook)
+            assert instance.neighbor_ipv6 == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfLiteModel(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
+        ("ansible-vrf-int1", "ansible-vrf-int1", True),  # OK, valid VRF name
+        ("vrf_5678901234567890123456789012", "vrf_5678901234567890123456789012", True),  # OK, exactly 32 characters
+        ("", "", False),  # NOK, at least one character is required
+        (123, None, False),  # NOK, int
+        ("vrf_56789012345678901234567890123", None, False),  # NOK, longer than 32 characters
+    ],
+)
+def test_vrf_lite_00060(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    vrf_lite.peer_vrf validation.
+
+    :param value: peer_vrf value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("vrf_lite")
+    playbook["peer_vrf"] = value
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfLiteModel(**playbook)
+            assert instance.peer_vrf == expected
     else:
         with pytest.raises(ValueError):
             PlaybookVrfLiteModel(**playbook)

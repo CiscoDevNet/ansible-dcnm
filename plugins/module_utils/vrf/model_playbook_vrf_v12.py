@@ -78,7 +78,7 @@ class PlaybookVrfLiteModel(BaseModel):
     ipv6_addr: Optional[str] = Field(default="")
     neighbor_ipv4: Optional[str] = Field(default="")
     neighbor_ipv6: Optional[str] = Field(default="")
-    peer_vrf: Optional[str] = Field(default="")
+    peer_vrf: Optional[str] = Field(default="", min_length=1, max_length=32)
 
     @field_validator("dot1q", mode="before")
     @classmethod
