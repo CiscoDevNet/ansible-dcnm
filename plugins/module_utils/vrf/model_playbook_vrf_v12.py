@@ -20,7 +20,7 @@ Validation model for dcnm_vrf playbooks.
 """
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, StrictBool
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
@@ -282,8 +282,8 @@ class PlaybookVrfModelV12(BaseModel):
         use_enum_values=True,
         validate_assignment=True,
     )
-    adv_default_routes: bool = Field(default=True, alias="advertiseDefaultRouteFlag")
-    adv_host_routes: bool = Field(default=False, alias="advertiseHostRouteFlag")
+    adv_default_routes: StrictBool = Field(default=True, alias="advertiseDefaultRouteFlag")
+    adv_host_routes: StrictBool = Field(default=False, alias="advertiseHostRouteFlag")
     attach: Optional[list[PlaybookVrfAttachModel]] = None
     bgp_passwd_encrypt: Union[BgpPasswordEncrypt, int] = Field(default=BgpPasswordEncrypt.MD5.value, alias="bgpPasswordKeyType")
     bgp_password: str = Field(default="", alias="bgpPassword")

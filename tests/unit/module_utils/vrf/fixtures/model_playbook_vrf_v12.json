@@ -145,5 +145,22 @@
         "neighbor_ipv4": "10.33.0.1",
         "neighbor_ipv6": "2010::10:34:0:3",
         "peer_vrf": "ansible-vrf-int1"
+    },
+    "vrf_attach": {
+        "deploy": true,
+        "export_evpn_rt": "",
+        "import_evpn_rt": "",
+        "ip_address": "172.22.150.113",
+        "vrf_lite": [
+            {
+                "dot1q": "2",
+                "interface": "Ethernet2/10",
+                "ipv4_addr": "10.33.0.2/30",
+                "ipv6_addr": "2010::10:34:0:7/64",
+                "neighbor_ipv4": "10.33.0.1",
+                "neighbor_ipv6": "2010::10:34:0:3",
+                "peer_vrf": "ansible-vrf-int1"
+            }
+        ]
     }
 }
