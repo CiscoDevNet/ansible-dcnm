@@ -25,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
 from ..common.models.ipv4_host import IPv4HostModel
+from ..common.models.ipv4_multicast_group_address import IPv4MulticastGroupModel
 from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
 from ..common.models.ipv6_host import IPv6HostModel
 
@@ -194,7 +195,7 @@ class PlaybookVrfAttachModel(BaseModel):
     ```
     """
 
-    deploy: bool = Field(default=True)
+    deploy: StrictBool = Field(default=True)
     export_evpn_rt: str = Field(default="")
     import_evpn_rt: str = Field(default="")
     ip_address: str
@@ -283,31 +284,31 @@ class PlaybookVrfModelV12(BaseModel):
     attach: Optional[list[PlaybookVrfAttachModel]] = None
     bgp_passwd_encrypt: BgpPasswordEncrypt = Field(default=BgpPasswordEncrypt.MD5.value)  # bgpPasswordKeyType
     bgp_password: str = Field(default="")  # bgpPassword
-    deploy: bool = Field(default=True)
-    disable_rt_auto: bool = Field(default=False)  # disableRtAuto
+    deploy: StrictBool = Field(default=True)
+    disable_rt_auto: StrictBool = Field(default=False)  # disableRtAuto
     export_evpn_rt: str = Field(default="")  # routeTargetExportEvpn
     export_mvpn_rt: str = Field(default="")  # routeTargetExportMvpn
     export_vpn_rt: str = Field(default="")  # routeTargetExport
     import_evpn_rt: str = Field(default="")  # routeTargetImportEvpn
     import_mvpn_rt: str = Field(default="")  # routeTargetImportMvpn
     import_vpn_rt: str = Field(default="")  # routeTargetImport
-    ipv6_linklocal_enable: bool = Field(default=True)  # ipv6LinkLocalFlag
+    ipv6_linklocal_enable: StrictBool = Field(default=True)  # ipv6LinkLocalFlag
     loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295)  # tag
     max_bgp_paths: int = Field(default=1, ge=1, le=64)  # maxBgpPaths
     max_ibgp_paths: int = Field(default=2, ge=1, le=64)  # maxIbgpPaths
-    netflow_enable: bool = Field(default=False)  # ENABLE_NETFLOW
+    netflow_enable: StrictBool = Field(default=False)  # ENABLE_NETFLOW
     nf_monitor: str = Field(default="")  # NETFLOW_MONITOR
-    no_rp: bool = Field(default=False)  # isRPAbsent
+    no_rp: StrictBool = Field(default=False)  # isRPAbsent
     overlay_mcast_group: str = Field(default="")  # multicastGroup
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET")  # vrfRouteMap
     rp_address: str = Field(default="")  # rpAddress
-    rp_external: bool = Field(default=False)  # isRPExternal
+    rp_external: StrictBool = Field(default=False)  # isRPExternal
     rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=-1, le=1023)  # loopbackNumber
     service_vrf_template: Optional[str] = Field(default=None)  # serviceVrfTemplate
     source: Optional[str] = None
-    static_default_route: bool = Field(default=True)  # configureStaticDefaultRouteFlag
-    trm_bgw_msite: bool = Field(default=False)  # trmBGWMSiteEnabled
-    trm_enable: bool = Field(default=False)  # trmEnabled
+    static_default_route: StrictBool = Field(default=True)  # configureStaticDefaultRouteFlag
+    trm_bgw_msite: StrictBool = Field(default=False)  # trmBGWMSiteEnabled
+    trm_enable: StrictBool = Field(default=False)  # trmEnabled
     underlay_mcast_ip: str = Field(default="")  # L3VniMcastGroup
     vlan_id: Optional[int] = Field(default=None, le=4094)
     vrf_description: str = Field(default="")  # vrfDescription
@@ -318,6 +319,16 @@ class PlaybookVrfModelV12(BaseModel):
     vrf_name: str = Field(..., max_length=32)
     vrf_template: str = Field(default="Default_VRF_Universal")
     vrf_vlan_name: str = Field(default="")  # vrfVlanName
+
+    @field_validator("overlay_mcast_group", mode="before")
+    @classmethod
+    def validate_overlay_mcast_group(cls, value: str) -> str:
+        """
+        Validate overlay_mcast_group is an IPv4 multicast group address without prefix.
+        """
+        if value != "":
+            IPv4MulticastGroupModel(ipv4_multicast_group=str(value))
+        return value
 
     @field_validator("source", mode="before")
     @classmethod

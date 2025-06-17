@@ -14,7 +14,7 @@
 """
 Test cases for PlaybookVrfModelV12 and PlaybookVrfConfigModelV12.
 """
-import json
+from functools import partial
 from typing import Union
 
 import pytest
@@ -29,12 +29,111 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_playbook_vrf_
 from ..common.common_utils import does_not_raise
 from .fixtures.load_fixture import playbooks
 
+bool_tests = [
+    (True, True, True),  # OK, bool
+    (False, False, True),  # OK, bool. TODO: This should not fail.
+    (1, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+    (0, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+    ("abc", None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+]
+bool_tests_missing_default_true = bool_tests + [
+    ("MISSING", True, True),  # OK, field can be missing. Default is True.
+]
+bool_tests_missing_default_false = bool_tests + [
+    ("MISSING", False, True),  # OK, field can be missing. Default is False.
+]
+
+ipv4_addr_host_tests = [
+    ("10.1.1.1", "10.1.1.1", True),
+    ("168.1.1.1", "168.1.1.1", True),
+    ("172.1.1.1", "172.1.1.1", True),
+    # ("255.255.255.255/30", None, False), TODO: this should not be valid, but currently is
+    ("10.1.1.1/24", "10.1.1.1/24", False),
+    ("168.1.1.1/30", "168.1.1.1/30", False),
+    ("172.1.1.1/30", "172.1.1.1/30", False),
+    ("172.1.1.", None, False),
+    ("2010::10:34:0:7", None, False),
+    ("2010::10:34:0:7/64", None, False),
+    (1, None, False),
+    ("abc", None, False),
+]
+
+ipv4_addr_cidr_tests = [
+    ("10.1.1.1/24", "10.1.1.1/24", True),
+    ("168.1.1.1/30", "168.1.1.1/30", True),
+    ("172.1.1.1/30", "172.1.1.1/30", True),
+    ("MISSING", "", True),  # OK, field can be missing. Default is "".
+    # ("255.255.255.255/30", None, False), TODO: this should not be valid, but currently is
+    ("172.1.1.", None, False),
+    ("255.255.255.255", None, False),
+    ("2010::10:34:0:7", None, False),
+    ("2010::10:34:0:7/64", None, False),
+    (1, None, False),
+    ("abc", None, False),
+]
+
+ipv6_addr_host_tests = [
+    ("2010::10:34:0:7", "2010::10:34:0:7", True),
+    ("2010:10::7", "2010:10::7", True),
+    ("2010::10:34:0:7/64", "2010::10:34:0:7/64", False),
+    ("2010::10::7/128", "2010::10::7/128", False),
+    ("172.1.1.1/30", None, False),
+    ("172.1.1.1", None, False),
+    ("255.255.255.255", None, False),
+    (1, None, False),
+    ("abc", None, False),
+]
+
+ipv6_addr_cidr_tests = [
+    ("2010::10:34:0:7/64", "2010::10:34:0:7/64", True),
+    ("2010::10::7/128", "2010::10::7/128", True),
+    ("2010:10::7", None, False),
+    ("172.1.1.1/30", None, False),
+    ("172.1.1.1", None, False),
+    ("255.255.255.255", None, False),
+    (1, None, False),
+    ("abc", None, False),
+]
+
+
+# pylint: disable=too-many-arguments,too-many-positional-arguments
+def base_test(value, expected, valid: bool, field: str, key: str, model):
+    """
+    Base test function called by other tests to validate the model.
+
+    :param value: vrf_model value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    :param field: The field in the playbook to modify.
+    :param key: The key in the playbooks fixture to use.
+    :param model: The model class to instantiate.
+    """
+    playbook = playbooks(key)
+    if value == "MISSING":
+        playbook.pop(field, None)
+    else:
+        playbook[field] = value
+
+    if valid:
+        with does_not_raise():
+            instance = model(**playbook)
+            if value != "MISSING":
+                assert getattr(instance, field) == expected
+            else:
+                assert expected == model.model_fields[field].default
+    else:
+        with pytest.raises(ValueError):
+            model(**playbook)
+
+
+# pylint: enable=too-many-arguments,too-many-positional-arguments
+
 
 def test_full_config_00000() -> None:
     """
     Test PlaybookVrfConfigModelV12 with JSON representing the structure passed to a playbook.
 
-    The remaining tests will use the structure associated with PlaybookVrfModelV12 for simplicity.
+    The remaining tests will use partial structures (e.g. vrf_lite, attach) for simplicity.
     """
     playbook = playbooks("playbook_full_config")
     with does_not_raise():
@@ -42,31 +141,26 @@ def test_full_config_00000() -> None:
     assert instance.config[0].vrf_name == "ansible-vrf-int1"
 
 
+base_test_vrf_name = partial(base_test, field="vrf_name", key="playbook_as_dict", model=PlaybookVrfModelV12)
+base_test_vrf_lite = partial(base_test, key="vrf_lite", model=PlaybookVrfLiteModel)
+base_test_attach = partial(base_test, key="vrf_attach", model=PlaybookVrfAttachModel)
+base_test_vrf = partial(base_test, key="playbook_as_dict", model=PlaybookVrfModelV12)
+
+
 @pytest.mark.parametrize(
-    "value, expected",
+    "value,expected,valid",
     [
-        ("ansible-vrf-int1", True),
-        ("vrf_5678901234567890123456789012", True),  # Valid, exactly 32 characters
-        (123, False),  # Invalid, int
-        ("vrf_56789012345678901234567890123", False),  # Invalid, longer than 32 characters
+        ("ansible-vrf-int1", "ansible-vrf-int1", True),
+        ("vrf_5678901234567890123456789012", "vrf_5678901234567890123456789012", True),  # Valid, exactly 32 characters
+        (123, None, False),  # Invalid, int
+        ("vrf_56789012345678901234567890123", None, False),  # Invalid, longer than 32 characters
     ],
 )
-def test_vrf_name_00000(value: Union[str, int], expected: bool) -> None:
+def test_vrf_name_00000(value: Union[str, int], expected, valid: bool) -> None:
     """
-    Test the validation of VRF names.
-
-    :param value: The VRF name to validate.
-    :param expected: Expected result of the validation.
+    vrf_name
     """
-    playbook = playbooks("playbook_as_dict")
-    playbook["vrf_name"] = value
-    if expected:
-        with does_not_raise():
-            instance = PlaybookVrfModelV12(**playbook)
-            assert instance.vrf_name == value
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfModelV12(**playbook)
+    base_test_vrf_name(value, expected, valid)
 
 
 @pytest.mark.parametrize(
@@ -84,23 +178,11 @@ def test_vrf_name_00000(value: Union[str, int], expected: bool) -> None:
         ("abc", None, False),
     ],
 )
-def test_vrf_lite_00000(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_lite_00000(value, expected, valid: bool) -> None:
     """
-    vrf_lite.dot1q validation.
-
-    :param value: The dot1q value to validate.
-    :param expected: Expected value after model conversion (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    dot1q
     """
-    playbook = playbooks("vrf_lite")
-    playbook["dot1q"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.dot1q == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="dot1q")
 
 
 @pytest.mark.parametrize(
@@ -108,162 +190,46 @@ def test_vrf_lite_00000(value: Union[str, int], expected: str, valid: bool) -> N
     [
         ("Ethernet1/1", "Ethernet1/1", True),
         ("Eth2/1", "Eth2/1", True),
-        ("foo", None, False),
+        ("MISSING", None, False),
     ],
 )
-def test_vrf_lite_00010(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_lite_00010(value, expected, valid: bool) -> None:
     """
-    vrf_lite.interface validation.
-
-    :param value: interface value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    interface
     """
-    playbook = playbooks("vrf_lite")
-    if valid:
-        playbook["interface"] = value
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.interface == expected
-    else:
-        del playbook["interface"]
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="interface")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        ("10.1.1.1/24", "10.1.1.1/24", True),
-        ("168.1.1.1/30", "168.1.1.1/30", True),
-        ("172.1.1.1/30", "172.1.1.1/30", True),
-        # ("255.255.255.255/30", None, False), TODO: this should not be valid, but currently is
-        ("172.1.1.", None, False),
-        ("255.255.255.255", None, False),
-        ("2010::10:34:0:7", None, False),
-        ("2010::10:34:0:7/64", None, False),
-        (1, None, False),
-        ("abc", None, False),
-    ],
-)
-def test_vrf_lite_00020(value: Union[str, int], expected: str, valid: bool) -> None:
+@pytest.mark.parametrize("value, expected, valid", ipv4_addr_cidr_tests)
+def test_vrf_lite_00020(value, expected, valid: bool) -> None:
     """
-    vrf_lite.ipv4_addr validation.
-
-    :param value: ipv4_addr value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    ipv4_addr
     """
-    playbook = playbooks("vrf_lite")
-    playbook["ipv4_addr"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.ipv4_addr == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="ipv4_addr")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        ("2010::10:34:0:7/64", "2010::10:34:0:7/64", True),
-        ("2010::10::7/128", "2010::10::7/128", True),
-        ("2010:10::7", None, False),
-        ("172.1.1.1/30", None, False),
-        ("172.1.1.1", None, False),
-        ("255.255.255.255", None, False),
-        (1, None, False),
-        ("abc", None, False),
-    ],
-)
-def test_vrf_lite_00030(value: Union[str, int], expected: str, valid: bool) -> None:
+@pytest.mark.parametrize("value, expected, valid", ipv6_addr_cidr_tests)
+def test_vrf_lite_00030(value, expected, valid: bool) -> None:
     """
-    vrf_lite.ipv6_addr validation.
-
-    :param value: ipv6_addr value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    ipv6_addr
     """
-    playbook = playbooks("vrf_lite")
-    playbook["ipv6_addr"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.ipv6_addr == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="ipv6_addr")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        ("10.1.1.1", "10.1.1.1", True),
-        ("168.1.1.1", "168.1.1.1", True),
-        ("172.1.1.1", "172.1.1.1", True),
-        # ("255.255.255.255/30", None, False), TODO: this should not be valid, but currently is
-        ("10.1.1.1/24", "10.1.1.1/24", False),
-        ("168.1.1.1/30", "168.1.1.1/30", False),
-        ("172.1.1.1/30", "172.1.1.1/30", False),
-        ("172.1.1.", None, False),
-        ("2010::10:34:0:7", None, False),
-        ("2010::10:34:0:7/64", None, False),
-        (1, None, False),
-        ("abc", None, False),
-    ],
-)
-def test_vrf_lite_00040(value: Union[str, int], expected: str, valid: bool) -> None:
+@pytest.mark.parametrize("value, expected, valid", ipv4_addr_host_tests)
+def test_vrf_lite_00040(value, expected, valid: bool) -> None:
     """
-    vrf_lite.neighbor_ipv4 validation.
-
-    :param value: neighbor_ipv4 value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    neighbor_ipv4
     """
-    playbook = playbooks("vrf_lite")
-    playbook["neighbor_ipv4"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.neighbor_ipv4 == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="neighbor_ipv4")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        ("2010::10:34:0:7", "2010::10:34:0:7", True),
-        ("2010:10::7", "2010:10::7", True),
-        ("2010::10:34:0:7/64", "2010::10:34:0:7/64", False),
-        ("2010::10::7/128", "2010::10::7/128", False),
-        ("172.1.1.1/30", None, False),
-        ("172.1.1.1", None, False),
-        ("255.255.255.255", None, False),
-        (1, None, False),
-        ("abc", None, False),
-    ],
-)
-def test_vrf_lite_00050(value: Union[str, int], expected: str, valid: bool) -> None:
+@pytest.mark.parametrize("value, expected, valid", ipv6_addr_host_tests)
+def test_vrf_lite_00050(value, expected, valid: bool) -> None:
     """
-    vrf_lite.neighbor_ipv6 validation.
-
-    :param value: neighbor_ipv6 value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    neighbor_ipv6
     """
-    playbook = playbooks("vrf_lite")
-    playbook["neighbor_ipv6"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.neighbor_ipv6 == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="neighbor_ipv6")
 
 
 @pytest.mark.parametrize(
@@ -276,51 +242,22 @@ def test_vrf_lite_00050(value: Union[str, int], expected: str, valid: bool) -> N
         ("vrf_56789012345678901234567890123", None, False),  # NOK, longer than 32 characters
     ],
 )
-def test_vrf_lite_00060(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_lite_00060(value, expected, valid: bool) -> None:
     """
-    vrf_lite.peer_vrf validation.
-
-    :param value: peer_vrf value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    peer_vrf
     """
-    playbook = playbooks("vrf_lite")
-    playbook["peer_vrf"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfLiteModel(**playbook)
-            assert instance.peer_vrf == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfLiteModel(**playbook)
+    base_test_vrf_lite(value, expected, valid, field="peer_vrf")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        (True, True, True),  # OK, bool
-        (False, False, True),  # OK, bool
-        ("", None, False),  # NOK, string
-        (123, None, False),  # NOK, int
-    ],
-)
-def test_vrf_attach_00000(value: Union[str, int], expected: str, valid: bool) -> None:
-    """
-    vrf_attach.deploy validation.
+# VRF Attach Tests
 
-    :param value: vrf_attachc value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+
+@pytest.mark.parametrize("value, expected, valid", bool_tests_missing_default_true)
+def test_vrf_attach_00000(value, expected, valid: bool) -> None:
     """
-    playbook = playbooks("vrf_attach")
-    playbook["deploy"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfAttachModel(**playbook)
-            assert instance.deploy == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfAttachModel(**playbook)
+    deploy
+    """
+    base_test_attach(value, expected, valid, field="deploy")
 
 
 @pytest.mark.parametrize(
@@ -332,23 +269,11 @@ def test_vrf_attach_00000(value: Union[str, int], expected: str, valid: bool) ->
         (123, None, False),  # NOK, int
     ],
 )
-def test_vrf_attach_00010(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_attach_00010(value, expected, valid: bool) -> None:
     """
-    vrf_attach.export_evpn_rt validation.
-
-    :param value: vrf_attachc value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    export_evpn_rt
     """
-    playbook = playbooks("vrf_attach")
-    playbook["export_evpn_rt"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfAttachModel(**playbook)
-            assert instance.export_evpn_rt == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfAttachModel(**playbook)
+    base_test_attach(value, expected, valid, field="export_evpn_rt")
 
 
 @pytest.mark.parametrize(
@@ -360,23 +285,11 @@ def test_vrf_attach_00010(value: Union[str, int], expected: str, valid: bool) ->
         (123, None, False),  # NOK, int
     ],
 )
-def test_vrf_attach_00020(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_attach_00020(value, expected, valid: bool) -> None:
     """
-    vrf_attach.import_evpn_rt validation.
-
-    :param value: vrf_attachc value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    import_evpn_rt
     """
-    playbook = playbooks("vrf_attach")
-    playbook["import_evpn_rt"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfAttachModel(**playbook)
-            assert instance.import_evpn_rt == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfAttachModel(**playbook)
+    base_test_attach(value, expected, valid, field="import_evpn_rt")
 
 
 @pytest.mark.parametrize(
@@ -396,160 +309,60 @@ def test_vrf_attach_00020(value: Union[str, int], expected: str, valid: bool) ->
         ("abc", None, False),
     ],
 )
-def test_vrf_attach_00030(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_attach_00030(value, expected, valid: bool) -> None:
     """
-    vrf_attach.ip_address validation.
-
-    :param value: ip_address value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    ip_address
     """
-    playbook = playbooks("vrf_attach")
-    playbook["ip_address"] = value
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfAttachModel(**playbook)
-            assert instance.ip_address == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfAttachModel(**playbook)
+    base_test_attach(value, expected, valid, field="ip_address")
 
 
 @pytest.mark.parametrize(
     "value, expected, valid",
     [
         (None, None, True),  # OK, vrf_lite null
-        ("MISSING", None, True),  # OK, vrf_lite can be missing
+        ("MISSING", None, True),  # OK, field can be missing
         (1, None, False),  # NOK, vrf_lite int
         ("abc", None, False),  # NOK, vrf_lite string
     ],
 )
-def test_vrf_attach_00040(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_attach_00040(value, expected, valid: bool) -> None:
     """
-    vrf_attach.vrf_lite validation.
-
-    :param value: ip_address value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    vrf_lite
     """
-    playbook = playbooks("vrf_attach")
-    if value == "MISSING":
-        playbook.pop("vrf_list", None)
-    else:
-        playbook["vrf_lite"] = value
-
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfAttachModel(**playbook)
-            if value != "MISSING":
-                assert instance.vrf_lite == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfAttachModel(**playbook)
+    base_test_attach(value, expected, valid, field="vrf_lite")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        (True, True, True),  # OK, bool
-        (False, False, True),  # OK, bool. TODO: This should not fail.
-        ("MISSING", True, True),  # OK, adv_default_routes can be missing
-        (1, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
-        (0, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
-        ("abc", None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
-    ],
-)
-def test_vrf_model_00000(value: Union[str, int], expected: str, valid: bool) -> None:
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_true)
+def test_vrf_model_00000(value, expected, valid: bool) -> None:
     """
-    vrf_attach.adv_default_routes validation.
-
-    :param value: vrf_model value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    adv_default_routes
     """
-    playbook = playbooks("playbook_as_dict")
-    if value == "MISSING":
-        playbook.pop("adv_default_routes", None)
-    else:
-        playbook["adv_default_routes"] = value
-
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfModelV12(**playbook)
-            if value != "MISSING":
-                assert instance.adv_default_routes == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfModelV12(**playbook)
+    base_test_vrf(value, expected, valid, field="adv_default_routes")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        (True, True, True),  # OK, bool
-        (False, False, True),  # OK, bool. TODO: This should not fail.
-        ("MISSING", True, True),  # OK, adv_default_routes can be missing
-        (1, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
-        (0, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
-        ("abc", None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
-    ],
-)
-def test_vrf_model_00010(value: Union[str, int], expected: str, valid: bool) -> None:
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00010(value, expected, valid: bool) -> None:
     """
-    vrf_attach.adv_host_routes
-
-    :param value: vrf_model value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    adv_host_routes
     """
-    playbook = playbooks("playbook_as_dict")
-    if value == "MISSING":
-        playbook.pop("adv_host_routes", None)
-    else:
-        playbook["adv_host_routes"] = value
-
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfModelV12(**playbook)
-            if value != "MISSING":
-                assert instance.adv_host_routes == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfModelV12(**playbook)
+    base_test_vrf(value, expected, valid, field="adv_host_routes")
 
 
 @pytest.mark.parametrize(
     "value, expected, valid",
     [
         (None, None, True),  # OK, attach can be null.
-        ("MISSING", None, True),  # OK, attach can be missing
+        ("MISSING", None, True),  # OK, field can be missing
         ([], [], True),  # OK, attach can be an empty list
         (0, None, False),
         ("abc", None, False),
     ],
 )
-def test_vrf_model_00020(value: Union[str, int], expected: str, valid: bool) -> None:
+def test_vrf_model_00020(value, expected, valid: bool) -> None:
     """
-    vrf_attach.attach
-
-    :param value: vrf_model value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    attach
     """
-    playbook = playbooks("playbook_as_dict")
-    if value == "MISSING":
-        playbook.pop("attach", None)
-    else:
-        playbook["attach"] = value
-
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfModelV12(**playbook)
-            if value != "MISSING":
-                assert instance.attach == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfModelV12(**playbook)
+    base_test_vrf(value, expected, valid, field="attach")
 
 
 @pytest.mark.parametrize(
@@ -567,25 +380,213 @@ def test_vrf_model_00020(value: Union[str, int], expected: str, valid: bool) -> 
 )
 def test_vrf_model_00030(value, expected, valid):
     """
-    vrf_attach.bgp_passwd_encrypt
-
-    :param value: vrf_model value to validate.
-    :param expected: Expected value after model conversion or validation (None for no expectation).
-    :param valid: Whether the value is valid or not.
+    bgp_passwd_encrypt
     """
-    field = "bgp_passwd_encrypt"
-    playbook = playbooks("playbook_as_dict")
-    if value == "MISSING":
-        playbook.pop(field, None)
-    else:
-        playbook[field] = value
+    base_test_vrf(value, expected, valid, field="bgp_passwd_encrypt")
 
-    if valid:
-        with does_not_raise():
-            instance = PlaybookVrfModelV12(**playbook)
-            print(f"instance.model_dump(): {json.dumps(instance.model_dump(), indent=4, sort_keys=True)}")
-            if value != "MISSING":
-                assert instance.bgp_passwd_encrypt == expected
-    else:
-        with pytest.raises(ValueError):
-            PlaybookVrfModelV12(**playbook)
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("MyPassword", "MyPassword", True),
+        ("MISSING", "", True),  # OK, field can be missing
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00040(value, expected, valid):
+    """
+    bgp_password
+    """
+    base_test_vrf(value, expected, valid, field="bgp_password")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_true)
+def test_vrf_model_00050(value, expected, valid):
+    """
+    deploy
+    """
+    base_test_vrf(value, expected, valid, field="deploy")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00060(value, expected, valid):
+    """
+    disable_rt_auto
+    """
+    base_test_vrf(value, expected, valid, field="disable_rt_auto")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("5000:1", "5000:1", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00070(value, expected, valid):
+    """
+    export/import route-target tests
+    """
+    for field in ["export_evpn_rt", "import_evpn_rt", "export_mvpn_rt", "import_mvpn_rt", "export_vpn_rt", "import_vpn_rt"]:
+        base_test_vrf(value, expected, valid, field=field)
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_true)
+def test_vrf_model_00080(value, expected, valid):
+    """
+    ipv6_linklocal_enable
+    """
+    base_test_vrf(value, expected, valid, field="ipv6_linklocal_enable")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (0, 0, True),  # OK, integer in range
+        (4294967295, 4294967295, True),  # OK, integer in range
+        ("MISSING", 12345, True),  # OK, field can be missing. Default is 12345.
+        (-1, None, False),  # NOK, must be > 0
+        (4294967296, None, False),  # NOK, must be <= 4294967295
+        ("md5", None, False),  # NOK, string
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00090(value, expected, valid):
+    """
+    loopback_route_tag
+    """
+    base_test_vrf(value, expected, valid, field="loopback_route_tag")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (1, 1, True),  # OK, integer in range
+        (64, 64, True),  # OK, integer in range
+        ("MISSING", 1, True),  # OK, field can be missing. Default is 1.
+        (0, None, False),  # NOK, must be > 1
+        (65, None, False),  # NOK, must be <= 64
+        ("md5", None, False),  # NOK, string
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00100(value, expected, valid):
+    """
+    max_bgp_paths
+    """
+    base_test_vrf(value, expected, valid, field="max_bgp_paths")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (1, 1, True),  # OK, integer in range
+        (64, 64, True),  # OK, integer in range
+        ("MISSING", 2, True),  # OK, field can be missing. Default is 2.
+        (0, None, False),  # NOK, must be > 1
+        (65, None, False),  # NOK, must be <= 64
+        ("md5", None, False),  # NOK, string
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00110(value, expected, valid):
+    """
+    max_ibgp_paths
+    """
+    base_test_vrf(value, expected, valid, field="max_ibgp_paths")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00120(value, expected, valid):
+    """
+    netflow_enable
+    """
+    base_test_vrf(value, expected, valid, field="netflow_enable")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("5000:1", "5000:1", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00130(value, expected, valid):
+    """
+    nf_monitor
+    TODO: Revisit for actual values after testing against NDFC.
+    """
+    base_test_vrf(value, expected, valid, field="nf_monitor")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00140(value, expected, valid):
+    """
+    no_rp
+    """
+    base_test_vrf(value, expected, valid, field="no_rp")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("224.1.1.1", "224.1.1.1", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        ("10.1.1.1", None, False),
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00150(value, expected, valid):
+    """
+    overlay_mcast_group
+    """
+    base_test_vrf(value, expected, valid, field="overlay_mcast_group")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("my-route-map", "my-route-map", True),
+        ("MISSING", "FABRIC-RMAP-REDIST-SUBNET", True),  # OK, field can be missing. Default is "FABRIC-RMAP-REDIST-SUBNET".
+        ("", "", True),  # OK, empty string
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00160(value, expected, valid):
+    """
+    redist_direct_rmap
+    """
+    base_test_vrf(value, expected, valid, field="redist_direct_rmap")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("10.1.1.1", "10.1.1.1", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        ("", "", True),  # OK, empty string
+        ("10.1.1.1/24", "10.1.1.1/24", False),  # NOK, prefix is not allowed
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00170(value, expected, valid):
+    """
+    rp_address
+    """
+    base_test_vrf(value, expected, valid, field="rp_address")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00180(value, expected, valid):
+    """
+    rp_external
+    """
+    base_test_vrf(value, expected, valid, field="rp_external")
