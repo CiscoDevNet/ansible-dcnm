@@ -96,7 +96,8 @@ ipv6_addr_cidr_tests = [
 ]
 
 
-# pylint: disable=too-many-arguments,too-many-positional-arguments
+# pylint: disable=too-many-positional-arguments
+# pylint: disable=too-many-arguments
 def base_test(value, expected, valid: bool, field: str, key: str, model):
     """
     Base test function called by other tests to validate the model.
@@ -126,7 +127,8 @@ def base_test(value, expected, valid: bool, field: str, key: str, model):
             model(**playbook)
 
 
-# pylint: enable=too-many-arguments,too-many-positional-arguments
+# pylint: enable=too-many-positional-arguments
+# pylint: enable=too-many-arguments
 
 
 def test_full_config_00000() -> None:
