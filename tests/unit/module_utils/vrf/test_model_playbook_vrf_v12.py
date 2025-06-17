@@ -14,9 +14,11 @@
 """
 Test cases for PlaybookVrfModelV12 and PlaybookVrfConfigModelV12.
 """
+import json
 from typing import Union
 
 import pytest
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.enums.bgp import BgpPasswordEncrypt
 from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_playbook_vrf_v12 import (
     PlaybookVrfAttachModel,
     PlaybookVrfConfigModelV12,
@@ -450,11 +452,11 @@ def test_vrf_attach_00040(value: Union[str, int], expected: str, valid: bool) ->
     "value, expected, valid",
     [
         (True, True, True),  # OK, bool
-        # (False, False, True),  # OK, bool. TODO: This should not fail.
+        (False, False, True),  # OK, bool. TODO: This should not fail.
         ("MISSING", True, True),  # OK, adv_default_routes can be missing
-        (1, True, True),  # OK, type is set to StrictBoolean in the model which does allow 1
-        (0, True, True),  # TODO: this should pass since StrictBoolean allows 0, but currently fails.  0 should == False, but True passes.
-        ("abc", True, True),  # OK, "abc" is truthy in Python, so it is considered valid
+        (1, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+        (0, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+        ("abc", None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
     ],
 )
 def test_vrf_model_00000(value: Union[str, int], expected: str, valid: bool) -> None:
@@ -484,12 +486,12 @@ def test_vrf_model_00000(value: Union[str, int], expected: str, valid: bool) -> 
 @pytest.mark.parametrize(
     "value, expected, valid",
     [
-        # (True, True, True),  # OK, bool
+        (True, True, True),  # OK, bool
         (False, False, True),  # OK, bool. TODO: This should not fail.
-        ("MISSING", False, True),  # OK, adv_default_routes can be missing
-        # (1, True, True),  # OK, type is set to StrictBoolean in the model which does allow 1
-        (0, False, True),
-        # ("abc", True, True),  # NOK, vrf_lite string
+        ("MISSING", True, True),  # OK, adv_default_routes can be missing
+        (1, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+        (0, None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
+        ("abc", None, False),  # NOK, type is set to StrictBoolean in the model with allows only True or False
     ],
 )
 def test_vrf_model_00010(value: Union[str, int], expected: str, valid: bool) -> None:
@@ -511,6 +513,79 @@ def test_vrf_model_00010(value: Union[str, int], expected: str, valid: bool) -> 
             instance = PlaybookVrfModelV12(**playbook)
             if value != "MISSING":
                 assert instance.adv_host_routes == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfModelV12(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value, expected, valid",
+    [
+        (None, None, True),  # OK, attach can be null.
+        ("MISSING", None, True),  # OK, attach can be missing
+        ([], [], True),  # OK, attach can be an empty list
+        (0, None, False),
+        ("abc", None, False),
+    ],
+)
+def test_vrf_model_00020(value: Union[str, int], expected: str, valid: bool) -> None:
+    """
+    vrf_attach.attach
+
+    :param value: vrf_model value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    playbook = playbooks("playbook_as_dict")
+    if value == "MISSING":
+        playbook.pop("attach", None)
+    else:
+        playbook["attach"] = value
+
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfModelV12(**playbook)
+            if value != "MISSING":
+                assert instance.attach == expected
+    else:
+        with pytest.raises(ValueError):
+            PlaybookVrfModelV12(**playbook)
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (BgpPasswordEncrypt.MD5, BgpPasswordEncrypt.MD5.value, True),
+        (BgpPasswordEncrypt.TYPE7, BgpPasswordEncrypt.TYPE7.value, True),
+        (3, 3, True),  # OK, integer corresponding to MD5
+        (7, 7, True),  # OK, integer corresponding to TYPE7
+        (-1, -1, True),  # OK, integer corresponding to NONE
+        (0, None, False),  # NOK, not a valid enum value
+        ("md5", None, False),  # NOK, string not in enum
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00030(value, expected, valid):
+    """
+    vrf_attach.bgp_passwd_encrypt
+
+    :param value: vrf_model value to validate.
+    :param expected: Expected value after model conversion or validation (None for no expectation).
+    :param valid: Whether the value is valid or not.
+    """
+    field = "bgp_passwd_encrypt"
+    playbook = playbooks("playbook_as_dict")
+    if value == "MISSING":
+        playbook.pop(field, None)
+    else:
+        playbook[field] = value
+
+    if valid:
+        with does_not_raise():
+            instance = PlaybookVrfModelV12(**playbook)
+            print(f"instance.model_dump(): {json.dumps(instance.model_dump(), indent=4, sort_keys=True)}")
+            if value != "MISSING":
+                assert instance.bgp_passwd_encrypt == expected
     else:
         with pytest.raises(ValueError):
             PlaybookVrfModelV12(**playbook)

@@ -20,7 +20,7 @@ Validation model for dcnm_vrf playbooks.
 """
 from typing import Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, StrictBool
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_validator
 
 from ..common.enums.bgp import BgpPasswordEncrypt
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
@@ -229,10 +229,6 @@ class PlaybookVrfModelV12(BaseModel):
 
     Model to validate a playbook VRF configuration.
 
-    All fields can take an alias, which is the name of the field in the
-    original payload. The alias is used to map the field to the
-    corresponding field in the playbook.
-
     ## Raises
 
     - ValueError if:
@@ -282,46 +278,46 @@ class PlaybookVrfModelV12(BaseModel):
         use_enum_values=True,
         validate_assignment=True,
     )
-    adv_default_routes: StrictBool = Field(default=True, alias="advertiseDefaultRouteFlag")
-    adv_host_routes: StrictBool = Field(default=False, alias="advertiseHostRouteFlag")
+    adv_default_routes: StrictBool = Field(default=True)  # advertiseDefaultRouteFlag
+    adv_host_routes: StrictBool = Field(default=False)  # advertiseHostRouteFlag
     attach: Optional[list[PlaybookVrfAttachModel]] = None
-    bgp_passwd_encrypt: Union[BgpPasswordEncrypt, int] = Field(default=BgpPasswordEncrypt.MD5.value, alias="bgpPasswordKeyType")
-    bgp_password: str = Field(default="", alias="bgpPassword")
+    bgp_passwd_encrypt: BgpPasswordEncrypt = Field(default=BgpPasswordEncrypt.MD5.value)  # bgpPasswordKeyType
+    bgp_password: str = Field(default="")  # bgpPassword
     deploy: bool = Field(default=True)
-    disable_rt_auto: bool = Field(default=False, alias="disableRtAuto")
-    export_evpn_rt: str = Field(default="", alias="routeTargetExportEvpn")
-    export_mvpn_rt: str = Field(default="", alias="routeTargetExportMvpn")
-    export_vpn_rt: str = Field(default="", alias="routeTargetExport")
-    import_evpn_rt: str = Field(default="", alias="routeTargetImportEvpn")
-    import_mvpn_rt: str = Field(default="", alias="routeTargetImportMvpn")
-    import_vpn_rt: str = Field(default="", alias="routeTargetImport")
-    ipv6_linklocal_enable: bool = Field(default=True, alias="ipv6LinkLocalFlag")
-    loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295, alias="tag")
-    max_bgp_paths: int = Field(default=1, ge=1, le=64, alias="maxBgpPaths")
-    max_ibgp_paths: int = Field(default=2, ge=1, le=64, alias="maxIbgpPaths")
-    netflow_enable: bool = Field(default=False, alias="ENABLE_NETFLOW")
-    nf_monitor: str = Field(default="", alias="NETFLOW_MONITOR")
-    no_rp: bool = Field(default=False, alias="isRPAbsent")
-    overlay_mcast_group: str = Field(default="", alias="multicastGroup")
-    redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="vrfRouteMap")
-    rp_address: str = Field(default="", alias="rpAddress")
-    rp_external: bool = Field(default=False, alias="isRPExternal")
-    rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=0, le=1023, alias="loopbackNumber")
-    service_vrf_template: Optional[str] = Field(default=None, alias="serviceVrfTemplate")
+    disable_rt_auto: bool = Field(default=False)  # disableRtAuto
+    export_evpn_rt: str = Field(default="")  # routeTargetExportEvpn
+    export_mvpn_rt: str = Field(default="")  # routeTargetExportMvpn
+    export_vpn_rt: str = Field(default="")  # routeTargetExport
+    import_evpn_rt: str = Field(default="")  # routeTargetImportEvpn
+    import_mvpn_rt: str = Field(default="")  # routeTargetImportMvpn
+    import_vpn_rt: str = Field(default="")  # routeTargetImport
+    ipv6_linklocal_enable: bool = Field(default=True)  # ipv6LinkLocalFlag
+    loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295)  # tag
+    max_bgp_paths: int = Field(default=1, ge=1, le=64)  # maxBgpPaths
+    max_ibgp_paths: int = Field(default=2, ge=1, le=64)  # maxIbgpPaths
+    netflow_enable: bool = Field(default=False)  # ENABLE_NETFLOW
+    nf_monitor: str = Field(default="")  # NETFLOW_MONITOR
+    no_rp: bool = Field(default=False)  # isRPAbsent
+    overlay_mcast_group: str = Field(default="")  # multicastGroup
+    redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET")  # vrfRouteMap
+    rp_address: str = Field(default="")  # rpAddress
+    rp_external: bool = Field(default=False)  # isRPExternal
+    rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=-1, le=1023)  # loopbackNumber
+    service_vrf_template: Optional[str] = Field(default=None)  # serviceVrfTemplate
     source: Optional[str] = None
-    static_default_route: bool = Field(default=True, alias="configureStaticDefaultRouteFlag")
-    trm_bgw_msite: bool = Field(default=False, alias="trmBGWMSiteEnabled")
-    trm_enable: bool = Field(default=False, alias="trmEnabled")
-    underlay_mcast_ip: str = Field(default="", alias="L3VniMcastGroup")
+    static_default_route: bool = Field(default=True)  # configureStaticDefaultRouteFlag
+    trm_bgw_msite: bool = Field(default=False)  # trmBGWMSiteEnabled
+    trm_enable: bool = Field(default=False)  # trmEnabled
+    underlay_mcast_ip: str = Field(default="")  # L3VniMcastGroup
     vlan_id: Optional[int] = Field(default=None, le=4094)
-    vrf_description: str = Field(default="", alias="vrfDescription")
-    vrf_extension_template: str = Field(default="Default_VRF_Extension_Universal", alias="vrfExtensionTemplate")
+    vrf_description: str = Field(default="")  # vrfDescription
+    vrf_extension_template: str = Field(default="Default_VRF_Extension_Universal")  # vrfExtensionTemplate
     vrf_id: Optional[int] = Field(default=None, le=16777214)
-    vrf_int_mtu: int = Field(default=9216, ge=68, le=9216, alias="mtu")
-    vrf_intf_desc: str = Field(default="", alias="vrfIntfDescription")
+    vrf_int_mtu: int = Field(default=9216, ge=68, le=9216)  # mtu
+    vrf_intf_desc: str = Field(default="")  # vrfIntfDescription
     vrf_name: str = Field(..., max_length=32)
     vrf_template: str = Field(default="Default_VRF_Universal")
-    vrf_vlan_name: str = Field(default="", alias="vrfVlanName")
+    vrf_vlan_name: str = Field(default="")  # vrfVlanName
 
     @field_validator("source", mode="before")
     @classmethod
@@ -341,6 +337,31 @@ class PlaybookVrfModelV12(BaseModel):
         """
         if value != "":
             IPv4HostModel(ipv4_host=str(value))
+        return value
+
+    @field_validator("rp_loopback_id", mode="before")
+    @classmethod
+    def validate_rp_loopback_id_before(cls, value: Union[int, str]) -> Union[int, str]:
+        """
+        Validate rp_loopback_id is an integer between 0 and 1023.
+        If it is an empty string, return -1.  This will be converted to "" in an "after" validator.
+        """
+        if isinstance(value, str) and value == "":
+            return -1
+        if not isinstance(value, int):
+            raise ValueError(f"Invalid rp_loopback_id: {value}. It must be an integer between 0 and 1023.")
+        if value < 0 or value > 1023:
+            raise ValueError(f"Invalid rp_loopback_id: {value}. It must be an integer between 0 and 1023.")
+        return value
+
+    @field_validator("rp_loopback_id", mode="after")
+    @classmethod
+    def validate_rp_loopback_id_after(cls, value: Union[int, str]) -> Union[int, str]:
+        """
+        Convert rp_loopback_id to an empty string if it is -1.
+        """
+        if value == -1:
+            return ""
         return value
 
 

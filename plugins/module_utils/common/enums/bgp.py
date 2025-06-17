@@ -10,6 +10,10 @@ from enum import Enum
 class BgpPasswordEncrypt(Enum):
     """
     Enumeration for BGP password encryption types.
+
+    - MDS = 3
+    - TYPE7 = 7
+    - NONE = -1
     """
     MD5 = 3
     TYPE7 = 7
