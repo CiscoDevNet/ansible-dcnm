@@ -96,8 +96,6 @@ ipv6_addr_cidr_tests = [
 ]
 
 
-# R0917 == too-many-positional-arguments (throws error on Github pylint so using code instead)
-# pylint: disable=R0917
 # pylint: disable=too-many-arguments
 def base_test(value, expected, valid: bool, field: str, key: str, model):
     """
@@ -128,8 +126,6 @@ def base_test(value, expected, valid: bool, field: str, key: str, model):
             model(**playbook)
 
 
-# R0917 == too-many-positional-arguments (throws error on Github pylint so using code instead)
-# pylint: enable=R0917
 # pylint: enable=too-many-arguments
 
 
