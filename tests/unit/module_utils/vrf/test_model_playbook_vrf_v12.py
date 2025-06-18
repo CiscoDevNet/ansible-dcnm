@@ -665,9 +665,13 @@ def test_vrf_model_00250(value, expected, valid):
     [
         (2, 2, True),  # OK, integer in range
         (4094, 4094, True),  # OK, integer in range
+        ("2", 2, True),  # OK, str convertable to integer in range
+        ("4094", 4094, True),  # OK, str convertable to integer in range
         ("MISSING", None, True),  # OK, field can be missing. Default is None.
         (-1, None, False),  # NOK, must be >= 2
         (4095, None, False),  # NOK, must be <= 4094
+        ("1", None, False),  # NOK, str convertable to integer out of range
+        ("4095", None, False),  # NOK, str convertable to integer out in range
         ("md5", None, False),  # NOK, string
         (None, None, False),  # NOK, None is not a valid value
     ],

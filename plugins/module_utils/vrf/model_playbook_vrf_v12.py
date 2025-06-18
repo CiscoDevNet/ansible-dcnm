@@ -394,6 +394,13 @@ class PlaybookVrfModelV12(BaseModel):
         """
         if isinstance(value, str) and value == "":
             return -1
+        if isinstance(value, str):
+            try:
+                value = int(value)
+            except (TypeError, ValueError) as error:
+                msg = f"Invalid vlan_id: {value}. It must be an integer between 2 and 4094."
+                msg += f" Error detail: {error}"
+                raise ValueError(msg) from error
         if not isinstance(value, int):
             raise ValueError(f"Invalid vlan_id: {value}. It must be an integer between 2 and 4094.")
         if value < 2 or value > 4094:
