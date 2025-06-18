@@ -643,3 +643,11 @@ def test_vrf_model_00210(value, expected, valid):
     source
     """
     base_test_vrf(value, expected, valid, field="source")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_true)
+def test_vrf_model_00220(value, expected, valid):
+    """
+    static_default_route
+    """
+    base_test_vrf(value, expected, valid, field="static_default_route")
