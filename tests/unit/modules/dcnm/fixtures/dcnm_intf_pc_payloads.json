@@ -29,7 +29,7 @@
 						"NATIVE_VLAN": "10",
 						"ENABLE_ORPHAN_PORT": false,
 						"ENABLE_PFC": false,
-						"ENABLE_CDP": true,
+						"CDP_ENABLE": true,
 						"ENABLE_MONITOR": false,
 						"DESC": "port channel acting as trunk"
 					}
@@ -70,7 +70,7 @@
 						"DESC": "port channel acting as access",
 						"ENABLE_ORPHAN_PORT": false,
 						"ENABLE_PFC": false,
-						"ENABLE_CDP": true,
+						"CDP_ENABLE": true,
 						"ENABLE_MONITOR": false
 					}
 				}],
