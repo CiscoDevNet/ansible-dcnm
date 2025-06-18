@@ -1252,6 +1252,7 @@ class DcnmLinks:
                 link_spec["profile"]["peer2_ipv4_addr"] = dict(
                     type="ipv4", default=""
                 )
+
         if (
             cfg[0]["template"]
             != self.templates["int_pre_provision_intra_fabric_link"]
@@ -1259,21 +1260,22 @@ class DcnmLinks:
             link_spec["profile"]["admin_state"] = dict(
                 required=True, type="bool", choices=[True, False]
             )
-            if (
-                cfg[0]["template"]
-                != self.templates["ios_xe_int_intra_fabric_num_link"]
-            ):
-                link_spec["profile"]["mtu"] = dict(required=True, type="int")
-            else:
-                link_spec["profile"]["mtu"] = dict(type="int", default=1500)
-            link_spec["profile"]["peer1_description"] = dict(
-                type="str", default=""
-            )
-            link_spec["profile"]["peer2_description"] = dict(
-                type="str", default=""
-            )
-            link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
-            link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
+        if (
+            (cfg[0]["template"] == self.templates["ios_xe_int_intra_fabric_num_link"]) or
+            (cfg[0]["template"] == self.templates["int_pre_provision_intra_fabric_link"])
+        ):
+            link_spec["profile"]["mtu"] = dict(type="int", default=1500)
+        else:
+            link_spec["profile"]["mtu"] = dict(required=True, type="int")
+
+        link_spec["profile"]["peer1_description"] = dict(
+            type="str", default=""
+        )
+        link_spec["profile"]["peer2_description"] = dict(
+            type="str", default=""
+        )
+        link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
+        link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
 
         if (
             (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"])
@@ -1775,35 +1777,34 @@ class DcnmLinks:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
         """
 
+        link_payload["nvPairs"] = {}
         if (
             link["template"]
             != self.templates["int_pre_provision_intra_fabric_link"]
         ):
-            link_payload["nvPairs"] = {}
             link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get(
                 "admin_state"
             )
-            link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu")
-            link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
-                "peer1_description"
-            )
-            link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get(
-                "peer2_description"
+        link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu", 1500)
+        link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
+            "peer1_description", ""
+        )
+        link_payload["nvPairs"]["PEER2_DESC"] = link["profile"].get(
+            "peer2_description", ""
+        )
+        if link["profile"].get("peer1_cmds") == []:
+            link_payload["nvPairs"]["PEER1_CONF"] = ""
+        else:
+            link_payload["nvPairs"]["PEER1_CONF"] = "\n".join(
+                link["profile"].get("peer1_cmds")
             )
 
-            if link["profile"].get("peer1_cmds") == []:
-                link_payload["nvPairs"]["PEER1_CONF"] = ""
-            else:
-                link_payload["nvPairs"]["PEER1_CONF"] = "\n".join(
-                    link["profile"].get("peer1_cmds")
-                )
-
-            if link["profile"].get("peer2_cmds") == []:
-                link_payload["nvPairs"]["PEER2_CONF"] = ""
-            else:
-                link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(
-                    link["profile"].get("peer2_cmds")
-                )
+        if link["profile"].get("peer2_cmds") == []:
+            link_payload["nvPairs"]["PEER2_CONF"] = ""
+        else:
+            link_payload["nvPairs"]["PEER2_CONF"] = "\n".join(
+                link["profile"].get("peer2_cmds")
+            )
 
         if (
             (link["template"] == self.templates["int_intra_fabric_num_link"])
