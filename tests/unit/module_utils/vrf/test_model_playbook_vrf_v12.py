@@ -651,3 +651,19 @@ def test_vrf_model_00220(value, expected, valid):
     static_default_route
     """
     base_test_vrf(value, expected, valid, field="static_default_route")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00230(value, expected, valid):
+    """
+    trm_bgw_msite
+    """
+    base_test_vrf(value, expected, valid, field="trm_bgw_msite")
+
+
+@pytest.mark.parametrize("value,expected,valid", bool_tests_missing_default_false)
+def test_vrf_model_00240(value, expected, valid):
+    """
+    trm_enable
+    """
+    base_test_vrf(value, expected, valid, field="trm_enable")
