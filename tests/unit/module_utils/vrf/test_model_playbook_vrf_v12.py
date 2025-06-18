@@ -590,3 +590,22 @@ def test_vrf_model_00180(value, expected, valid):
     rp_external
     """
     base_test_vrf(value, expected, valid, field="rp_external")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (0, 0, True),  # OK, integer in range
+        (1023, 1023, True),  # OK, integer in range
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        (-1, None, False),  # NOK, must be >= 0
+        (1024, None, False),  # NOK, must be <= 1023
+        ("md5", None, False),  # NOK, string
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00190(value, expected, valid):
+    """
+    rp_loopback_id
+    """
+    base_test_vrf(value, expected, valid, field="rp_loopback_id")
