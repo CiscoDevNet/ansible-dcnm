@@ -2549,7 +2549,7 @@ options:
                         required: false
                         type: bool
                     AI_ML_QOS_POLICY:
-                        default: false
+                        default: ''
                         description:
                         - Queuing Policy  based on predominant fabric link speed: 400G / 100G / 25G
                         required: false
@@ -2960,13 +2960,13 @@ options:
                         required: false
                         type: int
                     IPv6_ANYCAST_RP_IP_RANGE:
-                        default: false
+                        default: 'fd00::254:254:0/118'
                         description:
                         - Anycast IPv6 Address Range
                         required: false
                         type: str
                     IPv6_MULTICAST_GROUP_SUBNET:
-                        default: false
+                        default: 'ff1e::/121'
                         description:
                         - IPv6 Multicast address with prefix 112 to 128
                         required: false
@@ -3002,7 +3002,7 @@ options:
                         required: false
                         type: str
                     LEAF_BGP_AS:
-                        default: false
+                        default: ''
                         description:
                         - 1-4294967295 | 1-65535[.0-65535], applicable when 'BGP AS Mode' is Same-Tier-AS
                         required: false
