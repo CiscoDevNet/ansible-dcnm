@@ -72,6 +72,14 @@ ipv4_addr_cidr_tests = [
     ("abc", None, False),
 ]
 
+ipv4_multicast_group_tests = [
+    ("224.1.1.1", "224.1.1.1", True),
+    ("MISSING", "", True),  # OK, field can be missing. Default is "".
+    ("10.1.1.1", None, False),
+    (3, 3, False),  # NOK, int
+    (None, None, False),  # NOK, None is not a valid value
+]
+
 ipv6_addr_host_tests = [
     ("2010::10:34:0:7", "2010::10:34:0:7", True),
     ("2010:10::7", "2010:10::7", True),
@@ -532,16 +540,7 @@ def test_vrf_model_00140(value, expected, valid):
     base_test_vrf(value, expected, valid, field="no_rp")
 
 
-@pytest.mark.parametrize(
-    "value,expected,valid",
-    [
-        ("224.1.1.1", "224.1.1.1", True),
-        ("MISSING", "", True),  # OK, field can be missing. Default is "".
-        ("10.1.1.1", None, False),
-        (3, 3, False),  # NOK, int
-        (None, None, False),  # NOK, None is not a valid value
-    ],
-)
+@pytest.mark.parametrize("value,expected,valid", ipv4_multicast_group_tests)
 def test_vrf_model_00150(value, expected, valid):
     """
     overlay_mcast_group
@@ -667,3 +666,11 @@ def test_vrf_model_00240(value, expected, valid):
     trm_enable
     """
     base_test_vrf(value, expected, valid, field="trm_enable")
+
+
+@pytest.mark.parametrize("value,expected,valid", ipv4_multicast_group_tests)
+def test_vrf_model_00250(value, expected, valid):
+    """
+    underlay_mcast_ip
+    """
+    base_test_vrf(value, expected, valid, field="underlay_mcast_ip")

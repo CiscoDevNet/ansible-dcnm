@@ -375,6 +375,16 @@ class PlaybookVrfModelV12(BaseModel):
             return ""
         return value
 
+    @field_validator("underlay_mcast_ip", mode="before")
+    @classmethod
+    def validate_underlay_mcast_ip(cls, value: str) -> str:
+        """
+        Validate underlay_mcast_ip is an IPv4 multicast group address without prefix.
+        """
+        if value != "":
+            IPv4MulticastGroupModel(ipv4_multicast_group=str(value))
+        return value
+
 
 class PlaybookVrfConfigModelV12(BaseModel):
     """
