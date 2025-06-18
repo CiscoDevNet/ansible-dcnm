@@ -715,3 +715,107 @@ def test_vrf_model_00280(value, expected, valid):
     vrf_extension_template
     """
     base_test_vrf(value, expected, valid, field="vrf_extension_template")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (3, 3, True),  # OK, int in range
+        (16777214, 16777214, True),  # OK, int in range
+        ("MISSING", None, True),  # OK, field can be missing. Default is None.
+        (None, None, True),  # OK, None is a valid value
+        ("foo", None, False),  # NOK, string
+        (16777215, None, False),  # NOK, out of range
+    ],
+)
+def test_vrf_model_00290(value, expected, valid):
+    """
+    vrf_id
+    """
+    base_test_vrf(value, expected, valid, field="vrf_id")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (68, 68, True),  # OK, min value
+        (9216, 9216, True),  # OK, max value
+        ("MISSING", 9216, True),  # OK, field can be missing. Default is 9216.
+        (None, None, False),  # NOK, None is an invalid value
+        ("foo", None, False),  # NOK, string
+        (67, None, False),  # NOK, below min value
+        (9217, None, False),  # NOK, above max value
+    ],
+)
+def test_vrf_model_00300(value, expected, valid):
+    """
+    vrf_int_mtu
+    """
+    base_test_vrf(value, expected, valid, field="vrf_int_mtu")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("My vrf interface description", "My vrf interface description", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        ("", "", True),  # OK, empty string
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00310(value, expected, valid):
+    """
+    vrf_intf_desc
+    """
+    base_test_vrf(value, expected, valid, field="vrf_intf_desc")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("ansible-vrf-int1", "ansible-vrf-int1", True),
+        ("vrf_5678901234567890123456789012", "vrf_5678901234567890123456789012", True),  # Valid, exactly 32 characters
+        (123, None, False),  # Invalid, int
+        ("vrf_56789012345678901234567890123", None, False),  # Invalid, longer than 32 characters
+    ],
+)
+def test_vrf_model_00320(value, expected, valid) -> None:
+    """
+    vrf_name
+    """
+    base_test_vrf(value, expected, valid, field="vrf_name")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("MY_VRF_TEMPLATE", "MY_VRF_TEMPLATE", True),
+        ("MISSING", "Default_VRF_Universal", True),  # OK, field can be missing. Default is "Default_VRF_Universal".
+        ("", "", True),  # OK, empty string
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00330(value, expected, valid):
+    """
+    vrf_template
+    """
+    base_test_vrf(value, expected, valid, field="vrf_template")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("My VRF Vlan Name", "My VRF Vlan Name", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        ("", "", True),  # OK, empty string
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00340(value, expected, valid):
+    """
+    vrf_vlan_name
+    """
+    base_test_vrf(value, expected, valid, field="vrf_vlan_name")
