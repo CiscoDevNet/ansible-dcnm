@@ -626,3 +626,20 @@ def test_vrf_model_00200(value, expected, valid):
     service_vrf_template
     """
     base_test_vrf(value, expected, valid, field="service_vrf_template")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("MISSING", None, True),  # OK, field is always hardcoded to None.
+        (None, None, True),  # OK, field is always hardcoded to None.
+        ("some-string", None, True),  # OK, field is always hardcoded to None.
+        (-1, None, True),  # OK, field is always hardcoded to None.
+        (1024, None, True),  # OK, field is always hardcoded to None.
+    ],
+)
+def test_vrf_model_00210(value, expected, valid):
+    """
+    source
+    """
+    base_test_vrf(value, expected, valid, field="source")
