@@ -11,5 +11,5 @@ all:
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
       hosts:
-        fabric-stage:
+        nac-ndfc1:
           ansible_host: 10.10.5.1

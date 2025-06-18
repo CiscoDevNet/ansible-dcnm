@@ -822,7 +822,7 @@
       gw_ip_subnet: '192.168.30.1/24'
       attach:
       - ip_address:
-        ports: ["{{ interface_1a }}", "{{ interface_1b }}"]
+        ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
       deploy: false
   register: result
   ignore_errors: yes
@@ -848,7 +848,7 @@
       vlan_id: 1500
       gw_ip_subnet: '192.168.30.1/24'
       attach:
-      - ip_address: "{{ ansible_switch1 }}"
+      - ip_address: "{{ test_data_common.sw1 }}"
         ports:
       deploy: false
   register: result
