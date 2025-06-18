@@ -103,9 +103,9 @@ class ActionModule(ActionBase):
             expected_config_data = load_yaml_file(config_path)
             expected_data = DcnmNetworkQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric)
 
-            expected_data_parsed = DcnmNetworkQuerySchema.parse_obj(expected_data).dict(exclude_none=True)
+            expected_data_parsed = DcnmNetworkQuerySchema.model_validate(expected_data).model_dump(exclude_none=True)
 
-        ndfc_data_parsed = DcnmNetworkQuerySchema.parse_obj(native_ndfc_data).dict(exclude_none=True)
+        ndfc_data_parsed = DcnmNetworkQuerySchema.model_validate(native_ndfc_data).model_dump(exclude_none=True)
 
         if deleted_results := self.verify_deleted(results, check_deleted, expected_data_parsed, ndfc_data_parsed, config_path):
             return deleted_results
