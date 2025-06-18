@@ -698,3 +698,20 @@ def test_vrf_model_00270(value, expected, valid):
     vrf_description
     """
     base_test_vrf(value, expected, valid, field="vrf_description")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("MY_VRF_EXT_TEMPLATE", "MY_VRF_EXT_TEMPLATE", True),
+        ("MISSING", "Default_VRF_Extension_Universal", True),  # OK, field can be missing. Default is "Default_VRF_Extension_Universal".
+        ("", "", True),  # OK, empty string
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00280(value, expected, valid):
+    """
+    vrf_extension_template
+    """
+    base_test_vrf(value, expected, valid, field="vrf_extension_template")
