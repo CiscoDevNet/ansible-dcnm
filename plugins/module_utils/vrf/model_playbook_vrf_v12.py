@@ -385,6 +385,31 @@ class PlaybookVrfModelV12(BaseModel):
             IPv4MulticastGroupModel(ipv4_multicast_group=str(value))
         return value
 
+    @field_validator("vlan_id", mode="before")
+    @classmethod
+    def validate_vlan_id_before(cls, value: Union[int, str]) -> Union[int, str]:
+        """
+        Validate vlan_id is an integer between 2 and 4094.
+        If it is "", return -1.  This will be converted to None in an "after" validator.
+        """
+        if isinstance(value, str) and value == "":
+            return -1
+        if not isinstance(value, int):
+            raise ValueError(f"Invalid vlan_id: {value}. It must be an integer between 2 and 4094.")
+        if value < 2 or value > 4094:
+            raise ValueError(f"Invalid vlan_id: {value}. It must be an integer between 2 and 4094.")
+        return value
+
+    @field_validator("vlan_id", mode="after")
+    @classmethod
+    def validate_vlan_id_after(cls, value: Union[int, str]) -> Union[int, str]:
+        """
+        Convert vlan_id to None if it is -1.
+        """
+        if value == -1:
+            return None
+        return value
+
 
 class PlaybookVrfConfigModelV12(BaseModel):
     """

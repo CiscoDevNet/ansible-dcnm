@@ -658,3 +658,39 @@ def test_vrf_model_00250(value, expected, valid):
     underlay_mcast_ip
     """
     base_test_vrf(value, expected, valid, field="underlay_mcast_ip")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        (2, 2, True),  # OK, integer in range
+        (4094, 4094, True),  # OK, integer in range
+        ("MISSING", None, True),  # OK, field can be missing. Default is None.
+        (-1, None, False),  # NOK, must be >= 2
+        (4095, None, False),  # NOK, must be <= 4094
+        ("md5", None, False),  # NOK, string
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00260(value, expected, valid):
+    """
+    vlan_id
+    """
+    base_test_vrf(value, expected, valid, field="vlan_id")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("My vrf description", "My vrf description", True),
+        ("MISSING", "", True),  # OK, field can be missing. Default is "".
+        ("", "", True),  # OK, empty string
+        (3, 3, False),  # NOK, int
+        (None, None, False),  # NOK, None is not a valid value
+    ],
+)
+def test_vrf_model_00270(value, expected, valid):
+    """
+    vrf_description
+    """
+    base_test_vrf(value, expected, valid, field="vrf_description")
