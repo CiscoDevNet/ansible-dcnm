@@ -24,4 +24,13 @@ plugins/httpapi/dcnm.py import-3.10!skip
 plugins/module_utils/common/sender_requests.py import-3.9 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/sender_requests.py import-3.10 # TODO remove this if/when requests is added to the standard library
 plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
-plugins/action/tests/unit/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
+plugins/action/tests/integration/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
+plugins/action/tests/integration/ndfc_network_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
+plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py action-plugin-docs # action plugin has no matching module to provide documentation
+plugins/action/tests/plugin_utils/tools.py action-plugin-docs # action plugin has no matching module to provide documentation
+plugins/action/tests/integration/ndfc_network_validate.py import-3.9!skip
+plugins/action/tests/integration/ndfc_network_validate.py import-3.10!skip
+plugins/action/tests/integration/ndfc_network_validate.py import-3.11!skip
+plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py import-3.9!skip
+plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py import-3.10!skip
+plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py import-3.11!skip
