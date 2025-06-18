@@ -609,3 +609,20 @@ def test_vrf_model_00190(value, expected, valid):
     rp_loopback_id
     """
     base_test_vrf(value, expected, valid, field="rp_loopback_id")
+
+
+@pytest.mark.parametrize(
+    "value,expected,valid",
+    [
+        ("MY-SERVICE-VRF-TEMPLATE", "MY-SERVICE-VRF-TEMPLATE", True),  # OK, valid string
+        ("MISSING", None, True),  # OK, field can be missing. Default is None.
+        (None, None, True),  # OK, None is valid
+        (-1, None, False),  # NOK, not a string
+        (1024, None, False),  # NOK, not a string
+    ],
+)
+def test_vrf_model_00200(value, expected, valid):
+    """
+    service_vrf_template
+    """
+    base_test_vrf(value, expected, valid, field="service_vrf_template")
