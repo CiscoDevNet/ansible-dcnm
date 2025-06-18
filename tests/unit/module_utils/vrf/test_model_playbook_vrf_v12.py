@@ -300,23 +300,7 @@ def test_vrf_attach_00020(value, expected, valid: bool) -> None:
     base_test_attach(value, expected, valid, field="import_evpn_rt")
 
 
-@pytest.mark.parametrize(
-    "value, expected, valid",
-    [
-        ("10.1.1.1", "10.1.1.1", True),
-        ("168.1.1.1", "168.1.1.1", True),
-        ("172.1.1.1", "172.1.1.1", True),
-        # ("255.255.255.255/30", None, False), TODO: this should not be valid, but currently is
-        ("10.1.1.1/24", "10.1.1.1/24", False),
-        ("168.1.1.1/30", "168.1.1.1/30", False),
-        ("172.1.1.1/30", "172.1.1.1/30", False),
-        ("172.1.1.", None, False),
-        ("2010::10:34:0:7", None, False),
-        ("2010::10:34:0:7/64", None, False),
-        (1, None, False),
-        ("abc", None, False),
-    ],
-)
+@pytest.mark.parametrize("value, expected, valid", ipv4_addr_host_tests)
 def test_vrf_attach_00030(value, expected, valid: bool) -> None:
     """
     ip_address
