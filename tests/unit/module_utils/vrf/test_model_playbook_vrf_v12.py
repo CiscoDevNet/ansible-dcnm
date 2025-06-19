@@ -775,9 +775,12 @@ def test_vrf_model_00310(value, expected, valid):
     "value,expected,valid",
     [
         ("ansible-vrf-int1", "ansible-vrf-int1", True),
-        ("vrf_5678901234567890123456789012", "vrf_5678901234567890123456789012", True),  # Valid, exactly 32 characters
+        ("a", "a", True),  # Valid, minimum number of characters (1)
+        ("vrf_5678901234567890123456789012", "vrf_5678901234567890123456789012", True),  # Valid, maximum number of characters (32)
+        ("MISSING", None, False),  # Invalid, field is mandatory
         (123, None, False),  # Invalid, int
-        ("vrf_56789012345678901234567890123", None, False),  # Invalid, longer than 32 characters
+        ("", None, False),  # Invalid, less than 32 characters
+        ("vrf_56789012345678901234567890123", None, False),  # Invalid, more than 32 characters
     ],
 )
 def test_vrf_model_00320(value, expected, valid) -> None:

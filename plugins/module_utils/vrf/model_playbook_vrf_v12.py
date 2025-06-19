@@ -233,45 +233,48 @@ class PlaybookVrfModelV12(BaseModel):
     ## Raises
 
     - ValueError if:
-        - adv_default_routes is not a boolean
-        - adv_host_routes is not a boolean
-        - attach (if provided) is not a list of PlaybookVrfAttachModel instances
-        - bgp_passwd_encrypt is not a valid BgpPasswordEncrypt enum value
-        - bgp_password is not a string
-        - deploy is not a boolean
-        - disable_rt_auto is not a boolean
-        - export_evpn_rt is not a string
-        - export_mvpn_rt is not a string
-        - export_vpn_rt is not a string
-        - import_evpn_rt is not a string
-        - import_mvpn_rt is not a string
-        - import_vpn_rt is not a string
-        - ipv6_linklocal_enable is not a boolean
-        - loopback_route_tag is not an integer between 0 and 4294967295
-        - max_bgp_paths is not an integer between 1 and 64
-        - max_ibgp_paths is not an integer between 1 and 64
-        - netflow_enable is not a boolean
-        - nf_monitor is not a string
-        - no_rp is not a boolean
-        - overlay_mcast_group is not a string
-        - redist_direct_rmap is not a string
-        - rp_address is not a valid IPv4 host address
-        - rp_external is not a boolean
-        - rp_loopback_id is not an integer between 0 and 1023
-        - service_vrf_template is not a string
-        - static_default_route is not a boolean
-        - trm_bgw_msite is not a boolean
-        - trm_enable is not a boolean
-        - underlay_mcast_ip is not a string
-        - vlan_id is not an integer between 0 and 4094
-        - vrf_description is not a string
-        - vrf_extension_template is not a string
-        - vrf_id is not an integer between 0 and 16777214
-        - vrf_int_mtu is not an integer between 68 and 9216
-        - vrf_intf_desc is not a string
-        - vrf_name is not a string
-        - vrf_template is not a string
-        - vrf_vlan_name is not a string
+        - Any field does not meet its validation criteria.
+    
+    ## Attributes:
+        - adv_default_routes - boolean
+        - adv_host_routes - boolean
+        - attach - list of PlaybookVrfAttachModel
+        - bgp_passwd_encrypt - int (BgpPasswordEncrypt enum value, 3, 7)
+        - bgp_password - string
+        - deploy - boolean
+        - disable_rt_auto - boolean
+        - export_evpn_rt - string
+        - export_mvpn_rt - string
+        - export_vpn_rt - string
+        - import_evpn_rt - string
+        - import_mvpn_rt - string
+        - import_vpn_rt - string
+        - ipv6_linklocal_enable - boolean
+        - loopback_route_tag- integer range (0-4294967295)
+        - max_bgp_paths - integer range (1-64)
+        - max_ibgp_paths - integer range (1-64)
+        - netflow_enable - boolean
+        - nf_monitor - string
+        - no_rp - boolean
+        - overlay_mcast_group - string (IPv4 multicast group address without prefix)
+        - redist_direct_rmap - string
+        - rp_address - string (IPv4 host address without prefix)
+        - rp_external - boolean
+        - rp_loopback_id - int range (0-1023)
+        - service_vrf_template - string
+        - static_default_route - boolean
+        - trm_bgw_msite - boolean
+        - trm_enable - boolean
+        - underlay_mcast_ip - string (IPv4 multicast group address without prefix)
+        - vlan_id - integer range (0-4094)
+        - vrf_description - string
+        - vrf_extension_template - string
+        - vrf_id - integer range (0- 16777214)
+        - vrf_int_mtu - integer range (68-9216)
+        - vrf_intf_desc - string
+        - vrf_name - string
+        - vrf_template - string
+        - vrf_vlan_name - string
     """
 
     model_config = ConfigDict(
@@ -316,7 +319,7 @@ class PlaybookVrfModelV12(BaseModel):
     vrf_id: Optional[int] = Field(default=None, le=16777214)
     vrf_int_mtu: int = Field(default=9216, ge=68, le=9216)  # mtu
     vrf_intf_desc: str = Field(default="")  # vrfIntfDescription
-    vrf_name: str = Field(..., max_length=32)
+    vrf_name: str = Field(..., min_length=1, max_length=32)  # vrfName
     vrf_template: str = Field(default="Default_VRF_Universal")
     vrf_vlan_name: str = Field(default="")  # vrfVlanName
 
