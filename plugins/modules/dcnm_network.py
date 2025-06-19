@@ -1384,7 +1384,7 @@ class DcnmNetwork:
                 # Remove mcastGroup when Fabric is MSD
                 if "mcastGroup" not in json_to_dict:
                     del t_conf["mcastGroup"]
-                
+
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
                 del net["displayName"]
                 del net["serviceNetworkTemplate"]
@@ -1912,7 +1912,7 @@ class DcnmNetwork:
                     dhcp2_vrf_changed.update({want_c["networkName"]: dhcp2_vrf_chg})
                     dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
                     dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
-                    if self.is_ms_fabric == False:
+                    if self.is_ms_fabric is False:
                         multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
                     gwv6_changed.update({want_c["networkName"]: gwv6_chg})
                     sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
