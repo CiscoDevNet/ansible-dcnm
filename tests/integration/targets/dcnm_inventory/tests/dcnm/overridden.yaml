@@ -1,6 +1,6 @@
 ---
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yml
+  import_tasks: ../base_tasks.yaml
   tags: overridden
 
 # ----------------------------------------------
@@ -57,7 +57,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: overridden
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: overridden
 
 - name: Overridden TC3 - Override Existing Switch - Removes Other Switches from Fabric
@@ -98,7 +98,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: overridden
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: overridden
 
 - name: Overridden TC4 - New Role for the Existing Switch
@@ -138,7 +138,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: overridden
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: overridden
 
 - name: Overridden TC5 - Unspecified Role for the Existing Switch (Default, Leaf)

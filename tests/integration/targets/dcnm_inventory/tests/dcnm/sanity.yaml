@@ -1,7 +1,7 @@
 ---
 
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yml
+  import_tasks: ../base_tasks.yaml
   tags: sanity
 
 # ----------------------------------------------
@@ -96,7 +96,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: sanity
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: sanity
 
 - name: Sanity TC4 - Overridden - Update a New Switch using GreenField Deployment - Delete and Create - default role
@@ -200,7 +200,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: sanity
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: sanity
 
 - name: Sanity TC8 - Reset - Setup Switches in Fabric

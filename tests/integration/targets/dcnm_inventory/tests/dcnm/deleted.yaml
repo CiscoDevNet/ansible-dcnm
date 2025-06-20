@@ -1,7 +1,7 @@
 ---
 
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yml
+  import_tasks: ../base_tasks.yaml
   tags: deleted
 
 # ----------------------------------------------
@@ -118,7 +118,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: delete
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: deleted
 
 - name: Deleted TC5 - Merge a Switch using BrownField Deployment

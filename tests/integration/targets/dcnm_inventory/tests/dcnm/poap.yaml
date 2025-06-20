@@ -142,7 +142,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: poap
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   when: poap_enabled == True
   tags: poap
 
@@ -245,7 +245,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: poap
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   when: poap_enabled == True
   tags: poap
 

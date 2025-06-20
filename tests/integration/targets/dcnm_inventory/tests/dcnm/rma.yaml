@@ -121,7 +121,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: rma
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   when: rma_enabled == True
   tags: rma
 

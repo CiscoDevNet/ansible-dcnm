@@ -1,6 +1,6 @@
 ---
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yml
+  import_tasks: ../base_tasks.yaml
   tags: query
 
 # ----------------------------------------------
@@ -199,7 +199,7 @@
 - name: Import Configuration Prepare Tasks
   vars:
     file: query
-  import_tasks: ../conf_prep_tasks.yml
+  import_tasks: ../conf_prep_tasks.yaml
   tags: query
 
 - name: Query TC9 - Add Switch with Border Gateways to Fabric
