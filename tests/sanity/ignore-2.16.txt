@@ -1,3 +1,6 @@
+plugins/action/tests/integration/ndfc_inventory_validate.py action-plugin-docs
+plugins/action/tests/integration/ndfc_inventory_validate.py import-3.10!skip
+plugins/action/tests/integration/ndfc_inventory_validate.py import-3.11!skip
 plugins/action/tests/integration/ndfc_network_validate.py action-plugin-docs
 plugins/action/tests/integration/ndfc_network_validate.py import-3.10!skip
 plugins/action/tests/integration/ndfc_network_validate.py import-3.11!skip
