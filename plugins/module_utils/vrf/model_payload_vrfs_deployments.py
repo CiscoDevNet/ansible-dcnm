@@ -55,4 +55,4 @@ class PayloadfVrfsDeployments(BaseModel):
         """
         Serialize vrf_names to a comma-separated string of unique sorted vrf names.
         """
-        return ",".join(set(sorted(list(vrf_names))))
+        return ",".join(sorted(set(list(vrf_names))))
