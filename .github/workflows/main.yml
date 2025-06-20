@@ -21,20 +21,15 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.15.12, 2.16.7]
+        ansible: [2.15.13, 2.16.14, 2.17.12, 2.18.6]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
     
-    - name: Set up Python "3.10"
+    - name: Set up Python "3.11"
       uses: actions/setup-python@v1
       with:
-        python-version: "3.10"
-
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install pydantic
+        python-version: "3.11"
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -49,6 +44,7 @@ jobs:
         path: .cache/v${{ matrix.ansible }}/collection-tarballs
         overwrite: true
 
+
   sanity:
     name: Run ansible-sanity tests
     needs:
@@ -56,21 +52,22 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.15.12, 2.16.7]
+        ansible: [2.15.13, 2.16.14, 2.17.12, 2.18.6]
         python: ["3.9", "3.10", "3.11"]
         exclude:
-          - ansible: 2.16.7
+          - ansible: 2.16.14
             python: "3.9"
+          - ansible: 2.17.12
+            python: "3.9"
+          - ansible: 2.18.6
+            python: "3.9"
+          - ansible: 2.18.6
+            python: "3.10"
     steps:
     - name: Set up Python (v${{ matrix.python }})
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python }}
-
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install pydantic
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -96,21 +93,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        ansible: [2.15.12, 2.16.7]
+        ansible: [2.15.13, 2.16.14, 2.17.12, 2.18.6]
     steps:
-
-    - name: Set up Python "3.10"
+    - name: Set up Python "3.11"
       uses: actions/setup-python@v1
       with:
-        python-version: "3.10"
-
-    - name: Install dependencies
-      run: |
-        pip install --upgrade pip
-        pip install pydantic
+        python-version: "3.11"
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
+    
+    - name: Install Pydantic (v2)
+      run: pip install pydantic==2.11.4
+    
+    - name: Install DeepDiff (v8.5.0)
+      run: pip install deepdiff==8.5.0
 
     - name: Install coverage (v7.3.4)
       run: pip install coverage==7.3.4
