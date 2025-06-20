@@ -1,5 +1,4 @@
 plugins/action/tests/unit/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
-plugins/httpapi/dcnm.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/httpapi/dcnm.py import-3.10!skip
 plugins/httpapi/dcnm.py import-3.9!skip
 plugins/httpapi/dcnm.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
