@@ -57,12 +57,30 @@ def load_fixture(filename):
 
     return fixture
 
+def load_fixture_data(filename: str, key: str) -> dict[str, str]:
+    """
+    Return fixture data associated with key from data_file.
+
+    :param filename: The name of the fixture data file.
+    :param key: The key to look up in the fixture data.
+    :return: The data associated with the key.
+    """
+    data = load_fixture(filename).get(key)
+    print(f"{filename}: {key} : {data}")
+    return data
+
+def payloads_vrfs_attachments(key: str) -> dict[str, str]:
+    """
+    Return VRF payloads.
+    """
+    filename = "model_payload_vrfs_attachments.json"
+    data = load_fixture_data(filename=filename, key=key)
+    return data
 
 def playbooks(key: str) -> dict[str, str]:
     """
     Return VRF playbooks.
     """
-    playbook_file = "model_playbook_vrf_v12.json"
-    playbook = load_fixture(playbook_file).get(key)
-    print(f"{playbook_file}: {key} : {playbook}")
-    return playbook
+    filename = "model_playbook_vrf_v12.json"
+    data = load_fixture_data(filename=filename, key=key)
+    return data
