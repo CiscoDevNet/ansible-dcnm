@@ -234,7 +234,7 @@ class PlaybookVrfModelV12(BaseModel):
 
     - ValueError if:
         - Any field does not meet its validation criteria.
-    
+
     ## Attributes:
         - adv_default_routes - boolean
         - adv_host_routes - boolean

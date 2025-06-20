@@ -1,9 +1,3 @@
-plugins/action/tests/integration/ndfc_network_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
-plugins/action/tests/integration/ndfc_network_validate.py import-3.11!skip
-plugins/action/tests/integration/ndfc_pc_members_validate.py action-plugin-docs # action plugin has no matching module to provide documentation
-plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py action-plugin-docs # action plugin has no matching module to provide documentation
-plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_network/schemas.py import-3.11!skip
-plugins/action/tests/plugin_utils/tools.py action-plugin-docs # action plugin has no matching module to provide documentation
 plugins/httpapi/dcnm.py validate-modules:missing-gplv3-license # GPLv3 license header not found in the first 20 lines of the module
 plugins/module_utils/common/models/ipv4_cidr_host.py import-3.10!skip
 plugins/module_utils/common/models/ipv4_cidr_host.py import-3.11!skip
@@ -20,8 +14,8 @@ plugins/module_utils/common/models/ipv6_cidr_host.py import-3.9!skip
 plugins/module_utils/common/models/ipv6_host.py import-3.10!skip
 plugins/module_utils/common/models/ipv6_host.py import-3.11!skip
 plugins/module_utils/common/models/ipv6_host.py import-3.9!skip
-plugins/module_utils/common/sender_requests.py import-3.10 # TODO remove this if/when requests is added to the standard library
-plugins/module_utils/common/sender_requests.py import-3.11 # TODO remove this if/when requests is added to the standard library
+plugins/module_utils/common/sender_requests.py import-3.10
+plugins/module_utils/common/sender_requests.py import-3.11
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.10!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.11!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.9!skip
