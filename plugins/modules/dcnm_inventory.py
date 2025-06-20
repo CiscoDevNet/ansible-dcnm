@@ -1447,7 +1447,7 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
-                if not role["serialNumber"]:
+                if not role.get("serialNumber"):
                     msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
                         self.fabric
                     )
@@ -1460,8 +1460,7 @@ class DcnmInventory:
                     data = None
                     if self.nd:
                         method = "POST"
-                        path = "/rest/control/switches/roles"
-                        path = self.nd_prefix + "/" + path
+                        path = f"{self.nd_prefix}/rest/control/switches/roles"
                         data = json.dumps(
                             {
                                 "serialNumber": role["serialNumber"],
@@ -1483,7 +1482,7 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
-                if not role["serialNumber"]:
+                if not role.get("serialNumber"):
                     msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
                         self.fabric
                     )
@@ -1496,8 +1495,7 @@ class DcnmInventory:
                     data = None
                     if self.nd:
                         method = "POST"
-                        path = "/rest/control/switches/roles"
-                        path = self.nd_prefix + "/" + path
+                        path = f"{self.nd_prefix}/rest/control/switches/roles"
                         data = json.dumps(
                             {
                                 "serialNumber": role["serialNumber"],
