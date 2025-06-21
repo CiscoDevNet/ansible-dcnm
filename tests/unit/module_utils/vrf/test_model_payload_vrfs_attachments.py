@@ -17,30 +17,25 @@ Test cases for PayloadfVrfsDeployments.
 from functools import partial
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_payload_vrfs_attachments import (
-    PayloadVrfsAttachments,
-)
+from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_payload_vrfs_attachments import PayloadVrfsAttachments
 
 from ..common.common_utils import does_not_raise
 from .fixtures.load_fixture import payloads_vrfs_attachments
 
-
-vrf_name_tests = (
-    [
-        ("test_vrf", "test_vrf", True),
-        (
-            "vrf_5678901234567890123456789012",
-            "vrf_5678901234567890123456789012",
-            True,
-        ),  # Valid, exactly 32 characters
-        (123, None, False),  # Invalid, int
-        (
-            "vrf_56789012345678901234567890123",
-            None,
-            False,
-        ),  # Invalid, longer than 32 characters
-    ],
-)
+vrf_name_tests = [
+    ("test_vrf", "test_vrf", True),
+    (
+        "vrf_5678901234567890123456789012",
+        "vrf_5678901234567890123456789012",
+        True,
+    ),  # Valid, exactly 32 characters
+    (123, None, False),  # Invalid, int
+    (
+        "vrf_56789012345678901234567890123",
+        None,
+        False,
+    ),  # Invalid, longer than 32 characters
+]
 
 
 # pylint: disable=too-many-arguments
