@@ -23,18 +23,24 @@ from ..common.common_utils import does_not_raise
 from .fixtures.load_fixture import payloads_vrfs_attachments
 
 vrf_name_tests = [
-    ("test_vrf", "test_vrf", True),
+    ("test_vrf", "test_vrf", True),  # Valid, length within min_length and max_length
+    ("v", "v", True),  # Valid, compliant with min_length of 1 character
     (
         "vrf_5678901234567890123456789012",
         "vrf_5678901234567890123456789012",
         True,
-    ),  # Valid, exactly 32 characters
-    (123, None, False),  # Invalid, int
+    ),  # Valid, compliant with max_length of 32 characters
+    (123, None, False),  # Invalid, noncompliant with str type
     (
         "vrf_56789012345678901234567890123",
         None,
         False,
-    ),  # Invalid, longer than 32 characters
+    ),  # Invalid, noncompliant with max_length of 32 characters
+    (
+        "",
+        None,
+        False,
+    ),  # Invalid, noncompliant with min_length of 1 character
 ]
 
 
