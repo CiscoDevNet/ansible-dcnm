@@ -1,0 +1,17 @@
+{
+    "payload_full": {
+        "lanAttachList": [
+            {
+                "deployment": true,
+                "extensionValues": "",
+                "fabric": "test_fabric",
+                "freeformConfig": "",
+                "instanceValues": "{\"loopbackIpV6Address\":\"\",\"loopbackId\":\"\",\"deviceSupportL3VniNoVlan\":\"false\",\"switchRouteTargetImportEvpn\":\"\",\"loopbackIpAddress\":\"\",\"switchRouteTargetExportEvpn\":\"\"}",
+                "serialNumber": "01234567891",
+                "vlan": 0,
+                "vrfName": "test_vrf"
+            }
+        ],
+        "vrfName": "test_vrf"
+    }
+}

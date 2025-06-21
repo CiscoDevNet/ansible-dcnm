@@ -130,4 +130,4 @@ class PayloadVrfsAttachments(BaseModel):
     )
 
     lan_attach_list: list[PayloadVrfsAttachmentsLanAttachListItem] = Field(alias="lanAttachList")
-    vrf_name: str = Field(alias="vrfName")
+    vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
