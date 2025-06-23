@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import json
-
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
 from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
+
 
 class PayloadVrfsAttachmentsLanAttachListInstanceValues(BaseModel):
     """
@@ -41,6 +42,7 @@ class PayloadVrfsAttachmentsLanAttachListInstanceValues(BaseModel):
     switch_route_target_export_evpn: str = Field(alias="switchRouteTargetExportEvpn", default="")
 
     @field_validator("loopback_ip_address", mode="before")
+    @classmethod
     def validate_loopback_ip_address(cls, value: str) -> str:
         """
         Validate loopback_ip_address to ensure it is a valid IPv4 CIDR host.
@@ -54,6 +56,7 @@ class PayloadVrfsAttachmentsLanAttachListInstanceValues(BaseModel):
             raise ValueError(msg) from error
 
     @field_validator("loopback_ipv6_address", mode="before")
+    @classmethod
     def validate_loopback_ipv6_address(cls, value: str) -> str:
         """
         Validate loopback_ipv6_address to ensure it is a valid IPv6 CIDR host.
@@ -145,7 +148,6 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
     serial_number: str = Field(alias="serialNumber")
     vlan: int = Field(alias="vlan")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
-
 
     @field_serializer("instance_values")
     def serialize_instance_values(self, value: PayloadVrfsAttachmentsLanAttachListInstanceValues) -> str:
