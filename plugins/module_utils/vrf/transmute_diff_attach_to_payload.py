@@ -114,44 +114,25 @@ class DiffAttachToControllerPayload:
         caller = inspect.stack()[1][3]
         method_name = inspect.stack()[0][3]
 
-        msg = "ENTERED. "
-        msg += f"caller: {caller}."
+        msg = f"ENTERED. caller: {caller}."
         self.log.debug(msg)
 
-        if not self.sender:
-            msg = f"{self.class_name}.{caller}: "
-            msg += "Set instance.sender before calling commit()."
-            self.log.debug(msg)
-            raise ValueError(msg)
+        required_attrs = [
+            ("sender", self.sender),
+            ("diff_attach", self.diff_attach),
+            ("fabric_inventory", self.fabric_inventory),
+            ("playbook_models", self.playbook_models),
+            ("ansible_module", self.ansible_module),
+        ]
 
-        if not self.diff_attach:
-            msg = f"{self.class_name}.{method_name}: {caller}: "
-            msg += "diff_attach is empty. "
-            msg += "Set instance.diff_attach before calling commit()."
-            self.log.debug(msg)
-            raise ValueError(msg)
-
-        if not self.fabric_inventory:
-            msg = f"{self.class_name}.{method_name}: {caller}: "
-            msg += "Set instance.fabric_inventory before calling commit()."
-            self.log.debug(msg)
-            raise ValueError(msg)
-
-        if not self.playbook_models:
-            msg = f"{self.class_name}.{method_name}: {caller}: "
-            msg += "Set instance.playbook_models before calling commit()."
-            self.log.debug(msg)
-            raise ValueError(msg)
-
-        if not self.ansible_module:
-            msg = f"{self.class_name}.{method_name}: {caller}: "
-            msg += "Set instance.ansible_module before calling commit()."
-            self.log.debug(msg)
-            raise ValueError(msg)
+        for attr_name, attr_value in required_attrs:
+            if not attr_value:
+                msg = f"{self.class_name}.{method_name}: {caller}: Set instance.{attr_name} before calling commit()."
+                self.log.debug(msg)
+                raise ValueError(msg)
 
         self.serial_number_to_fabric_name.fabric_inventory = self.fabric_inventory
         self.serial_number_to_ipv4.fabric_inventory = self.fabric_inventory
-
         self.serial_number_to_vrf_lite.playbook_models = self.playbook_models
         self.serial_number_to_vrf_lite.fabric_inventory = self.fabric_inventory
         self.serial_number_to_vrf_lite.commit()
@@ -175,12 +156,10 @@ class DiffAttachToControllerPayload:
                         vlan=lan_attach.get("vlan") or lan_attach.get("vlanId") or 0,
                         vrfName=lan_attach.get("vrfName"),
                     )
-                    for lan_attach in item.get("lanAttachList")
-                    if item.get("lanAttachList") is not None
+                    for lan_attach in item.get("lanAttachList", [])
                 ],
             )
             for item in self.diff_attach
-            if self.diff_attach
         ]
 
         payload_model: list[PayloadVrfsAttachments] = []
