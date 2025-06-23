@@ -11,7 +11,7 @@ from .model_controller_response_vrfs_switches_v12 import (
     ControllerResponseVrfsSwitchesV12,
     ControllerResponseVrfsSwitchesVrfLiteConnProtoItem,
 )
-from .model_payload_vrfs_attachments import PayloadVrfsAttachments, PayloadVrfsAttachmentsLanAttachListItem
+from .model_payload_vrfs_attachments import PayloadVrfsAttachments, PayloadVrfsAttachmentsLanAttachListItem, PayloadVrfsAttachmentsLanAttachListInstanceValues
 from .model_playbook_vrf_v12 import PlaybookVrfModelV12
 from .serial_number_to_vrf_lite import SerialNumberToVrfLite
 
@@ -168,7 +168,7 @@ class DiffAttachToControllerPayload:
                         extensionValues=lan_attach.get("extensionValues"),
                         fabric=lan_attach.get("fabric") or lan_attach.get("fabricName"),
                         freeformConfig=lan_attach.get("freeformConfig"),
-                        instanceValues=lan_attach.get("instanceValues"),
+                        instanceValues=PayloadVrfsAttachmentsLanAttachListInstanceValues(**json.loads(lan_attach.get("instanceValues"))if lan_attach.get("instanceValues") else {}),
                         serialNumber=lan_attach.get("serialNumber"),
                         vlan=lan_attach.get("vlan") or lan_attach.get("vlanId") or 0,
                         vrfName=lan_attach.get("vrfName"),

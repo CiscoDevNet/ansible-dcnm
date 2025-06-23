@@ -1,7 +1,70 @@
 # -*- coding: utf-8 -*-
+import json
+
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, field_serializer
+from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
+from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
+
+class PayloadVrfsAttachmentsLanAttachListInstanceValues(BaseModel):
+    """
+    # Summary
+
+    Represents the instance values for a single lan attach item within VrfAttachPayload.lan_attach_list.
+
+    # Structure
+
+    - loopback_id: str, alias: loopbackId
+    - loopback_ip_address: str, alias: loopbackIpAddress
+    - loopback_ip_v6_address: str, alias: loopbackIpV6Address
+    - switch_route_target_import_evpn: str, alias: switchRouteTargetImportEvpn
+    - switch_route_target_export_evpn: str, alias: switchRouteTargetExportEvpn
+
+    ## Example
+
+    ```json
+        {
+            "loopbackId": "1",
+            "loopbackIpAddress": "10.1.1.1",
+            "loopbackIpV6Address": "f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8",
+            "switchRouteTargetImportEvpn": "5000:100",
+            "switchRouteTargetExportEvpn": "5000:100"
+        }
+    ```
+    """
+
+    loopback_id: str = Field(alias="loopbackId", default="")
+    loopback_ip_address: str = Field(alias="loopbackIpAddress", default="")
+    loopback_ipv6_address: str = Field(alias="loopbackIpV6Address", default="")
+    switch_route_target_import_evpn: str = Field(alias="switchRouteTargetImportEvpn", default="")
+    switch_route_target_export_evpn: str = Field(alias="switchRouteTargetExportEvpn", default="")
+
+    @field_validator("loopback_ip_address", mode="before")
+    def validate_loopback_ip_address(cls, value: str) -> str:
+        """
+        Validate loopback_ip_address to ensure it is a valid IPv4 CIDR host.
+        """
+        if value == "":
+            return value
+        try:
+            return IPv4CidrHostModel(ipv4_cidr_host=value).ipv4_cidr_host
+        except ValueError as error:
+            msg = f"Invalid loopback IP address (loopback_ip_address): {value}. detail: {error}"
+            raise ValueError(msg) from error
+
+    @field_validator("loopback_ipv6_address", mode="before")
+    def validate_loopback_ipv6_address(cls, value: str) -> str:
+        """
+        Validate loopback_ipv6_address to ensure it is a valid IPv6 CIDR host.
+        """
+        if value == "":
+            return value
+        try:
+            return IPv6CidrHostModel(ipv6_cidr_host=value).ipv6_cidr_host
+        except ValueError as error:
+            msg = f"Invalid loopback IPv6 address (loopback_ipv6_address): {value}. detail: {error}"
+            raise ValueError(msg) from error
 
 
 class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
@@ -78,10 +141,20 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
     extension_values: Optional[str] = Field(alias="extensionValues", default="")
     fabric: str = Field(alias="fabric", min_length=1, max_length=64)
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
-    instance_values: Optional[str] = Field(alias="instanceValues", default="")
+    instance_values: Optional[PayloadVrfsAttachmentsLanAttachListInstanceValues] = Field(alias="instanceValues", default="")
     serial_number: str = Field(alias="serialNumber")
     vlan: int = Field(alias="vlan")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
+
+
+    @field_serializer("instance_values")
+    def serialize_instance_values(self, value: PayloadVrfsAttachmentsLanAttachListInstanceValues) -> str:
+        """
+        Serialize instance_values to a JSON string.
+        """
+        if value == "":
+            return json.dumps({})  # return empty JSON value
+        return value.model_dump_json(by_alias=True)
 
 
 class PayloadVrfsAttachments(BaseModel):
