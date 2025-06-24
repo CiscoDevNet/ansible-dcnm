@@ -174,8 +174,14 @@ class DiffAttachToControllerPayload:
 
         payload_model: list[PayloadVrfsAttachments] = []
         for vrf_attach_payload in diff_attach_list:
-            new_lan_attach_list = self.update_lan_attach_list_model(vrf_attach_payload)
-            vrf_attach_payload.lan_attach_list = new_lan_attach_list
+            lan_attach_list = self.update_lan_attach_list_model(vrf_attach_payload)
+            msg = f"ZZZ: lan_attach_list: {lan_attach_list}"
+            self.log.debug(msg)
+            # for item in lan_attach_list:
+            #     if item.extension_values.VRF_LITE_CONN.VRF_LITE_CONN == [] and item.extension_values.MULTISITE_CONN.MULTISITE_CONN == []:
+            #         item.extension_values = ""
+            vrf_attach_payload.lan_attach_list = lan_attach_list
+            # vrf_attach_payload.lan_attach_list = self.update_lan_attach_list_model(vrf_attach_payload)
             payload_model.append(vrf_attach_payload)
 
         msg = f"Setting payload_model: type(payload_model[0]): {type(payload_model[0])} length: {len(payload_model)}."
@@ -184,6 +190,8 @@ class DiffAttachToControllerPayload:
 
         self._payload_model = payload_model
         self._payload = json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload_model])
+        msg = f"Setting payload: {self._payload}"
+        self.log.debug(msg)
 
     def update_lan_attach_list_model(self, diff_attach: PayloadVrfsAttachments) -> list[PayloadVrfsAttachmentsLanAttachListItem]:
         """
@@ -351,19 +359,19 @@ class DiffAttachToControllerPayload:
 
         ## Description
 
-        1.  Merge the values from the vrf_attach object into a matching
-            vrf_lite extension object (if any) from the switch.
+        1.  Merge the values from the vrf_attach object into a matching vrf_lite extension object (if any) from the switch.
         2.  Update the vrf_attach object with the merged result.
         3.  Return the updated vrf_attach object.
 
-        If no matching ControllerResponseVrfsSwitchesExtensionPrototypeValue model is found,
-        return the unmodified vrf_attach object.
+        ## Raises
+
+        - ValueError if:
+          - No matching ControllerResponseVrfsSwitchesExtensionPrototypeValue model is found, return the unmodified vrf_attach object.
 
         "matching" in this case means:
 
         1.  The extensionType of the switch's extension object is VRF_LITE
-        2.  The IF_NAME in the extensionValues of the extension object
-            matches the interface in vrf_attach.extension_values.
+        2.  The IF_NAME in the extensionValues of the extension object matches the interface in vrf_attach.extension_values.
         """
         method_name = inspect.stack()[0][3]
         caller = inspect.stack()[1][3]

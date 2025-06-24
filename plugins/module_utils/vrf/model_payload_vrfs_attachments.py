@@ -395,7 +395,10 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
         Serialize extension_values to a JSON string.
         """
         if value == "":
-            return json.dumps({})  # return empty JSON value
+            return ""
+            # return json.dumps({})  # return empty JSON value
+        if len(value.MULTISITE_CONN.MULTISITE_CONN) == 0 and len(value.VRF_LITE_CONN.VRF_LITE_CONN) == 0:
+            return ""
         return value.model_dump_json(by_alias=True)
 
     @field_serializer("instance_values")
