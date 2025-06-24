@@ -2627,7 +2627,7 @@ class DcnmNetwork:
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
-                ports=dict(required=True, type="list", default=[]),
+                ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
             )
 
@@ -2693,7 +2693,7 @@ class DcnmNetwork:
             )
             att_spec = dict(
                 ip_address=dict(required=True, type="str"),
-                ports=dict(required=True, type="list"),
+                ports=dict(type="list", default=[]),
                 deploy=dict(type="bool", default=True),
                 tor_ports=dict(required=False, type="list", elements="dict"),
             )

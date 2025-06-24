@@ -1,0 +1,53 @@
+---
+# This NDFC test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+
+- net_name: "{{ test_data_common.net1 }}"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_id: "{{ test_data_common.net1_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.net1_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.net1_gw_ip_subnet }}"
+  mtu_l3intf: 7600
+  arp_suppress: False
+  int_desc: 'test interface'
+  is_l2only: False
+  vlan_name: testvlan1
+  dhcp_srvr1_ip: '1.1.1.1'
+  dhcp_srvr2_ip: '2.2.2.2'
+  dhcp_srvr3_ip: '3.3.3.3'
+  dhcp_srvr1_vrf: one
+  dhcp_srvr2_vrf: two
+  dhcp_srvr3_vrf: three
+  dhcp_loopback_id: 1022
+  attach:
+  - ip_address: "{{ test_data_common.sw1 }}"
+    ports: []
+  deploy: "{{ test_data_common.deploy }}"
+
+- net_name: "{{ test_data_common.net2 }}"
+  vrf_name: "{{ test_data_common.net2_vrf }}"
+  net_id: "{{ test_data_common.net2_net_id }}"
+  net_template: "{{ test_data_common.net2_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net2_net_extension_template }}"
+  vlan_id: "{{ test_data_common.net2_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.net2_gw_ip_subnet }}"
+  mtu_l3intf: 7600
+  arp_suppress: False
+  int_desc: 'test interface'
+  is_l2only: False
+  vlan_name: testvlan2
+  dhcp_srvr1_ip: '11.11.11.11'
+  dhcp_srvr2_ip: '22.22.22.22'
+  dhcp_srvr3_ip: '33.33.33.33'
+  dhcp_srvr1_vrf: eleven
+  dhcp_srvr2_vrf: twelve
+  dhcp_srvr3_vrf: thirteen
+  dhcp_loopback_id: 1023
+  attach:
+  - ip_address: "{{ test_data_common.sw2 }}"
+    ports: []
+  deploy: "{{ test_data_common.deploy }}"
