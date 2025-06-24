@@ -3629,7 +3629,7 @@ class NdfcVrf12:
             action="attach",
             path=f"{endpoint.path}/attachments",
             verb=endpoint.verb,
-            payload=payload,
+            payload=json.dumps(payload) if payload else payload,
             log_response=True,
             is_rollback=is_rollback,
         )
