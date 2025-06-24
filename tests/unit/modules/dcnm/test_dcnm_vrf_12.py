@@ -30,7 +30,7 @@ from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
 class TestDcnmVrfModule12(TestDcnmModule):
     module = dcnm_vrf
 
-    test_data = loadPlaybookData("dcnm_vrf")
+    test_data = loadPlaybookData("dcnm_vrf_12")
 
     SUCCESS_RETURN_CODE = 200
 
