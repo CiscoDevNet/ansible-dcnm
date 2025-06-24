@@ -6,7 +6,7 @@
         "lanAttachList": [
             {
                 "deployment": true,
-                "extensionValues": "",
+                "extensionValues": {},
                 "fabric": "test_fabric",
                 "freeformConfig": "",
                 "instanceValues": {"loopbackIpV6Address": "", "loopbackId": "", "deviceSupportL3VniNoVlan": "false", "switchRouteTargetImportEvpn": "", "loopbackIpAddress": "", "switchRouteTargetExportEvpn": ""},

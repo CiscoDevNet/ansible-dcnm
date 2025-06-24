@@ -11,7 +11,15 @@ from .model_controller_response_vrfs_switches_v12 import (
     ControllerResponseVrfsSwitchesV12,
     ControllerResponseVrfsSwitchesVrfLiteConnProtoItem,
 )
-from .model_payload_vrfs_attachments import PayloadVrfsAttachments, PayloadVrfsAttachmentsLanAttachListInstanceValues, PayloadVrfsAttachmentsLanAttachListItem
+from .model_payload_vrfs_attachments import (
+    PayloadVrfsAttachments,
+    PayloadVrfsAttachmentsLanAttachListExtensionValues,
+    PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn,
+    PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn,
+    PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem,
+    PayloadVrfsAttachmentsLanAttachListInstanceValues,
+    PayloadVrfsAttachmentsLanAttachListItem,
+)
 from .model_playbook_vrf_v12 import PlaybookVrfModelV12
 from .serial_number_to_vrf_lite import SerialNumberToVrfLite
 
@@ -146,7 +154,9 @@ class DiffAttachToControllerPayload:
                 lanAttachList=[
                     PayloadVrfsAttachmentsLanAttachListItem(
                         deployment=lan_attach.get("deployment"),
-                        extensionValues=lan_attach.get("extensionValues"),
+                        extensionValues=PayloadVrfsAttachmentsLanAttachListExtensionValues(
+                            **json.loads(lan_attach.get("extensionValues")) if lan_attach.get("extensionValues") else {}
+                        ),
                         fabric=lan_attach.get("fabric") or lan_attach.get("fabricName"),
                         freeformConfig=lan_attach.get("freeformConfig"),
                         instanceValues=PayloadVrfsAttachmentsLanAttachListInstanceValues(
@@ -373,6 +383,8 @@ class DiffAttachToControllerPayload:
         self.log.debug(msg)
         self.log_list_of_models(lite)
 
+        vrf_lite_conn_list = PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn.model_construct()
+
         ext_values = self.get_extension_values_from_lite_objects(lite)
         if ext_values is None:
             ip_address = self.serial_number_to_ipv4.convert(serial_number)
@@ -382,23 +394,11 @@ class DiffAttachToControllerPayload:
             self.log.debug(msg)
             self.ansible_module.fail_json(msg=msg)
 
-        extension_values = json.loads(vrf_attach.extension_values)
-        vrf_lite_conn = json.loads(extension_values.get("VRF_LITE_CONN", []))
-        multisite_conn = json.loads(extension_values.get("MULTISITE_CONN", []))
-        msg = f"type(extension_values): {type(extension_values)}, type(vrf_lite_conn): {type(vrf_lite_conn)}, type(multisite_conn): {type(multisite_conn)}"
-        self.log.debug(msg)
-        msg = f"vrf_attach.extension_values: {json.dumps(extension_values, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        msg = f"vrf_lite_conn: {json.dumps(vrf_lite_conn, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-        msg = f"multisite_conn: {json.dumps(multisite_conn, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
-
         matches: dict = {}
         user_vrf_lite_interfaces = []
         switch_vrf_lite_interfaces = []
-        for item in vrf_lite_conn.get("VRF_LITE_CONN", []):
-            item_interface = item.get("IF_NAME")
+        for item in vrf_attach.extension_values.VRF_LITE_CONN.VRF_LITE_CONN:
+            item_interface = item.IF_NAME
             user_vrf_lite_interfaces.append(item_interface)
             for ext_value in ext_values:
                 ext_value_interface = ext_value.if_name
@@ -412,7 +412,7 @@ class DiffAttachToControllerPayload:
                 msg += f"item[interface] {item_interface}, == "
                 msg += f"ext_values.if_name {ext_value_interface}."
                 self.log.debug(msg)
-                msg = f"{json.dumps(item, indent=4, sort_keys=True)}"
+                msg = f"{json.dumps(item.model_dump(by_alias=True), indent=4, sort_keys=True)}"
                 self.log.debug(msg)
                 matches[item_interface] = {"user": item, "switch": ext_value}
         if not matches:
@@ -428,10 +428,8 @@ class DiffAttachToControllerPayload:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        msg = "Matching extension object(s) found on the switch. "
+        msg = "Matching extension object(s) found on the switch."
         self.log.debug(msg)
-
-        extension_values = {"VRF_LITE_CONN": [], "MULTISITE_CONN": []}
 
         for interface, item in matches.items():
             user = item["user"]
@@ -439,30 +437,35 @@ class DiffAttachToControllerPayload:
             msg = f"interface: {interface}: "
             self.log.debug(msg)
             msg = "item.user: "
-            msg += f"{json.dumps(user, indent=4, sort_keys=True)}"
+            msg += f"{json.dumps(user.model_dump(), indent=4, sort_keys=True)}"
             self.log.debug(msg)
             msg = "item.switch: "
             msg += f"{json.dumps(switch.model_dump(), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-            nbr_dict = {
-                "IF_NAME": user.get("IF_NAME"),
-                "DOT1Q_ID": str(user.get("DOT1Q_ID") or switch.dot1q_id),
-                "IP_MASK": user.get("IP_MASK") or switch.ip_mask,
-                "NEIGHBOR_IP": user.get("NEIGHBOR_IP") or switch.neighbor_ip,
-                "NEIGHBOR_ASN": switch.neighbor_asn,
-                "IPV6_MASK": user.get("IPV6_MASK") or switch.ipv6_mask,
-                "IPV6_NEIGHBOR": user.get("IPV6_NEIGHBOR") or switch.ipv6_neighbor,
-                "AUTO_VRF_LITE_FLAG": switch.auto_vrf_lite_flag,
-                "PEER_VRF_NAME": user.get("PEER_VRF_NAME") or switch.peer_vrf_name,
-                "VRF_LITE_JYTHON_TEMPLATE": user.get("Ext_VRF_Lite_Jython") or switch.vrf_lite_jython_template or "Ext_VRF_Lite_Jython",
-            }
-            extension_values["VRF_LITE_CONN"].append(nbr_dict)
+            vrf_lite_conn_item = PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem(
+                IF_NAME=user.IF_NAME,
+                DOT1Q_ID=str(user.DOT1Q_ID or switch.dot1q_id),
+                IP_MASK=user.IP_MASK or switch.ip_mask,
+                NEIGHBOR_IP=user.NEIGHBOR_IP or switch.neighbor_ip,
+                NEIGHBOR_ASN=switch.neighbor_asn,
+                IPV6_MASK=user.IPV6_MASK or switch.ipv6_mask,
+                IPV6_NEIGHBOR=user.IPV6_NEIGHBOR or switch.ipv6_neighbor,
+                AUTO_VRF_LITE_FLAG=switch.auto_vrf_lite_flag,
+                PEER_VRF_NAME=user.PEER_VRF_NAME or switch.peer_vrf_name,
+                VRF_LITE_JYTHON_TEMPLATE=user.VRF_LITE_JYTHON_TEMPLATE or switch.vrf_lite_jython_template or "Ext_VRF_Lite_Jython",
+            )
+            vrf_lite_conn_list.VRF_LITE_CONN.append(vrf_lite_conn_item)
 
-        ms_con = {"MULTISITE_CONN": []}
-        extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
-        extension_values["VRF_LITE_CONN"] = json.dumps({"VRF_LITE_CONN": extension_values["VRF_LITE_CONN"]})
-        vrf_attach.extension_values = json.dumps(extension_values).replace(" ", "")
+        multisite_conn = PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn.model_construct()
+        multisite_conn.MULTISITE_CONN = []
+        extension_values_model = PayloadVrfsAttachmentsLanAttachListExtensionValues.model_construct()
+        extension_values_model.MULTISITE_CONN = multisite_conn
+        extension_values_model.VRF_LITE_CONN = vrf_lite_conn_list
+        msg = f"extension_values_model: {json.dumps(extension_values_model.model_dump(), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+        vrf_attach.extension_values = extension_values_model
 
         msg = "Returning modified vrf_attach: "
         msg += f"{json.dumps(vrf_attach.model_dump(), indent=4, sort_keys=True)}"

@@ -1,11 +1,251 @@
 # -*- coding: utf-8 -*-
+# @author: Allen Robel
+# @file: plugins/module_utils/vrf/vrf_playbook_model.py
+# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# pylint: disable=wrong-import-position
+"""
+Validation model for VRF attachment payload.
+"""
 import json
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
 
 from ..common.models.ipv4_cidr_host import IPv4CidrHostModel
+from ..common.models.ipv4_host import IPv4HostModel
 from ..common.models.ipv6_cidr_host import IPv6CidrHostModel
+
+
+class PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn(BaseModel):
+    """
+    # Summary
+
+    Represents the multisite connection values for a single lan attach item within VrfAttachPayload.lan_attach_list.
+
+    # Structure
+
+    - MULTISITE_CONN: list, alias: MULTISITE_CONN
+
+    ## Example
+
+    ```json
+    {
+        "MULTISITE_CONN": []
+    }
+    }
+    ```
+    """
+
+    MULTISITE_CONN: list = Field(alias="MULTISITE_CONN", default_factory=list)
+
+
+class PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem(BaseModel):
+    """
+    # Summary
+
+    Represents a single VRF Lite connection item within VrfAttachPayload.lan_attach_list.
+
+    # Structure
+
+    - AUTO_VRF_LITE_FLAG: bool, alias: AUTO_VRF_LITE_FLAG
+    - DOT1Q_ID: str, alias: DOT1Q_ID
+    - IF_NAME: str, alias: IF_NAME
+    - IP_MASK: str, alias: IP_MASK
+    - IPV6_MASK: str, alias: IPV6_MASK
+    - IPV6_NEIGHBOR: str, alias: IPV6_NEIGHBOR
+    - NEIGHBOR_ASN: str, alias: NEIGHBOR_ASN
+    - NEIGHBOR_IP: str, alias: NEIGHBOR_IP
+    - PEER_VRF_NAME: str, alias: PEER_VRF_NAME
+    - VRF_LITE_JYTHON_TEMPLATE: str, alias: VRF_LITE_JYTHON_TEMPLATE
+
+    ## Example
+
+    ```json
+    {
+        "AUTO_VRF_LITE_FLAG": "true",
+        "DOT1Q_ID": "2",
+        "IF_NAME": "Ethernet2/10",
+        "IP_MASK": "10.33.0.2/30",
+        "IPV6_MASK": "2010::10:34:0:7/64",
+        "IPV6_NEIGHBOR": "2010::10:34:0:3",
+        "NEIGHBOR_ASN": "65001",
+        "NEIGHBOR_IP": "10.33.0.1",
+        "PEER_VRF_NAME": "ansible-vrf-int1",
+        "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"
+    }
+    ```
+    """
+
+    AUTO_VRF_LITE_FLAG: bool = Field(alias="AUTO_VRF_LITE_FLAG", default=True)
+    DOT1Q_ID: str = Field(alias="DOT1Q_ID")
+    IF_NAME: str = Field(alias="IF_NAME")
+    IP_MASK: str = Field(alias="IP_MASK", default="")
+    IPV6_MASK: str = Field(alias="IPV6_MASK", default="")
+    IPV6_NEIGHBOR: str = Field(alias="IPV6_NEIGHBOR", default="")
+    NEIGHBOR_ASN: str = Field(alias="NEIGHBOR_ASN", default="")
+    NEIGHBOR_IP: str = Field(alias="NEIGHBOR_IP", default="")
+    PEER_VRF_NAME: str = Field(alias="PEER_VRF_NAME", default="")
+    VRF_LITE_JYTHON_TEMPLATE: str = Field(alias="VRF_LITE_JYTHON_TEMPLATE")
+
+    @field_validator("IP_MASK", mode="before")
+    @classmethod
+    def validate_ip_mask(cls, value: str) -> str:
+        """
+        Validate IP_MASK to ensure it is a valid IPv4 CIDR host address.
+        """
+        if value == "":
+            return value
+        try:
+            return IPv4CidrHostModel(ipv4_cidr_host=value).ipv4_cidr_host
+        except ValueError as error:
+            msg = f"Invalid IP_MASK: {value}. detail: {error}"
+            raise ValueError(msg) from error
+
+    @field_validator("IPV6_MASK", mode="before")
+    @classmethod
+    def validate_ipv6_mask(cls, value: str) -> str:
+        """
+        Validate IPV6_MASK to ensure it is a valid IPv6 CIDR host address.
+        """
+        if value == "":
+            return value
+        try:
+            return IPv6CidrHostModel(ipv6_cidr_host=value).ipv6_cidr_host
+        except ValueError as error:
+            msg = f"Invalid IPV6_MASK: {value}. detail: {error}"
+            raise ValueError(msg) from error
+
+    @field_validator("NEIGHBOR_IP", mode="before")
+    @classmethod
+    def validate_neighbor_ip(cls, value: str) -> str:
+        """
+        Validate NEIGHBOR_IP to ensure it is a valid IPv4 host address without prefix length.
+        """
+        if value == "":
+            return value
+        try:
+            return IPv4HostModel(ipv4_host=value).ipv4_host
+        except ValueError as error:
+            msg = f"Invalid neighbor IP address (NEIGHBOR_IP): {value}. detail: {error}"
+            raise ValueError(msg) from error
+
+
+class PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn(BaseModel):
+    """
+    # Summary
+
+    Represents a list of PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem.
+
+    # Structure
+
+    - VRF_LITE_CONN: list[PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem], alias: VRF_LITE_CONN
+
+    ## Example
+
+    ```json
+    {
+        "VRF_LITE_CONN": [
+            {
+                "AUTO_VRF_LITE_FLAG": "true",
+                "DOT1Q_ID": "2",
+                "IF_NAME": "Ethernet2/10",
+                "IP_MASK": "10.33.0.2/30",
+                "IPV6_MASK": "2010::10:34:0:7/64",
+                "IPV6_NEIGHBOR": "2010::10:34:0:3",
+                "NEIGHBOR_ASN": "65001",
+                "NEIGHBOR_IP": "10.33.0.1",
+                "PEER_VRF_NAME": "ansible-vrf-int1",
+                "VRF_LITE_JYTHON_TEMPLATE": "Ext_VRF_Lite_Jython"
+            }
+        ]
+    }
+    ```
+    """
+
+    VRF_LITE_CONN: list[PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem] = Field(alias="VRF_LITE_CONN", default_factory=list)
+
+
+class PayloadVrfsAttachmentsLanAttachListExtensionValues(BaseModel):
+    """
+    # Summary
+
+    Represents the extension values for a single lan attach item within VrfAttachPayload.lan_attach_list.
+
+    # Structure
+
+    # Example
+
+    ```json
+    {
+        'MULTISITE_CONN': {'MULTISITE_CONN': []},
+        'VRF_LITE_CONN': {
+            'VRF_LITE_CONN': [
+                {
+                    'AUTO_VRF_LITE_FLAG': 'true',
+                    'DOT1Q_ID': '2',
+                    'IF_NAME': 'Ethernet2/10',
+                    'IP_MASK': '10.33.0.2/30',
+                    'IPV6_MASK': '2010::10:34:0:7/64',
+                    'IPV6_NEIGHBOR': '2010::10:34:0:3',
+                    'NEIGHBOR_ASN': '65001',
+                    'NEIGHBOR_IP': '10.33.0.1',
+                    'PEER_VRF_NAME': 'ansible-vrf-int1',
+                    'VRF_LITE_JYTHON_TEMPLATE': 'Ext_VRF_Lite_Jython'
+                }
+            ]
+        }
+    }
+    ```
+    """
+
+    MULTISITE_CONN: PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn = Field(
+        alias="MULTISITE_CONN", default_factory=PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn
+    )
+    VRF_LITE_CONN: PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn = Field(
+        alias="VRF_LITE_CONN", default_factory=PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn
+    )
+
+    @field_validator("MULTISITE_CONN", mode="before")
+    @classmethod
+    def preprocess_multisite_conn(cls, value: Union[str, dict]) -> Optional[PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn]:
+        """
+        Convert incoming data
+
+        - If data is a JSON string, use json.loads() to convert to a dict.
+        - If data is a dict, return it as is.
+        """
+        if isinstance(value, str):
+            if value == "":
+                return ""
+            return json.loads(value)
+        return value
+
+    @field_validator("VRF_LITE_CONN", mode="before")
+    @classmethod
+    def preprocess_vrf_lite_conn(cls, value: dict) -> Optional[PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn]:
+        """
+        Convert incoming data
+
+        - If data is a JSON string, use json.loads() to convert to a dict.
+        - If data is a dict, return it as is.
+        """
+        if isinstance(value, str):
+            if value == "":
+                return ""
+            return json.loads(value)
+        return value
 
 
 class PayloadVrfsAttachmentsLanAttachListInstanceValues(BaseModel):
@@ -141,13 +381,22 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
     """
 
     deployment: bool = Field(alias="deployment")
-    extension_values: Optional[str] = Field(alias="extensionValues", default="")
+    extension_values: Optional[PayloadVrfsAttachmentsLanAttachListExtensionValues] = Field(alias="extensionValues", default="")
     fabric: str = Field(alias="fabric", min_length=1, max_length=64)
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
     instance_values: Optional[PayloadVrfsAttachmentsLanAttachListInstanceValues] = Field(alias="instanceValues", default="")
     serial_number: str = Field(alias="serialNumber")
     vlan: int = Field(alias="vlan")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
+
+    @field_serializer("extension_values")
+    def serialize_extension_values(self, value: PayloadVrfsAttachmentsLanAttachListExtensionValues) -> str:
+        """
+        Serialize extension_values to a JSON string.
+        """
+        if value == "":
+            return json.dumps({})  # return empty JSON value
+        return value.model_dump_json(by_alias=True)
 
     @field_serializer("instance_values")
     def serialize_instance_values(self, value: PayloadVrfsAttachmentsLanAttachListInstanceValues) -> str:
