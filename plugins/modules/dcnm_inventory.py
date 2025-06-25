@@ -905,8 +905,19 @@ class DcnmInventory:
             found = False
             match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
             if match is None:
-                msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
-                self.module.fail_json(msg=msg)
+                # If we don't have a match that means one of the following:
+                # (1) The device has not been discovered and is not reachable or the IP address is not a valid IP
+                # (2) The device has been discovered and added to the fabric but is currently not reachable
+                #     due to it being pre-provisioned or some other reason.
+                want_c_already_discovered = False
+                for have_c in self.have_create:
+                    # Check the have list to see if the device has alreacy been discovered.
+                    if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                        want_c_already_discovered = True
+                        match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
+                if not want_c_already_discovered:
+                    msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
+                    self.module.fail_json(msg=msg)
             serial_num = match.groups()[0]
             for have_c in self.have_create:
                 if (
