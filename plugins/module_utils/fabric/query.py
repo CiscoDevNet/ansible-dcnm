@@ -219,4 +219,14 @@ class FabricQuery(FabricCommon):
         self.results.result_current = copy.deepcopy(
             self.fabric_details.results.result_current
         )
+
+        if not add_to_diff:
+            msg = f"No fabric details found for {self.fabric_names}."
+            self.log.debug(msg)
+            self.results.result_current["found"] = False
+            self.results.result_current["success"] = False
+        else:
+            msg = f"Found fabric details for {self.fabric_names}."
+            self.log.debug(msg)
+
         self.results.register_task_result()
