@@ -2551,7 +2551,7 @@ options:
                     AI_ML_QOS_POLICY:
                         default: ''
                         description:
-                        - Queuing Policy  based on predominant fabric link speed: 400G / 100G / 25G
+                        - 'Queuing Policy based on predominant fabric link speed 400G / 100G / 25G'
                         required: false
                         type: str
                     ANYCAST_BGW_ADVERTISE_PIP:
@@ -2637,7 +2637,8 @@ options:
                         - 'Same-Tier-AS'
                         default: 'Multi-AS'
                         description:
-                        - 'Multi-AS: Unique ASN per Leaf/Border/Border Gateway (Borders and border gateways are allowed to share ASN). Same-Tier-AS: Leafs share one ASN, Borders/border gateways share one ASN.'
+                        - 'Multi-AS: Unique ASN per Leaf/Border/Border Gateway (Borders and border gateways are allowed to share ASN).
+                            Same-Tier-AS: Leafs share one ASN, Borders/border gateways share one ASN.'
                         required: false
                         type: str
                     BGP_AUTH_ENABLE:
@@ -3110,7 +3111,7 @@ options:
                     MVPN_VRI_ID_RANGE:
                         default: false
                         description:
-                        - MVPN VRI ID for vPC (Min:1, Max:65535), applicable when TRM enabled with IPv6 underlay, 
+                        - MVPN VRI ID for vPC (Min:1, Max:65535), applicable when TRM enabled with IPv6 underlay,
                           or TRM enabled with IPv4 underlay while fabric allows L3VNI w/o VLAN option
                         required: false
                         type: int
@@ -3187,9 +3188,9 @@ options:
                     PER_VRF_IPLOOPBACK_AUTO_PROVISION:
                         default: false
                         description:
-                        - 'Auto provision a loopback IPv4 on a VTEP on VRF attachment. Note: 
-                          Enabling this option auto-provisions loopback on existing VRF attachments also when 
-                          Edit, QuickAttach, or Multiattach actions are performed. Provisioned loopbacks 
+                        - 'Auto provision a loopback IPv4 on a VTEP on VRF attachment. Note:
+                          Enabling this option auto-provisions loopback on existing VRF attachments also when
+                          Edit, QuickAttach, or Multiattach actions are performed. Provisioned loopbacks
                           cannot be deleted until VRFs are unattached.'
                         required: false
                         type: bool
