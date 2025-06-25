@@ -911,10 +911,12 @@ class DcnmInventory:
                 #     due to it being pre-provisioned or some other reason.
                 want_c_already_discovered = False
                 for have_c in self.have_create:
-                    # Check the have list to see if the device has alreacy been discovered.
+                    # Check the have list to see if the device has already been discovered and if so
+                    # don't error but use the have list to create the match.
                     if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
                         want_c_already_discovered = True
                         match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
+                # Device is not part of the fabric so return the error.
                 if not want_c_already_discovered:
                     msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
                     self.module.fail_json(msg=msg)
