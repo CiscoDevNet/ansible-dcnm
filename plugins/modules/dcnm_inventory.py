@@ -865,6 +865,10 @@ class DcnmInventory:
             for want_c in self.want_create:
                 match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
                 if match is None:
+                    # If we get here this is typically because the device was pre-provisioned
+                    # and it does the regex expression above will not match in this case.
+                    # We need to make an additionl check using ipaddr to see if the device
+                    # is already part of the fabric.
                     if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
                         match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
                 if match is None:
