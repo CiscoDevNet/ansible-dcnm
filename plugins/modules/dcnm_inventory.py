@@ -845,16 +845,31 @@ class DcnmInventory:
 
         self.diff_create = diff_create
 
+
     def get_diff_replace_delete(self):
 
         diff_delete = []
 
+        def check_have_c_in_want_list(have_c):
+            for want_c in self.want_create:
+                if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                    return True
+
+            return False
+
         def have_in_want(have_c):
             match_found = False
+
+            # Check to see if have is in the want list and if not return match_found(False)
+            if not check_have_c_in_want_list(have_c):
+                return match_found
             for want_c in self.want_create:
                 match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
                 if match is None:
-                    continue
+                    if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                        match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
+                if match is None:
+                    return match_found
                 want_serial_num = match.groups()[0]
                 if have_c["switches"][0]["serialNumber"] == want_serial_num:
                     if (
@@ -883,7 +898,6 @@ class DcnmInventory:
     def get_diff_delete(self):
 
         diff_delete = []
-
         if self.config:
             for want_c in self.want_create:
                 for have_c in self.have_create:
