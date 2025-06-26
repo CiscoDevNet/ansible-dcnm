@@ -845,7 +845,6 @@ class DcnmInventory:
 
         self.diff_create = diff_create
 
-
     def get_diff_replace_delete(self):
 
         diff_delete = []
