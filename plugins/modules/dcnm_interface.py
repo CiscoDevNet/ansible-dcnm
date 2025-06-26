@@ -182,17 +182,17 @@ options:
             choices: ['auto', 'full', 'half']
             default: auto
           enable_pfc:
-            description
+            description:
             - State of Priority Flow Control (PFC) on the interface
             type: bool
             default: false
           enable_cdp:
-            description
+            description:
             - State of CDP protocol on the interface
             type: bool
             default: true
           enable_monitor:
-            description
+            description:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
@@ -580,17 +580,17 @@ options:
             type: bool
             default: true
           enable_pfc:
-            description
+            description:
             - State of Priority Flow Control (PFC) on the interface
             type: bool
             default: false
           enable_cdp:
-            description
+            description:
             - State of CDP protocol on the interface
             type: bool
             default: true
           enable_monitor:
-            description
+            description:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
