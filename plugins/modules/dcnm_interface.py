@@ -1779,6 +1779,7 @@ class DcnmIntf:
             "INTERFACE": "/rest/interface",
             "IF_MARK_DELETE": "/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/rest/control/fabrics/{}/accessmode",
+            "BREAKOUT": "/rest/interface/breakout",
         },
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
