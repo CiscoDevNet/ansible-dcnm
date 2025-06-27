@@ -61,12 +61,12 @@ options:
                 type: str
             FABRIC_TYPE:
                 choices:
+                - BGP
                 - IPFM
                 - ISN
                 - LAN_CLASSIC
                 - VXLAN_EVPN
                 - VXLAN_EVPN_MSD
-                - BGP
                 description:
                 - The type of fabric.
                 required: true
