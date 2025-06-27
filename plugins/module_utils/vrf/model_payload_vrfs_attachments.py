@@ -141,6 +141,13 @@ class PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConnItem(BaseMode
             msg = f"Invalid neighbor IP address (NEIGHBOR_IP): {value}. detail: {error}"
             raise ValueError(msg) from error
 
+    @field_serializer("AUTO_VRF_LITE_FLAG")
+    def serialize_auto_vrf_lite_flag(self, value) -> str:
+        """
+        Serialize AUTO_VRF_LITE_FLAG to a string representation.
+        """
+        return str(value).lower()
+
 
 class PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn(BaseModel):
     """
@@ -211,11 +218,27 @@ class PayloadVrfsAttachmentsLanAttachListExtensionValues(BaseModel):
     """
 
     MULTISITE_CONN: PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn = Field(
-        alias="MULTISITE_CONN", default_factory=PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn
+        alias="MULTISITE_CONN",
+        default_factory=PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn,
     )
     VRF_LITE_CONN: PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn = Field(
-        alias="VRF_LITE_CONN", default_factory=PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn
+        alias="VRF_LITE_CONN",
+        default_factory=PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn,
     )
+
+    @field_serializer("MULTISITE_CONN")
+    def serialize_multisite_conn(self, value: PayloadVrfsAttachmentsLanAttachListExtensionValuesMultisiteConn) -> str:
+        """
+        Serialize MULTISITE_CONN to a JSON string.
+        """
+        return value.model_dump_json(by_alias=True)
+
+    @field_serializer("VRF_LITE_CONN")
+    def serialize_vrf_lite_conn(self, value: PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn) -> str:
+        """
+        Serialize VRF_LITE_CONN to a JSON string.
+        """
+        return value.model_dump_json(by_alias=True)
 
     @field_validator("MULTISITE_CONN", mode="before")
     @classmethod
@@ -381,7 +404,10 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
     """
 
     deployment: bool = Field(alias="deployment")
-    extension_values: Optional[PayloadVrfsAttachmentsLanAttachListExtensionValues] = Field(alias="extensionValues", default="")
+    extension_values: Optional[PayloadVrfsAttachmentsLanAttachListExtensionValues] = Field(
+        alias="extensionValues",
+        default=PayloadVrfsAttachmentsLanAttachListExtensionValues.model_construct(),
+    )
     fabric: str = Field(alias="fabric", min_length=1, max_length=64)
     freeform_config: Optional[str] = Field(alias="freeformConfig", default="")
     instance_values: Optional[PayloadVrfsAttachmentsLanAttachListInstanceValues] = Field(alias="instanceValues", default="")
@@ -389,17 +415,53 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
     vlan: int = Field(alias="vlan")
     vrf_name: str = Field(alias="vrfName", min_length=1, max_length=32)
 
+    @field_validator("extension_values", mode="before")
+    @classmethod
+    def preprocess_extension_values(cls, value: Union[dict, str]) -> PayloadVrfsAttachmentsLanAttachListExtensionValues:
+        """
+        # Summary
+
+        - If data is a JSON string, use json.loads() to convert to a dict and pipe it to the model.
+        - If data is an empty string, return an empty PayloadVrfsAttachmentsLanAttachListExtensionValues instance.
+        - If data is a dict, pipe it to the model.
+        - If data is already a PayloadVrfsAttachmentsLanAttachListExtensionValues instance, return it as is.
+
+        # Raises
+        - ValueError: If the value is not a valid type (not dict, str, or PayloadVrfsAttachmentsLanAttachListExtensionValues).
+        - ValueError: If the JSON string cannot be parsed into a dictionary.
+        """
+        if isinstance(value, str):
+            if value == "":
+                return PayloadVrfsAttachmentsLanAttachListExtensionValues.model_construct()
+            try:
+                value = json.loads(value)
+                return PayloadVrfsAttachmentsLanAttachListExtensionValues(**value)
+            except json.JSONDecodeError as error:
+                msg = f"Invalid JSON string for extension_values: {value}. detail: {error}"
+                raise ValueError(msg) from error
+        if isinstance(value, dict):
+            return PayloadVrfsAttachmentsLanAttachListExtensionValues(**value)
+        if isinstance(value, PayloadVrfsAttachmentsLanAttachListExtensionValues):
+            return value
+        msg = f"Invalid type for extension_values: {type(value)}. "
+        msg += "Expected dict, str, or PayloadVrfsAttachmentsLanAttachListExtensionValues."
+        raise ValueError(msg)
+
     @field_serializer("extension_values")
     def serialize_extension_values(self, value: PayloadVrfsAttachmentsLanAttachListExtensionValues) -> str:
         """
         Serialize extension_values to a JSON string.
         """
         if value == "":
-            return ""
-            # return json.dumps({})  # return empty JSON value
+            return json.dumps({})
         if len(value.MULTISITE_CONN.MULTISITE_CONN) == 0 and len(value.VRF_LITE_CONN.VRF_LITE_CONN) == 0:
-            return ""
-        return value.model_dump_json(by_alias=True)
+            return json.dumps({})
+        result = {}
+        if len(value.MULTISITE_CONN.MULTISITE_CONN) == 0 and len(value.VRF_LITE_CONN.VRF_LITE_CONN) == 0:
+            return json.dumps(result)
+        result["MULTISITE_CONN"] = value.MULTISITE_CONN.model_dump_json(by_alias=True)
+        result["VRF_LITE_CONN"] = value.VRF_LITE_CONN.model_dump_json(by_alias=True)
+        return json.dumps(result)
 
     @field_serializer("instance_values")
     def serialize_instance_values(self, value: PayloadVrfsAttachmentsLanAttachListInstanceValues) -> str:
@@ -407,7 +469,7 @@ class PayloadVrfsAttachmentsLanAttachListItem(BaseModel):
         Serialize instance_values to a JSON string.
         """
         if value == "":
-            return json.dumps({})  # return empty JSON value
+            return json.dumps({})
         return value.model_dump_json(by_alias=True)
 
 

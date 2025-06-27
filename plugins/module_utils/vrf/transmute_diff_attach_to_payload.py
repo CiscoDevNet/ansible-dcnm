@@ -189,7 +189,7 @@ class DiffAttachToControllerPayload:
         self.log_list_of_models(payload_model, by_alias=True)
 
         self._payload_model = payload_model
-        self._payload = json.dumps([model.model_dump(exclude_unset=True, by_alias=True) for model in payload_model])
+        self._payload = [model.model_dump_json(exclude_unset=True, by_alias=True) for model in payload_model]
         msg = f"Setting payload: {self._payload}"
         self.log.debug(msg)
 
