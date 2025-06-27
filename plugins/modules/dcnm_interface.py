@@ -5375,19 +5375,19 @@ class DcnmIntf:
 
         resp = None
 
-        ## Add Breakout creation from self.want_breakout
+        # Add Breakout creation from self.want_breakout
         path = self.paths["BREAKOUT"]
         for payload in self.diff_create_breakout:
-                json_payload = json.dumps(payload)
-                resp = dcnm_send(self.module, "POST", path, json_payload)
-                self.result["response"].append(resp)
-                if (resp.get("MESSAGE") != "OK") or (
-                    resp.get("RETURN_CODE") != 200
-                ):
-                    resp["CHANGED"] = self.changed_dict
-                    self.module.fail_json(msg=resp)
-                else:
-                    replace = True
+            json_payload = json.dumps(payload)
+            resp = dcnm_send(self.module, "POST", path, json_payload)
+            self.result["response"].append(resp)
+            if (resp.get("MESSAGE") != "OK") or (
+                resp.get("RETURN_CODE") != 200
+            ):
+                resp["CHANGED"] = self.changed_dict
+                self.module.fail_json(msg=resp)
+            else:
+                replace = True
 
         # Update interfaces
         path = self.paths["INTERFACE"]
