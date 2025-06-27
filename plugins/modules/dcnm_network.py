@@ -1268,8 +1268,11 @@ class DcnmNetwork:
             template_conf["vrfDhcp3"] = ""
         if template_conf["loopbackId"] is None:
             template_conf["loopbackId"] = ""
-        if template_conf["mcastGroup"] is None:
-            template_conf["mcastGroup"] = ""
+        if self.is_ms_fabric is True:
+            template_conf.pop("mcastGroup")
+        else:
+            if template_conf["mcastGroup"] is None:
+                template_conf["mcastGroup"] = ""
         if template_conf["gatewayIpV6Address"] is None:
             template_conf["gatewayIpV6Address"] = ""
         if template_conf["secondaryGW1"] is None:
@@ -1377,6 +1380,10 @@ class DcnmNetwork:
                     t_conf.update(ENABLE_NETFLOW=json_to_dict.get("ENABLE_NETFLOW", False))
                     t_conf.update(SVI_NETFLOW_MONITOR=json_to_dict.get("SVI_NETFLOW_MONITOR", ""))
                     t_conf.update(VLAN_NETFLOW_MONITOR=json_to_dict.get("VLAN_NETFLOW_MONITOR", ""))
+
+                # Remove mcastGroup when Fabric is MSD
+                if "mcastGroup" not in json_to_dict:
+                    del t_conf["mcastGroup"]
 
                 net.update({"networkTemplateConfig": json.dumps(t_conf)})
                 del net["displayName"]
@@ -1905,7 +1912,8 @@ class DcnmNetwork:
                     dhcp2_vrf_changed.update({want_c["networkName"]: dhcp2_vrf_chg})
                     dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
                     dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
-                    multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
+                    if self.is_ms_fabric is False:
+                        multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
                     gwv6_changed.update({want_c["networkName"]: gwv6_chg})
                     sec_gw1_changed.update({want_c["networkName"]: sec_gw1_chg})
                     sec_gw2_changed.update({want_c["networkName"]: sec_gw2_chg})
@@ -2902,8 +2910,9 @@ class DcnmNetwork:
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
 
-        if cfg.get("multicast_group_address", None) is None:
-            json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
+        if self.is_ms_fabric is False:
+            if cfg.get("multicast_group_address", None) is None:
+                json_to_dict_want["mcastGroup"] = json_to_dict_have["mcastGroup"]
 
         if cfg.get("gw_ipv6_subnet", None) is None:
             json_to_dict_want["gatewayIpV6Address"] = json_to_dict_have["gatewayIpV6Address"]
