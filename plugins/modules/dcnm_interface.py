@@ -4084,7 +4084,7 @@ class DcnmIntf:
                     # with the first sub if.
                     if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
                         payload = {'serialNumber': have['serialNo'],
-                                'ifName': have['ifName']}
+                                   'ifName': have['ifName']}
                         self.diff_delete_breakout.append(payload)
 
         for want in self.want:
@@ -4860,7 +4860,7 @@ class DcnmIntf:
                             # with the first sub if.
                             if re.search(r"\d+\/\d+\/1$", have_intf) and found:
                                 payload = {'serialNumber': have['serialNo'],
-                                        'ifName': have['ifName']}
+                                           'ifName': have['ifName']}
                                 self.diff_delete_breakout.append(payload)
                 elif cfg.get("name", None) is not None:
                     processed = []
