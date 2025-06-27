@@ -2035,7 +2035,7 @@ class DcnmIntf:
             intf = if_name.split("/")
             # Return True and the formatted interface string
             return True, f"{intf[0]}/{intf[1]}"
-        
+
         # Return False and None if the pattern does not match
         return False, None
 
@@ -3708,7 +3708,7 @@ class DcnmIntf:
 
                             # Add to self.want only if the interface does not match invalid breakout conditions
                             if not (is_valid_format and formatted_interface not in self.breakout):
-                                
+
                                 self.want.append(intf_payload)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
@@ -4054,10 +4054,10 @@ class DcnmIntf:
                 break
 
         # --------------------------------------------------------------------------------------------------------------------
-        
+
         # workflow to manage breakout interfaces
         # Append to self.diff_create_breakout to create breakout
-        # Append to self.diff_delete_breakout to delete breakout 
+        # Append to self.diff_delete_breakout to delete breakout
         for want_breakout in self.want_breakout:
             want_intf = want_breakout["interfaces"][0]["ifName"]
             match_create = False
@@ -4081,10 +4081,10 @@ class DcnmIntf:
                 # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
                 # with the first sub if.
                 if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
-                    payload = {'serialNumber': have['serialNo'], 
+                    payload = {'serialNumber': have['serialNo'],
                                'ifName': have['ifName']}
                     self.diff_delete_breakout.append(payload)
-        
+
         for want in self.want:
 
             delem = {}
@@ -5379,7 +5379,7 @@ class DcnmIntf:
         path = self.paths["BREAKOUT"]
         for payload in self.diff_create_breakout:
                 json_payload = json.dumps(payload)
-                resp = dcnm_send(self.module, "POST", path, json_payload) 
+                resp = dcnm_send(self.module, "POST", path, json_payload)
                 self.result["response"].append(resp)
                 if (resp.get("MESSAGE") != "OK") or (
                     resp.get("RETURN_CODE") != 200
