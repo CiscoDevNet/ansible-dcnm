@@ -4058,32 +4058,34 @@ class DcnmIntf:
         # workflow to manage breakout interfaces
         # Append to self.diff_create_breakout to create breakout
         # Append to self.diff_delete_breakout to delete breakout
-        for want_breakout in self.want_breakout:
-            want_intf = want_breakout["interfaces"][0]["ifName"]
-            match_create = False
-            for have_intf in self.have_all:
-                is_valid, have_intf = self.dcnm_intf_breakout_format(have_intf['ifName'])
-                if want_intf == have_intf:
-                    match_create = True
+        if state != "deleted":
+            for want_breakout in self.want_breakout:
+                want_intf = want_breakout["interfaces"][0]["ifName"]
+                match_create = False
+                for have_intf in self.have_all:
+                    is_valid, intf = self.dcnm_intf_breakout_format(have_intf['ifName'])
+                    if is_valid and want_intf == intf:
+                        match_create = True
 
-            # If interface in want_breakout and interface e1/x/y not present
-            # add to diff_create_breakout
-            if not match_create:
-                want_breakout["interfaces"][0].pop("fabricName")
-                want_breakout["interfaces"][0].pop("interfaceType")
-                self.diff_create_breakout.append(want_breakout["interfaces"])
+                # If interface in want_breakout and interface e1/x/y not present
+                # add to diff_create_breakout
+                if not match_create:
+                    want_breakout["interfaces"][0].pop("fabricName")
+                    want_breakout["interfaces"][0].pop("interfaceType")
+                    self.diff_create_breakout.append(want_breakout["interfaces"])
 
-        for have in self.have_all:
-            have_intf = have['ifName']
-            if re.search(r"\d+\/\d+\/\d+", have_intf):
-                found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf)
-                # If have not in want breakout and if match to E1/x/1 add to dict
-                # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
-                # with the first sub if.
-                if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
-                    payload = {'serialNumber': have['serialNo'],
-                               'ifName': have['ifName']}
-                    self.diff_delete_breakout.append(payload)
+        if state == "deleted" or state == "overridden":
+            for have in self.have_all:
+                have_intf = have['ifName']
+                if re.search(r"\d+\/\d+\/\d+", have_intf):
+                    found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf)
+                    # If have not in want breakout and if match to E1/x/1 add to dict
+                    # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
+                    # with the first sub if.
+                    if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
+                        payload = {'serialNumber': have['serialNo'],
+                                'ifName': have['ifName']}
+                        self.diff_delete_breakout.append(payload)
 
         for want in self.want:
 
@@ -4846,7 +4848,21 @@ class DcnmIntf:
             self.dcnm_intf_get_diff_overridden(self.config)
         elif self.config:
             for cfg in self.config:
-                if cfg.get("name", None) is not None:
+                if cfg.get("name", None) is not None and cfg.get("type") == "breakout":
+                    self.dcnm_intf_get_have_all(cfg["switch"][0])
+
+                    for have in self.have_all:
+                        have_intf = have['ifName']
+                        if re.search(r"\d+\/\d+\/\d+", have_intf):
+                            found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf)
+                            # If have in want breakout and if match to E1/x/1 add to dict
+                            # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
+                            # with the first sub if.
+                            if re.search(r"\d+\/\d+\/1$", have_intf) and found:
+                                payload = {'serialNumber': have['serialNo'],
+                                        'ifName': have['ifName']}
+                                self.diff_delete_breakout.append(payload)
+                elif cfg.get("name", None) is not None:
                     processed = []
                     have_all = []
 
