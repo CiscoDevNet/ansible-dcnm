@@ -101,8 +101,8 @@ class ControllerResponseVrfsSwitchesVrfLiteConnOuter(BaseModel):
 
 
 class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
-    vrf_lite_conn: ControllerResponseVrfsSwitchesVrfLiteConnOuter = Field(alias="VRF_LITE_CONN")
-    multisite_conn: ControllerResponseVrfsSwitchesMultisiteConnOuter = Field(alias="MULTISITE_CONN")
+    vrf_lite_conn: Optional[ControllerResponseVrfsSwitchesVrfLiteConnOuter] = Field(alias="VRF_LITE_CONN")
+    multisite_conn: Optional[ControllerResponseVrfsSwitchesMultisiteConnOuter] = Field(alias="MULTISITE_CONN")
 
     @field_validator("multisite_conn", mode="before")
     @classmethod
@@ -144,7 +144,7 @@ class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
 class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
     error_message: Union[str, None] = Field(alias="errorMessage")
     extension_prototype_values: Union[List[ControllerResponseVrfsSwitchesExtensionPrototypeValue], str] = Field(default="", alias="extensionPrototypeValues")
-    extension_values: Union[ControllerResponseVrfsSwitchesExtensionValuesOuter, str, None] = Field(default="", alias="extensionValues")
+    extension_values: Optional[Union[ControllerResponseVrfsSwitchesExtensionValuesOuter, str, None]] = Field(default="", alias="extensionValues")
     freeform_config: Union[str, None] = Field(alias="freeformConfig")
     instance_values: Optional[Union[ControllerResponseVrfsSwitchesInstanceValues, str, None]] = Field(default="", alias="instanceValues")
     is_lan_attached: bool = Field(alias="islanAttached")
