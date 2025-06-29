@@ -97,5 +97,5 @@ class ControllerResponseVrfsDeploymentsV12(ControllerResponseGenericV12):
     ERROR: Optional[str] = Field(default="")
     MESSAGE: Optional[str] = Field(default="")
     METHOD: Optional[str] = Field(default="")
-    REQUEST_PATH: str
+    REQUEST_PATH: Optional[str] = Field(default="")
     RETURN_CODE: Optional[int] = Field(default=500)

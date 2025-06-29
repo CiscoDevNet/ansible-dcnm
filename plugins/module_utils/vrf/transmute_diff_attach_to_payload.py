@@ -82,7 +82,7 @@ class DiffAttachToControllerPayload:
         self._fabric_type: str = ""
         self._fabric_inventory: dict = {}
         self._ansible_module = None  # AndibleModule instance
-        self._payload: str = ""
+        self._payload: list = []
         self._payload_model: list[PayloadVrfsAttachments] = []
         self._playbook_models: list = []
 
@@ -150,7 +150,7 @@ class DiffAttachToControllerPayload:
 
         diff_attach_list: list[PayloadVrfsAttachments] = [
             PayloadVrfsAttachments(
-                vrfName=item.get("vrfName"),
+                vrfName=item.get("vrfName", ""),
                 lanAttachList=[
                     PayloadVrfsAttachmentsLanAttachListItem(
                         deployment=lan_attach.get("deployment"),
@@ -290,12 +290,21 @@ class DiffAttachToControllerPayload:
 
             self.serial_number_to_vrf_lite.serial_number = serial_number
             if self.serial_number_to_vrf_lite.vrf_lite is None:
+                msg = "Appending lan_attach_item to new_lan_attach_list "
+                msg += f"for serial_number {serial_number} which is not VRF LITE capable. "
+                msg += f"lan_attach_item: {json.dumps(lan_attach_item.model_dump(), indent=4, sort_keys=True)}"
+                self.log.debug(msg)
                 new_lan_attach_list.append(lan_attach_item)
                 continue
 
             # VRF Lite processing
 
-            msg = f"lan_attach_item.extension_values: {lan_attach_item.extension_values}."
+            msg = f"Processing lan_attach_item for serial_number {serial_number} "
+            msg += "which is VRF LITE capable. "
+            msg += f"lan_attach_item: {json.dumps(lan_attach_item.model_dump(), indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+
+            msg = f"lan_attach_item.extension_values: {json.dumps(lan_attach_item.extension_values.model_dump(), indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
             ip_address = self.serial_number_to_ipv4.convert(lan_attach_item.serial_number)
@@ -385,8 +394,6 @@ class DiffAttachToControllerPayload:
         self.log.debug(msg)
         self.log_list_of_models(lite)
 
-        vrf_lite_conn_list = PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn.model_construct()
-
         ext_values = self.get_extension_values_from_lite_objects(lite)
         if ext_values is None:
             ip_address = self.serial_number_to_ipv4.convert(serial_number)
@@ -432,6 +439,8 @@ class DiffAttachToControllerPayload:
 
         msg = "Matching extension object(s) found on the switch."
         self.log.debug(msg)
+
+        vrf_lite_conn_list = PayloadVrfsAttachmentsLanAttachListExtensionValuesVrfLiteConn.model_construct()
 
         for interface, item in matches.items():
             user = item["user"]
@@ -705,7 +714,7 @@ class DiffAttachToControllerPayload:
         return self._payload_model
 
     @property
-    def payload(self) -> str:
+    def payload(self) -> list:
         """
         Return the payload as a JSON string.
         """

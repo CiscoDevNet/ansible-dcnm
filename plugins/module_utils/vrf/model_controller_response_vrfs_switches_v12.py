@@ -14,31 +14,33 @@ from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 
 
 class ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(BaseModel):
-    asn: str = Field(alias="asn")
-    auto_vrf_lite_flag: str = Field(alias="AUTO_VRF_LITE_FLAG")
-    dot1q_id: str = Field(alias="DOT1Q_ID")
-    enable_border_extension: str = Field(alias="enableBorderExtension")
-    if_name: str = Field(alias="IF_NAME")
-    ip_mask: str = Field(alias="IP_MASK")
-    ipv6_mask: str = Field(alias="IPV6_MASK")
-    ipv6_neighbor: str = Field(alias="IPV6_NEIGHBOR")
-    mtu: str = Field(alias="MTU")
-    neighbor_asn: str = Field(alias="NEIGHBOR_ASN")
-    neighbor_ip: str = Field(alias="NEIGHBOR_IP")
-    peer_vrf_name: str = Field(alias="PEER_VRF_NAME")
-    vrf_lite_jython_template: str = Field(alias="VRF_LITE_JYTHON_TEMPLATE")
+    asn: Optional[str] = Field(default="", alias="asn")
+    auto_vrf_lite_flag: Optional[str] = Field(default="", alias="AUTO_VRF_LITE_FLAG")
+    dot1q_id: Optional[str] = Field(default="", alias="DOT1Q_ID")
+    enable_border_extension: Optional[str] = Field(default="", alias="enableBorderExtension")
+    if_name: Optional[str] = Field(default="", alias="IF_NAME")
+    ip_mask: Optional[str] = Field(default="", alias="IP_MASK")
+    ipv6_mask: Optional[str] = Field(default="", alias="IPV6_MASK")
+    ipv6_neighbor: Optional[str] = Field(default="", alias="IPV6_NEIGHBOR")
+    mtu: Optional[str] = Field(default="", alias="MTU")
+    neighbor_asn: Optional[str] = Field(default="", alias="NEIGHBOR_ASN")
+    neighbor_ip: Optional[str] = Field(default="", alias="NEIGHBOR_IP")
+    peer_vrf_name: Optional[str] = Field(default="", alias="PEER_VRF_NAME")
+    vrf_lite_jython_template: Optional[str] = Field(default="", alias="VRF_LITE_JYTHON_TEMPLATE")
 
 
 class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
-    dest_interface_name: str = Field(alias="destInterfaceName")
-    dest_switch_name: str = Field(alias="destSwitchName")
-    extension_type: str = Field(alias="extensionType")
-    extension_values: Union[ControllerResponseVrfsSwitchesVrfLiteConnProtoItem, str] = Field(default="", alias="extensionValues")
-    interface_name: str = Field(alias="interfaceName")
+    dest_interface_name: Optional[str] = Field(default="", alias="destInterfaceName")
+    dest_switch_name: Optional[str] = Field(default="", alias="destSwitchName")
+    extension_type: Optional[str] = Field(default="", alias="extensionType")
+    extension_values: ControllerResponseVrfsSwitchesVrfLiteConnProtoItem = Field(
+        default=ControllerResponseVrfsSwitchesVrfLiteConnProtoItem().model_construct(), alias="extensionValues"
+    )
+    interface_name: Optional[str] = Field(default="", alias="interfaceName")
 
     @field_validator("extension_values", mode="before")
     @classmethod
-    def preprocess_extension_values(cls, data: Any) -> Any:
+    def preprocess_extension_values(cls, data: Any) -> ControllerResponseVrfsSwitchesVrfLiteConnProtoItem:
         """
         Convert incoming data
 
@@ -48,8 +50,9 @@ class ControllerResponseVrfsSwitchesExtensionPrototypeValue(BaseModel):
         """
         if isinstance(data, str):
             if data == "":
-                return ""
+                return ControllerResponseVrfsSwitchesVrfLiteConnProtoItem().model_construct()
             data = json.loads(data)
+            return ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(**data)
         if isinstance(data, dict):
             data = ControllerResponseVrfsSwitchesVrfLiteConnProtoItem(**data)
         return data
@@ -68,9 +71,9 @@ class ControllerResponseVrfsSwitchesInstanceValues(BaseModel):
     ```
     """
 
-    loopback_id: str = Field(alias="loopbackId")
-    loopback_ip_address: str = Field(alias="loopbackIpAddress")
-    loopback_ipv6_address: str = Field(alias="loopbackIpV6Address")
+    loopback_id: Optional[str] = Field(default="", alias="loopbackId")
+    loopback_ip_address: Optional[str] = Field(default="", alias="loopbackIpAddress")
+    loopback_ipv6_address: Optional[str] = Field(default="", alias="loopbackIpV6Address")
     switch_route_target_export_evpn: Optional[str] = Field(default="", alias="switchRouteTargetExportEvpn")
     switch_route_target_import_evpn: Optional[str] = Field(default="", alias="switchRouteTargetImportEvpn")
 
@@ -80,33 +83,41 @@ class ControllerResponseVrfsSwitchesMultisiteConnOuterItem(BaseModel):
 
 
 class VrfLiteConnOuterItem(BaseModel):
-    auto_vrf_lite_flag: str = Field(alias="AUTO_VRF_LITE_FLAG")
-    dot1q_id: str = Field(alias="DOT1Q_ID")
-    if_name: str = Field(alias="IF_NAME")
-    ip_mask: str = Field(alias="IP_MASK")
-    ipv6_mask: str = Field(alias="IPV6_MASK")
-    ipv6_neighbor: str = Field(alias="IPV6_NEIGHBOR")
-    neighbor_asn: str = Field(alias="NEIGHBOR_ASN")
-    neighbor_ip: str = Field(alias="NEIGHBOR_IP")
-    peer_vrf_name: str = Field(alias="PEER_VRF_NAME")
-    vrf_lite_jython_template: str = Field(alias="VRF_LITE_JYTHON_TEMPLATE")
+    # We set the default value to "NA", which we can check later in dcnm_vrf_v12.py
+    # to ascertain whether the model was populated with switch data.
+    auto_vrf_lite_flag: Optional[str] = Field(default="NA", alias="AUTO_VRF_LITE_FLAG")
+    dot1q_id: Optional[str] = Field(default="", alias="DOT1Q_ID")
+    if_name: Optional[str] = Field(default="", alias="IF_NAME")
+    ip_mask: Optional[str] = Field(default="", alias="IP_MASK")
+    ipv6_mask: Optional[str] = Field(default="", alias="IPV6_MASK")
+    ipv6_neighbor: Optional[str] = Field(default="", alias="IPV6_NEIGHBOR")
+    neighbor_asn: Optional[str] = Field(default="", alias="NEIGHBOR_ASN")
+    neighbor_ip: Optional[str] = Field(default="", alias="NEIGHBOR_IP")
+    peer_vrf_name: Optional[str] = Field(default="", alias="PEER_VRF_NAME")
+    vrf_lite_jython_template: Optional[str] = Field(default="", alias="VRF_LITE_JYTHON_TEMPLATE")
 
 
 class ControllerResponseVrfsSwitchesMultisiteConnOuter(BaseModel):
-    multisite_conn: List[ControllerResponseVrfsSwitchesMultisiteConnOuterItem] = Field(alias="MULTISITE_CONN")
+    multisite_conn: Optional[List[ControllerResponseVrfsSwitchesMultisiteConnOuterItem]] = Field(
+        default=[ControllerResponseVrfsSwitchesMultisiteConnOuterItem().model_construct()], alias="MULTISITE_CONN"
+    )
 
 
 class ControllerResponseVrfsSwitchesVrfLiteConnOuter(BaseModel):
-    vrf_lite_conn: List[VrfLiteConnOuterItem] = Field(alias="VRF_LITE_CONN")
+    vrf_lite_conn: Optional[List[VrfLiteConnOuterItem]] = Field(default=[VrfLiteConnOuterItem().model_construct()], alias="VRF_LITE_CONN")
 
 
 class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
-    vrf_lite_conn: Optional[ControllerResponseVrfsSwitchesVrfLiteConnOuter] = Field(alias="VRF_LITE_CONN")
-    multisite_conn: Optional[ControllerResponseVrfsSwitchesMultisiteConnOuter] = Field(alias="MULTISITE_CONN")
+    vrf_lite_conn: Optional[ControllerResponseVrfsSwitchesVrfLiteConnOuter] = Field(
+        default=ControllerResponseVrfsSwitchesVrfLiteConnOuter().model_construct(), alias="VRF_LITE_CONN"
+    )
+    multisite_conn: Optional[ControllerResponseVrfsSwitchesMultisiteConnOuter] = Field(
+        default=ControllerResponseVrfsSwitchesMultisiteConnOuter().model_construct(), alias="MULTISITE_CONN"
+    )
 
     @field_validator("multisite_conn", mode="before")
     @classmethod
-    def preprocess_multisite_conn(cls, data: Any) -> Any:
+    def preprocess_multisite_conn(cls, data: Any) -> ControllerResponseVrfsSwitchesMultisiteConnOuter:
         """
         Convert incoming data
 
@@ -115,16 +126,16 @@ class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
         - If data is already an ControllerResponseVrfsSwitchesMultisiteConnOuter instance, return as-is.
         """
         if isinstance(data, str):
-            if data == "":
-                return ""
-            data = json.loads(data)
+            if data in ["", "{}"]:
+                return ControllerResponseVrfsSwitchesMultisiteConnOuter().model_construct()
+            return ControllerResponseVrfsSwitchesMultisiteConnOuter(**json.loads(data))
         if isinstance(data, dict):
             data = ControllerResponseVrfsSwitchesMultisiteConnOuter(**data)
         return data
 
     @field_validator("vrf_lite_conn", mode="before")
     @classmethod
-    def preprocess_vrf_lite_conn(cls, data: Any) -> Any:
+    def preprocess_vrf_lite_conn(cls, data: Any) -> ControllerResponseVrfsSwitchesVrfLiteConnOuter:
         """
         Convert incoming data
 
@@ -133,9 +144,9 @@ class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
         - If data is already an ControllerResponseVrfsSwitchesVrfLiteConnOuter instance, return as-is.
         """
         if isinstance(data, str):
-            if data == "":
-                return ""
-            data = json.loads(data)
+            if data in ["", "{}"]:
+                return ControllerResponseVrfsSwitchesVrfLiteConnOuter().model_construct()
+            return ControllerResponseVrfsSwitchesVrfLiteConnOuter(**json.loads(data))
         if isinstance(data, dict):
             data = ControllerResponseVrfsSwitchesVrfLiteConnOuter(**data)
         return data
@@ -143,10 +154,16 @@ class ControllerResponseVrfsSwitchesExtensionValuesOuter(BaseModel):
 
 class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
     error_message: Union[str, None] = Field(alias="errorMessage")
-    extension_prototype_values: Union[List[ControllerResponseVrfsSwitchesExtensionPrototypeValue], str] = Field(default="", alias="extensionPrototypeValues")
-    extension_values: Optional[Union[ControllerResponseVrfsSwitchesExtensionValuesOuter, str, None]] = Field(default="", alias="extensionValues")
+    extension_prototype_values: Optional[List[ControllerResponseVrfsSwitchesExtensionPrototypeValue]] = Field(
+        default=[ControllerResponseVrfsSwitchesExtensionPrototypeValue().model_construct()], alias="extensionPrototypeValues"
+    )
+    extension_values: Optional[ControllerResponseVrfsSwitchesExtensionValuesOuter] = Field(
+        default=ControllerResponseVrfsSwitchesExtensionValuesOuter().model_construct(), alias="extensionValues"
+    )
     freeform_config: Union[str, None] = Field(alias="freeformConfig")
-    instance_values: Optional[Union[ControllerResponseVrfsSwitchesInstanceValues, str, None]] = Field(default="", alias="instanceValues")
+    instance_values: Optional[ControllerResponseVrfsSwitchesInstanceValues] = Field(
+        default=ControllerResponseVrfsSwitchesInstanceValues().model_construct(), alias="instanceValues"
+    )
     is_lan_attached: bool = Field(alias="islanAttached")
     lan_attached_state: str = Field(alias="lanAttachedState")
     peer_serial_number: Union[str, None] = Field(alias="peerSerialNumber")
@@ -158,7 +175,7 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
 
     @field_validator("extension_prototype_values", mode="before")
     @classmethod
-    def preprocess_extension_prototype_values(cls, data: Any) -> Any:
+    def preprocess_extension_prototype_values(cls, data: Any) -> ControllerResponseVrfsSwitchesExtensionPrototypeValue:
         """
         Convert incoming data
 
@@ -168,8 +185,7 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
         """
         if isinstance(data, str):
             if data == "":
-                return ""
-            data = json.loads(data)
+                return ControllerResponseVrfsSwitchesExtensionPrototypeValue().model_construct()
         if isinstance(data, list):
             for instance in data:
                 if isinstance(instance, dict):
@@ -178,7 +194,7 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
 
     @field_validator("extension_values", mode="before")
     @classmethod
-    def preprocess_extension_values(cls, data: Any) -> Any:
+    def preprocess_extension_values(cls, data: Any) -> Union[ControllerResponseVrfsSwitchesExtensionValuesOuter, str]:
         """
         Convert incoming data
 
@@ -187,16 +203,16 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
         - If data is already an ControllerResponseVrfsSwitchesExtensionValuesOuter instance, return as-is.
         """
         if isinstance(data, str):
-            if data == "":
-                return ""
-            data = json.loads(data)
+            if data in ["", "{}"]:
+                return ControllerResponseVrfsSwitchesExtensionValuesOuter().model_construct()
+            return ControllerResponseVrfsSwitchesExtensionValuesOuter(**json.loads(data))
         if isinstance(data, dict):
             data = ControllerResponseVrfsSwitchesExtensionValuesOuter(**data)
         return data
 
     @field_validator("instance_values", mode="before")
     @classmethod
-    def preprocess_instance_values(cls, data: Any) -> Any:
+    def preprocess_instance_values(cls, data: Any) -> ControllerResponseVrfsSwitchesInstanceValues:
         """
         Convert incoming data
 
@@ -205,9 +221,9 @@ class ControllerResponseVrfsSwitchesSwitchDetails(BaseModel):
         - If data is already an ControllerResponseVrfsSwitchesInstanceValues instance, return as-is.
         """
         if isinstance(data, str):
-            if data == "":
-                return ""
-            data = json.loads(data)
+            if data in ["", "{}"]:
+                return ControllerResponseVrfsSwitchesInstanceValues().model_construct()
+            return ControllerResponseVrfsSwitchesInstanceValues(**json.loads(data))
         if isinstance(data, dict):
             data = ControllerResponseVrfsSwitchesInstanceValues(**data)
         return data

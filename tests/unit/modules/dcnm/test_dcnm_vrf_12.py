@@ -1176,8 +1176,8 @@ class TestDcnmVrfModule12(TestDcnmModule):
             202,
         )
         self.assertEqual(
-            result.get("response")[0]["attach"][0]["switchDetailsList"][0]["extensionValues"],
-            "",
+            result.get("response")[0]["attach"][0]["switchDetailsList"][0]["extensionValues"]["VRF_LITE_CONN"]["VRF_LITE_CONN"][0]["AUTO_VRF_LITE_FLAG"],
+            "NA",
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["lanAttachedState"],
@@ -1188,8 +1188,8 @@ class TestDcnmVrfModule12(TestDcnmModule):
             202,
         )
         self.assertEqual(
-            result.get("response")[0]["attach"][1]["switchDetailsList"][0]["extensionValues"],
-            "",
+            result.get("response")[0]["attach"][1]["switchDetailsList"][0]["extensionValues"]["VRF_LITE_CONN"]["VRF_LITE_CONN"][0]["AUTO_VRF_LITE_FLAG"],
+            "NA",
         )
 
     def test_dcnm_vrf_12_query_lite_without_config(self):
@@ -1207,8 +1207,8 @@ class TestDcnmVrfModule12(TestDcnmModule):
             202,
         )
         self.assertEqual(
-            result.get("response")[0]["attach"][0]["switchDetailsList"][0]["extensionValues"],
-            "",
+            result.get("response")[0]["attach"][0]["switchDetailsList"][0]["extensionValues"]["VRF_LITE_CONN"]["VRF_LITE_CONN"][0]["AUTO_VRF_LITE_FLAG"],
+            "NA",
         )
         self.assertEqual(
             result.get("response")[0]["attach"][1]["switchDetailsList"][0]["lanAttachedState"],
@@ -1219,8 +1219,8 @@ class TestDcnmVrfModule12(TestDcnmModule):
             202,
         )
         self.assertEqual(
-            result.get("response")[0]["attach"][1]["switchDetailsList"][0]["extensionValues"],
-            "",
+            result.get("response")[0]["attach"][1]["switchDetailsList"][0]["extensionValues"]["VRF_LITE_CONN"]["VRF_LITE_CONN"][0]["AUTO_VRF_LITE_FLAG"],
+            "NA",
         )
 
     def test_dcnm_vrf_12_validation(self):

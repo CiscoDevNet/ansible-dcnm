@@ -1633,7 +1633,10 @@ class NdfcVrf12:
                     attach.freeform_config = ""
                     continue
                 ext_values = epv.extension_values
-                if ext_values.vrf_lite_conn is None:
+                # if ext_values.vrf_lite_conn is None:
+                if ext_values.vrf_lite_conn.vrf_lite_conn[0].auto_vrf_lite_flag == "NA":
+                    # The default value assigned in the model is "NA".  If we see this value
+                    # we know that the switch did not contibute to the model values.
                     continue
                 ext_values = ext_values.vrf_lite_conn
                 extension_values = {"VRF_LITE_CONN": {"VRF_LITE_CONN": []}}
