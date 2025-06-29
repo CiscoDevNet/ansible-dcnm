@@ -87,3 +87,17 @@ def playbooks(key: str) -> dict[str, str]:
     filename = "model_playbook_vrf_v12.json"
     data = load_fixture_data(filename=filename, key=key)
     return data
+
+
+def controller_response_fabrics_easy_fabric_get(key: str) -> dict[str, str]:
+    """
+    Return controller response fixtures for a GET request to the controller
+    for the following endpoint, where fabricName is a placeholder for the
+    actual fabric name, and the fabric type is Easy_Fabric.
+
+    - Verb: GET
+    - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabricName}
+    """
+    filename = "model_controller_response_fabrics_easy_fabric_get.json"
+    data = load_fixture_data(filename=filename, key=key)
+    return data
