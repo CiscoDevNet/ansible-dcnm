@@ -3884,6 +3884,11 @@ class DcnmIntf:
             else:
                 t_e2 = e2
 
+        if k == 'ENABLE_ORPHAN_PORT':
+            # This is a special case where the value is a boolean and we need to compare it as such
+            t_e1 = str(t_e1).lower()
+            t_e2 = str(t_e2).lower()
+
         if t_e1 != t_e2:
 
             if (state == "replaced") or (state == "overridden"):
