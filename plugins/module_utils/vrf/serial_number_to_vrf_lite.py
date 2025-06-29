@@ -8,7 +8,7 @@ from .model_playbook_vrf_v12 import PlaybookVrfModelV12
 class SerialNumberToVrfLite:
     """
     Given a list of validated playbook configuration models,
-    build a mapping of switch serial numbers to lists of VrfLiteModel instances.
+    build a mapping of switch serial numbers to lists of PlaybookVrfLiteModel instances.
 
     Usage:
     ```python
@@ -43,7 +43,7 @@ class SerialNumberToVrfLite:
         ```json
         {
             "XYZKSJHSMK4": [
-                VrfLiteModel(
+                PlaybookVrfLiteModel(
                     dot1q=21,
                     interface="Ethernet1/1",
                     ipv4_addr="10.33.0.11/30",
