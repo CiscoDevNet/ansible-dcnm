@@ -1,5 +1,7 @@
-from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class ControllerResponseFabricsEasyFabricGetNvPairs(BaseModel):
     """
@@ -15,6 +17,7 @@ class ControllerResponseFabricsEasyFabricGetNvPairs(BaseModel):
 
     ValueError if validation fails
     """
+
     AAA_REMOTE_IP_ENABLED: Optional[str] = Field(None, description="AAA remote IP enabled")
     AAA_SERVER_CONF: Optional[str] = Field(None, description="AAA server configuration")
     ACTIVE_MIGRATION: Optional[str] = Field(None, description="Active migration")
@@ -335,10 +338,11 @@ class ControllerResponseFabricsEasyFabricGetNvPairs(BaseModel):
     temp_vpc_peer_link: Optional[str] = Field(None, description="Temp VPC peer link")
     vrf_extension_template: Optional[str] = Field(None, description="VRF extension template")
 
+
 class ControllerResponseFabricsEasyFabricGet(BaseModel):
     """
     Model representing the controller response for the following endpoint:
-    
+
     - Verb: GET
     - Path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabricName}
 
@@ -346,6 +350,7 @@ class ControllerResponseFabricsEasyFabricGet(BaseModel):
 
     ValueError if validation fails
     """
+
     model_config = ConfigDict(
         str_strip_whitespace=True,
         validate_assignment=True,
