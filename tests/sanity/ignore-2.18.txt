@@ -20,6 +20,9 @@ plugins/module_utils/common/sender_requests.py import-3.11
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.10!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.11!skip
 plugins/module_utils/vrf/dcnm_vrf_v12.py import-3.9!skip
+plugins/module_utils/vrf/model_controller_response_fabrics_easy_fabric_get.py import-3.10!skip
+plugins/module_utils/vrf/model_controller_response_fabrics_easy_fabric_get.py import-3.11!skip
+plugins/module_utils/vrf/model_controller_response_fabrics_easy_fabric_get.py import-3.9!skip
 plugins/module_utils/vrf/model_controller_response_generic_v12.py import-3.10!skip
 plugins/module_utils/vrf/model_controller_response_generic_v12.py import-3.11!skip
 plugins/module_utils/vrf/model_controller_response_generic_v12.py import-3.9!skip
