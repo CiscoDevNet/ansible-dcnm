@@ -31,7 +31,7 @@
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
-- name: SETUP.0 - QUERY - [with_items] print vars
+- name: SETUP.0a - QUERY - [with_items] print vars
   ansible.builtin.debug:
     var: item
   with_items:
@@ -40,7 +40,24 @@
      - "switch_2 : {{ switch_2 }}"
      - "interface_2a : {{ interface_2a }}"
 
-- name: SETUP.1 - QUERY - [dcnm_rest.GET] Verify if fabric is deployed.
+- name: SETUP.0b - QUERY - [with_items] log vars
+  cisco.dcnm.dcnm_log:
+    msg: "{{ item }}"
+  with_items:
+     - "fabric_1 : {{ fabric_1 }}"
+     - "switch_1 : {{ switch_1 }}"
+     - "switch_2 : {{ switch_2 }}"
+     - "interface_2a : {{ interface_2a }}"
+
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.1 - QUERY - [dcnm_rest.GET] Verify if fabric is deployed."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_rest:
     method: GET
     path: "{{ rest_path }}"
@@ -50,13 +67,29 @@
     that:
     - 'result.response.DATA != None'
 
-- name: SETUP.2 - QUERY - [deleted] Delete all VRFs
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.2 - QUERY - [deleted] Delete all VRFs."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
   register: result_setup_2
 
-- name: SETUP.2a - QUERY - Wait 60 seconds for controller and switch to sync
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.2a - QUERY - Wait 60 seconds for controller and switch to sync."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
@@ -64,7 +97,15 @@
     timeout: 60
   when: result_setup_2.changed == true
 
-- name: SETUP.3 - QUERY - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.3 - QUERY - [merged] Create, Attach, Deploy VLAN+VRF ansible-vrf-int1."
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -80,7 +121,15 @@
       deploy: true
   register: result_setup_3
 
-- name: SETUP.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED
+- name: Set task name
+  ansible.builtin.set_fact:
+    task_name: "SETUP.3a - QUERY - [query] Wait for vrfStatus == DEPLOYED"
+
+- name: Log task
+  cisco.dcnm.dcnm_log:
+    msg: "{{ task_name }}"
+
+- name: "{{ task_name }}"
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
