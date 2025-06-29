@@ -39,6 +39,7 @@
     port_channel_1: port-channel801
     port_channel_2: port-channel802
     port_channel_3: port-channel803
+    port_channel_4: port-channel804
 
   roles:
     - ndfc_interface
