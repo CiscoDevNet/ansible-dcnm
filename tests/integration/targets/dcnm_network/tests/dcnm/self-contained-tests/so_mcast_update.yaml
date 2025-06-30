@@ -83,7 +83,7 @@
 
 - name: SO_MCAST_UPDATE - Override network config
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden
     config: "{{ dcnm_network_merged_double_net_mcast_changed_conf }}"
   register: result

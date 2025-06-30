@@ -129,6 +129,6 @@
 
   - name: MERGED - setup - remove any networks
     cisco.dcnm.dcnm_network:
-      fabric: "{{ test_fabric }}"
+      fabric: "{{ test_data_common.fabric }}"
       state: deleted
   when: test_ing_fabric is defined

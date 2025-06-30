@@ -495,6 +495,8 @@ class DcnmNetwork:
             "GET_NET": "/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/rest/top-down/fabrics/{}/networks/{}",
             "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
+            "GET_NET_STATUS": "/rest/top-down/fabrics/{}/networks/{}/status",
+            "GET_NET_SWITCH_DEPLOY": "/rest/top-down/fabrics/networks/deploy"
         },
         12: {
             "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -504,6 +506,8 @@ class DcnmNetwork:
             "GET_NET": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks",
             "GET_NET_NAME": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}",
             "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_NETWORK_VLAN",
+            "GET_NET_STATUS": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks/{}/status",
+            "GET_NET_SWITCH_DEPLOY": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/networks/deploy"
         },
     }
 
@@ -1466,13 +1470,10 @@ class DcnmNetwork:
             dep_net = ""
             for attach in attach_list:
                 torlist = []
-                if attach["lanAttachState"] == "NA" or (attach["lanAttachState"] == "PENDING" and attach["portNames"] == ""):
-                    attach_state = False
-                else:
-                    attach_state = True
-                deploy = attach["isLanAttached"]
+                attach_state = bool(attach.get("isLanAttached", False))
+                deploy = attach_state
                 deployed = False
-                if bool(deploy) and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
+                if attach_state and (attach["lanAttachState"] == "OUT-OF-SYNC" or attach["lanAttachState"] == "PENDING"):
                     deployed = False
                 else:
                     deployed = True
@@ -1497,8 +1498,6 @@ class DcnmNetwork:
                     attach.update({"torports": torlist})
                 else:
                     ports = attach["portNames"]
-                    if ports == "":
-                        ports = None
 
                 # The deletes and updates below are done to update the incoming dictionary format to
                 # match to what the outgoing payload requirements mandate.
@@ -2325,31 +2324,74 @@ class DcnmNetwork:
 
         self.query = query
 
+    def detach_and_deploy_for_del(self, net):
+        method = "GET"
+
+        payload_net = {}
+        deploy_payload = {}
+        payload_net["networkName"] = net["networkName"]
+        payload_net["lanAttachList"] = []
+        attach_list = net["switchList"]
+        for atch in attach_list:
+            payload_atch = {}
+            if atch["lanAttachedState"].upper() == "PENDING":
+                payload_atch["serialNumber"] = atch["serialNumber"]
+                payload_atch["networkName"] = net["networkName"]
+                payload_atch["fabric"] = net["fabric"]
+                payload_atch["deployment"] = False
+                payload_net["lanAttachList"].append(payload_atch)
+
+                deploy_payload[atch["serialNumber"]] = net["networkName"]
+
+        if payload_net["lanAttachList"]:
+            payload = [payload_net]
+            method = "POST"
+            path = self.paths["GET_NET"].format(self.fabric) + "/attachments"
+            resp = dcnm_send(self.module, method, path, json.dumps(payload))
+            self.result["response"].append(resp)
+            fail, dummy_changed = self.handle_response(resp, "attach")
+            if fail:
+                self.failure(resp)
+
+        method = "POST"
+        path = self.paths["GET_NET_SWITCH_DEPLOY"].format(self.fabric)
+        resp = dcnm_send(self.module, method, path, json.dumps(deploy_payload))
+        self.result["response"].append(resp)
+        fail, dummy_changed = self.handle_response(resp, "deploy")
+        if fail:
+            self.failure(resp)
+
     def wait_for_del_ready(self):
 
         method = "GET"
         if self.diff_delete:
             for net in self.diff_delete:
                 state = False
-                path = self.paths["GET_NET_ATTACH"].format(self.fabric, net)
-                while not state:
+                path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
+                retry = 20
+                deploy_started = False
+                while not state and retry >= 0:
+                    retry -= 1
                     resp = dcnm_send(self.module, method, path)
                     state = True
                     if resp["DATA"]:
-                        attach_list = resp["DATA"][0]["lanAttachList"]
+                        if resp["DATA"]["networkStatus"].upper() == "PENDING" and not deploy_started:
+                            self.detach_and_deploy_for_del(resp["DATA"])
+                            deploy_started = True
+                        attach_list = resp["DATA"]["switchList"]
                         for atch in attach_list:
-                            if atch["lanAttachState"] == "OUT-OF-SYNC" or atch["lanAttachState"] == "FAILED":
+                            if atch["lanAttachedState"].upper() == "OUT-OF-SYNC" or atch["lanAttachedState"].upper() == "FAILED":
                                 self.diff_delete.update({net: "OUT-OF-SYNC"})
                                 break
-                            if atch["lanAttachState"] == "PENDING":
-                                self.diff_delete.update({net: "PENDING"})
-                                break
-                            if atch["lanAttachState"] != "NA":
+                            if atch["lanAttachedState"].upper() != "NA":
                                 self.diff_delete.update({net: "DEPLOYED"})
                                 state = False
                                 time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                                 break
                             self.diff_delete.update({net: "NA"})
+                if retry < 0:
+                    self.diff_delete.update({net: "TIMEOUT"})
+                    return False
 
             return True
 
@@ -2393,7 +2435,8 @@ class DcnmNetwork:
 
             for d_a in self.diff_detach:
                 for v_a in d_a["lanAttachList"]:
-                    del v_a["is_deploy"]
+                    if v_a.get("is_deploy"):
+                        del v_a["is_deploy"]
 
             resp = dcnm_send(self.module, method, detach_path, json.dumps(self.diff_detach))
             self.result["response"].append(resp)
@@ -2413,7 +2456,7 @@ class DcnmNetwork:
             # the state of the network is "OUT-OF-SYNC"
             self.wait_for_del_ready()
             for net, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC":
+                if state.upper() == "OUT-OF-SYNC":
                     resp = dcnm_send(self.module, method, deploy_path, json.dumps(self.diff_undeploy))
 
             self.result["response"].append(resp)
@@ -2429,10 +2472,12 @@ class DcnmNetwork:
         if self.diff_delete and self.wait_for_del_ready():
             resp = ""
             for net, state in self.diff_delete.items():
-                if state == "OUT-OF-SYNC" or state == "PENDING":
+                if state.upper() == "OUT-OF-SYNC" or state == "TIMEOUT":
                     del_failure += net + ","
-                    if state == "PENDING":
-                        resp = "Cannot delete as some networks are undeployed"
+                    if state == "TIMEOUT":
+                        resp = "Timeout waiting for network to be in delete ready state.\n"
+                    if state == "OUT-OF-SYNC":
+                        resp += "Network is out of sync.\n"
                     continue
                 delete_path = path + "/" + net
                 resp = dcnm_send(self.module, method, delete_path)
@@ -2518,7 +2563,8 @@ class DcnmNetwork:
 
             for d_a in self.diff_attach:
                 for v_a in d_a["lanAttachList"]:
-                    del v_a["is_deploy"]
+                    if v_a.get("is_deploy"):
+                        del v_a["is_deploy"]
 
             for attempt in range(0, 50):
                 resp = dcnm_send(self.module, method, attach_path, json.dumps(self.diff_attach))

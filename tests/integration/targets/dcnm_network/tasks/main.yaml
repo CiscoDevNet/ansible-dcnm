@@ -11,47 +11,6 @@
   delegate_to: localhost
   tags: always
 
-# maintaining backward compatibility until all test cases are updated
-- set_fact:
-    controller_version: "Unable to determine controller version"
-  tags: always
-
-- name: Determine version of DCNM or NDFC
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: /appcenter/cisco/ndfc/api/about/version
-  register: result
-  ignore_errors: yes
-  tags: always
-
-- set_fact:
-    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
-  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
-  tags: always
-
-- name: Determine version of DCNM or NDFC
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: /fm/fmrest/about/version
-  register: result
-  ignore_errors: yes
-  tags: always
-
-- set_fact:
-    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
-  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
-  tags: always
-
-
-- assert:
-    that:
-    - 'controller_version != "Unable to determine controller version"'
-  tags: always
-
-# new version below
-
 - name: MAIN - QUERY - Verify Fabric Deployment
   cisco.dcnm.dcnm_fabric:
     state: query
