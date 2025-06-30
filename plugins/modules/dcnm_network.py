@@ -2374,7 +2374,7 @@ class DcnmNetwork:
                     retry -= 1
                     resp = dcnm_send(self.module, method, path)
                     state = True
-                    if resp["DATA"]:
+                    if resp.get("DATA"):
                         if resp["DATA"]["networkStatus"].upper() == "PENDING" and not deploy_started:
                             self.detach_and_deploy_for_del(resp["DATA"])
                             deploy_started = True
