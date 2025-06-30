@@ -17,7 +17,7 @@
   tags: sanity
 
 - name: run test cases (connection=httpapi)
-  include: "{{ test_case_to_run }}"
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
@@ -43,7 +43,7 @@
     method: DELETE
     path: "{{ [vpc_delete_path[controller_version], ansible_vxlan_fabric_sno1] | join ('') }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
 
 - name: Wait for 10 secs
@@ -61,7 +61,7 @@
     path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
   when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
-  ignore_errors: yes
+  ignore_errors: true
 
 ##############################################
 ##          DEPLOY VXLAN VPC PAIR           ##
@@ -75,7 +75,7 @@
   with_sequence: count=1
   loop_control:
     pause: 5
-  ignore_errors: yes
+  ignore_errors: true
   when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
 
 ##############################################
@@ -86,7 +86,7 @@
     method: DELETE
     path: "{{ [vpc_delete_path[controller_version], ansible_cxt_fabric_sno1] | join ('') }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
 
 - name: Wait for 10 secs
@@ -104,7 +104,7 @@
     path: "{{ cxt_config_save_path[controller_version] }}"
   register: result
   when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
-  ignore_errors: yes
+  ignore_errors: true
 
 ##############################################
 ##          DEPLOY CXT VPC PAIR             ##
@@ -118,7 +118,7 @@
   with_sequence: count=1
   loop_control:
     pause: 5
-  ignore_errors: yes
+  ignore_errors: true
   when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
 
 - name: Final Cleanup - delete my_vpc my_lacp my_interface_vlan and my_hsrp policies that we created during init

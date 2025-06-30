@@ -3073,6 +3073,9 @@ class TestDcnmIntfModule(TestDcnmModule):
 
     def test_dcnm_intf_eth_merged_existing(self):
 
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
+
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_intf_eth_configs")
         self.payloads_data = loadPlaybookData("dcnm_intf_eth_payloads")
@@ -3109,6 +3112,9 @@ class TestDcnmIntfModule(TestDcnmModule):
                 self.assertEqual((intf["ifName"] in ["Ethernet1/2"]), True)
 
     def test_dcnm_intf_eth_merged_new(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
 
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_intf_eth_configs")
@@ -3652,6 +3658,9 @@ class TestDcnmIntfModule(TestDcnmModule):
     # -------------------------- LOOPBACK --------------------------
 
     def test_dcnm_intf_lo_merged_new(self):
+
+        # Use Version 12 For This Test Case
+        self.run_dcnm_version_supported.side_effect = [12]
 
         # load the json from playbooks
         self.config_data = loadPlaybookData("dcnm_intf_lo_configs")
