@@ -37,8 +37,6 @@ class TestDcnmVrfModule12(TestDcnmModule):
     mock_ip_sn = test_data.get("mock_ip_sn")
     vrf_inv_data = test_data.get("vrf_inv_data")
     fabric_details = test_data.get("fabric_details")
-    fabric_details_mfd = test_data.get("fabric_details_mfd")
-    fabric_details_vxlan = test_data.get("fabric_details_vxlan")
 
     mock_vrf_attach_object_del_not_ready = test_data.get("mock_vrf_attach_object_del_not_ready")
     mock_vrf_attach_object_del_oos = test_data.get("mock_vrf_attach_object_del_oos")
