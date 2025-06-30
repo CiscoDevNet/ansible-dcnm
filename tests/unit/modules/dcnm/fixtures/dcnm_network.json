@@ -557,37 +557,33 @@
         "ERROR": "",
         "RETURN_CODE": 200,
         "MESSAGE": "OK",
-        "DATA": [
-            {
-                "networkName": "test_network",
-                "lanAttachList": [
-                    {
-                        "lanAttachState": "NA"
-                    },
-                    {
-                        "lanAttachState": "NA"
-                    }
-                ]
-            }
-        ]
+        "DATA": {
+            "networkStatus": "NA",
+            "networkName": "test_network",
+            "switchList": []
+        }
     },
     "mock_net_attach_object_del_not_ready": {
         "ERROR": "",
         "RETURN_CODE": 200,
         "MESSAGE": "OK",
-        "DATA": [
-            {
-                "networkName": "test_network",
-                "lanAttachList": [
-                    {
-                        "lanAttachState": "DEPLOYED"
-                    },
-                    {
-                        "lanAttachState": "DEPLOYED"
-                    }
-                ]
-            }
-        ]
+        "DATA": {
+            "networkStatus": "DEPLOYED",
+            "networkName": "test_network",
+            "switchList":
+            [
+                {
+                    "lanAttachedState": "DEPLOYED",
+                    "serialNumber": "9NN7E41N16A"
+                },
+                {
+                    "lanAttachedState": "DEPLOYED",
+                    "serialNumber": "9YO9A29F27U"
+                }
+                
+            ]
+    
+        }
     },
     "mock_vlan_get": {
         "DATA": "202",
