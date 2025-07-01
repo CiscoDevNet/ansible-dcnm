@@ -256,7 +256,7 @@ class HttpApi(HttpApiBase):
             )
 
     def logout(self):
-        if self.connection._auth is None:
+        if self.connection._auth is not None:
             return
 
         self.logout_succeeded = False
