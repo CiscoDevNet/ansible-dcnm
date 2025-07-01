@@ -3730,6 +3730,10 @@ class DcnmVrf:
                 continue
             if item.get("id") is None:
                 continue
+            if not item.get("ipAddress"):
+                continue
+            if not item.get("switchName"):
+                continue
 
             msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
             self.log.debug(msg)
