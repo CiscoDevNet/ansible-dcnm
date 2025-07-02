@@ -4136,11 +4136,19 @@ class DcnmVrf:
             fail = True
             changed = False
         if res.get("DATA"):
-            for resp_string in res.get("DATA").values():
-                if "fail" in resp_string.lower():
-                    fail = True
-                    changed = False
-                    return fail, changed
+            if isinstance(res.get("DATA"), list):
+                for resp_data_item in res.get("DATA"):
+                    for resp_string in resp_data_item.values():
+                        if "fail" in resp_string.lower():
+                            fail = True
+                            changed = False
+                            return fail, changed
+            elif isinstance(res.get("DATA"), dict):
+                for resp_string in res.get("DATA").values():
+                    if "fail" in resp_string.lower():
+                        fail = True
+                        changed = False
+                        return fail, changed
         if op == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
