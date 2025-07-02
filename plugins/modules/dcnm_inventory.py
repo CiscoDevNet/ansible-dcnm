@@ -849,12 +849,30 @@ class DcnmInventory:
 
         diff_delete = []
 
+        def check_have_c_in_want_list(have_c):
+            for want_c in self.want_create:
+                if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                    return True
+
+            return False
+
         def have_in_want(have_c):
             match_found = False
+
+            # Check to see if have is in the want list and if not return match_found(False)
+            if not check_have_c_in_want_list(have_c):
+                return match_found
             for want_c in self.want_create:
                 match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
                 if match is None:
-                    continue
+                    # If we get here this is typically because the device was pre-provisioned
+                    # and the regex expression above will not match in this case.
+                    # We need to make an additionl check using ipaddr to see if the device
+                    # is already part of the fabric.
+                    if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                        match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
+                if match is None:
+                    return match_found
                 want_serial_num = match.groups()[0]
                 if have_c["switches"][0]["serialNumber"] == want_serial_num:
                     if (
@@ -883,7 +901,6 @@ class DcnmInventory:
     def get_diff_delete(self):
 
         diff_delete = []
-
         if self.config:
             for want_c in self.want_create:
                 for have_c in self.have_create:
@@ -905,8 +922,21 @@ class DcnmInventory:
             found = False
             match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
             if match is None:
-                msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
-                self.module.fail_json(msg=msg)
+                # If we don't have a match that means one of the following:
+                # (1) The device has not been discovered and is not reachable or the IP address is not a valid IP
+                # (2) The device has been discovered and added to the fabric but is currently not reachable
+                #     due to it being pre-provisioned or some other reason.
+                want_c_already_discovered = False
+                for have_c in self.have_create:
+                    # Check the have list to see if the device has already been discovered and if so
+                    # don't error but use the have list to create the match.
+                    if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                        want_c_already_discovered = True
+                        match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
+                # Device is not part of the fabric so return the error.
+                if not want_c_already_discovered:
+                    msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
+                    self.module.fail_json(msg=msg)
             serial_num = match.groups()[0]
             for have_c in self.have_create:
                 if (

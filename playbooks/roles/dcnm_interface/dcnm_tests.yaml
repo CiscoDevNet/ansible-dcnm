@@ -39,6 +39,8 @@
     ansible_eth_intf22: Ethernet1/22
     ansible_eth_intf23: Ethernet1/23
     ansible_eth_intf24: Ethernet1/24
+    ansible_parent_intf1: Ethernet1/25
+    ansible_sub_intf1: Ethernet1/25.100
 
   roles:
     - dcnm_interface

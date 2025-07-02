@@ -40,6 +40,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     mock_ip_sn = test_data.get("mock_ip_sn")
     net_inv_data = test_data.get("net_inv_data")
     fabric_details = test_data.get("fabric_details")
+    fabric_details_vxlan_fabric = test_data.get("fabric_details_vxlan_fabric")
 
     playbook_config = test_data.get("playbook_config")
     playbook_config_incorrect_netid = test_data.get("playbook_config_incorrect_netid")
@@ -214,6 +215,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         elif "_merged_duplicate" in self._testMethodName:
             self.init_data()
             self.run_dcnm_get_url.side_effect = [self.mock_net_attach_object]
+            self.run_dcnm_fabric_details.side_effect = [self.fabric_details_vxlan_fabric]
             self.run_dcnm_send.side_effect = [
                 self.mock_vrf_object,
                 self.mock_net_object,
