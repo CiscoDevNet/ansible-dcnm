@@ -102,12 +102,6 @@ jobs:
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
-    
-    - name: Install Pydantic (v2)
-      run: pip install pydantic==2.11.4
-    
-    - name: Install DeepDiff (v8.5.0)
-      run: pip install deepdiff==8.5.0
 
     - name: Install coverage (v7.3.4)
       run: pip install coverage==7.3.4
