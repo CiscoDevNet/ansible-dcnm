@@ -4135,8 +4135,8 @@ class DcnmVrf:
         if res.get("ERROR"):
             fail = True
             changed = False
-        if res.get('DATA'):
-            for resp_string in res.get('DATA').values():
+        if res.get("DATA"):
+            for resp_string in res.get("DATA").values():
                 if "fail" in resp_string.lower():
                     fail = True
                     changed = False
