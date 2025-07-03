@@ -572,7 +572,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
     get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
-    get_sn_fabric_dict, validate_list_of_dicts)
+    get_sn_fabric_dict, validate_list_of_dicts, search_nested_json)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -4136,19 +4136,10 @@ class DcnmVrf:
             fail = True
             changed = False
         if res.get("DATA"):
-            if isinstance(res.get("DATA"), list):
-                for resp_data_item in res.get("DATA"):
-                    for resp_string in resp_data_item.values():
-                        if "fail" in resp_string.lower():
-                            fail = True
-                            changed = False
-                            return fail, changed
-            elif isinstance(res.get("DATA"), dict):
-                for resp_string in res.get("DATA").values():
-                    if "fail" in resp_string.lower():
-                        fail = True
-                        changed = False
-                        return fail, changed
+            resp_val = search_nested_json(res.get("DATA"), "fail")
+            if resp_val:
+                fail = True
+                changed = False
         if op == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
