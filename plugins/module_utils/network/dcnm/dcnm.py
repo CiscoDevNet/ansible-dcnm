@@ -908,7 +908,7 @@ def search_nested_json(obj, search_string):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, (dict, list)):
-                return search_nested_json(v,search_string)
+                return search_nested_json(v, search_string)
             else:
                 if isinstance(v, (str)) and search_string in v.lower():
                     return True
