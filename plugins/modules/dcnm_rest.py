@@ -99,6 +99,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_send, dcnm_post_request, dcnm_login_retrieve_token)
 
+
 def main():
     # define available arguments/parameters a user can pass to the module
     argument_spec = dict(

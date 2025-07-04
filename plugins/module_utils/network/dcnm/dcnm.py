@@ -816,7 +816,7 @@ def dcnm_get_auth_token(module):
     return conn.get_token()
 
 
-def dcnm_post_request(path, hdrs, **kwargs): 
+def dcnm_post_request(path, hdrs, **kwargs):
     # Keyword Arguments
     verify_flag = kwargs.get("verify")
     upload_files = kwargs.get("files")
