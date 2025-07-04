@@ -84,12 +84,12 @@
 
     - assert:
         that:
-          - 'result.changed == false'
+          - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
 
     - assert:
         that:
@@ -163,12 +163,12 @@
 
     - assert:
         that:
-          - 'result.changed == false'
+          - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
       when: (fabric_type == "VXLANFabric")
 
     - assert:
@@ -184,7 +184,7 @@
     - name: Delete VPC switch pair
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "{{ ansible_it_fabric }}"
-        deploy: true
+        deploy: true                                                # Flag indicating whether changes are to be deployed, Mandatory: False, Type: bool, default: True
         state: deleted                                              # only choose form [merged, replaced, deleted, overridden, query. fetch]
         config:
           - peerOneId: "{{ ansible_switch1 }}"                      # IP Address/Host Name of Peer1 of VPC switch pair, Mandatory: True, Type: str
@@ -204,7 +204,6 @@
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-
 
 ##############################################
 ##                MERGE                     ##
@@ -239,7 +238,7 @@
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["deploy"] | length) == 0'
       when: (fabric_type == "LANClassic")
 
     - assert:
@@ -270,7 +269,7 @@
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 1'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
       when: (fabric_type == "LANClassic")
 
     - assert:
@@ -286,6 +285,8 @@
     - name: Create VPC switch pair without state and deploy flag
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "{{ ansible_it_fabric }}"
+        deploy: true
+        state: merged
         config:
           - peerOneId: "{{ ansible_switch1 }}"                      # IP Address/Host Name of Peer1 of VPC switch pair, Mandatory: True, Type: str
             peerTwoId: "{{ ansible_switch2 }}"                      # IP Address/Host Name of Peer2 of VPC switch pair, Mandatory: True, Type: str
@@ -352,7 +353,7 @@
       cisco.dcnm.dcnm_vpc_pair:
         src_fabric: "{{ ansible_it_fabric }}"
         state: merged                                               # only choose form [merged, replaced, deleted, overridden, query. fetch]
-        deploy: false                                               # Flag indicating whether changes are to be deployed, Mandatory: False, Type: bool, default: True
+        deploy: true                                                # Flag indicating whether changes are to be deployed, Mandatory: False, Type: bool, default: True
         config:
           - peerOneId: "{{ ansible_switch1 }}"                      # IP Address/Host Name of Peer1 of VPC switch pair, Mandatory: True, Type: str
             peerTwoId: "{{ ansible_switch2 }}"                      # IP Address/Host Name of Peer2 of VPC switch pair, Mandatory: True, Type: str
@@ -376,7 +377,7 @@
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 1'
 
     - assert:
         that:
