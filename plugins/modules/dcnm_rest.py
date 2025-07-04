@@ -44,6 +44,12 @@ options:
     - json_data
     required: no
     type: raw
+  encoding:
+    description:
+    - 'Type of body encoding to use for the request'
+    choices: ['json', 'text', 'urlencoded']
+    default: json
+    type: str
 author:
     - Mike Wiebe (@mikewiebe)
 """
@@ -91,9 +97,7 @@ response:
 import json
 from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
-    dcnm_send,
-)
-
+    dcnm_send, dcnm_post_request, dcnm_login_retrieve_token)
 
 def main():
     # define available arguments/parameters a user can pass to the module
@@ -101,6 +105,7 @@ def main():
         method=dict(required=True, choices=["GET", "POST", "PUT", "DELETE"]),
         path=dict(required=True, type="str"),
         data=dict(type="raw", required=False, default=None, aliases=["json_data"]),
+        encoding=dict(type="str", default="json", choices=["json", "text", "urlencoded"]),
     )
 
     # seed the result dict
@@ -116,14 +121,30 @@ def main():
             break
     if data is None:
         data = "{}"
+    encoding = module.params["encoding"]
 
     # Determine if this is valid JSON or not
     try:
         json.loads(data)
-        result["response"] = dcnm_send(module, method, path, data)
+        if encoding == "urlencoded":
+            headers = {}
+            auth_token = dcnm_login_retrieve_token(module)
+            headers.update(auth_token)
+            headers.update({'Content-Type': 'application/x-www-form-urlencoded'})
+            resp = dcnm_post_request(path, headers, data=data, verify=False)
+            result["response"] = resp
+        elif encoding == "json":
+            result["response"] = dcnm_send(module, method, path, data)
+        else:
+            msg = "Encoding type '{}' is not supported for input data".format(encoding)
+            module.fail_json(msg=msg)
     except json.JSONDecodeError:
         # Resend data as text since it's not valid JSON
-        result["response"] = dcnm_send(module, method, path, data, "text")
+        if encoding == "text":
+            result["response"] = dcnm_send(module, method, path, data, "text")
+        else:
+            msg = "Encoding type '{}' is not supported for input data".format(encoding)
+            module.fail_json(msg=msg)
 
     if result["response"]["RETURN_CODE"] >= 400:
         module.fail_json(msg=result["response"])

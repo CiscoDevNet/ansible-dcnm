@@ -803,22 +803,37 @@ def dcnm_get_protocol_and_address(module):
     return [split_url[0], split_url[1]]
 
 
+def dcnm_login_retrieve_token(module):
+    # Login to DCNM and retrieve the authentication token
+    conn = Connection(module._socket_path)
+    conn.login(conn.get_option("remote_user"), conn.get_option("password"))
+    return conn.get_token()
+
+
 def dcnm_get_auth_token(module):
 
     conn = Connection(module._socket_path)
     return conn.get_token()
 
 
-def dcnm_post_request(path, hdrs, verify_flag, upload_files):
+def dcnm_post_request(path, hdrs, **kwargs): 
+    # Keyword Arguments
+    verify_flag = kwargs.get("verify")
+    upload_files = kwargs.get("files")
+    data = kwargs.get("data")
 
-    resp = requests.post(path, headers=hdrs, verify=verify_flag, files=upload_files)
-    json_resp = resp.json()
-    if json_resp:
-        json_resp["RETURN_CODE"] = resp.status_code
-        json_resp["DATA"] = json_resp["message"]
-        json_resp["METHOD"] = "POST"
-        json_resp["REQUEST_PATH"] = path
-        json_resp.pop("message")
+    resp = requests.post(path, data, headers=hdrs, verify=verify_flag, files=upload_files)
+    json_resp = {}
+    json_resp["RETURN_CODE"] = resp.status_code
+    json_resp["METHOD"] = "POST"
+    json_resp["REQUEST_PATH"] = path
+    try:
+        json_resp = resp.json()
+        if json_resp:
+            json_resp["DATA"] = json_resp["message"]
+            json_resp.pop("message")
+    except ValueError:
+        json_resp["DATA"] = resp.text
     return json_resp
 
 

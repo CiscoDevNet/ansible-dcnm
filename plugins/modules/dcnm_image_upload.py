@@ -636,7 +636,7 @@ class DcnmImageUpload:
         if file_path:
             upload_files = {"file": open(file_path, "rb")}
 
-            resp = dcnm_post_request(path, headers, False, upload_files)
+            resp = dcnm_post_request(path, headers, verify=False, files=upload_files)
 
             self.result["response"].append(resp)
 
