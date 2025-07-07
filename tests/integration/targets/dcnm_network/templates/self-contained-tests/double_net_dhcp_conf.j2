@@ -26,7 +26,7 @@
   attach:
   - ip_address: "{{ test_data_common.sw1 }}"
     ports: []
-  deploy: "{{ test_data_common.deploy }}"
+  deploy: {{ test_data_common.deploy | bool }}
 
 - net_name: "{{ test_data_common.net2 }}"
   vrf_name: "{{ test_data_common.net2_vrf }}"
@@ -50,4 +50,4 @@
   attach:
   - ip_address: "{{ test_data_common.sw2 }}"
     ports: []
-  deploy: "{{ test_data_common.deploy }}"
+  deploy: {{ test_data_common.deploy | bool }}
