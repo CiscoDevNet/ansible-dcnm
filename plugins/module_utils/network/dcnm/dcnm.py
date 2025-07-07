@@ -806,6 +806,12 @@ def dcnm_get_protocol_and_address(module):
 def dcnm_login_retrieve_token(module):
     # Login to DCNM and retrieve the authentication token
     conn = Connection(module._socket_path)
+    # If the connection has a token, we will use it.
+    token = conn.get_token()
+    if token is not None:
+        return token
+    # If the connection does not have a token, we will login
+    # using username and password and return the new token.
     conn.login(conn.get_option("remote_user"), conn.get_option("password"))
     return conn.get_token()
 

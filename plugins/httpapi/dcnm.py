@@ -61,6 +61,7 @@ class HttpApi(HttpApiBase):
         self.version = None
         # Retry count for send API
         self.retrycount = 5
+        self.token = None
 
     def get_version(self):
         return self.version
