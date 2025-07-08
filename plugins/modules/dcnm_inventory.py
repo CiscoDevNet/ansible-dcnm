@@ -1928,6 +1928,7 @@ class DcnmInventory:
 
         self.diff_input_format = diff
 
+
 def main():
     """main entry point for module execution"""
 
