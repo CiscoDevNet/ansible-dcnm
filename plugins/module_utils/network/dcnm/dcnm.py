@@ -88,7 +88,33 @@ def validate_ip_address_format(type, item, invalid_params):
             )
 
 
-def validate_list_of_dicts(param_list, spec, module=None):
+def find_extra_params(param_list, spec):
+    """
+    Checks for extra parameters in each dictionary of a list
+    when compared against a specification dictionary.
+
+    Args:
+        param_list: A list of dictionaries containing parameters.
+        spec: A dictionary where keys are the valid parameter names.
+
+    Returns:
+        A list of extra parameters found. If a parameter is found in
+        multiple dictionaries in the list, it will appear multiple
+        times in the result.
+    """
+    invalid_params = []
+    spec_keys = set(spec.keys())
+
+    for params in param_list:
+        param_keys = set(params.keys())
+        extra_keys = param_keys - spec_keys
+        if extra_keys:
+            invalid_params.extend(list(extra_keys))
+
+    return invalid_params
+
+
+def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=False):
     """Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
     spec: an argument spec dict
@@ -99,7 +125,8 @@ def validate_list_of_dicts(param_list, spec, module=None):
     v = validation
     normalized = []
     invalid_params = []
-
+    if check_extra_params:
+        invalid_params = find_extra_params(param_list, spec)
     for list_entry in param_list:
         valid_params_dict = {}
         for param in spec:
