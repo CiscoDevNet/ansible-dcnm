@@ -3103,14 +3103,14 @@ class DcnmVrf:
         if resp.get("RETURN_CODE") != 200:
             msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
             msg += f"caller: {caller}. "
-            msg += f"Failed to get dot1q ID for vrf_lite extension on switch "
+            msg += "Failed to get dot1q ID for vrf_lite extension on switch "
             msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
             msg += f"Response: {resp}"
             self.module.fail_json(msg=msg)
         else:
             msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
             msg += f"caller: {caller}. "
-            msg += f"Successfully got dot1q ID for vrf_lite extension on switch "
+            msg += "Successfully got dot1q ID for vrf_lite extension on switch "
             msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
             msg += f"Response: {resp}"
             self.log.debug(msg)
