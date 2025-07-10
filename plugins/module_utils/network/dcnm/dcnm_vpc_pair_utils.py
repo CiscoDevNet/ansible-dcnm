@@ -393,14 +393,21 @@ def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
         if "_defaulted" in key:
             continue
 
-        if str(hobj.get(key, None)).lower() != str(wobj[key]).lower():
-            if key == "nvPairs":
-                continue
-
-            # We found an object that matched all other key values, but differs in one of the params.
-            mismatch_reasons.append(
-                {key.upper() + "_MISMATCH": [wobj[key], hobj.get(key, None)]}
-            )
+        # Special handling for useVirtualPeerlink to treat None and False as equivalent
+        if key == "useVirtualPeerlink":
+            hval = hobj.get(key, None)
+            wval = wobj[key]
+            if not ((hval is None and wval is False) or (hval is False and wval is None)):
+                if str(hval).lower() != str(wval).lower():
+                    mismatch_reasons.append(
+                        {key.upper() + "_MISMATCH": [wval, hval]}
+                    )
+        elif key != "nvPairs":  # Skip nvPairs here as it's handled separately
+            if str(hobj.get(key, None)).lower() != str(wobj[key]).lower():
+                # We found an object that matched all other key values, but differs in one of the params.
+                mismatch_reasons.append(
+                    {key.upper() + "_MISMATCH": [wobj[key], hobj.get(key, None)]}
+                )
 
     if wobj.get("nvPairs", None) is not None:
 
@@ -409,20 +416,30 @@ def dcnm_vpc_pair_compare_vpc_pair_objects(self, wobj, hobj):
             if "_defaulted" in key:
                 continue
 
-            if (
-                str(hobj["nvPairs"].get(key, None)).lower()
-                != str(wobj["nvPairs"][key]).lower()
-            ):
-                # We found an object that matched all other key values, but differs in one of the params.
-                mismatch_reasons.append(
-                    {
-                        key.upper()
-                        + "_MISMATCH": [
-                            wobj["nvPairs"][key],
-                            hobj["nvPairs"].get(key, None),
-                        ]
-                    }
-                )
+            # Special handling for useVirtualPeerlink in nvPairs to treat None and False as equivalent
+            if key == "useVirtualPeerlink":
+                hval = hobj["nvPairs"].get(key, None)
+                wval = wobj["nvPairs"][key]
+                if not ((hval is None and wval is False) or (hval is False and wval is None)):
+                    if str(hval).lower() != str(wval).lower():
+                        mismatch_reasons.append(
+                            {key.upper() + "_MISMATCH": [wval, hval]}
+                        )
+            else:
+                if (
+                    str(hobj["nvPairs"].get(key, None)).lower()
+                    != str(wobj["nvPairs"][key]).lower()
+                ):
+                    # We found an object that matched all other key values, but differs in one of the params.
+                    mismatch_reasons.append(
+                        {
+                            key.upper()
+                            + "_MISMATCH": [
+                                wobj["nvPairs"][key],
+                                hobj["nvPairs"].get(key, None),
+                            ]
+                        }
+                    )
 
     if mismatch_reasons != []:
         return "DCNM_VPC_PAIR_MERGE", mismatch_reasons, hobj

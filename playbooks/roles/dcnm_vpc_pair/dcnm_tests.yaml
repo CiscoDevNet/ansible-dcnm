@@ -19,7 +19,6 @@
     ansible_switch2: 192.168.1.2
     ansible_peer1_ip: 192.168.1.1
     ansible_peer2_ip: 192.168.1.2
-    ipAddress: 192.168.1.5
     ansible_vxlan_vpc_domain_id: 1000
 
     config:
@@ -43,7 +42,6 @@
           PEER2_PCID: 2
           
           # Additional required fields
-          ipAddress: "{{ ansible_peer1_ip }}"
           peer1Ip: "{{ ansible_peer1_ip }}"
           peer2Ip: "{{ ansible_peer2_ip }}"
           vpcDomainId: "{{ ansible_vxlan_vpc_domain_id }}"

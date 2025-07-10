@@ -119,7 +119,17 @@
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
-      when: (fabric_type == "LANClassic" or fabric_type == "VXLANFabric")
+      when: (fabric_type == "LANClassic")
+
+    - assert:
+        that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["modified"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+      when: (fabric_type == "VXLANFabric")
 
     - assert:
         that:
@@ -136,12 +146,12 @@
 
     - assert:
         that:
-          - 'result.changed == true'
+          - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 1'
+          - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+          - '(result["diff"][0]["deploy"] | length) == 0'
 
     - assert:
         that:
