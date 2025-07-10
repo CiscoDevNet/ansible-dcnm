@@ -3661,7 +3661,7 @@ class DcnmVrf:
             verb = "DELETE"
             self.send_to_controller(action, verb, path, None, log_response=False)
 
-    def release_orphaned_resources(self, vrf, is_rollback=False):
+    def release_orphaned_resources(self, vrf_del_list, is_rollback=False):
         """
         # Summary
 
@@ -3724,7 +3724,7 @@ class DcnmVrf:
         for item in resp["DATA"]:
             if "entityName" not in item:
                 continue
-            if item["entityName"] != vrf:
+            if item["entityName"] not in vrf_del_list:
                 continue
             if item.get("allocatedFlag") is not False:
                 continue
@@ -3769,8 +3769,12 @@ class DcnmVrf:
         self.log.debug(msg)
 
         self.push_diff_delete(is_rollback)
+
+        vrf_del_list = []
         for vrf_name in self.diff_delete:
-            self.release_orphaned_resources(vrf_name, is_rollback)
+            vrf_del_list.append(vrf_name)
+        if vrf_del_list:
+            self.release_orphaned_resources(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback)
         self.push_diff_attach(is_rollback)
