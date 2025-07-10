@@ -3069,6 +3069,54 @@ class DcnmVrf:
 
         return extension_values_list
 
+    def get_vrf_lite_dot1q_id(self, serial_number: str, vrf_name: str, interface: str) -> int:
+        """
+        # Summary
+
+        Given a switch serial, vrf name and ifname, return the dot1q ID
+        reserved for the vrf_lite extension on that switch.
+
+        ## Raises
+
+        Calls fail_json if DNCM fails to reserve the dot1q ID.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"serial_number: {serial_number}"
+        msg += f"vrf name: {vrf_name}"
+        msg += f"interface: {interface}"
+        self.log.debug(msg)
+
+        dot1q_id = None
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
+        path += "/rest/resource-manager/reserve-id"
+        verb = "POST"
+        payload = {"scopeType": "DeviceInterface",
+                   "usageType": "TOP_DOWN_L3_DOT1Q",
+                   "serialNumber": serial_number,
+                   "ifName": interface,
+                   "allocatedTo": vrf_name}
+
+        resp = dcnm_send(self.module, verb, path, json.dumps(payload))
+        if resp.get("RETURN_CODE") != 200:
+            msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
+            msg += f"caller: {caller}. "
+            msg += f"Failed to get dot1q ID for vrf_lite extension on switch "
+            msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {resp}"
+            self.module.fail_json(msg=msg)
+        else:
+            msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
+            msg += f"caller: {caller}. "
+            msg += f"Successfully got dot1q ID for vrf_lite extension on switch "
+            msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {resp}"
+            self.log.debug(msg)
+            dot1q_id = resp.get("DATA")
+            return dot1q_id
+
     def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite) -> dict:
         """
         # Summary
@@ -3199,7 +3247,20 @@ class DcnmVrf:
             if item["user"]["dot1q"]:
                 nbr_dict["DOT1Q_ID"] = str(item["user"]["dot1q"])
             else:
-                nbr_dict["DOT1Q_ID"] = str(item["switch"]["DOT1Q_ID"])
+                dot1q_vlan = self.get_vrf_lite_dot1q_id(
+                    serial_number,
+                    vrf_attach.get("vrfName"),
+                    nbr_dict["IF_NAME"]
+                )
+                if dot1q_vlan is not None:
+                    nbr_dict["DOT1Q_ID"] = str(dot1q_vlan)
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}. "
+                    msg += "Failed to get dot1q ID for vrf_lite extension "
+                    msg += f"on switch {serial_number} for vrf {vrf_attach.get('vrfName')} "
+                    msg += f"and interface {nbr_dict['IF_NAME']}"
+                    self.module.fail_json(msg=msg)
 
             if item["user"]["ipv4_addr"]:
                 nbr_dict["IP_MASK"] = item["user"]["ipv4_addr"]
