@@ -25,4 +25,4 @@
   attach:
   - ip_address: "{{ test_data_common.sw2 }}"
     ports: []
-  deploy: "{{ test_data_common.deploy }}"
+  deploy: {{ test_data_common.deploy | bool }}
