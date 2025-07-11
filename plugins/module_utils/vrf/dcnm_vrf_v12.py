@@ -42,6 +42,7 @@ from .inventory_ipv4_to_serial_number import InventoryIpv4ToSerialNumber
 from .inventory_ipv4_to_switch_role import InventoryIpv4ToSwitchRole
 from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
 from .inventory_serial_number_to_switch_role import InventorySerialNumberToSwitchRole
+from .model_controller_response_fabrics_easy_fabric_get import ControllerResponseFabricsEasyFabricGet
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .model_controller_response_get_fabrics_vrfinfo import ControllerResponseGetFabricsVrfinfoV12
 from .model_controller_response_get_int import ControllerResponseGetIntV12
@@ -51,7 +52,7 @@ from .model_controller_response_vrfs_switches_v12 import ControllerResponseVrfsS
 from .model_controller_response_vrfs_v12 import ControllerResponseVrfsV12, VrfObjectV12
 from .model_have_attach_post_mutate_v12 import HaveAttachPostMutate, HaveLanAttachItem
 from .model_payload_vrfs_attachments import PayloadVrfsAttachmentsLanAttachListItem
-from .model_payload_vrfs_deployments import PayloadfVrfsDeployments
+from .model_payload_vrfs_deployments import PayloadVrfsDeployments
 from .model_playbook_vrf_v12 import PlaybookVrfAttachModel, PlaybookVrfModelV12
 from .model_vrf_detach_payload_v12 import LanDetachListItemV12, VrfDetachPayloadV12
 from .transmute_diff_attach_to_payload import DiffAttachToControllerPayload
@@ -186,9 +187,9 @@ class NdfcVrf12:
         # go out first and complain the VLAN is already in use.
         self.diff_detach: list = []
         self.have_deploy: dict = {}
-        self.have_deploy_model: PayloadfVrfsDeployments = None
+        self.have_deploy_model: PayloadVrfsDeployments = None
         self.want_deploy: dict = {}
-        self.want_deploy_model: PayloadfVrfsDeployments = None
+        self.want_deploy_model: PayloadVrfsDeployments = None
         # A playbook configuration model representing what was changed
         self.diff_deploy: dict = {}
         self.diff_undeploy: dict = {}
@@ -212,10 +213,14 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         self.fabric_data: dict = get_fabric_details(self.module, self.fabric)
-
         msg = "self.fabric_data: "
         msg += f"{json.dumps(self.fabric_data, indent=4, sort_keys=True)}"
         self.log.debug(msg)
+
+        # self.fabric_data_model: ControllerResponseFabricsEasyFabricGet = ControllerResponseFabricsEasyFabricGet(**self.fabric_data)
+        # msg = "ZZZ: self.fabric_data_model: "
+        # msg += f"{json.dumps(self.fabric_data_model.model_dump(), indent=4, sort_keys=True)}"
+        # self.log.debug(msg)
 
         try:
             self.fabric_type: str = self.fabric_data["fabricType"]
@@ -1480,11 +1485,11 @@ class NdfcVrf12:
 
         return copy.deepcopy(have_deploy)
 
-    def populate_have_deploy_model(self, vrf_attach_responses: list[ControllerResponseVrfsAttachmentsDataItem]) -> PayloadfVrfsDeployments:
+    def populate_have_deploy_model(self, vrf_attach_responses: list[ControllerResponseVrfsAttachmentsDataItem]) -> PayloadVrfsDeployments:
         """
-        Return PayloadfVrfsDeployments, which is a model representation of VRFs currently deployed on the controller.
+        Return PayloadVrfsDeployments, which is a model representation of VRFs currently deployed on the controller.
 
-        Uses vrf_attach_responses (list[ControllerResponseVrfsAttachmentsDataItem]) to populate PayloadfVrfsDeployments.
+        Uses vrf_attach_responses (list[ControllerResponseVrfsAttachmentsDataItem]) to populate PayloadVrfsDeployments.
         """
         caller = inspect.stack()[1][3]
 
@@ -1506,7 +1511,7 @@ class NdfcVrf12:
                     if vrf_to_deploy:
                         vrfs_to_update.add(vrf_to_deploy)
 
-        have_deploy_model = PayloadfVrfsDeployments(vrf_names=vrfs_to_update)
+        have_deploy_model = PayloadVrfsDeployments(vrf_names=vrfs_to_update)
 
         msg = "Returning have_deploy_model: "
         msg += f"{json.dumps(have_deploy_model.model_dump(), indent=4, sort_keys=True)}"

@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Test cases for PayloadfVrfsDeployments.
+Test cases for PayloadVrfsDeployments.
 """
 import pytest
 from ansible_collections.cisco.dcnm.plugins.module_utils.vrf.model_payload_vrfs_deployments import (
-    PayloadfVrfsDeployments,
+    PayloadVrfsDeployments,
 )
 
 from ..common.common_utils import does_not_raise
@@ -33,7 +33,7 @@ from ..common.common_utils import does_not_raise
 )
 def test_vrf_payload_deployments_00000(value, expected, valid) -> None:
     """
-    Test PayloadfVrfsDeployments.vrf_names.
+    Test PayloadVrfsDeployments.vrf_names.
 
     :param value: The input value for vrf_names.
     :param expected: The expected string representation of vrf_names after instance.model_dump().
@@ -41,11 +41,11 @@ def test_vrf_payload_deployments_00000(value, expected, valid) -> None:
     """
     if valid:
         with does_not_raise():
-            instance = PayloadfVrfsDeployments(vrf_names=value)
+            instance = PayloadVrfsDeployments(vrfNames=value)
             assert instance.vrf_names == value
             assert instance.model_dump(by_alias=True) == {
                 "vrfNames": expected
             }
     else:
         with pytest.raises(ValueError):
-            PayloadfVrfsDeployments(vrf_names=value)
+            PayloadVrfsDeployments(vrfNames=value)

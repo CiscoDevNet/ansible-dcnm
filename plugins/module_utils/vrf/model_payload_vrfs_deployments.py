@@ -8,7 +8,7 @@ Validation for payloads sent to the following controller endpoint:
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
 
-class PayloadfVrfsDeployments(BaseModel):
+class PayloadVrfsDeployments(BaseModel):
     """
     # Summary
 
