@@ -657,7 +657,7 @@ def main() -> None:
     argument_spec["fabric"]["type"] = "str"
     argument_spec["state"] = {}
     argument_spec["state"]["choices"] = [x.value for x in AnsibleStates]
-    argument_spec["state"]["default"] = AnsibleStates.merged.value
+    argument_spec["state"]["default"] = AnsibleStates.MERGED.value
 
     module: AnsibleModule = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 

@@ -1,6 +1,7 @@
 """
 Values used by Ansible
 """
+
 from enum import Enum
 
 
@@ -42,7 +43,7 @@ class AnsibleStates(Enum):
     With overridden state, all resources that are not specified in the
     Ansible task are removed, and the specified resources are created or
     updated as specified in the Ansible task.
-    
+
     For idempotency, each resource is modified only if its current
     properties differ from the properties specified in the Ansible
     task.
@@ -69,8 +70,9 @@ class AnsibleStates(Enum):
     Ansible task are not removed or modified.
 
     """
-    deleted = "deleted"
-    merged = "merged"
-    overridden = "overridden"
-    query = "query"
-    replaced = "replaced"
+
+    DELETED = "deleted"
+    MERGED = "merged"
+    OVERRIDDEN = "overridden"
+    QUERY = "query"
+    REPLACED = "replaced"
