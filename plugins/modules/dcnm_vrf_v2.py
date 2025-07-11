@@ -597,6 +597,7 @@ NdfcVrf12 = None  # pylint: disable=invalid-name
 
 try:
     from ..module_utils.vrf.dcnm_vrf_v11 import DcnmVrf11
+
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
@@ -605,6 +606,7 @@ except ImportError as import_error:
 
 try:
     from ..module_utils.vrf.dcnm_vrf_v12 import NdfcVrf12
+
     HAS_FIRST_PARTY_IMPORTS.add(True)
 except ImportError as import_error:
     HAS_FIRST_PARTY_IMPORTS.add(False)
