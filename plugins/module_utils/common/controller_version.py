@@ -110,9 +110,7 @@ class ControllerVersion:
             raise ValueError(msg)
 
     def _get(self, item):
-        return self.conversion.make_none(
-            self.conversion.make_boolean(self.response_data.get(item))
-        )
+        return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
 
     @property
     def dev(self):
@@ -237,11 +235,15 @@ class ControllerVersion:
 
         Possible values:
             if version is 12.1.2e, return "12"
+            if version is 12.4.1.245, return "12"
             None
         """
         if self.version is None:
             return None
-        return (self._get("version").split("."))[0]
+        version_parts = self._get("version").split(".")
+        if len(version_parts) >= 1:
+            return version_parts[0]
+        return None
 
     @property
     def version_minor(self):
@@ -253,12 +255,16 @@ class ControllerVersion:
         https://semver.org
 
         Possible values:
-            if version is 12.1.2e, return 1
+            if version is 12.1.2e, return "1"
+            if version is 12.4.1.245, return "4"
             None
         """
         if self.version is None:
             return None
-        return (self._get("version").split("."))[1]
+        version_parts = self._get("version").split(".")
+        if len(version_parts) >= 2:
+            return version_parts[1]
+        return None
 
     @property
     def version_patch(self):
@@ -270,12 +276,16 @@ class ControllerVersion:
         https://semver.org
 
         Possible values:
-            if version is 12.1.2e, return 2e
+            if version is 12.1.2e, return "2e"
+            if version is 12.4.1.245, return "1"
             None
         """
         if self.version is None:
             return None
-        return (self._get("version").split("."))[2]
+        version_parts = self._get("version").split(".")
+        if len(version_parts) >= 3:
+            return version_parts[2]
+        return None
 
     @property
     def is_controller_version_4x(self) -> bool:
@@ -288,13 +298,39 @@ class ControllerVersion:
         method_name = inspect.stack()[0][3]
 
         result = None
-        if int(self.version_major) == 12 and int(self.version_minor) < 3:
-            result = False
-        else:
+        try:
+            major = self.version_major
+            minor = self.version_minor
+
+            if major is None or minor is None:
+                # If we can't determine version, assume it's a newer version
+                result = True
+            else:
+                # Extract numeric part only from minor version in case of formats like "2e"
+                minor_numeric = ""
+                for char in minor:
+                    if char.isdigit():
+                        minor_numeric += char
+                    else:
+                        break
+
+                if not minor_numeric:
+                    # If no numeric part found, assume it's a newer version
+                    result = True
+                else:
+                    if int(major) == 12 and int(minor_numeric) < 3:
+                        result = False
+                    else:
+                        result = True
+        except (ValueError, TypeError) as e:
+            # If version parsing fails, assume it's a newer version
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Error parsing version {self.version}: {e}. Assuming version 4.x"
+            self.log.warning(msg)
             result = True
 
         msg = f"{self.class_name}.{method_name}: "
-        msg = f"self.version: {self.version}, "
+        msg += f"self.version: {self.version}, "
         msg += f"Controller is version 4.x: {result}"
         self.log.debug(msg)
 
