@@ -142,24 +142,15 @@ class ControllerVersion:
             msg += f"{self.rest_send.response_current}"
             raise ValueError(msg)
 
-    def _get(self, item):
-        # Handle the case where response_data might be a string instead of a dictionary
-        if isinstance(self.response_data, str):
-            # If response_data is a string, try to parse it as JSON
-            import json
+        # Ensure response_data is a dictionary
+        if not isinstance(self._response_data, dict):
+            msg = f"{self.class_name}.refresh() failed: "
+            msg += f"Expected response data to be a dictionary, got {type(self._response_data).__name__}. "
+            msg += f"Data: {self._response_data}"
+            raise ValueError(msg)
 
-            try:
-                data = json.loads(self.response_data)
-                return self.conversion.make_none(self.conversion.make_boolean(data.get(item)))
-            except json.JSONDecodeError:
-                # If JSON parsing fails, we can't extract the item
-                return None
-        elif isinstance(self.response_data, dict):
-            # Normal case: response_data is a dictionary
-            return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
-        else:
-            # If response_data is neither string nor dict, return None
-            return None
+    def _get(self, item):
+        return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
 
     @property
     def dev(self):
