@@ -54,6 +54,9 @@ class ControllerVersion:
     ```
 
     ### Response
+
+    #### ND 3.x
+
     ```json
         {
             "version": "12.1.2e",
@@ -62,10 +65,40 @@ class ControllerVersion:
             "dev": false,
             "isHaEnabled": false,
             "install": "EASYFABRIC",
-            "uuid": "f49e6088-ad4f-4406-bef6-2419de914ff1",
+            "uuid": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
             "is_upgrade_inprogress": false
         }
     ```
+
+    #### ND 4.1 EFT 138c
+
+    ```json
+        {
+            "version": "12.4.1.225",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+    ```
+
+    #### ND 4.1 EFT 156b
+
+    ```json
+        {
+            "version": "12.4.1.245",
+            "mode": "",
+            "isMediaController": false,
+            "dev": false,
+            "isHaEnabled": false,
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": false
+        }
+
     """
 
     def __init__(self):
