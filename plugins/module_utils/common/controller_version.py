@@ -143,7 +143,23 @@ class ControllerVersion:
             raise ValueError(msg)
 
     def _get(self, item):
-        return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
+        # Handle the case where response_data might be a string instead of a dictionary
+        if isinstance(self.response_data, str):
+            # If response_data is a string, try to parse it as JSON
+            import json
+
+            try:
+                data = json.loads(self.response_data)
+                return self.conversion.make_none(self.conversion.make_boolean(data.get(item)))
+            except json.JSONDecodeError:
+                # If JSON parsing fails, we can't extract the item
+                return None
+        elif isinstance(self.response_data, dict):
+            # Normal case: response_data is a dictionary
+            return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
+        else:
+            # If response_data is neither string nor dict, return None
+            return None
 
     @property
     def dev(self):
@@ -273,7 +289,7 @@ class ControllerVersion:
         """
         if self.version is None:
             return None
-        version_parts = self._get("version").split(".")
+        version_parts = self.version.split(".")
         if len(version_parts) >= 1:
             return version_parts[0]
         return None
@@ -294,7 +310,7 @@ class ControllerVersion:
         """
         if self.version is None:
             return None
-        version_parts = self._get("version").split(".")
+        version_parts = self.version.split(".")
         if len(version_parts) >= 2:
             return version_parts[1]
         return None
@@ -315,7 +331,7 @@ class ControllerVersion:
         """
         if self.version is None:
             return None
-        version_parts = self._get("version").split(".")
+        version_parts = self.version.split(".")
         if len(version_parts) >= 3:
             return version_parts[2]
         return None
