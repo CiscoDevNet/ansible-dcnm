@@ -309,6 +309,17 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          disable_lacp_suspend_individual:
+            description:
+            - If disabled, lacp will put the port to individual state and not suspend the port
+              in case the port does not get LACP BPDU from the peer ports in the port-channel
+            type: bool
+            default: false
+          enable_lacp_vpc_convergence:
+            description:
+            - Enable lacp convergence for vPC port-channels
+            type: bool
+            default: false
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -1920,6 +1931,8 @@ class DcnmIntf:
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
             "ENABLE_ORPHAN_PORT": "orphan_port",
+            "DISABLE_LACP_SUSPEND": "disable_lacp_suspend_individual",
+            "ENABLE_LACP_VPC_CONV": "enable_lacp_vpc_convergence",
         }
 
         # New Interfaces
@@ -2371,6 +2384,8 @@ class DcnmIntf:
             peer1_description=dict(type="str", default=""),
             peer2_description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
+            enable_lacp_vpc_convergence=dict(type="bool", default=False),
         )
 
         vpc_prof_spec_access = dict(
@@ -3089,6 +3104,14 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        if delem[profile].get("disable_lacp_suspend_individual"):
+            intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
+        if delem[profile].get("enable_lacp_vpc_convergence"):
+            intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = delem[profile]["enable_lacp_vpc_convergence"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = False
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3883,8 +3906,12 @@ class DcnmIntf:
                 t_e2 = e2.lower()
             else:
                 t_e2 = e2
-
-        if k == 'ENABLE_ORPHAN_PORT':
+        boolean_keys = [
+            "ENABLE_ORPHAN_PORT",
+            "DISABLE_LACP_SUSPEND",
+            "ENABLE_LACP_VPC_CONV"
+        ]
+        if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
@@ -4162,7 +4189,8 @@ class DcnmIntf:
                                     nv_keys = list(want[k][0][ik].keys())
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
-                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE"]
+                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE",
+                                                     "DISABLE_LACP_SUSPEND", "ENABLE_LACP_VPC_CONV"]
 
                                     for key in keys_to_check:
                                         # Remove the key from nv_keys only if it exists and is not present in 'have'
