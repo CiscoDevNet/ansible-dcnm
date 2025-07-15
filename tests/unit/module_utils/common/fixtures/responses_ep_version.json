@@ -352,6 +352,22 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
         "MESSAGE": "OK",
         "DATA": {
+            "version": "12.4.1.245",
+            "mode": "",
+            "isMediaController": "false",
+            "dev": "false",
+            "isHaEnabled": "false",
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": "false"
+        }
+    },
+    "test_controller_version_00220c": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
+        "MESSAGE": "OK",
+        "DATA": {
             "mode": "LAN",
             "isMediaController": "false",
             "dev": "false",
@@ -377,6 +393,22 @@
         }
     },
     "test_controller_version_00230b": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
+        "MESSAGE": "OK",
+        "DATA": {
+            "version": "12.4.1.245",
+            "mode": "",
+            "isMediaController": "false",
+            "dev": "false",
+            "isHaEnabled": "false",
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": "false"
+        }
+    },
+    "test_controller_version_00230c": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
@@ -412,6 +444,22 @@
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
         "MESSAGE": "OK",
         "DATA": {
+            "version": "12.4.1.245",
+            "mode": "",
+            "isMediaController": "false",
+            "dev": "false",
+            "isHaEnabled": "false",
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": "false"
+        }
+    },
+    "test_controller_version_00240c": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
+        "MESSAGE": "OK",
+        "DATA": {
             "mode": "LAN",
             "isMediaController": "false",
             "dev": "false",
@@ -437,6 +485,22 @@
         }
     },
     "test_controller_version_00250b": {
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",
+        "MESSAGE": "OK",
+        "DATA": {
+            "version": "12.4.1.245",
+            "mode": "",
+            "isMediaController": "false",
+            "dev": "false",
+            "isHaEnabled": "false",
+            "install": "",
+            "uuid": "",
+            "is_upgrade_inprogress": "false"
+        }
+    },
+    "test_controller_version_00250c": {
         "RETURN_CODE": 200,
         "METHOD": "GET",
         "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/fm/about/version",

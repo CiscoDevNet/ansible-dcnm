@@ -29,17 +29,18 @@ __author__ = "Allen Robel"
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import \
-    ControllerResponseError
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.exceptions import ControllerResponseError
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import (
-    MockAnsibleModule, ResponseGenerator, controller_version_fixture,
-    does_not_raise, params, responses_ep_version)
+    MockAnsibleModule,
+    ResponseGenerator,
+    controller_version_fixture,
+    does_not_raise,
+    params,
+    responses_ep_version,
+)
 
 
 def test_controller_version_00000(controller_version) -> None:
@@ -634,13 +635,14 @@ def test_controller_version_00210(controller_version, key, expected) -> None:
 
 
 @pytest.mark.parametrize(
-    "key, expected",
+    "key, expected, raises",
     [
-        ("test_controller_version_00220a", "12.1.3b"),
-        ("test_controller_version_00220b", None),
+        ("test_controller_version_00220a", "12.1.3b", False),
+        ("test_controller_version_00220b", "12.4.1.245", False),
+        ("test_controller_version_00220c", None, True),
     ],
 )
-def test_controller_version_00220(controller_version, key, expected) -> None:
+def test_controller_version_00220(controller_version, key, expected, raises) -> None:
     """
     ### Classes and Methods
 
@@ -656,12 +658,13 @@ def test_controller_version_00220(controller_version, key, expected) -> None:
     ``version`` returns:
 
     -   Its value, if the "version" key is present in the controller response.
-    -   None, if the "version" key is absent from the controller response.
+    -   ValueError, if the "version" key is absent from the controller response.
 
     ### Expected result
 
-    1. test_controller_version_00220a == "12.1.3b"
-    2. test_controller_version_00220b is None
+    1. test_controller_version_00220a == "12.1.3b"    (ND 3.x format)
+    2. test_controller_version_00220b == "12.4.1.245" (ND 4.1 format)
+    2. test_controller_version_00220b == None         (raises ValueError)
     """
 
     def responses():
@@ -680,17 +683,22 @@ def test_controller_version_00220(controller_version, key, expected) -> None:
         instance = controller_version
         instance.rest_send = rest_send
         instance.refresh()
-    assert instance.version == expected
+    if not raises:
+        assert instance.version == expected
+    else:
+        match = "ControllerVersion.version: Version information not available in controller response"
+        pytest.raises(ValueError, match=match)
 
 
 @pytest.mark.parametrize(
-    "key, expected",
+    "key, expected, raises",
     [
-        ("test_controller_version_00230a", "12"),
-        ("test_controller_version_00230b", None),
+        ("test_controller_version_00230a", "12", False),
+        ("test_controller_version_00230b", "12", False),
+        ("test_controller_version_00230c", None, True),
     ],
 )
-def test_controller_version_00230(controller_version, key, expected) -> None:
+def test_controller_version_00230(controller_version, key, expected, raises) -> None:
     """
     ### Classes and Methods
 
@@ -709,7 +717,8 @@ def test_controller_version_00230(controller_version, key, expected) -> None:
     ### Expected result
 
     1. test_controller_version_00230a == "12"
-    2. test_controller_version_00230b is None
+    2. test_controller_version_00230b == "12"
+    2. test_controller_version_00230c == None (raises ValueError)
     """
 
     def responses():
@@ -728,17 +737,22 @@ def test_controller_version_00230(controller_version, key, expected) -> None:
         instance = controller_version
         instance.rest_send = rest_send
         instance.refresh()
-    assert instance.version_major == expected
+    if not raises:
+        assert instance.version_major == expected
+    else:
+        match = "ControllerVersion.version: Version information not available in controller response"
+        pytest.raises(ValueError, match=match)
 
 
 @pytest.mark.parametrize(
-    "key, expected",
+    "key, expected, raises",
     [
-        ("test_controller_version_00240a", "1"),
-        ("test_controller_version_00240b", None),
+        ("test_controller_version_00240a", "1", False),
+        ("test_controller_version_00240b", "4", False),
+        ("test_controller_version_00240c", None, True),
     ],
 )
-def test_controller_version_00240(controller_version, key, expected) -> None:
+def test_controller_version_00240(controller_version, key, expected, raises) -> None:
     """
     ### Classes and Methods
 
@@ -758,7 +772,8 @@ def test_controller_version_00240(controller_version, key, expected) -> None:
     ### Expected result
 
     1. test_controller_version_00240a == "1"
-    2. test_controller_version_00240b is None
+    1. test_controller_version_00240b == "4"
+    2. test_controller_version_00240c == None (raises ValueError)
     """
 
     def responses():
@@ -777,17 +792,22 @@ def test_controller_version_00240(controller_version, key, expected) -> None:
         instance = controller_version
         instance.rest_send = rest_send
         instance.refresh()
-    assert instance.version_minor == expected
+    if not raises:
+        assert instance.version_minor == expected
+    else:
+        match = "ControllerVersion.version: Version information not available in controller response"
+        pytest.raises(ValueError, match=match)
 
 
 @pytest.mark.parametrize(
-    "key, expected",
+    "key, expected, raises",
     [
-        ("test_controller_version_00250a", "3b"),
-        ("test_controller_version_00250b", None),
+        ("test_controller_version_00250a", "3b", False),
+        ("test_controller_version_00250b", "1", False),
+        ("test_controller_version_00250c", None, True),
     ],
 )
-def test_controller_version_00250(controller_version, key, expected) -> None:
+def test_controller_version_00250(controller_version, key, expected, raises) -> None:
     """
     ### Classes and Methods
 
@@ -807,7 +827,8 @@ def test_controller_version_00250(controller_version, key, expected) -> None:
     ### Expected result
 
     1. test_controller_version_00250a == "3b"
-    2. test_controller_version_00250b is None
+    2. test_controller_version_00250b == "1"
+    3. test_controller_version_00250c == None (raises ValueError)
     """
 
     def responses():
@@ -826,7 +847,11 @@ def test_controller_version_00250(controller_version, key, expected) -> None:
         instance = controller_version
         instance.rest_send = rest_send
         instance.refresh()
-    assert instance.version_patch == expected
+    if not raises:
+        assert instance.version_patch == expected
+    else:
+        match = "ControllerVersion.version: Version information not available in controller response"
+        pytest.raises(ValueError, match=match)
 
 
 @pytest.mark.parametrize(
