@@ -1861,8 +1861,6 @@ class DcnmInventory:
                 item["preprovision_serial"] = poap.get("preprovisionSerial")
                 preprovision_list.append(item)
 
-            diff.append(item)
-
         if bootstrap_list:
             diff.append({
                 "action": "bootstrap",
