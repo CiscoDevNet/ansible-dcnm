@@ -373,11 +373,10 @@ class ControllerVersion:
             else:
                 result = True
         except (ValueError, TypeError) as e:
-            # If version parsing fails, assume it's a newer version
+            # If version parsing fails, re-raise as ValueError - do not assume version
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Error parsing version {self.version}: {e}. Assuming version 4.x"
-            self.log.warning(msg)
-            result = True
+            msg += f"Error parsing version {self.version}: {e}"
+            raise ValueError(msg) from e
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"self.version: {self.version}, "
