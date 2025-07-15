@@ -583,6 +583,7 @@ dcnm_vrf_paths = {
         "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
         "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}"
     },
     12: {
         "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -590,6 +591,7 @@ dcnm_vrf_paths = {
         "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
         "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
     },
 }
 
@@ -3763,6 +3765,19 @@ class DcnmVrf:
         # attachment being deleted is re-used on a new vrf attachment being
         # created. This is needed specially for state: overridden
 
+        for vrf_name in self.diff_delete:
+            path = self.paths["GET_NET_VRF"].format(self.fabric, vrf_name)
+            resp = dcnm_send(self.module, "GET", path)
+            if resp.get("DATA") is None:
+                msg = f"Invalid Response from Controller. {resp}"
+                self.module.fail_json(msg=msg)
+            elif resp["DATA"] != []:
+                msg = f"{vrf_name} in fabric: {self.fabric} has associated network attachments. "
+                self.log.debug("%s. Number of networks: %d", msg, len(resp['DATA']))
+                msg += "Please remove the network attachments "
+                msg += "before deleting the VRF. (maybe using dcnm_network module)"
+                self.module.fail_json(msg=msg)
+
         self.push_diff_detach(is_rollback)
         self.push_diff_undeploy(is_rollback)
 
@@ -3796,7 +3811,7 @@ class DcnmVrf:
         for vrf in self.diff_delete:
             ok_to_delete = False
             path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-
+            retry_count = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
             while not ok_to_delete:
                 resp = dcnm_send(self.module, "GET", path)
                 ok_to_delete = True
@@ -3816,31 +3831,18 @@ class DcnmVrf:
                     ):
                         self.diff_delete.update({vrf: "OUT-OF-SYNC"})
                         break
-                    if (
-                        attach["lanAttachState"] == "DEPLOYED"
-                        and attach["isLanAttached"] is True
-                    ):
-                        vrf_name = attach.get("vrfName", "unknown")
-                        fabric_name = attach.get("fabricName", "unknown")
-                        switch_ip = attach.get("ipAddress", "unknown")
-                        switch_name = attach.get("switchName", "unknown")
-                        vlan_id = attach.get("vlanId", "unknown")
-                        msg = f"Network attachments associated with vrf {vrf_name} "
-                        msg += "must be removed (e.g. using the dcnm_network module) "
-                        msg += "prior to deleting the vrf. "
-                        msg += f"Details: fabric_name: {fabric_name}, "
-                        msg += f"vrf_name: {vrf_name}. "
-                        msg += "Network attachments found on "
-                        msg += f"switch_ip: {switch_ip}, "
-                        msg += f"switch_name: {switch_name}, "
-                        msg += f"vlan_id: {vlan_id}"
-                        self.module.fail_json(msg=msg)
                     if attach["lanAttachState"] != "NA":
                         time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                         self.diff_delete.update({vrf: "DEPLOYED"})
                         ok_to_delete = False
                         break
                     self.diff_delete.update({vrf: "NA"})
+                if retry_count <= 0:
+                    msg = "Timeout waiting for VRF to be ready for deletion. "
+                    msg += f"vrf: {vrf}, "
+                    msg += f"resp: {resp}"
+                    self.module.fail_json(msg=msg)
+                retry_count -= 1
 
     def attach_spec(self):
         """

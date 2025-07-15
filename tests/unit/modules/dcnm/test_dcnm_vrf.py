@@ -43,6 +43,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     fabric_details_mfd = test_data.get("fabric_details_mfd")
     fabric_details_vxlan = test_data.get("fabric_details_vxlan")
 
+    mock_net_from_vrf_empty = test_data.get("mock_net_from_vrf_empty")
     mock_vrf_attach_object_del_not_ready = test_data.get(
         "mock_vrf_attach_object_del_not_ready"
     )
@@ -451,6 +452,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_ov_att1_only,
                 self.mock_vrf_attach_get_ext_object_ov_att2_only,
+                self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
@@ -488,6 +490,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
@@ -519,6 +522,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
@@ -539,6 +543,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_object_dcnm_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.mock_net_from_vrf_empty,
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 obj1,
