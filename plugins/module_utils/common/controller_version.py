@@ -362,25 +362,16 @@ class ControllerVersion:
             minor = self.version_minor
 
             if major is None or minor is None:
-                # If we can't determine version, assume it's a newer version
-                result = True
-            else:
-                # Extract numeric part only from minor version in case of formats like "2e"
-                minor_numeric = ""
-                for char in minor:
-                    if char.isdigit():
-                        minor_numeric += char
-                    else:
-                        break
+                # This should never happen due to early validation, but if it does, raise an error
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Unexpected None values: major={major}, minor={minor}"
+                raise ValueError(msg)
 
-                if not minor_numeric:
-                    # If no numeric part found, assume it's a newer version
-                    result = True
-                else:
-                    if int(major) == 12 and int(minor_numeric) < 3:
-                        result = False
-                    else:
-                        result = True
+            # version_minor is always numeric, so we can convert directly to int
+            if int(major) == 12 and int(minor) < 3:
+                result = False
+            else:
+                result = True
         except (ValueError, TypeError) as e:
             # If version parsing fails, assume it's a newer version
             msg = f"{self.class_name}.{method_name}: "
