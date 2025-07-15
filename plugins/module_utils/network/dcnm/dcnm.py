@@ -886,3 +886,69 @@ def find_dict_in_list_by_key_value(search: list, key: str, value: str):
     """
     match = (d for d in search if d[key] == value)
     return next(match, None)
+
+
+def search_nested_json(obj, search_string):
+    """
+    # Summary
+
+    Recursively flattens a nested dictionary or list and searches all values
+    for the given search_string.
+
+    ## Raises
+
+    None
+
+    ## Parameters
+
+    -   obj (dict or list): The dictionary or list to flatten.
+    -   search_string (string): string to search in the values.
+
+    ## Returns
+
+    true or false, based on the presence of the search
+    string in the nested json values.
+
+    ## Usage
+
+    ```python
+    content = {
+        "key1": "value1",
+        "key2": {
+            "subkey1": "subvalue1",
+            "subkey2": ["item1", "item2", "search_string"],
+        },
+        "key3": ["item3", {"subkey3": "search_string"}],
+    }
+    search_string = "search_string"
+    result = search_nested_json(content, search_string)
+    print(result)
+    # -> True
+
+    search_string = "not_found"
+    result = search_nested_json(content, search_string)
+    print(result)
+    # -> False
+    ```
+
+    """
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, (dict, list)):
+                if search_nested_json(v, search_string):
+                    return True
+            else:
+                if isinstance(v, (str)) and search_string in v.lower():
+                    return True
+    elif isinstance(obj, list):
+        for item in obj:
+            if isinstance(item, (dict, list)):
+                if search_nested_json(item, search_string):
+                    return True
+            else:
+                if isinstance(item, (str)) and search_string in item.lower():
+                    return True
+    elif isinstance(obj, str):
+        if search_string in obj.lower():
+            return True
+    return False
