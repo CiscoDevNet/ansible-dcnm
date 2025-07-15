@@ -3772,7 +3772,8 @@ class DcnmVrf:
                 msg = f"Invalid Response from Controller. {resp}"
                 self.module.fail_json(msg=msg)
             elif resp["DATA"] != []:
-                msg = "VRF has associated network attachments. "
+                msg = f"{vrf_name} in fabric: {self.fabric} has associated network attachments. "
+                self.log.debug("%s. Number of networks: %d", msg, len(resp['DATA']))
                 msg += "Please remove the network attachments "
                 msg += "before deleting the VRF. (maybe using dcnm_network module)"
                 self.module.fail_json(msg=msg)
@@ -3810,7 +3811,7 @@ class DcnmVrf:
         for vrf in self.diff_delete:
             ok_to_delete = False
             path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-            retry_count = 20
+            retry_count = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
             while not ok_to_delete:
                 resp = dcnm_send(self.module, "GET", path)
                 ok_to_delete = True
