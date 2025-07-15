@@ -152,6 +152,27 @@ class ControllerVersion:
     def _get(self, item):
         return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
 
+    def _validate_and_split_version(self):
+        """
+        Validate version format and return split version parts.
+
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
+
+        Returns:
+            list: Version parts split by '.'
+
+        Raises:
+            ValueError: If version format is unexpected
+        """
+        version_parts = self.version.split(".")
+        if len(version_parts) not in [3, 4]:
+            msg = f"{self.class_name}._validate_and_split_version: "
+            msg += f"Unexpected version format '{self.version}'. "
+            msg += f"Expected 3 or 4 parts (w.x.y or w.x.y.z), got {len(version_parts)} parts"
+            raise ValueError(msg)
+        return version_parts
+
     @property
     def dev(self):
         """
@@ -256,76 +277,74 @@ class ControllerVersion:
     def version(self):
         """
         Return the controller version, if it exists.
-        Return None otherwise
+        Raise ValueError if version is not available.
 
         Possible values:
             version, e.g. "12.1.2e"
-            None
         """
-        return self._get("version")
+        version = self._get("version")
+        if version is None:
+            msg = f"{self.class_name}.version: "
+            msg += "Version information not available in controller response"
+            raise ValueError(msg)
+        return version
 
     @property
     def version_major(self):
         """
-        Return the controller major version as a string, if it exists.
-        Return None otherwise
+        Return the controller major version as a string.
+        Raise ValueError if version format is unexpected.
 
         We are assuming semantic versioning based on:
         https://semver.org
+
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
 
         Possible values:
             if version is 12.1.2e, return "12"
             if version is 12.4.1.245, return "12"
-            None
         """
-        if self.version is None:
-            return None
-        version_parts = self.version.split(".")
-        if len(version_parts) >= 1:
-            return version_parts[0]
-        return None
+        version_parts = self._validate_and_split_version()
+        return version_parts[0]
 
     @property
     def version_minor(self):
         """
-        Return the controller minor version as a string, if it exists.
-        Return None otherwise
+        Return the controller minor version as a string.
+        Raise ValueError if version format is unexpected.
 
         We are assuming semantic versioning based on:
         https://semver.org
+
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
 
         Possible values:
             if version is 12.1.2e, return "1"
             if version is 12.4.1.245, return "4"
-            None
         """
-        if self.version is None:
-            return None
-        version_parts = self.version.split(".")
-        if len(version_parts) >= 2:
-            return version_parts[1]
-        return None
+        version_parts = self._validate_and_split_version()
+        return version_parts[1]
 
     @property
     def version_patch(self):
         """
-        Return the controller patch version as a string, if it exists.
-        Return None otherwise
+        Return the controller patch version as a string.
+        Raise ValueError if version format is unexpected.
 
         We are assuming semantic versioning based on:
         https://semver.org
 
+        Expected formats:
+            w.x.y (3 parts) or w.x.y.z (4 parts)
+
         Possible values:
             if version is 12.1.2e, return "2e"
             if version is 12.4.1.245, return "1"
-            None
         """
-        if self.version is None:
-            return None
-        version_parts = self.version.split(".")
-        if len(version_parts) >= 3:
-            return version_parts[2]
-        return None
+        version_parts = self._validate_and_split_version()
+        return version_parts[2]
 
     @property
     def is_controller_version_4x(self) -> bool:
