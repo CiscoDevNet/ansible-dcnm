@@ -48,6 +48,7 @@ dcnm_template_type_xlations = {
     "long": "int",
     "ipV4Address": "ipv4",
     "ipV6Address": "ipv6",
+    "ipAddress": "ipv4",
     "interfaceRange": "list",
     "boolean": "bool",
     "enum": "str",
