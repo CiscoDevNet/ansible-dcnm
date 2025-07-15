@@ -872,7 +872,7 @@ class DcnmInventory:
                     if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
                         match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
                 if match is None:
-                    return match_found
+                    continue
                 want_serial_num = match.groups()[0]
                 if have_c["switches"][0]["serialNumber"] == want_serial_num:
                     if (
