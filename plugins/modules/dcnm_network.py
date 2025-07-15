@@ -550,6 +550,8 @@ class DcnmNetwork:
         else:
             self.paths = self.dcnm_network_paths[self.dcnm_version]
 
+        self.check_extra_params = True
+
         self.result = dict(changed=False, diff=[], response=[], warnings=[])
 
         self.failed_to_rollback = False
@@ -2620,10 +2622,10 @@ class DcnmNetwork:
             if self.config:
                 msg = None
                 # Validate net params
-                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
                 for net in valid_net:
                     if net.get("attach"):
-                        valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec)
+                        valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
                         net["attach"] = valid_att
                         invalid_params.extend(invalid_att)
 
@@ -2691,10 +2693,10 @@ class DcnmNetwork:
             if self.config:
                 msg = None
                 # Validate net params
-                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec)
+                valid_net, invalid_params = validate_list_of_dicts(self.config, net_spec, check_extra_params=self.check_extra_params)
                 for net in valid_net:
                     if net.get("attach"):
-                        valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec)
+                        valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
                         net["attach"] = valid_att
                         for attach in net["attach"]:
                             attach["deploy"] = net["deploy"]
@@ -2705,7 +2707,8 @@ class DcnmNetwork:
                                     msg = "Invalid parameters in playbook: tor_ports configurations are supported only on NDFC"
                                     self.module.fail_json(msg=msg)
 
-                                valid_tor_att, invalid_tor_att = validate_list_of_dicts(attach["tor_ports"], tor_att_spec)
+                                valid_tor_att, invalid_tor_att = validate_list_of_dicts(attach["tor_ports"], tor_att_spec,
+                                                                                        check_extra_params=self.check_extra_params)
                                 attach["tor_ports"] = valid_tor_att
                                 for tor in attach["tor_ports"]:
                                     if tor.get("ports"):

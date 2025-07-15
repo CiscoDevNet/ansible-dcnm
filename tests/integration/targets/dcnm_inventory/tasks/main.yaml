@@ -1,41 +1,16 @@
 ---
+- name: Discover NDFC Test Cases
+  ansible.builtin.find:
+    paths: "{{ role_path }}/tests/dcnm"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: ndfc_testcases
 
-- set_fact:
-    controller_version: "Unable to determine controller version"
-  tags: sanity
+- name: Build List of Test Items
+  ansible.builtin.set_fact: test_items="{{ ndfc_testcases.files | map(attribute='path') | list }}"
 
-- name: Determine version of DCNM or NDFC
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: /appcenter/cisco/ndfc/api/about/version
-  register: result
-  ignore_errors: yes
-  tags: sanity
-
-- set_fact:
-    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
-  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
-  tags: sanity
-
-- name: Determine version of DCNM or NDFC
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: /fm/fmrest/about/version
-  register: result
-  ignore_errors: yes
-  tags: sanity
-
-- set_fact:
-    controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
-  when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
-  tags: sanity
-
-# No need to continue if we cannot determine the DCNM/NDFC controller version
-- assert:
-    that:
-    - 'controller_version != "Unable to determine controller version"'
-  tags: sanity
-
-- { include: dcnm.yaml, tags: ['dcnm'] }
+- name: Run NDFC Test Cases
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run

@@ -1457,6 +1457,7 @@ class DcnmVrf:
             "maxBgpPaths": vrf.get("max_bgp_paths", ""),
             "maxIbgpPaths": vrf.get("max_ibgp_paths", ""),
             "ipv6LinkLocalFlag": vrf.get("ipv6_linklocal_enable", True),
+            "enableL3VniNoVlan": vrf.get("l3vni_wo_vlan", False),
             "trmEnabled": vrf.get("trm_enable", False),
             "isRPExternal": vrf.get("rp_external", False),
             "rpAddress": vrf.get("rp_address", ""),
@@ -1592,6 +1593,7 @@ class DcnmVrf:
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths", 1),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths", 2),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag", True),
+                "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan", False),
                 "trmEnabled": json_to_dict.get("trmEnabled", False),
                 "isRPExternal": json_to_dict.get("isRPExternal", False),
                 "rpAddress": json_to_dict.get("rpAddress", ""),
@@ -2199,6 +2201,7 @@ class DcnmVrf:
                         "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                         "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                         "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                        "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan"),
                         "trmEnabled": json_to_dict.get("trmEnabled"),
                         "isRPExternal": json_to_dict.get("isRPExternal"),
                         "rpAddress": json_to_dict.get("rpAddress"),
@@ -2489,6 +2492,7 @@ class DcnmVrf:
             found_c.update(
                 {"ipv6_linklocal_enable": json_to_dict.get("ipv6LinkLocalFlag", True)}
             )
+            found_c.update({"l3vni_wo_vlan": json_to_dict.get("enableL3VniNoVlan", False)})
             found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
             found_c.update({"rp_external": json_to_dict.get("isRPExternal", False)})
             found_c.update({"rp_address": json_to_dict.get("rpAddress", "")})
@@ -2966,6 +2970,7 @@ class DcnmVrf:
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan"),
                 "trmEnabled": json_to_dict.get("trmEnabled"),
                 "isRPExternal": json_to_dict.get("isRPExternal"),
                 "rpAddress": json_to_dict.get("rpAddress"),
@@ -3903,6 +3908,7 @@ class DcnmVrf:
 
         spec["ipv6_linklocal_enable"] = {"default": True, "type": "bool"}
 
+        spec["l3vni_wo_vlan"] = {"default": False, "type": "bool"}
         spec["loopback_route_tag"] = {
             "default": 12345,
             "range_max": 4294967295,
