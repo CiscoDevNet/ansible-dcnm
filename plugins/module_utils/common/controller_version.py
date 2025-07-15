@@ -150,7 +150,21 @@ class ControllerVersion:
             raise ValueError(msg)
 
     def _get(self, item):
-        return self.conversion.make_none(self.conversion.make_boolean(self.response_data.get(item)))
+        """
+        # Summary
+
+        Return the parameter (item) from the response
+
+        ## Notes
+
+        - With ND 4, parameters like "mode", "uuid" are empty strings.
+          Return empty string in this case, rather than None.
+        - None indicates that the parameter is missing in the response (i.e. an error)
+        """
+        value = self.response_data.get(item)
+        if value == "":
+            return ""
+        return self.conversion.make_none(self.conversion.make_boolean(value))
 
     def _validate_and_split_version(self):
         """
@@ -252,14 +266,24 @@ class ControllerVersion:
     @property
     def mode(self):
         """
+        # Summary
+
         Return the controller mode, if it exists.
         Return None otherwise
 
         Possible values:
             LAN
-            None
+            ""
+
+        ## Notes
+
+        - mode will be "" for ND 4
         """
-        return self._get("mode")
+        value = self._get("mode")
+        if value is None:
+            msg = "Controller response is missing 'mode' parameter."
+            raise ValueError(msg)
+        return value
 
     @property
     def uuid(self):
@@ -276,11 +300,13 @@ class ControllerVersion:
     @property
     def version(self):
         """
-        Return the controller version, if it exists.
-        Raise ValueError if version is not available.
+        # Summary
+
+        - Return the controller version, if it exists.
+        - Raise ValueError if version is not available.
 
         Possible values:
-            version, e.g. "12.1.2e"
+            version, e.g. "12.1.2e" or "12.4.1.245"
         """
         version = self._get("version")
         if version is None:
@@ -349,10 +375,14 @@ class ControllerVersion:
     @property
     def is_controller_version_4x(self) -> bool:
         """
-        ### Summary
+        # Summary
 
         -   Return True if the controller version implies ND 4.0 or higher.
         -   Return False otherwise.
+
+        ## Raises
+
+        - ValueError if unable to determine version
         """
         method_name = inspect.stack()[0][3]
 

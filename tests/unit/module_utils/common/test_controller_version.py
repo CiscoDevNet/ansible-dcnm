@@ -534,34 +534,38 @@ def test_controller_version_00190(controller_version) -> None:
 
 
 @pytest.mark.parametrize(
-    "key, expected",
+    "key, expected, raises",
     [
-        ("test_controller_version_00200a", "LAN"),
-        ("test_controller_version_00200b", None),
+        ("test_controller_version_00200a", "LAN", False),
+        ("test_controller_version_00200b", "", False),
+        ("test_controller_version_00200c", None, True),
     ],
 )
-def test_controller_version_00200(controller_version, key, expected) -> None:
+def test_controller_version_00200(controller_version, key, expected, raises) -> None:
     """
     ### Classes and Methods
 
-    -   ``ControllerVersion()``
-            -   ``refresh``
-            -   ``mode``
+    -   `ControllerVersion()`
+            -   `refresh`
+            -   `mode`
 
     ### Test
 
-    -   ``mode`` returns expected values.
+    -   `mode` returns expected values.
+    -   ValueError is raised if `mode` is missing in the response
 
     ### Description
     ``mode`` returns:
 
     -   Its value, if the "mode" key is present in the controller response.
-    -   None, if the "mode" key is absent from the controller response.
+    -   For ND 4, mode will be an empty string ("").
+    -   ValueError if the "mode" key is absent from the controller response.
 
     ### Expected results
 
     1. test_controller_version_00200a == "LAN"
-    2. test_controller_version_00200b is None
+    2. test_controller_version_00200b == ""
+    3. test_controller_version_00200c == None (ValueError)
     """
 
     def responses():
@@ -580,7 +584,13 @@ def test_controller_version_00200(controller_version, key, expected) -> None:
         instance = controller_version
         instance.rest_send = rest_send
         instance.refresh()
-    assert instance.mode == expected
+    print(f"raises: {raises}")
+    if not raises:
+        assert instance.mode == expected
+    else:
+        match = "Controller response is missing 'mode' parameter."
+        with pytest.raises(ValueError, match=match):
+            instance.mode  # pylint: disable=pointless-statement
 
 
 @pytest.mark.parametrize(
@@ -741,7 +751,8 @@ def test_controller_version_00230(controller_version, key, expected, raises) -> 
         assert instance.version_major == expected
     else:
         match = "ControllerVersion.version: Version information not available in controller response"
-        pytest.raises(ValueError, match=match)
+        with pytest.raises(ValueError, match=match):
+            instance.version_major  # pylint: disable=pointless-statement
 
 
 @pytest.mark.parametrize(
@@ -796,7 +807,8 @@ def test_controller_version_00240(controller_version, key, expected, raises) -> 
         assert instance.version_minor == expected
     else:
         match = "ControllerVersion.version: Version information not available in controller response"
-        pytest.raises(ValueError, match=match)
+        with pytest.raises(ValueError, match=match):
+            instance.version_minor  # pylint: disable=pointless-statement
 
 
 @pytest.mark.parametrize(
@@ -851,7 +863,8 @@ def test_controller_version_00250(controller_version, key, expected, raises) -> 
         assert instance.version_patch == expected
     else:
         match = "ControllerVersion.version: Version information not available in controller response"
-        pytest.raises(ValueError, match=match)
+        with pytest.raises(ValueError, match=match):
+            instance.version_patch  # pylint: disable=pointless-statement
 
 
 @pytest.mark.parametrize(
