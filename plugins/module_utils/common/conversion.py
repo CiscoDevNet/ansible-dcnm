@@ -146,10 +146,15 @@ class ConversionUtils:
         -   On success, return translated mac address.
         -   On failure, raise ``ValueError``.
         """
+        error_message = f"Invalid MAC address: {mac_addr}"
+        if not isinstance(mac_addr, str):
+            raise ValueError(error_message)
+
         mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
-            raise ValueError(f"Invalid MAC address: {mac_addr}")
-        return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
+            raise ValueError(error_message)
+        mac = "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
+        return mac.lower()
 
     def validate_fabric_name(self, value):
         """
