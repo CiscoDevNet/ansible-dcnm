@@ -284,3 +284,69 @@ def test_conversion_utils_00050(value, expected, raises) -> None:
         match = f"Invalid MAC address: {str(value)}"
         with pytest.raises(ValueError, match=match):
             instance.translate_mac_address(value)
+
+
+@pytest.mark.parametrize(
+    "value, expected_exception",
+    [
+        ("validFabric", None),  # valid fabric name
+        ("ValidFabric123", None),  # valid fabric name with numbers
+        ("fabric_name", None),  # valid fabric name with underscore
+        ("fabric-name", None),  # valid fabric name with dash
+        ("a", None),  # valid single letter
+        ("A1_2-3", None),  # valid with all allowed characters
+        ("123fabric", ValueError),  # invalid - starts with number
+        ("_fabric", ValueError),  # invalid - starts with underscore
+        ("-fabric", ValueError),  # invalid - starts with dash
+        ("", ValueError),  # invalid - empty string
+        ("fabric@name", ValueError),  # invalid - contains special character
+        ("fabric name", ValueError),  # invalid - contains space
+        ("fabric.name", ValueError),  # invalid - contains dot
+        (123, TypeError),  # invalid - not a string
+        (None, TypeError),  # invalid - not a string
+        (True, TypeError),  # invalid - not a string
+        ([], TypeError),  # invalid - not a string
+    ],
+)
+def test_conversion_utils_00060(value, expected_exception) -> None:
+    """
+    ### Classes and Methods
+
+    - ConversionUtils()
+        - __init__()
+        - validate_fabric_name()
+
+    ### Summary
+
+    - Verify valid fabric names pass validation
+    - Verify TypeError is raised for non-string values
+    - Verify ValueError is raised for invalid fabric name patterns
+
+    ### Setup
+
+    -   ConversionUtils() is instantiated
+
+    ### Test
+
+    -   `validate_fabric_name` is called with various values.
+
+    ### Expected Result
+
+    -   No exception raised for valid fabric names
+    -   TypeError raised for non-string values
+    -   ValueError raised for invalid fabric name patterns
+    """
+    with does_not_raise():
+        instance = ConversionUtils()
+
+    if expected_exception is None:
+        with does_not_raise():
+            instance.validate_fabric_name(value)
+    elif expected_exception == TypeError:
+        match = f"Invalid fabric name. Expected string. Got {re.escape(str(value))}."
+        with pytest.raises(TypeError, match=match):
+            instance.validate_fabric_name(value)
+    elif expected_exception == ValueError:
+        match = f"Invalid fabric name: {value}. Fabric name must start with a letter A-Z or a-z and contain only the characters in: \\[A-Z,a-z,0-9,-,_\\]."
+        with pytest.raises(ValueError, match=match):
+            instance.validate_fabric_name(value)
