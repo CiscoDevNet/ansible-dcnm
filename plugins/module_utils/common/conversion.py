@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import re
 
@@ -146,13 +147,11 @@ class ConversionUtils:
         -   On success, return translated mac address.
         -   On failure, raise ``ValueError``.
         """
-        error_message = f"Invalid MAC address: {mac_addr}"
-        if not isinstance(mac_addr, str):
-            raise ValueError(error_message)
-
-        mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
+        mac_addr_orig = copy.copy(mac_addr)
+        mac_addr = re.sub(r"[\W\s_]", "", str(mac_addr))
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
-            raise ValueError(error_message)
+            msg = f"Invalid MAC address: {mac_addr_orig}"
+            raise ValueError(msg)
         mac = "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
         return mac.lower()
 

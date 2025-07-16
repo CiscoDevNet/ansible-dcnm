@@ -281,6 +281,6 @@ def test_conversion_utils_00050(value, expected, raises) -> None:
         with does_not_raise():
             assert instance.translate_mac_address(value) == expected
     else:
-        match = f"Invalid MAC address: {value}"
-        with pytest.raises(ValueError, match=re.escape(match)):
+        match = f"Invalid MAC address: {str(value)}"
+        with pytest.raises(ValueError, match=match):
             instance.translate_mac_address(value)
