@@ -1266,14 +1266,18 @@ class DcnmLinks:
                 link_spec["profile"]["mtu"] = dict(required=True, type="int")
             else:
                 link_spec["profile"]["mtu"] = dict(type="int", default=1500)
-            link_spec["profile"]["peer1_description"] = dict(
-                type="str", default=""
-            )
-            link_spec["profile"]["peer2_description"] = dict(
-                type="str", default=""
-            )
-            link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
-            link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
+        else:
+            link_spec["profile"]["mtu"] = dict(type="int", default=1500)
+
+        link_spec["profile"]["peer1_description"] = dict(
+            type="str", default=""
+        )
+        link_spec["profile"]["peer2_description"] = dict(
+            type="str", default=""
+        )
+
+        link_spec["profile"]["peer1_cmds"] = dict(type="list", default=[])
+        link_spec["profile"]["peer2_cmds"] = dict(type="list", default=[])
 
         if (
             (cfg[0]["template"] == self.templates["int_intra_fabric_num_link"])
@@ -1775,14 +1779,20 @@ class DcnmLinks:
             link_payload (dict): Link payload information populated with appropriate data from playbook config
         """
 
+        link_payload["nvPairs"] = {}
         if (
             link["template"]
             != self.templates["int_pre_provision_intra_fabric_link"]
         ):
-            link_payload["nvPairs"] = {}
             link_payload["nvPairs"]["ADMIN_STATE"] = link["profile"].get(
                 "admin_state"
             )
+
+        if (
+            link["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or link.get("profile") is not None
+        ):
             link_payload["nvPairs"]["MTU"] = link["profile"].get("mtu")
             link_payload["nvPairs"]["PEER1_DESC"] = link["profile"].get(
                 "peer1_description"
@@ -2053,23 +2063,29 @@ class DcnmLinks:
         ):
             return
 
-        if cfg["profile"].get("admin_state", None) is None:
-            wlink["nvPairs"]["ADMIN_STATE"] = hlink["nvPairs"]["ADMIN_STATE"]
-        if cfg["profile"].get("mtu", None) is None:
-            wlink["nvPairs"]["MTU"] = hlink["nvPairs"]["MTU"]
-        if cfg["profile"].get("peer1_description", None) is None:
-            wlink["nvPairs"]["PEER1_DESC"] = hlink["nvPairs"]["PEER1_DESC"]
-        if cfg["profile"].get("peer2_description", None) is None:
-            wlink["nvPairs"]["PEER2_DESC"] = hlink["nvPairs"]["PEER2_DESC"]
+        if cfg["template"] != self.templates["int_pre_provision_intra_fabric_link"]:
+            if cfg["profile"].get("admin_state", None) is None:
+                wlink["nvPairs"]["ADMIN_STATE"] = hlink["nvPairs"]["ADMIN_STATE"]
+        if (
+            cfg["template"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or cfg.get("profile") is not None
+        ):
+            if cfg["profile"].get("mtu", None) is None:
+                wlink["nvPairs"]["MTU"] = hlink["nvPairs"]["MTU"]
+            if cfg["profile"].get("peer1_description", None) is None:
+                wlink["nvPairs"]["PEER1_DESC"] = hlink["nvPairs"]["PEER1_DESC"]
+            if cfg["profile"].get("peer2_description", None) is None:
+                wlink["nvPairs"]["PEER2_DESC"] = hlink["nvPairs"]["PEER2_DESC"]
 
-        # Note down that 'want' is updated with information from 'have'. We will need
-        # this to properly merge 'want' and 'have' during diff_merge.
-        if cfg["profile"].get("peer1_cmds", None) is None:
-            wlink["nvPairs"]["PEER1_CONF"] = hlink["nvPairs"]["PEER1_CONF"]
-            wlink["peer1_conf_defaulted"] = True
-        if cfg["profile"].get("peer2_cmds", None) is None:
-            wlink["nvPairs"]["PEER2_CONF"] = hlink["nvPairs"]["PEER2_CONF"]
-            wlink["peer2_conf_defaulted"] = True
+            # Note down that 'want' is updated with information from 'have'. We will need
+            # this to properly merge 'want' and 'have' during diff_merge.
+            if cfg["profile"].get("peer1_cmds", None) is None:
+                wlink["nvPairs"]["PEER1_CONF"] = hlink["nvPairs"]["PEER1_CONF"]
+                wlink["peer1_conf_defaulted"] = True
+            if cfg["profile"].get("peer2_cmds", None) is None:
+                wlink["nvPairs"]["PEER2_CONF"] = hlink["nvPairs"]["PEER2_CONF"]
+                wlink["peer2_conf_defaulted"] = True
 
         if (
             (
@@ -2379,6 +2395,13 @@ class DcnmLinks:
         for link in self.want:
             have = self.dcnm_links_get_links_info_from_dcnm(link)
             if (have != []) and (have not in self.have):
+                # we do not get information about PEER_CONF, PEER_DESC, MTU from DCNM
+                if have["templateName"] == self.templates["int_pre_provision_intra_fabric_link"]:
+                    have["nvPairs"]["PEER1_CONF"] = have["nvPairs"].get("PEER1_CONF", "")
+                    have["nvPairs"]["PEER2_CONF"] = have["nvPairs"].get("PEER2_CONF", "")
+                    have["nvPairs"]["MTU"] = have["nvPairs"].get("MTU", 1500)
+                    have["nvPairs"]["PEER1_DESC"] = have["nvPairs"].get("PEER1_DESC", "")
+                    have["nvPairs"]["PEER2_DESC"] = have["nvPairs"].get("PEER2_DESC", "")
                 self.have.append(have)
 
     def dcnm_links_compare_inter_fabric_link_params(self, wlink, hlink):
@@ -2833,65 +2856,93 @@ class DcnmLinks:
 
         # Compare common info for all templates first
         if (
-            str(wlink["nvPairs"]["ADMIN_STATE"]).lower()
-            != str(hlink["nvPairs"]["ADMIN_STATE"]).lower()
+            wlink["templateName"] != self.templates["int_pre_provision_intra_fabric_link"]
         ):
-            mismatch_reasons.append(
-                {
-                    "ADMIN_STATE_MISMATCH": [
-                        str(wlink["nvPairs"]["ADMIN_STATE"]).lower(),
-                        str(hlink["nvPairs"]["ADMIN_STATE"]).lower(),
-                    ]
-                }
-            )
+            if (
+                str(wlink["nvPairs"]["ADMIN_STATE"]).lower()
+                != str(hlink["nvPairs"]["ADMIN_STATE"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "ADMIN_STATE_MISMATCH": [
+                            str(wlink["nvPairs"]["ADMIN_STATE"]).lower(),
+                            str(hlink["nvPairs"]["ADMIN_STATE"]).lower(),
+                        ]
+                    }
+                )
         if (
-            str(wlink["nvPairs"]["MTU"]).lower()
-            != str(hlink["nvPairs"]["MTU"]).lower()
+            wlink["templateName"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or wlink["nvPairs"].get("MTU") is not None
         ):
-            mismatch_reasons.append(
-                {
-                    "MTU_MISMATCH": [
-                        wlink["nvPairs"]["MTU"],
-                        hlink["nvPairs"]["MTU"],
-                    ]
-                }
-            )
-        if wlink["nvPairs"]["PEER1_DESC"] != hlink["nvPairs"]["PEER1_DESC"]:
-            mismatch_reasons.append(
-                {
-                    "PEER1_DESC_MISMATCH": [
-                        wlink["nvPairs"]["PEER1_DESC"],
-                        hlink["nvPairs"]["PEER1_DESC"],
-                    ]
-                }
-            )
-        if wlink["nvPairs"]["PEER2_DESC"] != hlink["nvPairs"]["PEER2_DESC"]:
-            mismatch_reasons.append(
-                {
-                    "PEER2_DESC_MISMATCH": [
-                        wlink["nvPairs"]["PEER2_DESC"],
-                        hlink["nvPairs"]["PEER2_DESC"],
-                    ]
-                }
-            )
-        if wlink["nvPairs"]["PEER1_CONF"] != hlink["nvPairs"]["PEER1_CONF"]:
-            mismatch_reasons.append(
-                {
-                    "PEER1_CONF_MISMATCH": [
-                        wlink["nvPairs"]["PEER1_CONF"],
-                        hlink["nvPairs"]["PEER1_CONF"],
-                    ]
-                }
-            )
-        if wlink["nvPairs"]["PEER2_CONF"] != hlink["nvPairs"]["PEER2_CONF"]:
-            mismatch_reasons.append(
-                {
-                    "PEER2_CONF_MISMATCH": [
-                        wlink["nvPairs"]["PEER2_CONF"],
-                        hlink["nvPairs"]["PEER2_CONF"],
-                    ]
-                }
-            )
+            if (
+                str(wlink["nvPairs"]["MTU"]).lower()
+                != str(hlink["nvPairs"]["MTU"]).lower()
+            ):
+                mismatch_reasons.append(
+                    {
+                        "MTU_MISMATCH": [
+                            wlink["nvPairs"]["MTU"],
+                            hlink["nvPairs"]["MTU"],
+                        ]
+                    }
+                )
+        if (
+            wlink["templateName"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or wlink["nvPairs"].get("PEER1_DESC") is not None
+        ):
+            if wlink["nvPairs"]["PEER1_DESC"] != hlink["nvPairs"]["PEER1_DESC"]:
+                mismatch_reasons.append(
+                    {
+                        "PEER1_DESC_MISMATCH": [
+                            wlink["nvPairs"]["PEER1_DESC"],
+                            hlink["nvPairs"]["PEER1_DESC"],
+                        ]
+                    }
+                )
+        if (
+            wlink["templateName"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or wlink["nvPairs"].get("PEER2_DESC") is not None
+        ):
+            if wlink["nvPairs"]["PEER2_DESC"] != hlink["nvPairs"]["PEER2_DESC"]:
+                mismatch_reasons.append(
+                    {
+                        "PEER2_DESC_MISMATCH": [
+                            wlink["nvPairs"]["PEER2_DESC"],
+                            hlink["nvPairs"]["PEER2_DESC"],
+                        ]
+                    }
+                )
+        if (
+            wlink["templateName"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or wlink["nvPairs"].get("PEER1_CONF") is not None
+        ):
+            if wlink["nvPairs"]["PEER1_CONF"] != hlink["nvPairs"]["PEER1_CONF"]:
+                mismatch_reasons.append(
+                    {
+                        "PEER1_CONF_MISMATCH": [
+                            wlink["nvPairs"]["PEER1_CONF"],
+                            hlink["nvPairs"]["PEER1_CONF"],
+                        ]
+                    }
+                )
+        if (
+            wlink["templateName"]
+            != self.templates["int_pre_provision_intra_fabric_link"]
+            or wlink["nvPairs"].get("PEER2_DESC") is not None
+        ):
+            if wlink["nvPairs"]["PEER2_CONF"] != hlink["nvPairs"]["PEER2_CONF"]:
+                mismatch_reasons.append(
+                    {
+                        "PEER2_CONF_MISMATCH": [
+                            wlink["nvPairs"]["PEER2_CONF"],
+                            hlink["nvPairs"]["PEER2_CONF"],
+                        ]
+                    }
+                )
 
         if (
             (
