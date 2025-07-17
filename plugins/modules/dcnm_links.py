@@ -2396,7 +2396,7 @@ class DcnmLinks:
             have = self.dcnm_links_get_links_info_from_dcnm(link)
             if (have != []) and (have not in self.have):
                 # we do not get information about PEER_CONF, PEER_DESC, MTU from DCNM
-                if have["templateName"] == self.templates["int_pre_provision_intra_fabric_link"]:
+                if have.get("templateName") == self.templates["int_pre_provision_intra_fabric_link"]:
                     have["nvPairs"]["PEER1_CONF"] = have["nvPairs"].get("PEER1_CONF", "")
                     have["nvPairs"]["PEER2_CONF"] = have["nvPairs"].get("PEER2_CONF", "")
                     have["nvPairs"]["MTU"] = have["nvPairs"].get("MTU", 1500)
