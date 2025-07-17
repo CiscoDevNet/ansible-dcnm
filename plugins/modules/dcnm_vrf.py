@@ -821,14 +821,17 @@ class DcnmVrf:
 
     # pylint: enable=inconsistent-return-statements
     @staticmethod
-    def compare_properties(dict1, dict2, property_list):
+    def compare_properties(dict1, dict2, property_list, skip_prop=None):
         """
-        Given two dictionaries and a list of keys:
+        Given two dictionaries, a list of keys and keys that can be
+        skipped, compare the values of the keys in both dictionaries:
 
         - Return True if all property values match.
         - Return False otherwise
         """
         for prop in property_list:
+            if skip_prop and prop in skip_prop:
+                continue
             if dict1.get(prop) != dict2.get(prop):
                 return False
         return True
@@ -940,8 +943,11 @@ class DcnmVrf:
                                         continue
                                     found = True
                                     interface_match = True
+                                    skip_prop = []
+                                    if not wlite["DOT1Q_ID"]:
+                                        skip_prop.append("DOT1Q_ID")
                                     if not self.compare_properties(
-                                        wlite, hlite, self.vrf_lite_properties
+                                        wlite, hlite, self.vrf_lite_properties, skip_prop
                                     ):
                                         found = False
                                         break
@@ -1202,14 +1208,16 @@ class DcnmVrf:
             else:
                 extension_values["VRF_LITE_CONN"] = copy.deepcopy(vrf_lite_connections)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(
-                extension_values["VRF_LITE_CONN"]
-            )
-
-            msg = "Returning extension_values: "
+            msg = "Building extension_values: "
             msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
+        extension_values["VRF_LITE_CONN"] = json.dumps(
+            extension_values["VRF_LITE_CONN"]
+        )
+        msg = "Returning extension_values: "
+        msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return copy.deepcopy(extension_values)
 
     def update_attach_params(self, attach, vrf_name, deploy, vlan_id) -> dict:
@@ -1379,10 +1387,13 @@ class DcnmVrf:
         # remove it here (as we did with the other params that are
         # compared in the call to self.dict_values_differ())
         vlan_id_want = str(json_to_dict_want.get("vrfVlanId", ""))
+        vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
 
         skip_keys = []
         if vlan_id_want == "0":
             skip_keys = ["vrfVlanId"]
+        if vrfSegmentId_want is None:
+            skip_keys.append("vrfSegmentId")
         templates_differ = self.dict_values_differ(
             json_to_dict_want, json_to_dict_have, skip_keys=skip_keys
         )
@@ -3306,9 +3317,9 @@ class DcnmVrf:
             ms_con["MULTISITE_CONN"] = []
             extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(
-                extension_values["VRF_LITE_CONN"]
-            )
+        extension_values["VRF_LITE_CONN"] = json.dumps(
+            extension_values["VRF_LITE_CONN"]
+        )
         vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
         if vrf_attach.get("vrf_lite") is not None:
             del vrf_attach["vrf_lite"]
