@@ -390,6 +390,185 @@
     that:
     - 'result_5c.changed == false'
 
+- name: TEST.5e - REPLACED - [deleted] Delete all VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: deleted
+
+- name: TEST.5f - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+
+- name: TEST.6 - REPLACED - [merged] Create, Attach, Deploy VRF+LITE switch_2 (L3VNI W/0 VLAN)
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int1 # optional
+            interface: "{{ interface_2a }}" # mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # optional controller can provide
+      deploy: true
+  register: result_6
+
+- name: TEST.6a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: query
+  register: result_6a
+  until:
+    - "result_6a.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- name: TEST.6b - REPLACED - [debug] print result_6
+  debug:
+    var: result_6
+
+- assert:
+    that:
+    - 'result_6.changed == true'
+    - 'result_6.response[0].RETURN_CODE == 200'
+    - 'result_6.response[1].RETURN_CODE == 200'
+    - 'result_6.response[2].RETURN_CODE == 200'
+    - '(result_6.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_6.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_6.diff[0].attach[0].deploy == true'
+    - 'result_6.diff[0].attach[1].deploy == true'
+    - '"{{ switch_1 }}" in result_6.diff[0].attach[0].ip_address'
+    - '"{{ switch_2 }}" in result_6.diff[0].attach[1].ip_address'
+    - 'result_6.diff[0].vrf_name == "ansible-vrf-int1"'
+
+- name: TEST.7 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
+  cisco.dcnm.dcnm_vrf: &conf7
+    fabric: "{{ fabric_1 }}"
+    state: replaced
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      deploy: true
+  register: result_7
+
+- name: TEST.7a - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+
+- name: TEST.7b - REPLACED - [query] Wait for vrfStatus == DEPLOYED
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: query
+  register: result_7b
+  until:
+    - "result_7b.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- name: TEST.7c - REPLACED - [debug] print result_7
+  debug:
+    var: result_7
+
+- assert:
+    that:
+    - 'result_7.changed == true'
+    - 'result_7.response[0].RETURN_CODE == 200'
+    - 'result_7.response[1].RETURN_CODE == 200'
+    - '(result_7.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - 'result_7.diff[0].attach[0].deploy == false'
+    - 'result_7.diff[0].vrf_name == "ansible-vrf-int1"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_7b.response[0].parent.vrfTemplateConfig'
+    - 'result_7b.response[0].attach[0].switchDetailsList[0].vlan is none'
+
+- name: TEST.7d - REPLACED - conf7 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf7
+  register: result_7d
+
+- name: TEST.7d - REPLACED - [debug] print result_7d
+  debug:
+    var: result_7d
+
+- assert:
+    that:
+    - 'result_7d.changed == false'
+
+- name: TEST.8 - REPLACED - [replaced] Update existing VRF - Create VRF LITE Attachment
+  cisco.dcnm.dcnm_vrf: &conf8
+    fabric: "{{ fabric_1 }}"
+    state: replaced
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int1 # optional
+            interface: "{{ interface_2a }}" # mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # optional controller can provide
+      deploy: true
+  register: result_8
+
+- name: TEST.8a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: query
+  register: result_8a
+  until:
+    - "result_8a.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 30
+  delay: 2
+
+- name: TEST.8b - REPLACED - [debug] print result_8
+  debug:
+    var: result_8
+
+- assert:
+    that:
+    - 'result_8.changed == true'
+    - 'result_8.response[0].RETURN_CODE == 200'
+    - 'result_8.response[1].RETURN_CODE == 200'
+    - '(result_8.response[0].DATA|dict2items)[0].value == "SUCCESS"'
+    - 'result_8.diff[0].attach[0].deploy == true'
+    - 'result_8.diff[0].vrf_name == "ansible-vrf-int1"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
+    - 'result_8a.response[0].attach[0].switchDetailsList[0].vlan is none'
+    - 'result_8a.response[0].attach[1].switchDetailsList[0].vlan is none'
+
+- name: TEST.8c - REPLACED - conf8 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf8
+  register: result_8c
+
+- name: TEST.8d - REPLACED - [debug] print result_8c
+  debug:
+    var: result_8c
+
+- assert:
+    that:
+    - 'result_8c.changed == false'
+
 ###############################################
 ###                 CLEAN-UP                 ##
 ###############################################
