@@ -3668,7 +3668,7 @@ class DcnmVrf:
             verb = "DELETE"
             self.send_to_controller(action, verb, path, None, log_response=False)
 
-    def release_orphaned_resources(self, vrf, is_rollback=False):
+    def release_orphaned_resources(self, vrf_del_list, is_rollback=False):
         """
         # Summary
 
@@ -3684,6 +3684,8 @@ class DcnmVrf:
         - allocatedFlag is False
         - entityName == vrf
         - fabricName == self.fabric
+        - switchName is not None
+        - ipAddress is not None
 
         ```json
         [
@@ -3731,11 +3733,18 @@ class DcnmVrf:
         for item in resp["DATA"]:
             if "entityName" not in item:
                 continue
-            if item["entityName"] != vrf:
+            if item["entityName"] not in vrf_del_list:
                 continue
             if item.get("allocatedFlag") is not False:
                 continue
             if item.get("id") is None:
+                continue
+            # Resources with no ipAddress or switchName
+            # are invalid and of Fabric's scope and
+            # should not be attempted to be deleted here.
+            if not item.get("ipAddress"):
+                continue
+            if not item.get("switchName"):
                 continue
 
             msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
@@ -3745,6 +3754,8 @@ class DcnmVrf:
 
         if len(delete_ids) == 0:
             return
+        msg = f"Releasing orphaned resources with IDs:{delete_ids}"
+        self.log.debug(msg)
         self.release_resources_by_id(delete_ids)
 
     def push_to_remote(self, is_rollback=False):
@@ -3785,8 +3796,13 @@ class DcnmVrf:
         self.log.debug(msg)
 
         self.push_diff_delete(is_rollback)
+
+        vrf_del_list = []
         for vrf_name in self.diff_delete:
-            self.release_orphaned_resources(vrf_name, is_rollback)
+            vrf_del_list.append(vrf_name)
+        if vrf_del_list:
+            msg += f"VRF(s) to be deleted: {vrf_del_list}."
+            self.release_orphaned_resources(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback)
         self.push_diff_attach(is_rollback)
