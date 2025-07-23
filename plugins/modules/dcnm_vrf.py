@@ -3791,44 +3791,48 @@ class DcnmVrf:
 
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
         path += f"resource-manager/fabric/{self.fabric}/"
-        path += "pools/TOP_DOWN_VRF_VLAN"
-        resp = dcnm_send(self.module, "GET", path)
-        self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "deploy")
-        if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
-            self.failure(resp)
-
-        delete_ids = []
-        for item in resp["DATA"]:
-            if "entityName" not in item:
-                continue
-            if item["entityName"] not in vrf_del_list:
-                continue
-            if item.get("allocatedFlag") is not False:
-                continue
-            if item.get("id") is None:
-                continue
-            # Resources with no ipAddress or switchName
-            # are invalid and of Fabric's scope and
-            # should not be attempted to be deleted here.
-            if not item.get("ipAddress"):
-                continue
-            if not item.get("switchName"):
-                continue
-
-            msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+        resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
+        for pool in resource_pool:
+            msg = f"Processing orphaned resources in pool:{pool}"
             self.log.debug(msg)
+            req_path = path + f"pools/{pool}"
+            resp = dcnm_send(self.module, "GET", req_path)
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
 
-            delete_ids.append(item["id"])
+            delete_ids = []
+            for item in resp["DATA"]:
+                if "entityName" not in item:
+                    continue
+                if item["entityName"] not in vrf_del_list:
+                    continue
+                if item.get("allocatedFlag") is not False:
+                    continue
+                if item.get("id") is None:
+                    continue
+                # Resources with no ipAddress or switchName
+                # are invalid and of Fabric's scope and
+                # should not be attempted to be deleted here.
+                if not item.get("ipAddress"):
+                    continue
+                if not item.get("switchName"):
+                    continue
 
-        if len(delete_ids) == 0:
-            return
-        msg = f"Releasing orphaned resources with IDs:{delete_ids}"
-        self.log.debug(msg)
-        self.release_resources_by_id(delete_ids)
+                msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                delete_ids.append(item["id"])
+
+            if len(delete_ids) == 0:
+                return
+            msg = f"Releasing orphaned resources with IDs:{delete_ids}"
+            self.log.debug(msg)
+            self.release_resources_by_id(delete_ids)
 
     def push_to_remote(self, is_rollback=False):
         """
