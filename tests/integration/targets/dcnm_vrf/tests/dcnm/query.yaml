@@ -361,7 +361,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.8 - QUERY - [merged] Create, Attach, Deploy VRF+LITE EXTENSION ansible-vrf-int2 on switch_2, L3VNI W/O VLAN
+- name: TEST.8 - QUERY - [merged] Create, Attach, Deploy VRF+LITE EXTENSION ansible-vrf-int2 on switch_2 (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged

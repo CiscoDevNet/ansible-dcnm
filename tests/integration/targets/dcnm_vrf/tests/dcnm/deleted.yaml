@@ -159,7 +159,7 @@
     - 'result_1c.diff|length == 0'
 
 
-- name: TEST.1e - DELETED - [merged] Create, Attach, Deploy L3VNI W/O VLAN+VRF ansible-vrf
+- name: TEST.1e - DELETED - [merged] Create, Attach, Deploy VRF ansible-vrf (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged

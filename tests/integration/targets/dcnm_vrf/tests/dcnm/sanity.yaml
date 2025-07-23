@@ -143,7 +143,7 @@
     timeout: 60
   tags: sanity
 
-- name: TEST.1g - SANITY MERGED - [merged] Create, Attach, Deploy L3VNI W/0 VLAN+VRF
+- name: TEST.1g - SANITY MERGED - [merged] Create, Attach, Deploy VRF (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf: &conf1g
     fabric: "{{ fabric_1 }}"
     state: merged

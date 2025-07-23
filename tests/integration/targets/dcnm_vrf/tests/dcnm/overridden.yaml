@@ -125,7 +125,7 @@
 ###              OVERRIDDEN                  ##
 ###############################################
 
-- name: TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2, L3VNI W/O VLAN
+- name: TEST.1 - OVERRIDDEN - [overridden] Override existing VRF ansible-vrf-int1 to create new VRF ansible-vrf-int2 (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf: &conf1
     fabric: "{{ fabric_1 }}"
     state: overridden
