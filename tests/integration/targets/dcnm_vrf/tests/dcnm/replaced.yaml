@@ -399,7 +399,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.6 - REPLACED - [merged] Create, Attach, Deploy VRF+LITE switch_2 (L3VNI W/0 VLAN)
+- name: TEST.6 - REPLACED - [merged] Create, Attach, Deploy VRF+LITE switch_2 (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
