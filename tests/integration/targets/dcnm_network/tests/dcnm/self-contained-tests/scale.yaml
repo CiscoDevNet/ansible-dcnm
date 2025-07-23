@@ -2,65 +2,84 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
-    rest_path: "/rest/control/fabrics/{{ test_fabric }}"
-  when: controller_version == "11"
+- name: SCALED_ALL - Test Entry Point - [ndfc_network]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_network]                +"
+      - "----------------------------------------------------------------"
 
-- set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_fabric }}"
-  when: controller_version >= "12"
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: SCALED_ALL - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    test_data:
+      #----------------------------------  
+      # config templates and auto generated file location for test cases
+      #----------------------------------
+      scale_conf_template: "self-contained-tests/scale_conf.j2"
+      scale_conf_file: "{{ role_path }}/files/self_contained_scale_conf.yaml"
+      #----------------------------------
 
-- name: SCALE - Verify if fabric is deployed.
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: "{{ rest_path }}"
-  register: result
 
-- assert:
-    that:
-    - 'result.response.DATA != None'
+- name: SCALED_ALL - Create Network Config File using J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data.scale_conf_template }}"
+    dest: "{{ test_data.scale_conf_file }}"
+  delegate_to: localhost
 
-- name: SCALE - Clean up any existing networks
+- name: SCALED_ALL - Delete any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted
-
-- name: Dummy set fact for leaf_attach_list
-  set_fact:
-    leaf_net_attach: []
-
-- name: Build list of Networks to be deployed
-  set_fact:
-    nets_list: "{{ nets_list|default([]) + [{ 'net_name': 'TEST_NET%03d' | format(item), 'vrf_name': 'Tenant-1', 'deploy': 'no', 'net_id': (item | int + 50000) | int, 'vlan_id': (item | int + 2000) | int, 'attach': leaf_net_attach }] }}"
-  loop: '{{ range(0, 800) | list }}'
-
-- name: Push all Networks to DCNM
-  cisco.dcnm.dcnm_network:
-    fabric: '{{ test_fabric }}'
-    state: merged
-    config: '{{ nets_list }}'
   register: result
 
-- name: SCALE - Clean up existing networks
+- name: SCALED_ALL - Load Scale Config File
+  ansible.builtin.set_fact:
+    dcnm_network_merged_scale_conf: "{{ lookup('file', '{{ test_data.scale_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+
+- name: SCALED_ALL - Create 800 networks
   cisco.dcnm.dcnm_network: &conf
-    fabric: "{{ test_fabric }}"
-    state: deleted
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_merged_scale_conf }}"
+  register: result
 
-- name: SCALE - conf - Idempotence
+- name: SCALED_ALL - ASSERT - Check changed flag is true
+  assert:
+    that:
+    - result.changed == true
+
+- name: SCALED_ALL - Query fabric for creation of Network Object
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: verify_result
+
+- name: SCALED_ALL - VALIDITY CHECK - Verify network state in NDFC
+  cisco.dcnm.tests.integration.ndfc_network_validate:
+    config_path: "{{ test_data.scale_conf_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  delegate_to: localhost
+
+- name: SCALED_ALL - conf - Idempotence
   cisco.dcnm.dcnm_network: *conf
   register: result
 
-- assert:
+- name: SCALED_ALL - ASSERT - Check changed flag is false
+  assert:
     that:
     - 'result.changed == false'
-    - 'result.response|length == 0'
-    - 'result.diff|length == 0'
 
-################################################
-####                 CLEAN-UP                 ##
-################################################
 
-- name: SCALE - Clean up any existing networks
+##############################################
+##                 CLEAN-UP                 ##
+##############################################
+
+- name: SCALED_ALL - END - Clean up any existing networks
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: deleted

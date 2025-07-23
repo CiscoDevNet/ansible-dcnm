@@ -410,11 +410,11 @@ def test_fabric_query_00030(fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.result[0].get("found", None) is True
-    assert instance.results.result[0].get("success", None) is True
+    assert instance.results.result[0].get("found", None) is False
+    assert instance.results.result[0].get("success", None) is False
 
-    assert False in instance.results.failed
-    assert True not in instance.results.failed
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
 
@@ -519,11 +519,11 @@ def test_fabric_query_00031(fabric_query) -> None:
 
     assert instance.results.diff[0].get("sequence_number", None) == 1
     assert instance.results.response[0].get("RETURN_CODE", None) == 200
-    assert instance.results.result[0].get("found", None) is True
-    assert instance.results.result[0].get("success", None) is True
+    assert instance.results.result[0].get("found", None) is False
+    assert instance.results.result[0].get("success", None) is False
 
-    assert False in instance.results.failed
-    assert True not in instance.results.failed
+    assert True in instance.results.failed
+    assert False not in instance.results.failed
     assert False in instance.results.changed
     assert True not in instance.results.changed
 

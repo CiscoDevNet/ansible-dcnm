@@ -80,3 +80,5 @@ venv.bak/
 
 # Ignore Integration Tests Files Directories
 tests/integration/targets/ndfc_interface/files
+tests/integration/targets/dcnm_network/files
+tests/integration/targets/dcnm_inventory/files

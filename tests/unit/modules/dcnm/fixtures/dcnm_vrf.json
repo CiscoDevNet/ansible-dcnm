@@ -1058,6 +1058,12 @@
       }
     ]
   },
+  "mock_net_from_vrf_empty": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": []
+  },
   "mock_vrf_attach_object_dcnm_only": {
     "MESSAGE": "OK",
     "METHOD": "POST",

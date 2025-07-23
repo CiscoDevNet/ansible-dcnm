@@ -509,6 +509,7 @@ class DcnmInventory:
         self.node_migration = False
         self.nd_prefix = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
         self.switch_snos = []
+        self.diff_input_format = []
 
         self.result = dict(changed=False, diff=[], response=[])
 
@@ -849,10 +850,28 @@ class DcnmInventory:
 
         diff_delete = []
 
+        def check_have_c_in_want_list(have_c):
+            for want_c in self.want_create:
+                if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                    return True
+
+            return False
+
         def have_in_want(have_c):
             match_found = False
+
+            # Check to see if have is in the want list and if not return match_found(False)
+            if not check_have_c_in_want_list(have_c):
+                return match_found
             for want_c in self.want_create:
                 match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
+                if match is None:
+                    # If we get here this is typically because the device was pre-provisioned
+                    # and the regex expression above will not match in this case.
+                    # We need to make an additionl check using ipaddr to see if the device
+                    # is already part of the fabric.
+                    if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                        match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
                 if match is None:
                     continue
                 want_serial_num = match.groups()[0]
@@ -883,7 +902,6 @@ class DcnmInventory:
     def get_diff_delete(self):
 
         diff_delete = []
-
         if self.config:
             for want_c in self.want_create:
                 for have_c in self.have_create:
@@ -905,8 +923,21 @@ class DcnmInventory:
             found = False
             match = re.search(r"\S+\((\S+)\)", want_c["switches"][0]["deviceIndex"])
             if match is None:
-                msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
-                self.module.fail_json(msg=msg)
+                # If we don't have a match that means one of the following:
+                # (1) The device has not been discovered and is not reachable or the IP address is not a valid IP
+                # (2) The device has been discovered and added to the fabric but is currently not reachable
+                #     due to it being pre-provisioned or some other reason.
+                want_c_already_discovered = False
+                for have_c in self.have_create:
+                    # Check the have list to see if the device has already been discovered and if so
+                    # don't error but use the have list to create the match.
+                    if have_c["switches"][0]["ipaddr"] == want_c["switches"][0]["ipaddr"]:
+                        want_c_already_discovered = True
+                        match = re.search(r"\S+\((\S+)\)", have_c["switches"][0]["deviceIndex"])
+                # Device is not part of the fabric so return the error.
+                if not want_c_already_discovered:
+                    msg = "Switch with IP {0} is not reachable or is not a valid IP".format(want_c["seedIP"])
+                    self.module.fail_json(msg=msg)
             serial_num = match.groups()[0]
             for have_c in self.have_create:
                 if (
@@ -1781,6 +1812,120 @@ class DcnmInventory:
 
         self.module.fail_json(msg=res)
 
+    def format_diff(self):
+        """
+        Format the diff for inventory operations
+        """
+        diff = []
+        create_list = []
+        preprovision_list = []
+        bootstrap_list = []
+        rma_list = []
+        delete_list = []
+
+        # Add created switches to the diff
+        for create in self.diff_create:
+            if create.get("switches") and len(create["switches"]) > 0:
+                switch = create["switches"][0]
+                item = {
+                    "ip_address": switch.get("ipaddr"),
+                    "serial_number": switch.get("serialNumber"),
+                    "role": create.get("role"),
+                    "platform": switch.get("platform"),
+                    "version": switch.get("version"),
+                    "hostname": switch.get("sysName"),
+                    "preserve_config": create.get("preserveConfig", False)
+                }
+                create_list.append(item)
+
+        if create_list:
+            create_item = {
+                "action": "create",
+                "switches": create_list
+            }
+            diff.append(create_item)
+
+        # Add POAP switches to the diff
+        for poap in self.want_create_poap:
+            item = {
+                "ip_address": poap.get("ipAddress"),
+                "role": poap.get("role"),
+                "hostname": poap.get("hostname"),
+                "platform": poap.get("model"),
+                "version": poap.get("version")
+            }
+            if poap.get("serialNumber"):
+                item["serial_number"] = poap.get("serialNumber")
+                bootstrap_list.append(item)
+            if poap.get("preprovisionSerial"):
+                item["preprovision_serial"] = poap.get("preprovisionSerial")
+                preprovision_list.append(item)
+
+        if bootstrap_list:
+            diff.append({
+                "action": "bootstrap",
+                "bootstrap_switches": bootstrap_list
+            })
+        if preprovision_list:
+            diff.append({
+                "action": "preprovision",
+                "preprovision_switches": preprovision_list
+            })
+
+        # Add RMA switches to the diff
+        for rma in self.want_create_rma:
+            item = {
+                "ip_address": rma.get("ipAddress"),
+                "old_serial": rma.get("oldSerialNumber"),
+                "new_serial": rma.get("newSerialNumber"),
+                "platform": rma.get("model"),
+                "version": rma.get("version")
+            }
+            rma_list.append(item)
+
+        if rma_list:
+            diff.append({
+                "action": "rma",
+                "rma_switches": rma_list
+            })
+
+        # Add deleted switches to the diff
+        for serial in self.diff_delete:
+            ip_address = None
+            hostname = None
+            for have_c in self.have_create:
+                if have_c["switches"][0]["serialNumber"] == serial:
+                    ip_address = have_c["switches"][0]["ipaddr"]
+                    hostname = have_c["switches"][0]["sysName"]
+                    role = have_c["switches"][0]["role"]
+                    platform = have_c["switches"][0]["platform"]
+                    version = have_c["switches"][0]["version"]
+                    break
+
+            item = {
+                "serial_number": serial
+            }
+            if ip_address:
+                item["ip_address"] = ip_address
+            if hostname:
+                item["hostname"] = hostname
+            if role:
+                item["role"] = role
+            if platform:
+                item["platform"] = platform
+            if version:
+                item["version"] = version
+
+            delete_list.append(item)
+
+        if delete_list:
+            diff.append({
+                "action": "delete",
+                "switches": delete_list
+            })
+
+        self.diff_input_format = diff
+
 
 def main():
     """main entry point for module execution"""
@@ -1913,6 +2058,8 @@ def main():
             if module.params["deploy"]:
                 dcnm_inv.config_deploy()
 
+    dcnm_inv.format_diff()
+    dcnm_inv.result["diff"] = dcnm_inv.diff_input_format
     module.exit_json(**dcnm_inv.result)
 
 
