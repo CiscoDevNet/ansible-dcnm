@@ -17,6 +17,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type
 __author__ = "Allen Robel"
 
+import copy
 import inspect
 import re
 
@@ -146,10 +147,13 @@ class ConversionUtils:
         -   On success, return translated mac address.
         -   On failure, raise ``ValueError``.
         """
-        mac_addr = re.sub(r"[\W\s_]", "", mac_addr)
+        mac_addr_orig = copy.copy(mac_addr)
+        mac_addr = re.sub(r"[\W\s_]", "", str(mac_addr))
         if not re.search("^[A-Fa-f0-9]{12}$", mac_addr):
-            raise ValueError(f"Invalid MAC address: {mac_addr}")
-        return "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
+            msg = f"Invalid MAC address: {mac_addr_orig}"
+            raise ValueError(msg)
+        mac = "".join((mac_addr[:4], ".", mac_addr[4:8], ".", mac_addr[8:]))
+        return mac.lower()
 
     def validate_fabric_name(self, value):
         """
