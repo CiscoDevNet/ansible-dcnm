@@ -311,7 +311,7 @@
 
 - name: TEST.3c - OVERRIDDEN - [debug] print result_3
   debug:
-    var: result_3b
+    var: result_3
 
 - assert:
     that:

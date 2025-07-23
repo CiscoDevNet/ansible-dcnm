@@ -189,10 +189,6 @@
   debug:
     var: result_1e
 
-- name: Print result_1f
-  debug:
-    var: 'result_1f.response[0].attach[0].switchDetailsList[0].vlan'
-
 - assert:
     that:
     - 'result_1e.changed == true'
