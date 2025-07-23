@@ -572,7 +572,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
     get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
-    get_sn_fabric_dict, validate_list_of_dicts)
+    get_sn_fabric_dict, validate_list_of_dicts, search_nested_json)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -583,6 +583,7 @@ dcnm_vrf_paths = {
         "GET_VRF_SWITCH": "/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/rest/managed-pool/fabrics/{}/partitions/ids",
         "GET_VLAN": "/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}"
     },
     12: {
         "GET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs",
@@ -590,6 +591,7 @@ dcnm_vrf_paths = {
         "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
         "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
         "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+        "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
     },
 }
 
@@ -1466,6 +1468,7 @@ class DcnmVrf:
             "maxBgpPaths": vrf.get("max_bgp_paths", ""),
             "maxIbgpPaths": vrf.get("max_ibgp_paths", ""),
             "ipv6LinkLocalFlag": vrf.get("ipv6_linklocal_enable", True),
+            "enableL3VniNoVlan": vrf.get("l3vni_wo_vlan", False),
             "trmEnabled": vrf.get("trm_enable", False),
             "isRPExternal": vrf.get("rp_external", False),
             "rpAddress": vrf.get("rp_address", ""),
@@ -1601,6 +1604,7 @@ class DcnmVrf:
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths", 1),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths", 2),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag", True),
+                "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan", False),
                 "trmEnabled": json_to_dict.get("trmEnabled", False),
                 "isRPExternal": json_to_dict.get("isRPExternal", False),
                 "rpAddress": json_to_dict.get("rpAddress", ""),
@@ -2208,6 +2212,7 @@ class DcnmVrf:
                         "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                         "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                         "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                        "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan"),
                         "trmEnabled": json_to_dict.get("trmEnabled"),
                         "isRPExternal": json_to_dict.get("isRPExternal"),
                         "rpAddress": json_to_dict.get("rpAddress"),
@@ -2498,6 +2503,7 @@ class DcnmVrf:
             found_c.update(
                 {"ipv6_linklocal_enable": json_to_dict.get("ipv6LinkLocalFlag", True)}
             )
+            found_c.update({"l3vni_wo_vlan": json_to_dict.get("enableL3VniNoVlan", False)})
             found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
             found_c.update({"rp_external": json_to_dict.get("isRPExternal", False)})
             found_c.update({"rp_address": json_to_dict.get("rpAddress", "")})
@@ -2975,6 +2981,7 @@ class DcnmVrf:
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
+                "enableL3VniNoVlan": json_to_dict.get("enableL3VniNoVlan"),
                 "trmEnabled": json_to_dict.get("trmEnabled"),
                 "isRPExternal": json_to_dict.get("isRPExternal"),
                 "rpAddress": json_to_dict.get("rpAddress"),
@@ -3733,7 +3740,7 @@ class DcnmVrf:
             verb = "DELETE"
             self.send_to_controller(action, verb, path, None, log_response=False)
 
-    def release_orphaned_resources(self, vrf, is_rollback=False):
+    def release_orphaned_resources(self, vrf_del_list, is_rollback=False):
         """
         # Summary
 
@@ -3749,6 +3756,8 @@ class DcnmVrf:
         - allocatedFlag is False
         - entityName == vrf
         - fabricName == self.fabric
+        - switchName is not None
+        - ipAddress is not None
 
         ```json
         [
@@ -3796,11 +3805,18 @@ class DcnmVrf:
         for item in resp["DATA"]:
             if "entityName" not in item:
                 continue
-            if item["entityName"] != vrf:
+            if item["entityName"] not in vrf_del_list:
                 continue
             if item.get("allocatedFlag") is not False:
                 continue
             if item.get("id") is None:
+                continue
+            # Resources with no ipAddress or switchName
+            # are invalid and of Fabric's scope and
+            # should not be attempted to be deleted here.
+            if not item.get("ipAddress"):
+                continue
+            if not item.get("switchName"):
                 continue
 
             msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
@@ -3810,6 +3826,8 @@ class DcnmVrf:
 
         if len(delete_ids) == 0:
             return
+        msg = f"Releasing orphaned resources with IDs:{delete_ids}"
+        self.log.debug(msg)
         self.release_resources_by_id(delete_ids)
 
     def push_to_remote(self, is_rollback=False):
@@ -3830,6 +3848,19 @@ class DcnmVrf:
         # attachment being deleted is re-used on a new vrf attachment being
         # created. This is needed specially for state: overridden
 
+        for vrf_name in self.diff_delete:
+            path = self.paths["GET_NET_VRF"].format(self.fabric, vrf_name)
+            resp = dcnm_send(self.module, "GET", path)
+            if resp.get("DATA") is None:
+                msg = f"Invalid Response from Controller. {resp}"
+                self.module.fail_json(msg=msg)
+            elif resp["DATA"] != []:
+                msg = f"{vrf_name} in fabric: {self.fabric} has associated network attachments. "
+                self.log.debug("%s. Number of networks: %d", msg, len(resp['DATA']))
+                msg += "Please remove the network attachments "
+                msg += "before deleting the VRF. (maybe using dcnm_network module)"
+                self.module.fail_json(msg=msg)
+
         self.push_diff_detach(is_rollback)
         self.push_diff_undeploy(is_rollback)
 
@@ -3837,8 +3868,13 @@ class DcnmVrf:
         self.log.debug(msg)
 
         self.push_diff_delete(is_rollback)
+
+        vrf_del_list = []
         for vrf_name in self.diff_delete:
-            self.release_orphaned_resources(vrf_name, is_rollback)
+            vrf_del_list.append(vrf_name)
+        if vrf_del_list:
+            msg += f"VRF(s) to be deleted: {vrf_del_list}."
+            self.release_orphaned_resources(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback)
         self.push_diff_attach(is_rollback)
@@ -3863,7 +3899,7 @@ class DcnmVrf:
         for vrf in self.diff_delete:
             ok_to_delete = False
             path = self.paths["GET_VRF_ATTACH"].format(self.fabric, vrf)
-
+            retry_count = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
             while not ok_to_delete:
                 resp = dcnm_send(self.module, "GET", path)
                 ok_to_delete = True
@@ -3883,31 +3919,18 @@ class DcnmVrf:
                     ):
                         self.diff_delete.update({vrf: "OUT-OF-SYNC"})
                         break
-                    if (
-                        attach["lanAttachState"] == "DEPLOYED"
-                        and attach["isLanAttached"] is True
-                    ):
-                        vrf_name = attach.get("vrfName", "unknown")
-                        fabric_name = attach.get("fabricName", "unknown")
-                        switch_ip = attach.get("ipAddress", "unknown")
-                        switch_name = attach.get("switchName", "unknown")
-                        vlan_id = attach.get("vlanId", "unknown")
-                        msg = f"Network attachments associated with vrf {vrf_name} "
-                        msg += "must be removed (e.g. using the dcnm_network module) "
-                        msg += "prior to deleting the vrf. "
-                        msg += f"Details: fabric_name: {fabric_name}, "
-                        msg += f"vrf_name: {vrf_name}. "
-                        msg += "Network attachments found on "
-                        msg += f"switch_ip: {switch_ip}, "
-                        msg += f"switch_name: {switch_name}, "
-                        msg += f"vlan_id: {vlan_id}"
-                        self.module.fail_json(msg=msg)
                     if attach["lanAttachState"] != "NA":
                         time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
                         self.diff_delete.update({vrf: "DEPLOYED"})
                         ok_to_delete = False
                         break
                     self.diff_delete.update({vrf: "NA"})
+                if retry_count <= 0:
+                    msg = "Timeout waiting for VRF to be ready for deletion. "
+                    msg += f"vrf: {vrf}, "
+                    msg += f"resp: {resp}"
+                    self.module.fail_json(msg=msg)
+                retry_count -= 1
 
     def attach_spec(self):
         """
@@ -3974,6 +3997,7 @@ class DcnmVrf:
 
         spec["ipv6_linklocal_enable"] = {"default": True, "type": "bool"}
 
+        spec["l3vni_wo_vlan"] = {"default": False, "type": "bool"}
         spec["loopback_route_tag"] = {
             "default": 12345,
             "range_max": 4294967295,
@@ -4207,6 +4231,11 @@ class DcnmVrf:
         if res.get("ERROR"):
             fail = True
             changed = False
+        if res.get("DATA"):
+            resp_val = search_nested_json(res.get("DATA"), "fail")
+            if resp_val:
+                fail = True
+                changed = False
         if op == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False

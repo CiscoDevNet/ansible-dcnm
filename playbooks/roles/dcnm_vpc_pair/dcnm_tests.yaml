@@ -1,0 +1,78 @@
+---
+# This playbook can be used to execute integration tests for
+# the role located in:
+#
+# tests/integration/targets/dcnm_image_policy
+#
+# Modify the hosts and vars sections with details for your testing
+# setup and uncomment the testcase you want to run.
+#
+- hosts: dcnm
+  gather_facts: no
+  connection: ansible.netcommon.httpapi
+
+  vars:
+    switch_username: admin
+    switch_password: "password-secret"
+    ansible_it_fabric: fabric-stage
+    ansible_switch1: 192.168.1.1
+    ansible_switch2: 192.168.1.2
+    ansible_peer1_ip: 192.168.1.1
+    ansible_peer2_ip: 192.168.1.2
+    ansible_vxlan_vpc_domain_id: 1000
+
+    config:
+      - peerOneId: "{{ ansible_switch1 }}"
+        peerTwoId: "{{ ansible_switch2 }}"
+        templateName: "vpc_pair"  # Using the correct template name
+        profile:
+          # Required fields for VPC template
+          ADMIN_STATE: true
+          ALLOWED_VLANS: "all"
+          DOMAIN_ID: "{{ ansible_vxlan_vpc_domain_id }}"
+          FABRIC_NAME: "{{ ansible_it_fabric }}"
+          KEEP_ALIVE_HOLD_TIMEOUT: 3
+          KEEP_ALIVE_VRF: "management"
+          PC_MODE: "active"
+          PEER1_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer1_ip }}"
+          PEER1_MEMBER_INTERFACES: "eth1/1"
+          PEER1_PCID: 1
+          PEER2_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer2_ip }}"
+          PEER2_MEMBER_INTERFACES: "eth1/1"
+          PEER2_PCID: 2
+          
+          # Additional required fields
+          peer1Ip: "{{ ansible_peer1_ip }}"
+          peer2Ip: "{{ ansible_peer2_ip }}"
+          vpcDomainId: "{{ ansible_vxlan_vpc_domain_id }}"
+          adminState: true
+          keepAliveVrf: "management"
+          keepAliveHoldTimeout: 3
+          keepAliveLocalIp: "{{ ansible_peer1_ip }}"
+          keepAliveRemoteIp: "{{ ansible_peer2_ip }}"
+          
+          # Template specific fields
+          templateName: "vpc_pair"
+          templatePropId: ""
+          templatePropName: "vpc_pair"
+          templatePropDescription: "VPC Template"
+          templatePropDataType: "JSON"
+          templatePropDefaultValue: ""
+          templatePropDisplayName: "VPC Configuration"
+          templatePropIsMandatory: true
+          templatePropIsMultiSelect: false
+          templatePropIsPassword: false
+          templatePropIsReadOnly: false
+          templatePropIsRequired: true
+          templatePropIsSecure: false
+          templatePropIsSortable: false
+          templatePropIsVisible: true
+          templatePropOptions: []
+          templatePropRange: []
+          templatePropValue: ""
+          templatePropValueType: "STRING"
+          templateIPAddress: "{{ ansible_peer1_ip }}"
+
+
+  roles:
+    - dcnm_vpc_pair
