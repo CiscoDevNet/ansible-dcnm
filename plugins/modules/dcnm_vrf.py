@@ -134,6 +134,12 @@ options:
         type: bool
         required: false
         default: true
+      l3vni_wo_vlan:
+        description:
+        - Enable L3 VNI without VLAN
+        type: bool
+        required: false
+        default: false
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
