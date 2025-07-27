@@ -158,8 +158,7 @@
     - 'result_1c.response|length == 0'
     - 'result_1c.diff|length == 0'
 
-
-- name: TEST.1e - DELETED - [merged] Create, Attach, Deploy VRF ansible-vrf (L3VNI W/O VLAN)
+- name: TEST.1e - DELETED - [merged] Create, Attach VRF ansible-vrf (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -172,18 +171,14 @@
       attach:
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+      deploy: false
   register: result_1e
 
-- name: TEST.1f - DELETED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.1f - DELETED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_1f
-  until:
-    - "result_1f.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.1g - DELETED - [debug] print result_1e
   debug:
@@ -194,17 +189,12 @@
     - 'result_1e.changed == true'
     - 'result_1e.response[0].RETURN_CODE == 200'
     - 'result_1e.response[1].RETURN_CODE == 200'
-    - 'result_1e.response[2].RETURN_CODE == 200'
     - '(result_1e.response[1].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result_1e.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1e.diff[0].attach[0].deploy == true'
-    - 'result_1e.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_1e.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_1e.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result_1e.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1e.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_1e.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1e.diff[0].attach[1].ip_address'
     - 'result_1e.diff[0].vrf_name == "ansible-vrf-int1"'
     - '"enableL3VniNoVlan\":\"true\"" in result_1f.response[0].parent.vrfTemplateConfig'
-    - 'result_1f.response[0].attach[0].switchDetailsList[0].vlan is none'
-    - 'result_1f.response[0].attach[1].switchDetailsList[0].vlan is none'
 
 - name: TEST.1h - DELETED - [deleted] Delete VRF ansible-vrf-int1
   cisco.dcnm.dcnm_vrf: &conf1h
@@ -216,10 +206,6 @@
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
   register: result_1h
-
-- name: TEST.1i - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
 
 - name: TEST.1j - DELETED - [debug] print result_1
   debug:

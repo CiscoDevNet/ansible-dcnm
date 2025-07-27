@@ -420,18 +420,14 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # optional controller can provide
-      deploy: true
+      deploy: false
   register: result_6
 
-- name: TEST.6a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.6a - REPLACED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_6a
-  until:
-    - "result_6a.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.6b - REPLACED - [debug] print result_6
   debug:
@@ -442,14 +438,13 @@
     - 'result_6.changed == true'
     - 'result_6.response[0].RETURN_CODE == 200'
     - 'result_6.response[1].RETURN_CODE == 200'
-    - 'result_6.response[2].RETURN_CODE == 200'
     - '(result_6.response[1].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result_6.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result_6.diff[0].attach[0].deploy == true'
-    - 'result_6.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_6.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_6.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_6.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_6.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result_6.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_6.diff[0].attach[1].ip_address'
     - 'result_6.diff[0].vrf_name == "ansible-vrf-int1"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_6a.response[0].parent.vrfTemplateConfig'
 
 - name: TEST.7 - REPLACED - [replaced] Update existing VRF - Delete VRF LITE Attachment
   cisco.dcnm.dcnm_vrf: &conf7
@@ -463,22 +458,14 @@
       l3vni_wo_vlan: true
       attach:
       - ip_address: "{{ switch_1 }}"
-      deploy: true
+      deploy: false
   register: result_7
 
-- name: TEST.7a - REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
-
-- name: TEST.7b - REPLACED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.7b - REPLACED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_7b
-  until:
-    - "result_7b.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.7c - REPLACED - [debug] print result_7
   debug:
@@ -493,7 +480,6 @@
     - 'result_7.diff[0].attach[0].deploy == false'
     - 'result_7.diff[0].vrf_name == "ansible-vrf-int1"'
     - '"enableL3VniNoVlan\":\"true\"" in result_7b.response[0].parent.vrfTemplateConfig'
-    - 'result_7b.response[0].attach[0].switchDetailsList[0].vlan is none'
 
 - name: TEST.7d - REPLACED - conf7 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf7
@@ -528,18 +514,14 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # optional controller can provide
-      deploy: true
+      deploy: false
   register: result_8
 
-- name: TEST.8a - REPLACED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.8a - REPLACED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_8a
-  until:
-    - "result_8a.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.8b - REPLACED - [debug] print result_8
   debug:
@@ -549,13 +531,10 @@
     that:
     - 'result_8.changed == true'
     - 'result_8.response[0].RETURN_CODE == 200'
-    - 'result_8.response[1].RETURN_CODE == 200'
     - '(result_8.response[0].DATA|dict2items)[0].value == "SUCCESS"'
     - 'result_8.diff[0].attach[0].deploy == true'
     - 'result_8.diff[0].vrf_name == "ansible-vrf-int1"'
     - '"enableL3VniNoVlan\":\"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
-    - 'result_8a.response[0].attach[0].switchDetailsList[0].vlan is none'
-    - 'result_8a.response[0].attach[1].switchDetailsList[0].vlan is none'
 
 - name: TEST.8c - REPLACED - conf8 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf8

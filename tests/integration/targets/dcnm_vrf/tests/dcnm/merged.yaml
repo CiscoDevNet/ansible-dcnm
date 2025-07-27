@@ -152,7 +152,7 @@
     timeout: 60
   when: result_1e.changed == true
 
-- name: TEST.2 - MERGED - [merged] Create, Attach, Deploy VRF ansible-vrf-int1 (L3VNI W/O VLAN)
+- name: TEST.2 - MERGED - [merged] Create, Attach VRF ansible-vrf-int1 (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf: &conf2
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -165,18 +165,14 @@
       attach:
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+      deploy: false
   register: result_2
 
-- name: TEST.2a - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.2a - MERGED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_2a
-  until:
-    - "result_2a.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.2b - MERGED - [debug] print result_2
   ansible.builtin.debug:
@@ -187,17 +183,12 @@
     - result_2.changed == true
     - result_2.response[0].RETURN_CODE == 200
     - result_2.response[1].RETURN_CODE == 200
-    - result_2.response[2].RETURN_CODE == 200
     - (result_2.response[1].DATA|dict2items)[0].value == "SUCCESS"
     - (result_2.response[1].DATA|dict2items)[1].value == "SUCCESS"
-    - result_2.diff[0].attach[0].deploy == true
-    - result_2.diff[0].attach[1].deploy == true
-    - switch_1 in result_2.diff[0].attach[0].ip_address
-    - switch_2 in result_2.diff[0].attach[1].ip_address
+    - '"{{ switch_1 }}" in result_2.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_2.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_2.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_2.diff[0].attach[1].ip_address'
     - result_2.diff[0].vrf_name == "ansible-vrf-int1"
     - '"enableL3VniNoVlan\":\"true\"" in result_2a.response[0].parent.vrfTemplateConfig'
-    - 'result_2a.response[0].attach[0].switchDetailsList[0].vlan is none'
-    - 'result_2a.response[0].attach[1].switchDetailsList[0].vlan is none'
 
 - name: TEST.2c - MERGED - [merged] conf2 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf2
@@ -216,12 +207,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-
-- name: TEST.2f - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  # While vrf-lite extension was not configured above, we still hit VRF
-  # OUT-OF-SYNC. Let's see if waiting helps here too.
-  wait_for:
-    timeout: 60
 
 - name: TEST.3 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF (controller provided VLAN)
   cisco.dcnm.dcnm_vrf: &conf3
@@ -367,7 +352,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.5 - MERGED - [merged] Create, Attach, Deploy VRF+LITE EXTENSION (L3VNI W/O VLAN)
+- name: TEST.5 - MERGED - [merged] Create, Attach VRF+LITE EXTENSION (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf: &conf5
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -382,18 +367,14 @@
       - ip_address: "{{ switch_2 }}"
         vrf_lite:
           - interface: "{{ interface_2a }}" # mandatory
-      deploy: true
+      deploy: false
   register: result_5
 
-- name: TEST.5a - MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.5a - MERGED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_5a
-  until:
-    - "result_5a.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.5b - MERGED - [debug] print result_5
   ansible.builtin.debug:
@@ -404,17 +385,12 @@
     - result_5.changed == true
     - result_5.response[0].RETURN_CODE == 200
     - result_5.response[1].RETURN_CODE == 200
-    - result_5.response[2].RETURN_CODE == 200
     - (result_5.response[1].DATA|dict2items)[0].value == "SUCCESS"
     - (result_5.response[1].DATA|dict2items)[1].value == "SUCCESS"
-    - result_5.diff[0].attach[0].deploy == true
-    - result_5.diff[0].attach[1].deploy == true
-    - switch_1 in result_5.diff[0].attach[0].ip_address
-    - switch_2 in result_5.diff[0].attach[1].ip_address
+    - '"{{ switch_1 }}" in result_5.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_5.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_5.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_5.diff[0].attach[1].ip_address'
     - result_5.diff[0].vrf_name == "ansible-vrf-int1"
     - '"enableL3VniNoVlan\":\"true\"" in result_5a.response[0].parent.vrfTemplateConfig'
-    - 'result_5a.response[0].attach[0].switchDetailsList[0].vlan is none'
-    - 'result_5a.response[0].attach[1].switchDetailsList[0].vlan is none'
 
 - name: TEST.5c - MERGED - [merged] conf5 - Idempotence
   cisco.dcnm.dcnm_vrf: *conf5

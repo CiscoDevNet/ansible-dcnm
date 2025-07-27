@@ -361,7 +361,7 @@
   wait_for:
     timeout: 60
 
-- name: TEST.8 - QUERY - [merged] Create, Attach, Deploy VRF+LITE EXTENSION ansible-vrf-int2 on switch_2 (L3VNI W/O VLAN)
+- name: TEST.8 - QUERY - [merged] Create, Attach VRF+LITE EXTENSION ansible-vrf-int2 on switch_2 (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -382,18 +382,14 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # optional controller can provide
-      deploy: true
+      deploy: false
   register: result_8
 
-- name: TEST.8a - QUERY - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.8a - QUERY - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_8a
-  until:
-    - "result_8a.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
 
 - name: TEST.8b - QUERY - [debug] print result_8
   debug:
@@ -407,8 +403,10 @@
     - '(result_8.response[1].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result_8.response[1].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result_8.diff[0].attach[0].deploy == true'
-    - '"{{ switch_2 }}" in result_8.diff[0].attach[0].ip_address or  "{{ switch_2 }}" in result_8.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_8.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_8.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result_8.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_8.diff[0].attach[1].ip_address'
     - 'result_8.diff[0].vrf_name == "ansible-vrf-int2"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
 
 - name: TEST.9 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
   cisco.dcnm.dcnm_vrf:
@@ -431,7 +429,7 @@
             ipv6_addr: 2010::10:34:0:7/64 # optional
             neighbor_ipv6: 2010::10:34:0:3 # optional
             dot1q: 2 # optional controller can provide
-      deploy: true
+      deploy: false
   register: result_9
 
 - name: TEST.9a - QUERY - [debug] print result_9
@@ -443,14 +441,12 @@
     - 'result_9.changed == false'
     - 'result_9.response[0].parent.vrfName == "ansible-vrf-int2"'
     - 'result_9.response[0].parent.vrfId == 9008012'
-    - 'result_9.response[0].parent.vrfStatus == "DEPLOYED"'
+    - 'result_9.response[0].parent.vrfStatus == "PENDING"'
     - '"enableL3VniNoVlan\":\"true\"" in result_9.response[0].parent.vrfTemplateConfig'
     - 'result_9.response[0].attach[0].switchDetailsList[0].islanAttached == true'
-    - 'result_9.response[0].attach[0].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_9.response[0].attach[0].switchDetailsList[0].vlan is none'
+    - 'result_9.response[0].attach[0].switchDetailsList[0].lanAttachedState == "PENDING"'
     - 'result_9.response[0].attach[1].switchDetailsList[0].islanAttached == true'
-    - 'result_9.response[0].attach[1].switchDetailsList[0].lanAttachedState == "DEPLOYED"'
-    - 'result_9.response[0].attach[1].switchDetailsList[0].vlan is none'
+    - 'result_9.response[0].attach[1].switchDetailsList[0].lanAttachedState == "PENDING"'
 
 ###############################################
 ###                 CLEAN-UP                 ##

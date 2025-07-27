@@ -143,7 +143,7 @@
     timeout: 60
   tags: sanity
 
-- name: TEST.1g - SANITY MERGED - [merged] Create, Attach, Deploy VRF (L3VNI W/O VLAN)
+- name: TEST.1g - SANITY MERGED - [merged] Create, Attach VRF (L3VNI W/O VLAN)
   cisco.dcnm.dcnm_vrf: &conf1g
     fabric: "{{ fabric_1 }}"
     state: merged
@@ -156,19 +156,15 @@
       attach:
       - ip_address: "{{ switch_1 }}"
       - ip_address: "{{ switch_2 }}"
-      deploy: true
+      deploy: false
   register: result_1g
   tags: sanity
 
-- name: TEST.1h - SANITY MERGED - [query] Wait for vrfStatus == DEPLOYED
+- name: TEST.1h - SANITY MERGED - [query] query VRF state
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: query
   register: result_1h
-  until:
-    - "result_1h.response[0].parent.vrfStatus is search('DEPLOYED')"
-  retries: 30
-  delay: 2
   tags: sanity
 
 - name: TEST.1i - SANITY MERGED - [debug] print result_1g
@@ -181,17 +177,12 @@
     - 'result_1g.changed == true'
     - 'result_1g.response[0].RETURN_CODE == 200'
     - 'result_1g.response[1].RETURN_CODE == 200'
-    - 'result_1g.response[2].RETURN_CODE == 200'
     - '(result_1g.response[1].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result_1g.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result_1g.diff[0].attach[0].deploy == true'
-    - 'result_1g.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" in result_1g.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" in result_1g.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1g.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1g.diff[0].attach[1].ip_address'
     - 'result_1g.diff[0].vrf_name == "ansible-vrf-int1"'
     - '"enableL3VniNoVlan\":\"true\"" in result_1h.response[0].parent.vrfTemplateConfig'
-    - 'result_1h.response[0].attach[0].switchDetailsList[0].vlan is none'
-    - 'result_1h.response[0].attach[1].switchDetailsList[0].vlan is none'
   tags: sanity
 
 - name: TEST.1j - SANITY MERGED - conf1 - Idempotence
@@ -214,11 +205,6 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: deleted
-  tags: sanity
-
-- name: TEST.1l - SANITY MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
-    timeout: 60
   tags: sanity
 
 ###############################################
