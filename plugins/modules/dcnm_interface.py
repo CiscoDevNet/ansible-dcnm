@@ -2065,10 +2065,13 @@ class DcnmIntf:
             "BREAKOUT": 8,
         }
 
-        # Build breakout list in config
+        # Build breakout list in config as a list of dicts: [{switch_ip: [intf_names]}, ...]
+        breakout_dict = {}
         for interface in self.config:
-            if interface.get("type") and interface["type"] == "breakout":
-                self.breakout.append(interface["name"])
+            if interface.get("type") == "breakout":
+                for sw in interface.get("switch", []):
+                    breakout_dict.setdefault(sw, []).append(interface["name"])
+        self.breakout = [{k: v} for k, v in breakout_dict.items()]
 
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
@@ -2087,19 +2090,38 @@ class DcnmIntf:
         # Return False and None if the pattern does not match
         return False, None
 
-    def dcnm_intf_get_parent(self, cfg, name):
-        # Extract the parent interface ID (e.g., "1/2" from "1/2/3")
+    def dcnm_intf_get_parent(self, cfg, name, switch):
+        """
+        Given an interface name and switch serial number, determine if the parent breakout interface exists in the config.
+
+        Args:
+            cfg (list): List of interface configuration dictionaries.
+            name (str): Interface name to check (e.g., "Ethernet1/100/1").
+            switch (str): Switch serial number.
+
+        Returns:
+            tuple: (True, type) if parent breakout interface exists, else (False, None).
+        """
+        # Extract the parent interface ID (e.g., "1/100" from "Ethernet1/100/1")
         match = re.search(r"(\d+/\d+)/\d+", name)
         if not match:
             return False, None  # Return early if the pattern doesn't match
 
-        parent_port_id = f"ethernet{match.group(1)}"
-
-        # Search for the parent interface in the configuration
+        parent_intf = f"Ethernet{match.group(1)}"
+        # Find the switch IP corresponding to the given serial number
+        sw_ip = None
+        for ip, serial in self.ip_sn.items():
+            if serial == switch:
+                sw_ip = ip
+                break
+        # Check if the parent interface exists in the config for the given switch
         for interface in cfg:
-            if interface.get("name").lower() == parent_port_id:
+            if (
+                interface.get("name", "").lower() == parent_intf.lower()
+                and interface.get("type", "").lower() == "breakout"
+                and sw_ip in interface.get("switch", [])
+            ):
                 return True, interface.get("type", None)
-
         return False, None
 
     def dcnm_intf_dump_have_all(self):
@@ -3801,7 +3823,7 @@ class DcnmIntf:
                             is_valid_format, formatted_interface = self.dcnm_intf_breakout_format(intf)
 
                             # Add to self.want only if the interface does not match invalid breakout conditions
-                            if not (is_valid_format and formatted_interface not in self.breakout):
+                            if not (is_valid_format and formatted_interface):
 
                                 self.want.append(intf_payload)
 
@@ -4168,10 +4190,11 @@ class DcnmIntf:
         if state != "deleted":
             for want_breakout in self.want_breakout:
                 want_intf = want_breakout["interfaces"][0]["ifName"]
+                want_serialnumber = want_breakout["interfaces"][0]["serialNumber"]
                 match_create = False
                 for have_intf in self.have_all:
                     is_valid, intf = self.dcnm_intf_breakout_format(have_intf['ifName'])
-                    if is_valid and want_intf == intf:
+                    if is_valid and want_intf == intf and want_serialnumber == have_intf['serialNo']:
                         match_create = True
 
                 # If interface in want_breakout and interface e1/x/y not present
@@ -4185,10 +4208,11 @@ class DcnmIntf:
             for have in self.have_all:
                 have_intf = have['ifName']
                 if re.search(r"\d+\/\d+\/\d+", have_intf):
-                    found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf)
+                    found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf, switch=have['serialNo'])
                     # If have not in want breakout and if match to E1/x/1 add to dict
                     # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
                     # with the first sub if.
+                    # import epdb; epdb.serve(port=5555)
                     if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
                         payload = {'serialNumber': have['serialNo'],
                                    'ifName': have['ifName']}
@@ -4362,7 +4386,7 @@ class DcnmIntf:
             if action == "add":
                 # If E1/x/y do not create. Interface is created with breakout
                 if re.search(r"\d+\/\d+\/\d+", name):
-                    found, parent_type = self.dcnm_intf_get_parent(self.config, name)
+                    found, parent_type = self.dcnm_intf_get_parent(self.config, name, switch=sno)
                     if found and parent_type == "breakout":
                         if want.get("interfaceType", None) is not None:
                             want.pop("interfaceType")
@@ -4753,7 +4777,7 @@ class DcnmIntf:
                     # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
                     # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
                     if re.search(r"\d+\/\d+\/\d+", name):
-                        found, parent_type = self.dcnm_intf_get_parent(cfg, name)
+                        found, parent_type = self.dcnm_intf_get_parent(cfg, name, switch=sno)
 
                         if not (found and parent_type == "breakout"):
                             payload = {
@@ -4962,7 +4986,7 @@ class DcnmIntf:
                     for have in self.have_all:
                         have_intf = have['ifName']
                         if re.search(r"\d+\/\d+\/\d+", have_intf):
-                            found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf)
+                            found, parent_type = self.dcnm_intf_get_parent(self.config, have_intf, switch=have['serialNo'])
                             # If have in want breakout and if match to E1/x/1 add to dict
                             # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
                             # with the first sub if.
@@ -5420,7 +5444,7 @@ class DcnmIntf:
             # index 8 is used for breakout interface
             if delete_index == 8:
                 path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
-
+                break
             json_payload = json.dumps(delem)
 
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
