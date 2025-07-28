@@ -44,6 +44,7 @@ import json
 # Any third party modules should be imported as below, if not sanity tests will fail
 try:
     import requests
+
     HAS_REQUESTS = True
 except ImportError:
     HAS_REQUESTS = False
@@ -110,7 +111,6 @@ class HttpApi(HttpApiBase):
                 self.login_fail_msg.append("Error on attempt to connect and authenticate with NDFC controller: {0}".format(vrd))
                 return
 
-            # self.connection._auth = {"Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token"))}
             self.connection._auth = {
                 "Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token")),
                 "Cookie": "AuthCookie={0}".format(self._response_to_json12(response_data).get("token")),
@@ -133,7 +133,6 @@ class HttpApi(HttpApiBase):
                 self.login_fail_msg.append("Error on attempt to connect and authenticate with NDFC controller: {0}".format(vrd))
                 return
 
-            # self.connection._auth = {"Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token"))}
             self.connection._auth = {
                 "Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token")),
                 "Cookie": "AuthCookie={0}".format(self._response_to_json12(response_data).get("token")),
