@@ -1,4 +1,4 @@
-# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,112 +84,73 @@ class HttpApi(HttpApiBase):
         data = "{'expirationTime': %s}" % timeout
 
         try:
-            response, response_data = self.connection.send(
-                path, data, method=method, headers=self.headers, force_basic_auth=True
-            )
+            response, response_data = self.connection.send(path, data, method=method, headers=self.headers, force_basic_auth=True)
             vrd = self._verify_response(response, method, path, response_data)
             if vrd["RETURN_CODE"] != 200:
-                self.login_fail_msg.append(
-                    "Error on attempt to connect and authenticate with DCNM controller: {0}".format(
-                        vrd
-                    )
-                )
+                self.login_fail_msg.append("Error on attempt to connect and authenticate with DCNM controller: {0}".format(vrd))
                 return
 
             response_value = self._get_response_value(response_data)
-            self.connection._auth = {
-                "Dcnm-Token": self._response_to_json(response_value)["Dcnm-Token"]
-            }
+            self.connection._auth = {"Dcnm-Token": self._response_to_json(response_value)["Dcnm-Token"]}
             self.login_succeeded = True
             self.set_version(11)
             self.set_token(self.connection._auth)
 
         except Exception as e:
-            self.login_fail_msg.append(
-                "Error on attempt to connect and authenticate with DCNM controller: {0}".format(
-                    e
-                )
-            )
+            self.login_fail_msg.append("Error on attempt to connect and authenticate with DCNM controller: {0}".format(e))
 
     def _login_latestv1(self, username, password, login_domain, method, path):
         """Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later."""
-        payload = {
-            "username": username,
-            "password": password,
-            "domain": login_domain
-        }
+        payload = {"username": username, "password": password, "domain": login_domain}
         data = json.dumps(payload)
         try:
-            response, response_data = self.connection.send(
-                path, data, method=method, headers=self.headers
-            )
+            response, response_data = self.connection.send(path, data, method=method, headers=self.headers)
             vrd = self._verify_response(response, method, path, response_data)
             if vrd["RETURN_CODE"] != 200:
-                self.login_fail_msg.append(
-                    "Error on attempt to connect and authenticate with NDFC controller: {0}".format(
-                        vrd
-                    )
-                )
+                self.login_fail_msg.append("Error on attempt to connect and authenticate with NDFC controller: {0}".format(vrd))
                 return
 
+            # self.connection._auth = {"Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token"))}
             self.connection._auth = {
-                "Authorization": "Bearer {0}".format(
-                    self._response_to_json12(response_data).get("token")
-                )
+                "Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token")),
+                "Cookie": "AuthCookie={0}".format(self._response_to_json12(response_data).get("token")),
             }
             self.login_succeeded = True
             self.set_version(12)
             self.set_token(self.connection._auth)
 
         except Exception as e:
-            self.login_fail_msg.append(
-                "Error on attempt to connect and authenticate with NDFC controller: {0}".format(
-                    e
-                )
-            )
+            self.login_fail_msg.append("Error on attempt to connect and authenticate with NDFC controller: {0}".format(e))
 
     def _login_latestv2(self, username, password, login_domain, method, path):
         """Nexus Dashboard NDFC Helper Function to login to NDFC version 12 or later."""
-        payload = {
-            "userName": username,
-            "userPasswd": password,
-            "domain": login_domain
-        }
+        payload = {"userName": username, "userPasswd": password, "domain": login_domain}
         data = json.dumps(payload)
         try:
-            response, response_data = self.connection.send(
-                path, data, method=method, headers=self.headers
-            )
+            response, response_data = self.connection.send(path, data, method=method, headers=self.headers)
             vrd = self._verify_response(response, method, path, response_data)
             if vrd["RETURN_CODE"] != 200:
-                self.login_fail_msg.append(
-                    "Error on attempt to connect and authenticate with NDFC controller: {0}".format(
-                        vrd
-                    )
-                )
+                self.login_fail_msg.append("Error on attempt to connect and authenticate with NDFC controller: {0}".format(vrd))
                 return
 
+            # self.connection._auth = {"Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token"))}
             self.connection._auth = {
-                "Authorization": "Bearer {0}".format(
-                    self._response_to_json12(response_data).get("token")
-                )
+                "Authorization": "Bearer {0}".format(self._response_to_json12(response_data).get("token")),
+                "Cookie": "AuthCookie={0}".format(self._response_to_json12(response_data).get("token")),
             }
             self.login_succeeded = True
             self.set_version(12)
             self.set_token(self.connection._auth)
 
         except Exception as e:
-            self.login_fail_msg.append(
-                "Error on attempt to connect and authenticate with NDFC controller: {0}".format(
-                    e
-                )
-            )
+            self.login_fail_msg.append("Error on attempt to connect and authenticate with NDFC controller: {0}".format(e))
 
     def login(self, username, password):
         """DCNM/NDFC Login Method.  This method is automatically called by the
         Ansible plugin architecture if an active Token is not already
         available.
         """
+
         self.login_succeeded = False
         self.login_fail_msg = []
         login_domain = "local"  # default login domain of Nexus Dashboard
@@ -224,45 +185,46 @@ class HttpApi(HttpApiBase):
             )
             vrd = self._verify_response(response, method, path, response_data)
             if vrd["RETURN_CODE"] != 200:
-                self.logout_fail_msg.append(
-                    "Error on attempt to logout from DCNM controller: {0}".format(vrd)
-                )
+                self.logout_fail_msg.append("Error on attempt to logout from DCNM controller: {0}".format(vrd))
                 return
 
             self.logout_succeeded = True
 
         except Exception as e:
-            self.logout_fail_msg.append(
-                "Error on attempt to logout from DCNM controller: {0}".format(e)
-            )
+            self.logout_fail_msg.append("Error on attempt to logout from DCNM controller: {0}".format(e))
 
     def _logout_latest(self, method, path):
         try:
-            response, response_data = self.connection.send(
-                path, {}, method=method, headers=self.headers
-            )
+            response, response_data = self.connection.send(path, {}, method=method, headers=self.headers)
             vrd = self._verify_response(response, method, path, response_data)
             if vrd["RETURN_CODE"] != 200:
-                self.logout_fail_msg.append(
-                    "Error on attempt to logout from NDFC controller: {0}".format(vrd)
-                )
+                self.logout_fail_msg.append("Error on attempt to logout from NDFC controller: {0}".format(vrd))
                 return
 
             self.logout_succeeded = True
 
         except Exception as e:
-            self.logout_fail_msg.append(
-                "Error on attempt to logout from NDFC controller: {0}".format(e)
-            )
+            self.logout_fail_msg.append("Error on attempt to logout from NDFC controller: {0}".format(e))
 
     def logout(self):
-        if self.connection._auth is not None:
-            return
+        """DCNM/NDFC Logout Method.
+
+        This method performs a logout operation to terminate the session with
+        the DCNM or NDFC controller. It detects the version and uses the
+        appropriate logout mechanism for DCNM v11 or NDFC v12+.
+
+        Raises:
+            ConnectionError: If logout fails or if the version cannot be detected
+        """
 
         self.logout_succeeded = False
         self.logout_fail_msg = []
         method = "POST"
         path = {"dcnm": "/rest/logout", "ndfc": "/logout"}
+
+        if self.version is None:
+            self.logout_fail_msg.append("Version not detected, cannot perform logout")
+            raise ConnectionError(self.logout_fail_msg)
 
         if self.version == 11:
             # Logout of DCNM version 11
@@ -271,9 +233,10 @@ class HttpApi(HttpApiBase):
             # Logout of DCNM version 12
             self._logout_latest(method, path["ndfc"])
 
-        # If both login attemps fail, raise ConnectionError
+        # If logout attempt fails, raise ConnectionError
         if not self.logout_succeeded:
-            raise ConnectionError(self.logout_fail_msg)
+            error_message = "Logout failed: " + "; ".join(self.logout_fail_msg)
+            raise ConnectionError(error_message)
 
         self.connection._auth = None
 
@@ -311,9 +274,7 @@ class HttpApi(HttpApiBase):
             if path[0] != "/":
                 msg = "Value of <path> does not appear to be formated properly"
                 raise ConnectionError(self._return_info(None, method, path, msg))
-            response, rdata = self.connection.send(
-                path, json, self.retrycount, method=method, headers=self.headers, force_basic_auth=True
-            )
+            response, rdata = self.connection.send(path, json, self.retrycount, method=method, headers=self.headers, force_basic_auth=True)
             return self._verify_response(response, method, path, rdata)
         except Exception as e:
             # In some cases netcommon raises execeptions without arguments, so check for exception args.
