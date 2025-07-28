@@ -4223,6 +4223,8 @@ class TestDcnmIntfModule(TestDcnmModule):
             "PEER1_PO_CONF",
             "PEER2_PO_CONF",
             "INTF_NAME",
+            "ENABLE_LACP_VPC_CONV",
+            "DISABLE_LACP_SUSPEND"
         ]
 
         for d in result["diff"][0]["replaced"]:

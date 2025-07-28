@@ -94,6 +94,9 @@
 				"allowed_vlans": "none",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
 				"duplex": "auto",
 				"cmds": [
 					"no shutdown"
@@ -219,6 +222,9 @@
 				"allowed_vlans": "all",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
 				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
@@ -469,6 +475,9 @@
 				"allowed_vlans": "all",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
 				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
@@ -500,6 +509,9 @@
 				"allowed_vlans": "all",
 				"native_vlan": 10,
 				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
 				"duplex": "auto",
 				"cmds": [
 					"no shutdown",

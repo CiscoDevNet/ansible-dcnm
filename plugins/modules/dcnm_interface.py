@@ -181,6 +181,21 @@ options:
             type: str
             choices: ['auto', 'full', 'half']
             default: auto
+          enable_pfc:
+            description:
+            - State of Priority Flow Control (PFC) on the interface
+            type: bool
+            default: false
+          enable_cdp:
+            description:
+            - State of CDP protocol on the interface
+            type: bool
+            default: true
+          enable_monitor:
+            description:
+            - State of Switchport Monitor for SPAN/ERSPAN
+            type: bool
+            default: false
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -309,6 +324,17 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          disable_lacp_suspend_individual:
+            description:
+            - If disabled, lacp will put the port to individual state and not suspend the port
+              in case the port does not get LACP BPDU from the peer ports in the port-channel
+            type: bool
+            default: false
+          enable_lacp_vpc_convergence:
+            description:
+            - Enable lacp convergence for vPC port-channels
+            type: bool
+            default: false
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -564,6 +590,21 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          enable_pfc:
+            description:
+            - State of Priority Flow Control (PFC) on the interface
+            type: bool
+            default: false
+          enable_cdp:
+            description:
+            - State of CDP protocol on the interface
+            type: bool
+            default: true
+          enable_monitor:
+            description:
+            - State of Switchport Monitor for SPAN/ERSPAN
+            type: bool
+            default: false
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -1920,6 +1961,12 @@ class DcnmIntf:
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
             "ENABLE_ORPHAN_PORT": "orphan_port",
+            "DISABLE_LACP_SUSPEND": "disable_lacp_suspend_individual",
+            "ENABLE_LACP_VPC_CONV": "enable_lacp_vpc_convergence",
+            "ENABLE_PFC": "enable_pfc",
+            "ENABLE_MONITOR": "enable_monitor",
+            "CDP_ENABLE": "enable_cdp",
+
         }
 
         # New Interfaces
@@ -2268,6 +2315,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2285,6 +2335,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2371,6 +2424,8 @@ class DcnmIntf:
             peer1_description=dict(type="str", default=""),
             peer2_description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
+            enable_lacp_vpc_convergence=dict(type="bool", default=False),
         )
 
         vpc_prof_spec_access = dict(
@@ -2487,6 +2542,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2504,6 +2562,9 @@ class DcnmIntf:
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
             orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
         )
@@ -2844,6 +2905,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
             intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
@@ -2870,6 +2937,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "l3":
@@ -3089,6 +3162,14 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        if delem[profile].get("disable_lacp_suspend_individual"):
+            intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
+        if delem[profile].get("enable_lacp_vpc_convergence"):
+            intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = delem[profile]["enable_lacp_vpc_convergence"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = False
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -3242,6 +3323,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
             intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
@@ -3259,6 +3346,12 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
             intf["interfaces"][0]["nvPairs"][
                 "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "routed":
@@ -3884,7 +3977,15 @@ class DcnmIntf:
             else:
                 t_e2 = e2
 
-        if k == 'ENABLE_ORPHAN_PORT':
+        boolean_keys = [
+            "ENABLE_ORPHAN_PORT",
+            "DISABLE_LACP_SUSPEND",
+            "ENABLE_LACP_VPC_CONV",
+            "ENABLE_PFC",
+            "ENABLE_MONITOR",
+            "CDP_ENABLE"
+        ]
+        if k in boolean_keys:
             # This is a special case where the value is a boolean and we need to compare it as such
             t_e1 = str(t_e1).lower()
             t_e2 = str(t_e2).lower()
@@ -4162,7 +4263,8 @@ class DcnmIntf:
                                     nv_keys = list(want[k][0][ik].keys())
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
-                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE"]
+                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE",
+                                                     "DISABLE_LACP_SUSPEND", "ENABLE_LACP_VPC_CONV"]
 
                                     for key in keys_to_check:
                                         # Remove the key from nv_keys only if it exists and is not present in 'have'
