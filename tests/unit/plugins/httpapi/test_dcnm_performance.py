@@ -55,7 +55,7 @@ class TestHttpApiPerformance:
             start_time = time.time()
 
             # Perform 100 login attempts
-            for _ in range(100):
+            for idx in range(100):
                 http_api.login_succeeded = False  # Reset state
                 http_api.login("admin", "password")
 
@@ -76,7 +76,7 @@ class TestHttpApiPerformance:
         start_time = time.time()
 
         # Parse JSON 100 times
-        for _ in range(100):
+        for idx in range(100):
             http_api._response_to_json(large_json)
 
         end_time = time.time()
@@ -101,7 +101,7 @@ class TestHttpApiPerformance:
         start_time = time.time()
 
         # Verify 1000 responses
-        for _ in range(1000):
+        for idx in range(1000):
             http_api._verify_response(mock_response, "GET", "/api/test", mock_rdata)
 
         end_time = time.time()

@@ -17,7 +17,7 @@ Fixtures for HttpApi tests
 """
 
 import pytest
-from unittest.mock import Mock, MagicMock
+from unittest.mock import Mock
 
 
 @pytest.fixture
