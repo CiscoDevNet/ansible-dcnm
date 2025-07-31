@@ -4212,7 +4212,6 @@ class DcnmIntf:
                     # If have not in want breakout and if match to E1/x/1 add to dict
                     # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
                     # with the first sub if.
-                    # import epdb; epdb.serve(port=5555)
                     if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
                         payload = {'serialNumber': have['serialNo'],
                                    'ifName': have['ifName']}
