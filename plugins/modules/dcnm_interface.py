@@ -3821,10 +3821,9 @@ class DcnmIntf:
                         if intf_payload not in self.want:
                             intf = intf_payload["interfaces"][0]["ifName"]
                             is_valid_format, formatted_interface = self.dcnm_intf_breakout_format(intf)
-
+                            found, parent_type = self.dcnm_intf_get_parent(self.config, formatted_interface, self.ip_sn[delem['switch'][0]])
                             # Add to self.want only if the interface does not match invalid breakout conditions
-                            if not (is_valid_format and formatted_interface):
-
+                            if (not found and is_valid_format) or (found and parent_type == "breakout_interface"):
                                 self.want.append(intf_payload)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
