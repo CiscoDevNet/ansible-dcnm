@@ -753,7 +753,7 @@ class DcnmInventory:
     def get_have(self):
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
@@ -784,7 +784,7 @@ class DcnmInventory:
             get_switch.update({"sysName": inv["logicalName"]})
             get_switch.update({"serialNumber": inv["serialNumber"]})
             get_switch.update({"ipaddr": inv["ipAddress"]})
-            get_switch.update({"platform": inv["nonMdsModel"]})
+            get_switch.update({"platform": inv["model"]})
             get_switch.update({"version": inv["release"]})
             get_switch.update(
                 {"deviceIndex": inv["logicalName"] + "(" + inv["serialNumber"] + ")"}
@@ -1250,7 +1250,7 @@ class DcnmInventory:
 
         # Get Fabric Inventory Details
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
@@ -1370,7 +1370,7 @@ class DcnmInventory:
         all_ok = True
         # Get Fabric Inventory Details
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         get_inv = dcnm_send(self.module, method, path)
@@ -1421,7 +1421,7 @@ class DcnmInventory:
         method = "GET"
         path = "/fm/fmrest/lanConfig/getLanSwitchCredentials"
         if self.nd:
-            path = self.nd_prefix + "/" + path[6:]
+            path = self.nd_prefix + "/" + path[6:] + "WithType"
             # lan_path = '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/lanConfig/getLanSwitchCredentials'
         get_lan = dcnm_send(self.module, method, path)
         missing_fabric, not_ok = self.handle_response(get_lan, "query_dcnm")
@@ -1457,7 +1457,7 @@ class DcnmInventory:
     def assign_role(self):
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         get_role = dcnm_send(self.module, method, path)
@@ -1478,14 +1478,27 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
+                if not role.get("serialNumber"):
+                    msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
+                        self.fabric
+                    )
+                    self.module.fail_json(msg=msg)
                 if role["ipAddress"] == create["switches"][0]["ipaddr"]:
                     method = "PUT"
                     path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
                         role["switchDbID"], create["role"].replace("_", "%20")
                     )
+                    data = None
                     if self.nd:
-                        path = self.nd_prefix + "/" + path[6:]
-                    response = dcnm_send(self.module, method, path)
+                        method = "POST"
+                        path = f"{self.nd_prefix}/rest/control/switches/roles"
+                        data = json.dumps(
+                            {
+                                "serialNumber": role["serialNumber"],
+                                "role": create["role"],
+                            }
+                        )
+                    response = dcnm_send(self.module, method, path, data)
                     self.result["response"].append(response)
                     fail, self.result["changed"] = self.handle_response(
                         response, "create"
@@ -1500,14 +1513,27 @@ class DcnmInventory:
                         self.fabric
                     )
                     self.module.fail_json(msg=msg)
+                if not role.get("serialNumber"):
+                    msg = "Unable to get serial number using getLanSwitchCredentials under fabric: {0}".format(
+                        self.fabric
+                    )
+                    self.module.fail_json(msg=msg)
                 if role["ipAddress"] == create["ipAddress"]:
                     method = "PUT"
                     path = "/fm/fmrest/topology/role/{0}?newRole={1}".format(
                         role["switchDbID"], create["role"].replace("_", "%20")
                     )
+                    data = None
                     if self.nd:
-                        path = self.nd_prefix + "/" + path[6:]
-                    response = dcnm_send(self.module, method, path)
+                        method = "POST"
+                        path = f"{self.nd_prefix}/rest/control/switches/roles"
+                        data = json.dumps(
+                            {
+                                "serialNumber": role["serialNumber"],
+                                "role": create["role"],
+                            }
+                        )
+                    response = dcnm_send(self.module, method, path, data)
                     self.result["response"].append(response)
                     fail, self.result["changed"] = self.handle_response(
                         response, "create"
@@ -1620,7 +1646,7 @@ class DcnmInventory:
         query_poap = self.params["query_poap"]
 
         method = "GET"
-        path = "/rest/control/fabrics/{0}/inventory".format(self.fabric)
+        path = "/rest/control/fabrics/{0}/inventory/switchesByFabric".format(self.fabric)
         if self.nd:
             path = self.nd_prefix + path
         inv_objects = dcnm_send(self.module, method, path)
