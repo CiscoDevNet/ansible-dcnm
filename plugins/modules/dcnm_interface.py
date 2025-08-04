@@ -2064,7 +2064,6 @@ class DcnmIntf:
             "BREAKOUT": 8,
         }
 
-
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
 
