@@ -126,13 +126,6 @@ class HttpApi(HttpApiBase):
         # Define login configurations in order of preference
         login_configs = [
             {
-                "controller_type": "DCNM",
-                "version": 11,
-                "path": "/rest/logon",
-                "data": "{'expirationTime': %s}" % (self.connection.get_option("persistent_connect_timeout") * 1000),
-                "force_basic_auth": True,
-            },
-            {
                 "controller_type": "NDFC",
                 "version": 12,
                 "path": "/login",
@@ -145,6 +138,13 @@ class HttpApi(HttpApiBase):
                 "path": "/login",
                 "data": json.dumps({"username": username, "password": password, "domain": login_domain}),
                 "force_basic_auth": False,
+            },
+            {
+                "controller_type": "DCNM",
+                "version": 11,
+                "path": "/rest/logon",
+                "data": "{'expirationTime': %s}" % (self.connection.get_option("persistent_connect_timeout") * 1000),
+                "force_basic_auth": True,
             },
         ]
 
@@ -279,9 +279,10 @@ class HttpApi(HttpApiBase):
         """Convert response_text to json format"""
         try:
             return json.loads(response_text) if response_text else {}
-        # JSONDecodeError only available on Python 3.5+
-        except ValueError:
+        except json.JSONDecodeError:
             return "Invalid JSON response: {0}".format(response_text)
+        except Exception as e:
+            return "Error decoding JSON response: {0}".format(str(e))
 
     def _response_to_json12(self, response_text):
         """Convert response_text to json format"""

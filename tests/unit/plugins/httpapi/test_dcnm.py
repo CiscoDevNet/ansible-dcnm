@@ -400,7 +400,7 @@ class TestHttpApiLogin:
 
             # Should call attempt_login once and return
             mock_attempt.assert_called_once()
-            assert mock_attempt.call_args[0][0]["controller_type"] == "DCNM"
+            assert mock_attempt.call_args[0][0]["controller_type"] == "NDFC"
 
     @patch.object(HttpApi, "get_option")
     def test_login_success_second_attempt(self, mock_get_option, mock_connection):
@@ -790,11 +790,10 @@ class TestHttpApiEdgeCases:
 
                 # Get the first call (DCNM config)
                 nd_config = mock_attempt.call_args_list[0][0][0]
-                assert nd_config["controller_type"] == "DCNM"
-                assert nd_config["version"] == 11
-                assert nd_config["path"] == "/rest/logon"
-                assert nd_config["force_basic_auth"] is True
-                assert "'expirationTime': 10000" in nd_config["data"]
+                assert nd_config["controller_type"] == "NDFC"
+                assert nd_config["version"] == 12
+                assert nd_config["path"] == "/login"
+                assert nd_config["force_basic_auth"] is False
 
     def test_logout_config_selection(self, mock_connection):
         """Test that logout selects correct configuration based on version."""
@@ -888,8 +887,8 @@ class TestHttpApiIntegration:
 
             # Verify login state
             assert http_api.login_succeeded is True
-            assert http_api.version == 11
-            assert http_api.connection._auth == {"Dcnm-Token": "test-token-123"}
+            assert http_api.version == 12
+            assert http_api.connection._auth == {'Authorization': 'Bearer None', 'Cookie': 'AuthCookie=None'}
 
             # Perform logout
             http_api.logout()
