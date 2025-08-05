@@ -2065,7 +2065,6 @@ class DcnmIntf:
             "BREAKOUT": 8,
         }
 
-
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
 
@@ -3894,7 +3893,6 @@ class DcnmIntf:
         self.dcnm_intf_get_have_all_with_sno(sno)
         self.dcnm_intf_get_have_all_breakout_interfaces(sno)
 
-
     def dcnm_intf_get_have(self):
 
         if not self.want:
@@ -4220,7 +4218,7 @@ class DcnmIntf:
                     if match_delete_interface:
                         payload = {
                             "serialNumber": list(have_breakout.keys())[0],
-                            "ifName": interface+"/1"
+                            "ifName": interface + "/1"
                         }
                         self.diff_delete_breakout.append(payload)
 
