@@ -1495,8 +1495,8 @@ class DcnmInventory:
                         data = json.dumps(
                             [
                                 {
-                                "serialNumber": role["serialNumber"],
-                                "role": create["role"].replace("_", " "),
+                                    "serialNumber": role["serialNumber"],
+                                    "role": create["role"].replace("_", " "),
                                 }
                             ]
                         )
@@ -1532,8 +1532,8 @@ class DcnmInventory:
                         data = json.dumps(
                             [
                                 {
-                                "serialNumber": role["serialNumber"],
-                                "role": create["role"].replace("_", " "),
+                                    "serialNumber": role["serialNumber"],
+                                    "role": create["role"].replace("_", " "),
                                 }
                             ]
                         )
