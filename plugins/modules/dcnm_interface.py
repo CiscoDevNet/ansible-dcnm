@@ -3864,15 +3864,15 @@ class DcnmIntf:
             self.have_all.extend(resp["DATA"])
 
     def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
-        # This function will get policies for a given serial number and 
+        # This function will get policies for a given serial number and
         # populate the breakout interfaces in self.have_breakout.
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
         resp = dcnm_send(self.module, "GET", path)
-        
+
         breakout = []
         if resp and "DATA" in resp and resp["DATA"]:
             for elem in resp["DATA"]:
-                if elem['templateName'] == "breakout_interface":
+                if elem.get('templateName', None) == "breakout_interface":
                     breakout.append(elem['entityName'])
             self.have_breakout.append({sno: breakout})
 
@@ -4201,7 +4201,7 @@ class DcnmIntf:
                     if want_serialnumber == list(elem.keys())[0]:
                         for interface in elem[want_serialnumber]:
                             if interface.lower() == want_intf.lower():
-                                # If the breakout interface is already present in have, 
+                                # If the breakout interface is already present in have,
                                 # skip adding it to diff_create_breakout
                                 match_create = True
                                 break
