@@ -1855,6 +1855,7 @@ class DcnmIntf:
         self.diff_delete = [[], [], [], [], [], [], [], [], []]
         self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.want_breakout = []
+        self.have_breakout = []
         self.diff_create_breakout = []
         self.diff_delete_breakout = []
         self.diff_deploy = []
@@ -2063,6 +2064,7 @@ class DcnmIntf:
             "AA_FEX": 7,
             "BREAKOUT": 8,
         }
+
 
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
@@ -3807,8 +3809,11 @@ class DcnmIntf:
                             intf = intf_payload["interfaces"][0]["ifName"]
                             is_breakout_format, formatted_interface = self.dcnm_intf_breakout_format(intf)
                             parent_breakout_found, parent_type = self.dcnm_intf_get_parent(intf, sw)
-                            # Add to self.want only if the interface does not match invalid breakout conditions
-                            if is_breakout_format is False or parent_breakout_found is True:
+                            # Add breakout interface to self.want only if breakout is configured in state overridden
+                            # When state is replaced, we don't check if parent is configured.
+                            if is_breakout_format is False or parent_breakout_found is True and self.params['state'] == "overridden":
+                                self.want.append(intf_payload)
+                            else:
                                 self.want.append(intf_payload)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
@@ -3858,6 +3863,19 @@ class DcnmIntf:
         if resp and "DATA" in resp and resp["DATA"]:
             self.have_all.extend(resp["DATA"])
 
+    def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
+        # This function will get policies for a given serial number and 
+        # populate the breakout interfaces in self.have_breakout.
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
+        resp = dcnm_send(self.module, "GET", path)
+        
+        breakout = []
+        if resp and "DATA" in resp and resp["DATA"]:
+            for elem in resp["DATA"]:
+                if elem['templateName'] == "breakout_interface":
+                    breakout.append(elem['entityName'])
+            self.have_breakout.append({sno: breakout})
+
     def dcnm_intf_get_have_all(self, sw):
 
         # Check if you have already got the details for this switch
@@ -3874,6 +3892,8 @@ class DcnmIntf:
 
         self.have_all_list.append(sw)
         self.dcnm_intf_get_have_all_with_sno(sno)
+        self.dcnm_intf_get_have_all_breakout_interfaces(sno)
+
 
     def dcnm_intf_get_have(self):
 
@@ -4176,29 +4196,32 @@ class DcnmIntf:
                 want_intf = want_breakout["interfaces"][0]["ifName"]
                 want_serialnumber = want_breakout["interfaces"][0]["serialNumber"]
                 match_create = False
-                for have_intf in self.have_all:
-                    is_valid, intf = self.dcnm_intf_breakout_format(have_intf['ifName'])
-                    if is_valid and want_intf == intf and want_serialnumber == have_intf['serialNo']:
-                        match_create = True
-
-                # If interface in want_breakout and interface e1/x/y not present
-                # add to diff_create_breakout
+                # Search if interface is in have_breakout
+                for elem in self.have_breakout:
+                    if want_serialnumber == list(elem.keys())[0]:
+                        for interface in elem[want_serialnumber]:
+                            if interface.lower() == want_intf.lower():
+                                # If the breakout interface is already present in have, 
+                                # skip adding it to diff_create_breakout
+                                match_create = True
+                                break
                 if not match_create:
-                    want_breakout["interfaces"][0].pop("fabricName")
-                    want_breakout["interfaces"][0].pop("interfaceType")
                     self.diff_create_breakout.append(want_breakout["interfaces"])
 
         if state == "deleted" or state == "overridden":
-            for have in self.have_all:
-                have_intf = have['ifName']
-                if re.search(r"\d+\/\d+\/\d+", have_intf):
-                    found, parent_type = self.dcnm_intf_get_parent(have_intf, have['mgmtIpAddress'])
-                    # If have not in want breakout and if match to E1/x/1 add to dict
-                    # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
-                    # with the first sub if.
-                    if re.search(r"\d+\/\d+\/1$", have_intf) and not found:
-                        payload = {'serialNumber': have['serialNo'],
-                                   'ifName': have['ifName']}
+            for have_breakout in self.have_breakout:
+                for interface in list(have_breakout.values())[0]:
+                    match_delete_interface = True
+                    for want_breakout in self.want_breakout:
+                        if list(have_breakout.keys())[0] == want_breakout["interfaces"][0]["serialNumber"]:
+                            if want_breakout["interfaces"][0]["ifName"] == interface:
+                                match_delete_interface = False
+                                break
+                    if match_delete_interface:
+                        payload = {
+                            "serialNumber": list(have_breakout.keys())[0],
+                            "ifName": interface+"/1"
+                        }
                         self.diff_delete_breakout.append(payload)
 
         for want in self.want:
@@ -4221,7 +4244,6 @@ class DcnmIntf:
                     and (sno == d["interfaces"][0]["serialNumber"])
                 )
             ]
-
             if not match_have:
                 changed_dict = copy.deepcopy(want)
 
@@ -4369,12 +4391,11 @@ class DcnmIntf:
             if action == "add":
                 # If E1/x/y do not create. Interface is created with breakout
                 if re.search(r"\d+\/\d+\/\d+", name):
-                    found, parent_type = self.dcnm_intf_get_parent(name, have['mgmtIpAddress'])
-                    if found and parent_type == "breakout":
-                        if want.get("interfaceType", None) is not None:
-                            want.pop("interfaceType")
-                        self.diff_replace.append(want)
-                        self.changed_dict[0][state].append(changed_dict)
+                    if want.get("interfaceType", None) is not None:
+                        want.pop("interfaceType")
+                    self.dcnm_intf_merge_intf_info(want, self.diff_replace)
+                    self.changed_dict[0][state].append(changed_dict)
+                    intf_changed = True
                     continue
                 self.dcnm_intf_merge_intf_info(want, self.diff_create)
                 # Add the changed_dict to self.changed_dict
@@ -4393,7 +4414,7 @@ class DcnmIntf:
             if str(deploy).lower() == "true":
                 # Add to diff_deploy,
                 #   1. if intf_changed is True
-                #   2. if intf_changed is Flase, then if 'complianceStatus is
+                #   2. if intf_changed is False, then if 'complianceStatus is
                 #      False then add to diff_deploy.
                 #   3. Do not add otherwise
 
@@ -5517,7 +5538,7 @@ class DcnmIntf:
                 resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
-                replace = True
+                create = True
 
         # Update interfaces
         path = self.paths["INTERFACE"]
@@ -5550,7 +5571,7 @@ class DcnmIntf:
                 resp["CHANGED"] = self.changed_dict
                 self.module.fail_json(msg=resp)
             else:
-                replace = True
+                delete = changed
 
         resp = None
         path = self.paths["GLOBAL_IF"]
