@@ -1493,10 +1493,12 @@ class DcnmInventory:
                         method = "POST"
                         path = f"{self.nd_prefix}/rest/control/switches/roles"
                         data = json.dumps(
-                            {
+                            [
+                                {
                                 "serialNumber": role["serialNumber"],
-                                "role": create["role"],
-                            }
+                                "role": create["role"].replace("_", " "),
+                                }
+                            ]
                         )
                     response = dcnm_send(self.module, method, path, data)
                     self.result["response"].append(response)
@@ -1528,10 +1530,12 @@ class DcnmInventory:
                         method = "POST"
                         path = f"{self.nd_prefix}/rest/control/switches/roles"
                         data = json.dumps(
-                            {
+                            [
+                                {
                                 "serialNumber": role["serialNumber"],
-                                "role": create["role"],
-                            }
+                                "role": create["role"].replace("_", " "),
+                                }
+                            ]
                         )
                     response = dcnm_send(self.module, method, path, data)
                     self.result["response"].append(response)
