@@ -894,6 +894,7 @@ class DcnmNetwork:
         trm_en_changed = False
         rt_both_changed = False
         l3gw_onbd_changed = False
+        net_name_changed = False
         nf_en_changed = False
         intvlan_nfmon_changed = False
         vlan_nfmon_changed = False
@@ -957,6 +958,8 @@ class DcnmNetwork:
         rt_both_have = json_to_dict_have.get("rtBothAuto", "")
         l3gw_onbd_want = str(json_to_dict_want.get("enableL3OnBorder", "")).lower()
         l3gw_onbd_have = json_to_dict_have.get("enableL3OnBorder", "")
+        net_name_want = json_to_dict_want.get("networkName", "")
+        net_name_have = json_to_dict_have.get("networkName", "")
         nf_en_want = str(json_to_dict_want.get("ENABLE_NETFLOW", "")).lower()
         nf_en_have = json_to_dict_have.get("ENABLE_NETFLOW", "")
         intvlan_nfen_want = json_to_dict_want.get("SVI_NETFLOW_MONITOR", "")
@@ -1002,6 +1005,7 @@ class DcnmNetwork:
                 or trmen_have != trmen_want
                 or rt_both_have != rt_both_want
                 or l3gw_onbd_have != l3gw_onbd_want
+                or net_name_have != net_name_want
                 or nf_en_have != nf_en_want
                 or intvlan_nfen_have != intvlan_nfen_want
                 or vlan_nfen_have != vlan_nfen_want
@@ -1058,6 +1062,8 @@ class DcnmNetwork:
                     rt_both_changed = True
                 if l3gw_onbd_have != l3gw_onbd_want:
                     l3gw_onbd_changed = True
+                if net_name_have != net_name_want:
+                    net_name_changed = True
                 if self.dcnm_version > 11:
                     if nf_en_have != nf_en_want:
                         nf_en_changed = True
@@ -1097,6 +1103,7 @@ class DcnmNetwork:
                 or trmen_have != trmen_want
                 or rt_both_have != rt_both_want
                 or l3gw_onbd_have != l3gw_onbd_want
+                or net_name_have != net_name_want
                 or nf_en_have != nf_en_want
                 or intvlan_nfen_have != intvlan_nfen_want
                 or vlan_nfen_have != vlan_nfen_want
@@ -1150,6 +1157,8 @@ class DcnmNetwork:
                     rt_both_changed = True
                 if l3gw_onbd_have != l3gw_onbd_want:
                     l3gw_onbd_changed = True
+                if net_name_have != net_name_want:
+                    net_name_changed = True
                 if self.dcnm_version > 11:
                     if nf_en_have != nf_en_want:
                         nf_en_changed = True
@@ -1187,6 +1196,7 @@ class DcnmNetwork:
             trm_en_changed,
             rt_both_changed,
             l3gw_onbd_changed,
+            net_name_changed,
             nf_en_changed,
             intvlan_nfmon_changed,
             vlan_nfmon_changed,
@@ -1245,6 +1255,7 @@ class DcnmNetwork:
             "trmEnabled": net.get("trm_enable", False),
             "rtBothAuto": net.get("route_target_both", False),
             "enableL3OnBorder": net.get("l3gw_on_border", False),
+            "networkName": net.get("net_name", False),
         }
 
         if self.dcnm_version > 11:
@@ -1376,6 +1387,7 @@ class DcnmNetwork:
                     "trmEnabled": json_to_dict.get("trmEnabled", False),
                     "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                     "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                    "networkName": json_to_dict.get("networkName", False),
                 }
 
                 if self.dcnm_version > 11:
@@ -1429,6 +1441,7 @@ class DcnmNetwork:
                             "trmEnabled": json_to_dict.get("trmEnabled", False),
                             "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                             "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                            "networkName": json_to_dict.get("networkName", ""),
                         }
 
                         if self.dcnm_version > 11:
@@ -1860,6 +1873,7 @@ class DcnmNetwork:
         trm_en_changed = {}
         rt_both_changed = {}
         l3gw_onbd_changed = {}
+        net_name_changed = {}
         nf_en_changed = {}
         intvlan_nfmon_changed = {}
         vlan_nfmon_changed = {}
@@ -1896,6 +1910,7 @@ class DcnmNetwork:
                         trm_en_chg,
                         rt_both_chg,
                         l3gw_onbd_chg,
+                        net_name_chg,
                         nf_en_chg,
                         intvlan_nfmon_chg,
                         vlan_nfmon_chg,
@@ -1924,6 +1939,7 @@ class DcnmNetwork:
                     trm_en_changed.update({want_c["networkName"]: trm_en_chg})
                     rt_both_changed.update({want_c["networkName"]: rt_both_chg})
                     l3gw_onbd_changed.update({want_c["networkName"]: l3gw_onbd_chg})
+                    net_name_changed.update({want_c["networkName"]: net_name_chg})
                     nf_en_changed.update({want_c["networkName"]: nf_en_chg})
                     intvlan_nfmon_changed.update({want_c["networkName"]: intvlan_nfmon_chg})
                     vlan_nfmon_changed.update({want_c["networkName"]: vlan_nfmon_chg})
@@ -2035,6 +2051,7 @@ class DcnmNetwork:
                             or trm_en_changed.get(want_a["networkName"], False)
                             or rt_both_changed.get(want_a["networkName"], False)
                             or l3gw_onbd_changed.get(want_a["networkName"], False)
+                            or net_name_changed.get(want_a["networkName"], False)
                             or nf_en_changed.get(want_a["networkName"], False)
                             or intvlan_nfmon_changed.get(want_a["networkName"], False)
                             or vlan_nfmon_changed.get(want_a["networkName"], False)
@@ -2142,6 +2159,7 @@ class DcnmNetwork:
             found_c.update({"trm_enable": json_to_dict.get("trmEnabled", False)})
             found_c.update({"route_target_both": json_to_dict.get("rtBothAuto", False)})
             found_c.update({"l3gw_on_border": json_to_dict.get("enableL3OnBorder", False)})
+            found_c.update({"net_name": json_to_dict.get("networkName", False)})
             if self.dcnm_version > 11:
                 found_c.update({"netflow_enable": json_to_dict.get("ENABLE_NETFLOW", False)})
                 found_c.update({"intfvlan_nf_monitor": json_to_dict.get("SVI_NETFLOW_MONITOR", "")})
@@ -2470,6 +2488,7 @@ class DcnmNetwork:
                     "trmEnabled": json_to_dict.get("trmEnabled", False),
                     "rtBothAuto": json_to_dict.get("rtBothAuto", False),
                     "enableL3OnBorder": json_to_dict.get("enableL3OnBorder", False),
+                    "networkName": json_to_dict.get("networkName", False),
                 }
 
                 if self.dcnm_version > 11:
@@ -2952,6 +2971,9 @@ class DcnmNetwork:
                 json_to_dict_want["enableL3OnBorder"] = True
             else:
                 json_to_dict_want["enableL3OnBorder"] = False
+
+        if cfg.get("net_name", None) is None:
+            json_to_dict_want["networkName"] = json_to_dict_have["networkName"]
 
         if self.dcnm_version > 11:
             if cfg.get("netflow_enable", None) is None:
