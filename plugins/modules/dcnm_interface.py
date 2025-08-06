@@ -4263,8 +4263,17 @@ class DcnmIntf:
                                     nv_keys = list(want[k][0][ik].keys())
                                     # List of keys to check and potentially remove from nv_keys
                                     # Some keys are not present in the first GET and must be removed
-                                    keys_to_check = ["SPEED", "NATIVE_VLAN", "ENABLE_ORPHAN_PORT", "PORT_DUPLEX_MODE",
-                                                     "DISABLE_LACP_SUSPEND", "ENABLE_LACP_VPC_CONV"]
+                                    keys_to_check = [
+                                        "CDP_ENABLE",
+                                        "DISABLE_LACP_SUSPEND",
+                                        "ENABLE_LACP_VPC_CONV",
+                                        "ENABLE_MONITOR",
+                                        "ENABLE_ORPHAN_PORT",
+                                        "ENABLE_PFC",
+                                        "NATIVE_VLAN",
+                                        "PORT_DUPLEX_MODE",
+                                        "SPEED"
+                                    ]
 
                                     for key in keys_to_check:
                                         # Remove the key from nv_keys only if it exists and is not present in 'have'
