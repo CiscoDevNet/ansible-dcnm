@@ -113,7 +113,7 @@ def main():
         method=dict(required=True, choices=["GET", "POST", "PUT", "DELETE"]),
         path=dict(required=True, type="str"),
         data=dict(type="raw", required=False, default=None, aliases=["json_data"]),
-        urlencoded_data = dict(type="raw", required=False, default=None),
+        urlencoded_data=dict(type="raw", required=False, default=None),
     )
 
     # seed the result dict
