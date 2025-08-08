@@ -49,7 +49,7 @@
 # Create the policy to deploy lacp, interface-vlan and hsrp features on the switches
 - name: Create vpc, lacp, interface-vlan and hsrp policies
   cisco.dcnm.dcnm_policy:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     config:
       - name: my_interface_vlan  # This must be a valid template name
         create_additional_policy: false  # Do not create a policy if it already exists
@@ -65,9 +65,9 @@
         priority: 101
 
       - switch:
-          - ip: "{{ ansible_switch1 }}"
-          - ip: "{{ ansible_switch2 }}"
-    deploy: true
+          - ip: "{{ test_data_common.switch1 }}"
+          - ip: "{{ test_data_common.switch2 }}"
+    deploy: "{{ test_data_common.deploy | bool }}"
     state: merged
   register: result
   tags: sanity
@@ -123,16 +123,16 @@
 - set_fact:
     vxlan_config_save_path: "{{ vxlan_config_save_path | combine (item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save'}
-    - {'11': '/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-save'}
-  when: (ansible_vxlan_fabric is defined)
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-save'}
+    - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-save'}
+  when: (test_data_common.vxlan_fabric is defined)
 
 - set_fact:
     cxt_config_save_path: "{{ cxt_config_save_path | combine (item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save'}
-    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-save'}
-  when: (ansible_cxt_fabric is defined)
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-save'}
+    - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-save'}
+  when: (test_data_common.cxt_fabric is defined)
 
 - set_fact:
     vpc_create_path: "{{ vpc_create_path | combine (item) }}"
@@ -143,16 +143,16 @@
 - set_fact:
     vpc_vxlan_deploy_path: "{{ vpc_vxlan_deploy_path | combine (item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-deploy/{{ ansible_vxlan_fabric_sno1 }},{{ ansible_vxlan_fabric_sno2 }}'}
-    - {'11': '/rest/control/fabrics/{{ ansible_vxlan_fabric }}/config-deploy/{{ ansible_vxlan_fabric_sno1 }},{{ ansible_vxlan_fabric_sno2 }}'}
-  when: (ansible_vxlan_fabric is defined)
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
+    - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
+  when: (test_data_common.vxlan_fabric is defined)
 
 - set_fact:
     vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine (item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_cxt_fabric_sno1 }},{{ ansible_cxt_fabric_sno2 }}'}
-    - {'11': '/rest/control/fabrics/{{ ansible_cxt_fabric }}/config-deploy/{{ ansible_cxt_fabric_sno1 }},{{ ansible_cxt_fabric_sno2 }}'}
-  when: (ansible_cxt_fabric is defined)
+    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
+    - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
+  when: (test_data_common.cxt_fabric is defined)
 
 - set_fact:
     vxlan_vpc_create: False
@@ -162,24 +162,24 @@
 
 - set_fact:
     vpc_vxlan_data: {
-      "peerOneId": "{{ ansible_vxlan_fabric_sno1 }}",
-      "peerTwoId": "{{ ansible_vxlan_fabric_sno2 }}",
+      "peerOneId": "{{ test_data_common.vxlan_fabric_sno1 }}",
+      "peerTwoId": "{{ test_data_common.vxlan_fabric_sno2 }}",
       "useVirtualPeerlink": false
     }
     vxlan_vpc_create: True
-    vxlan_vpc_deploy: True
-  when: (ansible_vxlan_fabric is defined and ansible_vxlan_fabric_sno1 is defined and ansible_vxlan_fabric_sno2 is defined)
+    vxlan_vpc_deploy: "{{ test_data_common.deploy | bool }}"
+  when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
 
 - set_fact:
     vpc_cxt_data: {
-      "peerOneId": "{{ ansible_cxt_fabric_sno1 }}",
-      "peerTwoId": "{{ ansible_cxt_fabric_sno2 }}",
+      "peerOneId": "{{ test_data_common.cxt_fabric_sno1 }}",
+      "peerTwoId": "{{ test_data_common.cxt_fabric_sno2 }}",
       "useVirtualPeerlink": false,
       "templateName": "vpc_pair",
       "nvPairs": {
-        "DOMAIN_ID": "{{ ansible_cxt_vpc_domain_id }}",
-        "PEER1_KEEP_ALIVE_LOCAL_IP": "{{ ansible_cxt_fabric_sw1 }}",
-        "PEER2_KEEP_ALIVE_LOCAL_IP": "{{ ansible_cxt_fabric_sw2 }}",
+        "DOMAIN_ID": "{{ test_data_common.cxt_vpc_domain_id }}",
+        "PEER1_KEEP_ALIVE_LOCAL_IP": "{{ test_data_common.cxt_fabric_sw1 }}",
+        "PEER2_KEEP_ALIVE_LOCAL_IP": "{{ test_data_common.cxt_fabric_sw2 }}",
         "KEEP_ALIVE_VRF": "management",
         "isVpcPlus": "false",
         "fabricPath_switch_id": "",
@@ -194,10 +194,10 @@
         "PEER2_DOMAIN_CONF": "",
         "clear_policy": "false",
         "FABRIC_NAME": "",
-        "PEER1_PCID": "{{ ansible_cxt_vpc_peer1_pcid }}",
-        "PEER2_PCID": "{{ ansible_cxt_vpc_peer2_pcid }}",
-        "PEER1_MEMBER_INTERFACES": "{{ ansible_cxt_vpc_peer1_member }}",
-        "PEER2_MEMBER_INTERFACES": "{{ ansible_cxt_vpc_peer2_member }}",
+        "PEER1_PCID": "{{ test_data_common.cxt_vpc_peer1_pcid }}",
+        "PEER2_PCID": "{{ test_data_common.cxt_vpc_peer2_pcid }}",
+        "PEER1_MEMBER_INTERFACES": "{{ test_data_common.cxt_vpc_peer1_member }}",
+        "PEER2_MEMBER_INTERFACES": "{{ test_data_common.cxt_vpc_peer2_member }}",
         "PC_MODE": "active",
         "PEER1_PO_DESC": "",
         "PEER2_PO_DESC": "",
@@ -208,8 +208,8 @@
       }
     }
     cxt_vpc_create: True
-    cxt_vpc_deploy: True
-  when: (ansible_cxt_fabric is defined and ansible_cxt_fabric_sno1 is defined and ansible_cxt_fabric_sno2 is defined)
+    cxt_vpc_deploy: "{{ test_data_common.deploy | bool }}"
+  when: (test_data_common.cxt_fabric is defined and test_data_common.cxt_fabric_sno1 is defined and test_data_common.cxt_fabric_sno2 is defined)
 
 ##############################################
 ##          CREATE VXLAN VPC PAIR           ##

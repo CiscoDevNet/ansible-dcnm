@@ -1,0 +1,64 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: "{{ test_data_common.parent_intf1 }}"
+  type: eth
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: routed
+    description: "Parent Interface for Sub-Interface test"
+
+- name: po333
+  type: pc
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    mode: trunk
+
+- name: "{{ test_data_common.sub_intf1 }}"
+  type: sub_int
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    mode: subint
+    vlan: 100
+    ipv4_addr: 192.168.1.1
+    ipv4_mask_len: 24
+
+- name: lo100
+  type: lo
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    mode: lo
+    ipv4_addr: 193.168.2.1
+
+- name: vpc102
+  type: vpc
+  switch:
+    - "{{ test_data_common.switch1 }}"
+    - "{{ test_data_common.switch2 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: trunk
+    peer1_pcid: 212
+    peer2_pcid: 212
+    peer1_members:
+      - "{{ test_data_common.eth_intf6 }}"
+    peer2_members:
+      - "{{ test_data_common.eth_intf6 }}"
+    pc_mode: 'active'
+    bpdu_guard: true
+    port_type_fast: true
+    mtu: jumbo
+    peer1_allowed_vlans: none
+    peer2_allowed_vlans: none
+    peer1_description: "VPC acting as trunk peer1"
+    peer2_description: "VPC acting as trunk peer2"

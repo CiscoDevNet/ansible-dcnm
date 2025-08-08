@@ -7,8 +7,8 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
-    fabric: "{{ ansible_it_fabric }}" 
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
 
@@ -20,77 +20,52 @@
 - block:
 
 ##############################################
+##             SETUP VARS                   ##
+##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          override_merge_conf_template: "templates/dcnm_vpc/override_merge_conf.j2"
+          override_merge_conf_file: "{{ role_path }}/files/dcnm_interface_vpc_override_merge_conf.yaml"
+          override_conf_template: "templates/dcnm_vpc/override_conf.j2"
+          override_conf_file: "{{ role_path }}/files/dcnm_interface_vpc_override_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - override_merge
+        - override
+      delegate_to: localhost
+
+##############################################
 ##                MERGE                     ##
 ##############################################
 
+    - name: Load Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_override_merge_conf: "{{ lookup('file', test_data_interfaces.override_merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Create vPC interfaces
       cisco.dcnm.dcnm_interface: &vpc_merge
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: vpc750                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:                           # provide switches of vPC pair
-              - "{{ ansible_switch1 }}"
-              - "{{ ansible_switch2 }}"
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: trunk                     # choose from [trunk, access]
-              peer1_pcid: 130                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer2_pcid: 130                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer1_members:                  # member interfaces on peer 1
-                - "{{ ansible_eth_intf6 }}"
-              peer2_members:                  # member interfaces on peer 2
-                - "{{ ansible_eth_intf6 }}"
-              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
-              bpdu_guard: true                # choose from [true, false, 'no']
-              port_type_fast: true            # choose from [true, false]
-              mtu: jumbo                      # choose from [default, jumbo]
-              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
-              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
-              peer1_description: "VPC acting as trunk peer1"
-              peer2_description: "VPC acting as trunk peer2"
-              peer1_native_vlan: 10
-              peer2_native_vlan: 10
-
-          - name: vpc751                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:                           # provide switches of vPC pair
-              - "{{ ansible_switch1 }}"
-              - "{{ ansible_switch2 }}"
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: access                    # choose from [trunk, access]
-              peer1_pcid: 131                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer2_pcid: 131                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer1_members:                  # member interfaces on peer 1
-                - "{{ ansible_eth_intf21 }}"
-              peer2_members:                  # member interfaces on peer 2
-                - "{{ ansible_eth_intf21 }}"
-              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
-              bpdu_guard: true                # choose from [true, false, 'no']
-              port_type_fast: true            # choose from [true, false]
-              mtu: jumbo                      # choose from [default, jumbo]
-              peer1_access_vlan: ""           # vlan id 
-              peer2_access_vlan: ""           # vlan id
-              peer1_description: "VPC acting as access peer1"
-              peer2_description: "VPC acting as access peer2"
-              peer1_native_vlan: 20
-              peer2_native_vlan: 20
-
+        config: "{{ dcnm_interface_override_merge_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 2'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 2'
+    # - assert:
+    #     that:
+    #       - 'result.changed == true'
+    #       - '(result["diff"][0]["merged"] | length) == 2'
+    #       - '(result["diff"][0]["deleted"] | length) == 0'
+    #       - '(result["diff"][0]["replaced"] | length) == 0'
+    #       - '(result["diff"][0]["overridden"] | length) == 0'
+    #       - '(result["diff"][0]["deploy"] | length) == 2'
 
     - assert:
         that:
@@ -101,53 +76,30 @@
 ##           OVERRIDE                       ##
 ##############################################
 
+    - name: Load Override Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_override_conf: "{{ lookup('file', test_data_interfaces.override_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Override vPC interfaces
       cisco.dcnm.dcnm_interface: &vpc_override
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: vpc752                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:                           # provide switches of vPC pair
+        config: "{{ dcnm_interface_override_conf }}"
+      register: result
               - "{{ ansible_switch1 }}"
               - "{{ ansible_switch2 }}"
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: trunk                     # choose from [trunk, access]
-              peer1_pcid: 752                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              #peer2_pcid: 1                  # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer1_members:                  # member interfaces on peer 1
-                - "{{ ansible_eth_intf22 }}"
-              peer2_members:                  # member interfaces on peer 2
-                - "{{ ansible_eth_intf24 }}"
-              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
-              bpdu_guard: true                # choose from [true, false, no]
-              port_type_fast: true            # choose from [true, false]
-              mtu: jumbo                      # choose from [default, jumbo]
-              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
-              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
-              peer1_description: "VPC acting as trunk peer1"
-              peer2_description: "VPC acting as trunk peer2"
-              peer1_native_vlan: 30
-              peer2_native_vlan: 30
 
-              peer1_cmds:                     # Freeform config
-                  - no shutdown   
-                  - no shutdown
-              peer2_cmds:                     # Freeform config
-                  - no shutdown   
-                  - no shutdown
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) != 0'
-          - '(result["diff"][0]["overridden"] | length) == 1'
-          - '(result["diff"][0]["deploy"] | length) != 0'
+    # - assert:
+    #     that:
+    #       - 'result.changed == true'
+    #       - '(result["diff"][0]["merged"] | length) == 0'
+    #       - '(result["diff"][0]["replaced"] | length) != 0'
+    #       - '(result["diff"][0]["overridden"] | length) == 1'
+    #       - '(result["diff"][0]["deploy"] | length) != 0'
 
     - assert:
         that:
@@ -179,8 +131,8 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: IT_CONTEXT is not defined

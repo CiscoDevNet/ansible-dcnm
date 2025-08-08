@@ -1,0 +1,57 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: vpc750
+  type: vpc
+  switch:
+    - "{{ test_data_common.switch1 }}"
+    - "{{ test_data_common.switch2 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: trunk
+    peer1_pcid: 140
+    peer2_pcid: 140
+    peer1_members:
+      - "{{ test_data_common.eth_intf22 }}"
+    peer2_members:
+      - "{{ test_data_common.eth_intf22 }}"
+    pc_mode: 'active'
+    bpdu_guard: false
+    port_type_fast: false
+    mtu: default
+    peer1_allowed_vlans: all
+    peer2_allowed_vlans: all
+    peer1_description: "VPC acting as trunk peer1 - modified"
+    peer2_description: "VPC acting as trunk peer2 - modified"
+    peer1_cmds:
+      - no shutdown
+    peer2_cmds:
+      - no shutdown
+- name: vpc751
+  type: vpc
+  switch:
+    - "{{ test_data_common.switch1 }}"
+    - "{{ test_data_common.switch2 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: access
+    peer1_pcid: 141
+    peer2_pcid: 141
+    peer1_members:
+      - "{{ test_data_common.eth_intf23 }}"
+    peer2_members:
+      - "{{ test_data_common.eth_intf23 }}"
+    pc_mode: 'active'
+    bpdu_guard: 'no'
+    port_type_fast: false
+    mtu: default
+    peer1_access_vlan: 751
+    peer2_access_vlan: 751
+    peer1_description: "VPC acting as access peer1"
+    peer2_description: "VPC acting as access peer2"
+    peer1_cmds:
+      - no shutdown
+    peer2_cmds:
+      - no shutdown

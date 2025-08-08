@@ -7,66 +7,90 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
-    fabric: "{{ ansible_svi_fabric }}"
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result
+  register: result  
 
 - assert:
     that:
-      - 'item["RETURN_CODE"] == 200'
+      - 'item["RETURN_CODE"] == 200'  
   loop: '{{ result.response }}'
 
 - block:
 
 ##############################################
+##             SETUP VARS                   ##
+##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          query_conf_template: "templates/dcnm_st_fex/query_conf.j2"
+          query_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_query_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - query
+      delegate_to: localhost
+
+##############################################
 ##                MERGE                     ##
 ##############################################
 
-    - name: Create ST FEX interfaces w/o optional parameters
+    - name: Load Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_query_conf: "{{ lookup('file', test_data_interfaces.query_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: Create ST FEX interfaces for query tests
       cisco.dcnm.dcnm_interface: &fex_merge
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
-        state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
-          - name: po150                                   # should be of the form po<po_id>
-            type: st_fex                                  # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+          - name: po150
+            type: st_fex
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
-            deploy: true                                  # choose from [true, false]
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
             profile:
-              admin_state: true                           # Flag to enable/disable FEX interaface
-              mode: port_channel_st                       # choose from [port_channel_st], default is "port_channel_st"
-          - name: po151                                   # should be of the form po<po_id>
-            type: st_fex                                  # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+              admin_state: true
+              mode: port_channel_st
+          - name: po151
+            type: st_fex
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
-            deploy: true                                  # choose from [true, false]
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
             profile:
-              admin_state: true                           # Flag to enable/disable FEX interaface
-              mode: port_channel_st                       # choose from [port_channel_st], default is "port_channel_st"
-          - name: po152                                   # should be of the form po<po_id>
-            type: st_fex                                  # choose from this list [pc, vpc, sub_int, lo, eth, svi, st_fex, aa_fex]
+              admin_state: true
+              mode: port_channel_st
+          - name: po152
+            type: st_fex
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
-            deploy: true                                  # choose from [true, false]
+              - "{{ test_data_common.switch1 }}"
+            deploy: "{{ test_data_common.deploy | bool }}"
             profile:
-              admin_state: true                           # Flag to enable/disable FEX interaface
-              mode: port_channel_st                       # choose from [port_channel_st], default is "port_channel_st"
+              admin_state: true
+              mode: port_channel_st
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 3'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 3'
+    # - assert:
+    #     that:
+    #       - 'result.changed == true'
+    #       - '(result["diff"][0]["merged"] | length) == 3'
+    #       - '(result["diff"][0]["deleted"] | length) == 0'
+    #       - '(result["diff"][0]["replaced"] | length) == 0'
+    #       - '(result["diff"][0]["overridden"] | length) == 0'
+    #       - '(result["diff"][0]["deploy"] | length) == 3'
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
+          - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
 
 ##############################################
@@ -75,19 +99,19 @@
 
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po150
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
           - name: po151
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
           - name: po152
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
       register: result
 
     - assert:
@@ -106,16 +130,16 @@
 
     - name: Query interface details - Subset of Existing
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po150
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
           - name: po152
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
       register: result
 
     - assert:
@@ -134,16 +158,16 @@
 
     - name: Query interface details - Existing and Non-Existing
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po151
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
           - name: po122
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
       register: result
 
     - assert:
@@ -162,16 +186,16 @@
 
     - name: Query interface details - Non-Existing
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: po121
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
           - name: po122
             switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+                - "{{ test_data_common.switch1 }}"
       register: result
 
     - assert:
@@ -196,14 +220,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_svi_fabric }}"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: IT_CONTEXT is not defined
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'
+          - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

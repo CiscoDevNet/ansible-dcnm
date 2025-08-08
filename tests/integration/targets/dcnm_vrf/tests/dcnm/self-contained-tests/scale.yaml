@@ -54,7 +54,7 @@
 
 - name: SETUP.5 - SCALE - [set_fact] Build list of VRFs to be deployed
   set_fact:
-    vrfs_list: "{{ vrfs_list|default([]) + [{ 'vrf_name': 'TEST_VRF%03d' | format(item), 'deploy': 'no', 'vrf_id': (item | int + 50000) | int, 'vlan_id': (item | int + 2000) | int, 'attach': leaf_vrf_attach }] }}"
+    vrfs_list: "{{ vrfs_list|default([]) + [{ 'vrf_name': 'TEST_VRF%03d' | format(item), 'deploy': 'no', 'vrf_id': (item | int + 60000) | int, 'vlan_id': (item | int + 2000) | int, 'attach': leaf_vrf_attach }] }}"
   loop: '{{ range(0, 800) | list }}'
 
 - name: TEST.1 - SCALE - [merged] Push all VRFs to the controller

@@ -1,0 +1,144 @@
+from __future__ import absolute_import, division, print_function
+
+
+__metaclass__ = type
+
+from pprint import pprint
+import json
+from ansible.utils.display import Display
+from ansible.plugins.action import ActionBase
+from ansible.module_utils.six import raise_from
+from ansible.errors import AnsibleError
+from ansible.module_utils.common.text.converters import to_native
+from ..plugin_utils.tools import load_yaml_file, process_deepdiff
+from ..plugin_utils.pydantic_schemas.dcnm_interface.schemas import DcnmInterfaceQuerySchema
+
+try:
+    from deepdiff import DeepDiff
+except ImportError as imp_exc:
+    DEEPDIFF_IMPORT_ERROR = imp_exc
+else:
+    DEEPDIFF_IMPORT_ERROR = None
+
+if DEEPDIFF_IMPORT_ERROR:
+    raise_from(
+        AnsibleError('DeepDiff must be installed to use this plugin. Use pip or install test-requirements.'),
+        DEEPDIFF_IMPORT_ERROR)
+
+display = Display()
+
+
+class ActionModule(ActionBase):
+
+    def verify_deleted(self, results, check_deleted, expected_data, ndfc_data, config_path):
+        if not check_deleted:
+            return None
+
+        existing_interfaces = set()
+        for policy in ndfc_data["response"]:
+            for interface in policy["interfaces"]:
+                existing_interfaces.add((interface["serialNumber"], interface["ifName"]))
+
+        if config_path == "":
+            # check for full delete
+            if not ndfc_data["failed"] and len(existing_interfaces) == 0:
+                results['msg'] = 'All interfaces are deleted'
+            else:
+                print("Interfaces still existing: ")
+                print(existing_interfaces)
+                results['failed'] = True
+                results['msg'] = 'Error: Expected full delete as config_path is empty but interfaces still exist.'
+                if ndfc_data["failed"]:
+                    results['msg'] += '\n\nError: ' + ndfc_data["error"]
+                return results
+            return results
+
+        # checks for a partial delete
+        deleted_interfaces = set()
+        for policy in expected_data["response"]:
+            for interface in policy["interfaces"]:
+                deleted_interfaces.add((interface["serialNumber"], interface["ifName"]))
+
+        remaining_interfaces = existing_interfaces.intersection(deleted_interfaces)
+        if len(remaining_interfaces) > 0:
+            results['failed'] = True
+            print("Expected interfaces to be deleted: ")
+            print(deleted_interfaces)
+            print("\nInterfaces present in NDFC: ")
+            print(existing_interfaces)
+            print("\nInterfaces still not deleted: ")
+            print(remaining_interfaces)
+            results['msg'] = 'All interfaces are not deleted'
+            return results
+
+        print("Expected interfaces to be deleted: ")
+        print(deleted_interfaces)
+        print("\n\nInterfaces present in NDFC: ")
+        print(existing_interfaces)
+        print("Interfaces still not deleted: ")
+        print(remaining_interfaces)
+        results['failed'] = False
+        results['msg'] = 'Provided interfaces are deleted'
+        return results
+
+    def run(self, tmp=None, task_vars=None):
+        results = super(ActionModule, self).run(tmp, task_vars)
+        results['failed'] = False
+
+        ndfc_data = self._task.args.get('ndfc_data', None)
+        test_data = self._task.args.get('test_data', None)
+        config_path = self._task.args.get('config_path', None)
+        check_deleted = self._task.args.get('check_deleted', False)
+        ignore_fields = list(self._task.args.get('ignore_fields', []))
+        for input_item in [ndfc_data, test_data, config_path]:
+            if input_item is None:
+                results['failed'] = True
+                results['msg'] = f"Required input parameter not found: '{input_item}'"
+                return results
+
+        # removes ansible embeddings and converts to native python types
+        native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))
+
+        test_fabric = test_data['fabric']
+
+        expected_data_parsed = None
+        if config_path != "":
+            # only parse if config file exists
+            expected_config_data = load_yaml_file(config_path)
+            expected_data = DcnmInterfaceQuerySchema.yaml_config_to_dict(expected_config_data, test_fabric)
+            expected_data_parsed = DcnmInterfaceQuerySchema.model_validate(expected_data).model_dump(exclude_none=True)
+
+        ndfc_data_parsed = DcnmInterfaceQuerySchema.model_validate(native_ndfc_data).model_dump(exclude_none=True)
+
+        if deleted_results := self.verify_deleted(results, check_deleted, expected_data_parsed, ndfc_data_parsed, config_path):
+            return deleted_results
+
+        validity = DeepDiff(
+            expected_data_parsed,
+            ndfc_data_parsed,
+            ignore_order=True,
+            cutoff_distance_for_pairs=0,
+            cutoff_intersection_for_pairs=0,
+            report_repetition=True
+        )
+
+        # Process the output of deepdiff to make it easier to read
+        # Effects the iterable_item_added and iterable_item_removed to remove unneeded fields
+        # ignore_extra_fields=True will ignore dictionary_item_added changes
+        # This is useful when the actual data has more fields than the expected data
+        # keys_to_ignore is a list of fields to ignore, useful for auto provisioned fields which are not known
+        processed_validity = process_deepdiff(validity, keys_to_ignore=ignore_fields, ignore_extra_fields=True)
+        if processed_validity == {}:
+            results['failed'] = False
+            results['msg'] = f'Data is valid. \n\n Expected data: \n\n{expected_data}\n\nActual data: \n\n{ndfc_data_parsed}'
+        else:
+            results['failed'] = True
+            print("\n\nExpected: ")
+            pprint(expected_data_parsed)
+            print("\n\nActual: ")
+            pprint(ndfc_data_parsed)
+            print("\n\nDifferences: ")
+            pprint(processed_validity)
+            results['msg'] = 'Data is not valid.'
+
+        return results
