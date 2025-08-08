@@ -127,12 +127,11 @@
   register: result
   tags: replaced
 
-# Possible bug, changed flag is not set to true when deleting attachments
-# - name: REPLACED - TC1 - ASSERT - Check if changed flag is true
-#   assert:
-#     that:
-#     - result.changed == true
-#   tags: replaced
+- name: REPLACED - TC1 - ASSERT - Check if changed flag is true
+  assert:
+    that:
+    - result.changed == true
+  tags: replaced
 
 - name: REPLACED - TC1 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:
@@ -254,11 +253,11 @@
   register: result
   tags: replaced
 
-# - name: REPLACED - TC3 - ASSERT - Check if changed flag is true
-#   assert:
-#     that:
-#     - result.changed == true
-#   tags: replaced
+- name: REPLACED - TC3 - ASSERT - Check if changed flag is true
+  assert:
+    that:
+    - result.changed == true
+  tags: replaced
 
 - name: REPLACED - TC3 - QUERY - Get network state in NDFC
   cisco.dcnm.dcnm_network:

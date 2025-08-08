@@ -83,7 +83,7 @@
 
 - name: SM_MCAST_UPDATE - Change mcast parameter values
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: merged
     config: "{{ dcnm_network_merged_net1_mcast_changed_conf }}"
   register: result
