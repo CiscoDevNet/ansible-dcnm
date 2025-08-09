@@ -578,7 +578,8 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm import (
     dcnm_get_ip_addr_info, dcnm_get_url, dcnm_send, dcnm_version_supported,
     get_fabric_details, get_fabric_inventory_details, get_ip_sn_dict,
-    get_sn_fabric_dict, validate_list_of_dicts, search_nested_json)
+    get_sn_fabric_dict, validate_list_of_dicts, search_nested_json,
+    find_dict_in_list_by_key_value)
 
 from ..module_utils.common.log_v2 import Log
 
@@ -1656,10 +1657,10 @@ class DcnmVrf:
             attach_list = vrf_attach["lanAttachList"]
             deploy_vrf = ""
             for attach in attach_list:
-                attach_state = not attach["lanAttachState"] == "NA"
-                deploy = attach["isLanAttached"]
+                attach_state = bool(attach.get("isLanAttached", False))
+                deploy = attach_state
                 deployed = False
-                if deploy and (
+                if attach_state and (
                     attach["lanAttachState"] == "OUT-OF-SYNC"
                     or attach["lanAttachState"] == "PENDING"
                 ):
@@ -2064,10 +2065,17 @@ class DcnmVrf:
             self.diff_deploy = diff_deploy
             return
 
+        modified_all_vrfs = copy.deepcopy(all_vrfs)
+        for vrf in all_vrfs:
+            # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
+            want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
+            if want_vrf_data['deploy'] is False:
+                modified_all_vrfs.remove(vrf)
+
         if not self.diff_deploy:
-            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+            diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
         else:
-            vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(all_vrfs)
+            vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(modified_all_vrfs)
             diff_deploy.update({"vrfNames": vrfs})
 
         self.diff_attach = copy.deepcopy(diff_attach)
@@ -2368,7 +2376,14 @@ class DcnmVrf:
             if deploy_vrf:
                 all_vrfs.append(deploy_vrf)
 
-        if len(all_vrfs) != 0:
+        modified_all_vrfs = copy.deepcopy(all_vrfs)
+        for vrf in all_vrfs:
+            # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
+            want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
+            if want_vrf_data['deploy'] is False:
+                modified_all_vrfs.remove(vrf)
+
+        if len(modified_all_vrfs) != 0:
             diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_attach = diff_attach
