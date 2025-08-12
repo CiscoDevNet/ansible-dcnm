@@ -2069,7 +2069,7 @@ class DcnmVrf:
         for vrf in all_vrfs:
             # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
             want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
-            if want_vrf_data.get('deploy',True) is False:
+            if want_vrf_data.get('deploy', True) is False:
                 modified_all_vrfs.remove(vrf)
 
         if modified_all_vrfs:
