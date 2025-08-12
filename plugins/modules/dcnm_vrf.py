@@ -2069,14 +2069,15 @@ class DcnmVrf:
         for vrf in all_vrfs:
             # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
             want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
-            if want_vrf_data['deploy'] is False:
+            if want_vrf_data.get('deploy',True) is False:
                 modified_all_vrfs.remove(vrf)
 
-        if not self.diff_deploy:
-            diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
-        else:
-            vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(modified_all_vrfs)
-            diff_deploy.update({"vrfNames": vrfs})
+        if modified_all_vrfs:
+            if not diff_deploy:
+                diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
+            else:
+                vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(modified_all_vrfs)
+                diff_deploy.update({"vrfNames": vrfs})
 
         self.diff_attach = copy.deepcopy(diff_attach)
         self.diff_deploy = copy.deepcopy(diff_deploy)
@@ -2380,11 +2381,15 @@ class DcnmVrf:
         for vrf in all_vrfs:
             # If the playbook sets the deploy key to False, then we need to remove the vrf from the deploy list.
             want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf)
-            if want_vrf_data['deploy'] is False:
+            if want_vrf_data.get("deploy", True) is False:
                 modified_all_vrfs.remove(vrf)
 
-        if len(modified_all_vrfs) != 0:
-            diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+        if modified_all_vrfs:
+            if not diff_deploy:
+                diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
+            else:
+                vrfs = self.diff_deploy["vrfNames"] + "," + ",".join(modified_all_vrfs)
+                diff_deploy.update({"vrfNames": vrfs})
 
         self.diff_attach = diff_attach
         self.diff_deploy = diff_deploy
