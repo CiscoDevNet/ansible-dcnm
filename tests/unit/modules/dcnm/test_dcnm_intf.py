@@ -2997,6 +2997,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ROUTING_TAG",
             "SPEED",
             "CONF",
+            "DISABLE_LACP_SUSPEND"
         ]
 
         for d in result["diff"][0]["replaced"]:
