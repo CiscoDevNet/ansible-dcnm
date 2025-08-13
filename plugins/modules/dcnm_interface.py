@@ -196,6 +196,12 @@ options:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
+          disable_lacp_suspend_individual:
+            description:
+            - If disabled, lacp will put the port to individual state and not suspend the port
+              in case the port does not get LACP BPDU from the peer ports in the port-channel
+            type: bool
+            default: false
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -2320,6 +2326,7 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
         )
 
         pc_prof_spec_access = dict(
@@ -2340,6 +2347,7 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2912,6 +2920,10 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("disable_lacp_suspend_individual"):
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2945,6 +2957,10 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("disable_lacp_suspend_individual"):
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
