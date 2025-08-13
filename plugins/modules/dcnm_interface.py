@@ -196,6 +196,19 @@ options:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
+          lacp_port_priority:
+            description:
+            - <1-65535> Set LACP port priority on member interfaces, default is 32768
+            type: int
+            default: 32768
+          lacp_rate:
+            description:
+            - Set the rate at which LACP control packets are sent to an LACP-supported
+              interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member
+              interfaces, default is normal
+            type: str
+            choices: ['normal', 'fast']
+            default: normal
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -335,6 +348,19 @@ options:
             - Enable lacp convergence for vPC port-channels
             type: bool
             default: false
+          lacp_port_priority:
+            description:
+            - <1-65535> Set LACP port priority on member interfaces, default is 32768
+            type: int
+            default: 32768
+          lacp_rate:
+            description:
+            - Set the rate at which LACP control packets are sent to an LACP-supported
+              interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member
+              interfaces, default is normal
+            type: str
+            choices: ['normal', 'fast']
+            default: normal
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -1963,6 +1989,8 @@ class DcnmIntf:
             "ENABLE_ORPHAN_PORT": "orphan_port",
             "DISABLE_LACP_SUSPEND": "disable_lacp_suspend_individual",
             "ENABLE_LACP_VPC_CONV": "enable_lacp_vpc_convergence",
+            "LACP_PORT_PRIO": "lacp_port_priority",
+            "LACP_RATE": "lacp_rate",
             "ENABLE_PFC": "enable_pfc",
             "ENABLE_MONITOR": "enable_monitor",
             "CDP_ENABLE": "enable_cdp",
@@ -2320,6 +2348,8 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
         )
 
         pc_prof_spec_access = dict(
@@ -2340,6 +2370,8 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2426,6 +2458,8 @@ class DcnmIntf:
             admin_state=dict(type="bool", default=True),
             disable_lacp_suspend_individual=dict(type="bool", default=False),
             enable_lacp_vpc_convergence=dict(type="bool", default=False),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
         )
 
         vpc_prof_spec_access = dict(
@@ -2912,6 +2946,8 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2945,6 +2981,8 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3170,6 +3208,8 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = delem[profile]["enable_lacp_vpc_convergence"]
         else:
             intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = False
+        intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+        intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -4267,6 +4307,8 @@ class DcnmIntf:
                                         "CDP_ENABLE",
                                         "DISABLE_LACP_SUSPEND",
                                         "ENABLE_LACP_VPC_CONV",
+                                        "LACP_PORT_PRIO",
+                                        "LACP_RATE",
                                         "ENABLE_MONITOR",
                                         "ENABLE_ORPHAN_PORT",
                                         "ENABLE_PFC",
