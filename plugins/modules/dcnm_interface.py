@@ -2946,8 +2946,14 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
-            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
-            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+            if delem[profile].get("lacp_port_priority"):
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = 32768
+            if delem[profile].get("lacp_rate"):
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2981,8 +2987,14 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
-            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
-            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+            if delem[profile].get("lacp_port_priority"):
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = 32768
+            if delem[profile].get("lacp_rate"):
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -3208,8 +3220,14 @@ class DcnmIntf:
             intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = delem[profile]["enable_lacp_vpc_convergence"]
         else:
             intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = False
-        intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
-        intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+        if delem[profile].get("lacp_port_priority"):
+            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = 32768
+        if delem[profile].get("lacp_rate"):
+            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
