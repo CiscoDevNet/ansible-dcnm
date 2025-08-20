@@ -2997,7 +2997,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ROUTING_TAG",
             "SPEED",
             "CONF",
-            "DISABLE_LACP_SUSPEND".
+            "DISABLE_LACP_SUSPEND",
             "LACP_PORT_PRIO",
             "LACP_RATE"
         ]
