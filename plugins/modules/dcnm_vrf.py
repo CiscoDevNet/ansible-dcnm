@@ -116,6 +116,12 @@ options:
         type: str
         required: false
         default: 'FABRIC-RMAP-REDIST-SUBNET'
+      v6_redist_direct_rmap:
+        description:
+        - IPv6 Redistribute Direct Route Map
+        type: str
+        required: false
+        default: 'FABRIC-RMAP-REDIST-SUBNET'
       max_bgp_paths:
         description:
         - Max BGP Paths
@@ -1460,6 +1466,7 @@ class DcnmVrf:
             "mtu": vrf.get("vrf_int_mtu", ""),
             "tag": vrf.get("loopback_route_tag", ""),
             "vrfRouteMap": vrf.get("redist_direct_rmap", ""),
+            "v6VrfRouteMap": vrf.get("v6_redist_direct_rmap", ""),
             "maxBgpPaths": vrf.get("max_bgp_paths", ""),
             "maxIbgpPaths": vrf.get("max_ibgp_paths", ""),
             "ipv6LinkLocalFlag": vrf.get("ipv6_linklocal_enable", True),
@@ -1596,6 +1603,7 @@ class DcnmVrf:
                 "mtu": json_to_dict.get("mtu", 9216),
                 "tag": json_to_dict.get("tag", 12345),
                 "vrfRouteMap": json_to_dict.get("vrfRouteMap", ""),
+                "v6VrfRouteMap": json_to_dict.get("v6VrfRouteMap", ""),
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths", 1),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths", 2),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag", True),
@@ -2204,6 +2212,7 @@ class DcnmVrf:
                         "mtu": json_to_dict.get("mtu"),
                         "tag": json_to_dict.get("tag"),
                         "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                        "v6VrfRouteMap": json_to_dict.get("v6VrfRouteMap"),
                         "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                         "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                         "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
@@ -2493,6 +2502,7 @@ class DcnmVrf:
             found_c.update({"vrf_int_mtu": json_to_dict.get("mtu", "")})
             found_c.update({"loopback_route_tag": json_to_dict.get("tag", "")})
             found_c.update({"redist_direct_rmap": json_to_dict.get("vrfRouteMap", "")})
+            found_c.update({"v6_redist_direct_rmap": json_to_dict.get("v6VrfRouteMap", "")})
             found_c.update({"max_bgp_paths": json_to_dict.get("maxBgpPaths", "")})
             found_c.update({"max_ibgp_paths": json_to_dict.get("maxIbgpPaths", "")})
             found_c.update(
@@ -2973,6 +2983,7 @@ class DcnmVrf:
                 "mtu": json_to_dict.get("mtu"),
                 "tag": json_to_dict.get("tag"),
                 "vrfRouteMap": json_to_dict.get("vrfRouteMap"),
+                "v6VrfRouteMap": json_to_dict.get("v6VrfRouteMap"),
                 "maxBgpPaths": json_to_dict.get("maxBgpPaths"),
                 "maxIbgpPaths": json_to_dict.get("maxIbgpPaths"),
                 "ipv6LinkLocalFlag": json_to_dict.get("ipv6LinkLocalFlag"),
@@ -3956,6 +3967,10 @@ class DcnmVrf:
         spec["overlay_mcast_group"] = {"default": "", "type": "str"}
 
         spec["redist_direct_rmap"] = {
+            "default": "FABRIC-RMAP-REDIST-SUBNET",
+            "type": "str",
+        }
+        spec["v6_redist_direct_rmap"] = {
             "default": "FABRIC-RMAP-REDIST-SUBNET",
             "type": "str",
         }

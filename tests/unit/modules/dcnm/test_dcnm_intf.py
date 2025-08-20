@@ -2997,7 +2997,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             "ROUTING_TAG",
             "SPEED",
             "CONF",
-            "DISABLE_LACP_SUSPEND"
+            "DISABLE_LACP_SUSPEND".
+            "LACP_PORT_PRIO",
+            "LACP_RATE"
         ]
 
         for d in result["diff"][0]["replaced"]:
@@ -4225,7 +4227,9 @@ class TestDcnmIntfModule(TestDcnmModule):
             "PEER2_PO_CONF",
             "INTF_NAME",
             "ENABLE_LACP_VPC_CONV",
-            "DISABLE_LACP_SUSPEND"
+            "DISABLE_LACP_SUSPEND",
+            "LACP_PORT_PRIO",
+            "LACP_RATE"
         ]
 
         for d in result["diff"][0]["replaced"]:
