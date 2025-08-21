@@ -196,6 +196,12 @@ options:
             - State of Switchport Monitor for SPAN/ERSPAN
             type: bool
             default: false
+          disable_lacp_suspend_individual:
+            description:
+            - If disabled, lacp will put the port to individual state and not suspend the port
+              in case the port does not get LACP BPDU from the peer ports in the port-channel
+            type: bool
+            default: false
           lacp_port_priority:
             description:
             - <1-65535> Set LACP port priority on member interfaces, default is 32768
@@ -2348,6 +2354,7 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
         )
@@ -2370,6 +2377,7 @@ class DcnmIntf:
             enable_pfc=dict(type="bool", default=False),
             duplex=dict(
                 type="str", default="auto", choices=["auto", "full", "half"]),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
             lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
             lacp_rate=dict(type="str", default="normal"),
         )
@@ -2946,6 +2954,10 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("disable_lacp_suspend_individual"):
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
             if delem[profile].get("lacp_port_priority"):
                 intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
             else:
@@ -2987,6 +2999,10 @@ class DcnmIntf:
                 "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
             intf["interfaces"][0]["nvPairs"][
                 "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("disable_lacp_suspend_individual"):
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
             if delem[profile].get("lacp_port_priority"):
                 intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
             else:
