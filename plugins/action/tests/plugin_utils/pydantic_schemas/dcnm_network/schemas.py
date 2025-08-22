@@ -99,7 +99,7 @@ class DcnmNetworkQuerySchema(BaseModel):
                 setattr(values, "attach", [sw for sw in getattr(values, "attach") if sw.portNames is not None])
             return values
 
-    failed: Optional[bool] = None
+    failed: Optional[bool] = False
     response: Optional[List[Network]] = None
 
     @classmethod

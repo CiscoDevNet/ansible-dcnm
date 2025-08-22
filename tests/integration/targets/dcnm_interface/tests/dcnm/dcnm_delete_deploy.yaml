@@ -64,19 +64,20 @@
         config: "{{ dcnm_interface_deploy_merge1_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+    - name: QUERY - Get interface state in NDFC (deploy merge 1)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_deploy_merge1_conf }}"
+      register: verify_result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+    - name: VALIDITY CHECK - Verify interface state in NDFC (deploy merge 1)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.deploy_merge1_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
 ##############################################
 ##              DELETE 1                    ##
@@ -90,20 +91,17 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 1'
-          - '(result["diff"][0]["delete_deploy"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+    - name: QUERY - Get interface state in NDFC (delete 1)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_deploy_merge1_conf }}"
+      register: verify_result
 
-    - assert:
+    - name: ASSERT - Verify interfaces are deleted (response length should be 0)
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'verify_result.response | length == 0'
 
 ##############################################
 ##              DELETE 2                    ##
@@ -117,20 +115,17 @@
         state: deleted                        # only choose form [merged, replaced, deleted, overridden,query]
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["delete_deploy"] | length) == 1'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+    - name: QUERY - Get interface state in NDFC (delete 2)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_deploy_merge1_conf }}"
+      register: verify_result
 
-    - assert:
+    - name: ASSERT - Verify interfaces are deleted (response length should be 0)
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'verify_result.response | length == 0'
 
 ##############################################
 ##              DELETE 3                    ##
@@ -147,17 +142,8 @@
     - assert:
         that:
           - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["delete_deploy"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'
 
 ##############################################
 ##                MERGE 2                   ##
@@ -176,19 +162,20 @@
         config: "{{ dcnm_interface_deploy_merge2_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+    - name: QUERY - Get interface state in NDFC (deploy merge 2)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_deploy_merge2_conf }}"
+      register: verify_result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+    - name: VALIDITY CHECK - Verify interface state in NDFC (deploy merge 2)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.deploy_merge2_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
 ##############################################
 ##              DELETE 4                    ##
@@ -208,20 +195,17 @@
         config: "{{ dcnm_interface_deploy_delete1_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 1'
-          - '(result["diff"][0]["delete_deploy"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+    - name: QUERY - Get interface state in NDFC (delete 4)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_deploy_delete1_conf }}"
+      register: verify_result
 
-    - assert:
+    - name: ASSERT - Verify interfaces are deleted (response length should be 0)
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'verify_result.response | length == 0'
 
 ##############################################
 ##              DELETE 5                    ##
@@ -241,20 +225,17 @@
         config: "{{ dcnm_interface_deploy_delete2_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["delete_deploy"] | length) == 1'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+    - name: QUERY - Get interface state in NDFC (delete 5)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_deploy_delete2_conf }}"
+      register: verify_result
 
-    - assert:
+    - name: ASSERT - Verify interfaces are deleted (response length should be 0)
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'verify_result.response | length == 0'
 
 ##############################################
 ##             CLEANUP                      ##

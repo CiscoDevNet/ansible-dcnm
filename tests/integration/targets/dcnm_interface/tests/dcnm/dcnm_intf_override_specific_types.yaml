@@ -17,7 +17,8 @@
       - pc
   register: result
 
-- assert:
+- name: ASSERT - Check return codes for setup
+  assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -63,18 +64,27 @@
         config: "{{ dcnm_interface_override_specific_types_merge_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - '(result["diff"][0]["merged"] | length) == 4'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - assert:
+    - name: ASSERT - Check changed flag is true and return codes
+      assert:
         that:
+          - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_override_specific_types_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.override_specific_types_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
 ##############################################
 ##           OVERRIDE                       ##
@@ -89,15 +99,8 @@
           - vpc
       register: result
 
-    # - assert:
-    #     that:
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - assert:
+    - name: ASSERT - Check return codes for override vpc
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -121,15 +124,8 @@
         config: "{{ dcnm_interface_override_specific_types_pc_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 2'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 1'
-    #       - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - assert:
+    - name: ASSERT - Check return codes for override pc with config
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -148,15 +144,8 @@
           - sub_int
       register: result
 
-    # - assert:
-    #     that:
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 2'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - assert:
+    - name: ASSERT - Check return codes for override sub_int/lo
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -179,7 +168,8 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: ASSERT - Check return codes for cleanup
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

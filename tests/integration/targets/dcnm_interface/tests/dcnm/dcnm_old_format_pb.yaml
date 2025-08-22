@@ -73,12 +73,30 @@
         config: "{{ dcnm_interface_old_format1_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Verify old format 1 interface creation results
+      assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Creation with old format 1 failed - {{ result }}"
+        success_msg: "Creation with old format 1 succeeded"
+      loop: '{{ result.response }}'
 
-    - assert:
+    - name: QUERY - Get old format 1 interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_old_format1_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify old format 1 interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.old_format1_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'

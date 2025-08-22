@@ -55,36 +55,31 @@
         config: "{{ dcnm_interface_merge_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == true'
-    #       - '(result["diff"][0]["merged"] | length) == 2'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 2'
-
-    - assert:
+    - name: ASSERT - Verify SVI interface creation results
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Creation of SVI interfaces failed - {{ result }}"
+        success_msg: "Creation of SVI interfaces succeeded"
       loop: '{{ result.response }}'
 
-##############################################
-##                QUERY                     ##
-##############################################
-
-    - name: Query SVI interfaces
+    - name: QUERY - Get SVI interface state in NDFC (setup)
       cisco.dcnm.dcnm_interface:
-        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        state: query
         fabric: "{{ test_data_common.fabric }}"
-        state: query                          # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merge_conf }}"
-      register: result
+      register: verify_result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+    - name: VALIDITY CHECK - Verify SVI interface state in NDFC (setup)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
+
+
 
 ##############################################
 ##             CLEANUP                      ##

@@ -58,19 +58,29 @@
         config: "{{ dcnm_interface_merged_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == true'
-    #       - '(result["diff"][0]["merged"] | length) == 2'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 2'
-
-    - assert:
+    - name: ASSERT - Verify SVI interface creation results
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Creation of SVI interfaces failed - {{ result }}"
+        success_msg: "Creation of SVI interfaces succeeded"
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get SVI interface state in NDFC (merge)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_merged_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify SVI interface state in NDFC (merge)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.merged_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
 ##############################################
 ##              REPLACE                     ##
@@ -89,29 +99,41 @@
         config: "{{ dcnm_interface_replace_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == true'
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 2'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 2'
-
-    - assert:
+    - name: ASSERT - Verify SVI interface replace results
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Replace of SVI interfaces failed - {{ result }}"
+        success_msg: "Replace of SVI interfaces succeeded"
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get SVI interface state in NDFC (replace)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_replace_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify SVI interface state in NDFC (replace)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.replace_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
     - name: Replace SVI interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *svi_replace
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == false'
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
+    - name: ASSERT - Verify SVI interface idempotence results
+      assert:
+        that:
+          - 'result.changed == false'
+          - 'result.response|length == 0'
+        fail_msg: "Idempotence test failed for SVI interfaces - {{ result }}"
+        success_msg: "Idempotence test passed for SVI interfaces"
     #       - '(result["diff"][0]["replaced"] | length) == 0'
     #       - '(result["diff"][0]["overridden"] | length) == 0'
 

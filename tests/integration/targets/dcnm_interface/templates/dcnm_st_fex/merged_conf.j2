@@ -7,11 +7,11 @@
     - "{{ test_data_common.switch1 }}"
   deploy: {{ test_data_common.deploy | bool }}
   profile:
-    description: "ST FEX interface 160 merged"
+    description: "ST FEX if 160 merge"
     members:
       - "{{ test_data_common.eth_intf10 }}"
     mtu: "jumbo"
-    po_description: "PC 160 ST FEX - Merged"
+    po_description: "PC 160 ST FEX Mrgd"
     cmds:
       - no shutdown
     admin_state: true

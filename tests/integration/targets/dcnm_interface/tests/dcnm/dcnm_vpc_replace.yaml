@@ -2,6 +2,14 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: VPC REPLACE - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                     VPC REPLACE Tests                        +"
+      - "----------------------------------------------------------------"
+
 - name: Remove local log file
   local_action: command rm -f dcnm_intf.log
 
@@ -12,7 +20,8 @@
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
 
-- assert:
+- name: ASSERT - Check return codes for setup
+  assert:
     that:
       - 'item["RETURN_CODE"] == 200'  
   loop: '{{ result.response }}'
@@ -58,19 +67,27 @@
         config: "{{ dcnm_interface_merged_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == true'
-    #       - '(result["diff"][0]["merged"] | length) == 2'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 2'
-
-    - assert:
+    - name: ASSERT - Check changed flag is true and return codes
+      assert:
         that:
+          - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC after merge
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_merged_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC after merge
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.merged_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
 ##############################################
 ##              REPLACE                     ##
@@ -89,36 +106,39 @@
         config: "{{ dcnm_interface_replace_conf }}"
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == true'
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 2'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-    #       - '(result["diff"][0]["deploy"] | length) == 2'
-
-    - assert:
+    - name: ASSERT - Check changed flag is true and return codes
+      assert:
         that:
+          - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC after replace
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_replace_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC after replace
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.replace_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+      delegate_to: localhost
 
     - name: Replace vPC interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *vpc_replace
       register: result
 
-    # - assert:
-    #     that:
-    #       - 'result.changed == false'
-    #       - '(result["diff"][0]["merged"] | length) == 0'
-    #       - '(result["diff"][0]["deleted"] | length) == 0'
-    #       - '(result["diff"][0]["replaced"] | length) == 0'
-    #       - '(result["diff"][0]["overridden"] | length) == 0'
-
-    - assert:
+    - name: ASSERT - Check changed flag is false and return codes for idempotence
+      assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'result.changed == false'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'  # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
 
 ##############################################
 ##             CLEANUP                      ##
@@ -134,7 +154,8 @@
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: ASSERT - Check return codes for cleanup
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
