@@ -835,14 +835,17 @@ class DcnmVrf:
 
     # pylint: enable=inconsistent-return-statements
     @staticmethod
-    def compare_properties(dict1, dict2, property_list):
+    def compare_properties(dict1, dict2, property_list, skip_prop=None):
         """
-        Given two dictionaries and a list of keys:
+        Given two dictionaries, a list of keys and keys that can be
+        skipped, compare the values of the keys in both dictionaries:
 
         - Return True if all property values match.
         - Return False otherwise
         """
         for prop in property_list:
+            if skip_prop and prop in skip_prop:
+                continue
             if dict1.get(prop) != dict2.get(prop):
                 return False
         return True
@@ -954,8 +957,11 @@ class DcnmVrf:
                                         continue
                                     found = True
                                     interface_match = True
+                                    skip_prop = []
+                                    if not wlite["DOT1Q_ID"]:
+                                        skip_prop.append("DOT1Q_ID")
                                     if not self.compare_properties(
-                                        wlite, hlite, self.vrf_lite_properties
+                                        wlite, hlite, self.vrf_lite_properties, skip_prop
                                     ):
                                         found = False
                                         break
@@ -1216,14 +1222,16 @@ class DcnmVrf:
             else:
                 extension_values["VRF_LITE_CONN"] = copy.deepcopy(vrf_lite_connections)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(
-                extension_values["VRF_LITE_CONN"]
-            )
-
-            msg = "Returning extension_values: "
+            msg = "Building extension_values: "
             msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
+        extension_values["VRF_LITE_CONN"] = json.dumps(
+            extension_values["VRF_LITE_CONN"]
+        )
+        msg = "Returning extension_values: "
+        msg += f"{json.dumps(extension_values, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         return copy.deepcopy(extension_values)
 
     def update_attach_params(self, attach, vrf_name, deploy, vlan_id) -> dict:
@@ -1393,10 +1401,13 @@ class DcnmVrf:
         # remove it here (as we did with the other params that are
         # compared in the call to self.dict_values_differ())
         vlan_id_want = str(json_to_dict_want.get("vrfVlanId", ""))
+        vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
 
         skip_keys = []
         if vlan_id_want == "0":
             skip_keys = ["vrfVlanId"]
+        if vrfSegmentId_want is None:
+            skip_keys.append("vrfSegmentId")
         templates_differ = self.dict_values_differ(
             json_to_dict_want, json_to_dict_have, skip_keys=skip_keys
         )
@@ -3093,6 +3104,54 @@ class DcnmVrf:
 
         return extension_values_list
 
+    def get_vrf_lite_dot1q_id(self, serial_number: str, vrf_name: str, interface: str) -> int:
+        """
+        # Summary
+
+        Given a switch serial, vrf name and ifname, return the dot1q ID
+        reserved for the vrf_lite extension on that switch.
+
+        ## Raises
+
+        Calls fail_json if DNCM fails to reserve the dot1q ID.
+        """
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"serial_number: {serial_number}"
+        msg += f"vrf name: {vrf_name}"
+        msg += f"interface: {interface}"
+        self.log.debug(msg)
+
+        dot1q_id = None
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
+        path += "/rest/resource-manager/reserve-id"
+        verb = "POST"
+        payload = {"scopeType": "DeviceInterface",
+                   "usageType": "TOP_DOWN_L3_DOT1Q",
+                   "serialNumber": serial_number,
+                   "ifName": interface,
+                   "allocatedTo": vrf_name}
+
+        resp = dcnm_send(self.module, verb, path, json.dumps(payload))
+        if resp.get("RETURN_CODE") != 200:
+            msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
+            msg += f"caller: {caller}. "
+            msg += "Failed to get dot1q ID for vrf_lite extension on switch "
+            msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {resp}"
+            self.module.fail_json(msg=msg)
+        else:
+            msg = f"{self.class_name}.get_vrf_lite_dot1q_id: "
+            msg += f"caller: {caller}. "
+            msg += "Successfully got dot1q ID for vrf_lite extension on switch "
+            msg += f"{serial_number} for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {resp}"
+            self.log.debug(msg)
+            dot1q_id = resp.get("DATA")
+            return dot1q_id
+
     def update_vrf_attach_vrf_lite_extensions(self, vrf_attach, lite) -> dict:
         """
         # Summary
@@ -3223,7 +3282,20 @@ class DcnmVrf:
             if item["user"]["dot1q"]:
                 nbr_dict["DOT1Q_ID"] = str(item["user"]["dot1q"])
             else:
-                nbr_dict["DOT1Q_ID"] = str(item["switch"]["DOT1Q_ID"])
+                dot1q_vlan = self.get_vrf_lite_dot1q_id(
+                    serial_number,
+                    vrf_attach.get("vrfName"),
+                    nbr_dict["IF_NAME"]
+                )
+                if dot1q_vlan is not None:
+                    nbr_dict["DOT1Q_ID"] = str(dot1q_vlan)
+                else:
+                    msg = f"{self.class_name}.{method_name}: "
+                    msg += f"caller: {caller}. "
+                    msg += "Failed to get dot1q ID for vrf_lite extension "
+                    msg += f"on switch {serial_number} for vrf {vrf_attach.get('vrfName')} "
+                    msg += f"and interface {nbr_dict['IF_NAME']}"
+                    self.module.fail_json(msg=msg)
 
             if item["user"]["ipv4_addr"]:
                 nbr_dict["IP_MASK"] = item["user"]["ipv4_addr"]
@@ -3269,9 +3341,9 @@ class DcnmVrf:
             ms_con["MULTISITE_CONN"] = []
             extension_values["MULTISITE_CONN"] = json.dumps(ms_con)
 
-            extension_values["VRF_LITE_CONN"] = json.dumps(
-                extension_values["VRF_LITE_CONN"]
-            )
+        extension_values["VRF_LITE_CONN"] = json.dumps(
+            extension_values["VRF_LITE_CONN"]
+        )
         vrf_attach["extensionValues"] = json.dumps(extension_values).replace(" ", "")
         if vrf_attach.get("vrf_lite") is not None:
             del vrf_attach["vrf_lite"]
@@ -3736,44 +3808,48 @@ class DcnmVrf:
 
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
         path += f"resource-manager/fabric/{self.fabric}/"
-        path += "pools/TOP_DOWN_VRF_VLAN"
-        resp = dcnm_send(self.module, "GET", path)
-        self.result["response"].append(resp)
-        fail, self.result["changed"] = self.handle_response(resp, "deploy")
-        if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
-            self.failure(resp)
-
-        delete_ids = []
-        for item in resp["DATA"]:
-            if "entityName" not in item:
-                continue
-            if item["entityName"] not in vrf_del_list:
-                continue
-            if item.get("allocatedFlag") is not False:
-                continue
-            if item.get("id") is None:
-                continue
-            # Resources with no ipAddress or switchName
-            # are invalid and of Fabric's scope and
-            # should not be attempted to be deleted here.
-            if not item.get("ipAddress"):
-                continue
-            if not item.get("switchName"):
-                continue
-
-            msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+        resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
+        for pool in resource_pool:
+            msg = f"Processing orphaned resources in pool:{pool}"
             self.log.debug(msg)
+            req_path = path + f"pools/{pool}"
+            resp = dcnm_send(self.module, "GET", req_path)
+            self.result["response"].append(resp)
+            fail, self.result["changed"] = self.handle_response(resp, "deploy")
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
 
-            delete_ids.append(item["id"])
+            delete_ids = []
+            for item in resp["DATA"]:
+                if "entityName" not in item:
+                    continue
+                if item["entityName"] not in vrf_del_list:
+                    continue
+                if item.get("allocatedFlag") is not False:
+                    continue
+                if item.get("id") is None:
+                    continue
+                # Resources with no ipAddress or switchName
+                # are invalid and of Fabric's scope and
+                # should not be attempted to be deleted here.
+                if not item.get("ipAddress"):
+                    continue
+                if not item.get("switchName"):
+                    continue
 
-        if len(delete_ids) == 0:
-            return
-        msg = f"Releasing orphaned resources with IDs:{delete_ids}"
-        self.log.debug(msg)
-        self.release_resources_by_id(delete_ids)
+                msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                delete_ids.append(item["id"])
+
+            if len(delete_ids) == 0:
+                return
+            msg = f"Releasing orphaned resources with IDs:{delete_ids}"
+            self.log.debug(msg)
+            self.release_resources_by_id(delete_ids)
 
     def push_to_remote(self, is_rollback=False):
         """
