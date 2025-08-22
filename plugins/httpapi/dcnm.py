@@ -66,6 +66,7 @@ class HttpApi(HttpApiBase):
     def __init__(self, *args, **kwargs):
         super(HttpApi, self).__init__(*args, **kwargs)
         self.headers = {"Content-Type": "application/json"}
+        self.urlencoded_headers = {"Content-Type": "application/x-www-form-urlencoded"}
         self.txt_headers = {"Content-Type": "text/plain"}
         self.version = None
         self.retrycount = DEFAULT_RETRY_COUNT
@@ -251,6 +252,10 @@ class HttpApi(HttpApiBase):
     def send_request(self, method, path, json=None):
         """This method handles all DCNM REST API requests other than login"""
         return self._send_request_internal(method, path, json or {}, self.headers)
+
+    def send_urlencoded_request(self, method, path, urlencoded=None):
+        """This method handles all DCNM REST API urlencoded requests other than login"""
+        return self._send_request_internal(method, path, urlencoded or {}, self.urlencoded_headers)
 
     def send_txt_request(self, method, path, txt=None):
         """This method handles all DCNM REST API text requests other than login"""

@@ -500,6 +500,8 @@ def dcnm_send(module, method, path, data=None, data_type="json"):
 
     if data_type == "json":
         return conn.send_request(method, path, data)
+    elif data_type == "urlencoded":
+        return conn.send_urlencoded_request(method, path, data)
     elif data_type == "text":
         return conn.send_txt_request(method, path, data)
 
