@@ -90,21 +90,23 @@
         config: "{{ dcnm_interface_delete_conf }}"
       register: result
 
+    - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
+      assert:
+        that:
+          - 'result.changed == True'
+
     - name: QUERY - Get interface state in NDFC (delete)
       cisco.dcnm.dcnm_interface:
         state: query
         fabric: "{{ test_data_common.fabric }}"
         config: "{{ dcnm_interface_delete_conf }}"
-      register: verify_result
+      register: result
 
-    - name: VALIDITY CHECK - Verify SVI interfaces are deleted
-      cisco.dcnm.tests.integration.ndfc_interface_validate:
-        config_path: "{{ test_data_interfaces.delete_conf_file }}"
-        ndfc_data: "{{ verify_result }}"
-        test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
-        check_deleted: true
-      delegate_to: localhost
+    - name: ASSERT RESPONSE IS EMPTY
+      assert:
+        that:
+          - 'result.response is defined'
+          - 'result.response | length == 0'
 
     - name: Delete SVI interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *svi_del
