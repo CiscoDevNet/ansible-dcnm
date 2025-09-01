@@ -16,6 +16,7 @@
     # IT_CONTEXT: true
     test_data_common:
       fabric: fabric_name
+      # svi_fabric: svi_fabric_name  # Define this for dcnm_svi_* tests
       deploy: false
       check_deploy: false
       switch1: 192.168.10.210

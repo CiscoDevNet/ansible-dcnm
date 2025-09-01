@@ -2,13 +2,17 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Skip SVI tests if svi_fabric is not defined
+  meta: end_play
+  when: test_data_common.svi_fabric is not defined or test_data_common.svi_fabric == ""
+
 - name: Remove local log file
   local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
-    fabric: "{{ test_data_common.fabric }}"
+    fabric: "{{ test_data_common.svi_fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
 
@@ -50,7 +54,7 @@
     - name: Create SVI interfaces
       cisco.dcnm.dcnm_interface: &svi_merge
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_merged_conf }}"
 
@@ -68,7 +72,7 @@
     - name: QUERY - Get SVI interface state in NDFC (merge)
       cisco.dcnm.dcnm_interface:
         state: query
-        fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         config: "{{ dcnm_interface_merged_conf }}"
       register: verify_result
 
@@ -106,7 +110,7 @@
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: IT_CONTEXT is not defined
