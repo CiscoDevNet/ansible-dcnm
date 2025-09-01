@@ -97,9 +97,6 @@
         test_data: "{{ test_data_common }}"
         switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
 
 ##############################################
 ##               MERGE 2                    ##

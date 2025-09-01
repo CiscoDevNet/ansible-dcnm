@@ -104,25 +104,25 @@ class ActionModule(ActionBase):
         for expected_policy in expected_data.get("response", []):
             for expected_interface in expected_policy.get("interfaces", []):
                 expected_nvpairs = expected_interface.get("nvPairs", {})
-                
+
                 # Find corresponding interface in NDFC data
                 ndfc_interface = self._find_matching_interface(expected_interface, ndfc_data)
                 if not ndfc_interface:
                     continue
-                
+
                 ndfc_nvpairs = ndfc_interface.get("nvPairs", {})
-                
+
                 # Determine if this is a port-channel or loopback interface
                 ifname = expected_interface.get("ifName", "").lower()
                 is_port_channel = ifname.startswith("port-channel")
                 is_loopback = ifname.startswith("loopback")
-                
+
                 if is_port_channel:
                     # For port-channel interfaces, use PO_ID
                     if "PO_ID" not in ndfc_nvpairs and "PO_ID" in expected_nvpairs:
                         del expected_nvpairs["PO_ID"]
                         display.vvv(f"Removed PO_ID from expected data for port-channel interface {ifname}")
-                    
+
                     # Remove INTF_NAME if present (shouldn't be used for port-channel)
                     if "INTF_NAME" in expected_nvpairs:
                         del expected_nvpairs["INTF_NAME"]
@@ -132,12 +132,12 @@ class ActionModule(ActionBase):
                     if "INTF_NAME" not in ndfc_nvpairs and "INTF_NAME" in expected_nvpairs:
                         del expected_nvpairs["INTF_NAME"]
                         display.vvv(f"Removed INTF_NAME from expected data for interface {ifname}")
-                    
+
                     # Remove PO_ID if present (shouldn't be used for non-port-channel)
                     if "PO_ID" in expected_nvpairs:
                         del expected_nvpairs["PO_ID"]
                         display.vvv(f"Removed PO_ID from expected data for non-port-channel interface {ifname}")
-                
+
                 # Handle special IPv6 field mapping for loopback interfaces
                 if is_loopback:
                     # For loopback interfaces, NDFC uses V6IP instead of IPv6
@@ -150,7 +150,7 @@ class ActionModule(ActionBase):
                         # Remove IPv6 if NDFC doesn't have V6IP
                         del expected_nvpairs["IPv6"]
                         display.vvv(f"Removed IPv6 from expected data for loopback interface {ifname}")
-                    
+
                     # For loopback interfaces, NDFC uses ROUTE_MAP_TAG instead of ROUTING_TAG
                     if "ROUTING_TAG" in expected_nvpairs and "ROUTE_MAP_TAG" in ndfc_nvpairs:
                         # Move ROUTING_TAG value to ROUTE_MAP_TAG in expected data
@@ -166,7 +166,7 @@ class ActionModule(ActionBase):
                     if "V6IP" in expected_nvpairs:
                         del expected_nvpairs["V6IP"]
                         display.vvv(f"Removed V6IP from expected data for non-loopback interface {ifname}")
-                    
+
                     # For non-loopback interfaces, remove ROUTE_MAP_TAG if present
                     if "ROUTE_MAP_TAG" in expected_nvpairs:
                         del expected_nvpairs["ROUTE_MAP_TAG"]
@@ -178,15 +178,15 @@ class ActionModule(ActionBase):
         """
         expected_ifname = expected_interface.get("ifName", "").lower()
         expected_serial = expected_interface.get("serialNumber", "")
-        
+
         for ndfc_policy in ndfc_data.get("response", []):
             for ndfc_interface in ndfc_policy.get("interfaces", []):
                 ndfc_ifname = ndfc_interface.get("ifName", "").lower()
                 ndfc_serial = ndfc_interface.get("serialNumber", "")
-                
+
                 if expected_ifname == ndfc_ifname and expected_serial == ndfc_serial:
                     return ndfc_interface
-        
+
         return None
 
     def verify_deleted(self, results, check_deleted, expected_data, ndfc_data, config_path):
