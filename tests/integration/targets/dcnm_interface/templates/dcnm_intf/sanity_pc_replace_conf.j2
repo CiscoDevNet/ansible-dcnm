@@ -10,7 +10,7 @@
     admin_state: true
     mode: trunk
     members:
-      - "{{ test_data_common.eth_intf13 }}"
+      - {{ test_data_common.eth_intf13 }}
     pc_mode: 'active'
     bpdu_guard: false
     port_type_fast: false
