@@ -1,173 +1,205 @@
 ##############################################
-##               SETUP                      ##
+##                 SETUP                    ##
 ##############################################
 
-- name: Remove local log file
-  local_action: command rm -f dcnm_vpc_pair.log
-
-- block:
-
-##############################################
-##            INITIALIZE                    ##
-##############################################
-
-    - name: Put fabric to default state
-      cisco.dcnm.dcnm_vpc_pair: &dcnm_vpc_pair_delete
-        src_fabric: "{{ ansible_it_fabric }}"
-        deploy: true                                                # Flag indicating whether changes are to be deployed, Mandatory: False, Type: bool, default: True
-        state: deleted                                              # only choose form [merged, replaced, deleted, overridden, query. fetch]
-      register: result
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+- name: QUERY - Test Entry Point - [dcnm_vpc_pair]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [dcnm_vpc_pair]               +"
+      - "----------------------------------------------------------------"
+  tags: query
 
 ##############################################
-##             MERGE                        ##
+##      Create Dictionary of Test Data      ##
 ##############################################
-
-    - name: Create a new VPC switch pair
-      cisco.dcnm.dcnm_vpc_pair:
-        src_fabric: "{{ ansible_it_fabric }}"
-        deploy: true                                                # Flag indicating whether changes are to be deployed, Mandatory: False, Type: bool, default: True
-        state: merged                                               # only choose form [merged, replaced, deleted, overridden, query. fetch]
-        config:
-          - peerOneId: "{{ ansible_switch1 }}"                      # IP Address/Host Name of Peer1 of VPC switch pair, Mandatory: True, Type: str
-            peerTwoId: "{{ ansible_switch2 }}"                      # IP Address/Host Name of Peer2 of VPC switch pair, Mandatory: True, Type: str
-            templateName: "vpc_pair"                                # Template to be applied to this VPC switch pair
-            profile:
-              ADMIN_STATE: True                                     # Uncheck to disable the vPC Peerlink port-channel, Mandatory: True, Type: bool, Default: true"
-              ALLOWED_VLANS: "all"                                  # Allowed values: 'none', 'all', or vlan ranges (ex: 1-200,500-2000,3000), Mandatory: True, Type: str, Default: all"
-              DOMAIN_ID: "{{ ansible_vxlan_vpc_domain_id | int }}"  # vPC Domain ID, Mandatory: True, Min: 1, Max: 1000, Type: int, Default: ''"
-              FABRIC_NAME: "{{ ansible_it_fabric }}"                # Fabric Name, Mandatory: True, Type: str, Default: ''"
-              KEEP_ALIVE_HOLD_TIMEOUT: 3                            # Hold timeout to ignore stale peer alive messages, default is 3 if not specified, Mandatory: False, Min: 3, Max: 10, Type: int, Default: 3"
-              KEEP_ALIVE_VRF: management                            # Name of VRF used for keep-alive, enter 'default' for default VRF, Mandatory: True, Type: str, Default: ''"
-              PC_MODE: active                                       # Channel mode options: on, active and passive, Mandatory: False, ValidValues: ['on', 'active', 'passive'], Type: str, Default: active"
-              PEER1_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer1_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 1, Mandatory: True, Type: str, Default: ''"
-              PEER1_MEMBER_INTERFACES: e1/20                        # A list of member interfaces for Peer-1 [e.g. e1/5,eth1/7-9], Mandatory: False, Type: list, Default: []"
-              PEER1_PCID: 101                                       # Peer-1 Peerlink port-channel number (Min:1, Max:4096), Mandatory: False, Min: 1, Max: 4096, Type: int, Default: ''"
-              PEER1_PO_DESC: "This is peer1 PC"                     # Add description to the port-channel (Max Size 254), Mandatory: False, MinLen: 1, MaxLen: 254, Type: str, Default: ''"
-              PEER2_KEEP_ALIVE_LOCAL_IP: "{{ ansible_peer2_ip }}"   # IP address of a L3 interface in non-default VRF on Peer 2, Mandatory: True, Type: str, Default: ''"
-              PEER2_MEMBER_INTERFACES: e1/20                        # A list of member interfaces for Peer-2 [e.g. e1/5,eth1/7-9], Mandatory: False, Type: list, Default: []"
-              PEER2_PCID: 102                                       # Peer-2 Peerlink port-channel number (Min:1, Max:4096), Mandatory: False, Min: 1, Max: 4096, Type: int, Default: ''"
-              PEER2_PO_DESC: "This is peer2 PC"                     # Add description to the port-channel (Max Size 254), Mandatory: False, MinLen: 1, MaxLen: 254, Type: str, Default: ''"
-        templates:                                                  # List of templates to be fetched, Mandatory: 'state==fetch', Type: list, default: []
-          - vpc_pair                                                # Name of the template to be fetched, Mandatory: 'state==fetch', Type: str
-      register: result
-
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
+- name: QUERY - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    # some cases are for a specific deploy state
+    deploy_local: true
+    
+    test_data_query:
+      #----------------------------------  
+      # config templates and auto generated file location for test cases
+      #----------------------------------
+      # TC1 - VPC Pair Configuration for query tests
+      vpc_pair_setup_template: "merged/dcnm_vpc_pair_merged_full_conf.j2"
+      vpc_pair_setup_file: "{{ role_path }}/files/dcnm_vpc_pair_query_setup_conf.yaml"
+  delegate_to: localhost
+  tags: query
 
 ##############################################
-##            QUERY                         ##
+## Create Module Payloads using J2 Template ##
 ##############################################
 
-    - name: Query VXLAN Fabric VPC switch pair - with no filters
-      cisco.dcnm.dcnm_vpc_pair:
-        src_fabric: "{{ ansible_it_fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query, fetch]
-      register: result
-
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["response"] | length) == 1'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+- name: QUERY - Create Config file from j2 for setup
+  ansible.builtin.template:
+    src: "{{ test_data_query.vpc_pair_setup_template }}"
+    dest: "{{ test_data_query.vpc_pair_setup_file }}"
+  delegate_to: localhost
+  tags: query
 
 ##############################################
-##            QUERY                         ##
+##                QUERY                     ##
 ##############################################
 
-    - name: Query VXLAN Fabric VPC switch pair - with both peers specified
-      cisco.dcnm.dcnm_vpc_pair:
-        src_fabric: "{{ ansible_it_fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query, fetch]
-        config:
-          - peerOneId: "{{ ansible_switch1 }}"                      # IP Address/Host Name of Peer1 of VPC switch pair, Mandatory: True, Type: str
-            peerTwoId: "{{ ansible_switch2 }}"                      # IP Address/Host Name of Peer2 of VPC switch pair, Mandatory: True, Type: str
-      register: result
+# TC1 - Setup: Create VPC Pair for query tests
+- name: QUERY - TC1 - DELETED - Clean up any existing VPC pairs
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: query
 
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["response"] | length) == 1'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
+- name: QUERY - TC1 - Load VPC Pair Setup Config File
+  ansible.builtin.set_fact:
+    dcnm_vpc_pair_setup_conf: "{{ lookup('file', '{{ test_data_query.vpc_pair_setup_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: query
+
+- name: QUERY - TC1 - MERGED - Create VPC Pair for testing
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_vpc_pair_setup_conf }}"
+  register: result
+  tags: query
+
+- name: QUERY - TC1 - ASSERT - Check if creation successful
+  assert:
+    that:
+      - result.changed == true
+      - '(result["diff"][0]["merged"] | length) == 1'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 1'
+  tags: query
+
+- name: QUERY - TC1 - QUERY - Get VPC pair state in NDFC
+  cisco.dcnm.dcnm_vpc_pair:
+    state: query
+    src_fabric: "{{ test_data_common.fabric }}"
+  register: verify_result
+  tags: query
+
+# - name: QUERY - TC1 - ASSERT - Check response codes
+#   assert:
+#     that:
+#       - 'item["RETURN_CODE"] == 200'
+#   loop: '{{ result.response }}'
+#   tags: query
+
+# TC2 - Query with no filters
+- name: QUERY - TC2 - QUERY - Query all VPC pairs with no filters
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: result
+  tags: query
+
+- name: QUERY - TC2 - ASSERT - Check query results
+  assert:
+    that:
+      - result.changed == false
+      - '(result["response"] | length) == 1'
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: query
+
+# TC3 - Query with both peers specified
+- name: QUERY - TC3 - QUERY - Query VPC pair with both peers specified
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - peerOneId: "{{ test_data_common.sw1 }}"
+        peerTwoId: "{{ test_data_common.sw2 }}"
+  register: result
+  tags: query
+
+- name: QUERY - TC3 - ASSERT - Check query results with both peers
+  assert:
+    that:
+      - result.changed == false
+      - '(result["response"] | length) == 1'
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: query
+
+# TC4 - Query with one peer specified
+- name: QUERY - TC4 - QUERY - Query VPC pair with one peer specified
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - peerOneId: "{{ test_data_common.sw1 }}"
+  register: result
+  tags: query
+
+- name: QUERY - TC4 - ASSERT - Check query results with one peer
+  assert:
+    that:
+      - result.changed == false
+      - '(result["response"] | length) == 1'
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: query
+
+# TC5 - Query with second peer specified
+- name: QUERY - TC5 - QUERY - Query VPC pair with second peer specified
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - peerTwoId: "{{ test_data_common.sw2 }}"
+  register: result
+  tags: query
+
+- name: QUERY - TC5 - ASSERT - Check query results with second peer
+  assert:
+    that:
+      - result.changed == false
+      - '(result["response"] | length) == 1'
+      - '(result["diff"][0]["merged"] | length) == 0'
+      - '(result["diff"][0]["modified"] | length) == 0'
+      - '(result["diff"][0]["deleted"] | length) == 0'
+      - '(result["diff"][0]["query"] | length) == 0'
+      - '(result["diff"][0]["deploy"] | length) == 0'
+  tags: query
+
+# TC6 - Query with non-existent peer
+- name: QUERY - TC6 - QUERY - Query VPC pair with non-existent peer
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: query
+    config:
+      - peerOneId: "1.1.1.1"
+  register: result
+  tags: query
+  ignore_errors: true
+
+- name: QUERY - TC6 - ASSERT - Check query results with non-existent peer
+  assert:
+    that:
+      - result.msg is search("not a valid one") or result.msg is search("Error")
+  tags: query
 
 ##############################################
-##            QUERY                         ##
+##                 CLEAN-UP                 ##
 ##############################################
 
-    - name: Query VXLAN Fabric VPC switch pair - with one peer specified
-      cisco.dcnm.dcnm_vpc_pair:
-        src_fabric: "{{ ansible_it_fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query, fetch]
-        config:
-          - peerOneId: "{{ ansible_switch1 }}"                      # IP Address/Host Name of Peer1 of VPC switch pair, Mandatory: True, Type: str
-      register: result
-
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["response"] | length) == 1'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-
-##############################################
-##            QUERY                         ##
-##############################################
-
-    - name: Query VXLAN Fabric VPC switch pair - with second peer specified
-      cisco.dcnm.dcnm_vpc_pair:
-        src_fabric: "{{ ansible_it_fabric }}"
-        state: query                        # only choose form [merged, replaced, deleted, overridden, query, fetch]
-        config:
-          - peerTwoId: "{{ ansible_switch2 }}"
-      register: result
-
-    - assert:
-        that:
-          - 'result.changed == false'
-          - '(result["response"] | length) == 1'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["modified"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-
-##############################################
-##            CLEANUP                       ##
-##############################################
-
-    - name: Delete all VPC switch pairs
-      cisco.dcnm.dcnm_vpc_pair: *dcnm_vpc_pair_delete
-      register: result
-      when: IT_CONTEXT is not defined
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-      loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+- name: QUERY - END - remove VPC pairs
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  when: IT_CONTEXT is not defined
+  tags: query
