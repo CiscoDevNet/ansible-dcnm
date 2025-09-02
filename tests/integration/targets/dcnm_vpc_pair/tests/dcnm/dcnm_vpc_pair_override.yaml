@@ -279,13 +279,6 @@
     check_deleted: true
   tags: overridden
 
-# - name: OVERRIDDEN - TC6 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-  tags: overridden
-
 ##############################################
 ##                 CLEAN-UP                 ##
 ##############################################

@@ -110,16 +110,16 @@ class DcnmVpcPairQuerySchema(BaseModel):
         Convert YAML config to the format expected by DCNM API response
         Maps the YAML structure to the API response structure
         """
-        
+
         # Mapping of fields in the yaml config to the fields in the DCNM API response
         # Format: {yaml_field: api_field}
         # All fields are included in the model - validation logic handles what to compare
         # ignore_extra_fields=True in validator ignores fields present in actual but not expected
-        
+
         # response.nvPairs mapping
         profile_to_nvpairs_fields = {
             "ADMIN_STATE": "ADMIN_STATE",
-            "ALLOWED_VLANS": "ALLOWED_VLANS", 
+            "ALLOWED_VLANS": "ALLOWED_VLANS",
             "DOMAIN_ID": "DOMAIN_ID",
             "FABRIC_NAME": "FABRIC_NAME",
             "KEEP_ALIVE_HOLD_TIMEOUT": "KEEP_ALIVE_HOLD_TIMEOUT",
@@ -156,7 +156,7 @@ class DcnmVpcPairQuerySchema(BaseModel):
         # Top level vpc pair fields
         vpc_pair_fields = {
             "peerOneId": "peerOneId",
-            "peerTwoId": "peerTwoId", 
+            "peerTwoId": "peerTwoId",
             "templateName": "templateName",
             # Note: deploy field doesn't map directly to API response
         }
@@ -167,7 +167,7 @@ class DcnmVpcPairQuerySchema(BaseModel):
 
         for vpc_pair in expected_config_data:
             vpc_pair_dict = {}
-            
+
             # Map top-level VPC pair fields
             for yaml_field, api_field in vpc_pair_fields.items():
                 if yaml_field in vpc_pair:

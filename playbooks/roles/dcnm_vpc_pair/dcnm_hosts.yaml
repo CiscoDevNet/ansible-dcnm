@@ -8,7 +8,6 @@ all:
   children:
     dcnm:
       vars:
-        ansible_it_fabric: fabric-stage
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
         ansible_httpapi_validate_certs: no
