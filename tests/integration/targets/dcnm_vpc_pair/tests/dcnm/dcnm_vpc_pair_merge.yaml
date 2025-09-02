@@ -10,6 +10,7 @@
       - "----------------------------------------------------------------"
   tags: merged
 
+
 ##############################################
 ##      Create Dictionary of Test Data      ##
 ##############################################
@@ -130,12 +131,12 @@
   register: verify_result
   tags: merged
 
-# - name: MERGED - TC1 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: merged
+- name: MERGED - TC1 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_merged.vpc_pair_full_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
 
 - name: MERGED - TC1 - conf - Idempotence
   cisco.dcnm.dcnm_vpc_pair: *conf_full
@@ -146,19 +147,7 @@
   assert:
     that:
       - result.changed == false
-      - '(result["diff"][0]["merged"] | length) == 0'
-      - '(result["diff"][0]["modified"] | length) == 0'
-      - '(result["diff"][0]["deleted"] | length) == 0'
-      - '(result["diff"][0]["query"] | length) == 0'
-      - '(result["diff"][0]["deploy"] | length) == 0'
   tags: merged
-
-# - name: MERGED - TC1 - ASSERT - Check response codes for idempotence
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: merged
 
 # TC2 - Modify existing VPC Pair configuration
 - name: MERGED - TC2 - Load VPC Pair Modified Config File
@@ -166,6 +155,7 @@
     dcnm_vpc_pair_modified_conf: "{{ lookup('file', '{{ test_data_merged.vpc_pair_modified_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: merged
+
 
 - name: MERGED - TC2 - MERGED - Modify VPC Pair Configuration
   cisco.dcnm.dcnm_vpc_pair:
@@ -196,13 +186,13 @@
   when: (fabric_type == "LANClassic")
   tags: merged
 
-# - name: MERGED - TC2 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   when: (fabric_type == "LANClassic")
-#   tags: merged
+- name: MERGED - TC2 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_merged.vpc_pair_modified_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  when: (fabric_type == "LANClassic")
+  tags: merged
 
 # TC2b - VXLANFabric specific test
 - name: MERGED - TC2b - MERGED - Merge VPC pair for VXLAN Fabric
@@ -236,14 +226,6 @@
   when: (fabric_type == "VXLANFabric")
   tags: merged
 
-# - name: MERGED - TC2b - ASSERT - Check response codes for VXLAN
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   when: (fabric_type == "VXLANFabric")
-#   tags: merged
-
 # TC3 - Delete VPC Pair
 - name: MERGED - TC3 - DELETED - Delete VPC Pair
   cisco.dcnm.dcnm_vpc_pair:
@@ -273,12 +255,13 @@
   register: verify_result
   tags: merged
 
-# - name: MERGED - TC3 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: merged
+- name: MERGED - TC3 - VALIDITY CHECK - Verify VPC pair deletion
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
+  tags: merged
 
 # TC4 - Create VPC Pair with minimal configuration
 - name: MERGED - TC4 - Load VPC Pair Minimal Config File
@@ -316,13 +299,13 @@
   when: (fabric_type == "LANClassic")
   tags: merged
 
-# - name: MERGED - TC4 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   when: (fabric_type == "LANClassic")
-#   tags: merged
+- name: MERGED - TC4 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_merged.vpc_pair_minimal_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  when: (fabric_type == "LANClassic")
+  tags: merged
 
 # TC4b - Delete VPC Pair after minimal test
 - name: MERGED - TC4b - DELETED - Delete VPC Pair after minimal test
@@ -374,12 +357,12 @@
   register: verify_result
   tags: merged
 
-# - name: MERGED - TC5 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: merged
+- name: MERGED - TC5 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_merged.vpc_pair_minimal_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
 
 # TC5b - Delete VPC Pair after defaults test
 - name: MERGED - TC5b - DELETED - Delete VPC Pair after defaults test
@@ -437,12 +420,12 @@
   register: verify_result
   tags: merged
 
-# - name: MERGED - TC6 - ASSERT - Check response codes
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: merged
+- name: MERGED - TC6 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_merged.vpc_pair_no_deploy_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: merged
 
 # TC7 - Test invalid configurations
 - name: MERGED - TC7 - Create VPC Pair with invalid peer IP

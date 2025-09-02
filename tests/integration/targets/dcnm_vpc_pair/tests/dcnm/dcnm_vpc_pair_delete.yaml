@@ -82,6 +82,13 @@
   register: verify_result
   tags: deleted
 
+- name: DELETED - TC1 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_deleted.vpc_pair_setup_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: deleted
+
 # - name: DELETED - TC1 - ASSERT - Check response codes
 #   assert:
 #     that:
@@ -118,6 +125,14 @@
   register: verify_result
   tags: deleted
 
+- name: DELETED - TC2 - VALIDITY CHECK - Verify VPC pair deletion
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
+  tags: deleted
+
 # - name: DELETED - TC2 - ASSERT - Check response codes
 #   assert:
 #     that:
@@ -141,13 +156,6 @@
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 0'
   tags: deleted
-
-# - name: DELETED - TC3 - ASSERT - Check response codes for idempotence
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: deleted
 
 # TC4 - Create another VPC pair for bulk deletion test
 - name: DELETED - TC4 - MERGED - Create VPC Pair for bulk deletion testing
@@ -174,6 +182,13 @@
     state: query
     src_fabric: "{{ test_data_common.fabric }}"
   register: verify_result
+  tags: deleted
+
+- name: DELETED - TC4 - VALIDITY CHECK - Verify VPC pair state in NDFC for bulk deletion setup
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_deleted.vpc_pair_setup_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
   tags: deleted
 
 # - name: DELETED - TC4 - ASSERT - Check response codes
@@ -207,6 +222,14 @@
     state: query
     src_fabric: "{{ test_data_common.fabric }}"
   register: verify_result
+  tags: deleted
+
+- name: DELETED - TC5 - VALIDITY CHECK - Verify bulk deletion
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
   tags: deleted
 
 # - name: DELETED - TC5 - ASSERT - Check response codes

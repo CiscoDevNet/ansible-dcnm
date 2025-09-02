@@ -93,6 +93,13 @@
   register: verify_result
   tags: overridden
 
+- name: OVERRIDDEN - TC1 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_overridden.vpc_pair_initial_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: overridden
+
 # - name: OVERRIDDEN - TC1 - ASSERT - Check response codes
 #   assert:
 #     that:
@@ -146,6 +153,14 @@
   register: verify_result
   tags: overridden
 
+- name: OVERRIDDEN - TC2 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_overridden.vpc_pair_overridden_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  when: (fabric_type == "LANClassic")
+  tags: overridden
+
 # - name: OVERRIDDEN - TC2 - ASSERT - Check response codes
 #   assert:
 #     that:
@@ -169,13 +184,6 @@
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 0'
   tags: overridden
-
-# - name: OVERRIDDEN - TC3 - ASSERT - Check response codes for idempotence
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: overridden
 
 # TC4 - Override existing VPC pair with no config (delete all)
 - name: OVERRIDDEN - TC4 - OVERRIDDEN - Delete all VPC pairs via override with no config
@@ -203,6 +211,14 @@
     state: query
     src_fabric: "{{ test_data_common.fabric }}"
   register: verify_result
+  tags: overridden
+
+- name: OVERRIDDEN - TC4 - VALIDITY CHECK - Verify VPC pair deletion via override
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
   tags: overridden
 
 # - name: OVERRIDDEN - TC4 - ASSERT - Check response codes
@@ -253,6 +269,14 @@
     state: query
     src_fabric: "{{ test_data_common.fabric }}"
   register: verify_result
+  tags: overridden
+
+- name: OVERRIDDEN - TC6 - VALIDITY CHECK - Verify no-op override
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: ""
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+    check_deleted: true
   tags: overridden
 
 # - name: OVERRIDDEN - TC6 - ASSERT - Check response codes

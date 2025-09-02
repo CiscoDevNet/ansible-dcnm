@@ -93,6 +93,13 @@
   register: verify_result
   tags: replaced
 
+- name: REPLACED - TC1 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_replaced.vpc_pair_initial_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  tags: replaced
+
 # - name: REPLACED - TC1 - ASSERT - Check response codes
 #   assert:
 #     that:
@@ -146,6 +153,14 @@
   register: verify_result
   tags: replaced
 
+- name: REPLACED - TC2 - VALIDITY CHECK - Verify VPC pair state in NDFC
+  cisco.dcnm.tests.integration.ndfc_vpc_pair_validate:
+    config_path: "{{ test_data_replaced.vpc_pair_replaced_file }}"
+    ndfc_data: "{{ verify_result }}"
+    test_data: "{{ test_data_common }}"
+  when: (fabric_type == "LANClassic")
+  tags: replaced
+
 # - name: REPLACED - TC2 - ASSERT - Check response codes
 #   assert:
 #     that:
@@ -169,13 +184,6 @@
       - '(result["diff"][0]["query"] | length) == 0'
       - '(result["diff"][0]["deploy"] | length) == 0'
   tags: replaced
-
-# - name: REPLACED - TC3 - ASSERT - Check response codes for idempotence
-#   assert:
-#     that:
-#       - 'item["RETURN_CODE"] == 200'
-#   loop: '{{ result.response }}'
-#   tags: replaced
 
 ##############################################
 ##                 CLEAN-UP                 ##
