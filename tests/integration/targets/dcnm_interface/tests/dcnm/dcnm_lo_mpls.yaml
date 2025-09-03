@@ -110,7 +110,6 @@
         config_path: "{{ test_data_interfaces.mpls_lo101_replace_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Replace MPLS fabric loopback interface (loopback101) - Idempotence
@@ -167,7 +166,6 @@
         config_path: "{{ test_data_interfaces.mpls_lo201_merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Create new MPLS loopback interface (loopback201) - Idempotence
@@ -217,7 +215,6 @@
         config_path: "{{ test_data_interfaces.mpls_lo201_merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
         check_deleted: true
       delegate_to: localhost
 

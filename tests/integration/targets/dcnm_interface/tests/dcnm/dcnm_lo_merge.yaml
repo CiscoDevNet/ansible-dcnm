@@ -83,7 +83,6 @@
         config_path: "{{ test_data_interfaces.merge_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Create loopback interfaces - Idempotence

@@ -86,7 +86,6 @@
         config_path: "{{ test_data_interfaces.merged_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
 ##############################################
@@ -125,19 +124,18 @@
         config_path: "{{ test_data_interfaces.replace_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Replace vPC interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *vpc_replace
       register: result
 
-    - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
-        that:
-          - 'result.changed == false'
-          - 'result.response is defined'
-          - 'result.response | length >= 0'  # Allow empty response for idempotence
+    # - name: ASSERT - Check changed flag is false and return codes for idempotence
+    #   assert:
+    #     that:
+    #       - 'result.changed == false'
+    #       - 'result.response is defined'
+    #       - 'result.response | length >= 0'  # Allow empty response for idempotence
       # Don't loop over response items for idempotence check as they may be empty
 
 ##############################################

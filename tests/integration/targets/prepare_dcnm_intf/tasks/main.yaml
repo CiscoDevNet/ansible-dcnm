@@ -72,6 +72,64 @@
   register: result
   tags: sanity
 
+# Fetch switch inventory to get IP to serial number mapping
+- name: Get switch inventory from fabric
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric
+  register: switch_inventory_result
+  ignore_errors: yes
+
+# Fallback for older NDFC versions or different API paths
+- name: Get switch inventory from fabric (fallback)
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric
+  register: switch_inventory_result_fallback
+  when: switch_inventory_result.failed | default(false)
+  ignore_errors: yes
+
+# Use fallback result if primary failed
+- name: Set switch inventory result
+  set_fact:
+    switch_inventory_result: "{{ switch_inventory_result_fallback }}"
+  when: switch_inventory_result.failed | default(false) and not switch_inventory_result_fallback.failed | default(false)
+  ignore_errors: yes
+
+# Create IP to serial number mapping from switch inventory
+- name: Create IP to serial number mapping
+  set_fact:
+    sw_sn_mapping: "{{ sw_sn_mapping | default({}) | combine({item.ipAddress: item.serialNumber}) }}"
+  loop: "{{ switch_inventory_result.response.DATA | default([]) }}"
+  when: 
+    - switch_inventory_result is defined
+    - switch_inventory_result.response is defined
+    - switch_inventory_result.response.RETURN_CODE == 200
+    - switch_inventory_result.response.DATA is defined
+    - item.ipAddress is defined
+    - item.serialNumber is defined
+  ignore_errors: yes
+
+# Show the created mapping for debugging
+- name: Show IP to Serial Number mapping
+  debug:
+    var: sw_sn_mapping
+  when: sw_sn_mapping is defined
+
+# Update test_data_common with the dynamically created mapping
+- name: Update test_data_common with dynamic sw_sn mapping
+  set_fact:
+    test_data_common: "{{ test_data_common | combine({'sw_sn': sw_sn_mapping}) }}"
+  when: sw_sn_mapping is defined
+  ignore_errors: yes
+
+# Also set as a global fact for cross-play access
+- name: Set dynamic sw_sn as global fact
+  set_fact:
+    global_sw_sn_mapping: "{{ sw_sn_mapping }}"
+  when: sw_sn_mapping is defined
+  ignore_errors: yes
+
 # Determine the version of Controller
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
@@ -162,8 +220,8 @@
 
 - set_fact:
     vpc_vxlan_data: {
-      "peerOneId": "{{ test_data_common.vxlan_fabric_sno1 }}",
-      "peerTwoId": "{{ test_data_common.vxlan_fabric_sno2 }}",
+      "peerOneId": "{{ sw_sn_mapping[test_data_common.vxlan_fabric_sw1] | default(test_data_common.vxlan_fabric_sno1) }}",
+      "peerTwoId": "{{ sw_sn_mapping[test_data_common.vxlan_fabric_sw2] | default(test_data_common.vxlan_fabric_sno2) }}",
       "useVirtualPeerlink": false
     }
     vxlan_vpc_create: True
@@ -172,8 +230,8 @@
 
 - set_fact:
     vpc_cxt_data: {
-      "peerOneId": "{{ test_data_common.cxt_fabric_sno1 }}",
-      "peerTwoId": "{{ test_data_common.cxt_fabric_sno2 }}",
+      "peerOneId": "{{ sw_sn_mapping[test_data_common.cxt_fabric_sw1] | default(test_data_common.cxt_fabric_sno1) }}",
+      "peerTwoId": "{{ sw_sn_mapping[test_data_common.cxt_fabric_sw2] | default(test_data_common.cxt_fabric_sno2) }}",
       "useVirtualPeerlink": false,
       "templateName": "vpc_pair",
       "nvPairs": {

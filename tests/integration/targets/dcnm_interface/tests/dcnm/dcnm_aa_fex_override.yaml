@@ -73,7 +73,6 @@
         config_path: "{{ test_data_interfaces.merged_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
 ##############################################
@@ -106,7 +105,6 @@
         config_path: "{{ test_data_interfaces.override_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Override AA FEX interfaces - Idempotence
@@ -151,7 +149,7 @@
     #     config_path: "{{ test_data_interfaces.override_modify_conf_file }}"
     #     ndfc_data: "{{ verify_result }}"
     #     test_data: "{{ test_data_common }}"
-    #     switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
+    #     switch_ip_sn_mapping: "{{ test_data_common.sw_sn | default(global_sw_sn_mapping | default({})) }}"
     #   delegate_to: localhost
 
 ##############################################

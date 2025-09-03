@@ -115,7 +115,6 @@
         config_path: "{{ test_data_interfaces.merge_po150_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Create ST FEX interfaces w/o optional parameters - Idempotence
@@ -163,7 +162,6 @@
         config_path: "{{ test_data_interfaces.merge_po151_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Create ST FEX interfaces including optional parameters - Idempotence
@@ -211,7 +209,6 @@
         config_path: "{{ test_data_interfaces.merge_po151_update_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
 ##############################################
@@ -247,7 +244,6 @@
         config_path: "{{ test_data_interfaces.merge_po155_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
 ##############################################

@@ -39,12 +39,15 @@ class ActionModule(ActionBase):
         config_path = self._task.args.get('config_path', None)
         check_deleted = self._task.args.get('check_deleted', False)
         ignore_fields = list(self._task.args.get('ignore_fields', []))
-        switch_ip_sn_mapping = self._task.args.get('switch_ip_sn_mapping', {})
+
         for input_item in [ndfc_data, test_data, config_path]:
             if input_item is None:
                 results['failed'] = True
                 results['msg'] = f"Required input parameter not found: '{input_item}'"
                 return results
+
+        # Get switch mapping from test_data.sw_sn
+        switch_ip_sn_mapping = test_data.get('sw_sn', {})
 
         # removes ansible embeddings and converts to native python types
         native_ndfc_data = json.loads(json.dumps(ndfc_data, default=to_native))

@@ -19,13 +19,9 @@
       # svi_fabric: svi_fabric_name  # Define this for dcnm_svi_* tests
       deploy: false
       check_deploy: false
-      switch1: 192.168.10.210
+      switch1: 192.168.10.203
       switch2: 192.168.10.204
-      serial1: "sn1"
-      serial2: "sn2"
-      sw_sn:
-        "192.168.10.210": "sn1"
-        "192.168.10.204": "sn2"
+      # sw_sn mapping will be automatically populated from switch inventory
       eth_intf2: Ethernet1/2
       eth_intf3: Ethernet1/3
       eth_intf4: Ethernet1/4
@@ -53,5 +49,7 @@
       sub_intf1: Ethernet1/25.100
       parent_intf2: Ethernet1/26
       sub_intf2: Ethernet1/26.100
+      parent_intf3: Ethernet1/27
+      sub_intf3: Ethernet1/27.100
   roles:
     - dcnm_interface

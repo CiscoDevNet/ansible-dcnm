@@ -112,7 +112,6 @@
         config_path: "{{ test_data_interfaces.lo0_replace_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Load Loopback1 Replace Interface Config File
@@ -149,7 +148,6 @@
         config_path: "{{ test_data_interfaces.lo1_replace_conf_file }}"
         ndfc_data: "{{ verify_result }}"
         test_data: "{{ test_data_common }}"
-        switch_ip_sn_mapping: "{{ test_data_common.sw_sn }}"
       delegate_to: localhost
 
     - name: Replace fabric loopback interface (loopback0) - Idempotence
