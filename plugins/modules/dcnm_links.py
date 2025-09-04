@@ -3075,8 +3075,9 @@ class DcnmLinks:
                 == self.templates["int_intra_fabric_unnum_link"]
             )
         ):
-            if (
-                str(wlink["nvPairs"]["ENABLE_MACSEC"]).lower()
+            if ( 
+                hlink["nvPairs"].get("ENABLE_MACSEC") and
+                str(wlink["nvPairs"].get("ENABLE_MACSEC")).lower()
                 != str(hlink["nvPairs"].get("ENABLE_MACSEC")).lower()
             ):
                 mismatch_reasons.append(
