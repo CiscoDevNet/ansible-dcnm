@@ -65,7 +65,7 @@ DEFAULT_RETRY_COUNT = 5
 class HttpApi(HttpApiBase):
     def __init__(self, *args, **kwargs):
         super(HttpApi, self).__init__(*args, **kwargs)
-        self.headers = {"Content-Type": "application/json"}
+        self.headers = {"Content-Type": "application/json", 'Transfer-Encoding': 'chunked'}
         self.urlencoded_headers = {"Content-Type": "application/x-www-form-urlencoded"}
         self.txt_headers = {"Content-Type": "text/plain"}
         self.version = None
