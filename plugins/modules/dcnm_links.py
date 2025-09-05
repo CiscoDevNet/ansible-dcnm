@@ -3076,7 +3076,6 @@ class DcnmLinks:
             )
         ):
             if (
-                hlink["nvPairs"].get("ENABLE_MACSEC") and
                 str(wlink["nvPairs"].get("ENABLE_MACSEC")).lower()
                 != str(hlink["nvPairs"].get("ENABLE_MACSEC")).lower()
             ):
