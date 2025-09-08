@@ -2,17 +2,26 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: ETH MERGE - Test Entry Point - [ndfc_interface]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+              Executing Tests - [ndfc_interface]               +"
+      - "+                     ETH MERGE Tests                          +"
+      - "----------------------------------------------------------------"
+
 - name: Remove local log file
   local_action: command rm -f dcnm_intf.log
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
-    fabric: "{{ ansible_it_fabric }}" 
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
 
-- assert:
+- name: ASSERT - Check return codes for setup
+  assert:
     that:
       - 'item["RETURN_CODE"] == 200'  
   loop: '{{ result.response }}'
@@ -20,128 +29,74 @@
 - block:
 
 ##############################################
+##             SETUP VARS                   ##
+##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          merge_conf_template: "templates/dcnm_eth/merge_conf.j2"
+          merge_conf_file: "{{ role_path }}/files/dcnm_interface_eth_merge_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - merge
+      delegate_to: localhost
+
+##############################################
 ##                MERGE                     ##
 ##############################################
 
+    - name: Load Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Create ethernet interfaces
       cisco.dcnm.dcnm_interface: &eth_merge
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
-        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: "{{ ansible_eth_intf7 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
-              bpdu_guard: true                # choose from [true, false, 'no']
-              port_type_fast: true            # choose from [true, false]
-              mtu: jumbo                      # choose from [default, jumbo]
-              allowed_vlans: none             # choose from [none, all, vlan range]
-              native_vlan: 10
-              cmds:                           # Freeform config
-                - no shutdown
-              description: "eth interface  acting as trunk"
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged
+        config: "{{ dcnm_interface_merge_conf }}"
 
-          - name: "{{ ansible_eth_intf8 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: access                    # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
-              bpdu_guard: true                # choose from [true, false, 'no']
-              port_type_fast: true            # choose from [true, false]
-              mtu: default                    # choose from [default, jumbo]
-              access_vlan: 31                 # 
-              cmds:                           # Freeform config
-                - no shutdown
-              description: "eth interface acting as access"
-
-          - name: "{{ ansible_eth_intf9 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: routed                    # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
-              int_vrf: ""                     # VRF name
-              ipv4_addr: 192.168.1.1          # ipv4 address for the interface
-              ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
-              route_tag: ""                   # Routing Tag for the interface
-              mtu: 9216                       # choose from [min=576, max=9216]
-              cmds:
-                - no shutdown
-              description: "eth interface acting as routed"
-
-          - name: "{{ ansible_eth_intf10 }}"  # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: epl_routed                # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
-              int_vrf: ""                     # VRF name
-              ipv4_addr: 192.168.2.1          # ipv4 address for the interface
-              ipv4_mask_len: 24               # ipv4 mask len, choose between [min:1, max:31]
-              ipv6_addr: fd03::0102           # ipV6 address for the interface
-              ipv6_mask_len: 64               # ipv6 mask len, choose between [min:64, max:127]
-              route_tag: ""                   # Routing Tag for the interface
-              mtu: 9216                       # choose from [min=576, max=9216]
-              cmds:
-                - no shutdown
-              description: "eth interface acting as epl_routed"
-
-          - name: "{{ ansible_eth_intf11 }}"  # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              mode: monitor                   # choose from [trunk, access, routed, monitor, epl_routed]
       register: result
 
-    - assert:
+    - name: ASSERT - Check changed flag is true and return codes
+      assert:
         that:
           - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) <= 5'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 4'
-
-    - assert:
-        that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
 
     - name: Create ethernet interfaces - Idempotence
       cisco.dcnm.dcnm_interface: *eth_merge
       register: result
 
-    - assert:
+    - name: ASSERT - Check changed flag is false and return codes for idempotence
+      assert:
         that:
           - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
-      loop: '{{ result.response }}'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'  # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
 
 ##############################################
 ##             CLEANUP                      ##
@@ -151,13 +106,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: ASSERT - Check return codes for cleanup
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'

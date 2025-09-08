@@ -129,7 +129,7 @@ def process_deepdiff(deepdiff_output, keys_to_ignore, ignore_extra_fields=False)
     if 'added_values' in diff_paths:
         paths_to_remove = []
         for path in diff_paths['added_values']:
-            if path not in removed_values:
+            if 'removed_values' not in diff_paths or path not in diff_paths['removed_values']:
                 paths_to_remove.append(path)
 
         for path in paths_to_remove:
