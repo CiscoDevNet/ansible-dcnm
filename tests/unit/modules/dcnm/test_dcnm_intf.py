@@ -86,10 +86,19 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
@@ -101,11 +110,16 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 [],
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -141,10 +155,19 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
@@ -156,10 +179,19 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
@@ -180,13 +212,25 @@ class TestDcnmIntfModule(TestDcnmModule):
             eth_3_2_access_intf = self.have_all_payloads_data.get(
                 "eth_3_2_access_payload"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 eth_1_1_access_intf,
                 eth_1_2_access_intf,
                 eth_3_2_access_intf,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
@@ -198,9 +242,19 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
@@ -212,9 +266,19 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
+
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
+                empty_breakout_resp,
+                empty_breakout_resp,
                 playbook_have_all_data,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
+                self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
             ]
 
@@ -647,11 +711,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_svi_intf1,
+                empty_breakout_resp,
                 playbook_svi_intf1,
             ]
         if "_svi_replaced_existing" in self._testMethodName:
@@ -659,11 +727,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_svi_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -723,11 +795,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_aa_fex_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -759,11 +835,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_aa_fex_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -816,11 +896,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_aa_fex_intf1,
+                empty_breakout_resp,
                 playbook_aa_fex_intf1,
             ]
 
@@ -831,11 +915,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_aa_fex_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -942,11 +1030,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_st_fex_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -978,11 +1070,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_st_fex_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1035,11 +1131,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_st_fex_intf1,
+                empty_breakout_resp,
                 playbook_st_fex_intf1,
             ]
         if "_st_fex_replaced_existing" in self._testMethodName:
@@ -1049,11 +1149,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_st_fex_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
                 self.playbook_mock_succ_resp,
@@ -1194,11 +1298,15 @@ class TestDcnmIntfModule(TestDcnmModule):
             playbook_have_all_data = self.have_all_payloads_data.get(
                 "payloads"
             )
+            # Load breakout policies fixture
+            self.breakout_policies_data = loadPlaybookData("dcnm_intf_breakout_policies")
+            empty_breakout_resp = self.breakout_policies_data.get("empty_breakout_policies")
 
             self.run_dcnm_send.side_effect = [
                 self.mock_monitor_false_resp,
                 self.playbook_mock_vpc_resp,
                 playbook_pc_intf1,
+                empty_breakout_resp,
                 playbook_have_all_data,
                 playbook_have_all_data,
                 self.playbook_mock_succ_resp,
