@@ -3864,7 +3864,7 @@ class DcnmIntf:
 
     def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
         # This function will get policies for a given serial number and
-        # populate the breakout interfaces in self.have_breakout.
+        # populate the breakout interfaces in self.have_breakout
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
         resp = dcnm_send(self.module, "GET", path)
 
