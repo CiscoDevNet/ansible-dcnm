@@ -54,7 +54,7 @@ class TestHttpApiInit:
         """Test that HttpApi initializes with correct default values."""
         http_api = HttpApi(mock_connection)
 
-        assert http_api.headers == {"Content-Type": "application/json"}
+        assert http_api.headers == {"Content-Type": "application/json", 'Transfer-Encoding': 'chunked'}
         assert http_api.txt_headers == {"Content-Type": "text/plain"}
         assert http_api.version is None
         assert http_api.retrycount == 5

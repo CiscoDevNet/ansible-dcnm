@@ -1,0 +1,34 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: lo100
+  type: lo
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: lo
+    int_vrf: ""
+    ipv4_addr: 192.168.1.1
+    ipv6_addr: fd08::0201
+    route_tag: ""
+    cmds:
+      - no shutdown
+    description: "loopback interface 100 configuration"
+
+- name: lo101
+  type: lo
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: lo
+    int_vrf: ""
+    ipv4_addr: 192.168.1.2
+    ipv6_addr: fd08::0202
+    route_tag: ""
+    cmds:
+      - no shutdown
+    description: "loopback interface 101 configuration"

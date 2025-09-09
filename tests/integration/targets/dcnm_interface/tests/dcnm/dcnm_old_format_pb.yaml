@@ -7,8 +7,8 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
-    fabric: "{{ ansible_it_fabric }}" 
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
 
@@ -20,151 +20,261 @@
 - block:
 
 ##############################################
-##               MERGE                      ##
+##             SETUP VARS                   ##
 ##############################################
 
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          old_format1_conf_template: "templates/dcnm_old/old_format1_conf.j2"
+          old_format1_conf_file: "{{ role_path }}/files/dcnm_interface_old_format1_conf.yaml"
+          old_format2_conf_template: "templates/dcnm_old/old_format2_conf.j2"
+          old_format2_conf_file: "{{ role_path }}/files/dcnm_interface_old_format2_conf.yaml"
+          old_format3_conf_template: "templates/dcnm_old/old_format3_conf.j2"
+          old_format3_conf_file: "{{ role_path }}/files/dcnm_interface_old_format3_conf.yaml"
+          old_format4_conf_template: "templates/dcnm_old/old_format4_conf.j2"
+          old_format4_conf_file: "{{ role_path }}/files/dcnm_interface_old_format4_conf.yaml"
+          old_format5_conf_template: "templates/dcnm_old/old_format5_conf.j2"
+          old_format5_conf_file: "{{ role_path }}/files/dcnm_interface_old_format5_conf.yaml"
+          old_format6_conf_template: "templates/dcnm_old/old_format6_conf.j2"
+          old_format6_conf_file: "{{ role_path }}/files/dcnm_interface_old_format6_conf.yaml"
+          old_format7_conf_template: "templates/dcnm_old/old_format7_conf.j2"
+          old_format7_conf_file: "{{ role_path }}/files/dcnm_interface_old_format7_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - old_format1
+        - old_format2
+        - old_format3
+        - old_format4
+        - old_format5
+        - old_format6
+        - old_format7
+      delegate_to: localhost
+
+##############################################
+##               MERGE 1                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 1
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format1_conf: "{{ lookup('file', test_data_interfaces.old_format1_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Create PC interface with profile name wrong
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format1
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile_dummy:
-              mode: trunk                     # choose from [trunk, access, l3, monitor]
+        config: "{{ dcnm_interface_old_format1_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Verify old format 1 interface creation results
+      assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Creation with old format 1 failed - {{ result }}"
+        success_msg: "Creation with old format 1 succeeded"
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get old format 1 interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_old_format1_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify old format 1 interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.old_format1_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##               MERGE 2                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 2
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format2_conf: "{{ lookup('file', test_data_interfaces.old_format2_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
     - name: Create PC interface with profile name in old format
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format2
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: po301                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile_pc:
-              mode: trunk                     # choose from [trunk, access, l3, monitor]
+        config: "{{ dcnm_interface_old_format2_conf }}"
       register: result
 
     - assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##               MERGE 3                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 3
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format3_conf: "{{ lookup('file', test_data_interfaces.old_format3_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
     - name: Create ETH interface with profile name old format
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format3
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: "{{ ansible_eth_intf2 }}"   # should be of the form eth<port-id>
-            type: eth                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile_eth:
-              mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
+        config: "{{ dcnm_interface_old_format3_conf }}"
       register: result
 
     - assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##               MERGE 4                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 4
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format4_conf: "{{ lookup('file', test_data_interfaces.old_format4_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
     - name: Create sub-interface with profile name in old format
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format4
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile_sub:
-              mode: subint                    # choose from [subint]
-              vlan: 100                       # vlan ID [min:2, max:3967]
-              ipv4_addr: 192.168.1.1          # ipv4 address for the sub-interface
-              ipv4_mask_len: 24               # choose between [min:8, max:31]
+        config: "{{ dcnm_interface_old_format4_conf }}"
       register: result
 
     - assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##               MERGE 5                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 5
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format5_conf: "{{ lookup('file', test_data_interfaces.old_format5_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
     - name: Create Loopback interfaces with profile name in old format
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format5
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
-            deploy: true                      # choose from [true, false]
-            profile_lo:
-              mode: lo                        # choose from [lo]
-              ipv4_addr: 193.168.2.1          # ipv4 address for the loopback interface
+        config: "{{ dcnm_interface_old_format5_conf }}"
       register: result
 
     - assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##               MERGE 6                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 6
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format6_conf: "{{ lookup('file', test_data_interfaces.old_format6_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
     - name: Create vPC interface with profile name in old format
-      cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format6
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: vpc750                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:                           # provide switches of vPC pair
-              - "{{ ansible_switch1 }}"
-              - "{{ ansible_switch2 }}"
-            deploy: true                      # choose from [true, false]
-            profile_vpc:
-              mode: trunk                     # choose from [trunk, access]
+        config: "{{ dcnm_interface_old_format6_conf }}"
       register: result
 
     - assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##               MERGE 7                    ##
+##############################################
+
+    - name: Load Interface Config File - Old Format 7
+      ansible.builtin.set_fact:
+        dcnm_interface_old_format7_conf: "{{ lookup('file', test_data_interfaces.old_format7_conf_file) | from_yaml }}"
+      delegate_to: localhost
 
     - name: Create vPC interface with switch elements in old format
-      cisco.dcnm.dcnm_interface: 
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &old_format7
+        check_deploy: true
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: vpc751                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:                           # provide switches of vPC pair
-              - ["{{ ansible_switch1 }}",
-                 "{{ ansible_switch2 }}"]
-            deploy: true                      # choose from [true, false]
-            profile:
-              mode: trunk                     # choose from [trunk, access]
+        config: "{{ dcnm_interface_old_format7_conf }}"
       register: result
 
     - assert:
         that:
           - 'result.failed == false'
           - 'result.changed == true'
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: IT_CONTEXT is not defined
+
+    - assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'  
+      loop: '{{ result.response }}'
+      when: IT_CONTEXT is not defined
