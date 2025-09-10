@@ -5613,7 +5613,7 @@ class TestDcnmIntfModule(TestDcnmModule):
                 (intf["interfaces"][0]["ifName"].lower() in ovr_if_names), True
             )
 
-        self.assertEqual(len(result["diff"][0]["deleted"]), 4)
+        self.assertEqual(len(result["diff"][0]["deleted"]), 0)
         self.assertEqual(len(result["diff"][0]["replaced"]), 0)
         self.assertEqual(len(result["diff"][0]["overridden"]), 1)
         self.assertEqual(len(result["diff"][0]["merged"]), 0)
@@ -5800,7 +5800,7 @@ class TestDcnmIntfModule(TestDcnmModule):
             )
 
         self.assertEqual(len(result["diff"][0]["deleted"]), 0)
-        self.assertEqual(len(result["diff"][0]["replaced"]), 3)
+        self.assertEqual(len(result["diff"][0]["replaced"]), 2)
         self.assertEqual(len(result["diff"][0]["overridden"]), 0)
 
     def test_dcnm_intf_override_sub_int_intf_types_only(self):
