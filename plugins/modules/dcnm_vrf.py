@@ -145,7 +145,7 @@ options:
         - Enable L3 VNI without VLAN
         type: bool
         required: false
-        default: false
+        default: Inherited from fabric settings
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
@@ -695,6 +695,11 @@ class DcnmVrf:
         self.log.debug(msg)
 
         self.fabric_type = self.fabric_data.get("fabricType")
+        self.fabric_nvpairs = self.fabric_data.get("nvPairs")
+        self.fabric_l3vni_wo_vlan = False
+
+        if self.fabric_nvpairs and self.fabric_nvpairs.get("ENABLE_L3VNI_NO_VLAN") == "true":
+            self.fabric_l3vni_wo_vlan = True
 
         try:
             self.sn_fab = get_sn_fabric_dict(self.inventory_data)
@@ -1833,10 +1838,14 @@ class DcnmVrf:
             vrfs = []
 
             vrf_deploy = vrf.get("deploy", True)
-            if vrf.get("vlan_id"):
-                vlan_id = vrf.get("vlan_id")
+
+            if vrf.get("l3vni_wo_vlan"):
+                vlan_id = ""
             else:
-                vlan_id = 0
+                if vrf.get("vlan_id"):
+                    vlan_id = vrf.get("vlan_id")
+                else:
+                    vlan_id = 0
 
             want_create.append(self.update_create_params(vrf, vlan_id))
 
@@ -4038,7 +4047,7 @@ class DcnmVrf:
 
         spec["ipv6_linklocal_enable"] = {"default": True, "type": "bool"}
 
-        spec["l3vni_wo_vlan"] = {"default": False, "type": "bool"}
+        spec["l3vni_wo_vlan"] = {"default": self.fabric_l3vni_wo_vlan, "type": "bool"}
         spec["loopback_route_tag"] = {
             "default": 12345,
             "range_max": 4294967295,
