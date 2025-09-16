@@ -145,7 +145,7 @@ options:
         - Enable L3 VNI without VLAN
         type: bool
         required: false
-        default: Inherited from fabric settings
+        default: Inherited from fabric level settings
       trm_enable:
         description:
         - Enable Tenant Routed Multicast

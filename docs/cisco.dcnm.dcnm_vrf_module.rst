@@ -567,9 +567,10 @@ Parameters
                 </td>
                 <td>
                         <ul style="margin: 0; padding: 0"><b>Choices:</b>
-                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>no</li>
                                     <li>yes</li>
                         </ul>
+                        <b>Default:</b><br/><div style="color: blue">"Inherited from fabric level settings"</div>
                 </td>
                 <td>
                         <div>Enable L3 VNI without VLAN</div>
