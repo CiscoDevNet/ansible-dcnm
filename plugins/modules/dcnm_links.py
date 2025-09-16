@@ -2149,9 +2149,10 @@ class DcnmLinks:
             )
         ):
             if cfg["profile"].get("enable_macsec", None) is None:
-                wlink["nvPairs"]["ENABLE_MACSEC"] = hlink["nvPairs"][
-                    "ENABLE_MACSEC"
-                ]
+                if wlink["nvPairs"].get("ENABLE_MACSEC"):
+                    wlink["nvPairs"]["ENABLE_MACSEC"] = hlink["nvPairs"].get(
+                        "ENABLE_MACSEC"
+                    )
 
         if (
             wlink["templateName"]
