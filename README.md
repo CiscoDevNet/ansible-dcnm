@@ -7,12 +7,19 @@ The Ansible Cisco Nexus® Dashboard Fabric Controller (NDFC) (formerly Cisco Dat
 
 This collection is intended for use with the following release versions:
   * `DCNM Release 11.4(1)` or later
-  * `NDFC Release 12.0` or later.
+  * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.1`
+  * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.2`
+  * `Cisco Nexus Dashboard Fabric Controller (NDFC) Release 12.2.3`
+  * `Cisco Nexus Dashboard Release 4.1.1g` - Unified Nexus Dashboard Tech Preview
 
 <!--start requires_ansible-->
 ## Ansible version compatibility
 
-This collection has been tested against the following Ansible versions: **>=2.15.0**.
+This collection has been tested against following Ansible Core versions: 
+  * `2.14.x`
+  * `2.15.x`
+  * `2.16.x`
+  * `2.17.x`
 
 Plugins and modules within a collection may be tested with only specific Ansible versions.
 A collection may contain metadata that identifies these versions.
@@ -69,7 +76,7 @@ You can also include it in a `requirements.yml` file and install it with `ansibl
 ---
 collections:
   - name: cisco.dcnm
-    version: 3.8.1
+    version: 3.9.0
 ```
 ## Using this collection
 
