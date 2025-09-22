@@ -1,2 +1,59 @@
 ---
-- { include: dcnm.yaml, tags: ['dcnm'] }
+- name: MAIN - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    test_data_setup:
+      #----------------------------------  
+      # No setup templates needed for VPC pair tests
+      #----------------------------------
+  delegate_to: localhost
+  tags: always
+
+- name: MAIN - QUERY - Verify Fabric Deployment
+  cisco.dcnm.dcnm_fabric:
+    state: query
+    config:
+      - FABRIC_NAME: "{{ test_data_common.fabric }}"
+  register: result
+  tags: always
+
+- name: MAIN - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.result[0].found == true
+    fail_msg: "Fabric '{{ test_data_common.fabric }}' not found."
+  tags: always
+
+- name: MAIN - Collect DCNM VPC Pair Test Cases
+  find:
+    paths: "{{ role_path }}/tests/dcnm"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: dcnm_cases
+  delegate_to: localhost
+  tags: always
+
+- name: MAIN - Set Test Cases Fact
+  set_fact:
+    test_cases:
+      files: "{{ dcnm_cases.files }}"
+  delegate_to: localhost
+  tags: always
+
+- name: MAIN - Build List of Test Items
+  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  delegate_to: localhost
+  tags: always
+
+- name: MAIN - Run Test Cases
+  include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+  tags: always
+
+- name: MAIN - DELETED - Clean Up Any Existing VPC Pairs
+  cisco.dcnm.dcnm_vpc_pair:
+    src_fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  when: IT_CONTEXT is not defined
+  tags: always

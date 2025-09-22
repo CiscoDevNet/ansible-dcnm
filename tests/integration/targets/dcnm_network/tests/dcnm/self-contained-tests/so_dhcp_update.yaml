@@ -50,7 +50,6 @@
     dcnm_network_merged_double_net_dhcp_conf: "{{ lookup('file', '{{ test_data.double_net_dhcp_conf_file }}') | from_yaml }}"
   delegate_to: localhost
 
-# below deploy is true, reason is in comment above idempotence checl
 - name: SO_DHCP_UPDATE - Create New Network with many params
   cisco.dcnm.dcnm_network: &conf
     fabric: "{{ test_data_common.fabric }}"
@@ -83,7 +82,7 @@
 
 - name: SO_DHCP_UPDATE - Override network config
   cisco.dcnm.dcnm_network:
-    fabric: "{{ test_fabric }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden
     config: "{{ dcnm_network_merged_double_net_dhcp_changed_conf }}"
   register: result

@@ -6,10 +6,10 @@ all:
     ansible_httpapi_validate_certs: False
     ansible_httpapi_use_ssl: True
   children:
-    ndfc:
+    dcnm:
       vars:
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
       hosts:
         nac-ndfc1:
-          ansible_host: 10.0.55.128
+          ansible_host: 1.1.1.1

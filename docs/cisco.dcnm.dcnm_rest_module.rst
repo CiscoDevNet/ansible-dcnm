@@ -87,6 +87,21 @@ Parameters
                         <div>REST API Path Endpoint</div>
                 </td>
             </tr>
+            <tr>
+                <td colspan="1">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>urlencoded_data</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">raw</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Dictionary data to be url-encoded for x-www-form-urlencoded type REST API call</div>
+                </td>
+            </tr>
     </table>
     <br/>
 
@@ -114,6 +129,12 @@ Examples
         method: POST
         path: /rest/top-down/fabrics/fabric1/vrfs/attachments
         json_data: '[{"vrfName":"sales66_vrf1","lanAttachList":[{"fabric":"fabric1","vrfName":"sales66_vrf1","serialNumber":"FDO21392QKM","vlan":2000,"freeformConfig":"","deployment":false,"extensionValues":"","instanceValues":"{"loopbackId":"","loopbackIpAddress":"","loopbackIpV6Address":""}"}]}]'
+
+    - name: Save Robot Credentials - (urlencoded)
+      dcnm_rest:
+        method: POST
+        path: /rest/lanConfig/saveRobotCredentials
+        urlencoded_data: '{"password": "password", "username": "admin"}'
 
     # Read payload data from file and validate a template
     - set_fact:

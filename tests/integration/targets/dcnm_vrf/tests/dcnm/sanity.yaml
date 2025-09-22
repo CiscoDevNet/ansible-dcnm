@@ -143,6 +143,70 @@
     timeout: 60
   tags: sanity
 
+- name: TEST.1g - SANITY MERGED - [merged] Create, Attach VRF (L3VNI W/O VLAN)
+  cisco.dcnm.dcnm_vrf: &conf1g
+    fabric: "{{ fabric_1 }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int1
+      vrf_id: 9008011
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
+      deploy: false
+  register: result_1g
+  tags: sanity
+
+- name: TEST.1h - SANITY MERGED - [query] query VRF state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: query
+  register: result_1h
+  tags: sanity
+
+- name: TEST.1i - SANITY MERGED - [debug] print result_1g
+  ansible.builtin.debug:
+    var: result_1g
+  tags: sanity
+
+- assert:
+    that:
+    - 'result_1g.changed == true'
+    - 'result_1g.response[0].RETURN_CODE == 200'
+    - 'result_1g.response[1].RETURN_CODE == 200'
+    - '(result_1g.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_1g.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - '"{{ switch_1 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_1g.diff[0].attach[1].ip_address'
+    - '"{{ switch_2 }}" in result_1g.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_1g.diff[0].attach[1].ip_address'
+    - 'result_1g.diff[0].vrf_name == "ansible-vrf-int1"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_1h.response[0].parent.vrfTemplateConfig'
+  tags: sanity
+
+- name: TEST.1j - SANITY MERGED - conf1 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf1g
+  register: result_1j
+  tags: sanity
+
+- name: TEST.1k - SANITY MERGED - [debug] print result_1j
+  ansible.builtin.debug:
+    var: result_1j
+  tags: sanity
+
+- assert:
+    that:
+    - 'result_1j.changed == false'
+    - 'result_1j.response|length == 0'
+  tags: sanity
+
+- name: TEST.1k - SANITY MERGED - [deleted] Delete all VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: deleted
+  tags: sanity
+
 ###############################################
 ###                REPLACED                  ##
 ###############################################
@@ -428,8 +492,8 @@
     - 'result_3c.response[5].RETURN_CODE == 200'
     - '(result_3c.response[0].DATA|dict2items)[0].value == "SUCCESS"'
     - '(result_3c.response[0].DATA|dict2items)[1].value == "SUCCESS"'
-    - '(result_3c.response[4].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result_3c.response[4].DATA|dict2items)[1].value == "SUCCESS"'
+    - '(result_3c.response[5].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_3c.response[5].DATA|dict2items)[1].value == "SUCCESS"'
     - 'result_3c.diff[0].attach[0].deploy == true'
     - 'result_3c.diff[0].attach[1].deploy == true'
     - 'result_3c.diff[0].vrf_name == "ansible-vrf-int2"'

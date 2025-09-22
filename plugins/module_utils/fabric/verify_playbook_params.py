@@ -238,6 +238,13 @@ class VerifyPlaybookParams:
             msg += f"'value' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
+        # Ensure consistent type conversion for rule_value
+        rule_value = self.conversion.make_none(
+            self.conversion.make_int(
+                self.conversion.make_boolean(rule_value)
+            )
+        )
+
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter: {parameter}, "
         msg += f"user_value: {user_value}, "
@@ -323,7 +330,9 @@ class VerifyPlaybookParams:
             return None
 
         controller_value = self.conversion.make_none(
-            self.conversion.make_boolean(self.config_controller[rule_parameter])
+            self.conversion.make_int(
+                self.conversion.make_boolean(self.config_controller[rule_parameter])
+            )
         )
 
         msg = f"{self.class_name}.{method_name}: "
@@ -379,7 +388,9 @@ class VerifyPlaybookParams:
             return None
 
         playbook_value = self.conversion.make_none(
-            self.conversion.make_boolean(self.config_playbook[rule_parameter])
+            self.conversion.make_int(
+                self.conversion.make_boolean(self.config_playbook[rule_parameter])
+            )
         )
 
         msg = f"{self.class_name}.{method_name}: "
@@ -442,6 +453,13 @@ class VerifyPlaybookParams:
             msg += "has no default value. Returning None."
             self.log.debug(msg)
             return None
+
+        # Convert default value to ensure consistent type handling
+        default_value = self.conversion.make_none(
+            self.conversion.make_int(
+                self.conversion.make_boolean(default_value)
+            )
+        )
 
         # update item with user's parameter value
         item["user_value"] = default_value

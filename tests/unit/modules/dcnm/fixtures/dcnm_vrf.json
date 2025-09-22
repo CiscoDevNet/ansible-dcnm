@@ -820,7 +820,7 @@
         "vrfId": 9008011,
         "vrfName": "test_vrf_1",
         "vrfTemplate": "Default_VRF_Universal",
-        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\"}",
         "vrfStatus": "DEPLOYED"
       }
     ]
@@ -1053,10 +1053,16 @@
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfStatus": "DEPLOYED",
-        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_dcnm\"}",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"L3VniMcastGroup\":\"\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"vrfSegmentId\":\"9008013\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"configureStaticDefaultRouteFlag\":\"true\",\"trmBGWMSiteEnabled\":\"false\",\"tag\":\"12345\",\"rpAddress\":\"\",\"nveId\":\"1\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"34343\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_dcnm\"}",
         "vrfId": "9008013"
       }
     ]
+  },
+  "mock_net_from_vrf_empty": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE": "OK",
+    "DATA": []
   },
   "mock_vrf_attach_object_dcnm_only": {
     "MESSAGE": "OK",
@@ -1930,7 +1936,7 @@
         "vrfId": 9008011,
         "vrfName": "test_vrf_1",
         "vrfTemplate": "Default_VRF_Universal",
-        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008013\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"routeTargetExportMvpn\":\"\",\"ENABLE_NETFLOW\":\"false\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"routeTargetExportEvpn\":\"\",\"NETFLOW_MONITOR\":\"\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"routeTargetImportMvpn\":\"\",\"isRPAbsent\":\"false\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"52125\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\",\"routeTargetImportEvpn\":\"\"}",
+        "vrfTemplateConfig": "{\"advertiseDefaultRouteFlag\":\"true\",\"routeTargetImport\":\"\",\"vrfVlanId\":\"202\",\"isRPExternal\":\"false\",\"vrfDescription\":\"\",\"disableRtAuto\":\"false\",\"L3VniMcastGroup\":\"\",\"vrfSegmentId\":\"9008013\",\"maxBgpPaths\":\"1\",\"maxIbgpPaths\":\"2\",\"routeTargetExport\":\"\",\"ipv6LinkLocalFlag\":\"true\",\"vrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"v6VrfRouteMap\":\"FABRIC-RMAP-REDIST-SUBNET\",\"routeTargetExportMvpn\":\"\",\"ENABLE_NETFLOW\":\"false\",\"configureStaticDefaultRouteFlag\":\"true\",\"tag\":\"12345\",\"rpAddress\":\"\",\"trmBGWMSiteEnabled\":\"false\",\"nveId\":\"1\",\"routeTargetExportEvpn\":\"\",\"NETFLOW_MONITOR\":\"\",\"bgpPasswordKeyType\":\"3\",\"bgpPassword\":\"\",\"mtu\":\"9216\",\"multicastGroup\":\"\",\"routeTargetImportMvpn\":\"\",\"isRPAbsent\":\"false\",\"advertiseHostRouteFlag\":\"false\",\"vrfVlanName\":\"\",\"trmEnabled\":\"false\",\"loopbackNumber\":\"\",\"asn\":\"52125\",\"vrfIntfDescription\":\"\",\"vrfName\":\"test_vrf_1\",\"routeTargetImportEvpn\":\"\"}",
         "vrfStatus": "DEPLOYED"
       }
     ]

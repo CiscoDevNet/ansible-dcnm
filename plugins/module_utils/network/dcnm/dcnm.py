@@ -48,6 +48,7 @@ dcnm_template_type_xlations = {
     "long": "int",
     "ipV4Address": "ipv4",
     "ipV6Address": "ipv6",
+    "ipAddress": "ipv4",
     "interfaceRange": "list",
     "boolean": "bool",
     "enum": "str",
@@ -88,7 +89,33 @@ def validate_ip_address_format(type, item, invalid_params):
             )
 
 
-def validate_list_of_dicts(param_list, spec, module=None):
+def find_extra_params(param_list, spec):
+    """
+    Checks for extra parameters in each dictionary of a list
+    when compared against a specification dictionary.
+
+    Args:
+        param_list: A list of dictionaries containing parameters.
+        spec: A dictionary where keys are the valid parameter names.
+
+    Returns:
+        A list of extra parameters found. If a parameter is found in
+        multiple dictionaries in the list, it will appear multiple
+        times in the result.
+    """
+    invalid_params = []
+    spec_keys = set(spec.keys())
+
+    for params in param_list:
+        param_keys = set(params.keys())
+        extra_keys = param_keys - spec_keys
+        if extra_keys:
+            invalid_params.extend(list(extra_keys))
+
+    return invalid_params
+
+
+def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=False):
     """Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
     spec: an argument spec dict
@@ -99,7 +126,8 @@ def validate_list_of_dicts(param_list, spec, module=None):
     v = validation
     normalized = []
     invalid_params = []
-
+    if check_extra_params:
+        invalid_params = find_extra_params(param_list, spec)
     for list_entry in param_list:
         valid_params_dict = {}
         for param in spec:
@@ -472,6 +500,8 @@ def dcnm_send(module, method, path, data=None, data_type="json"):
 
     if data_type == "json":
         return conn.send_request(method, path, data)
+    elif data_type == "urlencoded":
+        return conn.send_urlencoded_request(method, path, data)
     elif data_type == "text":
         return conn.send_txt_request(method, path, data)
 
@@ -859,3 +889,69 @@ def find_dict_in_list_by_key_value(search: list, key: str, value: str):
     """
     match = (d for d in search if d[key] == value)
     return next(match, None)
+
+
+def search_nested_json(obj, search_string):
+    """
+    # Summary
+
+    Recursively flattens a nested dictionary or list and searches all values
+    for the given search_string.
+
+    ## Raises
+
+    None
+
+    ## Parameters
+
+    -   obj (dict or list): The dictionary or list to flatten.
+    -   search_string (string): string to search in the values.
+
+    ## Returns
+
+    true or false, based on the presence of the search
+    string in the nested json values.
+
+    ## Usage
+
+    ```python
+    content = {
+        "key1": "value1",
+        "key2": {
+            "subkey1": "subvalue1",
+            "subkey2": ["item1", "item2", "search_string"],
+        },
+        "key3": ["item3", {"subkey3": "search_string"}],
+    }
+    search_string = "search_string"
+    result = search_nested_json(content, search_string)
+    print(result)
+    # -> True
+
+    search_string = "not_found"
+    result = search_nested_json(content, search_string)
+    print(result)
+    # -> False
+    ```
+
+    """
+    if isinstance(obj, dict):
+        for k, v in obj.items():
+            if isinstance(v, (dict, list)):
+                if search_nested_json(v, search_string):
+                    return True
+            else:
+                if isinstance(v, (str)) and search_string in v.lower():
+                    return True
+    elif isinstance(obj, list):
+        for item in obj:
+            if isinstance(item, (dict, list)):
+                if search_nested_json(item, search_string):
+                    return True
+            else:
+                if isinstance(item, (str)) and search_string in item.lower():
+                    return True
+    elif isinstance(obj, str):
+        if search_string in obj.lower():
+            return True
+    return False
