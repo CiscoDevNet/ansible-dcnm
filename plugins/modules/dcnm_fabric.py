@@ -1969,6 +1969,12 @@ options:
                         - Enable NBM mode to pim-passive for default VRF
                         required: false
                         type: bool
+                    ENABLE_RT_INTF_STATS:
+                        default: false
+                        description: 
+                        - Valid for NX-OS only and External Non-ND Telemetry Receiver
+                        requried: false
+                        type: bool
                     EXTRA_CONF_INTRA_LINKS:
                         default: ''
                         description:
@@ -2014,6 +2020,12 @@ options:
                         - No description available
                         required: false
                         type: bool
+                    INTF_STAT_LOAD_INTERVAL:
+                        default: ''
+                        description:
+                        - Time in seconds (Min:5, Max:300)
+                        required: false
+                        type: int
                     ISIS_AUTH_ENABLE:
                         default: false
                         description:
