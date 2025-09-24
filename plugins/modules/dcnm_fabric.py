@@ -2021,7 +2021,7 @@ options:
                         required: false
                         type: bool
                     INTF_STAT_LOAD_INTERVAL:
-                        default: ''
+                        default: 10
                         description:
                         - Time in seconds (Min:5, Max:300)
                         required: false
