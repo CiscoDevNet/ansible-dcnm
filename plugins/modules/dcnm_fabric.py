@@ -1971,7 +1971,7 @@ options:
                         type: bool
                     ENABLE_RT_INTF_STATS:
                         default: false
-                        description: 
+                        description:
                         - Valid for NX-OS only and External Non-ND Telemetry Receiver
                         required: false
                         type: bool
