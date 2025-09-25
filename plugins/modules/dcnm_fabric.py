@@ -1973,7 +1973,7 @@ options:
                         default: false
                         description: 
                         - Valid for NX-OS only and External Non-ND Telemetry Receiver
-                        requried: false
+                        required: false
                         type: bool
                     EXTRA_CONF_INTRA_LINKS:
                         default: ''
