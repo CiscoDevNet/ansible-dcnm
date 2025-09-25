@@ -410,7 +410,7 @@ class DcnmResManager:
             "SERVICE_NETWORK_VLAN": ["device"],
             "TOP_DOWN_VRF_VLAN": ["device"],
             "TOP_DOWN_NETWORK_VLAN": ["device"],
-            "IP_POOL": ["fabric", "device_interface"],
+            "IP_POOL": ["fabric", "device_interface", "device"],
             "SUBNET": ["link"],
         }
         # RESOURCE = {'entity_name': 'l3_vni_fabric', 'pool_type': 'ID', 'pool_name': 'L3_VNI', 'scope_type': 'fabric', 'resource': '101'}
