@@ -86,11 +86,13 @@ options:
         description:
         - VRF Vlan Name
         - if > 32 chars enable - system vlan long-name
+        - Not applicable to L3VNI w/o VLAN config
         type: str
         required: false
       vrf_intf_desc:
         description:
         - VRF Intf Description
+        - Not applicable to L3VNI w/o VLAN config
         type: str
         required: false
       vrf_description:
@@ -101,6 +103,7 @@ options:
       vrf_int_mtu:
         description:
         - VRF interface MTU
+        - Not applicable to L3VNI w/o VLAN config
         type: int
         required: false
         default: 9216
@@ -137,6 +140,7 @@ options:
       ipv6_linklocal_enable:
         description:
         - Enable IPv6 link-local Option
+        - Not applicable to L3VNI w/o VLAN config
         type: bool
         required: false
         default: true

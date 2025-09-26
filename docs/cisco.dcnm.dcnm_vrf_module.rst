@@ -553,6 +553,7 @@ Parameters
                 </td>
                 <td>
                         <div>Enable IPv6 link-local Option</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
             <tr>
@@ -969,6 +970,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF interface MTU</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
             <tr>
@@ -985,6 +987,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF Intf Description</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
             <tr>
@@ -1036,6 +1039,7 @@ Parameters
                 <td>
                         <div>VRF Vlan Name</div>
                         <div>if &gt; 32 chars enable - system vlan long-name</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
 
