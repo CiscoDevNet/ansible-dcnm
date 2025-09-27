@@ -2856,12 +2856,6 @@ class DcnmNetwork:
                                 invalid_params.append("vrf_name is required for L3 Networks")
 
                         if (
-                            (net.get("dhcp_srvr1_ip") or net.get("dhcp_srvr2_ip") or net.get("dhcp_srvr3_ip"))
-                            and (net.get("dhcp_servers"))
-                        ):
-                            invalid_params.append("DHCP key-value pairs and DHCP servers list cannot be used together")
-
-                        if (
                             (net.get("dhcp_srvr1_ip") and not net.get("dhcp_srvr1_vrf"))
                             or (net.get("dhcp_srvr1_vrf") and not net.get("dhcp_srvr1_ip"))
                             or (net.get("dhcp_srvr2_ip") and not net.get("dhcp_srvr2_vrf"))
