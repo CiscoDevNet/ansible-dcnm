@@ -439,125 +439,125 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
 
 - name: MERGE | Create a VRF with VRF-Lite extensions
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-        vrf_lite:
-          - peer_vrf: test_vrf_1 # optional
-            interface: Ethernet1/16 # mandatory
-            ipv4_addr: 10.33.0.2/30 # optional
-            neighbor_ipv4: 10.33.0.1 # optional
-            ipv6_addr: 2010::10:34:0:7/64 # optional
-            neighbor_ipv6: 2010::10:34:0:3 # optional
-            dot1q: 2 # dot1q can be got from dcnm/optional
-          - peer_vrf: test_vrf_2 # optional
-            interface: Ethernet1/17 # mandatory
-            ipv4_addr: 20.33.0.2/30 # optional
-            neighbor_ipv4: 20.33.0.1 # optional
-            ipv6_addr: 3010::10:34:0:7/64 # optional
-            neighbor_ipv6: 3010::10:34:0:3 # optional
-            dot1q: 3 # dot1q can be got from dcnm/optional
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+            vrf_lite:
+              - peer_vrf: test_vrf_1 # optional
+                interface: Ethernet1/16 # mandatory
+                ipv4_addr: 10.33.0.2/30 # optional
+                neighbor_ipv4: 10.33.0.1 # optional
+                ipv6_addr: 2010::10:34:0:7/64 # optional
+                neighbor_ipv6: 2010::10:34:0:3 # optional
+                dot1q: 2 # dot1q can be got from dcnm/optional
+              - peer_vrf: test_vrf_2 # optional
+                interface: Ethernet1/17 # mandatory
+                ipv4_addr: 20.33.0.2/30 # optional
+                neighbor_ipv4: 20.33.0.1 # optional
+                ipv6_addr: 3010::10:34:0:7/64 # optional
+                neighbor_ipv6: 3010::10:34:0:3 # optional
+                dot1q: 3 # dot1q can be got from dcnm/optional
 
 - name: REPLACE | Update attachments for a VRF
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: replaced
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      # Delete this attachment
-      # - ip_address: 192.168.1.225
-      # Create the following attachment
-      - ip_address: 192.168.1.226
-    # Dont touch this if its present on DCNM
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          # Delete this attachment
+          # - ip_address: 192.168.1.225
+          # Create the following attachment
+          - ip_address: 192.168.1.226
+      # Dont touch this if its present on DCNM
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
 - name: OVERRIDE | Override all VRFs on a fabric
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: overridden
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      # Delete this attachment
-      # - ip_address: 192.168.1.225
-      # Create the following attachment
-      - ip_address: 192.168.1.226
-    # Delete this vrf
-    # - vrf_name: ansible-vrf-r2
-    #   vrf_id: 9008012
-    #   vrf_template: Default_VRF_Universal
-    #   vrf_extension_template: Default_VRF_Extension_Universal
-    #   vlan_id: 2000
-    #   service_vrf_template: null
-    #   attach:
-    #   - ip_address: 192.168.1.224
-    #   - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          # Delete this attachment
+          # - ip_address: 192.168.1.225
+          # Create the following attachment
+          - ip_address: 192.168.1.226
+      # Delete this vrf
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   vlan_id: 2000
+      #   service_vrf_template: null
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
 
 - name: DELETE | Delete selected VRFs
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-fabric
     state: deleted
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
 
 - name: DELETE | Delete all VRFs on a fabric
   cisco.dcnm.dcnm_vrf:
@@ -571,7 +571,6 @@ EXAMPLES = """
     config:
       - vrf_name: ansible-vrf-r1
       - vrf_name: ansible-vrf-r2
-
 
 # ===========================================================================
 # MSD (Multi-Site Domain) Fabric Examples
@@ -595,25 +594,59 @@ EXAMPLES = """
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         service_vrf_template: null
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
         # Define how this VRF behaves on each Child fabric
         child_fabric_config:
-        - fabric_name: vxlan-child-fabric1
-        adv_default_routes: true
-        adv_host_routes: false
-        - fabric_name: vxlan-child-fabric2
-        adv_default_routes: false
-        adv_host_routes: true
+          - fabric_name: vxlan-child-fabric1
+            adv_default_routes: true
+            adv_host_routes: false
+          - fabric_name: vxlan-child-fabric2
+            adv_default_routes: false
+            adv_host_routes: true
       - vrf_name: ansible-vrf-msd-2 # A second VRF in the same task
         vrf_id: 9008012
         vlan_id: 2001
         child_fabric_config:
-        - fabric_name: vxlan-child-fabric1
-        adv_default_routes: false
-        adv_host_routes: false
+          - fabric_name: vxlan-child-fabric1
+            adv_default_routes: false
+            adv_host_routes: false
         # Attachments are for switches at the Parent fabric
         attach:
-        - ip_address: 192.168.1.224
-        - ip_address: 192.168.1.225
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+
+- name: MSD MERGE | Create VRF with L3VNI and advanced routing settings
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: merged
+    config:
+      - vrf_name: ansible-vrf-advanced
+        vrf_id: 9008020
+        vlan_id: 2020
+        vrf_int_mtu: 9000
+        max_bgp_paths: 4
+        max_ibgp_paths: 4
+        ipv6_linklocal_enable: true
+        # Parent-specific settings
+        redist_direct_rmap: CUSTOM-RMAP-REDIST
+        v6_redist_direct_rmap: CUSTOM-RMAP-REDIST-V6
+        # Child fabric configuration with multicast settings
+        child_fabric_config:
+          - fabric_name: vxlan-child-fabric1
+            l3vni_wo_vlan: true
+            trm_enable: true
+            trm_bgw_msite: true
+            rp_address: 10.1.1.1
+            underlay_mcast_ip: 239.1.1.1
+            overlay_mcast_group: 239.2.1.1
+          - fabric_name: vxlan-child-fabric2
+            bgp_password: 1234ABCD
+            bgp_passwd_encrypt: 7
+            netflow_enable: true
+            nf_monitor: NETFLOW_MONITOR_1
 
 # ---------------------------------------------------------------------------
 # STATE: REPLACED - Replace VRF configuration on Parent and Child Fabrics
@@ -624,32 +657,78 @@ EXAMPLES = """
     fabric: vxlan-parent-fabric
     state: replaced
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      vrf_int_mtu: 9000 # Update MTU on Parent
-      service_vrf_template: null
-      # Child fabric configs are replaced: child1 is updated
-      child_fabric_config:
-      - fabric_name: vxlan-child-fabric1
-      adv_default_routes: false # Value is updated
-      adv_host_routes: true   # Value is updated
-      attach:
-      - ip_address: 192.168.1.224
-      # Delete this attachment
-      # - ip_address: 192.168.1.225
-      # Create the following attachment
-      - ip_address: 192.168.1.226
-# Dont touch this if its present on DCNM
-# - vrf_name: ansible-vrf-r2
-#   vrf_id: 9008012
-#   vrf_template: Default_VRF_Universal
-#   vrf_extension_template: Default_VRF_Extension_Universal
-#   attach:
-#   - ip_address: 192.168.1.224
-#   - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-msd-1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        vrf_int_mtu: 9000 # Update MTU on Parent
+        service_vrf_template: null
+        # Child fabric configs are replaced: child1 is updated
+        child_fabric_config:
+          - fabric_name: vxlan-child-fabric1
+            adv_default_routes: false # Value is updated
+            adv_host_routes: true     # Value is updated
+        attach:
+          - ip_address: 192.168.1.224
+          # Delete this attachment
+          # - ip_address: 192.168.1.225
+          # Create the following attachment
+          - ip_address: 192.168.1.226
+      # Dont touch this if its present on DCNM
+      # - vrf_name: ansible-vrf-r2
+      #   vrf_id: 9008012
+      #   vrf_template: Default_VRF_Universal
+      #   vrf_extension_template: Default_VRF_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.1.224
+      #   - ip_address: 192.168.1.225
+
+- name: MSD REPLACE | Update VRF with route-target configuration
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - vrf_name: ansible-vrf-advanced
+        vrf_id: 9008020
+        vlan_id: 2020
+        # Parent route-target settings
+        disable_rt_auto: false
+        import_vpn_rt: "65000:10001,65000:10002"
+        export_vpn_rt: "65000:10001,65000:10002"
+        import_evpn_rt: "65000:20001,65000:20002"
+        export_evpn_rt: "65000:20001,65000:20002"
+        # Child fabric configuration updates
+        child_fabric_config:
+          - fabric_name: vxlan-child-fabric1
+            trm_enable: true
+            import_mvpn_rt: "65000:30001"
+            export_mvpn_rt: "65000:30001"
+
+# ---------------------------------------------------------------------------
+# STATE: OVERRIDDEN - Override all VRFs on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD OVERRIDE | Override all VRFs ensuring only specified ones exist
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: overridden
+    config:
+      - vrf_name: ansible-vrf-production
+        vrf_id: 9008050
+        vlan_id: 2050
+        vrf_description: "Production VRF for critical workloads"
+        child_fabric_config:
+          - fabric_name: vxlan-child-fabric1
+            adv_default_routes: true
+            static_default_route: true
+          - fabric_name: vxlan-child-fabric2
+            adv_default_routes: true
+            static_default_route: true
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+      # All other VRFs will be deleted from both parent and child fabrics
 
 # ---------------------------------------------------------------------------
 # STATE: DELETED - Delete VRFs from Parent and all Child Fabrics
@@ -661,6 +740,16 @@ EXAMPLES = """
     state: deleted
     config:
       - vrf_name: ansible-vrf-msd-1
+      # The 'child_fabric_config' parameter is not used or allowed for 'deleted' state.
+
+- name: MSD DELETE | Delete multiple VRFs from Parent and Child fabrics
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - vrf_name: ansible-vrf-msd-1
+      - vrf_name: ansible-vrf-msd-2
+      - vrf_name: ansible-vrf-advanced
 
 - name: MSD DELETE | Delete all VRFs from the Parent and all associated Child fabrics
   cisco.dcnm.dcnm_vrf:
@@ -668,16 +757,24 @@ EXAMPLES = """
     state: deleted
 
 # ---------------------------------------------------------------------------
-# STATE: QUERY - Query VRFs
+# STATE: QUERY - Query VRFs on Parent MSD Fabric
 # ---------------------------------------------------------------------------
 
-- name: MSD QUERY | Query a VRF on the Parent MSD fabric
+- name: MSD QUERY | Query specific VRFs on the Parent MSD fabric
   cisco.dcnm.dcnm_vrf:
     fabric: vxlan-parent-fabric
     state: query
     config:
       - vrf_name: ansible-vrf-msd-1
       - vrf_name: ansible-vrf-msd-2
+      # The query will return the VRF's configuration on the parent
+      # and its attachments on all associated child fabrics.
+
+- name: MSD QUERY | Query all VRFs on the Parent MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: query
+    # No config specified - returns all VRFs
 
 """
 import ast
@@ -1507,7 +1604,7 @@ class DcnmVrf:
 
         json_to_dict_want = json.loads(want["vrfTemplateConfig"])
         json_to_dict_have = json.loads(have["vrfTemplateConfig"])
-        
+
         # vlan_id_want drives the conditional below, so we cannot
         # remove it here (as we did with the other params that are
         # compared in the call to self.dict_values_differ())
@@ -2669,7 +2766,7 @@ class DcnmVrf:
 
         # Get the VRF spec to determine which properties should be included in diff
         vrf_spec = self.get_vrf_spec()
-        
+
         msg = "vrf_spec for diff formatting: "
         msg += f"{json.dumps(vrf_spec, indent=4, sort_keys=True)}"
         self.log.debug(msg)
@@ -2696,7 +2793,7 @@ class DcnmVrf:
 
             # Extract template configuration
             json_to_dict = json.loads(found_c["vrfTemplateConfig"])
-            
+
             # Initialize the output dict with basic required fields
             src = found_c["source"]
             formatted_vrf = {
@@ -2707,12 +2804,12 @@ class DcnmVrf:
 
             # Get property mappings for both template and VRF object properties
             template_mappings, vrf_object_mappings = self.get_property_mappings()
-            
+
             # Process each property defined in the VRF spec
             for spec_key in vrf_spec.keys():
                 if spec_key in ["vrf_name", "attach", "deploy", "source"]:
                     continue  # These are handled separately
-                    
+   
                 # Handle template properties
                 if spec_key in template_mappings:
                     template_key = template_mappings[spec_key]
@@ -2720,7 +2817,7 @@ class DcnmVrf:
                         formatted_vrf[spec_key] = json_to_dict[template_key]
                     elif "default" in vrf_spec[spec_key]:
                         formatted_vrf[spec_key] = vrf_spec[spec_key]["default"]
-                        
+         
                 # Handle VRF object properties
                 elif spec_key in vrf_object_mappings:
                     vrf_key = vrf_object_mappings[spec_key]
@@ -2735,7 +2832,7 @@ class DcnmVrf:
 
             if diff_deploy and formatted_vrf["vrf_name"] in diff_deploy:
                 diff_deploy.remove(formatted_vrf["vrf_name"])
-                
+
             if not found_a:
                 msg = "not found_a.  Appending formatted_vrf to diff."
                 self.log.debug(msg)
@@ -4139,13 +4236,13 @@ class DcnmVrf:
             "vrf_name": {"length_max": 32, "required": True, "type": "str"},
             "attach": {"type": "list"},
         }
-        
+
         # Add deploy spec based on state
         if self.state in ("merged", "overridden", "replaced"):
             base_spec["deploy"] = {"default": True, "type": "bool"}
         else:
             base_spec["deploy"] = {"type": "bool"}
-        
+
         # Add specs based on fabric type
         if self.action_fabric_type == 'Parent MSD':
             base_spec.update(self.get_parent_msd_specs())
@@ -4153,7 +4250,7 @@ class DcnmVrf:
             base_spec.update(self.get_child_msd_specs())
         else:  # Standard
             base_spec.update(self.get_standard_specs())
-        
+
         return base_spec
 
     def get_parent_msd_specs(self):
@@ -4310,7 +4407,7 @@ class DcnmVrf:
 
     def get_template_skip_keys(self):
         """Return template configuration keys to skip comparison based on fabric type"""
-        
+
         if self.action_fabric_type == 'Parent MSD':
             return self.get_child_msd_template_keys()
         elif self.action_fabric_type == 'Child MSD':
@@ -4342,14 +4439,14 @@ class DcnmVrf:
     def get_property_mappings(self):
         """
         Return mappings for both template and VRF object properties.
-        
+
         Returns:
             tuple: (template_mappings, vrf_object_mappings)
         """
         # Base properties available in all NDFC versions
         template_mappings = {
             "vrf_id": "vrfSegmentId",
-            "vlan_id": "vrfVlanId", 
+            "vlan_id": "vrfVlanId",
             "vrf_vlan_name": "vrfVlanName",
             "vrf_intf_desc": "vrfIntfDescription",
             "vrf_description": "vrfDescription",
@@ -4374,7 +4471,7 @@ class DcnmVrf:
             "bgp_password": "bgpPassword",
             "bgp_passwd_encrypt": "bgpPasswordKeyType",
         }
-        
+
         # Add DCNM version 12+ specific properties
         if self.dcnm_version > 11:
             dcnm_12_mappings = {
@@ -4390,14 +4487,14 @@ class DcnmVrf:
                 "export_mvpn_rt": "routeTargetExportMvpn",
             }
             template_mappings.update(dcnm_12_mappings)
-        
+
         # VRF object properties (same for all versions)
         vrf_object_mappings = {
             "vrf_template": "vrfTemplate",
-            "vrf_extension_template": "vrfExtensionTemplate", 
+            "vrf_extension_template": "vrfExtensionTemplate",
             "service_vrf_template": "serviceVrfTemplate",
         }
-        
+
         return template_mappings, vrf_object_mappings
 
     def validate_input(self):
