@@ -1555,7 +1555,7 @@ class DcnmVrf:
                 "advertiseDefaultRouteFlag": json_to_dict.get("advertiseDefaultRouteFlag", True),
                 "configureStaticDefaultRouteFlag": json_to_dict.get("configureStaticDefaultRouteFlag", True),
                 "bgpPassword": json_to_dict.get("bgpPassword", ""),
-                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", 3),
+                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", ""),
             }
 
             if self.dcnm_version > 11:

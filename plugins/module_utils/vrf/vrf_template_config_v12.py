@@ -50,6 +50,7 @@ class VrfTemplateConfigV12(BaseModel):
         alias="ipv6LinkLocalFlag",
         description="Enables IPv6 link-local Option under VRF SVI. Not applicable to L3VNI w/o VLAN config.",
     )
+    l3vni_wo_vlan: bool = Field(default=False, alias="enableL3VniNoVlan", description="Enable L3 VNI without VLAN configuration")
     loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295, alias="tag", description="Loopback routing tag")
     max_bgp_paths: int = Field(
         default=1,
@@ -70,6 +71,7 @@ class VrfTemplateConfigV12(BaseModel):
     no_rp: bool = Field(default=False, alias="isRPAbsent", description="There is no RP in TRMv4 as only SSM is used")
     overlay_mcast_group: str = Field(default="", alias="multicastGroup", description="Overlay Multicast group")
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="vrfRouteMap", description="VRF route map")
+    v6_redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="v6VrfRouteMap", description="VRF v6 route map")
     rp_address: str = Field(
         default="",
         alias="rpAddress",
@@ -184,6 +186,16 @@ class VrfTemplateConfigV12(BaseModel):
         if isinstance(data, VrfTemplateConfigV12):
             pass
         return data
+
+    @model_validator(mode="after")
+    def validate_l3vni_without_vlan_config(self) -> "VrfTemplateConfigV12":
+        """
+        Handle L3VNI without VLAN configuration
+        """
+        if self.l3vni_wo_vlan:
+            # For L3VNI without VLAN, these fields should be cleared
+            self.vlan_id = ""
+        return self
 
     # Replace rp_loopback_id validator with this one when python 3.10 is the minimum version supported
     '''

@@ -250,6 +250,7 @@ class PlaybookVrfModelV12(BaseModel):
         - import_mvpn_rt - string
         - import_vpn_rt - string
         - ipv6_linklocal_enable - boolean
+        - l3vni_wo_vlan - boolean
         - loopback_route_tag- integer range (0-4294967295)
         - max_bgp_paths - integer range (1-64)
         - max_ibgp_paths - integer range (1-64)
@@ -258,6 +259,7 @@ class PlaybookVrfModelV12(BaseModel):
         - no_rp - boolean
         - overlay_mcast_group - string (IPv4 multicast group address without prefix)
         - redist_direct_rmap - string
+        - v6_redist_direct_rmap - string
         - rp_address - string (IPv4 host address without prefix)
         - rp_external - boolean
         - rp_loopback_id - int range (0-1023)
@@ -296,6 +298,7 @@ class PlaybookVrfModelV12(BaseModel):
     import_mvpn_rt: str = Field(default="")  # routeTargetImportMvpn
     import_vpn_rt: str = Field(default="")  # routeTargetImport
     ipv6_linklocal_enable: StrictBool = Field(default=True)  # ipv6LinkLocalFlag
+    l3vni_wo_vlan: StrictBool = Field(default=False)  # enableL3VniNoVlan
     loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295)  # tag
     max_bgp_paths: int = Field(default=1, ge=1, le=64)  # maxBgpPaths
     max_ibgp_paths: int = Field(default=2, ge=1, le=64)  # maxIbgpPaths
@@ -304,6 +307,7 @@ class PlaybookVrfModelV12(BaseModel):
     no_rp: StrictBool = Field(default=False)  # isRPAbsent
     overlay_mcast_group: str = Field(default="")  # multicastGroup
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET")  # vrfRouteMap
+    v6_redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET") # v6VrfRouteMap
     rp_address: str = Field(default="")  # rpAddress
     rp_external: StrictBool = Field(default=False)  # isRPExternal
     rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=-1, le=1023)  # loopbackNumber
