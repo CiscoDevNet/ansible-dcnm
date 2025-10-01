@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -605,6 +605,7 @@ class DcnmNetwork:
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
         attach_list = []
+        atch_tor_ports = []
 
         if not want_a:
             return attach_list
@@ -628,7 +629,6 @@ class DcnmNetwork:
                                         if have.get("torports"):
                                             for tor_h in have["torports"]:
                                                 if tor_w["switch"] == tor_h["switch"]:
-                                                    atch_tor_ports = []
                                                     torports_present = True
                                                     h_tor_ports = tor_h["torPorts"].split(",") if tor_h["torPorts"] else []
                                                     w_tor_ports = tor_w["torPorts"].split(",") if tor_w["torPorts"] else []
