@@ -33,7 +33,7 @@ from ansible.errors import AnsibleError
 # Module Constants
 WAIT_TIME_FOR_DELETE_LOOP = 5
 VALID_VRF_STATES = ["DEPLOYED", "PENDING", "NA"]
-MAX_RETRY_COUNT = 20
+MAX_RETRY_COUNT = 50
 
 display = Display()
 
@@ -284,9 +284,9 @@ class ActionModule(ActionNetworkModule):
                 self.logger.error(error_msg, fabric=fabric_name, operation="type_detection")
                 raise AnsibleError(error_msg)
 
-            fabric_info = fabric_data[fabric_name]
-            fabric_type = fabric_info.get('fabricType', 'Standard')
-            fabric_state = fabric_info.get('fabricState', 'active')
+            fabric_info = fabric_data.get(fabric_name)
+            fabric_type = fabric_info.get('fabricType')
+            fabric_state = fabric_info.get('fabricState')
 
             if fabric_type == 'MSD':
                 detected_type = 'Parent MSD'
@@ -379,7 +379,7 @@ class ActionModule(ActionNetworkModule):
                         self.logger.error(error_msg, fabric=child_task['fabric'], operation="vrf_readiness")
                         return {"failed": True, "msg": error_msg}
 
-                    self.logger.info(f"Executing child task", fabric=child_task['fabric'], operation="child_execution")
+                    self.logger.info("Executing child task", fabric=child_task['fabric'], operation="child_execution")
                     child_result = self.execute_child_task(child_task, task_vars)
                     child_results.append(child_result)
 
@@ -402,7 +402,7 @@ class ActionModule(ActionNetworkModule):
     def handle_child_msd_workflow(self, module_args, task_vars):
         """Handle Child MSD fabric workflow with restrictions"""
         fabric_name = module_args.get('fabric', 'Unknown')
-        self.logger.warning(f"Attempted direct access to Child MSD fabric", fabric=fabric_name, operation="child_msd_workflow")
+        self.logger.warning("Attempted direct access to Child MSD fabric", fabric=fabric_name, operation="child_msd_workflow")
 
         result = {
             'failed': True,

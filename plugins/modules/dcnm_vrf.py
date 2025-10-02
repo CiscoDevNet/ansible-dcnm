@@ -382,6 +382,11 @@ options:
           If set to "False", the attachments will be created in DCNM, but will not be deployed
         type: bool
         default: true
+  _fabric_type:
+    description:
+    - (Internal) Fabric type for the VRF
+    type: str
+    required: false
 """
 
 EXAMPLES = """
@@ -2674,7 +2679,7 @@ class DcnmVrf:
             return
 
         for vrf_name in self.want_deploy["vrfNames"].split(","):
-            self.log.debug(f"VRF Name {vrf_name}")
+            self.log.debug(f"VRF Name : {vrf_name}")
             if not self.want_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
                 all_vrfs.append(vrf_name)
 
@@ -2809,7 +2814,7 @@ class DcnmVrf:
             for spec_key in vrf_spec.keys():
                 if spec_key in ["vrf_name", "attach", "deploy", "source"]:
                     continue  # These are handled separately
-   
+
                 # Handle template properties
                 if spec_key in template_mappings:
                     template_key = template_mappings[spec_key]
@@ -2817,7 +2822,7 @@ class DcnmVrf:
                         formatted_vrf[spec_key] = json_to_dict[template_key]
                     elif "default" in vrf_spec[spec_key]:
                         formatted_vrf[spec_key] = vrf_spec[spec_key]["default"]
-         
+
                 # Handle VRF object properties
                 elif spec_key in vrf_object_mappings:
                     vrf_key = vrf_object_mappings[spec_key]
@@ -3117,8 +3122,9 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_undeploy:
-            msg = "Early return. self.diff_undeploy is empty."
+        if not self.diff_undeploy or self.action_fabric_type == "Child MSD":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
@@ -3920,8 +3926,9 @@ class DcnmVrf:
         msg += "ENTERED."
         self.log.debug(msg)
 
-        if not self.diff_deploy:
-            msg = "Early return. self.diff_deploy is empty."
+        if not self.diff_deploy or self.action_fabric_type == "Child MSD":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
