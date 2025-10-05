@@ -2151,33 +2151,35 @@ class DcnmVrf:
 
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
-                have_a = self.find_dict_in_list_by_key_value(
-                    search=self.have_attach, key="vrfName", value=want_c["vrfName"]
-                )
+                if self.action_fabric_type != "Child MSD":
+                    have_a = self.find_dict_in_list_by_key_value(
+                        search=self.have_attach, key="vrfName", value=want_c["vrfName"]
+                    )
 
-                if not have_a:
-                    continue
+                    if not have_a:
+                        continue
 
-                detach_items = get_items_to_detach(have_a["lanAttachList"])
-                if detach_items:
-                    have_a.update({"lanAttachList": detach_items})
-                    diff_detach.append(have_a)
-                    all_vrfs.append(have_a["vrfName"])
-            if len(all_vrfs) != 0:
+                    detach_items = get_items_to_detach(have_a["lanAttachList"])
+                    if detach_items:
+                        have_a.update({"lanAttachList": detach_items})
+                        diff_detach.append(have_a)
+                        all_vrfs.append(have_a["vrfName"])
+
+            if len(all_vrfs) != 0 and self.action_fabric_type != "Child MSD":
                 diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         else:
+            if self.action_fabric_type != "Child MSD":
+                for have_a in self.have_attach:
+                    detach_items = get_items_to_detach(have_a["lanAttachList"])
+                    if detach_items:
+                        have_a.update({"lanAttachList": detach_items})
+                        diff_detach.append(have_a)
+                        all_vrfs.append(have_a["vrfName"])
 
-            for have_a in self.have_attach:
-                detach_items = get_items_to_detach(have_a["lanAttachList"])
-                if detach_items:
-                    have_a.update({"lanAttachList": detach_items})
-                    diff_detach.append(have_a)
-                    all_vrfs.append(have_a["vrfName"])
-
-                diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
-            if len(all_vrfs) != 0:
-                diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
+                    diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
+                if len(all_vrfs) != 0:
+                    diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_detach = diff_detach
         self.diff_undeploy = diff_undeploy
@@ -2217,21 +2219,22 @@ class DcnmVrf:
 
             detach_list = []
             if not found:
-                for item in have_a["lanAttachList"]:
-                    if "isAttached" in item:
-                        if item["isAttached"]:
-                            del item["isAttached"]
-                            item.update({"deployment": False})
-                            detach_list.append(item)
+                if self.action_fabric_type != "Child MSD":
+                    for item in have_a["lanAttachList"]:
+                        if "isAttached" in item:
+                            if item["isAttached"]:
+                                del item["isAttached"]
+                                item.update({"deployment": False})
+                                detach_list.append(item)
 
-                if detach_list:
-                    have_a.update({"lanAttachList": detach_list})
-                    diff_detach.append(have_a)
-                    all_vrfs.append(have_a["vrfName"])
+                    if detach_list:
+                        have_a.update({"lanAttachList": detach_list})
+                        diff_detach.append(have_a)
+                        all_vrfs.append(have_a["vrfName"])
 
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
 
-        if len(all_vrfs) != 0:
+        if len(all_vrfs) != 0 and self.action_fabric_type != "Child MSD":
             diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_delete = diff_delete
@@ -2260,6 +2263,12 @@ class DcnmVrf:
         all_vrfs = []
 
         self.get_diff_merge(replace=True)
+
+        if self.action_fabric_type == "Child MSD":
+            # In Child MSD fabric, attach and deploy 
+            # operations are not processed.
+            return
+
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
 
@@ -2580,6 +2589,11 @@ class DcnmVrf:
         msg += f"replace == {replace}"
         self.log.debug(msg)
 
+        if self.action_fabric_type == "Child MSD":
+            # In Child MSD fabric, attach and deploy
+            # operations are not processed.
+            return
+
         diff_attach = []
         diff_deploy = {}
 
@@ -2669,6 +2683,11 @@ class DcnmVrf:
         msg = "ENTERED. "
         msg += f"caller: {caller}. "
         self.log.debug(msg)
+
+        if self.action_fabric_type == "Child MSD":
+            # In Child MSD fabric, attach and deploy
+            # operations are not processed.
+            return
 
         diff_deploy = self.diff_deploy
         all_vrfs = []
@@ -4415,9 +4434,9 @@ class DcnmVrf:
     def get_template_skip_keys(self):
         """Return template configuration keys to skip comparison based on fabric type"""
 
-        if self.action_fabric_type == 'Parent MSD':
+        if self.action_fabric_type == "Parent MSD":
             return self.get_child_msd_template_keys()
-        elif self.action_fabric_type == 'Child MSD':
+        elif self.action_fabric_type == "Child MSD":
             return self.get_parent_msd_template_keys()
         else:  # Standard
             return None

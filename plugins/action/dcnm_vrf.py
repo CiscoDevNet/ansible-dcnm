@@ -162,13 +162,13 @@ class ActionModule(ActionNetworkModule):
 
         try:
             result = self.run_pre_validation()
-            if result.get('failed', False):
+            if result.get("failed", False):
                 self.logger.error("Validation failed", operation="validation")
                 return result
 
             fabric_data = self.obtain_fabric_associations(task_vars, tmp)
             module_args = self._task.args.copy()
-            fabric_name = module_args.get('fabric')
+            fabric_name = module_args.get("fabric")
 
             if not fabric_name:
                 raise AnsibleError("Parameter 'fabric' is required")
@@ -177,15 +177,15 @@ class ActionModule(ActionNetworkModule):
             fabric_type = self.detect_fabric_type(fabric_name, fabric_data)
             self.logger.info(f"Detected fabric type: {fabric_type}", fabric=fabric_name)
 
-            if fabric_type == 'Parent MSD':
+            if fabric_type == "Parent MSD":
                 result = self.handle_parent_msd_workflow(module_args, fabric_data, task_vars, tmp)
-            elif fabric_type == 'Child MSD':
+            elif fabric_type == "Child MSD":
                 result = self.handle_child_msd_workflow(module_args, task_vars)
             else:
                 result = self.handle_standard_workflow(task_vars)
 
             execution_time = self.logger.get_execution_time()
-            result['execution_time'] = execution_time
+            result["execution_time"] = execution_time
             self.logger.info(f"Plugin execution completed in {execution_time:.2f}s", fabric=fabric_name)
 
             return result
@@ -262,8 +262,8 @@ class ActionModule(ActionNetworkModule):
             )
 
             fabric_data = {}
-            for fabric in response_data.get('DATA', []):
-                fabric_name = fabric.get('fabricName')
+            for fabric in response_data.get("DATA", []):
+                fabric_name = fabric.get("fabricName")
                 if fabric_name:
                     fabric_data[fabric_name] = fabric
 
@@ -285,15 +285,15 @@ class ActionModule(ActionNetworkModule):
                 raise AnsibleError(error_msg)
 
             fabric_info = fabric_data.get(fabric_name)
-            fabric_type = fabric_info.get('fabricType')
-            fabric_state = fabric_info.get('fabricState')
+            fabric_type = fabric_info.get("fabricType")
+            fabric_state = fabric_info.get("fabricState")
 
-            if fabric_type == 'MSD':
-                detected_type = 'Parent MSD'
-            elif fabric_state == 'member':
-                detected_type = 'Child MSD'
+            if fabric_type == "MSD":
+                detected_type = "Parent MSD"
+            elif fabric_state == "member":
+                detected_type = "Child MSD"
             else:
-                detected_type = 'Standard'
+                detected_type = "Standard"
 
             self.logger.debug(f"Fabric type detected: {detected_type} (fabricType={fabric_type}, fabricState={fabric_state})",
                             fabric=fabric_name, operation="type_detection")
@@ -309,22 +309,22 @@ class ActionModule(ActionNetworkModule):
 
     def handle_parent_msd_workflow(self, module_args, fabric_data, task_vars, tmp):
         """Handle Parent MSD fabric workflow with child fabric processing"""
-        parent_fabric = module_args.get('fabric')
+        parent_fabric = module_args.get("fabric")
         self.logger.info("Starting Parent MSD workflow", fabric=parent_fabric, operation="parent_msd_workflow")
 
         try:
             # Step 1: Validate and split parent/child configurations
-            config = module_args.get('config', [])
+            config = module_args.get("config", [])
             parent_config = []
             child_tasks_dict = {}
 
             for vrf_idx, vrf in enumerate(config):
-                child_fabric_configs = vrf.get('child_fabric_config')
+                child_fabric_configs = vrf.get("child_fabric_config")
 
                 if child_fabric_configs:
                     # Validate child fabrics
                     for child_idx, child_config in enumerate(child_fabric_configs):
-                        fabric_name = child_config.get('fabric_name')
+                        fabric_name = child_config.get("fabric_name")
                         if not fabric_name:
                             error_msg = f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: fabric_name is required"
                             self.logger.error(error_msg, fabric=parent_fabric, operation="config_validation")
@@ -333,7 +333,7 @@ class ActionModule(ActionNetworkModule):
                         # Validate child fabric type
                         try:
                             child_fabric_type = self.detect_fabric_type(fabric_name, fabric_data)
-                            if child_fabric_type != 'Child MSD':
+                            if child_fabric_type != "Child MSD":
                                 error_msg = f"Fabric {fabric_name} is not a valid Child MSD fabric (detected: {child_fabric_type})"
                                 self.logger.error(error_msg, fabric=parent_fabric, operation="config_validation")
                                 return {"failed": True, "msg": error_msg}
@@ -346,8 +346,8 @@ class ActionModule(ActionNetworkModule):
 
                     # Create parent VRF without child_fabric_config
                     parent_vrf = copy.deepcopy(vrf)
-                    if 'child_fabric_config' in parent_vrf:
-                        del parent_vrf['child_fabric_config']
+                    if "child_fabric_config" in parent_vrf:
+                        del parent_vrf["child_fabric_config"]
                     parent_config.append(parent_vrf)
                 else:
                     parent_config.append(vrf)
@@ -356,21 +356,21 @@ class ActionModule(ActionNetworkModule):
             self.logger.info(f"Executing parent operations for {len(parent_config)} VRF configurations",
                            fabric=parent_fabric, operation="parent_execution")
             parent_module_args = copy.deepcopy(module_args)
-            parent_module_args['config'] = parent_config
-            parent_module_args['_fabric_type'] = 'Parent MSD'
+            parent_module_args["config"] = parent_config
+            parent_module_args["_fabric_type"] = "Parent MSD"
 
             parent_result = self.execute_module_with_args(parent_module_args, task_vars)
 
             # Step 3: Execute child fabric tasks if parent succeeded
             child_results = []
-            if not parent_result.get('failed', False) and child_tasks_dict:
+            if not parent_result.get("failed", False) and child_tasks_dict:
                 self.logger.info(f"Processing {len(child_tasks_dict)} child fabrics",
                                fabric=parent_fabric, operation="child_execution")
 
                 for child_task in child_tasks_dict.values():
                     all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
-                        child_task['vrf_list'],
-                        child_task['fabric'],
+                        child_task["vrf_list"],
+                        child_task["fabric"],
                         task_vars,
                         tmp
                     )
@@ -379,16 +379,16 @@ class ActionModule(ActionNetworkModule):
                         self.logger.error(error_msg, fabric=child_task['fabric'], operation="vrf_readiness")
                         return {"failed": True, "msg": error_msg}
 
-                    self.logger.info("Executing child task", fabric=child_task['fabric'], operation="child_execution")
+                    self.logger.info("Executing child task", fabric=child_task["fabric"], operation="child_execution")
                     child_result = self.execute_child_task(child_task, task_vars)
                     child_results.append(child_result)
 
-                    if child_result.get('failed', False):
-                        error_msg = f"Child fabric task failed for {child_task['fabric']}: {child_result.get('msg', 'Unknown error')}"
-                        self.logger.error(error_msg, fabric=child_task['fabric'], operation="child_execution")
-                        parent_result['failed'] = True
-                        parent_result['msg'] = error_msg
-                        parent_result['child_fabric_results'] = child_results
+                    if child_result.get("failed", False):
+                        error_msg = f"Child fabric task failed for {child_task["fabric"]}: {child_result.get("msg", "Unknown error")}"
+                        self.logger.error(error_msg, fabric=child_task["fabric"], operation="child_execution")
+                        parent_result["failed"] = True
+                        parent_result["msg"] = error_msg
+                        parent_result["child_fabric_results"] = child_results
                         return parent_result
 
             # Step 4: Create structured results
@@ -401,14 +401,14 @@ class ActionModule(ActionNetworkModule):
 
     def handle_child_msd_workflow(self, module_args, task_vars):
         """Handle Child MSD fabric workflow with restrictions"""
-        fabric_name = module_args.get('fabric', 'Unknown')
+        fabric_name = module_args.get("fabric", "Unknown")
         self.logger.warning("Attempted direct access to Child MSD fabric", fabric=fabric_name, operation="child_msd_workflow")
 
         result = {
-            'failed': True,
-            'msg': f"Task not permitted on Child MSD fabric '{fabric_name}'. Please perform operations through the Parent MSD fabric.",
-            'fabric_type': 'Child MSD',
-            'workflow': 'Child MSD Workflow'
+            "failed": True,
+            "msg": f"Task not permitted on Child MSD fabric '{fabric_name}'. Please perform operations through the Parent MSD fabric.",
+            "fabric_type": "Child MSD",
+            "workflow": "Child MSD Workflow"
         }
         return result
 
@@ -419,9 +419,9 @@ class ActionModule(ActionNetworkModule):
         try:
             result = super(ActionModule, self).run(task_vars=task_vars)
 
-            if 'fabric_type' not in result:
-                result['fabric_type'] = 'Standard'
-                result['workflow'] = 'Standard Non-MSD VRF Processing'
+            if "fabric_type" not in result:
+                result["fabric_type"] = "Standard"
+                result["workflow"] = "Standard Non-MSD VRF Processing"
 
             self.logger.info("Standard workflow completed successfully", operation="standard_workflow")
             return result
@@ -447,10 +447,10 @@ class ActionModule(ActionNetworkModule):
                 child_tasks_dict[child_fabric_name]["vrf_list"].append(child_config["vrf_name"])
             else:
                 child_task = {
-                    'fabric': child_fabric_name,
-                    'state': parent_module_args.get('state'),
-                    'config': [child_config],
-                    'vrf_list': [child_config["vrf_name"]]
+                    "fabric": child_fabric_name,
+                    "state": parent_module_args.get("state"),
+                    "config": [child_config],
+                    "vrf_list": [child_config["vrf_name"]]
                 }
                 child_tasks_dict[child_fabric_name] = child_task
 
@@ -464,32 +464,32 @@ class ActionModule(ActionNetworkModule):
 
     def execute_child_task(self, child_task, task_vars):
         """Execute child fabric task using Child MSD flow"""
-        fabric_name = child_task['fabric']
+        fabric_name = child_task["fabric"]
 
         try:
             self.logger.info(f"Executing child task for fabric: {fabric_name}", fabric=fabric_name, operation="execute_child_task")
 
             child_module_args = {
-                'fabric': fabric_name,
-                'config': child_task['config'],
-                '_fabric_type': 'Child MSD'
+                "fabric": fabric_name,
+                "config": child_task["config"],
+                "_fabric_type": "Child MSD"
             }
 
-            state = child_task.get('state')
+            state = child_task.get("state")
             if state:
-                if state == 'overridden':
+                if state == "overridden":
                     child_module_args["state"] = "replaced"
                 else:
                     child_module_args["state"] = state
 
             child_result = self.execute_module_with_args(child_module_args, task_vars)
 
-            child_result['child_fabric'] = fabric_name
-            child_result['invocation'] = {
-                'module_args': copy.deepcopy(child_module_args)
+            child_result["child_fabric"] = fabric_name
+            child_result["invocation"] = {
+                "module_args": copy.deepcopy(child_module_args)
             }
 
-            success = not child_result.get('failed', False)
+            success = not child_result.get("failed", False)
             self.logger.info(f"Child task execution completed: {'Success' if success else 'Failed'}",
                            fabric=fabric_name, operation="execute_child_task")
             return child_result
@@ -503,7 +503,7 @@ class ActionModule(ActionNetworkModule):
 
     def execute_module_with_args(self, module_args, task_vars):
         """Execute the dcnm_vrf module with given arguments"""
-        fabric_name = module_args.get('fabric', 'Unknown')
+        fabric_name = module_args.get("fabric", "Unknown")
         original_args = self._task.args
 
         try:
@@ -511,11 +511,11 @@ class ActionModule(ActionNetworkModule):
             self._task.args = module_args
             result = super(ActionModule, self).run(task_vars=task_vars)
 
-            result['invocation'] = {
-                'module_args': copy.deepcopy(module_args)
+            result["invocation"] = {
+                "module_args": copy.deepcopy(module_args)
             }
 
-            success = not result.get('failed', False)
+            success = not result.get("failed", False)
             self.logger.debug(f"Module execution completed: {'Success' if success else 'Failed'}",
                             fabric=fabric_name, operation="execute_module")
             return result
@@ -595,40 +595,40 @@ class ActionModule(ActionNetworkModule):
         try:
             if child_results:
                 structured_result = {
-                    'changed': parent_result.get('changed', False),
-                    'failed': parent_result.get('failed', False),
-                    'fabric_type': 'Parent MSD',
-                    'workflow': 'Parent MSD with Child Fabric Processing',
-                    'parent_fabric': {
-                        'fabric_name': parent_fabric,
-                        'changed': parent_result.get('changed', False),
-                        'diff': parent_result.get('diff', []),
-                        'response': parent_result.get('response', [])
+                    "changed": parent_result.get("changed", False),
+                    "failed": parent_result.get("failed", False),
+                    "fabric_type": "Parent MSD",
+                    "workflow": "Parent MSD with Child Fabric Processing",
+                    "parent_fabric": {
+                        "fabric_name": parent_fabric,
+                        "changed": parent_result.get("changed", False),
+                        "diff": parent_result.get("diff", []),
+                        "response": parent_result.get("response", [])
                     },
-                    'child_fabrics': []
+                    "child_fabrics": []
                 }
 
                 for child_result in child_results:
                     child_entry = {
-                        'fabric_name': child_result.get('child_fabric'),
-                        'changed': child_result.get('changed', False),
-                        'failed': child_result.get('failed', False),
-                        'diff': child_result.get('diff', []),
-                        'response': child_result.get('response', [])
+                        "fabric_name": child_result.get("child_fabric"),
+                        "changed": child_result.get("changed", False),
+                        "failed": child_result.get("failed", False),
+                        "diff": child_result.get("diff", []),
+                        "response": child_result.get("response", [])
                     }
-                    structured_result['child_fabrics'].append(child_entry)
+                    structured_result["child_fabrics"].append(child_entry)
 
-                    if child_result.get('changed', False):
-                        structured_result['changed'] = True
+                    if child_result.get("changed", False):
+                        structured_result["changed"] = True
 
-                    if child_result.get('failed', False):
-                        structured_result['failed'] = True
-                        structured_result['msg'] = f"Child fabric task failed for {child_result.get('child_fabric')}: {child_result.get('msg', 'Unknown error')}"
+                    if child_result.get("failed", False):
+                        structured_result["failed"] = True
+                        structured_result["msg"] = f"Child fabric task failed for {child_result.get("child_fabric")}: {child_result.get("msg", "Unknown error")}"
 
                 return structured_result
             else:
-                parent_result['fabric_type'] = 'Parent MSD'
-                parent_result['workflow'] = 'Parent MSD without Child Fabric Processing'
+                parent_result["fabric_type"] = "Parent MSD"
+                parent_result["workflow"] = "Parent MSD without Child Fabric Processing"
                 return parent_result
 
         except Exception as e:
