@@ -38,6 +38,37 @@ from ..base_paths import BasePath
 # )
 
 
+class EpOneManageFabricCreate(BaseModel):
+    """
+    ## Fabric Create Endpoint (OneManage)
+
+    ### Description
+    Endpoint to create a new multi-cluster fabric.
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricCreate()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricCreate"  # For backward compatibility
+
+    @property
+    def path(self) -> str:
+        """Build the endpoint path."""
+
+        return BasePath.onemanage_fabrics()
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
+
+
 class EpOneManageFabricDetails(BaseModel):
     """
     ## Fabric Details Endpoint (OneManage)
