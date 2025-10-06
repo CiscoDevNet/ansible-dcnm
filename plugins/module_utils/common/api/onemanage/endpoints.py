@@ -26,14 +26,16 @@ __author__ = "Allen Robel"
 
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field  # field_validator
 
 from ..base_paths import BasePath
-from ..query_params import (
-    CompositeQueryParams,
-    EndpointQueryParams,
-    LuceneQueryParams,
-)
+
+# Import query parameter models as needed
+# from ..query_params import (
+#     CompositeQueryParams,
+#     EndpointQueryParams,
+#     LuceneQueryParams,
+# )
 
 
 class EpOneManageFabricDetails(BaseModel):
