@@ -80,10 +80,6 @@ class Logger:
     def error(self, message, fabric=None, operation=None):
         self.log("error", message, fabric, operation)
 
-    def get_execution_time(self):
-        """Get execution time since logger creation"""
-        return (datetime.now() - self.start_time).total_seconds()
-
 
 class ErrorHandler:
     """Centralized error handling for action plugin"""
@@ -183,10 +179,6 @@ class ActionModule(ActionNetworkModule):
                 result = self.handle_child_msd_workflow(module_args, task_vars)
             else:
                 result = self.handle_standard_workflow(task_vars)
-
-            execution_time = self.logger.get_execution_time()
-            result["execution_time"] = execution_time
-            self.logger.info(f"Plugin execution completed in {execution_time:.2f}s", fabric=fabric_name)
 
             return result
 

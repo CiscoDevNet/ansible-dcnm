@@ -2823,8 +2823,10 @@ class DcnmVrf:
             formatted_vrf = {
                 "vrf_name": found_c["vrfName"],
                 "source": src,
-                "attach": []
             }
+
+            if self.action_fabric_type != "Child MSD":
+                formatted_vrf.update({"attach": []})
 
             # Get property mappings for both template and VRF object properties
             template_mappings, vrf_object_mappings = self.get_property_mappings()
