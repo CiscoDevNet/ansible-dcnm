@@ -43,11 +43,11 @@ class EpOneManageFabricDetails(BaseModel):
     ## Fabric Details Endpoint (OneManage)
 
     ### Description
-    Endpoint to query details for a specific fabric.
+    Endpoint to query details for a specific multi-cluster fabric.
 
     ### Usage
     ```python
-    request = EpFabricDetails()
+    request = EpOneManageFabricDetails()
     request.fabric_name = "MyFabric"
 
     path = request.path
