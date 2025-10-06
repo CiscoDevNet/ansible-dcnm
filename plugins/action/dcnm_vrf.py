@@ -376,7 +376,7 @@ class ActionModule(ActionNetworkModule):
                     child_results.append(child_result)
 
                     if child_result.get("failed", False):
-                        error_msg = f"Child fabric task failed for {child_task["fabric"]}: {child_result.get("msg", "Unknown error")}"
+                        error_msg = f"Child fabric task failed for {child_task['fabric']}: {child_result.get('msg', 'Unknown error')}"
                         self.logger.error(error_msg, fabric=child_task["fabric"], operation="child_execution")
                         parent_result["failed"] = True
                         parent_result["msg"] = error_msg
@@ -615,7 +615,7 @@ class ActionModule(ActionNetworkModule):
 
                     if child_result.get("failed", False):
                         structured_result["failed"] = True
-                        structured_result["msg"] = f"Child fabric task failed for {child_result.get("child_fabric")}: {child_result.get("msg", "Unknown error")}"
+                        structured_result["msg"] = f"Child fabric task failed for {child_result.get('child_fabric')}: {child_result.get('msg', 'Unknown error')}"
 
                 return structured_result
             else:
