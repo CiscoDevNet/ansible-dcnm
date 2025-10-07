@@ -245,3 +245,41 @@ class BasePath:
         ```
         """
         return cls.onemanage("fabrics", *segments)
+
+    @classmethod
+    def onemanage_top_down(cls, *segments: str) -> str:
+        """
+        Build onemanage/top-down API path.
+
+        ### Parameters
+        - segments: Path segments to append after top-down (e.g., fabric_name)
+
+        ### Returns
+        - Complete onemanage/top-down path
+
+        ### Example
+        ```python
+        path = BasePath.onemanage_top_down("fabrics", "MyFabric")
+        # Returns: /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/MyFabric
+        ```
+        """
+        return cls.onemanage("top-down", *segments)
+
+    @classmethod
+    def onemanage_top_down_fabrics(cls, *segments: str) -> str:
+        """
+        Build onemanage/top-down/fabrics API path.
+
+        ### Parameters
+        - segments: Path segments to append after top-down/fabrics (e.g., fabric_name)
+
+        ### Returns
+        - Complete onemanage/top-down/fabrics path
+
+        ### Example
+        ```python
+        path = BasePath.onemanage_top_down_fabrics("MyFabric")
+        # Returns: /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/MyFabric
+        ```
+        """
+        return cls.onemanage_top_down("fabrics", *segments)
