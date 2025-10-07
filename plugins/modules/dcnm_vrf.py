@@ -2265,7 +2265,7 @@ class DcnmVrf:
         self.get_diff_merge(replace=True)
 
         if self.action_fabric_type == "Child MSD":
-            # In Child MSD fabric, attach and deploy 
+            # In Child MSD fabric, attach and deploy
             # operations are not processed.
             return
 
@@ -2698,7 +2698,8 @@ class DcnmVrf:
             return
 
         for vrf_name in self.want_deploy["vrfNames"].split(","):
-            self.log.debug(f"VRF Name : {vrf_name}")
+            msg = f"VRF Name : {vrf_name}"
+            self.log.debug(msg)
             if not self.want_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
                 all_vrfs.append(vrf_name)
 
