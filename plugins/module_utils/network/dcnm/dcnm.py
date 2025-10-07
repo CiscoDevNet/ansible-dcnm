@@ -955,3 +955,51 @@ def search_nested_json(obj, search_string):
         if search_string in obj.lower():
             return True
     return False
+
+
+def has_partial_dhcp_config(server):
+    """
+    # Summary
+
+    Check if a DHCP server has incomplete configuration (IP address set but no VRF or vice versa).
+
+    ## Raises
+
+    None
+
+    ## Parameters
+
+    -   server (dict): A dictionary representing the DHCP server configuration.
+
+    ## Returns
+
+    -   bool: True if the server has partial configuration, False otherwise.
+
+    ## Usage
+
+    ```python
+    server1 = {
+        "srvr_ip": "ip_address",
+        "srvr_vrf": "vrf_name"
+        }
+    result1 = has_partial_dhcp_config(server1)
+    print(result1)
+    # -> False (complete configuration)
+
+    server2 = {
+        "srvr_ip": "ip_address"
+        }
+    result2 = has_partial_dhcp_config(server2)
+    print(result2)
+    # -> True (partial configuration)
+
+    server3 = {
+        "srvr_vrf": "vrf_name"
+        }
+    result3 = has_partial_dhcp_config(server3)
+    print(result3)
+    # -> True (partial configuration)
+    """
+    ip = server.get("srvr_ip")
+    vrf = server.get("srvr_vrf")
+    return bool(ip) != bool(vrf)
