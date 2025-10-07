@@ -72,12 +72,6 @@ jobs:
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
 
-    - name: Install Pydantic (v2)
-      run: pip install pydantic==2.11.10
-
-    - name: Install Requests
-      run: pip install requests==2.32.5
-
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
       with:
