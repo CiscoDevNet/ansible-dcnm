@@ -87,7 +87,9 @@ class ErrorHandler:
     def __init__(self, logger):
         self.logger = logger
 
-    def handle_exception(self, e, operation="unknown", fabric=None, include_traceback=False):
+    def handle_exception(
+        self, e, operation="unknown", fabric=None, include_traceback=False
+    ):
         """Handle exceptions with logging and structured error response"""
         error_type = type(e).__name__
         error_msg = str(e)
@@ -114,7 +116,9 @@ class ErrorHandler:
 
         return error_response
 
-    def validate_api_response(self, response, operation="API call", fabric=None):
+    def validate_api_response(
+        self, response, operation="API call", fabric=None
+    ):
         """Validate API response and handle errors"""
         if not response:
             raise AnsibleError(f"No response received for {operation}")
@@ -202,7 +206,10 @@ class ActionModule(ActionNetworkModule):
                     if "attach" in con:
                         for at_idx, at in enumerate(con["attach"]):
                             if "vlan_id" in at:
-                                msg = f"Config[{con_idx}].attach[{at_idx}]: vlan_id should not be specified under attach block. Please specify under config block instead"
+                                msg = (
+                                    f"Config[{con_idx}].attach[{at_idx}]: vlan_id should not be "
+                                    "specified under attach block. Please specify under config block instead"
+                                )
                                 self.logger.error(msg, operation="validation")
                                 return {"failed": True, "msg": msg}
 
@@ -211,18 +218,26 @@ class ActionModule(ActionNetworkModule):
                                     for vl in at["vrf_lite"]:
                                         continue
                                 except TypeError:
-                                    msg = f"Config[{con_idx}].attach[{at_idx}]: Please specify interface parameter under vrf_lite section in the playbook"
+                                    msg = (
+                                        f"Config[{con_idx}].attach[{at_idx}]: Please specify interface "
+                                        "parameter under vrf_lite section in the playbook"
+                                    )
                                     self.logger.error(msg, operation="validation")
                                     return {"failed": True, "msg": msg}
 
             elif state == "deleted":
                 for vrf_idx, vrf in enumerate(config):
                     if vrf.get("child_fabric_config"):
-                        msg = f"Config[{vrf_idx}]: child_fabric_config is not supported with state 'deleted'"
+                        msg = (
+                            f"Config[{vrf_idx}]: child_fabric_config is not supported "
+                            "with state 'deleted'"
+                        )
                         self.logger.error(msg, operation="validation")
                         return {"failed": True, "msg": msg}
 
-            self.logger.debug("Input validation completed successfully", operation="validation")
+            self.logger.debug(
+                "Input validation completed successfully", operation="validation"
+            )
             return {"failed": False}
 
         except Exception as e:
@@ -234,14 +249,19 @@ class ActionModule(ActionNetworkModule):
 
     def obtain_fabric_associations(self, task_vars, tmp):
         """Obtain fabric associations from DCNM"""
-        self.logger.debug("Fetching fabric associations from DCNM", operation="fabric_discovery")
+        self.logger.debug(
+            "Fetching fabric associations from DCNM", operation="fabric_discovery"
+        )
 
         try:
             msd_fabric_associations = self._execute_module(
                 module_name="cisco.dcnm.dcnm_rest",
                 module_args={
                     "method": "GET",
-                    "path": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations",
+                    "path": (
+                        "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/"
+                        "fabrics/msd/fabric-associations"
+                    ),
                 },
                 task_vars=task_vars,
                 tmp=tmp
@@ -267,13 +287,22 @@ class ActionModule(ActionNetworkModule):
 
     def detect_fabric_type(self, fabric_name, fabric_data):
         """Detect fabric type from fabric name or DCNM API"""
-        self.logger.debug(f"Detecting fabric type for: {fabric_name}", fabric=fabric_name, operation="type_detection")
+        self.logger.debug(
+            f"Detecting fabric type for: {fabric_name}",
+            fabric=fabric_name,
+            operation="type_detection"
+        )
 
         try:
             if fabric_name not in fabric_data:
                 available_fabrics = list(fabric_data.keys())
-                error_msg = f"Fabric '{fabric_name}' not found in NDFC. Available fabrics: {available_fabrics}"
-                self.logger.error(error_msg, fabric=fabric_name, operation="type_detection")
+                error_msg = (
+                    f"Fabric '{fabric_name}' not found in NDFC. "
+                    f"Available fabrics: {available_fabrics}"
+                )
+                self.logger.error(
+                    error_msg, fabric=fabric_name, operation="type_detection"
+                )
                 raise AnsibleError(error_msg)
 
             fabric_info = fabric_data.get(fabric_name)
@@ -287,12 +316,20 @@ class ActionModule(ActionNetworkModule):
             else:
                 detected_type = "Standard"
 
-            self.logger.debug(f"Fabric type detected: {detected_type} (fabricType={fabric_type}, fabricState={fabric_state})",
-                            fabric=fabric_name, operation="type_detection")
+            self.logger.debug(
+                f"Fabric type detected: {detected_type} "
+                f"(fabricType={fabric_type}, fabricState={fabric_state})",
+                fabric=fabric_name,
+                operation="type_detection"
+            )
             return detected_type
 
         except Exception as e:
-            self.logger.error(f"Failed to detect fabric type: {str(e)}", fabric=fabric_name, operation="type_detection")
+            self.logger.error(
+                f"Failed to detect fabric type: {str(e)}",
+                fabric=fabric_name,
+                operation="type_detection"
+            )
             raise
 
     # =========================================================================
@@ -302,7 +339,11 @@ class ActionModule(ActionNetworkModule):
     def handle_parent_msd_workflow(self, module_args, fabric_data, task_vars, tmp):
         """Handle Parent MSD fabric workflow with child fabric processing"""
         parent_fabric = module_args.get("fabric")
-        self.logger.info("Starting Parent MSD workflow", fabric=parent_fabric, operation="parent_msd_workflow")
+        self.logger.info(
+            "Starting Parent MSD workflow",
+            fabric=parent_fabric,
+            operation="parent_msd_workflow"
+        )
 
         try:
             # Step 1: Validate and split parent/child configurations
@@ -318,23 +359,44 @@ class ActionModule(ActionNetworkModule):
                     for child_idx, child_config in enumerate(child_fabric_configs):
                         fabric_name = child_config.get("fabric_name")
                         if not fabric_name:
-                            error_msg = f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: fabric_name is required"
-                            self.logger.error(error_msg, fabric=parent_fabric, operation="config_validation")
+                            error_msg = (
+                                f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: "
+                                "fabric_name is required"
+                            )
+                            self.logger.error(
+                                error_msg,
+                                fabric=parent_fabric,
+                                operation="config_validation"
+                            )
                             return {"failed": True, "msg": error_msg}
 
                         # Validate child fabric type
                         try:
-                            child_fabric_type = self.detect_fabric_type(fabric_name, fabric_data)
+                            child_fabric_type = self.detect_fabric_type(
+                                fabric_name, fabric_data
+                            )
                             if child_fabric_type != "Child MSD":
-                                error_msg = f"Fabric {fabric_name} is not a valid Child MSD fabric (detected: {child_fabric_type})"
-                                self.logger.error(error_msg, fabric=parent_fabric, operation="config_validation")
+                                error_msg = (
+                                    f"Fabric {fabric_name} is not a valid Child MSD fabric "
+                                    f"(detected: {child_fabric_type})"
+                                )
+                                self.logger.error(
+                                    error_msg,
+                                    fabric=parent_fabric,
+                                    operation="config_validation"
+                                )
                                 return {"failed": True, "msg": error_msg}
                         except Exception as e:
-                            error_msg = f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: {str(e)}"
+                            error_msg = (
+                                f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: "
+                                f"{str(e)}"
+                            )
                             return {"failed": True, "msg": error_msg}
 
                         # Create child tasks and group by child fabric name
-                        child_tasks_dict = self.create_child_task(vrf, child_config, module_args, child_tasks_dict)
+                        child_tasks_dict = self.create_child_task(
+                            vrf, child_config, module_args, child_tasks_dict
+                        )
 
                     # Create parent VRF without child_fabric_config
                     parent_vrf = copy.deepcopy(vrf)
@@ -345,8 +407,11 @@ class ActionModule(ActionNetworkModule):
                     parent_config.append(vrf)
 
             # Step 2: Execute parent VRF operations
-            self.logger.info(f"Executing parent operations for {len(parent_config)} VRF configurations",
-                           fabric=parent_fabric, operation="parent_execution")
+            self.logger.info(
+                f"Executing parent operations for {len(parent_config)} VRF configurations",
+                fabric=parent_fabric,
+                operation="parent_execution"
+            )
             parent_module_args = copy.deepcopy(module_args)
             parent_module_args["config"] = parent_config
             parent_module_args["_fabric_type"] = "Parent MSD"
@@ -357,7 +422,7 @@ class ActionModule(ActionNetworkModule):
             child_results = []
             if not parent_result.get("failed", False) and child_tasks_dict:
                 self.logger.info(f"Processing {len(child_tasks_dict)} child fabrics",
-                               fabric=parent_fabric, operation="child_execution")
+                                 fabric=parent_fabric, operation="child_execution")
 
                 for child_task in child_tasks_dict.values():
                     all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
@@ -367,8 +432,14 @@ class ActionModule(ActionNetworkModule):
                         tmp
                     )
                     if not all_vrf_ready:
-                        error_msg = f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric {child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA state before proceeding."
-                        self.logger.error(error_msg, fabric=child_task['fabric'], operation="vrf_readiness")
+                        error_msg = (
+                            f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric "
+                            f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
+                            "state before proceeding."
+                        )
+                        self.logger.error(
+                            error_msg, fabric=child_task['fabric'], operation="vrf_readiness"
+                        )
                         return {"failed": True, "msg": error_msg}
 
                     self.logger.info("Executing child task", fabric=child_task["fabric"], operation="child_execution")
@@ -447,7 +518,7 @@ class ActionModule(ActionNetworkModule):
                 child_tasks_dict[child_fabric_name] = child_task
 
             self.logger.debug(f"Created child task for VRF: {child_config['vrf_name']}",
-                            fabric=child_fabric_name, operation="create_child_task")
+                              fabric=child_fabric_name, operation="create_child_task")
             return child_tasks_dict
 
         except Exception as e:
@@ -483,7 +554,7 @@ class ActionModule(ActionNetworkModule):
 
             success = not child_result.get("failed", False)
             self.logger.info(f"Child task execution completed: {'Success' if success else 'Failed'}",
-                           fabric=fabric_name, operation="execute_child_task")
+                             fabric=fabric_name, operation="execute_child_task")
             return child_result
 
         except Exception as e:
@@ -509,7 +580,7 @@ class ActionModule(ActionNetworkModule):
 
             success = not result.get("failed", False)
             self.logger.debug(f"Module execution completed: {'Success' if success else 'Failed'}",
-                            fabric=fabric_name, operation="execute_module")
+                              fabric=fabric_name, operation="execute_module")
             return result
 
         except Exception as e:
@@ -526,7 +597,7 @@ class ActionModule(ActionNetworkModule):
         retry_count = max(MAX_RETRY_COUNT // WAIT_TIME_FOR_DELETE_LOOP, 1)
 
         self.logger.info(f"Waiting for VRF(s) to be ready: {', '.join(vrf_list)}",
-                        fabric=fabric_name, operation="wait_for_vrf_ready")
+                         fabric=fabric_name, operation="wait_for_vrf_ready")
 
         while retry_count > 0 and vrf_list:
             try:
@@ -550,31 +621,31 @@ class ActionModule(ActionNetworkModule):
                         if vrf_status in VALID_VRF_STATES:
                             vrf_list.remove(vrf_name)
                             self.logger.debug(f"VRF {vrf_name} is ready (status: {vrf_status})",
-                                            fabric=fabric_name, operation="wait_for_vrf_ready")
+                                              fabric=fabric_name, operation="wait_for_vrf_ready")
                         elif vrf_status == "OUT-OF-SYNC":
                             if vrf not in vrf_oos_list:
                                 vrf_oos_list.append(vrf)
                                 self.logger.debug(f"VRF {vrf_name} is OUT-OF-SYNC",
-                                                fabric=fabric_name, operation="wait_for_vrf_ready")
+                                                  fabric=fabric_name, operation="wait_for_vrf_ready")
                             else:
                                 vrf_list.remove(vrf_name)
                                 self.logger.debug(f"VRF {vrf_name} removed after persistent OUT-OF-SYNC",
-                                                fabric=fabric_name, operation="wait_for_vrf_ready")
+                                                  fabric=fabric_name, operation="wait_for_vrf_ready")
 
                 if vrf_list:
                     time.sleep(WAIT_TIME_FOR_DELETE_LOOP)
                     retry_count -= 1
                     self.logger.debug(f"VRF(s) still not ready: {', '.join(vrf_list)}, retries left: {retry_count}",
-                                    fabric=fabric_name, operation="wait_for_vrf_ready")
+                                      fabric=fabric_name, operation="wait_for_vrf_ready")
 
             except Exception as e:
                 self.logger.error(f"VRF readiness check failed: {str(e)}",
-                                fabric=fabric_name, operation="wait_for_vrf_ready")
+                                  fabric=fabric_name, operation="wait_for_vrf_ready")
                 return False, vrf_list
 
         if vrf_list:
             self.logger.warning(f"VRF(s) not ready after maximum retries: {', '.join(vrf_list)}",
-                              fabric=fabric_name, operation="wait_for_vrf_ready")
+                                fabric=fabric_name, operation="wait_for_vrf_ready")
             return False, vrf_list
         else:
             self.logger.info("All VRFs are ready", fabric=fabric_name, operation="wait_for_vrf_ready")
@@ -615,7 +686,10 @@ class ActionModule(ActionNetworkModule):
 
                     if child_result.get("failed", False):
                         structured_result["failed"] = True
-                        structured_result["msg"] = f"Child fabric task failed for {child_result.get('child_fabric')}: {child_result.get('msg', 'Unknown error')}"
+                        structured_result["msg"] = (
+                            f"Child fabric task failed for {child_result.get('child_fabric')}: "
+                            f"{child_result.get('msg', 'Unknown error')}"
+                        )
 
                 return structured_result
             else:
@@ -625,5 +699,5 @@ class ActionModule(ActionNetworkModule):
 
         except Exception as e:
             self.logger.error(f"Failed to create structured results: {str(e)}",
-                            fabric=parent_fabric, operation="create_structured_results")
+                              fabric=parent_fabric, operation="create_structured_results")
             return self.error_handler.handle_exception(e, "create_structured_results", parent_fabric)
