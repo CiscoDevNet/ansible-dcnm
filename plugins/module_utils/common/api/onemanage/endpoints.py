@@ -41,7 +41,7 @@ class NetworkNamesQueryParams(EndpointQueryParams):
     Query parameters for network deletion endpoints.
 
     ### Parameters
-    - network_names: Comma-separated list of network names to delete
+    - network_names: Comma-separated list of network names to delete e.g. "Net1,Net2,Net3"
     """
 
     network_names: Optional[str] = Field(None, min_length=1, description="Comma-separated network names")
@@ -58,7 +58,7 @@ class VrfNamesQueryParams(EndpointQueryParams):
     Query parameters for VRF deletion endpoints.
 
     ### Parameters
-    - vrf_names: Comma-separated list of VRF names to delete
+    - vrf_names: Comma-separated list of VRF names to delete e.g. "VRF1,VRF2,VRF3"
     """
 
     vrf_names: Optional[str] = Field(None, min_length=1, description="Comma-separated VRF names")
