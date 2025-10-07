@@ -616,6 +616,7 @@ class DcnmNetwork:
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
         attach_list = []
+        atch_tor_ports = []
 
         if not want_a:
             return attach_list
@@ -639,7 +640,6 @@ class DcnmNetwork:
                                         if have.get("torports"):
                                             for tor_h in have["torports"]:
                                                 if tor_w["switch"] == tor_h["switch"]:
-                                                    atch_tor_ports = []
                                                     torports_present = True
                                                     h_tor_ports = tor_h["torPorts"].split(",") if tor_h["torPorts"] else []
                                                     w_tor_ports = tor_w["torPorts"].split(",") if tor_w["torPorts"] else []
@@ -679,9 +679,10 @@ class DcnmNetwork:
                                     else:
                                         # Dont update torports_configured to True.
                                         # If at all there is any other config change, this attach to will be appended attach_list there
+                                        torconfig_list = []
                                         for tor_h in have.get("torports"):
-                                            torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
-                                            want.update({"torPorts": torconfig})
+                                            torconfig_list.append(tor_h["switch"] + "(" + tor_h["torPorts"] + ")")
+                                        want.update({"torPorts": " ".join(torconfig_list)})
 
                                     del have["torports"]
 
@@ -761,9 +762,10 @@ class DcnmNetwork:
                                     continue
                                 del want["isAttached"]
                                 if want.get("torports"):
+                                    torconfig_list = []
                                     for tor_w in want["torports"]:
-                                        torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                        want.update({"torPorts": torconfig})
+                                        torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                                    want.update({"torPorts": " ".join(torconfig_list)})
                                 del want["torports"]
                                 want.update({"deployment": True})
                                 attach_list.append(want)
@@ -785,9 +787,10 @@ class DcnmNetwork:
             if not found:
                 if bool(want["isAttached"]):
                     if want.get("torports"):
+                        torconfig_list = []
                         for tor_w in want["torports"]:
-                            torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                            want.update({"torPorts": torconfig})
+                            torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                        want.update({"torPorts": " ".join(torconfig_list)})
                     del want["torports"]
                     del want["isAttached"]
                     want["deployment"] = True
@@ -859,11 +862,11 @@ class DcnmNetwork:
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
         if attach.get("tor_ports"):
-            torports = {}
             if role.lower() != "leaf":
                 msg = "tor_ports for Networks cannot be attached to switch {0} with role {1}".format(attach["ip_address"], role)
                 self.module.fail_json(msg=msg)
             for tor in attach.get("tor_ports"):
+                torports = {}
                 torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
                 torports.update({"torPorts": ",".join(tor["ports"])})
                 torlist.append(torports)
@@ -2120,9 +2123,10 @@ class DcnmNetwork:
                     # Saftey check
                     if attach.get("isAttached"):
                         if attach.get("torports"):
+                            torconfig_list = []
                             for tor_w in attach["torports"]:
-                                torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                attach.update({"torPorts": torconfig})
+                                torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                            attach.update({"torPorts": " ".join(torconfig_list)})
                         del attach["torports"]
                         del attach["isAttached"]
                         atch_list.append(attach)
