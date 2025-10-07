@@ -24,9 +24,17 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
-from typing import Literal, Optional
+import traceback
+from typing import Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+try:
+    from pydantic import BaseModel, Field
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None
 
 from ..base_paths import BasePath
 from ..query_params import EndpointQueryParams
