@@ -2868,7 +2868,7 @@ class DcnmNetwork:
                             if len(dhcp_servers) > 16:
                                 invalid_params.append("A maximum of 16 DHCP servers can be specified")
                             if any(has_partial_dhcp_config(srvr) for srvr in dhcp_servers):
-                                    invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+                                invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
