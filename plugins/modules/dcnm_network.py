@@ -162,7 +162,7 @@ options:
         - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
             dhcp_srvr3_ip, dhcp_srvr3_vrf
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
-            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified, playbook will fail
+            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified, unexpected results may occur
         type: list
         elements: dict
         required: false
