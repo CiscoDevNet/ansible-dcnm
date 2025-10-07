@@ -1301,18 +1301,14 @@ class DcnmNetwork:
         if template_conf["vrfDhcp3"] is None:
             template_conf["vrfDhcp3"] = ""
         if template_conf["dhcpServers"] == []:
-            dhcp_srvr_found = False
             dhcp_srvr_list = []
             if template_conf["dhcpServerAddr1"] != "" and template_conf["vrfDhcp"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
-                dhcp_srvr_found = True
             if template_conf["dhcpServerAddr2"] != "" and template_conf["vrfDhcp2"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
-                dhcp_srvr_found = True
             if template_conf["dhcpServerAddr3"] != "" and template_conf["vrfDhcp3"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
-                dhcp_srvr_found = True
-            if dhcp_srvr_found:
+            if dhcp_srvr_list != []:
                 template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
             else:
                 template_conf["dhcpServers"] = ""
@@ -2859,16 +2855,6 @@ class DcnmNetwork:
                         else:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
-
-                        if (
-                            (net.get("dhcp_srvr1_ip") and not net.get("dhcp_srvr1_vrf"))
-                            or (net.get("dhcp_srvr1_vrf") and not net.get("dhcp_srvr1_ip"))
-                            or (net.get("dhcp_srvr2_ip") and not net.get("dhcp_srvr2_vrf"))
-                            or (net.get("dhcp_srvr2_vrf") and not net.get("dhcp_srvr2_ip"))
-                            or (net.get("dhcp_srvr3_ip") and not net.get("dhcp_srvr3_vrf"))
-                            or (net.get("dhcp_srvr3_vrf") and not net.get("dhcp_srvr3_ip"))
-                        ):
-                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                         if any(has_partial_dhcp_config(srvr) for srvr in [
                             dict(srvr_ip=net.get("dhcp_srvr1_ip"), srvr_vrf=net.get("dhcp_srvr1_vrf")),
