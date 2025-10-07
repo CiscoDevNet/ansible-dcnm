@@ -75,6 +75,9 @@ jobs:
     - name: Install Pydantic (v2)
       run: pip install pydantic==2.11.10
 
+    - name: Install Requests
+      run: pip install requests==2.32.5
+
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v4.1.7
       with:
@@ -108,7 +111,10 @@ jobs:
     
     - name: Install Pydantic (v2)
       run: pip install pydantic==2.11.10
-    
+
+    - name: Install Requests
+      run: pip install requests==2.32.5
+
     - name: Install DeepDiff (v8.5.0)
       run: pip install deepdiff==8.5.0
 
