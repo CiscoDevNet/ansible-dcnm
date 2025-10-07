@@ -297,7 +297,7 @@ def test_onemanage_endpoints_00410():
     """
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageFabricDetails()
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00420():
@@ -403,7 +403,7 @@ def test_onemanage_endpoints_00520():
     """
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageNetworksDelete()
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00530():
@@ -498,7 +498,7 @@ def test_onemanage_endpoints_00610():
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageNetworkUpdate()
         endpoint.network_name = "MyNetwork"
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00620():
@@ -512,7 +512,7 @@ def test_onemanage_endpoints_00620():
     with pytest.raises(ValueError, match="network_name must be set"):
         endpoint = EpOneManageNetworkUpdate()
         endpoint.fabric_name = "MyFabric"
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00630():
@@ -525,7 +525,7 @@ def test_onemanage_endpoints_00630():
     """
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageNetworkUpdate()
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00640():
@@ -645,7 +645,7 @@ def test_onemanage_endpoints_00720():
     """
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageVrfsDelete()
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00730():
@@ -740,7 +740,7 @@ def test_onemanage_endpoints_00810():
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageVrfUpdate()
         endpoint.vrf_name = "MyVRF"
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00820():
@@ -754,7 +754,7 @@ def test_onemanage_endpoints_00820():
     with pytest.raises(ValueError, match="vrf_name must be set"):
         endpoint = EpOneManageVrfUpdate()
         endpoint.fabric_name = "MyFabric"
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00830():
@@ -767,7 +767,7 @@ def test_onemanage_endpoints_00830():
     """
     with pytest.raises(ValueError, match="fabric_name must be set"):
         endpoint = EpOneManageVrfUpdate()
-        _ = endpoint.path
+        endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_00840():
