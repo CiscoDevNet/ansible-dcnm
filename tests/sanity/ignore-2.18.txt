@@ -15,6 +15,9 @@ plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_vpc_pair/schemas.py acti
 plugins/action/tests/plugin_utils/pydantic_schemas/dcnm_vpc_pair/schemas.py import-3.11!skip
 plugins/action/tests/plugin_utils/tools.py action-plugin-docs
 plugins/httpapi/dcnm.py validate-modules:missing-gplv3-license
+plugins/module_utils/common/api/onemanage/endpoints.py import-3.9!skip
+plugins/module_utils/common/api/onemanage/endpoints.py import-3.10!skip
+plugins/module_utils/common/api/onemanage/endpoints.py import-3.11!skip
 plugins/modules/dcnm_bootflash.py validate-modules:missing-gplv3-license
 plugins/modules/dcnm_fabric.py validate-modules:missing-gplv3-license
 plugins/modules/dcnm_image_policy.py validate-modules:missing-gplv3-license
