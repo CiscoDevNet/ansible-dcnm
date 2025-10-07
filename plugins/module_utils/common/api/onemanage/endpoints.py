@@ -24,7 +24,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel, Field
 
@@ -44,7 +44,7 @@ class NetworkNamesQueryParams(EndpointQueryParams):
     - network_names: Comma-separated list of network names to delete
     """
 
-    network_names: str | None = Field(None, min_length=1, description="Comma-separated network names")
+    network_names: Optional[str] = Field(None, min_length=1, description="Comma-separated network names")
 
     def to_query_string(self) -> str:
         """Build query string with network-names parameter."""
@@ -61,7 +61,7 @@ class VrfNamesQueryParams(EndpointQueryParams):
     - vrf_names: Comma-separated list of VRF names to delete
     """
 
-    vrf_names: str | None = Field(None, min_length=1, description="Comma-separated VRF names")
+    vrf_names: Optional[str] = Field(None, min_length=1, description="Comma-separated VRF names")
 
     def to_query_string(self) -> str:
         """Build query string with vrf-names parameter."""
@@ -135,7 +135,7 @@ class EpOneManageFabricDetails(BaseModel):
     """
 
     class_name: str = "EpOneManageFabricDetails"  # For backward compatibility
-    fabric_name: str | None = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -180,7 +180,7 @@ class EpOneManageNetworksDelete(BaseModel):
     """
 
     class_name: str = "EpOneManageNetworksDelete"  # For backward compatibility
-    fabric_name: str | None = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     query_params: NetworkNamesQueryParams = Field(default_factory=NetworkNamesQueryParams)
 
     def __init__(self, **data):
@@ -245,8 +245,8 @@ class EpOneManageNetworkUpdate(BaseModel):
     """
 
     class_name: str = "EpOneManageNetworkUpdate"  # For backward compatibility
-    fabric_name: str | None = Field(None, min_length=1, description="Fabric name")
-    network_name: str | None = Field(None, min_length=1, description="Network name")
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    network_name: Optional[str] = Field(None, min_length=1, description="Network name")
 
     @property
     def path(self) -> str:
@@ -303,7 +303,7 @@ class EpOneManageVrfsDelete(BaseModel):
     """
 
     class_name: str = "EpOneManageVrfsDelete"  # For backward compatibility
-    fabric_name: str | None = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     query_params: VrfNamesQueryParams = Field(default_factory=VrfNamesQueryParams)
 
     def __init__(self, **data):
@@ -368,8 +368,8 @@ class EpOneManageVrfUpdate(BaseModel):
     """
 
     class_name: str = "EpOneManageVrfUpdate"  # For backward compatibility
-    fabric_name: str | None = Field(None, min_length=1, description="Fabric name")
-    vrf_name: str | None = Field(None, min_length=1, description="VRF name")
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    vrf_name: Optional[str] = Field(None, min_length=1, description="VRF name")
 
     @property
     def path(self) -> str:

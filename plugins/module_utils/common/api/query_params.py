@@ -25,6 +25,7 @@ __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 from abc import ABC, abstractmethod
+from typing import Optional, Union
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -152,11 +153,11 @@ class LuceneQueryParams(BaseModel):
     - NOT conditions: `NOT state:deleted`
     """
 
-    filter: str | None = Field(None, description="Lucene filter expression")
-    max: int | None = Field(None, ge=1, le=10000, description="Maximum results")
-    offset: int | None = Field(None, ge=0, description="Pagination offset")
-    sort: str | None = Field(None, description="Sort field and direction (e.g., 'name:asc')")
-    fields: str | None = Field(None, description="Comma-separated list of fields to return")
+    filter: Optional[str] = Field(None, description="Lucene filter expression")
+    max: Optional[int] = Field(None, ge=1, le=10000, description="Maximum results")
+    offset: Optional[int] = Field(None, ge=0, description="Pagination offset")
+    sort: Optional[str] = Field(None, description="Sort field and direction (e.g., 'name:asc')")
+    fields: Optional[str] = Field(None, description="Comma-separated list of fields to return")
 
     @field_validator("sort")
     @classmethod
@@ -219,9 +220,9 @@ class CompositeQueryParams:
     """
 
     def __init__(self) -> None:
-        self._param_groups: list[EndpointQueryParams | LuceneQueryParams] = []
+        self._param_groups: list[Union[EndpointQueryParams, LuceneQueryParams]] = []
 
-    def add(self, params: EndpointQueryParams | LuceneQueryParams) -> "CompositeQueryParams":
+    def add(self, params: Union[EndpointQueryParams, LuceneQueryParams]) -> "CompositeQueryParams":
         """
         Add a query parameter group to the composite.
 
