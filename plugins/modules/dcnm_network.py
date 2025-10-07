@@ -490,6 +490,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_fabric_inventory_details,
     get_ip_sn_dict,
     get_ip_sn_fabric_dict,
+    has_partial_dhcp_config,
     validate_list_of_dicts,
 )
 
@@ -2865,17 +2866,19 @@ class DcnmNetwork:
                         ):
                             invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
+                        if any(has_partial_dhcp_config(srvr) for srvr in [
+                            dict(srvr_ip=net.get("dhcp_srvr1_ip"), srvr_vrf=net.get("dhcp_srvr1_vrf")),
+                            dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
+                            dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
+                        ]):
+                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+
                         if net.get("dhcp_servers"):
                             dhcp_servers = net.get("dhcp_servers")
-                            for srvr in dhcp_servers:
-                                if (
-                                    (srvr.get("srvr_ip") and not srvr.get("srvr_vrf"))
-                                    or (srvr.get("srvr_vrf") and not srvr.get("srvr_ip"))
-                                ):
+                            if len(dhcp_servers) > 16:
+                                invalid_params.append("A maximum of 16 DHCP servers can be specified")
+                            if any(has_partial_dhcp_config(srvr) for srvr in dhcp_servers):
                                     invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
-
-                        if net.get("dhcp_servers") and len(net.get("dhcp_servers")) > 16:
-                            invalid_params.append("A maximum of 16 DHCP servers can be specified")
 
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
@@ -3052,7 +3055,24 @@ class DcnmNetwork:
             json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
 
         if cfg.get("dhcp_servers", None) is None:
-            json_to_dict_want["dhcpServers"] = json_to_dict_have["dhcpServers"]
+            want_have_dhcp_servers = [None] * 3
+            if cfg.get("dhcp_srvr1_ip", None) is not None:
+                want_have_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=cfg.get("dhcp_srvr1_vrf"))
+            elif json_to_dict_have["dhcpServerAddr1"] != "":
+                want_have_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
+            if cfg.get("dhcp_srvr2_ip", None) is not None:
+                want_have_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=cfg.get("dhcp_srvr2_vrf"))
+            elif json_to_dict_have["dhcpServerAddr2"] != "":
+                want_have_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
+            if cfg.get("dhcp_srvr3_ip", None) is not None:
+                want_have_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=cfg.get("dhcp_srvr3_vrf"))
+            elif json_to_dict_have["dhcpServerAddr3"] != "":
+                want_have_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
+            want_have_dhcp_servers = [srvr for srvr in want_have_dhcp_servers[:] if srvr is not None]
+            if want_have_dhcp_servers != []:
+                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_have_dhcp_servers, separators=(",", ":")))
+            else:
+                json_to_dict_want["dhcpServers"] = json_to_dict_have["dhcpServers"]
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
