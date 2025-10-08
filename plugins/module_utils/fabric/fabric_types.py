@@ -149,6 +149,7 @@ class FabricTypes:
         self._mandatory_parameters["IPFM"].sort()
         self._mandatory_parameters["ISN"].sort()
         self._mandatory_parameters["LAN_CLASSIC"].sort()
+        self._mandatory_parameters["MCFG"].sort()
         self._mandatory_parameters["VXLAN_EVPN"].sort()
         self._mandatory_parameters["VXLAN_EVPN_MSD"].sort()
 
