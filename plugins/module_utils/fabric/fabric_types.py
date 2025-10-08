@@ -20,6 +20,7 @@ __author__ = "Allen Robel"
 
 import copy
 import logging
+from typing import Any
 
 
 class FabricTypes:
@@ -77,6 +78,7 @@ class FabricTypes:
         self._fabric_type_to_template_name_map["IPFM"] = "Easy_Fabric_IPFM"
         self._fabric_type_to_template_name_map["ISN"] = "External_Fabric"
         self._fabric_type_to_template_name_map["LAN_CLASSIC"] = "LAN_Classic"
+        self._fabric_type_to_template_name_map["MCFG"] = "MSD_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN"] = "Easy_Fabric"
         self._fabric_type_to_template_name_map["VXLAN_EVPN_MSD"] = "MSD_Fabric"
 
@@ -87,6 +89,7 @@ class FabricTypes:
         self._fabric_type_to_feature_name_map["IPFM"] = "pmn"
         self._fabric_type_to_feature_name_map["ISN"] = "vxlan"
         self._fabric_type_to_feature_name_map["LAN_CLASSIC"] = "lan"
+        self._fabric_type_to_feature_name_map["MCFG"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN"] = "vxlan"
         self._fabric_type_to_feature_name_map["VXLAN_EVPN_MSD"] = "vxlan"
 
@@ -129,6 +132,9 @@ class FabricTypes:
         self._mandatory_parameters["LAN_CLASSIC"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
+        self._mandatory_parameters["MCFG"] = copy.copy(
+            self._mandatory_parameters_all_fabrics
+        )
         self._mandatory_parameters["VXLAN_EVPN"] = copy.copy(
             self._mandatory_parameters_all_fabrics
         )
@@ -150,7 +156,7 @@ class FabricTypes:
         """
         Initialize properties specific to this class
         """
-        self._properties = {}
+        self._properties: dict[str, Any] = {}
         self._properties["fabric_type"] = None
         self._properties["template_name"] = None
         self._properties["valid_fabric_types"] = self._valid_fabric_types
