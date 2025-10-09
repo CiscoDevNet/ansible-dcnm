@@ -1104,8 +1104,9 @@ class DcnmVrf:
                         want_inst_values = {}
                         have_inst_values = {}
                         if (
-                            want["instanceValues"] is not None
-                            and have["instanceValues"] is not None
+                            (want["instanceValues"] is not None and want["instanceValues"] != "")
+                            and
+                            (have["instanceValues"] is not None and have["instanceValues"] != "")
                         ):
                             want_inst_values = ast.literal_eval(want["instanceValues"])
                             have_inst_values = ast.literal_eval(have["instanceValues"])
