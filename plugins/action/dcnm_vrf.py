@@ -114,7 +114,7 @@ class ErrorHandler:
             error_response["traceback"] = traceback.format_exc()
             self.logger.debug(f"Traceback: {traceback.format_exc()}")
 
-        return error_response
+        raise AnsibleError(error_response)
 
     def validate_api_response(
         self, response, operation="API call", fabric=None
@@ -123,19 +123,34 @@ class ErrorHandler:
         if not response:
             raise AnsibleError(f"No response received for {operation}")
 
-        if not response.get("response"):
-            self.logger.error(f"Empty response for {operation}: {json.dumps(response, indent=2)}")
-            raise AnsibleError(f"Empty response received for {operation}")
+        if not isinstance(response, dict):
+            raise AnsibleError(f"Invalid response format for {operation}: {response}")
 
-        resp = response.get("response")
-        return_code = resp.get("RETURN_CODE", 500)
+        if response.get("failed"):
+            error_msg = response.get("msg", "Unknown error")
+            self.logger.error(f"API failure for {operation}: {json.dumps(response, indent=2)}")
+            raise AnsibleError(f"{operation} failed: {error_msg}")
 
-        if return_code != 200:
-            error_msg = resp.get("MESSAGE", f"HTTP {return_code} error")
+        if not response.get("msg"):
+            self.logger.error(f"Empty response msg for {operation}: {json.dumps(response, indent=2)}")
+            raise AnsibleError(f"Empty response msg received for {operation}")
+
+        resp = response.get("msg")
+        if not isinstance(resp, dict):
+            raise AnsibleError(f"Invalid msg format for {operation}: {resp}")
+
+        return_code = resp.get("RETURN_CODE")
+        display.vvv("return code is ", return_code)
+        if not return_code or return_code != 200:
+            error_msg = response.get("MESSAGE", f"HTTP {return_code} error")
             self.logger.error(f"API error for {operation}: {json.dumps(resp, indent=2)}")
             raise AnsibleError(f"{operation} failed: {error_msg}")
 
-        return resp
+        if not resp.get("DATA"):
+            self.logger.error(f"Empty response DATA for {operation}: {json.dumps(resp, indent=2)}")
+            raise AnsibleError(f"Empty response DATA received for {operation}")
+
+        return response
 
 
 class ActionModule(ActionNetworkModule):
@@ -259,7 +274,7 @@ class ActionModule(ActionNetworkModule):
                 module_args={
                     "method": "GET",
                     "path": (
-                        "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/"
+                        "/appcenter/cisco/ndfc/api/v1d/lan-fabric/rest/control/"
                         "fabrics/msd/fabric-associations"
                     ),
                 },
@@ -283,7 +298,7 @@ class ActionModule(ActionNetworkModule):
             return fabric_data
 
         except Exception as e:
-            raise AnsibleError(f"Failed to obtain fabric associations: {str(e)}")
+            return self.error_handler.handle_exception(e, "fabric_discovery")
 
     def detect_fabric_type(self, fabric_name, fabric_data):
         """Detect fabric type from fabric name or DCNM API"""
@@ -299,9 +314,6 @@ class ActionModule(ActionNetworkModule):
                 error_msg = (
                     f"Fabric '{fabric_name}' not found in NDFC. "
                     f"Available fabrics: {available_fabrics}"
-                )
-                self.logger.error(
-                    error_msg, fabric=fabric_name, operation="type_detection"
                 )
                 raise AnsibleError(error_msg)
 
@@ -332,6 +344,54 @@ class ActionModule(ActionNetworkModule):
             )
             raise
 
+    def validate_child_parent_fabric(self, child_fabric, parent_fabric, fabric_data):
+        """Validate child and parent MSD fabric relationship"""
+        self.logger.debug(
+            f"Validating child-parent fabric relationship: {child_fabric} <-> {parent_fabric}",
+            fabric=child_fabric,
+            operation="child_parent_validation"
+        )
+
+        try:
+            if child_fabric not in fabric_data or parent_fabric not in fabric_data:
+                available_fabrics = list(fabric_data.keys())
+                error_msg = (
+                    f"Fabric '{child_fabric}' and/or '{parent_fabric}' not found in NDFC. "
+                    f"Available fabrics: {available_fabrics}"
+                )
+                raise AnsibleError(error_msg)
+
+            fabric_info = fabric_data.get(child_fabric)
+            fabric_state = fabric_info.get("fabricState")
+            fabric_parent = fabric_info.get("fabricParent")
+
+            if fabric_state != "member":
+                error_msg = f"Fabric '{child_fabric}' is not a Child fabric (fabricState={fabric_state})"
+                self.logger.error(
+                    error_msg, fabric=child_fabric, operation="child_parent_validation"
+                )
+                return False
+
+            if fabric_parent != parent_fabric:
+                error_msg = (
+                    f"Fabric '{child_fabric}' is not associated with parent MSD fabric '{parent_fabric}' "
+                    f"(detected parent: '{fabric_parent}')"
+                )
+                self.logger.error(
+                    error_msg, fabric=child_fabric, operation="child_parent_validation"
+                )
+                return False
+
+            return True
+
+        except Exception as e:
+            self.logger.error(
+                f"Child-parent fabric validation failed: {str(e)}",
+                fabric=child_fabric,
+                operation="child_parent_validation"
+            )
+            raise
+
     # =========================================================================
     # WORKFLOW HANDLERS
     # =========================================================================
@@ -353,14 +413,13 @@ class ActionModule(ActionNetworkModule):
 
             for vrf_idx, vrf in enumerate(config):
                 child_fabric_configs = vrf.get("child_fabric_config")
-
                 if child_fabric_configs:
                     # Validate child fabrics
                     for child_idx, child_config in enumerate(child_fabric_configs):
                         fabric_name = child_config.get("fabric_name")
                         if not fabric_name:
                             error_msg = (
-                                f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: "
+                                f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
                                 "fabric_name is required"
                             )
                             self.logger.error(
@@ -369,16 +428,13 @@ class ActionModule(ActionNetworkModule):
                                 operation="config_validation"
                             )
                             return {"failed": True, "msg": error_msg}
-
-                        # Validate child fabric type
+                        # Validate child fabric type and child-parent relationship
                         try:
-                            child_fabric_type = self.detect_fabric_type(
-                                fabric_name, fabric_data
-                            )
-                            if child_fabric_type != "Child MSD":
+                            if not self.validate_child_parent_fabric(
+                                fabric_name, parent_fabric, fabric_data
+                            ):
                                 error_msg = (
-                                    f"Fabric {fabric_name} is not a valid Child MSD fabric "
-                                    f"(detected: {child_fabric_type})"
+                                    f"Child-parent MSD fabric validation failed: {fabric_name} -> {parent_fabric}"
                                 )
                                 self.logger.error(
                                     error_msg,
@@ -387,11 +443,7 @@ class ActionModule(ActionNetworkModule):
                                 )
                                 return {"failed": True, "msg": error_msg}
                         except Exception as e:
-                            error_msg = (
-                                f"Config[{vrf_idx}].child_fabric_config[{child_idx}]: "
-                                f"{str(e)}"
-                            )
-                            return {"failed": True, "msg": error_msg}
+                            return self.error_handler.handle_exception(e, "child_config_validation", fabric_name)
 
                         # Create child tasks and group by child fabric name
                         child_tasks_dict = self.create_child_task(
@@ -404,7 +456,10 @@ class ActionModule(ActionNetworkModule):
                         del parent_vrf["child_fabric_config"]
                     parent_config.append(parent_vrf)
                 else:
-                    parent_config.append(vrf)
+                    parent_vrf = copy.deepcopy(vrf)
+                    if "child_fabric_config" in parent_vrf:
+                        del parent_vrf["child_fabric_config"]
+                    parent_config.append(parent_vrf)
 
             # Step 2: Execute parent VRF operations
             self.logger.info(
@@ -523,7 +578,7 @@ class ActionModule(ActionNetworkModule):
 
         except Exception as e:
             self.logger.error(f"Failed to create child task: {str(e)}", operation="create_child_task")
-            raise
+            return self.error_handler.handle_exception(e, "create_child_task")
 
     def execute_child_task(self, child_task, task_vars):
         """Execute child fabric task using Child MSD flow"""
