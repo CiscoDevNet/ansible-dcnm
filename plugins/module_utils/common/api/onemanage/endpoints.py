@@ -589,6 +589,56 @@ class EpOneManageFabricDetails(BaseModel):
         return "GET"
 
 
+class EpOneManageFabricGroupMembersGet(BaseModel):
+    """
+    ## Fabric Group Members Get Endpoint (OneManage)
+
+    ### Description
+    Endpoint to retrieve members of a specific multi-cluster fabric group.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/members
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricGroupMembersGet()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricGroupMembersGet"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_fabrics(self.fabric_name, "members")
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
 class EpOneManageFabricGroupUpdate(BaseModel):
     """
     ## Fabric Group Update Endpoint (OneManage)
@@ -624,7 +674,7 @@ class EpOneManageFabricGroupUpdate(BaseModel):
     """
 
     class_name: str = "EpOneManageFabricGroupUpdate"  # For backward compatibility
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
 
     @property
     def path(self) -> str:
@@ -646,56 +696,6 @@ class EpOneManageFabricGroupUpdate(BaseModel):
     def verb(self) -> Literal["PUT"]:
         """Return the HTTP verb for this endpoint."""
         return "PUT"
-
-
-class EpOneManageFabricMembersGet(BaseModel):
-    """
-    ## Fabric Members Get Endpoint (OneManage)
-
-    ### Description
-    Endpoint to retrieve members of a specific multi-cluster fabric.
-
-    ### Path
-
-    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/members
-
-    ### Verb
-
-    - GET
-
-    ### Usage
-    ```python
-    request = EpOneManageFabricMembersGet()
-    request.fabric_name = "MyFabric"
-
-    path = request.path
-    verb = request.verb
-    ```
-    """
-
-    class_name: str = "EpOneManageFabricMembersGet"  # For backward compatibility
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
-
-    @property
-    def path(self) -> str:
-        """
-        Build the endpoint path.
-
-        ### Raises
-        - ValueError: If fabric_name is not set
-
-        ### Returns
-        - Complete endpoint path string
-        """
-        if self.fabric_name is None:
-            raise ValueError("fabric_name must be set before accessing path")
-
-        return BasePath.onemanage_fabrics(self.fabric_name, "members")
-
-    @property
-    def verb(self) -> Literal["GET"]:
-        """Return the HTTP verb for this endpoint."""
-        return "GET"
 
 
 class EpOneManageFabricUpdate(BaseModel):
