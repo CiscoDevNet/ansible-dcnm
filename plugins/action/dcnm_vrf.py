@@ -131,16 +131,15 @@ class ErrorHandler:
             self.logger.error(f"API failure for {operation}: {json.dumps(response, indent=2)}")
             raise AnsibleError(f"{operation} failed: {error_msg}")
 
-        if not response.get("msg"):
+        if not response.get("response"):
             self.logger.error(f"Empty response msg for {operation}: {json.dumps(response, indent=2)}")
             raise AnsibleError(f"Empty response msg received for {operation}")
 
-        resp = response.get("msg")
+        resp = response.get("response")
         if not isinstance(resp, dict):
-            raise AnsibleError(f"Invalid msg format for {operation}: {resp}")
+            raise AnsibleError(f"Invalid response format for {operation}: {resp}")
 
         return_code = resp.get("RETURN_CODE")
-        display.vvv("return code is ", return_code)
         if not return_code or return_code != 200:
             error_msg = response.get("MESSAGE", f"HTTP {return_code} error")
             self.logger.error(f"API error for {operation}: {json.dumps(resp, indent=2)}")
@@ -150,7 +149,7 @@ class ErrorHandler:
             self.logger.error(f"Empty response DATA for {operation}: {json.dumps(resp, indent=2)}")
             raise AnsibleError(f"Empty response DATA received for {operation}")
 
-        return response
+        return resp
 
 
 class ActionModule(ActionNetworkModule):
@@ -274,7 +273,7 @@ class ActionModule(ActionNetworkModule):
                 module_args={
                     "method": "GET",
                     "path": (
-                        "/appcenter/cisco/ndfc/api/v1d/lan-fabric/rest/control/"
+                        "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/"
                         "fabrics/msd/fabric-associations"
                     ),
                 },
