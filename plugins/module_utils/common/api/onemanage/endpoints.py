@@ -78,6 +78,1020 @@ class VrfNamesQueryParams(EndpointQueryParams):
         return ""
 
 
+class FabricConfigPreviewQueryParams(EndpointQueryParams):
+    """
+    Query parameters for fabric config preview endpoints.
+
+    ### Parameters
+    - force_show_run: Force show running config (default: "false")
+    - show_brief: Show brief output (default: "false")
+    """
+
+    force_show_run: Literal["false", "true"] = Field("false", description="Force show running config")
+    show_brief: Literal["false", "true"] = Field("false", description="Show brief output")
+
+    def to_query_string(self) -> str:
+        """Build query string with forceShowRun and showBrief parameters."""
+        params = []
+        if self.force_show_run:
+            params.append(f"forceShowRun={self.force_show_run}")
+        if self.show_brief:
+            params.append(f"showBrief={self.show_brief}")
+        return "&".join(params)
+
+
+class FabricConfigDeployQueryParams(EndpointQueryParams):
+    """
+    Query parameters for fabric config deploy endpoints.
+
+    ### Parameters
+    - force_show_run: If true, fetch latest running config from device; if false, use cached version (default: "false")
+    - incl_all_msd_switches: If true and MSD fabric, deploy all child fabric changes; if false, skip child fabrics (default: "false")
+    """
+
+    force_show_run: Literal["false", "true"] = Field("false", description="Fetch latest running config from device")
+    incl_all_msd_switches: Literal["false", "true"] = Field("false", description="Deploy all MSD child fabric changes")
+
+    def to_query_string(self) -> str:
+        """Build query string with forceShowRun and inclAllMSDSwitches parameters."""
+        params = []
+        if self.force_show_run:
+            params.append(f"forceShowRun={self.force_show_run}")
+        if self.incl_all_msd_switches:
+            params.append(f"inclAllMSDSwitches={self.incl_all_msd_switches}")
+        return "&".join(params)
+
+
+class LinkByUuidQueryParams(EndpointQueryParams):
+    """
+    Query parameters for link by UUID endpoints.
+
+    ### Parameters
+    - source_cluster_name: Source cluster name (e.g., "nd-cluster-1")
+    - destination_cluster_name: Destination cluster name (e.g., "nd-cluster-2")
+    """
+
+    source_cluster_name: Optional[str] = Field(None, min_length=1, description="Source cluster name")
+    destination_cluster_name: Optional[str] = Field(None, min_length=1, description="Destination cluster name")
+
+    def to_query_string(self) -> str:
+        """Build query string with sourceClusterName and destinationClusterName parameters."""
+        params = []
+        if self.source_cluster_name:
+            params.append(f"sourceClusterName={self.source_cluster_name}")
+        if self.destination_cluster_name:
+            params.append(f"destinationClusterName={self.destination_cluster_name}")
+        return "&".join(params)
+
+
+class EpOneManageFabricUpdate(BaseModel):
+    """
+    ## Fabric Update Endpoint (OneManage)
+
+    ### Description
+    Endpoint to update a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}
+
+    ### Verb
+
+    - PUT
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricUpdate()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain fabric update parameters:
+    - fabricName: str - Name of the Fabric
+    - fabricType: str - Type of the fabric
+    - fabricTechnology: str - Fabric technology
+    - nvPairs: dict - Key value pairs describing the fabric configuration
+
+    nvPairs dictionary keys (all string values unless noted):
+    - ANYCAST_GW_MAC
+    - BGP_RP_ASN
+    - BGW_ROUTING_TAG
+    - BGW_ROUTING_TAG_PREV
+    - BORDER_GWY_CONNECTIONS
+    - DCI_SUBNET_RANGE
+    - DCI_SUBNET_TARGET_MASK
+    - DELAY_RESTORE
+    - ENABLE_BGP_BFD
+    - ENABLE_BGP_LOG_NEIGHBOR_CHANGE (boolean)
+    - ENABLE_BGP_SEND_COMM (boolean)
+    - ENABLE_PVLAN
+    - ENABLE_PVLAN_PREV
+    - ENABLE_RS_REDIST_DIRECT (boolean)
+    - ENABLE_TRM_TRMv6
+    - ENABLE_TRM_TRMv6_PREV
+    - EXT_FABRIC_TYPE
+    - FABRIC_NAME
+    - FABRIC_TYPE
+    - FF
+    - L2_SEGMENT_ID_RANGE
+    - L3_PARTITION_ID_RANGE
+    - LOOPBACK100_IPV6_RANGE
+    - LOOPBACK100_IP_RANGE
+    - MSO_CONTROLER_ID
+    - MSO_SITE_GROUP_NAME
+    - MS_IFC_BGP_AUTH_KEY_TYPE
+    - MS_IFC_BGP_AUTH_KEY_TYPE_PREV
+    - MS_IFC_BGP_PASSWORD
+    - MS_IFC_BGP_PASSWORD_ENABLE
+    - MS_IFC_BGP_PASSWORD_ENABLE_PREV
+    - MS_IFC_BGP_PASSWORD_PREV
+    - MS_LOOPBACK_ID
+    - MS_UNDERLAY_AUTOCONFIG (boolean)
+    - PARENT_ONEMANAGE_FABRIC
+    - PREMSO_PARENT_FABRIC
+    - RP_SERVER_IP
+    - RS_ROUTING_TAG
+    - TOR_AUTO_DEPLOY
+    - V6_DCI_SUBNET_RANGE
+    - V6_DCI_SUBNET_TARGET_MASK
+    - VXLAN_UNDERLAY_IS_V6
+    - default_network
+    - default_pvlan_sec_network
+    - default_vrf
+    - network_extension_template
+    - vrf_extension_template
+    """
+
+    class_name: str = "EpOneManageFabricUpdate"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_fabrics(self.fabric_name)
+
+    @property
+    def verb(self) -> Literal["PUT"]:
+        """Return the HTTP verb for this endpoint."""
+        return "PUT"
+
+
+class EpOneManageFabricConfigDeploySwitch(BaseModel):
+    """
+    ## Fabric Config-Deploy Switch Endpoint (OneManage)
+
+    ### Description
+    Endpoint to deploy the configuration for a specific switch in a multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-deploy/{switchSN}
+
+    ### Verb
+
+    - POST
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricConfigDeploySwitch()
+    request.fabric_name = "MyFabric"
+    request.switch_sn = "92RZ2OMQCNC"
+    request.query_params.force_show_run = "true"
+    request.query_params.incl_all_msd_switches = "false"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricConfigDeploySwitch"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    switch_sn: Optional[str] = Field(None, min_length=1, description="Switch serial number")
+    query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
+
+    def __init__(self, **data):
+        """Initialize with default query parameter objects."""
+        super().__init__(**data)
+        if not isinstance(self.query_params, FabricConfigDeployQueryParams):
+            self.query_params = FabricConfigDeployQueryParams()
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path with query parameters.
+
+        ### Raises
+        - ValueError: If fabric_name or switch_sn is not set
+
+        ### Returns
+        - Complete endpoint path string with query parameters
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+        if self.switch_sn is None:
+            raise ValueError("switch_sn must be set before accessing path")
+
+        base_path = BasePath.onemanage_fabrics(self.fabric_name, "config-deploy", self.switch_sn)
+
+        query_string = self.query_params.to_query_string()
+        if query_string:
+            return f"{base_path}?{query_string}"
+        return base_path
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
+
+
+class EpOneManageFabricConfigPreviewSwitch(BaseModel):
+    """
+    ## Fabric Config-Preview Switch Endpoint (OneManage)
+
+    ### Description
+    Endpoint to preview the configuration for a specific switch in a multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-preview/{switchSN}
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricConfigPreviewSwitch()
+    request.fabric_name = "MyFabric"
+    request.switch_sn = "92RZ2OMQCNC"
+    request.query_params.force_show_run = "true"
+    request.query_params.show_brief = "false"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricConfigPreviewSwitch"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    switch_sn: Optional[str] = Field(None, min_length=1, description="Switch serial number")
+    query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
+
+    def __init__(self, **data):
+        """Initialize with default query parameter objects."""
+        super().__init__(**data)
+        if not isinstance(self.query_params, FabricConfigPreviewQueryParams):
+            self.query_params = FabricConfigPreviewQueryParams()
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path with query parameters.
+
+        ### Raises
+        - ValueError: If fabric_name or switch_sn is not set
+
+        ### Returns
+        - Complete endpoint path string with query parameters
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+        if self.switch_sn is None:
+            raise ValueError("switch_sn must be set before accessing path")
+
+        base_path = BasePath.onemanage_fabrics(self.fabric_name, "config-preview", self.switch_sn)
+
+        query_string = self.query_params.to_query_string()
+        if query_string:
+            return f"{base_path}?{query_string}"
+        return base_path
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageFabricGroupUpdate(BaseModel):
+    """
+    ## Fabric Group Update Endpoint (OneManage)
+
+    ### Description
+    Endpoint to add or remove a fabric from a multi-cluster fabric group.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/members
+
+    ### Verb
+
+    - PUT
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricGroupUpdate()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain fabric group update parameters:
+    - clusterName: str - Name of the cluster
+    - fabricName: str - Name of the fabric
+    - operation: str - Operation type ("add" or "remove")
+      - "add": Add fabricName to clusterName
+      - "remove": Remove fabricName from clusterName
+    """
+
+    class_name: str = "EpOneManageFabricGroupUpdate"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_fabrics(self.fabric_name, "members")
+
+    @property
+    def verb(self) -> Literal["PUT"]:
+        """Return the HTTP verb for this endpoint."""
+        return "PUT"
+
+
+class EpOneManageFabricMembersGet(BaseModel):
+    """
+    ## Fabric Members Get Endpoint (OneManage)
+
+    ### Description
+    Endpoint to retrieve members of a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/members
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricMembersGet()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricMembersGet"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_fabrics(self.fabric_name, "members")
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageFabricsGet(BaseModel):
+    """
+    ## Fabrics Get Endpoint (OneManage)
+
+    ### Description
+    Endpoint to retrieve all multi-cluster fabrics.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricsGet()
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricsGet"  # For backward compatibility
+
+    @property
+    def path(self) -> str:
+        """Build the endpoint path."""
+        return BasePath.onemanage_fabrics()
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageLinksDelete(BaseModel):
+    """
+    ## Links Delete Endpoint (OneManage)
+
+    ### Description
+    Endpoint to delete links in multi-cluster setup.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/links
+
+    ### Verb
+
+    - PUT
+
+    ### Usage
+    ```python
+    request = EpOneManageLinksDelete()
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain link deletion parameters:
+    - linkUUID: str - Link UUID (e.g., "63505f61-ce7b-40a6-a38c-ae9a355b2116")
+    - destinationClusterName: str - Destination cluster name (e.g., "nd-cluster-1")
+    - sourceClusterName: str - Source cluster name (e.g., "nd-cluster-2")
+    """
+
+    class_name: str = "EpOneManageLinksDelete"  # For backward compatibility
+
+    @property
+    def path(self) -> str:
+        """Build the endpoint path."""
+        return BasePath.onemanage_links()
+
+    @property
+    def verb(self) -> Literal["PUT"]:
+        """Return the HTTP verb for this endpoint."""
+        return "PUT"
+
+
+class EpOneManageLinkCreate(BaseModel):
+    """
+    ## Link Create Endpoint (OneManage)
+
+    ### Description
+    Endpoint to create a link between fabrics in multi-cluster setup.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/links
+
+    ### Verb
+
+    - POST
+
+    ### Usage
+    ```python
+    request = EpOneManageLinkCreate()
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain link creation parameters:
+    - sourceClusterName: str - Source cluster name
+    - destinationClusterName: str - Destination cluster name
+    - sourceFabric: str - Source fabric name
+    - destinationFabric: str - Destination fabric name
+    - sourceDevice: str - Source switch serial number
+    - destinationDevice: str - Destination switch serial number
+    - sourceSwitchName: str - Source switch name
+    - destinationSwitchName: str - Destination switch name
+    - sourceInterface: str - Source switch interface
+    - destinationInterface: str - Destination switch interface
+    - templateName: str - Link template name
+    - nvPairs: dict - Key/value pairs of configuration items
+
+    nvPairs dictionary keys (all string values unless noted):
+    - IP_MASK
+    - NEIGHBOR_IP
+    - IPV6_MASK
+    - IPV6_NEIGHBOR
+    - MAX_PATHS
+    - ROUTING_TAG
+    - MTU
+    - SPEED
+    - DEPLOY_DCI_TRACKING (boolean)
+    - BGP_PASSWORD_ENABLE
+    - BGP_PASSWORD
+    - ENABLE_BGP_LOG_NEIGHBOR_CHANGE
+    - ENABLE_BGP_SEND_COMM
+    - BGP_PASSWORD_INHERIT_FROM_MSD
+    - BGP_AUTH_KEY_TYPE
+    - asn
+    - NEIGHBOR_ASNL
+    - ENABLE_BGP_BFD
+    """
+
+    class_name: str = "EpOneManageLinkCreate"  # For backward compatibility
+
+    @property
+    def path(self) -> str:
+        """Build the endpoint path."""
+        return BasePath.onemanage_links()
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
+
+
+class EpOneManageLinkUpdate(BaseModel):
+    """
+    ## Link Update Endpoint (OneManage)
+
+    ### Description
+    Endpoint to update a specific link by its UUID.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/links/{linkUUID}
+
+    ### Verb
+
+    - PUT
+
+    ### Usage
+    ```python
+    request = EpOneManageLinkUpdate()
+    request.link_uuid = "63505f61-ce7b-40a6-a38c-ae9a355b2116"
+    request.query_params.source_cluster_name = "nd-cluster-2"
+    request.query_params.destination_cluster_name = "nd-cluster-1"
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain link update parameters:
+    - sourceClusterName: str - Source cluster name
+    - destinationClusterName: str - Destination cluster name
+    - sourceFabric: str - Source fabric name
+    - destinationFabric: str - Destination fabric name
+    - sourceDevice: str - Source switch serial number
+    - destinationDevice: str - Destination switch serial number
+    - sourceSwitchName: str - Source switch name
+    - destinationSwitchName: str - Destination switch name
+    - sourceInterface: str - Source switch interface
+    - destinationInterface: str - Destination switch interface
+    - templateName: str - Link template name
+    - nvPairs: dict - Key/value pairs of configuration items
+
+    nvPairs dictionary keys (all string values unless noted):
+    - IP_MASK
+    - NEIGHBOR_IP
+    - IPV6_MASK
+    - IPV6_NEIGHBOR
+    - MAX_PATHS
+    - ROUTING_TAG
+    - MTU
+    - SPEED
+    - DEPLOY_DCI_TRACKING (boolean)
+    - BGP_PASSWORD_ENABLE
+    - BGP_PASSWORD
+    - ENABLE_BGP_LOG_NEIGHBOR_CHANGE
+    - ENABLE_BGP_SEND_COMM
+    - BGP_PASSWORD_INHERIT_FROM_MSD
+    - BGP_AUTH_KEY_TYPE
+    - asn
+    - NEIGHBOR_ASNL
+    - ENABLE_BGP_BFD
+    """
+
+    class_name: str = "EpOneManageLinkUpdate"  # For backward compatibility
+    link_uuid: Optional[str] = Field(None, min_length=1, description="Link UUID")
+    query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
+
+    def __init__(self, **data):
+        """Initialize with default query parameter objects."""
+        super().__init__(**data)
+        if not isinstance(self.query_params, LinkByUuidQueryParams):
+            self.query_params = LinkByUuidQueryParams()
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path with query parameters.
+
+        ### Raises
+        - ValueError: If link_uuid is not set
+
+        ### Returns
+        - Complete endpoint path string with query parameters
+        """
+        if self.link_uuid is None:
+            raise ValueError("link_uuid must be set before accessing path")
+
+        base_path = BasePath.onemanage_links(self.link_uuid)
+
+        query_string = self.query_params.to_query_string()
+        if query_string:
+            return f"{base_path}?{query_string}"
+        return base_path
+
+    @property
+    def verb(self) -> Literal["PUT"]:
+        """Return the HTTP verb for this endpoint."""
+        return "PUT"
+
+
+class EpOneManageLinkGetByUuid(BaseModel):
+    """
+    ## Link Get By UUID Endpoint (OneManage)
+
+    ### Description
+    Endpoint to retrieve a specific link by its UUID.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/links/{linkUUID}
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageLinkGetByUuid()
+    request.link_uuid = "63505f61-ce7b-40a6-a38c-ae9a355b2116"
+    request.query_params.source_cluster_name = "nd-cluster-1"
+    request.query_params.destination_cluster_name = "nd-cluster-2"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageLinkGetByUuid"  # For backward compatibility
+    link_uuid: Optional[str] = Field(None, min_length=1, description="Link UUID")
+    query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
+
+    def __init__(self, **data):
+        """Initialize with default query parameter objects."""
+        super().__init__(**data)
+        if not isinstance(self.query_params, LinkByUuidQueryParams):
+            self.query_params = LinkByUuidQueryParams()
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path with query parameters.
+
+        ### Raises
+        - ValueError: If link_uuid is not set
+
+        ### Returns
+        - Complete endpoint path string with query parameters
+        """
+        if self.link_uuid is None:
+            raise ValueError("link_uuid must be set before accessing path")
+
+        base_path = BasePath.onemanage_links(self.link_uuid)
+
+        query_string = self.query_params.to_query_string()
+        if query_string:
+            return f"{base_path}?{query_string}"
+        return base_path
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageFabricDelete(BaseModel):
+    """
+    ## Fabric Delete Endpoint (OneManage)
+
+    ### Description
+    Endpoint to delete a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}
+
+    ### Verb
+
+    - DELETE
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricDelete()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricDelete"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_fabrics(self.fabric_name)
+
+    @property
+    def verb(self) -> Literal["DELETE"]:
+        """Return the HTTP verb for this endpoint."""
+        return "DELETE"
+
+
+class EpOneManageLinksGetByFabric(BaseModel):
+    """
+    ## Links Get By Fabric Endpoint (OneManage)
+
+    ### Description
+    Endpoint to retrieve links for a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/links/fabrics/{fabricName}
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageLinksGetByFabric()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageLinksGetByFabric"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_links_fabrics(self.fabric_name)
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageFabricConfigDeploy(BaseModel):
+    """
+    ## Fabric Config-Deploy Endpoint (OneManage)
+
+    ### Description
+    Endpoint to deploy the configuration for a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-deploy
+
+    ### Verb
+
+    - POST
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricConfigDeploy()
+    request.fabric_name = "MyFabric"
+    request.query_params.force_show_run = "true"
+    request.query_params.incl_all_msd_switches = "false"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricConfigDeploy"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
+
+    def __init__(self, **data):
+        """Initialize with default query parameter objects."""
+        super().__init__(**data)
+        if not isinstance(self.query_params, FabricConfigDeployQueryParams):
+            self.query_params = FabricConfigDeployQueryParams()
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path with query parameters.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string with query parameters
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        base_path = BasePath.onemanage_fabrics(self.fabric_name, "config-deploy")
+
+        query_string = self.query_params.to_query_string()
+        if query_string:
+            return f"{base_path}?{query_string}"
+        return base_path
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
+
+
+class EpOneManageFabricConfigPreview(BaseModel):
+    """
+    ## Fabric Config-Preview Endpoint (OneManage)
+
+    ### Description
+    Endpoint to preview the configuration for a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-preview
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricConfigPreview()
+    request.fabric_name = "MyFabric"
+    request.query_params.force_show_run = "true"
+    request.query_params.show_brief = "false"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricConfigPreview"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
+
+    def __init__(self, **data):
+        """Initialize with default query parameter objects."""
+        super().__init__(**data)
+        if not isinstance(self.query_params, FabricConfigPreviewQueryParams):
+            self.query_params = FabricConfigPreviewQueryParams()
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path with query parameters.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string with query parameters
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        base_path = BasePath.onemanage_fabrics(self.fabric_name, "config-preview")
+
+        query_string = self.query_params.to_query_string()
+        if query_string:
+            return f"{base_path}?{query_string}"
+        return base_path
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageFabricConfigSave(BaseModel):
+    """
+    ## Fabric Config-Save Endpoint (OneManage)
+
+    ### Description
+    Endpoint to save the configuration for a specific multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-save
+
+    ### Verb
+
+    - POST
+
+    ### Usage
+    ```python
+    request = EpOneManageFabricConfigSave()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageFabricConfigSave"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_fabrics(self.fabric_name, "config-save")
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
+
+
 class EpOneManageFabricCreate(BaseModel):
     """
     ## Fabric Create Endpoint (OneManage)
@@ -157,6 +1171,121 @@ class EpOneManageFabricDetails(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
+
+class EpOneManageNetworksGet(BaseModel):
+    """
+    ## Networks Get Endpoint (OneManage)
+
+    ### Description
+
+    Endpoint to retrieve all networks from a multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/networks
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+
+    ```python
+    request = EpOneManageNetworksGet()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageNetworksGet"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_top_down_fabrics(self.fabric_name, "networks")
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
+
+
+class EpOneManageNetworkCreate(BaseModel):
+    """
+    ## Network Create Endpoint (OneManage)
+
+    ### Description
+
+    Endpoint to create a network in a multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/networks
+
+    ### Verb
+
+    - POST
+
+    ### Usage
+
+    ```python
+    request = EpOneManageNetworkCreate()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain network creation parameters:
+    - id: int - Link ID
+    - vrfId: int - VRF ID
+    - networkId: int - Network ID
+    - vrf: str - Name of the VRF
+    - fabric: str - Name of the Fabric
+    - networkTemplate: str - Network template name
+    - networkTemplateConfig: str - Network extension template config
+    """
+
+    class_name: str = "EpOneManageNetworkCreate"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_top_down_fabrics(self.fabric_name, "networks")
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
 
 
 class EpOneManageNetworksDelete(BaseModel):
@@ -280,6 +1409,121 @@ class EpOneManageNetworkUpdate(BaseModel):
     def verb(self) -> Literal["PUT"]:
         """Return the HTTP verb for this endpoint."""
         return "PUT"
+
+
+class EpOneManageVrfCreate(BaseModel):
+    """
+    ## VRF Create Endpoint (OneManage)
+
+    ### Description
+
+    Endpoint to create a VRF in a multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/vrfs
+
+    ### Verb
+
+    - POST
+
+    ### Usage
+
+    ```python
+    request = EpOneManageVrfCreate()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+
+    ### Request Body
+
+    The request body should contain VRF creation parameters:
+    - id: int - Link ID
+    - vrfId: int - VRF ID
+    - vrfName: str - Name of the VRF
+    - fabric: str - Name of the fabric
+    - vrfTemplate: str - VRF template name
+    - vrfExtensionTemplate: str - VRF extension template name
+    - vrfTemplateConfig: str - JSON string representing the VRF configuration
+    """
+
+    class_name: str = "EpOneManageVrfCreate"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_top_down_fabrics(self.fabric_name, "vrfs")
+
+    @property
+    def verb(self) -> Literal["POST"]:
+        """Return the HTTP verb for this endpoint."""
+        return "POST"
+
+
+class EpOneManageVrfsGet(BaseModel):
+    """
+    ## VRFs Get Endpoint (OneManage)
+
+    ### Description
+
+    Endpoint to retrieve all VRFs from a multi-cluster fabric.
+
+    ### Path
+
+    - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/vrfs
+
+    ### Verb
+
+    - GET
+
+    ### Usage
+
+    ```python
+    request = EpOneManageVrfsGet()
+    request.fabric_name = "MyFabric"
+
+    path = request.path
+    verb = request.verb
+    ```
+    """
+
+    class_name: str = "EpOneManageVrfsGet"  # For backward compatibility
+    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+
+    @property
+    def path(self) -> str:
+        """
+        Build the endpoint path.
+
+        ### Raises
+        - ValueError: If fabric_name is not set
+
+        ### Returns
+        - Complete endpoint path string
+        """
+        if self.fabric_name is None:
+            raise ValueError("fabric_name must be set before accessing path")
+
+        return BasePath.onemanage_top_down_fabrics(self.fabric_name, "vrfs")
+
+    @property
+    def verb(self) -> Literal["GET"]:
+        """Return the HTTP verb for this endpoint."""
+        return "GET"
 
 
 class EpOneManageVrfsDelete(BaseModel):

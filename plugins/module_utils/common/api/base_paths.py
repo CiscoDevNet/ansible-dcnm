@@ -247,6 +247,44 @@ class BasePath:
         return cls.onemanage("fabrics", *segments)
 
     @classmethod
+    def onemanage_links(cls, *segments: str) -> str:
+        """
+        Build onemanage/links API path.
+
+        ### Parameters
+        - segments: Path segments to append after links (e.g., link_uuid)
+
+        ### Returns
+        - Complete onemanage/links path
+
+        ### Example
+        ```python
+        path = BasePath.onemanage_links("63505f61-ce7b-40a6-a38c-ae9a355b2116")
+        # Returns: /appcenter/cisco/ndfc/api/v1/onemanage/links/63505f61-ce7b-40a6-a38c-ae9a355b2116
+        ```
+        """
+        return cls.onemanage("links", *segments)
+
+    @classmethod
+    def onemanage_links_fabrics(cls, *segments: str) -> str:
+        """
+        Build onemanage/links/fabrics API path.
+
+        ### Parameters
+        - segments: Path segments to append after links/fabrics (e.g., fabric_name)
+
+        ### Returns
+        - Complete onemanage/links/fabrics path
+
+        ### Example
+        ```python
+        path = BasePath.onemanage_links_fabrics("MyFabric")
+        # Returns: /appcenter/cisco/ndfc/api/v1/onemanage/links/fabrics/MyFabric
+        ```
+        """
+        return cls.onemanage("links", "fabrics", *segments)
+
+    @classmethod
     def onemanage_top_down(cls, *segments: str) -> str:
         """
         Build onemanage/top-down API path.
