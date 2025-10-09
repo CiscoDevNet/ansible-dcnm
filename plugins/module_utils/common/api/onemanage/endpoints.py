@@ -43,6 +43,7 @@ from ..query_params import EndpointQueryParams
 # Endpoint-Specific Query Parameter Classes
 # ============================================================================
 
+
 class FabricConfigDeployQueryParams(EndpointQueryParams):
     """
     Query parameters for fabric config deploy endpoints.
@@ -63,6 +64,7 @@ class FabricConfigDeployQueryParams(EndpointQueryParams):
         if self.incl_all_msd_switches:
             params.append(f"inclAllMSDSwitches={self.incl_all_msd_switches}")
         return "&".join(params)
+
 
 class FabricConfigPreviewQueryParams(EndpointQueryParams):
     """
@@ -85,6 +87,7 @@ class FabricConfigPreviewQueryParams(EndpointQueryParams):
             params.append(f"showBrief={self.show_brief}")
         return "&".join(params)
 
+
 class LinkByUuidQueryParams(EndpointQueryParams):
     """
     Query parameters for link by UUID endpoints.
@@ -106,6 +109,7 @@ class LinkByUuidQueryParams(EndpointQueryParams):
             params.append(f"destinationClusterName={self.destination_cluster_name}")
         return "&".join(params)
 
+
 class NetworkNamesQueryParams(EndpointQueryParams):
     """
     Query parameters for network deletion endpoints.
@@ -122,6 +126,7 @@ class NetworkNamesQueryParams(EndpointQueryParams):
             return f"network-names={self.network_names}"
         return ""
 
+
 class VrfNamesQueryParams(EndpointQueryParams):
     """
     Query parameters for VRF deletion endpoints.
@@ -137,6 +142,7 @@ class VrfNamesQueryParams(EndpointQueryParams):
         if self.vrf_names:
             return f"vrf-names={self.vrf_names}"
         return ""
+
 
 class EpOneManageFabricConfigDeploy(BaseModel):
     """
@@ -200,6 +206,7 @@ class EpOneManageFabricConfigDeploy(BaseModel):
     def verb(self) -> Literal["POST"]:
         """Return the HTTP verb for this endpoint."""
         return "POST"
+
 
 class EpOneManageFabricConfigDeploySwitch(BaseModel):
     """
@@ -268,6 +275,7 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "POST"
 
+
 class EpOneManageFabricConfigPreview(BaseModel):
     """
     ## Fabric Config-Preview Endpoint (OneManage)
@@ -330,6 +338,7 @@ class EpOneManageFabricConfigPreview(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     """
@@ -398,6 +407,7 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "GET"
 
+
 class EpOneManageFabricConfigSave(BaseModel):
     """
     ## Fabric Config-Save Endpoint (OneManage)
@@ -447,6 +457,7 @@ class EpOneManageFabricConfigSave(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "POST"
 
+
 class EpOneManageFabricCreate(BaseModel):
     """
     ## Fabric Create Endpoint (OneManage)
@@ -484,6 +495,7 @@ class EpOneManageFabricCreate(BaseModel):
     def verb(self) -> Literal["POST"]:
         """Return the HTTP verb for this endpoint."""
         return "POST"
+
 
 class EpOneManageFabricDelete(BaseModel):
     """
@@ -534,6 +546,7 @@ class EpOneManageFabricDelete(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "DELETE"
 
+
 class EpOneManageFabricDetails(BaseModel):
     """
     ## Fabric Details Endpoint (OneManage)
@@ -574,6 +587,7 @@ class EpOneManageFabricDetails(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageFabricGroupUpdate(BaseModel):
     """
@@ -633,6 +647,7 @@ class EpOneManageFabricGroupUpdate(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "PUT"
 
+
 class EpOneManageFabricMembersGet(BaseModel):
     """
     ## Fabric Members Get Endpoint (OneManage)
@@ -681,6 +696,7 @@ class EpOneManageFabricMembersGet(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageFabricUpdate(BaseModel):
     """
@@ -788,6 +804,7 @@ class EpOneManageFabricUpdate(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "PUT"
 
+
 class EpOneManageFabricsGet(BaseModel):
     """
     ## Fabrics Get Endpoint (OneManage)
@@ -823,6 +840,7 @@ class EpOneManageFabricsGet(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageLinkCreate(BaseModel):
     """
@@ -896,6 +914,7 @@ class EpOneManageLinkCreate(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "POST"
 
+
 class EpOneManageLinkGetByUuid(BaseModel):
     """
     ## Link Get By UUID Endpoint (OneManage)
@@ -958,6 +977,7 @@ class EpOneManageLinkGetByUuid(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageLinkUpdate(BaseModel):
     """
@@ -1058,6 +1078,7 @@ class EpOneManageLinkUpdate(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "PUT"
 
+
 class EpOneManageLinksDelete(BaseModel):
     """
     ## Links Delete Endpoint (OneManage)
@@ -1100,6 +1121,7 @@ class EpOneManageLinksDelete(BaseModel):
     def verb(self) -> Literal["PUT"]:
         """Return the HTTP verb for this endpoint."""
         return "PUT"
+
 
 class EpOneManageLinksGetByFabric(BaseModel):
     """
@@ -1149,6 +1171,7 @@ class EpOneManageLinksGetByFabric(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageNetworkCreate(BaseModel):
     """
@@ -1212,6 +1235,7 @@ class EpOneManageNetworkCreate(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "POST"
 
+
 class EpOneManageNetworkUpdate(BaseModel):
     """
     ## Network Update Endpoint (OneManage)
@@ -1268,6 +1292,7 @@ class EpOneManageNetworkUpdate(BaseModel):
     def verb(self) -> Literal["PUT"]:
         """Return the HTTP verb for this endpoint."""
         return "PUT"
+
 
 class EpOneManageNetworksDelete(BaseModel):
     """
@@ -1333,6 +1358,7 @@ class EpOneManageNetworksDelete(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "DELETE"
 
+
 class EpOneManageNetworksGet(BaseModel):
     """
     ## Networks Get Endpoint (OneManage)
@@ -1383,6 +1409,7 @@ class EpOneManageNetworksGet(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
+
 
 class EpOneManageVrfCreate(BaseModel):
     """
@@ -1446,6 +1473,7 @@ class EpOneManageVrfCreate(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "POST"
 
+
 class EpOneManageVrfUpdate(BaseModel):
     """
     ## VRF Update Endpoint (OneManage)
@@ -1500,6 +1528,7 @@ class EpOneManageVrfUpdate(BaseModel):
     def verb(self) -> Literal["PUT"]:
         """Return the HTTP verb for this endpoint."""
         return "PUT"
+
 
 class EpOneManageVrfsDelete(BaseModel):
     """
@@ -1565,6 +1594,7 @@ class EpOneManageVrfsDelete(BaseModel):
         """Return the HTTP verb for this endpoint."""
         return "DELETE"
 
+
 class EpOneManageVrfsGet(BaseModel):
     """
     ## VRFs Get Endpoint (OneManage)
@@ -1615,4 +1645,3 @@ class EpOneManageVrfsGet(BaseModel):
     def verb(self) -> Literal["GET"]:
         """Return the HTTP verb for this endpoint."""
         return "GET"
-
