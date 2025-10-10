@@ -171,7 +171,7 @@ class EpOneManageFabricConfigDeploy(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricConfigDeploy", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploy", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
 
@@ -236,7 +236,7 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricConfigDeploySwitch", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploySwitch", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     switch_sn: Optional[str] = Field(None, min_length=1, description="Switch serial number")
     query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
@@ -303,7 +303,7 @@ class EpOneManageFabricConfigPreview(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricConfigPreview", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreview", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
 
@@ -368,7 +368,7 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricConfigPreviewSwitch", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreviewSwitch", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     switch_sn: Optional[str] = Field(None, min_length=1, description="Switch serial number")
     query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
@@ -433,7 +433,7 @@ class EpOneManageFabricConfigSave(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricConfigSave", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricConfigSave", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -483,7 +483,7 @@ class EpOneManageFabricCreate(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricCreate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricCreate", description="Class name for backward compatibility")
 
     @property
     def path(self) -> str:
@@ -522,7 +522,7 @@ class EpOneManageFabricDelete(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricDelete", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricDelete", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -572,7 +572,7 @@ class EpOneManageFabricDetails(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricDetails", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricDetails", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -614,7 +614,7 @@ class EpOneManageFabricGroupMembersGet(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricGroupMembersGet", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricGroupMembersGet", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
 
     @property
@@ -673,7 +673,7 @@ class EpOneManageFabricGroupUpdate(BaseModel):
       - "remove": Remove fabricName from clusterName
     """
 
-    class_name: str = Field(default="EpOneManageFabricGroupUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricGroupUpdate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
 
     @property
@@ -780,7 +780,7 @@ class EpOneManageFabricUpdate(BaseModel):
     - vrf_extension_template
     """
 
-    class_name: str = Field(default="EpOneManageFabricUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricUpdate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -829,7 +829,7 @@ class EpOneManageFabricsGet(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageFabricsGet", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricsGet", description="Class name for backward compatibility")
 
     @property
     def path(self) -> str:
@@ -902,7 +902,7 @@ class EpOneManageLinkCreate(BaseModel):
     - ENABLE_BGP_BFD
     """
 
-    class_name: str = Field(default="EpOneManageLinkCreate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageLinkCreate", description="Class name for backward compatibility")
 
     @property
     def path(self) -> str:
@@ -942,7 +942,7 @@ class EpOneManageLinkGetByUuid(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageLinkGetByUuid", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageLinkGetByUuid", description="Class name for backward compatibility")
     link_uuid: Optional[str] = Field(None, min_length=1, description="Link UUID")
     query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
 
@@ -1042,7 +1042,7 @@ class EpOneManageLinkUpdate(BaseModel):
     - ENABLE_BGP_BFD
     """
 
-    class_name: str = Field(default="EpOneManageLinkUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageLinkUpdate", description="Class name for backward compatibility")
     link_uuid: Optional[str] = Field(None, min_length=1, description="Link UUID")
     query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
 
@@ -1110,7 +1110,7 @@ class EpOneManageLinksDelete(BaseModel):
     - sourceClusterName: str - Source cluster name (e.g., "nd-cluster-2")
     """
 
-    class_name: str = Field(default="EpOneManageLinksDelete", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageLinksDelete", description="Class name for backward compatibility")
 
     @property
     def path(self) -> str:
@@ -1148,7 +1148,7 @@ class EpOneManageLinksGetByFabric(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageLinksGetByFabric", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageLinksGetByFabric", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -1211,7 +1211,7 @@ class EpOneManageNetworkCreate(BaseModel):
     - networkTemplateConfig: str - Network extension template config
     """
 
-    class_name: str = Field(default="EpOneManageNetworkCreate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageNetworkCreate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -1264,7 +1264,7 @@ class EpOneManageNetworkUpdate(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageNetworkUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageNetworkUpdate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     network_name: Optional[str] = Field(None, min_length=1, description="Network name")
 
@@ -1322,7 +1322,7 @@ class EpOneManageNetworksDelete(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageNetworksDelete", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageNetworksDelete", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     query_params: NetworkNamesQueryParams = Field(default_factory=NetworkNamesQueryParams)
 
@@ -1386,7 +1386,7 @@ class EpOneManageNetworksGet(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageNetworksGet", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageNetworksGet", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -1449,7 +1449,7 @@ class EpOneManageVrfCreate(BaseModel):
     - vrfTemplateConfig: str - JSON string representing the VRF configuration
     """
 
-    class_name: str = Field(default="EpOneManageVrfCreate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageVrfCreate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
@@ -1502,7 +1502,7 @@ class EpOneManageVrfUpdate(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageVrfUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageVrfUpdate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     vrf_name: Optional[str] = Field(None, min_length=1, description="VRF name")
 
@@ -1558,7 +1558,7 @@ class EpOneManageVrfsDelete(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageVrfsDelete", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageVrfsDelete", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
     query_params: VrfNamesQueryParams = Field(default_factory=VrfNamesQueryParams)
 
@@ -1622,7 +1622,7 @@ class EpOneManageVrfsGet(BaseModel):
     ```
     """
 
-    class_name: str = Field(default="EpOneManageVrfsGet", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageVrfsGet", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
