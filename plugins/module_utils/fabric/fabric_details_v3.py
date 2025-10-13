@@ -48,23 +48,24 @@ class FabricDetails:
     None
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.action = "fabric_details"
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.action: str = "fabric_details"
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = "ENTERED FabricDetails() (v2)"
+        msg = f"ENTERED {self.class_name}() (v3)"
         self.log.debug(msg)
 
-        self.data = {}
-        self.conversion = ConversionUtils()
-        self.ep_fabrics = EpFabrics()
+        self.data: dict = {}
+        self.conversion: ConversionUtils = ConversionUtils()
+        self.ep_fabrics: EpFabrics = EpFabrics()
 
+        self._refreshed: bool = False
         self.rest_send: RestSend = None  # type: ignore[assignment]
         self.results: Results = None  # type: ignore[assignment]
 
-    def register_result(self):
+    def register_result(self) -> None:
         """
         ### Summary
         Update the results object with the current state of the fabric
@@ -114,7 +115,7 @@ class FabricDetails:
             msg += f"{self.class_name}.refresh()."
             raise ValueError(msg)
 
-    def refresh_super(self):
+    def refresh_super(self) -> None:
         """
         ### Summary
         Refresh the fabric details from the controller and
@@ -192,7 +193,7 @@ class FabricDetails:
         """
 
     @property
-    def all_data(self):
+    def all_data(self) -> dict:
         """
         ### Summary
         Return all fabric details from the controller (i.e. self.data)
@@ -205,13 +206,13 @@ class FabricDetails:
         return self.data
 
     @property
-    def asn(self):
+    def asn(self) -> str:
         """
         ### Summary
         Return the BGP asn of the fabric specified with filter, if it exists.
-        Return None otherwise.
+        Return "" (empty string) otherwise.
 
-        This is an alias of BGP_AS.
+        This is an alias of bgp_as.
 
         ### Raises
         None
@@ -221,21 +222,21 @@ class FabricDetails:
 
         ### Returns
             - e.g. "65000"
-            - None
+            - "" (empty string) if BGP_AS is not set
         """
         try:
-            return self._get_nv_pair("BGP_AS")
+            return self._get_nv_pair("BGP_AS") or ""
         except ValueError as error:
             msg = f"Failed to retrieve asn: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return ""
 
     @property
-    def bgp_as(self):
+    def bgp_as(self) -> str:
         """
         ### Summary
         Return ``nvPairs.BGP_AS`` of the fabric specified with filter, if it exists.
-        Return None otherwise
+        Return "" (empty string) otherwise
 
         ### Raises
         None
@@ -245,17 +246,17 @@ class FabricDetails:
 
         ### Returns
             - e.g. "65000"
-            - None
+            - "" (empty string) if BGP_AS is not set
         """
         try:
-            return self._get_nv_pair("BGP_AS")
+            return self._get_nv_pair("BGP_AS") or ""
         except ValueError as error:
             msg = f"Failed to retrieve bgp_as: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return ""
 
     @property
-    def deployment_freeze(self):
+    def deployment_freeze(self) -> bool:
         """
         ### Summary
         The nvPairs.DEPLOYMENT_FREEZE of the fabric specified with filter.
@@ -267,19 +268,18 @@ class FabricDetails:
         boolean
 
         ### Returns
-        - False
+        - False (if set to False, or not set)
         - True
-        - None
         """
         try:
-            return self._get_nv_pair("DEPLOYMENT_FREEZE")
+            return self._get_nv_pair("DEPLOYMENT_FREEZE") or False
         except ValueError as error:
             msg = f"Failed to retrieve deployment_freeze: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return False
 
     @property
-    def enable_pbr(self):
+    def enable_pbr(self) -> bool:
         """
         ### Summary
         The PBR enable state of the fabric specified with filter.
@@ -291,19 +291,18 @@ class FabricDetails:
         boolean
 
         ### Returns
-        - False
+        - False (if set to False, or not set)
         - True
-        - None
         """
         try:
-            return self._get_nv_pair("ENABLE_PBR")
+            return self._get_nv_pair("ENABLE_PBR") or False
         except ValueError as error:
             msg = f"Failed to retrieve enable_pbr: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return False
 
     @property
-    def fabric_id(self):
+    def fabric_id(self) -> str:
         """
         ### Summary
         The ``fabricId`` value of the fabric specified with filter.
@@ -316,17 +315,17 @@ class FabricDetails:
 
         ### Returns
         - e.g. FABRIC-5
-        - None
+        - "" if fabricId is not set
         """
         try:
-            return self._get("fabricId")
+            return self._get("fabricId") or ""
         except ValueError as error:
             msg = f"Failed to retrieve fabric_id: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return ""
 
     @property
-    def fabric_type(self):
+    def fabric_type(self) -> str:
         """
         ### Summary
         The ``nvPairs.FABRIC_TYPE`` value of the fabric specified with filter.
@@ -339,17 +338,17 @@ class FabricDetails:
 
         ### Returns
         - e.g. Switch_Fabric
-        - None
+        - "" (empty string) if FABRIC_TYPE is not set
         """
         try:
-            return self._get_nv_pair("FABRIC_TYPE")
+            return self._get_nv_pair("FABRIC_TYPE") or ""
         except ValueError as error:
             msg = f"Failed to retrieve fabric_type: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return ""
 
     @property
-    def is_read_only(self):
+    def is_read_only(self) -> bool:
         """
         ### Summary
         The ``nvPairs.IS_READ_ONLY`` value of the fabric specified with filter.
@@ -362,18 +361,17 @@ class FabricDetails:
 
         ### Returns
         - True
-        - False
-        - None
+        - False (if set to False, or not set)
         """
         try:
-            return self._get_nv_pair("IS_READ_ONLY")
+            return self._get_nv_pair("IS_READ_ONLY") or False
         except ValueError as error:
             msg = f"Failed to retrieve is_read_only: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return False
 
     @property
-    def per_vrf_loopback_auto_provision(self):
+    def per_vrf_loopback_auto_provision(self) -> bool:
         """
         ### Summary
         The ``nvPairs.PER_VRF_LOOPBACK_AUTO_PROVISION`` value of the fabric
@@ -387,19 +385,18 @@ class FabricDetails:
 
         ### Returns
         - True
-        - False
-        - None
+        - False (if set to False, or not set)
         """
         try:
-            return self._get_nv_pair("PER_VRF_LOOPBACK_AUTO_PROVISION")
+            return self._get_nv_pair("PER_VRF_LOOPBACK_AUTO_PROVISION") or False
         except ValueError as error:
             msg = "Failed to retrieve per_vrf_loopback_auto_provision: "
             msg += f"Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return False
 
     @property
-    def replication_mode(self):
+    def replication_mode(self) -> str:
         """
         ### Summary
         The ``nvPairs.REPLICATION_MODE`` value of the fabric specified
@@ -409,22 +406,29 @@ class FabricDetails:
         None
 
         ### Type
-        boolean
+        string
 
         ### Returns
         - Ingress
         - Multicast
-        - None
+        - "" (empty string) if REPLICATION_MODE is not set
         """
         try:
-            return self._get_nv_pair("REPLICATION_MODE")
+            return self._get_nv_pair("REPLICATION_MODE") or ""
         except ValueError as error:
             msg = f"Failed to retrieve replication_mode: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return ""
 
     @property
-    def template_name(self):
+    def refreshed(self) -> bool:
+        """
+        Indicates whether the fabric details have been refreshed.
+        """
+        return self._refreshed
+
+    @property
+    def template_name(self) -> str:
         """
         ### Summary
         The ``templateName`` value of the fabric specified
@@ -438,14 +442,14 @@ class FabricDetails:
 
         ### Returns
         - e.g. Easy_Fabric
-        - None
+        - Empty string, if templateName is not set
         """
         try:
-            return self._get("templateName")
+            return self._get("templateName") or ""
         except ValueError as error:
             msg = f"Failed to retrieve template_name: Error detail: {error}"
             self.log.debug(msg)
-            return None
+            return ""
 
 
 class FabricDetailsByName(FabricDetails):
@@ -529,7 +533,7 @@ class FabricDetailsByName(FabricDetails):
         self.log.debug(msg)
 
         self.data_subclass = {}
-        self._filter = None
+        self._filter: str = ""
 
     def refresh(self):
         """
@@ -547,6 +551,7 @@ class FabricDetailsByName(FabricDetails):
             raise ValueError(msg) from error
 
         self.data_subclass = copy.deepcopy(self.data)
+        self._refreshed = True
 
     def _get(self, item):
         """
@@ -566,7 +571,7 @@ class FabricDetailsByName(FabricDetails):
         msg += f"instance.filter {self.filter} "
         self.log.debug(msg)
 
-        if self.filter is None:
+        if not self.filter:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a fabric name "
             msg += f"before accessing property {item}."
@@ -604,13 +609,13 @@ class FabricDetailsByName(FabricDetails):
         msg += f"instance.filter {self.filter} "
         self.log.debug(msg)
 
-        if self.filter is None:
+        if not self.filter:
             msg = f"{self.class_name}.{method_name}: "
             msg += "set instance.filter to a fabric name "
             msg += f"before accessing property {item}."
             raise ValueError(msg)
 
-        if self.data_subclass.get(self.filter) is None:
+        if not self.data_subclass.get(self.filter):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"fabric_name {self.filter} "
             msg += "does not exist on the controller."
@@ -625,7 +630,7 @@ class FabricDetailsByName(FabricDetails):
         return self.conversion.make_none(self.conversion.make_boolean(self.data_subclass[self.filter].get("nvPairs").get(item)))
 
     @property
-    def filtered_data(self):
+    def filtered_data(self) -> dict:
         """
         ### Summary
         The DATA portion of the dictionary for the fabric specified with filter.
@@ -636,18 +641,18 @@ class FabricDetailsByName(FabricDetails):
 
         ### Returns
         - A dictionary of the fabric matching self.filter.
-        - ``None``, if the fabric does not exist on the controller.
+        - Empty dictionary, if the fabric does not exist on the controller.
         """
         method_name = inspect.stack()[0][3]
-        if self.filter is None:
+        if not self.filter:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"{self.class_name}.filter must be set before accessing "
             msg += f"{self.class_name}.filtered_data."
             raise ValueError(msg)
-        return self.data_subclass.get(self.filter, None)
+        return self.data_subclass.get(self.filter, {})
 
     @property
-    def filter(self):
+    def filter(self) -> str:
         """
         ### Summary
         Set the fabric_name of the fabric to query.
@@ -661,7 +666,7 @@ class FabricDetailsByName(FabricDetails):
         return self._filter
 
     @filter.setter
-    def filter(self, value):
+    def filter(self, value: str) -> None:
         self._filter = value
 
     @property
@@ -736,11 +741,11 @@ class FabricDetailsByNvPair(FabricDetails):
         msg = "ENTERED FabricDetailsByNvPair() "
         self.log.debug(msg)
 
-        self.data_subclass = {}
-        self._filter_key = None
-        self._filter_value = None
+        self.data_subclass: dict[str, dict] = {}
+        self._filter_key: str = ""
+        self._filter_value: str = ""
 
-    def refresh(self):
+    def refresh(self) -> None:
         """
         ### Summary
         Refresh fabric_name current details from the controller.
@@ -752,12 +757,12 @@ class FabricDetailsByNvPair(FabricDetails):
         """
         method_name = inspect.stack()[0][3]
 
-        if self.filter_key is None:
+        if not self.filter_key:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"set {self.class_name}.filter_key to a nvPair key "
             msg += f"before calling {self.class_name}.refresh()."
             raise ValueError(msg)
-        if self.filter_value is None:
+        if not self.filter_value:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"set {self.class_name}.filter_value to a nvPair value "
             msg += f"before calling {self.class_name}.refresh()."
@@ -769,6 +774,8 @@ class FabricDetailsByNvPair(FabricDetails):
             msg = "Failed to refresh fabric details: "
             msg += f"Error detail: {error}"
             raise ValueError(msg) from error
+
+        self._refreshed = True
 
         if len(self.data) == 0:
             self.results.diff = {}
@@ -782,7 +789,7 @@ class FabricDetailsByNvPair(FabricDetails):
                 self.data_subclass[item] = value
 
     @property
-    def filtered_data(self):
+    def filtered_data(self) -> dict:
         """
         ### Summary
         A dictionary of the fabric(s) matching ``filter_key`` and
@@ -799,7 +806,7 @@ class FabricDetailsByNvPair(FabricDetails):
         return self.data_subclass
 
     @property
-    def filter_key(self):
+    def filter_key(self) -> str:
         """
         ### Summary
         The ``nvPairs`` key on which to filter.
@@ -814,11 +821,11 @@ class FabricDetailsByNvPair(FabricDetails):
         return self._filter_key
 
     @filter_key.setter
-    def filter_key(self, value):
+    def filter_key(self, value: str) -> None:
         self._filter_key = value
 
     @property
-    def filter_value(self):
+    def filter_value(self) -> str:
         """
         ### Summary
         The ``nvPairs`` value on which to filter.
@@ -833,7 +840,7 @@ class FabricDetailsByNvPair(FabricDetails):
         return self._filter_value
 
     @filter_value.setter
-    def filter_value(self, value):
+    def filter_value(self, value: str) -> None:
         self._filter_value = value
 
     @property
