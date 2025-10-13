@@ -3722,29 +3722,37 @@ import copy
 import inspect
 import json
 import logging
+import traceback
 from typing import Union
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore[import-untyped]
 
-from ..module_utils.common.controller_features_v2 import ControllerFeatures
-from ..module_utils.common.controller_version_v2 import ControllerVersion
-from ..module_utils.common.exceptions import ControllerResponseError
-from ..module_utils.common.log_v2 import Log
-from ..module_utils.common.response_handler import ResponseHandler
-from ..module_utils.common.rest_send_v2 import RestSend
-from ..module_utils.common.results_v2 import Results
-from ..module_utils.common.sender_dcnm import Sender
-from ..module_utils.fabric_group.common import FabricGroupCommon
-from ..module_utils.fabric_group.create import FabricGroupCreateBulk
-from ..module_utils.fabric_group.delete import FabricGroupDelete
-from ..module_utils.fabric.fabric_details_v3 import FabricDetailsByName
-from ..module_utils.fabric.fabric_summary_v2 import FabricSummary
-from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
-from ..module_utils.fabric_group.query import FabricGroupQuery
-from ..module_utils.fabric_group.replaced import FabricGroupReplacedBulk
-from ..module_utils.fabric.template_get_v2 import TemplateGet
-from ..module_utils.fabric_group.update import FabricGroupUpdateBulk
-from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
+# Import guard for pydantic-dependent modules
+try:
+    from ..module_utils.common.controller_features_v2 import ControllerFeatures
+    from ..module_utils.common.controller_version_v2 import ControllerVersion
+    from ..module_utils.common.exceptions import ControllerResponseError
+    from ..module_utils.common.log_v2 import Log
+    from ..module_utils.common.response_handler import ResponseHandler
+    from ..module_utils.common.rest_send_v2 import RestSend
+    from ..module_utils.common.results_v2 import Results
+    from ..module_utils.common.sender_dcnm import Sender
+    from ..module_utils.fabric_group.common import FabricGroupCommon
+    from ..module_utils.fabric_group.create import FabricGroupCreateBulk
+    from ..module_utils.fabric_group.delete import FabricGroupDelete
+    from ..module_utils.fabric.fabric_details_v3 import FabricDetailsByName
+    from ..module_utils.fabric.fabric_summary_v2 import FabricSummary
+    from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
+    from ..module_utils.fabric_group.query import FabricGroupQuery
+    from ..module_utils.fabric_group.replaced import FabricGroupReplacedBulk
+    from ..module_utils.fabric.template_get_v2 import TemplateGet
+    from ..module_utils.fabric_group.update import FabricGroupUpdateBulk
+    from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
+    HAS_PYDANTIC_DEPS = True
+    PYDANTIC_DEPS_IMPORT_ERROR = None
+except ImportError as imp_exc:
+    HAS_PYDANTIC_DEPS = False
+    PYDANTIC_DEPS_IMPORT_ERROR = traceback.format_exc()
 
 
 def json_pretty(msg):
@@ -3754,7 +3762,14 @@ def json_pretty(msg):
     return json.dumps(msg, indent=4, sort_keys=True)
 
 
-class Common(FabricGroupCommon):
+# Use conditional base class to support import without pydantic
+if HAS_PYDANTIC_DEPS:
+    CommonBase = FabricGroupCommon
+else:
+    CommonBase = object
+
+
+class Common(CommonBase):
     """
     Common methods, properties, and resources for all states.
     """
@@ -4583,6 +4598,15 @@ def main():
     ansible_module = AnsibleModule(
         argument_spec=argument_spec, supports_check_mode=True
     )
+
+    # Check for pydantic dependency before proceeding
+    if not HAS_PYDANTIC_DEPS:
+        ansible_module.fail_json(
+            msg="The pydantic library is required to use this module. "
+                "Install it with: pip install pydantic",
+            exception=PYDANTIC_DEPS_IMPORT_ERROR
+        )
+
     params = copy.deepcopy(ansible_module.params)
     params["check_mode"] = ansible_module.check_mode
 
