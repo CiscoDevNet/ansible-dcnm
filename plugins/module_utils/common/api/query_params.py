@@ -24,18 +24,16 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
-import traceback
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
 try:
     from pydantic import BaseModel, Field, field_validator
-except ImportError:
-    HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()
-else:
-    HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
+except ImportError as imp_exc:
+    raise ImportError(
+        "The pydantic library is required to use this module. "
+        "Install it with: pip install pydantic"
+    ) from imp_exc
 
 
 class QueryParams(ABC):
