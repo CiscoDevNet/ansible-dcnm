@@ -26,16 +26,18 @@ import logging
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricDelete
 from ..common.exceptions import ControllerResponseError
+from ..common.rest_send_v2 import RestSend
 
 # Import Results() only for the case where the user has not set Results()
 # prior to calling commit().  In this case, we instantiate Results()
 # in _validate_commit_parameters() so that we can register the failure
 # in commit().
 from ..common.results_v2 import Results
-from .common import FabricGroupCommon
+from ..fabric.fabric_details_v3 import FabricDetailsByName
+from ..fabric.fabric_summary_v2 import FabricSummary
 
 
-class FabricGroupDelete(FabricGroupCommon):
+class FabricGroupDelete:
     """
     Delete fabric groups
 
@@ -71,9 +73,8 @@ class FabricGroupDelete(FabricGroupCommon):
     """
 
     def __init__(self):
-        super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "fabric_delete"
+        self.action = "fabric_group_delete"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -82,6 +83,12 @@ class FabricGroupDelete(FabricGroupCommon):
         self._fabric_group_names: list[str] = []
 
         self._cannot_delete_fabric_reason: str = ""
+
+        self._fabric_details: FabricDetailsByName = FabricDetailsByName()
+        self._fabric_summary: FabricSummary = FabricSummary()
+        # Properties to be set by caller
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
 
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
@@ -131,9 +138,9 @@ class FabricGroupDelete(FabricGroupCommon):
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        if not self.fabric_details.data:
+        if not self.fabric_details.refreshed:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_details must be set prior to calling commit."
+            msg += "fabric_details must be refreshed prior to calling commit."
             raise ValueError(msg)
 
         if not self.fabric_group_names:
@@ -142,16 +149,9 @@ class FabricGroupDelete(FabricGroupCommon):
             raise ValueError(msg)
 
         # pylint: disable=no-member
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling commit."
-            raise ValueError(msg)
-
-        if self.results is None:
-            # Instantiate Results() only to register the failure
-            self.results = Results()
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set prior to calling commit."
+            msg += "rest_send.params must be set prior to calling commit."
             raise ValueError(msg)
 
     def commit(self):
@@ -330,3 +330,47 @@ class FabricGroupDelete(FabricGroupCommon):
                 msg += f"value {item}"
                 raise ValueError(msg)
         self._fabric_group_names = value
+
+    @property
+    def fabric_details(self) -> FabricDetailsByName:
+        """
+        An instance of FabricDetailsByName.
+        """
+        return self._fabric_details
+
+    @fabric_details.setter
+    def fabric_details(self, value: FabricDetailsByName) -> None:
+        self._fabric_details = value
+
+    @property
+    def fabric_summary(self) -> FabricSummary:
+        """
+        An instance of FabricSummary.
+        """
+        return self._fabric_summary
+
+    @fabric_summary.setter
+    def fabric_summary(self, value: FabricSummary) -> None:
+        self._fabric_summary = value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        An instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        An instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        self._results = value
