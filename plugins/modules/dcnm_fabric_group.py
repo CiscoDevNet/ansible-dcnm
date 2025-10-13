@@ -3723,7 +3723,7 @@ import inspect
 import json
 import logging
 import traceback
-from typing import Union
+from typing import Type, Union
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore[import-untyped]
 
@@ -3737,17 +3737,18 @@ try:
     from ..module_utils.common.rest_send_v2 import RestSend
     from ..module_utils.common.results_v2 import Results
     from ..module_utils.common.sender_dcnm import Sender
+    from ..module_utils.fabric.fabric_details_v3 import FabricDetailsByName
+    from ..module_utils.fabric.fabric_summary_v2 import FabricSummary
+    from ..module_utils.fabric.template_get_v2 import TemplateGet
+    from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
     from ..module_utils.fabric_group.common import FabricGroupCommon
     from ..module_utils.fabric_group.create import FabricGroupCreateBulk
     from ..module_utils.fabric_group.delete import FabricGroupDelete
-    from ..module_utils.fabric.fabric_details_v3 import FabricDetailsByName
-    from ..module_utils.fabric.fabric_summary_v2 import FabricSummary
     from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
     from ..module_utils.fabric_group.query import FabricGroupQuery
     from ..module_utils.fabric_group.replaced import FabricGroupReplacedBulk
-    from ..module_utils.fabric.template_get_v2 import TemplateGet
     from ..module_utils.fabric_group.update import FabricGroupUpdateBulk
-    from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
+
     HAS_PYDANTIC_DEPS = True
     PYDANTIC_DEPS_IMPORT_ERROR = None
 except ImportError as imp_exc:
@@ -3763,6 +3764,7 @@ def json_pretty(msg):
 
 
 # Use conditional base class to support import without pydantic
+CommonBase: Type
 if HAS_PYDANTIC_DEPS:
     CommonBase = FabricGroupCommon
 else:
@@ -3797,6 +3799,7 @@ class Common(CommonBase):
         self.populate_config()
 
         self.rest_send: RestSend = RestSend(params=params)
+        self.rest_send.response_handler = ResponseHandler()
         self.results: Results = Results()
         self.results.state = self.state
         self.results.check_mode = self.check_mode
@@ -4032,16 +4035,15 @@ class Deleted(Common):
         msg = f"ENTERED: {self.class_name}.{method_name}"
         self.log.debug(msg)
 
-        self.fabric_details.rest_send = self.rest_send
-        self.fabric_details.results = Results()
-
-        self.fabric_summary.rest_send = self.rest_send
-        self.fabric_summary.results = Results()
-
         self.delete.rest_send = self.rest_send
-        self.delete.fabric_details = self.fabric_details
-        self.delete.fabric_summary = self.fabric_summary
         self.delete.results = self.results
+
+        self.delete.fabric_details.rest_send = self.rest_send
+        self.delete.fabric_details.results = Results()
+        self.delete.fabric_details.refresh()
+
+        self.delete.fabric_summary.rest_send = self.rest_send
+        self.delete.fabric_summary.results = Results()
 
         fabric_group_names_to_delete: list = []
         for want in self.want:
@@ -4360,6 +4362,8 @@ class Query(Common):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
+        self.fabric_details: FabricDetailsByName = FabricDetailsByName()
+
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
         msg += f"check_mode: {self.check_mode}"
@@ -4377,7 +4381,6 @@ class Query(Common):
             -   The controller returns an error when attempting to
                 query the fabrics.
         """
-        self.fabric_details = FabricDetailsByName()
         self.fabric_details.rest_send = self.rest_send
         self.fabric_details.results = Results()
 
@@ -4595,16 +4598,12 @@ def main():
         "choices": ["deleted", "merged", "query", "replaced"],
     }
 
-    ansible_module = AnsibleModule(
-        argument_spec=argument_spec, supports_check_mode=True
-    )
+    ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     # Check for pydantic dependency before proceeding
     if not HAS_PYDANTIC_DEPS:
         ansible_module.fail_json(
-            msg="The pydantic library is required to use this module. "
-                "Install it with: pip install pydantic",
-            exception=PYDANTIC_DEPS_IMPORT_ERROR
+            msg="The pydantic library is required to use this module. " "Install it with: pip install pydantic", exception=PYDANTIC_DEPS_IMPORT_ERROR
         )
 
     params = copy.deepcopy(ansible_module.params)
