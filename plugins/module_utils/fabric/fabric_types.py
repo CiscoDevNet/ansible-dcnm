@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,10 +12,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+"""
+Fabric type definitions for the dcnm_fabric and dcnm_fabric_group modules.
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import copy
@@ -25,7 +27,7 @@ from typing import Any
 
 class FabricTypes:
     """
-    Fabric type definitions for the dcnm_fabric module.
+    Fabric type definitions for the dcnm_fabric and dcnm_fabric_group modules.
 
     Usage
 
@@ -105,6 +107,7 @@ class FabricTypes:
         self._fabric_type_to_ext_fabric_type_map["ISN"] = "Multi-Site External Network"
 
         self._valid_fabric_types = sorted(self._fabric_type_to_template_name_map.keys())
+        self._valid_fabric_group_types = {"MCFG"}
 
         # self._external_fabric_types is used in conjunction with
         # self._fabric_type_to_ext_fabric_type_map.  This is used in (at least)
@@ -258,6 +261,13 @@ class FabricTypes:
         Return a sorted list() of valid fabric types.
         """
         return self._properties["valid_fabric_types"]
+
+    @property
+    def valid_fabric_group_types(self) -> set:
+        """
+        Return a set() of valid fabric group types.
+        """
+        return self._valid_fabric_group_types
 
     @property
     def valid_fabric_template_names(self):
