@@ -239,7 +239,7 @@ class FabricGroupQuery:
             if not self.results.result_current:
                 self.results.result_current = {}
             self.results.result_current["found"] = False
-            self.results.result_current["success"] = False
+            self.results.result_current["success"] = True
         else:
             msg = f"Found fabric details for {self.fabric_group_names}."
             self.log.debug(msg)
