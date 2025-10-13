@@ -61,6 +61,8 @@ from pydantic import ValidationError
 ONEMANAGE_FABRICS_PATH = "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
 ONEMANAGE_LINKS_PATH = "/appcenter/cisco/ndfc/api/v1/onemanage/links"
 ONEMANAGE_TOP_DOWN_FABRICS_PATH = "/appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics"
+# OneManage DELETE uses the regular LAN fabric control API with /onemanage prefix
+ONEMANAGE_CONTROL_FABRICS_PATH = "/onemanage/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics"
 
 
 # =============================================================================
@@ -1317,12 +1319,13 @@ def test_onemanage_endpoints_01600():
 
     ### Summary
     - Verify path with fabric_name set
+    - Note: DELETE uses the regular LAN fabric control API with /onemanage prefix
     """
     with does_not_raise():
         endpoint = EpOneManageFabricDelete()
         endpoint.fabric_name = "MyFabric"
         result = endpoint.path
-    assert result == f"{ONEMANAGE_FABRICS_PATH}/MyFabric"
+    assert result == f"{ONEMANAGE_CONTROL_FABRICS_PATH}/MyFabric"
 
 
 def test_onemanage_endpoints_01610():

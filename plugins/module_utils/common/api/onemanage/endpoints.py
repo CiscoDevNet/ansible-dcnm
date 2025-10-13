@@ -506,7 +506,7 @@ class EpOneManageFabricDelete(BaseModel):
 
     ### Path
 
-    - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}
+    - /onemanage/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabricName}
 
     ### Verb
 
@@ -520,6 +520,10 @@ class EpOneManageFabricDelete(BaseModel):
     path = request.path
     verb = request.verb
     ```
+
+    ### Note
+    The delete endpoint uses the regular LAN fabric control API with /onemanage prefix,
+    not the onemanage-specific API endpoint. This is required for multi-cluster fabrics.
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricDelete", description="Class name for backward compatibility")
@@ -534,12 +538,14 @@ class EpOneManageFabricDelete(BaseModel):
         - ValueError: If fabric_name is not set
 
         ### Returns
-        - Complete endpoint path string
+        - Complete endpoint path string with /onemanage prefix
         """
         if self.fabric_name is None:
             raise ValueError("fabric_name must be set before accessing path")
 
-        return BasePath.onemanage_fabrics(self.fabric_name)
+        # Use the regular LAN fabric control API with /onemanage prefix
+        # This is the correct endpoint for deleting multi-cluster fabrics
+        return f"/onemanage{BasePath.control_fabrics(self.fabric_name)}"
 
     @property
     def verb(self) -> Literal["DELETE"]:
