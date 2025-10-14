@@ -296,6 +296,149 @@ options:
         - Use ',' to separate multiple route-targets
         type: str
         required: false
+      child_fabric_config:
+        description:
+        - Configuration for Child fabrics in MSD deployments
+        - Only applicable for Parent MSD fabrics
+        - Defines VRF behavior on each Child fabric
+        - Not supported with state 'deleted'
+        - "Parent MSD Fabric Only"
+        type: list
+        elements: dict
+        required: false
+        suboptions:
+          fabric:
+            description:
+            - Name of the Child fabric
+            - Must be a valid Child fabric associated with the Parent
+            type: str
+            required: true
+          l3vni_wo_vlan:
+            description:
+            - Enable L3 VNI without VLAN on Child fabric
+            type: bool
+            required: false
+            default: false
+          adv_default_routes:
+            description:
+            - Advertise default routes on Child fabric
+            type: bool
+            required: false
+            default: true
+          adv_host_routes:
+            description:
+            - Advertise host routes on Child fabric
+            type: bool
+            required: false
+            default: false
+          static_default_route:
+            description:
+            - Configure static default route on Child fabric
+            type: bool
+            required: false
+            default: true
+          bgp_password:
+            description:
+            - BGP password for Child fabric VRF Lite
+            - Password should be in Hex string format
+            type: str
+            required: false
+          bgp_passwd_encrypt:
+            description:
+            - BGP password encryption type on Child fabric
+            - 3 for 3DES encryption, 7 for Cisco encryption
+            type: int
+            choices:
+              - 3
+              - 7
+            required: false
+            default: 3
+          netflow_enable:
+            description:
+            - Enable netflow on Child fabric
+            - Netflow is supported only if it is enabled on fabric
+            - Netflow configs are supported on NDFC only
+            type: bool
+            required: false
+            default: false
+          nf_monitor:
+            description:
+            - Netflow monitor on Child fabric
+            - Netflow configs are supported on NDFC only
+            type: str
+            required: false
+          trm_enable:
+            description:
+            - Enable TRM (Tenant Routed Multicast) on Child fabric
+            - Required for multicast traffic within VRF on Child fabric
+            type: bool
+            required: false
+            default: false
+          no_rp:
+            description:
+            - No RP, only SSM is used on Child fabric
+            - Supported on NDFC only
+            - Cannot be used with TRM enabled
+            type: bool
+            required: false
+            default: false
+          rp_address:
+            description:
+            - IPv4 Address of RP (Rendezvous Point) on Child fabric
+            - Can be configured only when TRM is enabled
+            type: str
+            required: false
+          rp_external:
+            description:
+            - Specifies if RP is external to the Child fabric
+            - Can be configured only when TRM is enabled
+            type: bool
+            required: false
+            default: false
+          rp_loopback_id:
+            description:
+            - Loopback ID of RP on Child fabric
+            - Can be configured only when TRM is enabled
+            - Range 0-1023
+            type: int
+            required: false
+          underlay_mcast_ip:
+            description:
+            - Underlay IPv4 Multicast Address on Child fabric
+            - Can be configured only when TRM is enabled
+            type: str
+            required: false
+          overlay_mcast_group:
+            description:
+            - Overlay IPv4 Multicast group on Child fabric
+            - Format (224.0.0.0/4 to 239.255.255.255/4)
+            - Can be configured only when TRM is enabled
+            type: str
+            required: false
+          trm_bgw_msite:
+            description:
+            - Enable TRM on Border Gateway Multisite for Child fabric
+            - Can be configured only when TRM is enabled
+            - Required for multicast across sites
+            type: bool
+            required: false
+            default: false
+          import_mvpn_rt:
+            description:
+            - MVPN routes to import on Child fabric
+            - Supported on NDFC only
+            - Can be configured only when TRM is enabled
+            - Use ',' to separate multiple route-targets
+            type: str
+            required: false
+          export_mvpn_rt:
+            description:
+            - MVPN routes to export on Child fabric
+            - Supported on NDFC only
+            - Can be configured only when TRM is enabled
+            - Use ',' to separate multiple route-targets
+            type: str
+            required: false
       attach:
         description:
         - List of vrf attachment details
@@ -377,16 +520,22 @@ options:
         - Ansible NDFC Collection Behavior for Version 2.0.1 and earlier
         - This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
         - Ansible NDFC Collection Behavior for Version 2.1.0 and later
-        - Attachments specified in the playbook will always be created in DCNM.
+        - Attachments specified in the playbook will always be created in DCNM
           This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
           If set to "False", the attachments will be created in DCNM, but will not be deployed
+        - In case of Multisite fabrics, deploy flag on parent will be inherited by the specified child fabrics, unless
+          overridden at child fabric config level.
         type: bool
         default: true
   _fabric_type:
     description:
-    - (Internal) Fabric type for the VRF
+    - INTERNAL PARAMETER - DO NOT USE
+    - Fabric type is determined by the module's action plugin
+    - This parameter is used internally by the module for multisite fabric processing
+    - Valid values are 'multisite_child', 'multisite_parent' and 'standalone'
     type: str
     required: false
+    choices: ['multisite_child', 'multisite_parent', 'standalone']
 """
 
 EXAMPLES = """
@@ -605,17 +754,17 @@ EXAMPLES = """
           - ip_address: 192.168.1.225
         # Define how this VRF behaves on each Child fabric
         child_fabric_config:
-          - fabric_name: vxlan-child-fabric1
+          - fabric: vxlan-child-fabric1
             adv_default_routes: true
             adv_host_routes: false
-          - fabric_name: vxlan-child-fabric2
+          - fabric: vxlan-child-fabric2
             adv_default_routes: false
             adv_host_routes: true
       - vrf_name: ansible-vrf-msd-2 # A second VRF in the same task
         vrf_id: 9008012
         vlan_id: 2001
         child_fabric_config:
-          - fabric_name: vxlan-child-fabric1
+          - fabric: vxlan-child-fabric1
             adv_default_routes: false
             adv_host_routes: false
         # Attachments are for switches at the Parent fabric
@@ -640,14 +789,14 @@ EXAMPLES = """
         v6_redist_direct_rmap: CUSTOM-RMAP-REDIST-V6
         # Child fabric configuration with multicast settings
         child_fabric_config:
-          - fabric_name: vxlan-child-fabric1
+          - fabric: vxlan-child-fabric1
             l3vni_wo_vlan: true
             trm_enable: true
             trm_bgw_msite: true
             rp_address: 10.1.1.1
             underlay_mcast_ip: 239.1.1.1
             overlay_mcast_group: 239.2.1.1
-          - fabric_name: vxlan-child-fabric2
+          - fabric: vxlan-child-fabric2
             bgp_password: 1234ABCD
             bgp_passwd_encrypt: 7
             netflow_enable: true
@@ -671,7 +820,7 @@ EXAMPLES = """
         service_vrf_template: null
         # Child fabric configs are replaced: child1 is updated
         child_fabric_config:
-          - fabric_name: vxlan-child-fabric1
+          - fabric: vxlan-child-fabric1
             adv_default_routes: false # Value is updated
             adv_host_routes: true     # Value is updated
         attach:
@@ -705,7 +854,7 @@ EXAMPLES = """
         export_evpn_rt: "65000:20001,65000:20002"
         # Child fabric configuration updates
         child_fabric_config:
-          - fabric_name: vxlan-child-fabric1
+          - fabric: vxlan-child-fabric1
             trm_enable: true
             import_mvpn_rt: "65000:30001"
             export_mvpn_rt: "65000:30001"
@@ -724,10 +873,10 @@ EXAMPLES = """
         vlan_id: 2050
         vrf_description: "Production VRF for critical workloads"
         child_fabric_config:
-          - fabric_name: vxlan-child-fabric1
+          - fabric: vxlan-child-fabric1
             adv_default_routes: true
             static_default_route: true
-          - fabric_name: vxlan-child-fabric2
+          - fabric: vxlan-child-fabric2
             adv_default_routes: true
             static_default_route: true
         attach:
@@ -2117,6 +2266,24 @@ class DcnmVrf:
         msg += f"{json.dumps(self.want_deploy, indent=4)}"
         self.log.debug(msg)
 
+    def update_want(self):
+
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        self.log.debug(msg)
+
+        # If fabric type is multisite_child, no attachments
+        # are present in want. So copy have_attach to want_attach for
+        # processing deployments.
+        if self.action_fabric_type == "multisite_child":
+            self.want_attach = copy.deepcopy(self.have_attach)
+
+            msg = "self.want_attach: "
+            msg += f"{json.dumps(self.want_attach, indent=4)}"
+            self.log.debug(msg)
+            
     def get_diff_delete(self):
         caller = inspect.stack()[1][3]
 
@@ -2152,7 +2319,7 @@ class DcnmVrf:
 
                 diff_delete.update({want_c["vrfName"]: "DEPLOYED"})
 
-                if self.action_fabric_type != "Child MSD":
+                if self.action_fabric_type != "multisite_child":
                     have_a = self.find_dict_in_list_by_key_value(
                         search=self.have_attach, key="vrfName", value=want_c["vrfName"]
                     )
@@ -2166,11 +2333,11 @@ class DcnmVrf:
                         diff_detach.append(have_a)
                         all_vrfs.append(have_a["vrfName"])
 
-            if len(all_vrfs) != 0 and self.action_fabric_type != "Child MSD":
+            if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child":
                 diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         else:
-            if self.action_fabric_type != "Child MSD":
+            if self.action_fabric_type != "multisite_child":
                 for have_a in self.have_attach:
                     detach_items = get_items_to_detach(have_a["lanAttachList"])
                     if detach_items:
@@ -2220,7 +2387,7 @@ class DcnmVrf:
 
             detach_list = []
             if not found:
-                if self.action_fabric_type != "Child MSD":
+                if self.action_fabric_type != "multisite_child":
                     for item in have_a["lanAttachList"]:
                         if "isAttached" in item:
                             if item["isAttached"]:
@@ -2235,7 +2402,7 @@ class DcnmVrf:
 
                 diff_delete.update({have_a["vrfName"]: "DEPLOYED"})
 
-        if len(all_vrfs) != 0 and self.action_fabric_type != "Child MSD":
+        if len(all_vrfs) != 0 and self.action_fabric_type != "multisite_child":
             diff_undeploy.update({"vrfNames": ",".join(all_vrfs)})
 
         self.diff_delete = diff_delete
@@ -2264,11 +2431,6 @@ class DcnmVrf:
         all_vrfs = []
 
         self.get_diff_merge(replace=True)
-
-        if self.action_fabric_type == "Child MSD":
-            # In Child MSD fabric, attach and deploy
-            # operations are not processed.
-            return
 
         diff_attach = self.diff_attach
         diff_deploy = self.diff_deploy
@@ -2590,11 +2752,6 @@ class DcnmVrf:
         msg += f"replace == {replace}"
         self.log.debug(msg)
 
-        if self.action_fabric_type == "Child MSD":
-            # In Child MSD fabric, attach and deploy
-            # operations are not processed.
-            return
-
         diff_attach = []
         diff_deploy = {}
 
@@ -2685,11 +2842,6 @@ class DcnmVrf:
         msg += f"caller: {caller}. "
         self.log.debug(msg)
 
-        if self.action_fabric_type == "Child MSD":
-            # In Child MSD fabric, attach and deploy
-            # operations are not processed.
-            return
-
         diff_deploy = self.diff_deploy
         all_vrfs = []
 
@@ -2701,8 +2853,10 @@ class DcnmVrf:
         for vrf_name in self.want_deploy["vrfNames"].split(","):
             msg = f"VRF Name : {vrf_name}"
             self.log.debug(msg)
-            if not self.want_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
-                all_vrfs.append(vrf_name)
+            if not self.diff_attach and vrf_name in self.chg_deploy["vrfNames"].split(","):
+                want_vrf_data = find_dict_in_list_by_key_value(search=self.config, key="vrf_name", value=vrf_name)
+                if want_vrf_data.get("deploy", True) is True:
+                    all_vrfs.append(vrf_name)
 
         if all_vrfs:
             if not diff_deploy:
@@ -2827,8 +2981,7 @@ class DcnmVrf:
                 "source": src,
             }
 
-            if self.action_fabric_type != "Child MSD":
-                formatted_vrf.update({"attach": []})
+            formatted_vrf.update({"attach": []})
 
             # Get property mappings for both template and VRF object properties
             template_mappings, vrf_object_mappings = self.get_property_mappings()
@@ -3099,7 +3252,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_detach or self.action_fabric_type == "Child MSD":
+        if not self.diff_detach or self.action_fabric_type == "multisite_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_detach: {json.dumps(self.diff_detach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -3145,7 +3298,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_undeploy, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_undeploy or self.action_fabric_type == "Child MSD":
+        if not self.diff_undeploy or self.action_fabric_type == "multisite_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -3179,8 +3332,9 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_delete:
-            msg = "Early return. self.diff_delete is None."
+        if not self.diff_delete or self.action_fabric_type == "multisite_child":
+            msg = f"Early return. Fabric Type:{self.action_fabric_type}"
+            msg += f"diff_delete: {json.dumps(self.diff_delete, indent=4, sort_keys=True)}"
             self.log.debug(msg)
             return
 
@@ -3819,7 +3973,7 @@ class DcnmVrf:
         msg += f"{json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-        if not self.diff_attach or self.action_fabric_type == "Child MSD":
+        if not self.diff_attach or self.action_fabric_type == "multisite_child":
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_attach: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -3949,7 +4103,7 @@ class DcnmVrf:
         msg += "ENTERED."
         self.log.debug(msg)
 
-        if not self.diff_deploy or self.action_fabric_type == "Child MSD":
+        if not self.diff_deploy:
             msg = f"Early return. Fabric Type:{self.action_fabric_type}"
             msg += f"diff_deploy: {json.dumps(self.diff_attach, indent=4, sort_keys=True)}"
             self.log.debug(msg)
@@ -4274,12 +4428,12 @@ class DcnmVrf:
             base_spec["deploy"] = {"type": "bool"}
 
         # Add specs based on fabric type
-        if self.action_fabric_type == 'Parent MSD':
+        if self.action_fabric_type == 'multisite_parent':
             base_spec.update(self.get_parent_msd_specs())
-        elif self.action_fabric_type == 'Child MSD':
+        elif self.action_fabric_type == 'multisite_child':
             base_spec.update(self.get_child_msd_specs())
-        else:  # Standard
-            base_spec.update(self.get_standard_specs())
+        else:  # standalone
+            base_spec.update(self.get_standalone_specs())
 
         return base_spec
 
@@ -4362,8 +4516,8 @@ class DcnmVrf:
         }
         return spec
 
-    def get_standard_specs(self):
-        """Return standard (non-MSD) VRF parameters"""
+    def get_standalone_specs(self):
+        """Return standalone (non-MSD) VRF parameters"""
         spec = {
             "adv_default_routes": {"default": True, "type": "bool"},
             "adv_host_routes": {"default": False, "type": "bool"},
@@ -4438,11 +4592,11 @@ class DcnmVrf:
     def get_template_skip_keys(self):
         """Return template configuration keys to skip comparison based on fabric type"""
 
-        if self.action_fabric_type == "Parent MSD":
+        if self.action_fabric_type == "multisite_parent":
             return self.get_child_msd_template_keys()
-        elif self.action_fabric_type == "Child MSD":
+        elif self.action_fabric_type == "multisite_child":
             return self.get_parent_msd_template_keys()
-        else:  # Standard
+        else:  # standalone
             return None
 
     def get_parent_msd_template_keys(self):
@@ -4713,7 +4867,7 @@ class DcnmVrf:
 
     def failure(self, resp):
         # Do not Rollback for Multi-site fabrics
-        if self.fabric_type == "MFD" or self.action_fabric_type == "Child MSD":
+        if self.fabric_type == "MFD" or self.action_fabric_type != "standalone":
             self.failed_to_rollback = True
             self.module.fail_json(msg=resp)
             return
@@ -4791,6 +4945,7 @@ def main():
 
     dcnm_vrf.get_want()
     dcnm_vrf.get_have()
+    dcnm_vrf.update_want()
 
     if module.params["state"] == "merged":
         dcnm_vrf.get_diff_merge()
