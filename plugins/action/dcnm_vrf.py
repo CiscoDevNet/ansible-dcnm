@@ -392,7 +392,7 @@ class ActionModule(ActionNetworkModule):
             elif fabric_type == "multisite_child":
                 result = self.handle_child_msd_workflow(module_args, task_vars)
             else:
-                result = self.handle_standalone_workflow(task_vars)
+                result = self.handle_standalone_workflow(module_args, task_vars)
 
             return result
 
@@ -636,7 +636,7 @@ class ActionModule(ActionNetworkModule):
             fabric_state = fabric_info.get("fabricState")
 
             # Classify fabric based on properties
-            if fabric_type == "Multisite":
+            if fabric_type == "MSD":
                 # Multisite type indicates parent fabric
                 detected_type = "multisite_parent"
             elif fabric_state == "member":
@@ -938,7 +938,7 @@ class ActionModule(ActionNetworkModule):
             # Handle workflow-level exceptions
             return self.error_handler.handle_exception(e, "parent_multisite_workflow", parent_fabric)
 
-    def handle_child_msd_workflow(self, module_args):
+    def handle_child_msd_workflow(self, module_args, task_vars):
         """
         Handle restricted access attempts to Child Multisite fabrics.
         
@@ -960,6 +960,7 @@ class ActionModule(ActionNetworkModule):
         
         Args:
             module_args (dict): Original module arguments from playbook
+            task_vars (dict): Ansible task variables for module execution
             
         Returns:
             dict: Error result indicating operation restriction:
@@ -969,20 +970,47 @@ class ActionModule(ActionNetworkModule):
                 - workflow (str): "Child Multisite Workflow"
         """
         # Extract fabric name for logging
-        fabric_name = module_args.get("fabric", "Unknown")
-        # Log attempted direct child fabric access
-        self.logger.warning("Attempted direct access to Child Multisite fabric", fabric=fabric_name, operation="child_multisite_workflow")
+        fabric_name = module_args.get("fabric")
+        state = module_args.get("state")
+        self.logger.info("Starting Multisite Child workflow", operation="multisite_child_workflow")
+        try:
+            if state == "query":
+                child_module_args = {
+                    "fabric": module_args["fabric"],
+                    "state": "query",
+                    "config": module_args.get("config"),
+                    "_fabric_type": "standalone"
+                }
 
-        # Return restriction error with detailed guidance
-        result = {
-            "failed": True,
-            "msg": f"Task not permitted on Child Multisite fabric '{fabric_name}'. Please perform operations through the Multisite Parent fabric.",
-            "fabric_type": "multisite_child",
-            "workflow": "Child Multisite Workflow"
-        }
-        return result
+                # Execute base dcnm_vrf module functionality
+                result = self.execute_module_with_args(child_module_args, task_vars)
 
-    def handle_standalone_workflow(self, task_vars):
+                # Add workflow identification to result if not present
+                if "fabric_type" not in result:
+                    result["fabric_type"] = "multisite_child"
+                    result["workflow"] = "Multisite Child VRF Processing"
+
+                # Log successful completion
+                self.logger.info("Multisite Child workflow completed successfully", operation="multisite_child_workflow")
+                return result
+            else:
+                # Log attempted direct child fabric access for other states
+                self.logger.warning("Attempted direct access to Child Multisite fabric", fabric=fabric_name, operation="multisite_child_workflow")
+
+                # Return restriction error with detailed guidance
+                result = {
+                    "failed": True,
+                    "msg": f"Task not permitted on Child Multisite fabric '{fabric_name}'. Please perform operations through the Parent fabric.",
+                    "fabric_type": "multisite_child",
+                    "workflow": "Child Multisite Workflow"
+                }
+            return result
+        except Exception as e:
+            # Handle standalone workflow failures
+            return self.error_handler.handle_exception(e, "standalone_workflow")
+
+
+    def handle_standalone_workflow(self, module_args, task_vars):
         """
         Execute standard VRF operations for non-Multisite (standalone) fabrics.
         
@@ -1003,6 +1031,7 @@ class ActionModule(ActionNetworkModule):
         - VRF deletion and cleanup
         
         Args:
+            module_args (dict): Original module arguments from playbook
             task_vars (dict): Ansible task variables for module execution
             
         Returns:
@@ -1017,8 +1046,17 @@ class ActionModule(ActionNetworkModule):
         self.logger.info("Starting standalone Non-Multisite workflow", operation="standalone_workflow")
 
         try:
+            parent_module_args = {
+                "fabric": module_args["fabric"],
+                "config": module_args.get("config"),
+                "_fabric_type": "standalone"
+            }
+
+            if module_args.get("state"):
+                parent_module_args["state"] = module_args["state"]
+
             # Execute base dcnm_vrf module functionality
-            result = super(ActionModule, self).run(task_vars=task_vars)
+            result = self.execute_module_with_args(parent_module_args, task_vars)
 
             # Add workflow identification to result if not present
             if "fabric_type" not in result:
@@ -1499,6 +1537,7 @@ class ActionModule(ActionNetworkModule):
                     "workflow": "Multisite Parent with Child Fabric Processing",
                     "parent_fabric": {
                         "fabric": parent_fabric,
+                        "invocation": parent_result.get("invocation"),
                         "changed": parent_result.get("changed", False),
                         "diff": parent_result.get("diff", []),
                         "response": parent_result.get("response", [])
@@ -1511,6 +1550,7 @@ class ActionModule(ActionNetworkModule):
                     # Create child fabric entry with all relevant data
                     child_entry = {
                         "fabric": child_result.get("child_fabric"),
+                        "invocation": child_result.get("invocation"),
                         "changed": child_result.get("changed", False),
                         "failed": child_result.get("failed", False),
                         "diff": child_result.get("diff", []),
@@ -1533,7 +1573,6 @@ class ActionModule(ActionNetworkModule):
                 return structured_result
             else:
                 # Parent-only workflow: Augment original result with metadata
-                parent_result["fabric_type"] = "multisite_parent"
                 parent_result["workflow"] = "Multisite Parent without Child Fabric Processing"
                 return parent_result
 
