@@ -1,0 +1,27 @@
+---
+- name: collect standalone test cases
+  find:
+    paths: 
+      - "{{ role_path }}/tests/dcnm/standalone"
+      - "{{ role_path }}/tests/dcnm/standalone/self-contained-tests"
+    patterns: "{{ standalone_pattern }}"
+    recurse: true
+  connection: local
+  register: standalone_cases
+  tags: sanity
+
+- name: set standalone test_items
+  set_fact: 
+    standalone_test_items: "{{ standalone_cases.files | map(attribute='path') | list }}"
+  tags: sanity
+
+- name: debug standalone test items
+  debug:
+    var: standalone_test_items
+
+- name: run standalone test cases
+  include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ standalone_test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+  tags: sanity

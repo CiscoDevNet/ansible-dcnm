@@ -437,7 +437,7 @@ class ActionModule(ActionNetworkModule):
         try:
             # Extract state and configuration from task arguments
             state = self._task.args.get("state")
-            config = self._task.args.get("config", [])
+            config = self._task.args.get("config")
 
             # Validate configurations for create/update states
             if state in ["merged", "overridden", "replaced"]:
@@ -472,15 +472,16 @@ class ActionModule(ActionNetworkModule):
 
             # Validate delete state restrictions
             elif state == "deleted":
-                for vrf_idx, vrf in enumerate(config):
-                    # Check for unsupported child_fabric_config in delete operations
-                    if vrf.get("child_fabric_config"):
-                        msg = (
-                            f"Config[{vrf_idx}]: child_fabric_config is not supported "
-                            "with state 'deleted'"
-                        )
-                        self.logger.error(msg, operation="validation")
-                        return {"failed": True, "msg": msg}
+                if config:
+                    for vrf_idx, vrf in enumerate(config):
+                        # Check for unsupported child_fabric_config in delete operations
+                        if vrf.get("child_fabric_config"):
+                            msg = (
+                                f"Config[{vrf_idx}]: child_fabric_config is not supported "
+                                "with state 'deleted'"
+                            )
+                            self.logger.error(msg, operation="validation")
+                            return {"failed": True, "msg": msg}
 
             # Log successful validation completion
             self.logger.debug(
@@ -821,21 +822,20 @@ class ActionModule(ActionNetworkModule):
 
         try:
             # Step 1: Validate and split parent/child configurations
-            config = module_args.get("config", [])
+            config = module_args.get("config")
             parent_config = []
             child_tasks_dict = {}
 
-            # Process each VRF configuration for parent/child splitting
-            for vrf_idx, vrf in enumerate(config):
-                child_fabric_configs = vrf.get("child_fabric_config")
-                if child_fabric_configs:
-                    # Validate each child fabric configuration
-                    for child_idx, child_config in enumerate(child_fabric_configs):
-                        fabric_name = child_config.get("fabric")
-                        if not fabric_name:
+            if config:
+                # Process each VRF configuration for parent/child splitting
+                for vrf_idx, vrf in enumerate(config):
+                    child_fabric_configs = vrf.get("child_fabric_config")
+                    if "child_fabric_config" in vrf:
+                        child_fabric_configs = vrf.get("child_fabric_config")
+                        if not child_fabric_configs:
                             error_msg = (
-                                f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
-                                "fabric is required"
+                                f"Config[{vrf_idx+1}]: child_fabric_config is required for "
+                                "Multisite Parent fabrics. It can be optionally removed when state is query."
                             )
                             self.logger.error(
                                 error_msg,
@@ -843,13 +843,14 @@ class ActionModule(ActionNetworkModule):
                                 operation="config_validation"
                             )
                             return {"failed": True, "msg": error_msg}
-                        # Validate child fabric type and child-parent relationship
-                        try:
-                            if not self.validate_child_parent_fabric(
-                                fabric_name, parent_fabric, fabric_data
-                            ):
+
+                        # Validate each child fabric configuration
+                        for child_idx, child_config in enumerate(child_fabric_configs):
+                            fabric_name = child_config.get("fabric")
+                            if not fabric_name:
                                 error_msg = (
-                                    f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
+                                    f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
+                                    "fabric is required"
                                 )
                                 self.logger.error(
                                     error_msg,
@@ -857,25 +858,36 @@ class ActionModule(ActionNetworkModule):
                                     operation="config_validation"
                                 )
                                 return {"failed": True, "msg": error_msg}
-                        except Exception as e:
-                            return self.error_handler.handle_exception(e, "child_config_validation", fabric_name)
+                            # Validate child fabric type and child-parent relationship
+                            try:
+                                if not self.validate_child_parent_fabric(
+                                    fabric_name, parent_fabric, fabric_data
+                                ):
+                                    error_msg = (
+                                        f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
+                                    )
+                                    self.logger.error(
+                                        error_msg,
+                                        fabric=parent_fabric,
+                                        operation="config_validation"
+                                    )
+                                    return {"failed": True, "msg": error_msg}
+                            except Exception as e:
+                                return self.error_handler.handle_exception(e, "child_config_validation", fabric_name)
 
-                        # Create child tasks and group by child fabric name
-                        child_tasks_dict = self.create_child_task(
-                            vrf, child_config, module_args, child_tasks_dict
-                        )
+                            # Create child tasks and group by child fabric name
+                            child_tasks_dict = self.create_child_task(
+                                vrf, child_config, module_args, child_tasks_dict
+                            )
 
-                    # Create parent VRF without child_fabric_config
-                    parent_vrf = copy.deepcopy(vrf)
-                    if "child_fabric_config" in parent_vrf:
+                        # Create parent VRF without child_fabric_config
+                        parent_vrf = copy.deepcopy(vrf)
                         del parent_vrf["child_fabric_config"]
-                    parent_config.append(parent_vrf)
-                else:
-                    # Handle VRFs without child fabric configurations
-                    parent_vrf = copy.deepcopy(vrf)
-                    if "child_fabric_config" in parent_vrf:
-                        del parent_vrf["child_fabric_config"]
-                    parent_config.append(parent_vrf)
+                        parent_config.append(parent_vrf)
+                    else:
+                        # Handle VRFs without child fabric configurations
+                        parent_vrf = copy.deepcopy(vrf)
+                        parent_config.append(parent_vrf)
 
             # Step 2: Execute parent VRF operations
             self.logger.info(
@@ -924,10 +936,7 @@ class ActionModule(ActionNetworkModule):
                     if child_result.get("failed", False):
                         error_msg = f"Child fabric task failed for {child_task['fabric']}: {child_result.get('msg', 'Unknown error')}"
                         self.logger.error(error_msg, fabric=child_task["fabric"], operation="child_execution")
-                        parent_result["failed"] = True
-                        parent_result["msg"] = error_msg
-                        parent_result["child_fabric_results"] = child_results
-                        return parent_result
+                        break
 
             # Step 4: Create structured results
             result = self.create_structured_results(parent_result, child_results, parent_fabric)

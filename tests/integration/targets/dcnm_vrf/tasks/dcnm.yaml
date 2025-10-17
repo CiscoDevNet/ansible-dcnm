@@ -1,32 +1,63 @@
 ---
-- name: collect dcnm test cases
-  find:
-    paths: ["{{ role_path }}/tests/dcnm", "{{ role_path }}/tests/dcnm/self-contained-tests"]
-    patterns: "{{ testcase }}.yaml"
-  connection: local
-  register: dcnm_cases
-  tags: sanity
-
-- set_fact:
-    test_cases:
-      files: "{{ dcnm_cases.files }}"
-  tags: sanity
-
-- name: set test_items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
-  tags: sanity
-
-- name: debug
+- name: debug testcase variable
   debug:
-     var: test_items
+    var: testcase
+  tags: sanity
 
-- name: debug
-  debug:
-     var: testcase
+# Handle wildcard patterns
+- name: run all tests
+  block:
+    - name: set patterns for all tests
+      set_fact:
+        msd_pattern: "*.yaml"
+        standalone_pattern: "*.yaml"
+    - import_tasks: dcnm_msd.yaml
+    - import_tasks: dcnm_standalone.yaml
+  when: testcase == "*"
+  tags: sanity
 
-- name: run test cases (connection=httpapi)
-  include_tasks: "{{ test_case_to_run }}"
-  with_items: "{{ test_items }}"
-  loop_control:
-    loop_var: test_case_to_run
+# Handle MSD wildcard
+- name: run all MSD tests
+  block:
+    - name: set pattern for all MSD tests
+      set_fact:
+        msd_pattern: "*.yaml"
+    - import_tasks: dcnm_msd.yaml
+  when: testcase == "msd/*"
+  tags: sanity
+
+# Handle standalone wildcard
+- name: run all standalone tests
+  block:
+    - name: set pattern for all standalone tests
+      set_fact:
+        standalone_pattern: "*.yaml"
+    - import_tasks: dcnm_standalone.yaml
+  when: testcase == "standalone/*"
+  tags: sanity
+
+# Handle specific MSD test
+- name: run specific MSD test
+  block:
+    - name: extract MSD test name
+      set_fact:
+        msd_test_name: "{{ testcase | regex_replace('^msd/', '') }}"
+    - name: set pattern for specific MSD test
+      set_fact:
+        msd_pattern: "{{ msd_test_name }}.yaml"
+    - import_tasks: dcnm_msd.yaml
+  when: testcase.startswith("msd/") and testcase != "msd/*"
+  tags: sanity
+
+# Handle specific standalone test
+- name: run specific standalone test
+  block:
+    - name: extract standalone test name
+      set_fact:
+        standalone_test_name: "{{ testcase | regex_replace('^standalone/', '') }}"
+    - name: set pattern for specific standalone test
+      set_fact:
+        standalone_pattern: "{{ standalone_test_name }}.yaml"
+    - import_tasks: dcnm_standalone.yaml
+  when: testcase.startswith("standalone/") and testcase != "standalone/*"
   tags: sanity

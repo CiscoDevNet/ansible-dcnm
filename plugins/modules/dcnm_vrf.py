@@ -2762,6 +2762,8 @@ class DcnmVrf:
             want_config = self.find_dict_in_list_by_key_value(
                 search=self.config, key="vrf_name", value=want_a["vrfName"]
             )
+            if not want_config:
+                continue
             deploy_vrf = ""
             attach_found = False
             for have_a in self.have_attach:
@@ -4929,7 +4931,7 @@ def main():
             default="merged",
             choices=["merged", "replaced", "deleted", "overridden", "query"],
         ),
-        _fabric_type=dict(required=False, type="str")
+        _fabric_type=dict(default="standalone", required=False, type="str")
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)
