@@ -4711,7 +4711,7 @@ class DcnmIntf:
                     self.dcnm_intf_get_if_name(mem, "eth")[0]
                     for mem in item["members"]
                 ]:
-                    # Compare have serial_number to item serial_number and continue if they don't match
+                    # Compare have serial_number to item serial_number return if they don't match
                     if have.get('serialNo') != item.get('sno'):
                         return True, None
                     else:
