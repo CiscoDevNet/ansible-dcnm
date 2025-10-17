@@ -4711,7 +4711,11 @@ class DcnmIntf:
                     self.dcnm_intf_get_if_name(mem, "eth")[0]
                     for mem in item["members"]
                 ]:
-                    return False, item["ifname"]
+                    # Compare have serial_number to item serial_number and continue if they don't match
+                    if have.get('serialNo') != item.get('sno'):
+                        return True, None
+                    else:
+                        return False, item["ifname"]
             elif (item.get("peer1_members")) or (item.get("peer2_members")):
                 if (
                     have["ifName"]
