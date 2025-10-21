@@ -3,12 +3,12 @@ DCNM VRF Action Plugin Test Fixtures
 Generic test data for MSD (Multisite Domain) action plugin testing
 """
 
-import json
 from typing import Dict, Any, List
+
 
 class DCNMVRFActionPluginFixtures:
     """Comprehensive fixtures for DCNM VRF Action Plugin testing with generic names."""
-    
+
     # Generic fabric and configuration names
     PARENT_FABRIC = "PARENT_MSD_FABRIC"
     CHILD_FABRIC = "CHILD_FABRIC_01"
@@ -16,7 +16,7 @@ class DCNMVRFActionPluginFixtures:
     CONTROLLER_IP = "10.10.10.1"
     SWITCH_SERIAL = "ABC123DEF456"
     SWITCH_NAME = "Switch01"
-    
+
     @staticmethod
     def get_fabric_associations_query_response() -> Dict[str, Any]:
         """Returns fabric associations query response (success scenario)."""
@@ -34,7 +34,10 @@ class DCNMVRFActionPluginFixtures:
                                     "extensionPrototypeValues": [],
                                     "extensionValues": "",
                                     "freeformConfig": "",
-                                    "instanceValues": '{"loopbackIpV6Address":"","loopbackId":"","deviceSupportL3VniNoVlan":"false","switchRouteTargetImportEvpn":"","loopbackIpAddress":"","switchRouteTargetExportEvpn":""}',
+                                    "instanceValues": (
+                                        '{"loopbackIpV6Address":"","loopbackId":"","deviceSupportL3VniNoVlan":"false",'
+                                        '"switchRouteTargetImportEvpn":"","loopbackIpAddress":"","switchRouteTargetExportEvpn":""}'
+                                    ),
                                     "islanAttached": True,
                                     "lanAttachedState": "PENDING",
                                     "peerSerialNumber": None,
@@ -64,13 +67,18 @@ class DCNMVRFActionPluginFixtures:
                         "vrfName": "TestVRF_Query",
                         "vrfStatus": "PENDING",
                         "vrfTemplate": "Default_VRF_Universal",
-                        "vrfTemplateConfig": '{"routeTargetExportEvpn":"","routeTargetImport":"","vrfVlanId":"2001","vrfDescription":"","disableRtAuto":"false","v6VrfRouteMap":"FABRIC-RMAP-REDIST-SUBNET","vrfSegmentId":"50001","maxBgpPaths":"1","maxIbgpPaths":"2","routeTargetExport":"","ipv6LinkLocalFlag":"true","mtu":"9216","vrfRouteMap":"FABRIC-RMAP-REDIST-SUBNET","vrfVlanName":"","tag":"12345","nveId":"1","vrfIntfDescription":"","vrfName":"TestVRF_Query","routeTargetImportEvpn":""}'
+                        "vrfTemplateConfig": (
+                            '{"routeTargetExportEvpn":"","routeTargetImport":"","vrfVlanId":"2001","vrfDescription":"","disableRtAuto":"false",'
+                            '"v6VrfRouteMap":"FABRIC-RMAP-REDIST-SUBNET","vrfSegmentId":"50001","maxBgpPaths":"1","maxIbgpPaths":"2",'
+                            '"routeTargetExport":"","ipv6LinkLocalFlag":"true","mtu":"9216","vrfRouteMap":"FABRIC-RMAP-REDIST-SUBNET",'
+                            '"vrfVlanName":"","tag":"12345","nveId":"1","vrfIntfDescription":"","vrfName":"TestVRF_Query","routeTargetImportEvpn":""}'
+                        )
                     }
                 }
             ],
             "workflow": "Multisite Parent without Child Fabric Processing"
         }
-    
+
     @staticmethod
     def get_merged_parent_with_child_failure() -> Dict[str, Any]:
         """Returns merged operation with child fabric failure."""
@@ -102,7 +110,10 @@ class DCNMVRFActionPluginFixtures:
                 }
             ],
             "fabric_type": "multisite_parent",
-            "msg": f"Child fabric task failed for {DCNMVRFActionPluginFixtures.CHILD_FABRIC}: MODULE FAILURE\nSee stdout/stderr for the exact error",
+            "msg": (
+                f"Child fabric task failed for {DCNMVRFActionPluginFixtures.CHILD_FABRIC}: "
+                "MODULE FAILURE\nSee stdout/stderr for the exact error"
+            ),
             "parent_fabric": {
                 "changed": True,
                 "diff": [
@@ -147,23 +158,28 @@ class DCNMVRFActionPluginFixtures:
                         },
                         "MESSAGE": "OK",
                         "METHOD": "POST",
-                        "REQUEST_PATH": f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs",
+                        "REQUEST_PATH": (
+                            f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/"
+                            f"lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs"
+                        ),
                         "RETURN_CODE": 200
                     },
                     {
                         "DATA": {
-                            f"TestVRF_Success-[{DCNMVRFActionPluginFixtures.SWITCH_SERIAL}/{DCNMVRFActionPluginFixtures.SWITCH_NAME}]": "SUCCESS"
+                            f"TestVRF_Success-[{DCNMVRFActionPluginFixtures.SWITCH_SERIAL}/"
+                            f"{DCNMVRFActionPluginFixtures.SWITCH_NAME}]": "SUCCESS"
                         },
                         "MESSAGE": "OK",
                         "METHOD": "POST",
-                        "REQUEST_PATH": f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs/attachments",
+                        "REQUEST_PATH": f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/"
+                                        f"{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs/attachments",
                         "RETURN_CODE": 200
                     }
                 ]
             },
             "workflow": "Multisite Parent with Child Fabric Processing"
         }
-    
+
     @staticmethod
     def get_configuration_validation_failures() -> Dict[str, Dict[str, Any]]:
         """Returns all configuration validation failure scenarios."""
@@ -177,7 +193,12 @@ class DCNMVRFActionPluginFixtures:
             "empty_vrf_name": {
                 "changed": False,
                 "failed": True,
-                "msg": f"DcnmVrf.get_want: vrf missing mandatory key vrf_name: {{'vrf_name': '', 'attach': [{{'deploy': False, 'ip_address': '{DCNMVRFActionPluginFixtures.SWITCH_IP}', 'import_evpn_rt': '', 'export_evpn_rt': '', 'vrf_lite': None}}], 'deploy': False, 'vrf_id': 50103, 'vlan_id': 2103, 'vrf_template': 'Default_VRF_Universal', 'vrf_extension_template': 'Default_VRF_Extension_Universal'}}",
+                "msg": (
+                    f"DcnmVrf.get_want: vrf missing mandatory key vrf_name: "
+                    f"{{'vrf_name': '', 'attach': [{{'deploy': False, 'ip_address': '{DCNMVRFActionPluginFixtures.SWITCH_IP}', "
+                    f"'import_evpn_rt': '', 'export_evpn_rt': '', 'vrf_lite': None}}], 'deploy': False, 'vrf_id': 50103, "
+                    f"'vlan_id': 2103, 'vrf_template': 'Default_VRF_Universal', 'vrf_extension_template': 'Default_VRF_Extension_Universal'}}"
+                ),
                 "workflow": "Multisite Parent without Child Fabric Processing"
             },
             "invalid_vlan_id": {
@@ -199,37 +220,50 @@ class DCNMVRFActionPluginFixtures:
                     },
                     "MESSAGE": "Bad Request",
                     "METHOD": "POST",
-                    "REQUEST_PATH": f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs",
+                    "REQUEST_PATH": (
+                        f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/"
+                        f"lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs"
+                    ),
                     "RETURN_CODE": 400
                 },
                 "workflow": "Multisite Parent without Child Fabric Processing"
             }
         }
-    
+
     @staticmethod
     def get_fabric_related_failures() -> Dict[str, Dict[str, Any]]:
         """Returns fabric-related failure scenarios."""
         return {
             "nonexistent_fabric": {
                 "failed": True,
-                "msg": "{'failed': True, 'msg': \"Fabric 'NONEXISTENT_FABRIC' not found in NDFC. Available fabrics: ['FABRIC_1', 'FABRIC_2', 'PARENT_MSD_FABRIC', 'CHILD_FABRIC_01', 'STANDALONE_FABRIC']\", 'error_type': 'AnsibleError', 'operation': 'main_execution'}"
+                "msg": (
+                    "{'failed': True, 'msg': \"Fabric 'NONEXISTENT_FABRIC' not found in NDFC. "
+                    "Available fabrics: ['FABRIC_1', 'FABRIC_2', 'PARENT_MSD_FABRIC', 'CHILD_FABRIC_01', "
+                    "'STANDALONE_FABRIC']\", 'error_type': 'AnsibleError', 'operation': 'main_execution'}"
+                )
             },
             "child_direct_merged": {
                 "changed": False,
                 "fabric_type": "multisite_child",
                 "failed": True,
-                "msg": f"Task not permitted on Child Multisite fabric '{DCNMVRFActionPluginFixtures.CHILD_FABRIC}'. Please perform operations through the Parent fabric.",
+                "msg": (
+                    f"Task not permitted on Child Multisite fabric '{DCNMVRFActionPluginFixtures.CHILD_FABRIC}'. "
+                    "Please perform operations through the Parent fabric."
+                ),
                 "workflow": "Child Multisite Workflow"
             },
             "child_direct_deleted": {
                 "changed": False,
                 "fabric_type": "multisite_child",
                 "failed": True,
-                "msg": f"Task not permitted on Child Multisite fabric '{DCNMVRFActionPluginFixtures.CHILD_FABRIC}'. Please perform operations through the Parent fabric.",
+                "msg": (
+                    f"Task not permitted on Child Multisite fabric '{DCNMVRFActionPluginFixtures.CHILD_FABRIC}'. "
+                    "Please perform operations through the Parent fabric."
+                ),
                 "workflow": "Child Multisite Workflow"
             }
         }
-    
+
     @staticmethod
     def get_template_attachment_failures() -> Dict[str, Dict[str, Any]]:
         """Returns template and attachment failure scenarios."""
@@ -247,7 +281,10 @@ class DCNMVRFActionPluginFixtures:
                     },
                     "MESSAGE": "Bad Request",
                     "METHOD": "POST",
-                    "REQUEST_PATH": f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs",
+                    "REQUEST_PATH": (
+                        f"https://{DCNMVRFActionPluginFixtures.CONTROLLER_IP}:443/appcenter/cisco/ndfc/api/v1/"
+                        f"lan-fabric/rest/top-down/fabrics/{DCNMVRFActionPluginFixtures.PARENT_FABRIC}/vrfs"
+                    ),
                     "RETURN_CODE": 400
                 },
                 "workflow": "Multisite Parent without Child Fabric Processing"
@@ -255,17 +292,23 @@ class DCNMVRFActionPluginFixtures:
             "invalid_switch_ip": {
                 "changed": False,
                 "failed": True,
-                "msg": '{"Error": "Given switch elem = \\"10.255.255.255\\" cannot be validated, provide a valid ip_sn object\\n"}',
+                "msg": (
+                    '{"Error": "Given switch elem = \\"10.255.255.255\\" cannot be validated, '
+                    'provide a valid ip_sn object\\n"}'
+                ),
                 "workflow": "Multisite Parent without Child Fabric Processing"
             },
             "nonexistent_switch": {
                 "changed": False,
                 "failed": True,
-                "msg": f"DcnmVrf.update_attach_params: caller: get_want. Fabric {DCNMVRFActionPluginFixtures.PARENT_FABRIC} does not contain switch 10.9.9.9",
+                "msg": (
+                    f"DcnmVrf.update_attach_params: caller: get_want. Fabric "
+                    f"{DCNMVRFActionPluginFixtures.PARENT_FABRIC} does not contain switch 10.9.9.9"
+                ),
                 "workflow": "Multisite Parent without Child Fabric Processing"
             }
         }
-    
+
     @staticmethod
     def get_fabric_associations_data() -> List[Dict[str, Any]]:
         """Returns mock fabric associations data."""
@@ -278,7 +321,7 @@ class DCNMVRFActionPluginFixtures:
             },
             {
                 "fabricName": DCNMVRFActionPluginFixtures.CHILD_FABRIC,
-                "fabricType": "Switch_Fabric", 
+                "fabricType": "Switch_Fabric",
                 "fabricState": "member",
                 "fabricId": 12346,
                 "parentFabricName": DCNMVRFActionPluginFixtures.PARENT_FABRIC,
@@ -291,7 +334,7 @@ class DCNMVRFActionPluginFixtures:
                 "fabricId": 12347
             }
         ]
-    
+
     @staticmethod
     def get_module_args_successful_merged() -> Dict[str, Any]:
         """Returns module args for successful merged operation."""
@@ -315,7 +358,7 @@ class DCNMVRFActionPluginFixtures:
                 }
             ]
         }
-    
+
     @staticmethod
     def get_module_args_query() -> Dict[str, Any]:
         """Returns module args for query operation."""
@@ -324,7 +367,7 @@ class DCNMVRFActionPluginFixtures:
             "state": "query",
             "config": []
         }
-    
+
     @staticmethod
     def get_module_args_invalid_vrf_id() -> Dict[str, Any]:
         """Returns module args with invalid VRF ID."""
@@ -346,7 +389,7 @@ class DCNMVRFActionPluginFixtures:
                 }
             ]
         }
-    
+
     @staticmethod
     def get_module_args_child_fabric_direct() -> Dict[str, Any]:
         """Returns module args for direct child fabric access (should fail)."""
@@ -362,7 +405,7 @@ class DCNMVRFActionPluginFixtures:
                 }
             ]
         }
-    
+
     @staticmethod
     def get_all_fixtures() -> Dict[str, Any]:
         """Returns complete fixture data structure."""
@@ -393,16 +436,17 @@ class DCNMVRFActionPluginFixtures:
             }
         }
 
+
 # Usage example:
 if __name__ == "__main__":
     fixtures = DCNMVRFActionPluginFixtures()
-    
+
     # Get specific failure type
     config_failures = fixtures.get_configuration_validation_failures()
     print("Configuration validation failures:")
     for failure_type, failure_data in config_failures.items():
         print(f"  {failure_type}: {failure_data.get('msg', 'No message')}")
-    
+
     # Get all fixtures
     all_fixtures = fixtures.get_all_fixtures()
     print(f"\nTotal fixture categories: {len(all_fixtures['failure_responses'])}")

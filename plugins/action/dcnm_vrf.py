@@ -41,20 +41,20 @@ display = Display()
 class Logger:
     """
     Centralized logging system for DCNM VRF action plugin operations.
-    
+
     This class provides structured logging with context awareness for fabric operations.
     It formats log messages with timestamps, fabric context, and operation context to
     facilitate debugging and monitoring of VRF operations across different fabric types.
-    
+
     Features:
     - Contextual logging with fabric and operation information
     - Multiple log levels mapped to Ansible display verbosity
     - Consistent message formatting across all operations
     - Timestamp tracking for performance analysis
-    
+
     Args:
         name (str): Logger instance name for identification
-        
+
     Attributes:
         name (str): Logger identifier used in message formatting
         start_time (datetime): Initialization timestamp for duration calculations
@@ -69,20 +69,20 @@ class Logger:
     def log(self, level, message, fabric=None, operation=None):
         """
         Core logging method that formats and outputs messages with context.
-        
+
         This method creates structured log messages with timestamps and contextual
         information, then routes them to appropriate Ansible display methods based
         on log level severity.
-        
+
         Message Format:
         - YYYY-MM-DD HH:MM:SS [Logger][Fabric][Operation] LEVEL: message
-        
+
         Args:
             level (str): Log level (debug, info, warning, error)
             message (str): Log message content
             fabric (str, optional): Fabric context for the log message
             operation (str, optional): Operation context for the log message
-            
+
         Display Routing:
         - debug: display.vvv() - Most verbose, debug information
         - info: display.vv() - Informational messages
@@ -137,21 +137,21 @@ class Logger:
 class ErrorHandler:
     """
     Centralized error handling and API response validation for DCNM operations.
-    
+
     This class provides standardized error handling, exception management, and API
     response validation for all DCNM VRF operations. It ensures consistent error
     reporting and helps maintain robust operation flows across fabric types.
-    
+
     Features:
     - Structured exception handling with context preservation
     - API response validation with detailed error reporting
     - Traceback management for debugging complex failures
     - Integration with logging system for error tracking
     - Consistent error response formatting for Ansible
-    
+
     Args:
         logger (Logger): Logger instance for error reporting
-        
+
     Attributes:
         logger (Logger): Associated logger for error message output
     """
@@ -165,27 +165,27 @@ class ErrorHandler:
     ):
         """
         Handle exceptions with comprehensive logging and structured error responses.
-        
+
         This method processes exceptions by extracting relevant information, logging
         the error with context, and creating structured error responses suitable for
         Ansible module returns. It supports optional traceback inclusion for debugging.
-        
+
         Exception Processing:
         - Extracts exception type and message
         - Logs error with operation and fabric context
         - Creates structured error response dictionary
         - Optionally includes Python traceback for debugging
         - Raises AnsibleError with structured information
-        
+
         Args:
             e (Exception): Exception object to handle
             operation (str): Operation context where exception occurred
             fabric (str, optional): Fabric context for the exception
             include_traceback (bool): Whether to include Python traceback
-            
+
         Returns:
             dict: Structured error response with failed=True and error details
-            
+
         Raises:
             AnsibleError: Always raises with structured error information
         """
@@ -226,12 +226,12 @@ class ErrorHandler:
     ):
         """
         Validate DCNM API responses and handle various error conditions.
-        
+
         This method performs comprehensive validation of DCNM API responses,
         checking for proper structure, success indicators, and data presence.
         It handles the common DCNM API response format and provides detailed
         error reporting for debugging failed API calls.
-        
+
         Validation Checks:
         - Response existence and basic structure
         - Response format validation (dict expected)
@@ -239,7 +239,7 @@ class ErrorHandler:
         - Response data structure validation
         - HTTP return code validation (expects 200)
         - Data payload presence validation
-        
+
         DCNM API Response Format:
         {
             "failed": false,
@@ -249,15 +249,15 @@ class ErrorHandler:
                 "DATA": [...]
             }
         }
-        
+
         Args:
             response (dict): DCNM API response to validate
             operation (str): Operation description for error reporting
             fabric (str, optional): Fabric context for error reporting
-            
+
         Returns:
             dict: Validated response['response'] section with DATA
-            
+
         Raises:
             AnsibleError: On any validation failure with detailed error info
         """
@@ -322,32 +322,32 @@ class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
         """
         Main entry point for DCNM VRF action plugin execution.
-        
+
         This method orchestrates the complete VRF operation workflow, handling fabric
         type detection, validation, and appropriate workflow routing. It serves as the
         central coordinator for all VRF operations across different fabric types.
-        
+
         Execution Flow:
         - Performs initial validation of module parameters
         - Discovers fabric associations from DCNM controller
         - Detects fabric type (Multisite Parent, Multisite Child, Standalone)
         - Routes to appropriate workflow handler based on fabric type
         - Returns structured results with operation outcomes
-        
+
         Fabric Type Workflows:
         - Multisite Parent: Handles parent VRF config and child fabric coordination
         - Multisite Child: Restricts direct access, requires parent fabric routing
         - Standalone: Standard VRF operations without Multisite considerations
-        
+
         Error Handling:
         - Comprehensive exception handling with structured error responses
         - Detailed logging for debugging and monitoring
         - Fail-fast approach with immediate error returns
-        
+
         Args:
             tmp (str, optional): Temporary directory path for module operations
             task_vars (dict, optional): Ansible task variables and context
-            
+
         Returns:
             dict: Structured result dictionary containing:
                 - failed (bool): True if operation failed
@@ -356,7 +356,7 @@ class ActionModule(ActionNetworkModule):
                 - fabric_type (str): Detected fabric type
                 - workflow (str): Executed workflow description
                 - Additional workflow-specific result data
-                
+
         Raises:
             AnsibleError: On validation failures or execution errors
         """
@@ -407,25 +407,25 @@ class ActionModule(ActionNetworkModule):
     def run_pre_validation(self):
         """
         Perform comprehensive input validation for VRF module parameters.
-        
+
         This method validates the input configuration to ensure proper parameter
         usage and catch common configuration errors early in the execution flow.
         It checks for parameter placement, structure validation, and state-specific
         restrictions to prevent invalid operations.
-        
+
         Validation Checks:
         - vlan_id placement validation (must be in config, not attach block)
         - vrf_lite structure validation (must contain interface parameter)
         - child_fabric_config restrictions for delete operations
         - Parameter structure and format validation
-        
+
         State-Specific Validations:
         - merged/overridden/replaced: Full parameter validation
         - deleted: Restricted child_fabric_config usage
-        
+
         Args:
             None (uses self._task.args for validation input)
-            
+
         Returns:
             dict: Validation result containing:
                 - failed (bool): True if validation failed
@@ -500,32 +500,32 @@ class ActionModule(ActionNetworkModule):
     def obtain_fabric_associations(self, task_vars, tmp):
         """
         Retrieve fabric associations and relationships from DCNM controller.
-        
+
         This method queries the DCNM controller to obtain fabric association data,
         which includes fabric types, relationships (parent-child), and states.
         This information is essential for fabric type detection and Multisite workflow
         routing decisions.
-        
+
         API Endpoint:
         - GET /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/msd/fabric-associations
-        
+
         Response Processing:
         - Validates API response structure and success
         - Extracts fabric data and builds lookup dictionary
         - Indexes fabrics by name for efficient access
         - Handles empty responses and API errors
-        
+
         Fabric Data Structure:
         Each fabric entry contains:
         - fabricName: Fabric identifier
         - fabricType: Type (MSD, VXLAN, etc.)
         - fabricState: State (member, parent, standalone)
         - fabricParent: Parent fabric name (for child fabrics)
-        
+
         Args:
             task_vars (dict): Ansible task variables for module execution
             tmp (str): Temporary directory path for module operations
-            
+
         Returns:
             dict: Fabric associations indexed by fabric name:
                 {
@@ -536,7 +536,7 @@ class ActionModule(ActionNetworkModule):
                         "fabricParent": null
                     }
                 }
-                
+
         Raises:
             AnsibleError: On API failure or invalid response structure
         """
@@ -585,32 +585,32 @@ class ActionModule(ActionNetworkModule):
     def detect_fabric_type(self, fabric_name, fabric_data):
         """
         Analyze fabric data to determine fabric type for workflow routing.
-        
+
         This method examines fabric properties from DCNM to classify the fabric
         into one of three types that determine the appropriate VRF workflow.
         The classification drives the execution path and operation restrictions.
-        
+
         Fabric Type Classification:
         - Multisite Parent: fabricType="MSD" - Can orchestrate child fabrics
         - Multisite Child: fabricState="member" - Restricted to parent-driven operations
         - Standalone: All others - Standard VRF operations without Multisite features
-        
+
         Detection Logic:
         1. Check if fabric exists in DCNM fabric associations
         2. Examine fabricType field for Multisite Parent identification
         3. Examine fabricState field for child fabric identification
         4. Default to standalone for all other configurations
-        
+
         Args:
             fabric_name (str): Name of fabric to classify
             fabric_data (dict): Fabric associations data from DCNM
-            
+
         Returns:
             str: Detected fabric type:
                 - "multisite_parent": Multisite Parent fabric
-                - "multisite_child": Multisite Child fabric  
+                - "multisite_child": Multisite Child fabric
                 - "standalone": Non-Multisite fabric
-                
+
         Raises:
             AnsibleError: If fabric not found in DCNM associations
         """
@@ -668,32 +668,32 @@ class ActionModule(ActionNetworkModule):
     def validate_child_parent_fabric(self, child_fabric, parent_fabric, fabric_data):
         """
         Validate the relationship between child and Multisite Parent fabrics.
-        
+
         This method ensures that child fabrics are properly associated with their
         Multisite Parent fabric and validates the hierarchical relationship integrity.
         It prevents misconfigurations that could lead to operational issues in
         multi-site domain environments.
-        
+
         Validation Checks:
         - Child fabric exists in DCNM fabric associations
-        - Parent fabric exists in DCNM fabric associations  
+        - Parent fabric exists in DCNM fabric associations
         - Child fabric has fabricState="member" (indicating child status)
         - Child fabric's fabricParent matches specified parent fabric
         - Proper Multisite hierarchy enforcement
-        
+
         Multisite Hierarchy Rules:
         - Child fabrics must be in "member" state
         - Child fabrics must reference correct parent fabric
         - Parent-child relationships must be properly established in DCNM
-        
+
         Args:
             child_fabric (str): Name of child fabric to validate
             parent_fabric (str): Name of expected parent fabric
             fabric_data (dict): Fabric associations data from DCNM
-            
+
         Returns:
             bool: True if child-parent relationship is valid, False otherwise
-            
+
         Raises:
             AnsibleError: On fabric existence failures or validation errors
         """
@@ -757,50 +757,47 @@ class ActionModule(ActionNetworkModule):
     def handle_parent_msd_workflow(self, module_args, fabric_data, task_vars, tmp):
         """
         Execute comprehensive Multisite Parent fabric workflow with child fabric orchestration.
-        
         This method implements the complete Multisite Parent workflow that coordinates VRF
         operations across parent and child fabrics in the correct sequence. It handles
         configuration splitting, validation, execution coordination, and result aggregation
         for complex multi-site domain scenarios.
-        
+
         Workflow Sequence:
         1. Configuration Validation and Splitting
            - Validates child fabric configurations and relationships
            - Splits parent and child configurations into separate tasks
            - Ensures proper Multisite hierarchy and parameter usage
-        
+
         2. Parent Fabric Operations
            - Executes VRF creation, configuration, and attachment on parent
            - Handles parent-specific parameters and templates
            - Validates parent operation completion before child processing
-        
         3. Child Fabric Coordination
            - Waits for VRF readiness on child fabrics
            - Executes child fabric tasks sequentially
            - Applies child-specific VRF parameters and configurations
-        
+
         4. Result Aggregation
            - Combines parent and child operation results
            - Creates structured response with fabric-specific outcomes
            - Handles error propagation and rollback scenarios
-        
+
         Configuration Processing:
         - Extracts child_fabric_config from parent VRF definitions
         - Creates clean parent configurations without child parameters
         - Generates child tasks grouped by fabric with VRF lists
         - Validates child fabric relationships and capabilities
-        
+
         Error Handling:
         - Fail-fast on validation errors with detailed messages
         - Child task failures abort workflow with context preservation
         - Comprehensive logging for debugging complex multi-fabric scenarios
-        
         Args:
             module_args (dict): Original module arguments from playbook
             fabric_data (dict): Fabric associations data from DCNM
             task_vars (dict): Ansible task variables for execution context
             tmp (str): Temporary directory path for operations
-            
+
         Returns:
             dict: Comprehensive workflow result containing:
                 - failed (bool): True if any operation failed
@@ -950,27 +947,26 @@ class ActionModule(ActionNetworkModule):
     def handle_child_msd_workflow(self, module_args, task_vars):
         """
         Handle restricted access attempts to Child Multisite fabrics.
-        
         This method enforces the Multisite operational model by preventing direct
         access to child fabrics. In Multisite architectures, all VRF operations
         must be coordinated through the parent fabric to maintain consistency
         and proper orchestration across the multi-site domain.
-        
+
         Operational Restrictions:
         - Direct VRF operations on child fabrics are not permitted
         - All child fabric changes must be initiated from parent fabric
         - Prevents configuration drift and maintains Multisite integrity
         - Enforces proper Multisite workflow patterns
-        
+
         Security Model:
         - Child fabrics should only be modified through parent orchestration
         - Direct access could bypass Multisite coordination mechanisms
         - Prevents unauthorized or uncoordinated fabric modifications
-        
+
         Args:
             module_args (dict): Original module arguments from playbook
             task_vars (dict): Ansible task variables for module execution
-            
+
         Returns:
             dict: Error result indicating operation restriction:
                 - failed (bool): Always True
@@ -1018,31 +1014,29 @@ class ActionModule(ActionNetworkModule):
             # Handle standalone workflow failures
             return self.error_handler.handle_exception(e, "standalone_workflow")
 
-
     def handle_standalone_workflow(self, module_args, task_vars):
         """
         Execute standard VRF operations for non-Multisite (standalone) fabrics.
-        
+
         This method handles VRF operations for fabrics that are not part of
         Multi-Site Domain (Multisite) configurations. It provides a direct pass-through
         to the base dcnm_vrf module functionality without Multisite-specific processing.
-        
+
         Workflow Characteristics:
         - Direct pass-through to base module functionality
         - No child fabric considerations or orchestration
         - Standard VRF operations (create, update, delete, attach)
         - No additional Multisite-specific validation or processing
-        
+
         Operation Types Supported:
         - VRF creation and configuration
         - VRF attachments to switches
         - VRF updates and modifications
         - VRF deletion and cleanup
-        
+
         Args:
             module_args (dict): Original module arguments from playbook
             task_vars (dict): Ansible task variables for module execution
-            
         Returns:
             dict: Module execution result containing:
                 - changed (bool): True if fabric state was modified
@@ -1087,37 +1081,37 @@ class ActionModule(ActionNetworkModule):
     def create_child_task(self, parent_vrf, child_config, parent_module_args, child_tasks_dict):
         """
         Create and organize child fabric tasks from parent VRF and child configurations.
-        
+
         This method processes child fabric configurations and creates structured tasks
         that can be executed independently on child fabrics. It handles task grouping
         by fabric name to optimize execution and maintains VRF context from parent
         configurations while applying child-specific parameters.
-        
+
         Task Creation Process:
         - Extracts fabric name from child configuration
         - Removes fabric name from config (used as task key)
         - Inherits VRF name and deploy settings from parent VRF
         - Groups multiple VRFs by child fabric for batch processing
         - Maintains VRF list for readiness checking
-        
+
         Task Grouping Logic:
         - Child tasks are grouped by fabric name for efficiency
         - Multiple VRFs for same child fabric are batched together
         - Each child fabric gets one task with multiple VRF configurations
         - VRF names tracked separately for status monitoring
-        
+
         Configuration Inheritance:
         - VRF name: Inherited from parent VRF configuration
         - Deploy flag: Inherited from parent if specified
         - State: Inherited from parent module arguments
         - Child-specific parameters: From child_config block
-        
+
         Args:
             parent_vrf (dict): Parent VRF configuration containing VRF name and settings
             child_config (dict): Child fabric configuration with fabric name and parameters
             parent_module_args (dict): Original module arguments for state inheritance
             child_tasks_dict (dict): Existing child tasks dictionary for accumulation
-            
+
         Returns:
             dict: Updated child tasks dictionary with structure:
                 {
@@ -1128,7 +1122,7 @@ class ActionModule(ActionNetworkModule):
                         "vrf_list": [list of VRF names for readiness checking]
                     }
                 }
-            
+
         Raises:
             Exception: On task creation failures with context preservation
         """
@@ -1136,7 +1130,7 @@ class ActionModule(ActionNetworkModule):
             # Extract and remove fabric name from child configuration
             child_fabric_name = child_config["fabric"]
             del child_config["fabric"]
-            
+
             # Inherit VRF context from parent configuration
             child_config["vrf_name"] = parent_vrf["vrf_name"]
             if "deploy" in parent_vrf:
@@ -1170,35 +1164,35 @@ class ActionModule(ActionNetworkModule):
     def execute_child_task(self, child_task, task_vars):
         """
         Execute child fabric VRF operations using specialized Child Multisite workflow.
-        
+
         This method handles the execution of VRF operations on child fabrics within
         an Multisite environment. It adapts parent module arguments for child fabric
         execution, applies state transformations, and maintains proper context
         for child fabric operations while ensuring Multisite operational consistency.
-        
+
         Child Multisite Execution Model:
         - Child fabrics operate with restricted parameter sets
         - State transformations applied (overridden -> replaced)
         - Child-specific VRF parameters applied from parent orchestration
         - Independent execution context with parent-derived configurations
-        
+
         State Handling:
         - overridden: Transformed to 'replaced' for child fabric compatibility
         - merged/replaced: Passed through unchanged
         - deleted: Should be prevented at validation stage
-        
+
         Module Argument Adaptation:
         - fabric: Set to child fabric name
         - config: Child-specific VRF configurations
         - state: Transformed as needed for child fabric
         - _fabric_type: Set to "multisite_child" for module behavior
-        
+
         Result Enhancement:
         - Adds child_fabric identifier to result
         - Includes invocation details for debugging
         - Preserves all standard dcnm_vrf result data
         - Maintains error context for troubleshooting
-        
+
         Args:
             child_task (dict): Child fabric task containing:
                 - fabric (str): Child fabric name
@@ -1206,14 +1200,14 @@ class ActionModule(ActionNetworkModule):
                 - state (str): Operation state
                 - vrf_list (list): VRF names for tracking
             task_vars (dict): Ansible task variables for execution context
-            
+
         Returns:
             dict: Child fabric execution result containing:
                 - Standard dcnm_vrf module results (changed, failed, diff, response)
                 - child_fabric (str): Child fabric identifier
                 - invocation (dict): Module arguments used for execution
                 - Error details if execution failed
-            
+
         Raises:
             Exception: On child task execution failures with context
         """
@@ -1267,28 +1261,27 @@ class ActionModule(ActionNetworkModule):
     def execute_module_with_args(self, module_args, task_vars):
         """
         Execute the dcnm_vrf module with specified arguments and context.
-        
+
         This method provides a wrapper for executing the base dcnm_vrf module
         with custom arguments while preserving the original task context.
         It temporarily replaces task arguments, executes the module, and
         restores the original arguments to maintain task state integrity.
-        
+
         Execution Flow:
         - Preserves original task arguments
         - Temporarily replaces with custom module arguments
         - Executes base dcnm_vrf module functionality
         - Adds invocation details to result for debugging
         - Restores original task arguments
-        
+
         Use Cases:
         - Parent fabric VRF operations with modified configurations
         - Child fabric VRF operations with derived configurations
         - Module execution with dynamically generated parameters
-        
         Args:
             module_args (dict): Custom module arguments to execute with
             task_vars (dict): Ansible task variables for execution context
-            
+
         Returns:
             dict: Module execution result containing:
                 - Standard dcnm_vrf module results
@@ -1329,42 +1322,41 @@ class ActionModule(ActionNetworkModule):
     def wait_for_vrf_ready(self, vrf_list, fabric_name, task_vars, tmp):
         """
         Wait for VRFs to reach a deployable state on the specified fabric.
-        
+
         This method monitors VRF status on child fabrics to ensure they are in
         appropriate states before child fabric operations proceed. It implements
         a polling mechanism with configurable retry logic and handles various
         VRF states that may occur during parent-to-child fabric propagation.
-        
         VRF State Monitoring:
         - DEPLOYED: VRF is fully deployed and ready for operations
         - PENDING: VRF deployment is in progress, acceptable for operations
         - NA: VRF state not applicable, typically ready for operations
         - OUT-OF-SYNC: VRF configuration drift, handled with retry logic
-        
+
         Polling Algorithm:
         - Queries DCNM REST API for current VRF status on fabric
         - Removes VRFs from wait list as they reach ready states
         - Implements exponential backoff with configurable wait times
         - Handles persistent OUT-OF-SYNC states with tolerance logic
-        
+
         Retry Logic:
         - Maximum retry count based on MAX_RETRY_COUNT and WAIT_TIME_FOR_DELETE_LOOP
         - OUT-OF-SYNC VRFs get additional chances before removal
         - Persistent wait list items eventually timeout and fail
         - Progressive logging of wait status and remaining retries
-        
+
         State Transition Handling:
         - Newly created VRFs may initially show as non-existent
         - Parent fabric changes propagate to child fabrics over time
         - Configuration drift scenarios handled with retry tolerance
         - Network connectivity issues accommodated with retry logic
-        
+
         Args:
             vrf_list (list): List of VRF names to monitor for readiness
             fabric_name (str): Child fabric name where VRFs should be ready
             task_vars (dict): Ansible task variables for API calls
             tmp (str): Temporary directory path for operations
-            
+
         Returns:
             tuple: (all_ready, remaining_vrfs)
                 - all_ready (bool): True if all VRFs reached ready state
@@ -1408,7 +1400,7 @@ class ActionModule(ActionNetworkModule):
                     vrf_name = vrf.get("vrfName")
                     if vrf_name in vrf_list:
                         vrf_status = vrf.get("vrfStatus")
-                        
+
                         # Check if VRF is in ready state
                         if vrf_status in VALID_VRF_STATES:
                             # VRF is ready, remove from wait list
@@ -1455,45 +1447,45 @@ class ActionModule(ActionNetworkModule):
     def create_structured_results(self, parent_result, child_results, parent_fabric):
         """
         Create structured results combining parent and child fabric operations.
-        
+
         This method aggregates execution results from Multi-Site Domain (Multisite)
         operations to create a unified response structure that clearly separates
         parent fabric outcomes from child fabric orchestration results. It
         provides consistent output format for both simple parent-only operations
         and complex parent-with-children workflows.
-        
+
         Result Structure Design:
         - Multisite Parent operations: Primary fabric configuration changes
         - Child fabric operations: Secondary orchestrated operations
         - Combined status: Overall operation success/failure indicators
         - Workflow metadata: Operation type and fabric relationship context
-        
+
         Parent-Only Workflow:
         - Simple augmentation of parent result with workflow metadata
         - Fabric type marked as "multisite_parent" for identification
         - Workflow description indicates no child processing occurred
         - All original parent result data preserved unchanged
-        
+
         Parent-with-Children Workflow:
         - Comprehensive structure separating parent and child results
         - Parent fabric section with original operation outcomes
         - Child fabrics array with individual fabric results
         - Aggregated changed/failed status across all fabrics
         - Detailed failure messaging for child fabric issues
-        
+
         Status Aggregation Logic:
         - changed: True if parent OR any child fabric changed
         - failed: True if parent OR any child fabric failed
         - Child failures include detailed error messaging
         - Parent failures preserved from original result
-        
+
         Args:
             parent_result (dict): Result from parent fabric operations
                 Expected keys: changed, failed, diff, response, msg
             child_results (list): List of child fabric operation results
                 Each item expected keys: child_fabric, changed, failed, diff, response, msg
             parent_fabric (str): Name of the Multisite Parent fabric for context
-            
+
         Returns:
             dict: Structured result with parent/child separation
                 For parent-only operations:
@@ -1504,7 +1496,7 @@ class ActionModule(ActionNetworkModule):
                     'workflow': 'Multisite Parent without Child Fabric Processing',
                     ... (original parent_result fields)
                 }
-                
+
                 For parent-with-children operations:
                 {
                     'changed': bool,      # Aggregated across all fabrics

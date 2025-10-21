@@ -536,6 +536,7 @@ options:
     type: str
     required: false
     choices: ['multisite_child', 'multisite_parent', 'standalone']
+    default: standalone
 """
 
 EXAMPLES = """
@@ -2283,7 +2284,7 @@ class DcnmVrf:
             msg = "self.want_attach: "
             msg += f"{json.dumps(self.want_attach, indent=4)}"
             self.log.debug(msg)
-            
+
     def get_diff_delete(self):
         caller = inspect.stack()[1][3]
 
