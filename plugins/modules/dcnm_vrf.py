@@ -536,7 +536,7 @@ options:
     type: str
     required: false
     choices: ['multisite_child', 'multisite_parent', 'standalone']
-    default: standalone
+    default: 'standalone'
 """
 
 EXAMPLES = """

@@ -1,0 +1,416 @@
+{
+  "mock_fabric_associations": [
+    {
+      "fabricId": 34,
+      "fabricName": "TF_VXLAN_FABRIC3",
+      "fabricParent": "None",
+      "fabricState": "standalone",
+      "fabricTechnology": "VXLANFabric",
+      "fabricType": "Switch_Fabric"
+    },
+    {
+      "fabricId": 3,
+      "fabricName": "neil-test",
+      "fabricParent": "neil-test-msd",
+      "fabricState": "member",
+      "fabricTechnology": "VXLANFabric",
+      "fabricType": "Switch_Fabric"
+    },
+    {
+      "fabricId": 37,
+      "fabricName": "neil-test-msd",
+      "fabricParent": "None",
+      "fabricState": "msd",
+      "fabricTechnology": "VXLANFabric",
+      "fabricType": "MSD"
+    },
+    {
+      "fabricId": 38,
+      "fabricName": "AK-MSD_R",
+      "fabricParent": "None",
+      "fabricState": "msd",
+      "fabricTechnology": "VXLANFabric",
+      "fabricType": "MSD"
+    },
+    {
+      "fabricId": 40,
+      "fabricName": "AK-RT",
+      "fabricParent": "AK-MSD_R",
+      "fabricState": "member",
+      "fabricTechnology": "VXLANFabric",
+      "fabricType": "Switch_Fabric"
+    },
+    {
+      "fabricId": 11,
+      "fabricName": "AK-R",
+      "fabricParent": "None",
+      "fabricState": "standalone",
+      "fabricTechnology": "VXLANFabric",
+      "fabricType": "Switch_Fabric"
+    },
+    {
+      "fabricId": 12,
+      "fabricName": "AK-EXT",
+      "fabricParent": "None",
+      "fabricState": "standalone",
+      "fabricTechnology": "External",
+      "fabricType": "External"
+    }
+  ],
+  "mock_fabric_associations_dict": {
+    "TF_VXLAN_FABRIC3": {"fabricId": 34, "fabricName": "TF_VXLAN_FABRIC3", "fabricParent": "None", "fabricState": "standalone", "fabricTechnology": "VXLANFabric", "fabricType": "Switch_Fabric"}, "neil-test": {"fabricId": 3, "fabricName": "neil-test", "fabricParent": "neil-test-msd", "fabricState": "member", "fabricTechnology": "VXLANFabric", "fabricType": "Switch_Fabric"}, "neil-test-msd": {"fabricId": 37, "fabricName": "neil-test-msd", "fabricParent": "None", "fabricState": "msd", "fabricTechnology": "VXLANFabric", "fabricType": "MSD"}, "AK-MSD_R": {"fabricId": 38, "fabricName": "AK-MSD_R", "fabricParent": "None", "fabricState": "msd", "fabricTechnology": "VXLANFabric", "fabricType": "MSD"}, "AK-RT": {"fabricId": 40, "fabricName": "AK-RT", "fabricParent": "AK-MSD_R", "fabricState": "member", "fabricTechnology": "VXLANFabric", "fabricType": "Switch_Fabric"}, "AK-R": {"fabricId": 11, "fabricName": "AK-R", "fabricParent": "None", "fabricState": "standalone", "fabricTechnology": "VXLANFabric", "fabricType": "Switch_Fabric"}, "AK-EXT": {"fabricId": 12, "fabricName": "AK-EXT", "fabricParent": "None", "fabricState": "standalone", "fabricTechnology": "External", "fabricType": "External"}},
+  "mock_parent_fabric_details": {
+    "id": 38,
+    "fabricId": "FABRIC-38",
+    "fabricName": "AK-MSD_R",
+    "fabricType": "MSD",
+    "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+    "fabricTechnology": "VXLANFabric",
+    "templateFabricType": "VXLAN EVPN Multi-Site",
+    "fabricTechnologyFriendly": "VXLAN EVPN",
+    "provisionMode": "DCNMTopDown",
+    "deviceType": "n9k",
+    "replicationMode": "IngressReplication",
+    "operStatus": "HEALTHY",
+    "templateName": "MSD_Fabric",
+    "nvPairs": {
+      "ANYCAST_GW_MAC": "2020.0000.00aa",
+      "BGP_AS": "65000",
+      "DCI_SUBNET_RANGE": "10.10.1.0/24",
+      "ENABLE_EVPN": "true",
+      "L2_SEGMENT_ID_RANGE": "30000-49000",
+      "L3_PARTITION_ID_RANGE": "50000-59000",
+      "MULTICAST_GROUP_SUBNET": "239.1.1.0/25",
+      "NETWORK_VLAN_RANGE": "2300-2999",
+      "VRF_VLAN_RANGE": "2000-2299"
+    },
+    "vrfTemplate": "Default_VRF_Universal",
+    "networkTemplate": "Default_Network_Universal",
+    "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+    "networkExtensionTemplate": "Default_Network_Extension_Universal",
+    "createdOn": 1737248524471,
+    "modifiedOn": 1737248525048
+  },
+  "mock_child_fabric_details": {
+    "id": 40,
+    "fabricId": "FABRIC-40",
+    "fabricName": "AK-RT",
+    "fabricType": "Switch_Fabric",
+    "fabricTypeFriendly": "Switch Fabric",
+    "fabricTechnology": "VXLANFabric",
+    "templateFabricType": "Data Center VXLAN EVPN",
+    "fabricTechnologyFriendly": "VXLAN EVPN",
+    "provisionMode": "DCNMTopDown",
+    "deviceType": "n9k",
+    "replicationMode": "Multicast",
+    "operStatus": "MINOR",
+    "asn": "2009",
+    "siteId": "4567",
+    "templateName": "Easy_Fabric",
+    "nvPairs": {
+      "ANYCAST_GW_MAC": "2020.0000.00aa",
+      "BGP_AS": "2009",
+      "DCI_SUBNET_RANGE": "10.33.0.0/16",
+      "ENABLE_EVPN": "true",
+      "L2_SEGMENT_ID_RANGE": "30000-49000",
+      "L3_PARTITION_ID_RANGE": "50000-59000",
+      "MULTICAST_GROUP_SUBNET": "239.1.1.0/25",
+      "NETWORK_VLAN_RANGE": "2300-2999",
+      "SITE_ID": "4567",
+      "VRF_VLAN_RANGE": "2000-2299"
+    },
+    "vrfTemplate": "Default_VRF_Universal",
+    "networkTemplate": "Default_Network_Universal",
+    "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+    "networkExtensionTemplate": "Default_Network_Extension_Universal",
+    "createdOn": 1761045849064,
+    "modifiedOn": 1761046730860
+  },
+  "mock_standalone_fabric_details": {
+    "id": 11,
+    "fabricId": "FABRIC-11",
+    "fabricName": "AK-R",
+    "fabricType": "Switch_Fabric",
+    "fabricTypeFriendly": "Switch Fabric",
+    "fabricTechnology": "VXLANFabric",
+    "templateFabricType": "Data Center VXLAN EVPN",
+    "fabricTechnologyFriendly": "VXLAN EVPN",
+    "provisionMode": "DCNMTopDown",
+    "deviceType": "n9k",
+    "replicationMode": "Multicast",
+    "operStatus": "HEALTHY",
+    "asn": "65001",
+    "siteId": "65001",
+    "templateName": "Easy_Fabric",
+    "nvPairs": {
+      "ANYCAST_GW_MAC": "2020.0000.00aa",
+      "BGP_AS": "65001",
+      "DCI_SUBNET_RANGE": "10.2.0.0/16",
+      "ENABLE_EVPN": "true",
+      "L2_SEGMENT_ID_RANGE": "30000-49000",
+      "L3_PARTITION_ID_RANGE": "50000-59000",
+      "MULTICAST_GROUP_SUBNET": "239.1.1.0/25",
+      "NETWORK_VLAN_RANGE": "2300-2999",
+      "SITE_ID": "65001",
+      "VRF_VLAN_RANGE": "2000-2299"
+    },
+    "vrfTemplate": "Default_VRF_Universal",
+    "networkTemplate": "Default_Network_Universal",
+    "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+    "networkExtensionTemplate": "Default_Network_Extension_Universal",
+    "createdOn": 1737248896991,
+    "modifiedOn": 1737248902373
+  },
+  "mock_api_responses": {
+    "success_response": {
+      "MESSAGE": "OK",
+      "METHOD": "GET",
+      "RETURN_CODE": 200,
+      "DATA": {}
+    },
+    "error_400": {
+      "MESSAGE": "Bad Request",
+      "METHOD": "POST",
+      "RETURN_CODE": 400,
+      "ERROR": "Invalid request parameters"
+    },
+    "error_404": {
+      "MESSAGE": "Not Found",
+      "METHOD": "GET",
+      "RETURN_CODE": 404,
+      "ERROR": "Resource not found"
+    },
+    "error_500": {
+      "MESSAGE": "Internal Server Error",
+      "METHOD": "POST",
+      "RETURN_CODE": 500,
+      "ERROR": "Internal server error"
+    }
+  },
+  "mock_error_responses": {
+    "child_direct_access": {
+      "changed": false,
+      "fabric_type": "multisite_child",
+      "failed": true,
+      "msg": "Task not permitted on Child Multisite fabric 'AK-RT'. Please perform operations through the Parent fabric.",
+      "workflow": "Child Multisite Workflow"
+    },
+    "invalid_fabric": {
+      "failed": true,
+      "msg": "Fabric 'NONEXISTENT_FABRIC' not found in NDFC. Available fabrics: ['TF_VXLAN_FABRIC3', 'neil-test', 'CML', 'cisco_test_fabric', 'neil-test-msd', 'AK-MSD_R', 'TF_VXLAN_FABRIC2', 'neil-test-2', 'AK-RT', 'AK-R', 'AK-EXT', 'msde', 'nac-msd-parent', 'TF_ISN_FABRIC', 'TF_lan_fabric', 'vpc_test_fabric', 'nac-fabric1', 'MSD-P1-AK', 'MSD-C1-AK']"
+    },
+    "invalid_vrf_id": {
+      "changed": false,
+      "failed": true,
+      "msg": "DcnmVrf.validate_input: Invalid parameters in playbook: vrf_id:999999999 : The item exceeds the allowed range of max 16777214",
+      "workflow": "Multisite Parent without Child Fabric Processing"
+    },
+    "permission_denied": {
+      "changed": false,
+      "failed": true,
+      "msg": "Permission denied for fabric operations",
+      "workflow": "Error Handling"
+    }
+  },
+  "mock_module_args": {
+    "basic_vrf_config": {
+      "state": "merged",
+      "fabric": "AK-R",
+      "config": [
+        {
+          "vrf_name": "test_vrf_1",
+          "vrf_id": "9008011",
+          "vrf_template": "Default_VRF_Universal",
+          "vrf_extension_template": "Default_VRF_Extension_Universal",
+          "vlan_id": "202",
+          "source": "None",
+          "service_vrf_template": "None",
+          "attach": [],
+          "deploy": true
+        }
+      ]
+    },
+    "msd_parent_config": {
+      "state": "merged",
+      "fabric": "AK-MSD_R",
+      "config": [
+        {
+          "vrf_name": "test_vrf_msd",
+          "vrf_id": "9008012",
+          "vrf_template": "Default_VRF_Universal",
+          "vrf_extension_template": "Default_VRF_Extension_Universal",
+          "vlan_id": "203",
+          "source": "None",
+          "service_vrf_template": "None",
+          "attach": [],
+          "deploy": true
+        }
+      ]
+    },
+    "child_fabric_config": {
+      "state": "merged",
+      "fabric": "AK-RT",
+      "config": [
+        {
+          "vrf_name": "test_vrf_child",
+          "vrf_id": "9008013",
+          "vrf_template": "Default_VRF_Universal",
+          "vrf_extension_template": "Default_VRF_Extension_Universal",
+          "vlan_id": "204",
+          "source": "None",
+          "service_vrf_template": "None",
+          "attach": [],
+          "deploy": true
+        }
+      ]
+    },
+    "invalid_fabric_config": {
+      "state": "merged",
+      "fabric": "NONEXISTENT_FABRIC",
+      "config": [
+        {
+          "vrf_name": "test_vrf_fail",
+          "vrf_id": "9008014",
+          "vrf_template": "Default_VRF_Universal",
+          "vrf_extension_template": "Default_VRF_Extension_Universal",
+          "vlan_id": "205",
+          "source": "None",
+          "service_vrf_template": "None",
+          "attach": [],
+          "deploy": true
+        }
+      ]
+    },
+    "invalid_vrf_id_config": {
+      "state": "merged",
+      "fabric": "AK-R",
+      "config": [
+        {
+          "vrf_name": "test_vrf_invalid_id",
+          "vrf_id": "999999999",
+          "vrf_template": "Default_VRF_Universal",
+          "vrf_extension_template": "Default_VRF_Extension_Universal",
+          "vlan_id": "206",
+          "source": "None",
+          "service_vrf_template": "None",
+          "attach": [],
+          "deploy": true
+        }
+      ]
+    }
+  },
+  "mock_workflow_results": {
+    "standalone_success": {
+      "changed": true,
+      "failed": false,
+      "msg": "VRF operations completed successfully on standalone fabric",
+      "fabric_type": "standalone",
+      "workflow": "Standalone Fabric Workflow"
+    },
+    "msd_parent_success": {
+      "changed": true,
+      "failed": false,
+      "msg": "VRF operations completed successfully on MSD parent fabric",
+      "fabric_type": "multisite_parent",
+      "workflow": "Multisite Parent Workflow"
+    },
+    "msd_child_redirect": {
+      "changed": false,
+      "failed": false,
+      "msg": "VRF operations redirected to parent fabric",
+      "fabric_type": "multisite_child",
+      "workflow": "Child Multisite Workflow",
+      "redirected_to": "AK-MSD_R"
+    }
+  },
+  "mock_fabric_detection_data": {
+    "standalone_fabric": {
+      "fabric_name": "AK-R",
+      "fabric_type": "standalone",
+      "fabric_details": {
+        "fabricType": "Switch_Fabric",
+        "fabricTechnology": "VXLANFabric"
+      },
+      "associations": []
+    },
+    "msd_parent_fabric": {
+      "fabric_name": "AK-MSD_R",
+      "fabric_type": "multisite_parent",
+      "fabric_details": {
+        "fabricType": "MSD",
+        "fabricTechnology": "VXLANFabric"
+      },
+      "associations": [
+        {
+          "fabricName": "AK-RT",
+          "fabricParent": "AK-MSD_R",
+          "fabricState": "member"
+        }
+      ]
+    },
+    "msd_child_fabric": {
+      "fabric_name": "AK-RT",
+      "fabric_type": "multisite_child",
+      "fabric_details": {
+        "fabricType": "Switch_Fabric",
+        "fabricTechnology": "VXLANFabric"
+      },
+      "parent_fabric": "AK-MSD_R",
+      "associations": [
+        {
+          "fabricName": "AK-RT",
+          "fabricParent": "AK-MSD_R",
+          "fabricState": "member"
+        }
+      ]
+    }
+  },
+  "mock_logger_contexts": {
+    "basic_context": {
+      "fabric": "AK-R",
+      "operation": "fabric_detection"
+    },
+    "msd_context": {
+      "fabric": "AK-MSD_R",
+      "operation": "msd_workflow"
+    },
+    "error_context": {
+      "fabric": "NONEXISTENT_FABRIC",
+      "operation": "error_handling"
+    }
+  },
+  "mock_error_handler_data": {
+    "ansible_error": {
+      "error_type": "AnsibleError",
+      "message": "Test ansible error",
+      "fabric": "test_fabric",
+      "operation": "test_operation"
+    },
+    "api_error": {
+      "error_type": "APIError",
+      "message": "API request failed",
+      "fabric": "test_fabric",
+      "operation": "api_call",
+      "response_code": 400
+    },
+    "validation_error": {
+      "error_type": "ValidationError", 
+      "message": "Invalid configuration parameters",
+      "fabric": "test_fabric",
+      "operation": "validation"
+    }
+  },
+  "mock_performance_data": {
+    "operation_timings": {
+      "fabric_detection": 0.5,
+      "workflow_execution": 2.3,
+      "api_calls": 1.2,
+      "total_execution": 4.0
+    },
+    "api_call_counts": {
+      "get_fabric_details": 3,
+      "get_fabric_associations": 1,
+      "dcnm_module_execution": 1
+    }
+  }
+}

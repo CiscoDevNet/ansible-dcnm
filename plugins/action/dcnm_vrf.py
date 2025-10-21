@@ -40,7 +40,7 @@ display = Display()
 
 class Logger:
     """
-    Centralized logging system for DCNM VRF action plugin operations.
+    Centralized logging system for NDFC VRF action plugin operations.
 
     This class provides structured logging with context awareness for fabric operations.
     It formats log messages with timestamps, fabric context, and operation context to
@@ -60,7 +60,7 @@ class Logger:
         start_time (datetime): Initialization timestamp for duration calculations
     """
 
-    def __init__(self, name="DCNM_VRF_ActionPlugin"):
+    def __init__(self, name="NDFC_VRF_ActionPlugin"):
         # Set logger identification name
         self.name = name
         # Record initialization time for performance tracking
@@ -136,10 +136,10 @@ class Logger:
 
 class ErrorHandler:
     """
-    Centralized error handling and API response validation for DCNM operations.
+    Centralized error handling and API response validation for NDFC operations.
 
     This class provides standardized error handling, exception management, and API
-    response validation for all DCNM VRF operations. It ensures consistent error
+    response validation for all NDFC VRF operations. It ensures consistent error
     reporting and helps maintain robust operation flows across fabric types.
 
     Features:
@@ -225,11 +225,11 @@ class ErrorHandler:
         self, response, operation="API call", fabric=None
     ):
         """
-        Validate DCNM API responses and handle various error conditions.
+        Validate NDFC API responses and handle various error conditions.
 
-        This method performs comprehensive validation of DCNM API responses,
+        This method performs comprehensive validation of NDFC API responses,
         checking for proper structure, success indicators, and data presence.
-        It handles the common DCNM API response format and provides detailed
+        It handles the common NDFC API response format and provides detailed
         error reporting for debugging failed API calls.
 
         Validation Checks:
@@ -240,7 +240,7 @@ class ErrorHandler:
         - HTTP return code validation (expects 200)
         - Data payload presence validation
 
-        DCNM API Response Format:
+        NDFC API Response Format:
         {
             "failed": false,
             "response": {
@@ -251,7 +251,7 @@ class ErrorHandler:
         }
 
         Args:
-            response (dict): DCNM API response to validate
+            response (dict): NDFC API response to validate
             operation (str): Operation description for error reporting
             fabric (str, optional): Fabric context for error reporting
 
@@ -303,7 +303,7 @@ class ErrorHandler:
 
 class ActionModule(ActionNetworkModule):
     """
-    DCNM VRF Action Plugin supporting Multisite (Multi-Site Domain) workflows
+    NDFC VRF Action Plugin supporting Multisite (Multi-Site Domain) workflows
 
     This action plugin extends the base dcnm_vrf module with Multisite fabric support,
     handling Multisite Parent, Child Multisite, and Standalone fabric types.
@@ -311,9 +311,9 @@ class ActionModule(ActionNetworkModule):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.logger = Logger("DCNM_VRF_ActionPlugin")
+        self.logger = Logger("NDFC_VRF_ActionPlugin")
         self.error_handler = ErrorHandler(self.logger)
-        self.logger.info("DCNM VRF Action Plugin initialized")
+        self.logger.info("NDFC VRF Action Plugin initialized")
 
     # =========================================================================
     # MAIN ENTRY POINT
@@ -321,7 +321,7 @@ class ActionModule(ActionNetworkModule):
 
     def run(self, tmp=None, task_vars=None):
         """
-        Main entry point for DCNM VRF action plugin execution.
+        Main entry point for NDFC VRF action plugin execution.
 
         This method orchestrates the complete VRF operation workflow, handling fabric
         type detection, validation, and appropriate workflow routing. It serves as the
@@ -329,7 +329,7 @@ class ActionModule(ActionNetworkModule):
 
         Execution Flow:
         - Performs initial validation of module parameters
-        - Discovers fabric associations from DCNM controller
+        - Discovers fabric associations from NDFC controller
         - Detects fabric type (Multisite Parent, Multisite Child, Standalone)
         - Routes to appropriate workflow handler based on fabric type
         - Returns structured results with operation outcomes
@@ -361,7 +361,7 @@ class ActionModule(ActionNetworkModule):
             AnsibleError: On validation failures or execution errors
         """
         # Log workflow initiation
-        self.logger.info("Starting DCNM VRF action plugin execution")
+        self.logger.info("Starting NDFC VRF action plugin execution")
 
         try:
             # Perform initial parameter validation
@@ -370,7 +370,7 @@ class ActionModule(ActionNetworkModule):
                 self.logger.error("Validation failed", operation="validation")
                 return result
 
-            # Discover fabric associations from DCNM
+            # Discover fabric associations from NDFC
             fabric_data = self.obtain_fabric_associations(task_vars, tmp)
             # Extract module arguments and fabric name
             module_args = self._task.args.copy()
@@ -440,7 +440,7 @@ class ActionModule(ActionNetworkModule):
             config = self._task.args.get("config")
 
             # Validate configurations for create/update states
-            if state in ["merged", "overridden", "replaced"]:
+            if state in ["merged", "overridden", "replaced"] or not state:
                 # Iterate through each VRF configuration
                 for con_idx, con in enumerate(config):
                     # Validate attach block parameters if present
@@ -482,6 +482,11 @@ class ActionModule(ActionNetworkModule):
                             )
                             self.logger.error(msg, operation="validation")
                             return {"failed": True, "msg": msg}
+            else:
+                # Unknown state provided
+                msg = f"Unknown state '{state}' provided for validation"
+                self.logger.error(msg, operation="validation")
+                return {"failed": True, "changed": False, "msg": msg}
 
             # Log successful validation completion
             self.logger.debug(
@@ -499,9 +504,9 @@ class ActionModule(ActionNetworkModule):
 
     def obtain_fabric_associations(self, task_vars, tmp):
         """
-        Retrieve fabric associations and relationships from DCNM controller.
+        Retrieve fabric associations and relationships from NDFC controller.
 
-        This method queries the DCNM controller to obtain fabric association data,
+        This method queries the NDFC controller to obtain fabric association data,
         which includes fabric types, relationships (parent-child), and states.
         This information is essential for fabric type detection and Multisite workflow
         routing decisions.
@@ -542,11 +547,11 @@ class ActionModule(ActionNetworkModule):
         """
         # Log fabric discovery initiation
         self.logger.debug(
-            "Fetching fabric associations from DCNM", operation="fabric_discovery"
+            "Fetching fabric associations from NDFC", operation="fabric_discovery"
         )
 
         try:
-            # Execute DCNM REST API call to get fabric associations
+            # Execute NDFC REST API call to get fabric associations
             msd_fabric_associations = self._execute_module(
                 module_name="cisco.dcnm.dcnm_rest",
                 module_args={
@@ -586,7 +591,7 @@ class ActionModule(ActionNetworkModule):
         """
         Analyze fabric data to determine fabric type for workflow routing.
 
-        This method examines fabric properties from DCNM to classify the fabric
+        This method examines fabric properties from NDFC to classify the fabric
         into one of three types that determine the appropriate VRF workflow.
         The classification drives the execution path and operation restrictions.
 
@@ -596,14 +601,14 @@ class ActionModule(ActionNetworkModule):
         - Standalone: All others - Standard VRF operations without Multisite features
 
         Detection Logic:
-        1. Check if fabric exists in DCNM fabric associations
+        1. Check if fabric exists in NDFC fabric associations
         2. Examine fabricType field for Multisite Parent identification
         3. Examine fabricState field for child fabric identification
         4. Default to standalone for all other configurations
 
         Args:
             fabric_name (str): Name of fabric to classify
-            fabric_data (dict): Fabric associations data from DCNM
+            fabric_data (dict): Fabric associations data from NDFC
 
         Returns:
             str: Detected fabric type:
@@ -612,7 +617,7 @@ class ActionModule(ActionNetworkModule):
                 - "standalone": Non-Multisite fabric
 
         Raises:
-            AnsibleError: If fabric not found in DCNM associations
+            AnsibleError: If fabric not found in NDFC associations
         """
         # Log fabric type detection initiation
         self.logger.debug(
@@ -622,7 +627,7 @@ class ActionModule(ActionNetworkModule):
         )
 
         try:
-            # Validate fabric exists in DCNM associations
+            # Validate fabric exists in NDFC associations
             if fabric_name not in fabric_data:
                 available_fabrics = list(fabric_data.keys())
                 error_msg = (
@@ -675,8 +680,8 @@ class ActionModule(ActionNetworkModule):
         multi-site domain environments.
 
         Validation Checks:
-        - Child fabric exists in DCNM fabric associations
-        - Parent fabric exists in DCNM fabric associations
+        - Child fabric exists in NDFC fabric associations
+        - Parent fabric exists in NDFC fabric associations
         - Child fabric has fabricState="member" (indicating child status)
         - Child fabric's fabricParent matches specified parent fabric
         - Proper Multisite hierarchy enforcement
@@ -684,12 +689,12 @@ class ActionModule(ActionNetworkModule):
         Multisite Hierarchy Rules:
         - Child fabrics must be in "member" state
         - Child fabrics must reference correct parent fabric
-        - Parent-child relationships must be properly established in DCNM
+        - Parent-child relationships must be properly established in NDFC
 
         Args:
             child_fabric (str): Name of child fabric to validate
             parent_fabric (str): Name of expected parent fabric
-            fabric_data (dict): Fabric associations data from DCNM
+            fabric_data (dict): Fabric associations data from NDFC
 
         Returns:
             bool: True if child-parent relationship is valid, False otherwise
@@ -705,7 +710,7 @@ class ActionModule(ActionNetworkModule):
         )
 
         try:
-            # Validate both fabrics exist in DCNM
+            # Validate both fabrics exist in NDFC
             if child_fabric not in fabric_data or parent_fabric not in fabric_data:
                 available_fabrics = list(fabric_data.keys())
                 error_msg = (
@@ -794,7 +799,7 @@ class ActionModule(ActionNetworkModule):
         - Comprehensive logging for debugging complex multi-fabric scenarios
         Args:
             module_args (dict): Original module arguments from playbook
-            fabric_data (dict): Fabric associations data from DCNM
+            fabric_data (dict): Fabric associations data from NDFC
             task_vars (dict): Ansible task variables for execution context
             tmp (str): Temporary directory path for operations
 
@@ -1005,6 +1010,7 @@ class ActionModule(ActionNetworkModule):
                 # Return restriction error with detailed guidance
                 result = {
                     "failed": True,
+                    "changed": False,
                     "msg": f"Task not permitted on Child Multisite fabric '{fabric_name}'. Please perform operations through the Parent fabric.",
                     "fabric_type": "multisite_child",
                     "workflow": "Child Multisite Workflow"
@@ -1295,7 +1301,7 @@ class ActionModule(ActionNetworkModule):
 
         try:
             # Log module execution initiation
-            self.logger.debug("Executing DCNM VRF module", fabric=fabric_name, operation="execute_module")
+            self.logger.debug("Executing NDFC VRF module", fabric=fabric_name, operation="execute_module")
             # Temporarily replace task arguments with custom ones
             self._task.args = module_args
             # Execute base dcnm_vrf module with custom arguments
@@ -1334,7 +1340,7 @@ class ActionModule(ActionNetworkModule):
         - OUT-OF-SYNC: VRF configuration drift, handled with retry logic
 
         Polling Algorithm:
-        - Queries DCNM REST API for current VRF status on fabric
+        - Queries NDFC REST API for current VRF status on fabric
         - Removes VRFs from wait list as they reach ready states
         - Implements exponential backoff with configurable wait times
         - Handles persistent OUT-OF-SYNC states with tolerance logic
@@ -1380,7 +1386,7 @@ class ActionModule(ActionNetworkModule):
         # Continue polling while VRFs remain and retries available
         while retry_count > 0 and vrf_list:
             try:
-                # Query DCNM for current VRF status on fabric
+                # Query NDFC for current VRF status on fabric
                 resp = self._execute_module(
                     module_name="cisco.dcnm.dcnm_rest",
                     module_args={
