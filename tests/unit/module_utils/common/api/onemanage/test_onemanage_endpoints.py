@@ -1325,7 +1325,7 @@ def test_onemanage_endpoints_01600():
         endpoint = EpOneManageFabricDelete()
         endpoint.fabric_name = "MyFabric"
         result = endpoint.path
-    assert result == f"{ONEMANAGE_CONTROL_FABRICS_PATH}/MyFabric"
+    assert result == "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MyFabric"
 
 
 def test_onemanage_endpoints_01610():
