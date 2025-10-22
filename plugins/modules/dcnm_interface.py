@@ -1916,6 +1916,8 @@ class DcnmIntf:
         self.dcnm_version = dcnm_version_supported(self.module)
 
         self.inventory_data = {}
+        self.manageable = []
+        self.unmanageable = []
 
         self.paths = self.dcnm_intf_paths[self.dcnm_version]
 
@@ -3946,7 +3948,10 @@ class DcnmIntf:
         if resp and "DATA" in resp and resp["DATA"]:
             for elem in resp["DATA"]:
                 if elem.get('templateName', None) == "breakout_interface":
-                    breakout.append(elem['entityName'])
+                    # Make sure the serial number for this device is a manageable device
+                    # We cannot manage breakout interfaces for pre-provisioned devices
+                    if elem.get('serialNumber') in self.manageable.values():
+                        breakout.append(elem['entityName'])
             self.have_breakout.append({sno: breakout})
 
     def dcnm_intf_get_have_all(self, sw):
@@ -4706,7 +4711,11 @@ class DcnmIntf:
                     self.dcnm_intf_get_if_name(mem, "eth")[0]
                     for mem in item["members"]
                 ]:
-                    return False, item["ifname"]
+                    # Compare have serial_number to item serial_number return if they don't match
+                    if have.get('serialNo') != item.get('sno'):
+                        return True, None
+                    else:
+                        return False, item["ifname"]
             elif (item.get("peer1_members")) or (item.get("peer2_members")):
                 if (
                     have["ifName"]
@@ -5812,22 +5821,26 @@ class DcnmIntf:
 
         if self.module.params["state"] != "query":
 
-            # Get all switches which are managable. Changes must be avoided to all switches which are not part of this list
-            managable_ip = [
-                (key, self.inventory_data[key]["serialNumber"])
-                for key in self.inventory_data
-                if str(self.inventory_data[key]["managable"]).lower() == "true"
-            ]
-            managable_hosts = [
-                (
-                    self.inventory_data[key]["logicalName"],
-                    self.inventory_data[key]["serialNumber"],
-                )
-                for key in self.inventory_data
-                if str(self.inventory_data[key]["managable"]).lower() == "true"
-            ]
+            # Get all switches which are manageable and unmanageable
+            manageable_ip = []
+            manageable_hosts = []
+            unmanageable_ip = []
+            unmanageable_hosts = []
 
-            managable = dict(managable_ip + managable_hosts)
+            for key in self.inventory_data:
+                serial_number = self.inventory_data[key]["serialNumber"]
+                logical_name = self.inventory_data[key]["logicalName"]
+                is_manageable = str(self.inventory_data[key]["managable"]).lower() == "true"
+
+                if is_manageable:
+                    manageable_ip.append((key, serial_number))
+                    manageable_hosts.append((logical_name, serial_number))
+                else:
+                    unmanageable_ip.append((key, serial_number))
+                    unmanageable_hosts.append((logical_name, serial_number))
+
+            self.manageable = dict(manageable_ip + manageable_hosts)
+            self.unmanageable = dict(unmanageable_ip + unmanageable_hosts)
 
             # Build a mapping of serial numbers to switch roles. This will be required to build default ethernet
             # payload during overridden state. for switch role leaf the default policy for ethernet interface must
@@ -5842,13 +5855,13 @@ class DcnmIntf:
                     }
                 )
 
-            # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
+            # Get all switches which are manageable. Deploy must be avoided to all switches which are not part of this list
             ronly_sw_list = []
             for cfg in self.config:
-                # Check if there are any switches which are not managable in the config.
+                # Check if there are any switches which are not manageable in the config.
                 if cfg.get("switch", None) is not None:
                     for sw in cfg["switch"]:
-                        if sw not in managable:
+                        if sw not in self.manageable:
                             if sw not in ronly_sw_list:
                                 ronly_sw_list.append(sw)
 
