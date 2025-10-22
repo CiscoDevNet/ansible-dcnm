@@ -450,7 +450,7 @@ try:
     from ..module_utils.fabric.template_get_v2 import TemplateGet
     from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
     from ..module_utils.fabric_group.common import FabricGroupCommon
-    from ..module_utils.fabric_group.create import FabricGroupCreateBulk
+    from ..module_utils.fabric_group.create import FabricGroupCreate
     from ..module_utils.fabric_group.delete import FabricGroupDelete
     from ..module_utils.fabric_group.fabric_group_details import FabricGroupDetails
     from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
@@ -788,7 +788,7 @@ class Merged(Common):
 
         self.fabric_group_details: FabricGroupDetails = FabricGroupDetails()
         self.fabric_summary: FabricSummary = FabricSummary()
-        self.fabric_group_create: FabricGroupCreateBulk = FabricGroupCreateBulk()
+        self.fabric_group_create: FabricGroupCreate = FabricGroupCreate()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
         self.fabric_group_update: FabricGroupUpdateBulk = FabricGroupUpdateBulk()
         self.template: TemplateGet = TemplateGet()
@@ -1110,12 +1110,10 @@ class Query(Common):
         self.class_name = self.__class__.__name__
         super().__init__(params)
 
-        self.action = "fabric_query"
+        self.action = "fabric_group_query"
         self._implemented_states.add("query")
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
-        self.fabric_group_details: FabricGroupDetails = FabricGroupDetails()
 
         msg = "ENTERED Query(): "
         msg += f"state: {self.state}, "
@@ -1124,23 +1122,19 @@ class Query(Common):
 
     def commit(self) -> None:
         """
-        ### Summary
-        query the fabrics in ``self.want`` that exist on the controller.
+        # Summary
 
-        ### Raises
+        query the fabrics in `self.want` that exist on the controller.
 
-        -   ``ValueError`` if:
+        ## Raises
+
+        -   `ValueError` if:
             -   Any fabric names are invalid.
-            -   The controller returns an error when attempting to
-                query the fabrics.
+            -   The controller returns an error when attempting to query the fabrics.
         """
-        self.fabric_group_details.rest_send = self.rest_send
-        self.fabric_group_details.results = Results()
-
         self.get_want()
 
         fabric_group_query = FabricGroupQuery()
-        # fabric_group_query.fabric_group_details = self.fabric_group_details
         fabric_group_query.rest_send = self.rest_send
         fabric_group_query.results = self.results
 

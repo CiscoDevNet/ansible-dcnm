@@ -14,9 +14,8 @@
 # limitations under the License.
 # pylint: disable=too-many-instance-attributes
 """
-Exposes two public classes to create fabric-groups on the controller:
+Exposes one public class to create fabric-groups on the controller:
 - FabricGroupCreate
-- FabricGroupCreateBulk
 """
 from __future__ import absolute_import, division, print_function
 
@@ -35,11 +34,47 @@ from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
 
 
-class FabricGroupCreateCommon(FabricGroupCommon):
+class FabricGroupCreate(FabricGroupCommon):
     """
-    Common methods and properties for:
-    - FabricGroupCreate
-    - FabricGroupCreateBulk
+    Create fabric-groups in bulk.  Skip any fabric-groups that already exist.
+
+    Usage:
+
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.create import FabricGroupCreate
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_group_details import FabricGroupDetails
+    payloads = [
+        { "FABRIC_NAME": "fabric1", "BGP_AS": 65000 },
+        { "FABRIC_NAME": "fabric2", "BGP_AS": 65001 }
+    ]
+    results = Results()
+    fabric_group_details = FabricGroupDetails()
+    fabric_group_details.rest_send = rest_send_instance
+    fabric_group_details.results = results
+    instance = FabricGroupCreate()
+    instance.rest_send = rest_send_instance
+    instance.results = results
+    instance.payloads = payloads
+    instance.fabric_group_details = fabric_group_details
+    instance.commit()
+    results.build_final_result()
+
+    # diff contains a dictionary of payloads that succeeded and/or failed
+    diff = results.diff
+    # result contains the result(s) of the fabric create request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Fabric create failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
+    ```
     """
 
     def __init__(self):
@@ -56,6 +91,7 @@ class FabricGroupCreateCommon(FabricGroupCommon):
         self.path: str = self.endpoint.path
         self.verb: str = self.endpoint.verb
 
+        self._payloads: list[dict] = []
         self._payloads_to_commit: list[dict[str, Any]] = []
 
         msg = f"ENTERED {self.class_name}()"
@@ -164,96 +200,6 @@ class FabricGroupCreateCommon(FabricGroupCommon):
             msg = f"self.results.diff: {json.dumps(self.results.diff, indent=4, sort_keys=True)}"
             self.log.debug(msg)
 
-    @property
-    def payloads(self):
-        """
-        Payloads must be a ``list`` of ``dict`` of payloads for the
-        ``fabric_create`` endpoint.
-
-        - getter: Return the fabric create payloads
-        - setter: Set the fabric create payloads
-        - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
-        - setter: raise ``ValueError`` if any payload is missing mandatory keys
-        """
-        return self._payloads
-
-    @payloads.setter
-    def payloads(self, value: list[dict[str, Any]]):
-        method_name = inspect.stack()[0][3]
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"value: {value}"
-        self.log.debug(msg)
-
-        if not isinstance(value, list):
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payloads must be a list of dict. "
-            msg += f"got {type(value).__name__} for "
-            msg += f"value {value}"
-            raise ValueError(msg)
-        for item in value:
-            if not isinstance(item, dict):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Each payload must be a dict. "
-                msg += f"got {type(item).__name__} for "
-                msg += f"item {item}"
-                raise ValueError(msg)
-            try:
-                self._verify_payload(item)
-            except ValueError as error:
-                raise ValueError(error) from error
-        self._payloads = value
-
-
-class FabricGroupCreateBulk(FabricGroupCreateCommon):
-    """
-    Create fabric-groups in bulk.  Skip any fabric-groups that already exist.
-
-    Usage:
-
-    ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.create import \
-        FabricCreateBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-        Results
-
-    payloads = [
-        { "FABRIC_NAME": "fabric1", "BGP_AS": 65000 },
-        { "FABRIC_NAME": "fabric2", "BGP_AS": 65001 }
-    ]
-    results = Results()
-    instance = FabricCreateBulk(ansible_module)
-    instance.rest_send = RestSend(ansible_module)
-    instance.payloads = payloads
-    instance.results = results
-    instance.commit()
-    results.build_final_result()
-
-    # diff contains a dictionary of payloads that succeeded and/or failed
-    diff = results.diff
-    # result contains the result(s) of the fabric create request
-    result = results.result
-    # response contains the response(s) from the controller
-    response = results.response
-
-    # results.final_result contains all of the above info, and can be passed
-    # to the exit_json and fail_json methods of AnsibleModule:
-
-    if True in results.failed:
-        msg = "Fabric create failed."
-        ansible_module.fail_json(msg, **task.results.final_result)
-    ansible_module.exit_json(**task.results.final_result)
-    ```
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payloads: list[dict] = []
-        self.log.debug("ENTERED FabricCreateBulk()")
-
     def commit(self):
         """
         # create fabrics.
@@ -294,92 +240,42 @@ class FabricGroupCreateBulk(FabricGroupCreateCommon):
         except ValueError as error:
             raise ValueError(error) from error
 
-
-class FabricGroupCreate(FabricGroupCreateCommon):
-    """
-    Create a VXLAN fabric-group on the controller and register the result.
-
-    NOTES:
-    -   FabricGroupCreate is NOT used currently, though may be useful in the future.
-    -   FabricGroupCreateBulk is used instead.
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payload = None
-        self.log.debug("ENTERED FabricCreate()")
-
-    def commit(self):
-        """
-        -   Send the fabric create request to the controller.
-        -   raise ``ValueError`` if ``rest_send`` is not set.
-        -   raise ``ValueError`` if ``payload`` is not set.
-        -   raise ``ValueError`` if ``fabric_create`` endpoint
-            assignment fails.
-        -   return if the fabric already exists on the controller.
-
-        NOTES:
-        -   FabricCreate().commit() is very similar to
-            FabricCreateBulk().commit() since we convert the payload
-            to a list and leverage the processing that already exists
-            in FabricCreateCommom()
-        """
-        method_name = inspect.stack()[0][3]
-        if self.rest_send is None:  # pylint: disable=no-member
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling commit. "
-            raise ValueError(msg)
-
-        if self.payload is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload must be set prior to calling commit. "
-            raise ValueError(msg)
-
-        self._build_payloads_to_commit()
-
-        if len(self._payloads_to_commit) == 0:
-            return
-        try:
-            self._fixup_payloads_to_commit()
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        try:
-            self._send_payloads()
-        except ValueError as error:
-            raise ValueError(error) from error
-
     @property
-    def payload(self):
+    def payloads(self):
         """
-        Return a fabric create payload.
-        """
-        return self._payload
+        Payloads must be a ``list`` of ``dict`` of payloads for the
+        ``fabric_create`` endpoint.
 
-    @payload.setter
-    def payload(self, value):
+        - getter: Return the fabric create payloads
+        - setter: Set the fabric create payloads
+        - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
+        - setter: raise ``ValueError`` if any payload is missing mandatory keys
+        """
+        return self._payloads
+
+    @payloads.setter
+    def payloads(self, value: list[dict[str, Any]]):
         method_name = inspect.stack()[0][3]
-        if not isinstance(value, dict):
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value: {value}"
+        self.log.debug(msg)
+
+        if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
-            msg += "payload must be a dict. "
-            msg += f"Got type {type(value).__name__}, "
+            msg += "payloads must be a list of dict. "
+            msg += f"got {type(value).__name__} for "
             msg += f"value {value}"
             raise ValueError(msg)
-        if len(value) == 0:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "payload is empty."
-            raise ValueError(msg)
-        try:
-            self._verify_payload(value)
-        except ValueError as error:
-            raise ValueError(error) from error
-        self._payload = value
-        # payloads is also set to a list containing one payload.
-        # commit() calls FabricGroupCreateCommon()._build_payloads_to_commit(),
-        # which expects a list of payloads.
-        # FabricGroupCreateCommon()._build_payloads_to_commit() verifies that
-        # the fabric does not already exist on the controller.
-        self._payloads = [value]
+        for item in value:
+            if not isinstance(item, dict):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Each payload must be a dict. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"item {item}"
+                raise ValueError(msg)
+            try:
+                self._verify_payload(item)
+            except ValueError as error:
+                raise ValueError(error) from error
+        self._payloads = value
