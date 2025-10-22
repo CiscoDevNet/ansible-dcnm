@@ -158,11 +158,12 @@ options:
         required: false
       dhcp_servers:
         description:
-        - List of DHCP servers
+        - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
         - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
             dhcp_srvr3_ip, dhcp_srvr3_vrf
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
-            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified, unexpected results may occur
+            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified and error message is generated
+            indicaitng these are mutulally exclusive options
         type: list
         elements: dict
         required: false
@@ -380,6 +381,27 @@ EXAMPLES = """
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
+        dhcp_servers:
+        - srvr_ip: 192.168.1.1
+            srvr_vrf: vrf_01
+        - srvr_ip: 192.168.2.1
+            srvr_vrf: vrf_02
+        - srvr_ip: 192.168.3.1
+            srvr_vrf: vrf_03
+        - srvr_ip: 192.168.4.1
+            srvr_vrf: vrf_04
+        - srvr_ip: 192.168.5.1
+            srvr_vrf: vrf_05
+        - srvr_ip: 192.168.6.1
+            srvr_vrf: vrf_06
+        - srvr_ip: 192.168.7.1
+            srvr_vrf: vrf_07
+        - srvr_ip: 192.168.8.1
+            srvr_vrf: vrf_08
+        - srvr_ip: 192.168.9.1
+            srvr_vrf: vrf_09
+        - srvr_ip: 192.168.10.1
+            srvr_vrf: vrf_10
         attach:
         - ip_address: 192.168.1.224
           # Replace the ports with new ports
@@ -2698,6 +2720,26 @@ class DcnmNetwork:
 
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
+
+        # Make sure mutully exclusive dhcp properties are not set
+        for net in self.config:
+            if net.get("dhcp_servers"):
+                conflicting_keys = []
+                dhcp_individual_keys = [
+                "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
+                "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
+                "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
+                ]
+
+                for key in dhcp_individual_keys:
+                    if net.get(key) is not None:
+                        conflicting_keys.append(key)
+
+                if conflicting_keys:
+                    msg = "Network '{0}': dhcp_servers cannot be used together with individual DHCP server properties: {1}".format(
+                        net.get("net_name", "unknown"), ", ".join(conflicting_keys)
+                    )
+                    self.module.fail_json(msg=msg)
 
         state = self.params["state"]
 
