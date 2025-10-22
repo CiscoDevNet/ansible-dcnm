@@ -27,10 +27,12 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricCreate
-from .fabric_group_types import FabricGroupTypes
 from .common import FabricGroupCommon
+from .fabric_group_types import FabricGroupTypes
+from .fabric_groups import FabricGroups
 
 
 class FabricGroupCreateCommon(FabricGroupCommon):
@@ -43,17 +45,18 @@ class FabricGroupCreateCommon(FabricGroupCommon):
     def __init__(self):
         super().__init__()
         self.class_name = self.__class__.__name__
-        self.action = "fabric_create"
+        self.action = "fabric_group_create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.ep_fabric_group_create = EpOneManageFabricCreate()
+        self.fabric_groups = FabricGroups()
         self.fabric_group_types = FabricGroupTypes()
 
         self.path: str = self.ep_fabric_group_create.path
         self.verb: str = self.ep_fabric_group_create.verb
 
-        self._payloads_to_commit: list = []
+        self._payloads_to_commit: list[dict[str, Any]] = []
 
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
@@ -69,13 +72,48 @@ class FabricGroupCreateCommon(FabricGroupCommon):
         Populates self._payloads_to_commit with a list of payloads
         to commit.
         """
-        self.fabric_details.refresh()
+        method_name = inspect.stack()[0][3]
+        self.fabric_groups.rest_send = self.rest_send
+        self.fabric_groups.results = self.results
+        self.fabric_groups.refresh()
 
         self._payloads_to_commit = []
+        payload: dict[str, Any] = {}
         for payload in self.payloads:
-            if payload.get("FABRIC_NAME", None) in self.fabric_details.all_data:
+            commit_payload: dict[str, Any] = {}
+            if payload.get("FABRIC_NAME", None) in self.fabric_groups.fabric_group_names:
                 continue
-            self._payloads_to_commit.append(copy.deepcopy(payload))
+            seed_member: dict[str, Any] = {}
+            seed_member["clusterName"] = payload.get("seed_member", {}).get("cluster_name")
+            seed_member["fabricName"] = payload.get("seed_member", {}).get("fabric_name")
+            payload.pop("seed_member", None)
+            if not seed_member:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "seed_member is required in payload. "
+                msg += f"Got payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+                raise ValueError(msg)
+            commit_payload["seedMember"] = copy.deepcopy(seed_member)
+            commit_payload["fabricName"] = payload.get("FABRIC_NAME")
+            commit_payload["fabricTechnology"] = "VXLANFabric"
+            commit_payload["fabricType"] = "MFD"
+            commit_payload["templateName"] = "MSD_Fabric"
+            commit_payload["nvPairs"] = copy.deepcopy(payload)
+            commit_payload["nvPairs"]["FABRIC_TYPE"] = "MFD"
+            commit_payload["nvPairs"]["default_network"] = payload.get("default_network", "Default_Network_Universal")
+            commit_payload["nvPairs"]["default_vrf"] = payload.get("default_vrf", "Default_VRF_Universal")
+            commit_payload["nvPairs"]["network_extension_template"] = payload.get("network_extension_template", "Default_Network_Extension_Universal")
+            commit_payload["nvPairs"]["scheduledTime"] = payload.get("scheduledTime", "")
+            commit_payload["nvPairs"]["vrf_extension_template"] = payload.get("vrf_extension_template", "Default_VRF_Extension_Universal")
+            commit_payload["nvPairs"]["CLOUDSEC_ALGORITHM"] = payload.get("CLOUDSEC_ALGORITHM", "")
+            commit_payload["nvPairs"]["CLOUDSEC_ENFORCEMENT"] = payload.get("CLOUDSEC_ENFORCEMENT", "")
+            commit_payload["nvPairs"]["CLOUDSEC_KEY_STRING"] = payload.get("CLOUDSEC_KEY_STRING", "")
+            commit_payload["nvPairs"]["CLOUDSEC_REPORT_TIMER"] = payload.get("CLOUDSEC_REPORT_TIMER", "")
+            commit_payload["nvPairs"]["LOOPBACK100_IPV6_RANGE"] = payload.get("LOOPBACK100_IPV6_RANGE", "")
+            commit_payload["nvPairs"]["MS_IFC_BGP_AUTH_KEY_TYPE"] = payload.get("MS_IFC_BGP_AUTH_KEY_TYPE", "")
+            commit_payload["nvPairs"]["MS_IFC_BGP_PASSWORD"] = payload.get("MS_IFC_BGP_PASSWORD", "")
+            commit_payload["nvPairs"]["V6_DCI_SUBNET_RANGE"] = payload.get("V6_DCI_SUBNET_RANGE", "")
+            commit_payload["nvPairs"]["V6_DCI_SUBNET_TARGET_MASK"] = payload.get("V6_DCI_SUBNET_TARGET_MASK", "")
+            self._payloads_to_commit.append(commit_payload)
 
     def _set_fabric_create_endpoint(self):
         """
@@ -140,7 +178,7 @@ class FabricGroupCreateCommon(FabricGroupCommon):
         return self._payloads
 
     @payloads.setter
-    def payloads(self, value):
+    def payloads(self, value: list[dict[str, Any]]):
         method_name = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
@@ -154,6 +192,12 @@ class FabricGroupCreateCommon(FabricGroupCommon):
             msg += f"value {value}"
             raise ValueError(msg)
         for item in value:
+            if not isinstance(item, dict):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Each payload must be a dict. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"item {item}"
+                raise ValueError(msg)
             try:
                 self._verify_payload(item)
             except ValueError as error:

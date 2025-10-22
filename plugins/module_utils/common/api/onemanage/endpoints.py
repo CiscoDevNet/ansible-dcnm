@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-lines
 """
 Pydantic-based endpoint models with property-style interface for ALL parameters.
 
@@ -24,6 +25,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
+import inspect
 import traceback
 from typing import Literal, Optional, Union
 
@@ -489,7 +491,9 @@ class EpOneManageFabricCreate(BaseModel):
     def path(self) -> str:
         """Build the endpoint path."""
 
-        return BasePath.onemanage_fabrics()
+        # return BasePath.onemanage_fabrics()
+        # return "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
+        return "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
 
     @property
     def verb(self) -> Literal["POST"]:
@@ -504,9 +508,9 @@ class EpOneManageFabricDelete(BaseModel):
     ### Description
     Endpoint to delete a specific multi-cluster fabric.
 
-    ### Path
+    ### Path (nd322m apidocs)
 
-    - /onemanage/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{fabricName}
+    -  /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}
 
     ### Verb
 
@@ -543,9 +547,7 @@ class EpOneManageFabricDelete(BaseModel):
         if self.fabric_name is None:
             raise ValueError("fabric_name must be set before accessing path")
 
-        # Use the regular LAN fabric control API with /onemanage prefix
-        # This is the correct endpoint for deleting multi-cluster fabrics
-        return f"/onemanage{BasePath.control_fabrics(self.fabric_name)}"
+        return f"/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{self.fabric_name}"
 
     @property
     def verb(self) -> Literal["DELETE"]:
@@ -555,9 +557,12 @@ class EpOneManageFabricDelete(BaseModel):
 
 class EpOneManageFabricDetails(BaseModel):
     """
-    ## Fabric Details Endpoint (OneManage)
+    # Summary
+
+    Fabric Details Endpoint as documented in nd322m apidocs (OneManage)
 
     ### Description
+
     Endpoint to query details for a specific multi-cluster fabric.
 
     ### Path
@@ -587,7 +592,7 @@ class EpOneManageFabricDetails(BaseModel):
         if self.fabric_name is None:
             raise ValueError("fabric_name must be set before accessing path")
 
-        return BasePath.onemanage_fabrics(self.fabric_name)
+        return f"/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{self.fabric_name}"
 
     @property
     def verb(self) -> Literal["GET"]:

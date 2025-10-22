@@ -27,7 +27,7 @@ import logging
 
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
-from ..fabric.fabric_details_v3 import FabricDetailsByName
+from ..fabric_group.fabric_group_details import FabricGroupDetails
 
 
 class FabricGroupQuery:
@@ -37,7 +37,7 @@ class FabricGroupQuery:
 
     ### Raises
     -   ``ValueError`` if:
-        -   ``fabric_details`` is not set.
+        -   ``fabric_group_details`` is not set.
         -   ``fabric_names`` is not set.
         -   ``rest_send`` is not set.
         -   ``results`` is not set.
@@ -53,14 +53,14 @@ class FabricGroupQuery:
     rest_send = RestSend(params)
     results = Results()
 
-    fabric_details = FabricDetailsByName()
-    fabric_details.rest_send = rest_send
-    fabric_details.results = results # or Results() if you don't want
-                                     # fabric_details results to be separate
+    fabric_group_details = FabricDetailsByName()
+    fabric_group_details.rest_send = rest_send
+    fabric_group_details.results = results # or Results() if you don't want
+                                     # fabric_group_details results to be separate
                                      # from FabricGroupQuery results.
 
     instance = FabricGroupQuery()
-    instance.fabric_details = fabric_details
+    instance.fabric_group_details = fabric_group_details
     instance.fabric_names = ["FABRIC_GROUP_1", "FABRIC_GROUP_2"]
     instance.results = results
     instance.commit()
@@ -92,7 +92,7 @@ class FabricGroupQuery:
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._fabric_group_names: list[str] = []
-        self.fabric_details: FabricDetailsByName = FabricDetailsByName()
+        self.fabric_group_details: FabricGroupDetails = FabricGroupDetails()
 
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
@@ -146,16 +146,16 @@ class FabricGroupQuery:
 
         ### Raises
         -   ``ValueError`` if:
-            -   ``fabric_details`` is not set.
+            -   ``fabric_group_details`` is not set.
             -   ``fabric_names`` is not set.
             -   ``rest_send`` is not set.
             -   ``results`` is not set.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
 
-        if self.fabric_details is None:
+        if self.fabric_group_details is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_details must be set before calling commit."
+            msg += "fabric_group_details must be set before calling commit."
             raise ValueError(msg)
 
         if not self.fabric_group_names:
@@ -180,7 +180,7 @@ class FabricGroupQuery:
     def commit(self) -> None:
         """
         ### Summary
-        -   query each of the fabrics in ``fabric_names``.
+        -   query each of the fabric groups in ``fabric_group_names``.
 
         ### Raises
         -   ``ValueError`` if:
@@ -206,9 +206,8 @@ class FabricGroupQuery:
             self.results.register_task_result()
             raise ValueError(error) from error
 
-        self.fabric_details.results = Results()
-        self.fabric_details.rest_send = self.rest_send
-        self.fabric_details.refresh()
+        self.fabric_group_details.results = Results()
+        self.fabric_group_details.rest_send = self.rest_send
 
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
@@ -218,20 +217,16 @@ class FabricGroupQuery:
         self.log.debug(msg)
         add_to_diff = {}
         for fabric_group_name in self.fabric_group_names:
-            if fabric_group_name in self.fabric_details.all_data:
-                add_to_diff[fabric_group_name] = copy.deepcopy(
-                    self.fabric_details.all_data[fabric_group_name]
-                )
+            self.fabric_group_details.fabric_group_name = fabric_group_name
+            self.fabric_group_details.refresh()
+            if fabric_group_name in self.fabric_group_details.all_data:
+                add_to_diff[fabric_group_name] = copy.deepcopy(self.fabric_group_details.all_data[fabric_group_name])
 
         self.results.diff_current = add_to_diff
-        self.results.response_current = copy.deepcopy(
-            self.fabric_details.results.response_current
-        )
+        self.results.response_current = copy.deepcopy(self.fabric_group_details.results.response_current)
         if not self.results.result_current:
             self.results.result_current = {}
-        self.results.result_current = copy.deepcopy(
-            self.fabric_details.results.result_current
-        )
+        self.results.result_current = copy.deepcopy(self.fabric_group_details.results.result_current)
 
         if not add_to_diff:
             msg = f"No fabric details found for {self.fabric_group_names}."

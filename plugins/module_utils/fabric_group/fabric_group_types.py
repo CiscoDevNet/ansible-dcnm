@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-instance-attributes
 """
 Fabric group type definitions for the dcnm_fabric_group module.
 """
@@ -89,9 +90,7 @@ class FabricGroupTypes:
         self._mandatory_parameters_all_fabric_groups.append("FABRIC_TYPE")
 
         self._mandatory_parameters = {}
-        self._mandatory_parameters["MCFG"] = copy.copy(
-            self._mandatory_parameters_all_fabric_groups
-        )
+        self._mandatory_parameters["MCFG"] = copy.copy(self._mandatory_parameters_all_fabric_groups)
         self._mandatory_parameters["MCFG"].sort()
 
     def _init_properties(self) -> None:

@@ -33,8 +33,8 @@ from ..common.rest_send_v2 import RestSend
 # in _validate_commit_parameters() so that we can register the failure
 # in commit().
 from ..common.results_v2 import Results
-from ..fabric.fabric_details_v3 import FabricDetailsByName
-from ..fabric.fabric_summary_v2 import FabricSummary
+from ..fabric_group.fabric_group_details import FabricGroupDetails
+from ..fabric_group.fabric_group_member_info import FabricGroupMemberInfo
 
 
 class FabricGroupDelete:
@@ -84,51 +84,70 @@ class FabricGroupDelete:
 
         self._cannot_delete_fabric_reason: str = ""
 
-        self._fabric_details: FabricDetailsByName = FabricDetailsByName()
-        self._fabric_summary: FabricSummary = FabricSummary()
+        self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
+        self._fabric_group_member_info: FabricGroupMemberInfo = FabricGroupMemberInfo()
         # Properties to be set by caller
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
 
-        msg = f"ENTERED {self.class_name}()"
+        msg = f"ENTERED {self.class_name} "
+        msg += f"action: {self.action}"
         self.log.debug(msg)
 
     def _get_fabric_groups_to_delete(self) -> None:
         """
-        -   Retrieve fabric info from the controller and set the list of
-            controller fabrics that are in our fabric_group_names list.
+        -   Retrieve fabric group info from the controller and set the list of
+            controller fabric groups that are in our fabric_group_names list.
         -   Raise ``ValueError`` if any fabric in ``fabric_group_names``
             cannot be deleted.
         """
-        self.fabric_details.refresh()
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name} ENTERED"
+        self.log.debug(msg)
 
+        self.fabric_group_details.rest_send = self.rest_send
+        self.fabric_group_details.results = self.results
         self._fabric_groups_to_delete = []
         for fabric_group_name in self.fabric_group_names:
-            if fabric_group_name in self.fabric_details.all_data:
+            self.fabric_group_details.fabric_group_name = fabric_group_name
+            self.fabric_group_details.refresh()
+            if fabric_group_name in self.fabric_group_details.all_data:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Found fabric group {fabric_group_name} on controller."
+                self.log.debug(msg)
                 try:
-                    self._verify_fabric_can_be_deleted(fabric_group_name)
+                    self._verify_fabric_group_can_be_deleted(fabric_group_name)
                 except ValueError as error:
                     raise ValueError(error) from error
                 self._fabric_groups_to_delete.append(fabric_group_name)
 
-    def _verify_fabric_can_be_deleted(self, fabric_group_name):
+    def _verify_fabric_group_can_be_deleted(self, fabric_group_name):
         """
         raise ``ValueError`` if the fabric cannot be deleted
         return otherwise
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.fabric_summary.fabric_name = fabric_group_name
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name} ENTERED"
+        self.log.debug(msg)
 
+        self._fabric_group_member_info.rest_send = self.rest_send
+        self._fabric_group_member_info.results = self.results
+        self._fabric_group_member_info.fabric_group_name = fabric_group_name
         try:
-            self.fabric_summary.refresh()
+            self._fabric_group_member_info.refresh()
         except (ControllerResponseError, ValueError) as error:
             raise ValueError(error) from error
 
-        if self.fabric_summary.fabric_is_empty is True:
+        if self._fabric_group_member_info.count == 0:
             return
+
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"Fabric {fabric_group_name} cannot be deleted since it is not "
-        msg += "empty. Remove all devices from the fabric and try again."
+        msg += f"Fabric group {fabric_group_name} "
+        msg += f"in cluster {self._fabric_group_member_info.cluster_name} "
+        msg += "cannot be deleted since it contains "
+        msg += f"{self._fabric_group_member_info.count} members "
+        msg += f"{self._fabric_group_member_info.members}. "
+        msg += "Remove all members from the fabric group and try again."
         raise ValueError(msg)
 
     def _validate_commit_parameters(self):
@@ -136,19 +155,15 @@ class FabricGroupDelete:
         - validate the parameters for commit
         - raise ``ValueError`` if ``fabric_group_names`` is not set
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        if not self.fabric_details.refreshed:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_details must be refreshed prior to calling commit."
-            raise ValueError(msg)
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name} ENTERED"
+        self.log.debug(msg)
 
         if not self.fabric_group_names:
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_group_names must be set prior to calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=no-member
         if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send.params must be set prior to calling commit."
@@ -159,7 +174,9 @@ class FabricGroupDelete:
         - delete each of the fabrics in self.fabric_group_names
         - raise ``ValueError`` if any commit parameters are invalid
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name} ENTERED"
+        self.log.debug(msg)
 
         try:
             self._validate_commit_parameters()
@@ -169,7 +186,6 @@ class FabricGroupDelete:
             self.register_result(None)
             raise ValueError(error) from error
 
-        # pylint: disable=no-member
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
@@ -183,8 +199,6 @@ class FabricGroupDelete:
             self.register_result(None)
             raise ValueError(error) from error
 
-        msg = f"self._fabric_groups_to_delete: {self._fabric_groups_to_delete}"
-        self.log.debug(msg)
         if len(self._fabric_groups_to_delete) != 0:
             try:
                 self._send_requests()
@@ -217,7 +231,6 @@ class FabricGroupDelete:
             timeout to 1 second and restore the original timeout after the
             requests are sent.
         """
-        # pylint: disable=no-member
         self.rest_send.save_settings()
         self.rest_send.timeout = 1
 
@@ -247,7 +260,6 @@ class FabricGroupDelete:
         ### Raises
             -   ``ValueError`` if the fabric delete endpoint cannot be set.
         """
-        # pylint: disable=no-member
         try:
             self._set_fabric_group_delete_endpoint(fabric_group_name)
             self.rest_send.commit()
@@ -264,7 +276,6 @@ class FabricGroupDelete:
         -   If ``fabric_group_name`` is not ``None``, set the result to indicate
             the success or failure of the request.
         """
-        # pylint: disable=no-member
         self.results.action = self.action
         if self.rest_send is not None:
             self.results.check_mode = self.rest_send.check_mode
@@ -291,7 +302,7 @@ class FabricGroupDelete:
             response_current = copy.deepcopy(self.rest_send.response_current)
             if "DATA" in response_current:
                 if "Failed to delete the fabric." in response_current["DATA"]:
-                    msg = f"Failed to delete fabric {fabric_group_name}."
+                    msg = f"Failed to delete fabric group {fabric_group_name}."
                     response_current["DATA"] = msg
 
         self.results.response_current = response_current
@@ -332,26 +343,15 @@ class FabricGroupDelete:
         self._fabric_group_names = value
 
     @property
-    def fabric_details(self) -> FabricDetailsByName:
+    def fabric_group_details(self) -> FabricGroupDetails:
         """
-        An instance of FabricDetailsByName.
+        An instance of FabricGroupDetails.
         """
-        return self._fabric_details
+        return self._fabric_group_details
 
-    @fabric_details.setter
-    def fabric_details(self, value: FabricDetailsByName) -> None:
-        self._fabric_details = value
-
-    @property
-    def fabric_summary(self) -> FabricSummary:
-        """
-        An instance of FabricSummary.
-        """
-        return self._fabric_summary
-
-    @fabric_summary.setter
-    def fabric_summary(self, value: FabricSummary) -> None:
-        self._fabric_summary = value
+    @fabric_group_details.setter
+    def fabric_group_details(self, value: FabricGroupDetails) -> None:
+        self._fabric_group_details = value
 
     @property
     def rest_send(self) -> RestSend:

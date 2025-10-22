@@ -26,8 +26,8 @@ import logging
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
-from ..fabric.fabric_details_v3 import FabricDetailsByName
 from ..fabric.fabric_summary_v2 import FabricSummary
+from ..fabric_group.fabric_group_details import FabricGroupDetails
 from .fabric_group_types import FabricGroupTypes
 
 # pylint: disable=too-many-instance-attributes
@@ -90,7 +90,7 @@ class FabricGroupCommon:
         self.path: str = ""
         self.verb: str = ""
 
-        self._fabric_details: FabricDetailsByName = FabricDetailsByName()
+        self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
         self._fabric_summary: FabricSummary = FabricSummary()
         self._fabric_type: str = "VXLAN_EVPN"
 
@@ -190,7 +190,7 @@ class FabricGroupCommon:
             raise ValueError(msg)
 
         sorted_payload = dict(sorted(payload.items(), key=lambda item: item[0]))
-        fabric_group_type = payload.get("FABRIC_TYPE", None)
+        fabric_group_type = payload.get("FABRIC_TYPE", "MCFG")
         fabric_group_name = payload.get("FABRIC_NAME", "UNKNOWN")
 
         if fabric_group_type is None:
@@ -241,15 +241,15 @@ class FabricGroupCommon:
         raise ValueError(msg)
 
     @property
-    def fabric_details(self) -> FabricDetailsByName:
+    def fabric_group_details(self) -> FabricGroupDetails:
         """
-        An instance of the FabricDetailsByName class.
+        An instance of the FabricGroupDetails class.
         """
-        return self._fabric_details
+        return self._fabric_group_details
 
-    @fabric_details.setter
-    def fabric_details(self, value: FabricDetailsByName) -> None:
-        self._fabric_details = value
+    @fabric_group_details.setter
+    def fabric_group_details(self, value: FabricGroupDetails) -> None:
+        self._fabric_group_details = value
 
     @property
     def fabric_summary(self) -> FabricSummary:
@@ -265,9 +265,9 @@ class FabricGroupCommon:
     @property
     def fabric_group_type(self) -> str:
         """
-        - getter: Return the type of fabric to create/update.
-        - setter: Set the type of fabric to create/update.
-        - setter: raise ``ValueError`` if ``value`` is not a valid fabric type
+        - getter: Return the type of fabric group to create/update.
+        - setter: Set the type of fabric group to create/update.
+        - setter: raise ``ValueError`` if ``value`` is not a valid fabric group type
 
         See ``FabricTypes().valid_fabric_types`` for valid values
         """
