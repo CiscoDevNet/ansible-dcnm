@@ -49,12 +49,12 @@ class FabricGroupCreateCommon(FabricGroupCommon):
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.ep_fabric_group_create = EpOneManageFabricCreate()
+        self.endpoint = EpOneManageFabricCreate()
         self.fabric_groups = FabricGroups()
         self.fabric_group_types = FabricGroupTypes()
 
-        self.path: str = self.ep_fabric_group_create.path
-        self.verb: str = self.ep_fabric_group_create.verb
+        self.path: str = self.endpoint.path
+        self.verb: str = self.endpoint.verb
 
         self._payloads_to_commit: list[dict[str, Any]] = []
 
@@ -122,8 +122,8 @@ class FabricGroupCreateCommon(FabricGroupCommon):
         - raise ``ValueError`` if the fabric_type to template_name mapping fails
         - raise ``ValueError`` if the fabric_create endpoint assignment fails
         """
-        self.path = self.ep_fabric_group_create.path
-        self.verb = self.ep_fabric_group_create.verb
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
 
     def _send_payloads(self):
         """
