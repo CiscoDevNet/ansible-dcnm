@@ -2726,9 +2726,9 @@ class DcnmNetwork:
             if net.get("dhcp_servers"):
                 conflicting_keys = []
                 dhcp_individual_keys = [
-                "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
-                "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
-                "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
+                    "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
+                    "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
+                    "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
                 ]
 
                 for key in dhcp_individual_keys:
