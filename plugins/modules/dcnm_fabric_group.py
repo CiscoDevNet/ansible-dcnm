@@ -457,7 +457,7 @@ try:
     from ..module_utils.fabric_group.fabric_groups import FabricGroups
     from ..module_utils.fabric_group.query import FabricGroupQuery
     from ..module_utils.fabric_group.replaced import FabricGroupReplacedBulk
-    from ..module_utils.fabric_group.update import FabricGroupUpdateBulk
+    from ..module_utils.fabric_group.update import FabricGroupUpdate
 
     HAS_PYDANTIC_DEPS = True
     PYDANTIC_DEPS_IMPORT_ERROR = None
@@ -790,7 +790,7 @@ class Merged(Common):
         self.fabric_summary: FabricSummary = FabricSummary()
         self.fabric_group_create: FabricGroupCreate = FabricGroupCreate()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
-        self.fabric_group_update: FabricGroupUpdateBulk = FabricGroupUpdateBulk()
+        self.fabric_group_update: FabricGroupUpdate = FabricGroupUpdate()
         self.template: TemplateGet = TemplateGet()
 
         msg = f"ENTERED {self.class_name}.{method_name}: "
@@ -1039,7 +1039,6 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
-        self.fabric_group_create.fabric_group_details = self.fabric_group_details
         self.fabric_group_create.rest_send = self.rest_send
         self.fabric_group_create.results = self.results
 

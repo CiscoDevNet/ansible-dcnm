@@ -13,9 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Update fabric groups
+Exposes one public class to update fabric-groups on the controller:
+- FabricGroupUpdate
 """
 from __future__ import absolute_import, division, print_function
+
+from typing import Any
 
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
@@ -26,20 +29,50 @@ import json
 import logging
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricGroupUpdate
-from ..common.exceptions import ControllerResponseError
 from ..common.conversion import ConversionUtils
+from ..common.exceptions import ControllerResponseError
+from .common import FabricGroupCommon
 from .config_deploy import FabricGroupConfigDeploy
 from .config_save import FabricGroupConfigSave
-
-from .common import FabricGroupCommon
 from .fabric_group_types import FabricGroupTypes
+from .fabric_groups import FabricGroups
 
 
-class FabricGroupUpdateCommon(FabricGroupCommon):
+class FabricGroupUpdate(FabricGroupCommon):
     """
-    Common methods and properties for:
-    - FabricGroupUpdate
-    - FabricGroupUpdateBulk
+    Update fabrics in bulk.
+
+    Usage:
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.update import \
+        FabricGroupUpdate
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
+        Results
+
+    payloads = [
+        { "FABRIC_NAME": "fabric1", "BGP_AS": 65000, "DEPLOY": True },
+        { "FABRIC_NAME": "fabric2", "BGP_AS": 65001, "DEPLOY": False }
+    ]
+    results = Results()
+    instance = FabricGroupUpdate(ansible_module)
+    instance.payloads = payloads
+    instance.results = results
+    instance.commit()
+    results.build_final_result()
+
+    # diff contains a dictionary of payloads that succeeded and/or failed
+    diff = results.diff
+    # result contains the result(s) of the fabric create request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Fabric update(s) failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
     """
 
     def __init__(self):
@@ -57,7 +90,8 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
         self._key_translations["DEPLOY"] = ""
         self.ep_fabric_group_update = EpOneManageFabricGroupUpdate()
         self.fabric_group_types = FabricGroupTypes()
-        self.fabric_group_type: str = ""
+        self.fabric_group_type: str = "MCFG"
+        self._payloads: list[dict] = []
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
 
@@ -85,7 +119,7 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
         fabric_name = payload.get("FABRIC_NAME", None)
 
         self._fabric_changes_payload[fabric_name] = {}
-        nv_pairs = self.fabric_details.all_data[fabric_name].get("nvPairs", {})
+        nv_pairs = self.fabric_group_details.all_data[fabric_name].get("nvPairs", {})
 
         for payload_key, payload_value in payload.items():
             # Translate payload keys to equivilent keys on the controller
@@ -119,10 +153,7 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
                 self.results.result_current = {"success": False, "changed": False}
                 self.results.failed = True
                 self.results.changed = False
-                self.results.failed_result["msg"] = (
-                    f"Key {key} not found in fabric configuration for "
-                    f"fabric {fabric_name}"
-                )
+                self.results.failed_result["msg"] = f"Key {key} not found in fabric configuration for " f"fabric {fabric_name}"
                 self.results.register_task_result()
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Invalid key: {key} found in payload for "
@@ -185,12 +216,12 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
         -   self._fabric_group_needs_update_for_merged_state() may remove payload
             key/values that would not change the controller configuration.
         """
-        self.fabric_details.refresh()
+        self.fabric_group_details.refresh()
         self._payloads_to_commit = []
 
         for payload in self.payloads:
             fabric_name = payload.get("FABRIC_NAME", None)
-            if fabric_name not in self.fabric_details.all_data:
+            if fabric_name not in self.fabric_group_details.all_data:
                 continue
 
             self._fabric_group_update_required = set()
@@ -201,9 +232,7 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
 
             if True not in self._fabric_group_update_required:
                 continue
-            self._payloads_to_commit.append(
-                copy.deepcopy(self._fabric_changes_payload[fabric_name])
-            )
+            self._payloads_to_commit.append(copy.deepcopy(self._fabric_changes_payload[fabric_name]))
 
     def _send_payloads(self):
         """
@@ -259,13 +288,17 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
         - Set the endpoint for the fabric create API call.
         - raise ``ValueError`` if the enpoint assignment fails
         """
+        method_name = inspect.stack()[0][3]
         try:
             self.ep_fabric_group_update.fabric_name = payload.get("FABRIC_NAME")
         except ValueError as error:
             raise ValueError(error) from error
 
+        msg = f"ZZZ: {self.class_name}.{method_name}: "
+        msg += f"payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+        self.log.debug(msg)
         # Used to convert fabric group type to template name
-        self.fabric_group_type = copy.copy(payload.get("FABRIC_TYPE"))
+        self.fabric_group_type = copy.copy(payload.get("FABRIC_TYPE", "MCFG"))
         try:
             self.fabric_group_types.fabric_group_type = self.fabric_group_type
         except ValueError as error:
@@ -307,9 +340,7 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
         else:
             self.results.diff_current = copy.deepcopy(payload)
 
-        self.send_payload_result[payload["FABRIC_NAME"]] = (
-            self.rest_send.result_current["success"]
-        )
+        self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
@@ -331,7 +362,7 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
         return self._payloads
 
     @payloads.setter
-    def payloads(self, value):
+    def payloads(self, value: list[dict[str, Any]]):
         method_name = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
@@ -340,65 +371,23 @@ class FabricGroupUpdateCommon(FabricGroupCommon):
             msg += f"value {value}"
             raise ValueError(msg)
         for item in value:
+            if not isinstance(item, dict):
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "Each payload must be a dict. "
+                msg += f"got {type(item).__name__} for "
+                msg += f"item {item}"
+                raise ValueError(msg)
             try:
                 self._verify_payload(item)
             except ValueError as error:
                 raise ValueError(error) from error
         self._payloads = value
 
-
-class FabricGroupUpdateBulk(FabricGroupUpdateCommon):
-    """
-    Update fabrics in bulk.
-
-    Usage:
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.update import \
-        FabricGroupUpdateBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
-        Results
-
-    payloads = [
-        { "FABRIC_NAME": "fabric1", "BGP_AS": 65000, "DEPLOY": True },
-        { "FABRIC_NAME": "fabric2", "BGP_AS": 65001, "DEPLOY: False }
-    ]
-    results = Results()
-    instance = FabricGroupUpdateBulk(ansible_module)
-    instance.payloads = payloads
-    instance.results = results
-    instance.commit()
-    results.build_final_result()
-
-    # diff contains a dictionary of payloads that succeeded and/or failed
-    diff = results.diff
-    # result contains the result(s) of the fabric create request
-    result = results.result
-    # response contains the response(s) from the controller
-    response = results.response
-
-    # results.final_result contains all of the above info, and can be passed
-    # to the exit_json and fail_json methods of AnsibleModule:
-
-    if True in results.failed:
-        msg = "Fabric update(s) failed."
-        ansible_module.fail_json(msg, **task.results.final_result)
-    ansible_module.exit_json(**task.results.final_result)
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payloads: list[dict] = []
-
-        msg = f"ENTERED {self.class_name}()"
-        self.log.debug(msg)
-
     def commit(self):
         """
         - Update fabrics and register results.
         - Return if there are no fabrics to update for merged state.
-        - raise ``ValueError`` if ``fabric_details`` is not set
+        - raise ``ValueError`` if ``fabric_group_details`` is not set
         - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
         - raise ``ValueError`` if ``rest_send`` is not set
@@ -406,9 +395,11 @@ class FabricGroupUpdateBulk(FabricGroupUpdateCommon):
         - raise ``ValueError`` if ``_send_payloads`` fails
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_details is None:
+        msg = f"ZZZ: ENTERED {self.class_name}.{method_name}()"
+        self.log.debug(msg)
+        if self.fabric_group_details is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_details must be set prior to calling commit."
+            msg += "fabric_group_details must be set prior to calling commit."
             raise ValueError(msg)
 
         if self.fabric_summary is None:
