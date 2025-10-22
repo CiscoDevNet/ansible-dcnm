@@ -431,7 +431,6 @@ import copy
 import inspect
 import json
 import logging
-import sys
 import traceback
 from typing import Type, Union
 
@@ -804,6 +803,101 @@ class Merged(Common):
 
         self._implemented_states.add("merged")
 
+    def retrieve_template(self) -> None:
+        """
+        # Summary
+
+        Retrieve the template for the fabric type in self.fabric_group_types.
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            template_name = self.fabric_group_types.template_name
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
+
+        self.template.rest_send = self.rest_send
+        self.template.template_name = template_name
+
+        try:
+            self.template.refresh()
+        except ValueError as error:
+            raise ValueError(f"{error}") from error
+        except ControllerResponseError as error:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Controller returned error when attempting to retrieve "
+            msg += f"template: {template_name}. "
+            msg += f"Error detail: {error}"
+            raise ValueError(msg) from error
+
+    def update_need_create(self, want) -> None:
+        """
+        # Summary
+
+        -   Validate the playbook config in ``want`` for creation
+        -   Append ``want`` to ``self.need_create``
+
+        ## Raises
+
+        -   ``ValueError`` if the playbook config in ``want`` is invalid.
+
+        """
+        method_name = inspect.stack()[0][3]
+        try:
+            self._verify_playbook_params.config_controller = None
+        except TypeError as error:
+            raise ValueError(f"{error}") from error
+
+        if self.params.get("skip_validation") is False:
+            try:
+                self._verify_playbook_params.commit()
+            except ValueError as error:
+                raise ValueError(f"{error}") from error
+        else:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "skip_validation: "
+            msg += f"{self.params.get('skip_validation')}, "
+            msg += "skipping parameter validation."
+            self.log.debug(msg)
+
+        self.need_create.append(want)
+
+    def update_need_update(self, want) -> None:
+        """
+        # Summary
+
+        -   Validate the playbook config in ``want`` for update
+        -   Append ``want`` to ``self.need_update``
+
+        ## Raises
+
+        -   ``ValueError`` if the playbook config in ``want`` is invalid.
+
+        """
+        method_name = inspect.stack()[0][3]
+        fabric_name: str = want.get("FABRIC_NAME", "")
+        if not fabric_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "FABRIC_NAME is required in config."
+            raise ValueError(msg)
+        nv_pairs = self.have.all_data[fabric_name]["nvPairs"]
+        try:
+            self._verify_playbook_params.config_controller = nv_pairs
+        except TypeError as error:
+            raise ValueError(f"{error}") from error
+        if self.params.get("skip_validation") is False:
+            try:
+                self._verify_playbook_params.commit()
+            except (ValueError, KeyError) as error:
+                raise ValueError(f"{error}") from error
+        else:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "skip_validation: "
+            msg += f"{self.params.get('skip_validation')}, "
+            msg += "skipping parameter validation."
+            self.log.debug(msg)
+
+        self.need_update.append(want)
+
     def get_need(self):
         """
         ### Summary
@@ -836,13 +930,6 @@ class Merged(Common):
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "FABRIC_TYPE is required in config."
                 raise ValueError(msg)
-            msg = f"ZZZ: {self.class_name}.{method_name}: "
-            msg += f"fabric_name: {fabric_name}, fabric_type: {fabric_type}"
-            self.log.debug(msg)
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"self.features: {self.features}"
-            self.log.debug(msg)
 
             is_4x = self.controller_version.is_controller_version_4x
 
@@ -871,24 +958,7 @@ class Merged(Common):
             except ValueError as error:
                 raise ValueError(f"{error}") from error
 
-            try:
-                template_name = self.fabric_group_types.template_name
-            except ValueError as error:
-                raise ValueError(f"{error}") from error
-
-            self.template.rest_send = self.rest_send
-            self.template.template_name = template_name
-
-            try:
-                self.template.refresh()
-            except ValueError as error:
-                raise ValueError(f"{error}") from error
-            except ControllerResponseError as error:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += "Controller returned error when attempting to retrieve "
-                msg += f"template: {template_name}. "
-                msg += f"Error detail: {error}"
-                raise ValueError(msg) from error
+            self.retrieve_template()
 
             try:
                 self._verify_playbook_params.template = self.template.template
@@ -898,45 +968,9 @@ class Merged(Common):
             # Append to need_create if the fabric does not exist.
             # Otherwise, append to need_update.
             if fabric_name not in self.have.fabric_group_names:
-                try:
-                    self._verify_playbook_params.config_controller = None
-                except TypeError as error:
-                    raise ValueError(f"{error}") from error
-
-                if self.params.get("skip_validation") is False:
-                    try:
-                        self._verify_playbook_params.commit()
-                    except ValueError as error:
-                        raise ValueError(f"{error}") from error
-                else:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += "skip_validation: "
-                    msg += f"{self.params.get('skip_validation')}, "
-                    msg += "skipping parameter validation."
-                    self.log.debug(msg)
-
-                self.need_create.append(want)
-
+                self.update_need_create(want)
             else:
-
-                nv_pairs = self.have.all_data[fabric_name]["nvPairs"]
-                try:
-                    self._verify_playbook_params.config_controller = nv_pairs
-                except TypeError as error:
-                    raise ValueError(f"{error}") from error
-                if self.params.get("skip_validation") is False:
-                    try:
-                        self._verify_playbook_params.commit()
-                    except (ValueError, KeyError) as error:
-                        raise ValueError(f"{error}") from error
-                else:
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += "skip_validation: "
-                    msg += f"{self.params.get('skip_validation')}, "
-                    msg += "skipping parameter validation."
-                    self.log.debug(msg)
-
-                self.need_update.append(want)
+                self.update_need_update(want)
 
     def commit(self):
         """
@@ -1343,16 +1377,10 @@ def main():
 
     if params.get("state") not in ["deleted", "merged", "query", "replaced"]:
         ansible_module.fail_json(f"Invalid state: {params['state']}")
-    log_main = logging.getLogger("dcnm.main")
-    msg = f"ENTERED main(): state: {params['state']}, "
-    msg += f"check_mode: {params['check_mode']}"
-    log_main.debug(msg)
     task: Union[Deleted, Merged, Query, Replaced, None] = None
     try:
         if params["state"] == "merged":
             task = Merged(params)
-            msg = "Initialized Merged() task."
-            log_main.debug(msg)
         elif params["state"] == "deleted":
             task = Deleted(params)
         elif params["state"] == "query":
@@ -1364,22 +1392,23 @@ def main():
 
     if task is None:
         ansible_module.fail_json("Task is None. Exiting.")
-        sys.exit(1)
+    else:
+        # else is needed here since pylint doesn't understand fail_json
+        # and thinks task can be None below.
+        try:
+            task.rest_send = rest_send
+            task.commit()
+            task.results.build_final_result()
+        except ValueError as error:
+            ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
-    try:
-        task.rest_send = rest_send
-        task.commit()
-        task.results.build_final_result()
-    except ValueError as error:
-        ansible_module.fail_json(f"{error}", **task.results.failed_result)
-
-    # Results().failed is a property that returns a set()
-    # of boolean values.  pylint doesn't seem to understand this so we've
-    # disabled the unsupported-membership-test warning.
-    if True in task.results.failed:  # pylint: disable=unsupported-membership-test
-        msg = "Module failed."
-        ansible_module.fail_json(msg, **task.results.final_result)
-    ansible_module.exit_json(**task.results.final_result)
+        # Results().failed is a property that returns a set()
+        # of boolean values.  pylint doesn't seem to understand this so we've
+        # disabled the unsupported-membership-test warning.
+        if True in task.results.failed:  # pylint: disable=unsupported-membership-test
+            msg = "Module failed."
+            ansible_module.fail_json(msg, **task.results.final_result)
+        ansible_module.exit_json(**task.results.final_result)
 
 
 if __name__ == "__main__":
