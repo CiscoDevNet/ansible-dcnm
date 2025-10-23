@@ -12,8 +12,10 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-instance-attributes
 """
 Exposes one public class to update fabric-groups on the controller:
+
 - FabricGroupUpdate
 """
 from __future__ import absolute_import, division, print_function
@@ -30,7 +32,6 @@ import logging
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricGroupUpdate
 from ..common.conversion import ConversionUtils
-from ..common.exceptions import ControllerResponseError
 from .common import FabricGroupCommon
 from .config_deploy import FabricGroupConfigDeploy
 from .config_save import FabricGroupConfigSave
@@ -96,33 +97,55 @@ class FabricGroupUpdate(FabricGroupCommon):
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
 
-    def _fabric_group_needs_update_for_merged_state(self, payload):
+    @staticmethod
+    def rename_key(dictionary: dict, old_key: str, new_key: str) -> dict:
         """
-        -   Add True to self._fabric_group_update_required set() if the fabric needs
-            to be updated for merged state.
-        -   Populate self._fabric_changes_payload[fabric_name],
-            a modified payload with key/values that differ from the fabric
-            configuration on the controller.  This payload will be used to
-            update the fabric.
-        -   raise ``ValueError`` if any payload parameter would raise an
-            error on the controller.
+        Rename a key in a dictionary from old_key to new_key.
+        """
+        if old_key in dictionary:
+            dictionary[new_key] = dictionary.pop(old_key)
+        return dictionary
 
-        The fabric needs to be updated if any of the following are true:
-        -   A parameter in the payload has a different value than the
-            corresponding parameter in fabric configuration on the controller.
+    def _update_seed_member(self, payload) -> dict:
+        """
+        Update the seed_member information in the payload.
 
-        NOTES:
-        -   We've already verified that the fabric exists on the
-            controller in ``_build_payloads_for_merged_state()``.
+        Not currently used.
+        """
+        payload_seed_member = payload.get("seed_member", {})
+        payload_seed_member = self.rename_key(payload_seed_member, "cluster_name", "clusterName")
+        payload_seed_member = self.rename_key(payload_seed_member, "fabric_name", "fabricName")
+        if "clusterName" in payload_seed_member and "fabricName" in payload_seed_member:
+            msg = f"{self.class_name}._update_seed_member: "
+            msg += "Updated seed_member payload: "
+            msg += f"{json.dumps(payload_seed_member, indent=4, sort_keys=True)}"
+            self.log.debug(msg)
+            return payload_seed_member
+        msg = f"{self.class_name}._update_seed_member: "
+        msg += "seed_member payload missing cluster_name or fabric_name. "
+        msg += "Returning empty dictionary."
+        self.log.debug(msg)
+        return {}
+
+    def _string_to_bool(self, value: Any) -> Any:
+        """
+        Convert string "true" or "false" to boolean True or False.
+        If value is not a string, return it unchanged.
+        """
+        if isinstance(value, str):
+            if value.lower() == "true":
+                return True
+            if value.lower() == "false":
+                return False
+        return value
+
+    def _merge_user_payload_into_nv_pairs(self, controller_nv_pairs, payload):
+        """
+        Update controller_nv_pairs with key/values from user payload.
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
-
-        fabric_name = payload.get("FABRIC_NAME", None)
-
-        self._fabric_changes_payload[fabric_name] = {}
-        nv_pairs = self.fabric_groups.data[fabric_name].get("nvPairs", {})
 
         for payload_key, payload_value in payload.items():
             # Translate payload keys to equivilent keys on the controller
@@ -133,112 +156,129 @@ class FabricGroupUpdate(FabricGroupCommon):
                 key = self._key_translations[payload_key]
             else:
                 key = payload_key
-
             # Skip the FABRIC_TYPE key since the payload FABRIC_TYPE value
-            # will be e.g. "VXLAN_EVPN", whereas the fabric configuration will
-            # be something along the lines of "Switch_Fabric"
+            # will be e.g. "MCFG", whereas the fabric configuration will
+            # be something along the lines of "MFD"
             if key == "FABRIC_TYPE":
                 continue
-
-            # self._key_translations returns "" for any keys that would not
-            # be found in the controller configuration (e.g. DEPLOY).
-            # Skip these keys.
-            if not key:
-                continue
-
-            # If a key is in the payload that is not in the fabric
-            # configuration on the controller:
-            # - Update Results()
-            # - raise ValueError
-            # pylint: disable=no-member
-            if nv_pairs.get(key) is None:
-                self.results.diff_current = {}
-                self.results.result_current = {"success": False, "changed": False}
-                self.results.failed = True
-                self.results.changed = False
-                self.results.failed_result["msg"] = f"Key {key} not found in fabric configuration for " f"fabric {fabric_name}"
-                self.results.register_task_result()
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Invalid key: {key} found in payload for "
-                msg += f"fabric {fabric_name}"
-                self.log.debug(msg)
-                raise ValueError(msg)
-            # pylint: enable=no-member
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"key: {key}, payload_value: {payload_value}, "
-            msg += f"fabric_value: {nv_pairs.get(key)}"
-            self.log.debug(msg)
-            value = self._prepare_parameter_value_for_comparison(payload_value)
-
             if key == "ANYCAST_GW_MAC":
                 try:
-                    value = self.conversion.translate_mac_address(value)
+                    payload_value = self.conversion.translate_mac_address(payload_value)
                 except ValueError as error:
                     raise ValueError(error) from error
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"type payload_value: {type(value)}, "
-            msg += f"type fabric_value: {type(nv_pairs.get(key))}"
-            self.log.debug(msg)
-            if isinstance(nv_pairs.get(key), bool):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"key {key} requires boolean value."
-                self.log.debug(msg)
-                if isinstance(value, str):
+            if key in controller_nv_pairs:
+                if isinstance(controller_nv_pairs.get(key), bool):
                     msg = f"{self.class_name}.{method_name}: "
-                    msg += f"Converting key {key} string value [{value}] to boolean."
+                    msg += f"key {key} requires boolean value."
                     self.log.debug(msg)
-                    if value.lower() == "true":
-                        value = True
-                    elif value.lower() == "false":
-                        value = False
-            if value != nv_pairs.get(key):
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"key {key}: "
-                msg += f"payload_value [{value}] != "
-                msg += f"fabric_value: [{nv_pairs.get(key)}]: "
-                msg += "Fabric needs update."
-                self.log.debug(msg)
-                self._fabric_changes_payload[fabric_name][key] = value
-                self._fabric_group_update_required.add(True)
+                    payload_value = self._string_to_bool(payload_value)
+                controller_nv_pairs[key] = payload_value
+        return controller_nv_pairs
 
-        if len(self._fabric_changes_payload[fabric_name]) == 0:
+    def _log_changed_keys(self, controller_values, updated_values):
+        """
+        Log the keys that have changed between controller_values
+        and updated_values.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: ENTERED"
+        self.log.debug(msg)
+
+        all_keys = set(controller_values) | set(updated_values)
+        changed = {k for k in all_keys if controller_values.get(k) != updated_values.get(k)}
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"Changed keys: {json.dumps(list(changed), indent=4, sort_keys=True)}"
+        self.log.debug(msg)
+
+    def _add_mandatory_keys_to_payload(self, fabric_name):
+        """
+        Add mandatory key/values to the fabric update payload
+        For now, we assume all fabric groups are VXLAN MFD fabrics
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: ENTERED"
+        self.log.debug(msg)
+
+        self._fabric_changes_payload[fabric_name]["fabricName"] = fabric_name
+        self._fabric_changes_payload[fabric_name]["fabricTechnology"] = "VXLANFabric"
+        self._fabric_changes_payload[fabric_name]["fabricType"] = "MFD"
+        self._fabric_changes_payload[fabric_name]["templateName"] = "MSD_Fabric"
+        if "nvPairs" not in self._fabric_changes_payload[fabric_name]:
+            self._fabric_changes_payload[fabric_name]["nvPairs"] = {}
+        self._fabric_changes_payload[fabric_name]["nvPairs"]["FABRIC_NAME"] = fabric_name
+        self._fabric_changes_payload[fabric_name]["nvPairs"]["FABRIC_TYPE"] = "MFD"
+
+    def _build_payload_for_merged_state_update(self, payload):
+        """
+        # Summary
+
+        Merge user payload into existing fabric configuration on the controller.
+        If the resulting merged payload differs from the existing fabric configuration
+        on the controller, prepare the merged payload for update.
+
+        Add True to self._fabric_group_update_required set() if the updated payload
+        needs to be sent to the controller.
+
+        The controller needs to be updated if a parameter in the merged user/controller
+        payload has a different value than the corresponding parameter in fabric
+        configuration on the controller.
+        """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: ENTERED"
+        self.log.debug(msg)
+
+        fabric_name = payload.get("FABRIC_NAME", None)
+        if not fabric_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "FABRIC_NAME missing from payload."
+            self.log.error(msg)
+            raise ValueError(msg)
+
+        self._fabric_changes_payload[fabric_name] = {}
+
+        controller_config: dict = self.fabric_groups.data.get(fabric_name, {})
+        if not controller_config:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric {fabric_name} not found on controller."
+            self.log.debug(msg)
+            raise ValueError(msg)
+
+        controller_nv_pairs = copy.deepcopy(controller_config.get("nvPairs", {}))
+        controller_nv_pairs_original = copy.deepcopy(controller_nv_pairs)
+        controller_nv_pairs_updated = self._merge_user_payload_into_nv_pairs(controller_nv_pairs, payload)
+        if controller_nv_pairs_updated != controller_nv_pairs_original:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Controller needs to be updated for fabric {fabric_name}. "
+            self.log.debug(msg)
+            self._log_changed_keys(controller_nv_pairs_original, controller_nv_pairs_updated)
+            self._fabric_changes_payload[fabric_name]["nvPairs"] = controller_nv_pairs_updated
+            self._fabric_group_update_required.add(True)
+
+        if True not in self._fabric_group_update_required:
             self._fabric_changes_payload[fabric_name] = payload
             msg = f"{self.class_name}.{method_name}: "
             msg += f"No changes detected for fabric {fabric_name}. "
-            msg += "Skipping fabric update."
+            msg += "Skipping controller update."
             self.log.debug(msg)
             return
 
-        # Copy mandatory key/values DEPLOY, FABRIC_NAME, and FABRIC_TYPE
-        # from the old payload to the new payload.
-        deploy = payload.get("DEPLOY", None)
-        fabric_type = payload.get("FABRIC_TYPE", None)
-        self._fabric_changes_payload[fabric_name]["DEPLOY"] = deploy
-        self._fabric_changes_payload[fabric_name]["FABRIC_NAME"] = fabric_name
-        self._fabric_changes_payload[fabric_name]["FABRIC_TYPE"] = fabric_type
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"fabric_name: {fabric_name}, "
-        msg += f"fabric_update_required: {self._fabric_group_update_required}, "
-        msg += "fabric_changes_payload: "
-        msg += f"{json.dumps(self._fabric_changes_payload, indent=4, sort_keys=True)}"
-        self.log.debug(msg)
+        self._add_mandatory_keys_to_payload(fabric_name)
 
     def _build_payloads_for_merged_state(self):
         """
         -   Populate self._payloads_to_commit. A list of dict of payloads to
             commit for merged state.
         -   Skip payloads for fabrics that do not exist on the controller.
-        -   raise ``ValueError`` if ``_fabric_group_needs_update_for_merged_state``
+        -   raise ``ValueError`` if ``_build_payload_for_merged_state_update``
             fails.
         -   Expects self.payloads to be a list of dict, with each dict
             being a payload for the fabric create API endpoint.
 
         NOTES:
-        -   self._fabric_group_needs_update_for_merged_state() may remove payload
+        -   self._build_payload_for_merged_state_update() may remove payload
             key/values that would not change the controller configuration.
         """
+        method_name = inspect.stack()[0][3]
         self.fabric_groups.rest_send = self.rest_send
         self.fabric_groups.results = self.results
         self.fabric_groups.refresh()
@@ -251,12 +291,15 @@ class FabricGroupUpdate(FabricGroupCommon):
 
             self._fabric_group_update_required = set()
             try:
-                self._fabric_group_needs_update_for_merged_state(payload)
+                self._build_payload_for_merged_state_update(payload)
             except ValueError as error:
                 raise ValueError(error) from error
 
             if True not in self._fabric_group_update_required:
                 continue
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Adding fabric group {fabric_name} to payloads_to_commit. "
+            self.log.debug(msg)
             self._payloads_to_commit.append(copy.deepcopy(self._fabric_changes_payload[fabric_name]))
 
     def _send_payloads(self):
@@ -272,6 +315,10 @@ class FabricGroupUpdate(FabricGroupCommon):
             -   ``FabricUpdateCommon()._config_save()``
             -   ``FabricUpdateCommon()._config_deploy()``
         """
+        method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: ENTERED"
+        self.log.debug(msg)
+
         try:
             self._fixup_payloads_to_commit()
         except ValueError as error:
@@ -279,55 +326,32 @@ class FabricGroupUpdate(FabricGroupCommon):
 
         for payload in self._payloads_to_commit:
             commit_payload = copy.deepcopy(payload)
-            if "DEPLOY" in commit_payload:
-                commit_payload.pop("DEPLOY")
             try:
                 self._send_payload(commit_payload)
             except ValueError as error:
                 raise ValueError(error) from error
 
         # Skip config-save if prior actions encountered errors.
-        # pylint: disable=no-member
-        if True in self.results.failed:
-            return
+        # if True in self.results.failed:
+        #     return
 
-        for payload in self._payloads_to_commit:
-            try:
-                self._config_save.payload = payload
-            except ValueError as error:
-                raise ValueError(error) from error
+        # TODO: Ask Mike/Matt if we need to do config-save and config-deploy
+        # for fabric group updates.
+        # for payload in self._payloads_to_commit:
+        #     try:
+        #         self._config_save.payload = payload
+        #     except ValueError as error:
+        #         raise ValueError(error) from error
 
-        # Skip config-deploy if prior actions encountered errors.
-        if True in self.results.failed:
-            return
-        # pylint: enable=no-member
+        # # Skip config-deploy if prior actions encountered errors.
+        # if True in self.results.failed:
+        #     return
 
-        for payload in self._payloads_to_commit:
-            try:
-                self._config_deploy.payload = payload
-            except (ControllerResponseError, ValueError) as error:
-                raise ValueError(error) from error
-
-    def _set_fabric_update_endpoint(self, payload):
-        """
-        - Set the endpoint for the fabric create API call.
-        - raise ``ValueError`` if the enpoint assignment fails
-        """
-        try:
-            self.endpoint.fabric_name = payload.get("FABRIC_NAME")
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        # Used to convert fabric group type to template name
-        self.fabric_group_type = copy.copy(payload.get("FABRIC_TYPE", "MCFG"))
-        try:
-            self.fabric_group_types.fabric_group_type = self.fabric_group_type
-        except ValueError as error:
-            raise ValueError(error) from error
-
-        payload.pop("FABRIC_TYPE", None)
-        self.path = self.endpoint.path
-        self.verb = self.endpoint.verb
+        # for payload in self._payloads_to_commit:
+        #     try:
+        #         self._config_deploy.payload = payload
+        #     except (ControllerResponseError, ValueError) as error:
+        #         raise ValueError(error) from error
 
     def _send_payload(self, payload):
         """
@@ -336,10 +360,20 @@ class FabricGroupUpdate(FabricGroupCommon):
         """
         method_name = inspect.stack()[0][3]
 
+        fabric_name = payload.get("nvPairs", {}).get("FABRIC_NAME", None)
+        if not fabric_name:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "FABRIC_NAME missing from payload nvPairs."
+            self.log.error(msg)
+            raise ValueError(msg)
+
         try:
-            self._set_fabric_update_endpoint(payload)
+            self.endpoint.fabric_name = fabric_name
         except ValueError as error:
             raise ValueError(error) from error
+
+        self.path = self.endpoint.path
+        self.verb = self.endpoint.verb
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"verb: {self.verb}, path: {self.path}, "
@@ -349,7 +383,6 @@ class FabricGroupUpdate(FabricGroupCommon):
         # We don't want RestSend to retry on errors since the likelihood of a
         # timeout error when updating a fabric is low, and there are many cases
         # of permanent errors for which we don't want to retry.
-        # pylint: disable=no-member
         self.rest_send.timeout = 1
         self.rest_send.path = self.path
         self.rest_send.verb = self.verb
@@ -361,7 +394,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         else:
             self.results.diff_current = copy.deepcopy(payload)
 
-        self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
+        self.send_payload_result[fabric_name] = self.rest_send.result_current["success"]
         self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
@@ -446,10 +479,6 @@ class FabricGroupUpdate(FabricGroupCommon):
             self._build_payloads_for_merged_state()
         except ValueError as error:
             raise ValueError(error) from error
-
-        msg = f"{self.class_name}.{method_name}: "
-        msg += "_build_payloads_for_merged_state DONE"
-        self.log.debug(msg)
 
         if len(self._payloads_to_commit) == 0:
             self.results.diff_current = {}

@@ -874,6 +874,8 @@ class Merged(Common):
 
         """
         method_name = inspect.stack()[0][3]
+        msg = f"{self.class_name}.{method_name}: ENTERED"
+        self.log.debug(msg)
         fabric_name: str = want.get("FABRIC_NAME", "")
         if not fabric_name:
             msg = f"{self.class_name}.{method_name}: "
@@ -1065,7 +1067,7 @@ class Merged(Common):
                 the fabric.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        msg = f"{self.class_name}.{method_name}: entered. "
+        msg = f"{self.class_name}.{method_name}: ENTERED. "
         msg += "self.need_update: "
         msg += f"{json_pretty(self.need_update)}"
         self.log.debug(msg)
@@ -1085,6 +1087,10 @@ class Merged(Common):
             self.fabric_group_update.payloads = self.need_update
         except ValueError as error:
             raise ValueError(f"{error}") from error
+
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "Calling self.fabric_group_update.commit()"
+        self.log.debug(msg)
 
         try:
             self.fabric_group_update.commit()

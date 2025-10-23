@@ -123,10 +123,12 @@ class FabricGroupCommon:
         Modifications:
         - Translate ANYCAST_GW_MAC to a format the controller understands
         - Validate BGP_AS
+        - Remove DEPLOY key if present
         """
         try:
             self._fixup_anycast_gw_mac()
             self._fixup_bgp_as()
+            self._fixup_deploy()
         except ValueError as error:
             raise ValueError(error) from error
 
@@ -169,6 +171,14 @@ class FabricGroupCommon:
                 msg += f"for fabric {fabric_name}, "
                 msg += f"Error detail: {self.conversion.bgp_as_invalid_reason}"
                 raise ValueError(msg)
+
+    def _fixup_deploy(self) -> None:
+        """
+        -   Remove DEPLOY key from payloads prior to sending them
+            to the controller.
+        """
+        for payload in self._payloads_to_commit:
+            payload.pop("DEPLOY", None)
 
     def _verify_payload(self, payload) -> None:
         """
