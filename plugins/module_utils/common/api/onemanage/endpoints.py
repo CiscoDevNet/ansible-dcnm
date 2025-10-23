@@ -91,9 +91,12 @@ class FabricConfigPreviewQueryParams(EndpointQueryParams):
 
 class LinkByUuidQueryParams(EndpointQueryParams):
     """
+    # Summary
+
     Query parameters for link by UUID endpoints.
 
-    ### Parameters
+    ## Parameters
+
     - source_cluster_name: Source cluster name (e.g., "nd-cluster-1")
     - destination_cluster_name: Destination cluster name (e.g., "nd-cluster-2")
     """
@@ -113,9 +116,12 @@ class LinkByUuidQueryParams(EndpointQueryParams):
 
 class NetworkNamesQueryParams(EndpointQueryParams):
     """
+    # Summary
+
     Query parameters for network deletion endpoints.
 
-    ### Parameters
+    ## Parameters
+
     - network_names: Comma-separated list of network names to delete e.g. "Net1,Net2,Net3"
     """
 
@@ -130,9 +136,12 @@ class NetworkNamesQueryParams(EndpointQueryParams):
 
 class VrfNamesQueryParams(EndpointQueryParams):
     """
+    # Summary
+
     Query parameters for VRF deletion endpoints.
 
-    ### Parameters
+    ## Parameters
+
     - vrf_names: Comma-separated list of VRF names to delete e.g. "VRF1,VRF2,VRF3"
     """
 
@@ -147,20 +156,24 @@ class VrfNamesQueryParams(EndpointQueryParams):
 
 class EpOneManageFabricConfigDeploy(BaseModel):
     """
-    ## Fabric Config-Deploy Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Config-Deploy Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to deploy the configuration for a specific multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-deploy
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricConfigDeploy()
     request.fabric_name = "MyFabric"
@@ -185,12 +198,16 @@ class EpOneManageFabricConfigDeploy(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path with query parameters.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with query parameters
         """
         if self.fabric_name is None:
@@ -211,20 +228,24 @@ class EpOneManageFabricConfigDeploy(BaseModel):
 
 class EpOneManageFabricConfigDeploySwitch(BaseModel):
     """
-    ## Fabric Config-Deploy Switch Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Config-Deploy Switch Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to deploy the configuration for a specific switch in a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-deploy/{switchSN}
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricConfigDeploySwitch()
     request.fabric_name = "MyFabric"
@@ -251,12 +272,16 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path with query parameters.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name or switch_sn is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with query parameters
         """
         if self.fabric_name is None:
@@ -279,20 +304,24 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
 
 class EpOneManageFabricConfigPreview(BaseModel):
     """
-    ## Fabric Config-Preview Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Config-Preview Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to preview the configuration for a specific multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-preview
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricConfigPreview()
     request.fabric_name = "MyFabric"
@@ -317,12 +346,16 @@ class EpOneManageFabricConfigPreview(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path with query parameters.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with query parameters
         """
         if self.fabric_name is None:
@@ -343,20 +376,24 @@ class EpOneManageFabricConfigPreview(BaseModel):
 
 class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     """
-    ## Fabric Config-Preview Switch Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Config-Preview Switch Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to preview the configuration for a specific switch in a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-preview/{switchSN}
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricConfigPreviewSwitch()
     request.fabric_name = "MyFabric"
@@ -383,12 +420,16 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path with query parameters.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name or switch_sn is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with query parameters
         """
         if self.fabric_name is None:
@@ -411,20 +452,24 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
 
 class EpOneManageFabricConfigSave(BaseModel):
     """
-    ## Fabric Config-Save Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Config-Save Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to save the configuration for a specific multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/config-save
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricConfigSave()
     request.fabric_name = "MyFabric"
@@ -440,12 +485,16 @@ class EpOneManageFabricConfigSave(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string
         """
         if self.fabric_name is None:
@@ -461,20 +510,24 @@ class EpOneManageFabricConfigSave(BaseModel):
 
 class EpOneManageFabricCreate(BaseModel):
     """
-    ## Fabric Create Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Create Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to create a new multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricCreate()
     request.fabric_name = "MyFabric"
@@ -502,20 +555,24 @@ class EpOneManageFabricCreate(BaseModel):
 
 class EpOneManageFabricDelete(BaseModel):
     """
-    ## Fabric Delete Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Delete Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to delete a specific multi-cluster fabric.
 
-    ### Path (nd322m apidocs)
+    ## Path (nd322m apidocs)
 
     -  /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}
 
-    ### Verb
+    ## Verb
 
     - DELETE
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricDelete()
     request.fabric_name = "MyFabric"
@@ -535,12 +592,16 @@ class EpOneManageFabricDelete(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with /onemanage prefix
         """
         if self.fabric_name is None:
@@ -601,20 +662,24 @@ class EpOneManageFabricDetails(BaseModel):
 
 class EpOneManageFabricGroupMembersGet(BaseModel):
     """
-    ## Fabric Group Members Get Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabric Group Members Get Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to retrieve members of a specific multi-cluster fabric group.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/members
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricGroupMembersGet()
     request.fabric_name = "MyFabric"
@@ -630,12 +695,16 @@ class EpOneManageFabricGroupMembersGet(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string
         """
         if self.fabric_name is None:
@@ -649,24 +718,28 @@ class EpOneManageFabricGroupMembersGet(BaseModel):
         return "GET"
 
 
-class EpOneManageFabricGroupUpdate(BaseModel):
+class EpOneManageFabricGroupMembersUpdate(BaseModel):
     """
-    ## Fabric Group Update Endpoint (OneManage)
+    # Summary
 
-    ### Description
-    Endpoint to add or remove a fabric from a multi-cluster fabric group.
+    Fabric Group Members Update Endpoint (OneManage)
 
-    ### Path
+    ## Description
+
+    Endpoint to add or remove members to/from a multi-cluster fabric group.
+
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}/members
 
-    ### Verb
+    ## Verb
 
     - PUT
 
-    ### Usage
+    ## Usage
+
     ```python
-    request = EpOneManageFabricGroupUpdate()
+    request = EpOneManageFabricGroupMembersUpdate()
     request.fabric_name = "MyFabric"
 
     path = request.path
@@ -683,18 +756,22 @@ class EpOneManageFabricGroupUpdate(BaseModel):
       - "remove": Remove fabricName from clusterName
     """
 
-    class_name: Optional[str] = Field(default="EpOneManageFabricGroupUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricGroupMembersUpdate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
 
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string
         """
         if self.fabric_name is None:
@@ -708,31 +785,35 @@ class EpOneManageFabricGroupUpdate(BaseModel):
         return "PUT"
 
 
-class EpOneManageFabricUpdate(BaseModel):
+class EpOneManageFabricGroupUpdate(BaseModel):
     """
-    ## Fabric Update Endpoint (OneManage)
+    # Summary
 
-    ### Description
-    Endpoint to update a specific multi-cluster fabric.
+    Fabric Group Update Endpoint (OneManage)
 
-    ### Path
+    ## Description
+
+    Endpoint to update a specific multi-cluster fabric group.
+
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabricName}
 
-    ### Verb
+    ## Verb
 
     - PUT
 
-    ### Usage
+    ## Usage
+
     ```python
-    request = EpOneManageFabricUpdate()
+    request = EpOneManageFabricGroupUpdate()
     request.fabric_name = "MyFabric"
 
     path = request.path
     verb = request.verb
     ```
 
-    ### Request Body
+    ## Request Body
 
     The request body should contain fabric update parameters:
     - fabricName: str - Name of the Fabric
@@ -790,18 +871,22 @@ class EpOneManageFabricUpdate(BaseModel):
     - vrf_extension_template
     """
 
-    class_name: Optional[str] = Field(default="EpOneManageFabricUpdate", description="Class name for backward compatibility")
+    class_name: Optional[str] = Field(default="EpOneManageFabricGroupUpdate", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string
         """
         if self.fabric_name is None:
@@ -817,20 +902,24 @@ class EpOneManageFabricUpdate(BaseModel):
 
 class EpOneManageFabricsGet(BaseModel):
     """
-    ## Fabrics Get Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Fabrics Get Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to retrieve all multi-cluster fabrics.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/fabrics
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageFabricsGet()
 
@@ -854,20 +943,24 @@ class EpOneManageFabricsGet(BaseModel):
 
 class EpOneManageLinkCreate(BaseModel):
     """
-    ## Link Create Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Link Create Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to create a link between fabrics in multi-cluster setup.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/links
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageLinkCreate()
 
@@ -875,7 +968,7 @@ class EpOneManageLinkCreate(BaseModel):
     verb = request.verb
     ```
 
-    ### Request Body
+    ## Request Body
 
     The request body should contain link creation parameters:
     - sourceClusterName: str - Source cluster name
@@ -927,20 +1020,24 @@ class EpOneManageLinkCreate(BaseModel):
 
 class EpOneManageLinkGetByUuid(BaseModel):
     """
-    ## Link Get By UUID Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Link Get By UUID Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to retrieve a specific link by its UUID.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/links/{linkUUID}
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageLinkGetByUuid()
     request.link_uuid = "63505f61-ce7b-40a6-a38c-ae9a355b2116"
@@ -991,20 +1088,24 @@ class EpOneManageLinkGetByUuid(BaseModel):
 
 class EpOneManageLinkUpdate(BaseModel):
     """
-    ## Link Update Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Link Update Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to update a specific link by its UUID.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/links/{linkUUID}
 
-    ### Verb
+    ## Verb
 
     - PUT
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageLinkUpdate()
     request.link_uuid = "63505f61-ce7b-40a6-a38c-ae9a355b2116"
@@ -1015,7 +1116,7 @@ class EpOneManageLinkUpdate(BaseModel):
     verb = request.verb
     ```
 
-    ### Request Body
+    ## Request Body
 
     The request body should contain link update parameters:
     - sourceClusterName: str - Source cluster name
@@ -1091,20 +1192,24 @@ class EpOneManageLinkUpdate(BaseModel):
 
 class EpOneManageLinksDelete(BaseModel):
     """
-    ## Links Delete Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Links Delete Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to delete links in multi-cluster setup.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/links
 
-    ### Verb
+    ## Verb
 
     - PUT
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageLinksDelete()
 
@@ -1112,9 +1217,10 @@ class EpOneManageLinksDelete(BaseModel):
     verb = request.verb
     ```
 
-    ### Request Body
+    ## Request Body
 
-    The request body should contain link deletion parameters:
+    The request body should contain link deletion parameters.
+
     - linkUUID: str - Link UUID (e.g., "63505f61-ce7b-40a6-a38c-ae9a355b2116")
     - destinationClusterName: str - Destination cluster name (e.g., "nd-cluster-1")
     - sourceClusterName: str - Source cluster name (e.g., "nd-cluster-2")
@@ -1135,20 +1241,24 @@ class EpOneManageLinksDelete(BaseModel):
 
 class EpOneManageLinksGetByFabric(BaseModel):
     """
-    ## Links Get By Fabric Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Links Get By Fabric Endpoint (OneManage)
+
+    ## Description
+
     Endpoint to retrieve links for a specific multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/links/fabrics/{fabricName}
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
+
     ```python
     request = EpOneManageLinksGetByFabric()
     request.fabric_name = "MyFabric"
@@ -1185,21 +1295,23 @@ class EpOneManageLinksGetByFabric(BaseModel):
 
 class EpOneManageNetworkCreate(BaseModel):
     """
-    ## Network Create Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Network Create Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to create a network in a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/networks
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageNetworkCreate()
@@ -1248,21 +1360,23 @@ class EpOneManageNetworkCreate(BaseModel):
 
 class EpOneManageNetworkUpdate(BaseModel):
     """
-    ## Network Update Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Network Update Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to update single Network in a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabric_name}/networks/{network_name}
 
-    ### Verb
+    ## Verb
 
     - PUT
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageNetworkUpdate()
@@ -1281,13 +1395,15 @@ class EpOneManageNetworkUpdate(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
 
         - ValueError: If fabric_name or vrf_name is not set
 
-        ### Returns
+        ## Returns
 
         - Complete endpoint path string
         """
@@ -1306,21 +1422,23 @@ class EpOneManageNetworkUpdate(BaseModel):
 
 class EpOneManageNetworksDelete(BaseModel):
     """
-    ## Networks Delete Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Networks Delete Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to bulk-delete networks from a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabric_name}/bulk-delete/networks
 
-    ### Verb
+    ## Verb
 
     - DELETE
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageNetworksDelete()
@@ -1345,12 +1463,16 @@ class EpOneManageNetworksDelete(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path with query parameters.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with query parameters
         """
         if self.fabric_name is None:
@@ -1371,21 +1493,23 @@ class EpOneManageNetworksDelete(BaseModel):
 
 class EpOneManageNetworksGet(BaseModel):
     """
-    ## Networks Get Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    Networks Get Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to retrieve all networks from a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/networks
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageNetworksGet()
@@ -1423,21 +1547,23 @@ class EpOneManageNetworksGet(BaseModel):
 
 class EpOneManageVrfCreate(BaseModel):
     """
-    ## VRF Create Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    VRF Create Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to create a VRF in a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/vrfs
 
-    ### Verb
+    ## Verb
 
     - POST
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageVrfCreate()
@@ -1486,21 +1612,23 @@ class EpOneManageVrfCreate(BaseModel):
 
 class EpOneManageVrfUpdate(BaseModel):
     """
-    ## VRF Update Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    VRF Update Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to update single VRF in a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabric_name}/vrfs/{vrf_name}
 
-    ### Verb
+    ## Verb
 
     - PUT
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageVrfUpdate()
@@ -1542,21 +1670,23 @@ class EpOneManageVrfUpdate(BaseModel):
 
 class EpOneManageVrfsDelete(BaseModel):
     """
-    ## VRFs Delete Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    VRFs Delete Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to bulk-delete VRFs from a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabric_name}/bulk-delete/vrfs
 
-    ### Verb
+    ## Verb
 
     - DELETE
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageVrfsDelete()
@@ -1581,12 +1711,16 @@ class EpOneManageVrfsDelete(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path with query parameters.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string with query parameters
         """
         if self.fabric_name is None:
@@ -1607,21 +1741,23 @@ class EpOneManageVrfsDelete(BaseModel):
 
 class EpOneManageVrfsGet(BaseModel):
     """
-    ## VRFs Get Endpoint (OneManage)
+    # Summary
 
-    ### Description
+    VRFs Get Endpoint (OneManage)
+
+    ## Description
 
     Endpoint to retrieve all VRFs from a multi-cluster fabric.
 
-    ### Path
+    ## Path
 
     - /appcenter/cisco/ndfc/api/v1/onemanage/top-down/fabrics/{fabricName}/vrfs
 
-    ### Verb
+    ## Verb
 
     - GET
 
-    ### Usage
+    ## Usage
 
     ```python
     request = EpOneManageVrfsGet()
@@ -1638,12 +1774,16 @@ class EpOneManageVrfsGet(BaseModel):
     @property
     def path(self) -> str:
         """
+        # Summary
+
         Build the endpoint path.
 
-        ### Raises
+        ## Raises
+
         - ValueError: If fabric_name is not set
 
-        ### Returns
+        ## Returns
+
         - Complete endpoint path string
         """
         if self.fabric_name is None:

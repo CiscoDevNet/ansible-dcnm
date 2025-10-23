@@ -29,9 +29,9 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.api.onemanage.en
     EpOneManageFabricDelete,
     EpOneManageFabricDetails,
     EpOneManageFabricGroupMembersGet,
+    EpOneManageFabricGroupMembersUpdate,
     EpOneManageFabricGroupUpdate,
     EpOneManageFabricsGet,
-    EpOneManageFabricUpdate,
     EpOneManageLinkCreate,
     EpOneManageLinkGetByUuid,
     EpOneManageLinksDelete,
@@ -1750,48 +1750,48 @@ def test_onemanage_endpoints_02230():
 
 
 # =============================================================================
-# Test: EpOneManageFabricUpdate
+# Test: EpOneManageFabricGroupMembersUpdate
 # =============================================================================
 
 
 def test_onemanage_endpoints_02300():
     """
     ### Class
-    - EpOneManageFabricUpdate
+    - EpOneManageFabricGroupMembersUpdate
 
     ### Summary
     - Verify path with fabric_name set
     """
     with does_not_raise():
-        endpoint = EpOneManageFabricUpdate()
+        endpoint = EpOneManageFabricGroupMembersUpdate()
         endpoint.fabric_name = "MyFabric"
         result = endpoint.path
-    assert result == f"{ONEMANAGE_FABRICS_PATH}/MyFabric"
+    assert result == f"{ONEMANAGE_FABRICS_PATH}/MyFabric/members"
 
 
 def test_onemanage_endpoints_02310():
     """
     ### Class
-    - EpOneManageFabricUpdate
+    - EpOneManageFabricGroupMembersUpdate
 
     ### Summary
     - Verify path raises ValueError when fabric_name not set
     """
     with pytest.raises(ValueError, match="fabric_name must be set"):
-        endpoint = EpOneManageFabricUpdate()
+        endpoint = EpOneManageFabricGroupMembersUpdate()
         endpoint.path  # pylint: disable=pointless-statement
 
 
 def test_onemanage_endpoints_02320():
     """
     ### Class
-    - EpOneManageFabricUpdate
+    - EpOneManageFabricGroupMembersUpdate
 
     ### Summary
     - Verify verb property returns PUT
     """
     with does_not_raise():
-        endpoint = EpOneManageFabricUpdate()
+        endpoint = EpOneManageFabricGroupMembersUpdate()
         result = endpoint.verb
     assert result == "PUT"
 
@@ -1799,15 +1799,15 @@ def test_onemanage_endpoints_02320():
 def test_onemanage_endpoints_02330():
     """
     ### Class
-    - EpOneManageFabricUpdate
+    - EpOneManageFabricGroupMembersUpdate
 
     ### Summary
     - Verify class_name attribute
     """
     with does_not_raise():
-        endpoint = EpOneManageFabricUpdate()
+        endpoint = EpOneManageFabricGroupMembersUpdate()
         result = endpoint.class_name
-    assert result == "EpOneManageFabricUpdate"
+    assert result == "EpOneManageFabricGroupMembersUpdate"
 
 
 # =============================================================================
@@ -2168,7 +2168,7 @@ def test_onemanage_endpoints_03000():
         endpoint = EpOneManageFabricGroupUpdate()
         endpoint.fabric_name = "MyFabric"
         result = endpoint.path
-    assert result == f"{ONEMANAGE_FABRICS_PATH}/MyFabric/members"
+    assert result == f"{ONEMANAGE_FABRICS_PATH}/MyFabric"
 
 
 def test_onemanage_endpoints_03010():
