@@ -20,7 +20,7 @@ Exposes one public class to update fabric-groups on the controller:
 """
 from __future__ import absolute_import, division, print_function
 
-from typing import Any
+from typing import Any, Union
 
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
@@ -78,23 +78,23 @@ class FabricGroupUpdate(FabricGroupCommon):
 
     def __init__(self):
         super().__init__()
-        self.class_name = self.__class__.__name__
-        self.action = "fabric_group_update"
+        self.class_name: str = self.__class__.__name__
+        self.action: str = "fabric_group_update"
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self._config_deploy = FabricGroupConfigDeploy()
-        self._config_save = FabricGroupConfigSave()
-        self.conversion = ConversionUtils()
+        self._config_deploy: FabricGroupConfigDeploy = FabricGroupConfigDeploy()
+        self._config_save: FabricGroupConfigSave = FabricGroupConfigSave()
+        self.conversion: ConversionUtils = ConversionUtils()
         self._fabric_group_update_required: set = set()
-        self._key_translations = {}
+        self._key_translations: dict = {}
         self._key_translations["DEPLOY"] = ""
-        self.endpoint = EpOneManageFabricGroupUpdate()
-        self.fabric_group_types = FabricGroupTypes()
+        self.endpoint: EpOneManageFabricGroupUpdate = EpOneManageFabricGroupUpdate()
+        self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
         self.fabric_group_type: str = "MCFG"
         self.fabric_groups: FabricGroups = FabricGroups()
         self._payloads: list[dict] = []
-        msg = f"ENTERED {self.class_name}()"
+        msg = f"ENTERED {self.class_name}"
         self.log.debug(msg)
 
     @staticmethod
@@ -106,7 +106,7 @@ class FabricGroupUpdate(FabricGroupCommon):
             dictionary[new_key] = dictionary.pop(old_key)
         return dictionary
 
-    def _update_seed_member(self, payload) -> dict:
+    def _update_seed_member(self, payload: dict) -> dict:
         """
         Update the seed_member information in the payload.
 
@@ -139,11 +139,11 @@ class FabricGroupUpdate(FabricGroupCommon):
                 return False
         return value
 
-    def _merge_user_payload_into_nv_pairs(self, controller_nv_pairs, payload):
+    def _merge_user_payload_into_nv_pairs(self, controller_nv_pairs: dict, payload: dict) -> dict:
         """
         Update controller_nv_pairs with key/values from user payload.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
 
@@ -168,34 +168,32 @@ class FabricGroupUpdate(FabricGroupCommon):
                     raise ValueError(error) from error
             if key in controller_nv_pairs:
                 if isinstance(controller_nv_pairs.get(key), bool):
-                    msg = f"{self.class_name}.{method_name}: "
-                    msg += f"key {key} requires boolean value."
-                    self.log.debug(msg)
                     payload_value = self._string_to_bool(payload_value)
                 controller_nv_pairs[key] = payload_value
         return controller_nv_pairs
 
-    def _log_changed_keys(self, controller_values, updated_values):
+    def _log_changed_keys(self, controller_values: dict, updated_values: dict):
         """
         Log the keys that have changed between controller_values
         and updated_values.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
 
         all_keys = set(controller_values) | set(updated_values)
         changed = {k for k in all_keys if controller_values.get(k) != updated_values.get(k)}
         msg = f"{self.class_name}.{method_name}: "
-        msg += f"Changed keys: {json.dumps(list(changed), indent=4, sort_keys=True)}"
+        msg += "Changed keys: "
+        msg += f"{json.dumps(list(changed), indent=4, sort_keys=True)}"
         self.log.debug(msg)
 
-    def _add_mandatory_keys_to_payload(self, fabric_name):
+    def _add_mandatory_keys_to_payload(self, fabric_name: str) -> None:
         """
         Add mandatory key/values to the fabric update payload
         For now, we assume all fabric groups are VXLAN MFD fabrics
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
 
@@ -208,7 +206,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         self._fabric_changes_payload[fabric_name]["nvPairs"]["FABRIC_NAME"] = fabric_name
         self._fabric_changes_payload[fabric_name]["nvPairs"]["FABRIC_TYPE"] = "MFD"
 
-    def _build_payload_for_merged_state_update(self, payload):
+    def _build_payload_for_merged_state_update(self, payload: dict) -> None:
         """
         # Summary
 
@@ -223,11 +221,11 @@ class FabricGroupUpdate(FabricGroupCommon):
         payload has a different value than the corresponding parameter in fabric
         configuration on the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
 
-        fabric_name = payload.get("FABRIC_NAME", None)
+        fabric_name: Union[str, None] = payload.get("FABRIC_NAME", None)
         if not fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "FABRIC_NAME missing from payload."
@@ -264,7 +262,7 @@ class FabricGroupUpdate(FabricGroupCommon):
 
         self._add_mandatory_keys_to_payload(fabric_name)
 
-    def _build_payloads_for_merged_state(self):
+    def _build_payloads_for_merged_state(self) -> None:
         """
         -   Populate self._payloads_to_commit. A list of dict of payloads to
             commit for merged state.
@@ -278,15 +276,24 @@ class FabricGroupUpdate(FabricGroupCommon):
         -   self._build_payload_for_merged_state_update() may remove payload
             key/values that would not change the controller configuration.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.fabric_groups.rest_send = self.rest_send
         self.fabric_groups.results = self.results
         self.fabric_groups.refresh()
         self._payloads_to_commit = []
 
         for payload in self.payloads:
-            fabric_name = payload.get("FABRIC_NAME", None)
+            fabric_name = payload.get("FABRIC_NAME", "")
+            if not fabric_name:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += "FABRIC_NAME missing from payload. Skipping payload."
+                self.log.debug(msg)
+                continue
             if fabric_name not in self.fabric_groups.fabric_group_names:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric {fabric_name} not found on controller. "
+                msg += "Skipping payload."
+                self.log.debug(msg)
                 continue
 
             self._fabric_group_update_required = set()
@@ -302,7 +309,7 @@ class FabricGroupUpdate(FabricGroupCommon):
             self.log.debug(msg)
             self._payloads_to_commit.append(copy.deepcopy(self._fabric_changes_payload[fabric_name]))
 
-    def _send_payloads(self):
+    def _send_payloads(self) -> None:
         """
         -   If ``check_mode`` is ``False``, send the payloads
             to the controller.
@@ -315,7 +322,7 @@ class FabricGroupUpdate(FabricGroupCommon):
             -   ``FabricUpdateCommon()._config_save()``
             -   ``FabricUpdateCommon()._config_deploy()``
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
 
@@ -325,7 +332,7 @@ class FabricGroupUpdate(FabricGroupCommon):
             raise ValueError(error) from error
 
         for payload in self._payloads_to_commit:
-            commit_payload = copy.deepcopy(payload)
+            commit_payload: dict = copy.deepcopy(payload)
             try:
                 self._send_payload(commit_payload)
             except ValueError as error:
@@ -353,14 +360,14 @@ class FabricGroupUpdate(FabricGroupCommon):
         #     except (ControllerResponseError, ValueError) as error:
         #         raise ValueError(error) from error
 
-    def _send_payload(self, payload):
+    def _send_payload(self, payload: dict) -> None:
         """
         - Send one fabric update payload
         - raise ``ValueError`` if the endpoint assignment fails
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
-        fabric_name = payload.get("nvPairs", {}).get("FABRIC_NAME", None)
+        fabric_name: Union[str, None] = payload.get("nvPairs", {}).get("FABRIC_NAME", None)
         if not fabric_name:
             msg = f"{self.class_name}.{method_name}: "
             msg += "FABRIC_NAME missing from payload nvPairs."
@@ -403,7 +410,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         self.results.register_task_result()
 
     @property
-    def payloads(self):
+    def payloads(self) -> list[dict[str, Any]]:
         """
         Payloads must be a ``list`` of ``dict`` of payloads for the
         ``fabric_update`` endpoint.
@@ -437,7 +444,7 @@ class FabricGroupUpdate(FabricGroupCommon):
                 raise ValueError(error) from error
         self._payloads = value
 
-    def commit(self):
+    def commit(self) -> None:
         """
         - Update fabrics and register results.
         - Return if there are no fabrics to update for merged state.
@@ -448,8 +455,8 @@ class FabricGroupUpdate(FabricGroupCommon):
         - raise ``ValueError`` if ``_build_payloads_for_merged_state`` fails
         - raise ``ValueError`` if ``_send_payloads`` fails
         """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: ENTERED"
+        method_name: str = inspect.stack()[0][3]
+        msg: str = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
         if self.fabric_group_details is None:
             msg = f"{self.class_name}.{method_name}: "
@@ -461,7 +468,7 @@ class FabricGroupUpdate(FabricGroupCommon):
             msg += "fabric_summary must be set prior to calling commit."
             raise ValueError(msg)
 
-        if self.payloads is None:
+        if not self.payloads:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
