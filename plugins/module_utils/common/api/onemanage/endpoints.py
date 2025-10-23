@@ -530,7 +530,6 @@ class EpOneManageFabricCreate(BaseModel):
 
     ```python
     request = EpOneManageFabricCreate()
-    request.fabric_name = "MyFabric"
 
     path = request.path
     verb = request.verb
@@ -542,9 +541,6 @@ class EpOneManageFabricCreate(BaseModel):
     @property
     def path(self) -> str:
         """Build the endpoint path."""
-
-        # return BasePath.onemanage_fabrics()
-        # return "/onemanage/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
         return "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics"
 
     @property
