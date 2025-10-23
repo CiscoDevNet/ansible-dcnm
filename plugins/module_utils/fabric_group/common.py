@@ -111,6 +111,52 @@ class FabricGroupCommon:
             return str(value)
         return value
 
+    @staticmethod
+    def rename_key(dictionary: dict, old_key: str, new_key: str) -> dict[str, str]:
+        """
+        #  Summary
+
+        Rename a key in a dictionary from old_key to new_key.
+
+        ## Raises
+
+        None
+        """
+        if old_key in dictionary:
+            dictionary[new_key] = dictionary.pop(old_key)
+        return dictionary
+
+    def _update_seed_member(self, seed_member: dict[str, str]) -> dict[str, str]:
+        """
+        # Summary
+
+        Update the seed_member information in the payload by renaming
+        cluster_name to clusterName and fabric_name to fabricName.
+
+        ## Raises
+
+        -  `ValueError` if `seed_member` is not a `dict`
+        """
+        method_name: str = inspect.stack()[0][3]
+        if not isinstance(seed_member, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "seed_member must be a dictionary."
+            raise ValueError(msg)
+        if not seed_member:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "seed_member is empty. Returning empty dictionary."
+            self.log.debug(msg)
+            return {}
+        seed_member = self.rename_key(seed_member, "cluster_name", "clusterName")
+        seed_member = self.rename_key(seed_member, "fabric_name", "fabricName")
+        if "clusterName" in seed_member and "fabricName" in seed_member:
+            return seed_member
+        msg = f"{self.class_name}._update_seed_member: "
+        msg += "seed_member payload missing cluster_name or fabric_name. "
+        msg += "Returning empty dictionary."
+        self.log.debug(msg)
+        return {}
+
     def _fixup_payloads_to_commit(self) -> None:
         """
         -   Make any modifications to the payloads prior to sending them

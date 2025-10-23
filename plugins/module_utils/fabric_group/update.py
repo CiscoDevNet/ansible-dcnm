@@ -76,7 +76,7 @@ class FabricGroupUpdate(FabricGroupCommon):
     ansible_module.exit_json(**task.results.final_result)
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self.class_name: str = self.__class__.__name__
         self.action: str = "fabric_group_update"
@@ -97,51 +97,38 @@ class FabricGroupUpdate(FabricGroupCommon):
         msg = f"ENTERED {self.class_name}"
         self.log.debug(msg)
 
-    @staticmethod
-    def rename_key(dictionary: dict, old_key: str, new_key: str) -> dict:
+    def _string_to_bool(self, value: str) -> Any:
         """
-        Rename a key in a dictionary from old_key to new_key.
-        """
-        if old_key in dictionary:
-            dictionary[new_key] = dictionary.pop(old_key)
-        return dictionary
+        # Summary
 
-    def _update_seed_member(self, payload: dict) -> dict:
-        """
-        Update the seed_member information in the payload.
-
-        Not currently used.
-        """
-        payload_seed_member = payload.get("seed_member", {})
-        payload_seed_member = self.rename_key(payload_seed_member, "cluster_name", "clusterName")
-        payload_seed_member = self.rename_key(payload_seed_member, "fabric_name", "fabricName")
-        if "clusterName" in payload_seed_member and "fabricName" in payload_seed_member:
-            msg = f"{self.class_name}._update_seed_member: "
-            msg += "Updated seed_member payload: "
-            msg += f"{json.dumps(payload_seed_member, indent=4, sort_keys=True)}"
-            self.log.debug(msg)
-            return payload_seed_member
-        msg = f"{self.class_name}._update_seed_member: "
-        msg += "seed_member payload missing cluster_name or fabric_name. "
-        msg += "Returning empty dictionary."
-        self.log.debug(msg)
-        return {}
-
-    def _string_to_bool(self, value: Any) -> Any:
-        """
         Convert string "true" or "false" to boolean True or False.
-        If value is not a string, return it unchanged.
+        If value is not a string, or is a string that's not "true"/"false",
+        return it unchanged.
+
+        ## Raises
+
+        None
         """
-        if isinstance(value, str):
-            if value.lower() == "true":
-                return True
-            if value.lower() == "false":
-                return False
+        if not isinstance(value, str):
+            return value
+        if value.lower() == "true":
+            return True
+        if value.lower() == "false":
+            return False
         return value
 
-    def _merge_user_payload_into_nv_pairs(self, controller_nv_pairs: dict, payload: dict) -> dict:
+    def _merge_nv_pairs(self, controller_nv_pairs: dict, payload: dict) -> dict:
         """
-        Update controller_nv_pairs with key/values from user payload.
+        # Summary
+
+        Merge user and controller nvPairs.  User nvPairs overwrite controller nvPairs.
+
+        -  Translate payload keys to equivilent keys on the controller if necessary.
+        -  Skip FABRIC_TYPE key since we add the correct value later.
+
+        ## Raises
+
+        -   ``ValueError`` if ANYCAST_GW_MAC translation fails.
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -156,9 +143,10 @@ class FabricGroupUpdate(FabricGroupCommon):
                 key = self._key_translations[payload_key]
             else:
                 key = payload_key
-            # Skip the FABRIC_TYPE key since the payload FABRIC_TYPE value
+            # Skip the FABRIC_TYPE key since the user payload FABRIC_TYPE value
             # will be e.g. "MCFG", whereas the fabric configuration will
-            # be something along the lines of "MFD"
+            # be "MFD".  We later add the correct FABRIC_TYPE value in
+            # self._add_mandatory_keys_to_payload().
             if key == "FABRIC_TYPE":
                 continue
             if key == "ANYCAST_GW_MAC":
@@ -172,10 +160,15 @@ class FabricGroupUpdate(FabricGroupCommon):
                 controller_nv_pairs[key] = payload_value
         return controller_nv_pairs
 
-    def _log_changed_keys(self, controller_values: dict, updated_values: dict):
+    def _log_changed_keys(self, controller_values: dict, updated_values: dict) -> None:
         """
-        Log the keys that have changed between controller_values
-        and updated_values.
+        # Summary
+
+        Log the keys that have changed between controller_values and updated_values.
+
+        ## Raises
+
+        None
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -185,13 +178,29 @@ class FabricGroupUpdate(FabricGroupCommon):
         changed = {k for k in all_keys if controller_values.get(k) != updated_values.get(k)}
         msg = f"{self.class_name}.{method_name}: "
         msg += "Changed keys: "
-        msg += f"{json.dumps(list(changed), indent=4, sort_keys=True)}"
+        msg += f"{','.join(list(changed))}"
         self.log.debug(msg)
 
     def _add_mandatory_keys_to_payload(self, fabric_name: str) -> None:
         """
-        Add mandatory key/values to the fabric update payload
-        For now, we assume all fabric groups are VXLAN MFD fabrics
+        # Summary
+
+        Add mandatory key/values to the fabric update payload.
+
+        - fabricName
+        - fabricTechnology
+        - fabricType
+        - templateName
+        - nvPairs.FABRIC_NAME
+        - nvPairs.FABRIC_TYPE
+
+        ## Raises
+
+        None
+
+        ## Notes
+
+        1. For now, we assume all fabric groups are VXLAN MFD fabrics
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -206,7 +215,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         self._fabric_changes_payload[fabric_name]["nvPairs"]["FABRIC_NAME"] = fabric_name
         self._fabric_changes_payload[fabric_name]["nvPairs"]["FABRIC_TYPE"] = "MFD"
 
-    def _build_payload_for_merged_state_update(self, payload: dict) -> None:
+    def _merge_payload(self, payload: dict) -> None:
         """
         # Summary
 
@@ -220,6 +229,11 @@ class FabricGroupUpdate(FabricGroupCommon):
         The controller needs to be updated if a parameter in the merged user/controller
         payload has a different value than the corresponding parameter in fabric
         configuration on the controller.
+
+        ## Raises
+
+        None
+
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -228,22 +242,22 @@ class FabricGroupUpdate(FabricGroupCommon):
         fabric_name: Union[str, None] = payload.get("FABRIC_NAME", None)
         if not fabric_name:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "FABRIC_NAME missing from payload."
+            msg += "FABRIC_NAME missing from payload.  Skipping payload."
             self.log.error(msg)
-            raise ValueError(msg)
-
-        self._fabric_changes_payload[fabric_name] = {}
+            return
 
         controller_config: dict = self.fabric_groups.data.get(fabric_name, {})
         if not controller_config:
             msg = f"{self.class_name}.{method_name}: "
-            msg += f"Fabric {fabric_name} not found on controller."
+            msg += f"Fabric {fabric_name} not found on controller.  Skipping payload."
             self.log.debug(msg)
-            raise ValueError(msg)
+            return
+
+        self._fabric_changes_payload[fabric_name] = {}
 
         controller_nv_pairs = copy.deepcopy(controller_config.get("nvPairs", {}))
         controller_nv_pairs_original = copy.deepcopy(controller_nv_pairs)
-        controller_nv_pairs_updated = self._merge_user_payload_into_nv_pairs(controller_nv_pairs, payload)
+        controller_nv_pairs_updated = self._merge_nv_pairs(controller_nv_pairs, payload)
         if controller_nv_pairs_updated != controller_nv_pairs_original:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Controller needs to be updated for fabric {fabric_name}. "
@@ -262,19 +276,23 @@ class FabricGroupUpdate(FabricGroupCommon):
 
         self._add_mandatory_keys_to_payload(fabric_name)
 
-    def _build_payloads_for_merged_state(self) -> None:
+    def _build_payloads(self) -> None:
         """
+        # Summary
+
+        Build the list of payloads to commit for merged (update) state.
+
         -   Populate self._payloads_to_commit. A list of dict of payloads to
             commit for merged state.
         -   Skip payloads for fabrics that do not exist on the controller.
-        -   raise ``ValueError`` if ``_build_payload_for_merged_state_update``
+        -   raise ``ValueError`` if ``_merge_payload``
             fails.
         -   Expects self.payloads to be a list of dict, with each dict
             being a payload for the fabric create API endpoint.
 
-        NOTES:
-        -   self._build_payload_for_merged_state_update() may remove payload
-            key/values that would not change the controller configuration.
+        ## Raises
+
+        -   ``ValueError`` if ``_merge_payload`` fails.
         """
         method_name: str = inspect.stack()[0][3]
         self.fabric_groups.rest_send = self.rest_send
@@ -289,6 +307,7 @@ class FabricGroupUpdate(FabricGroupCommon):
                 msg += "FABRIC_NAME missing from payload. Skipping payload."
                 self.log.debug(msg)
                 continue
+
             if fabric_name not in self.fabric_groups.fabric_group_names:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Fabric {fabric_name} not found on controller. "
@@ -298,7 +317,7 @@ class FabricGroupUpdate(FabricGroupCommon):
 
             self._fabric_group_update_required = set()
             try:
-                self._build_payload_for_merged_state_update(payload)
+                self._merge_payload(payload)
             except ValueError as error:
                 raise ValueError(error) from error
 
@@ -452,7 +471,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
         - raise ``ValueError`` if ``rest_send`` is not set
-        - raise ``ValueError`` if ``_build_payloads_for_merged_state`` fails
+        - raise ``ValueError`` if ``_build_payloads`` fails
         - raise ``ValueError`` if ``_send_payloads`` fails
         """
         method_name: str = inspect.stack()[0][3]
@@ -483,7 +502,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         self.results.state = self.rest_send.state
 
         try:
-            self._build_payloads_for_merged_state()
+            self._build_payloads()
         except ValueError as error:
             raise ValueError(error) from error
 
