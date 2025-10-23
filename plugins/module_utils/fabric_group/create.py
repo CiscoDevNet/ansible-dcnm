@@ -26,7 +26,7 @@ import copy
 import inspect
 import json
 import logging
-from typing import Any
+from typing import Any, Union
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricCreate
 from .common import FabricGroupCommon
@@ -97,18 +97,116 @@ class FabricGroupCreate(FabricGroupCommon):
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
 
+    def _build_payload_top_level_keys(self, fabric_name: str) -> dict[str, str]:
+        """
+        # Summary
+
+        Add top-level keys to the payload.  Remove seed_member from the
+        passed `payload` and add it as a top-level key seedMember in the
+        returned dict.
+
+        - fabricName
+        - fabricTechnology
+        - fabricType
+        - templateName
+        - seedMember
+
+        ## Assumptions
+
+        - fabricType is always MFD
+        - fabricTechnology is always VXLANFabric
+        - templateName is always MSD_Fabric
+
+        ## Raises
+
+        -   `ValueError` if
+            - payload is missing ``FABRIC_NAME``.
+            - seed_member update fails.
+
+        """
+        commit_payload = {}
+        commit_payload["fabricName"] = fabric_name
+        commit_payload["fabricTechnology"] = "VXLANFabric"
+        commit_payload["fabricType"] = "MFD"
+        commit_payload["templateName"] = "MSD_Fabric"
+        return commit_payload
+
+    def _build_payload_seed_member(self, commit_payload: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+        """
+        Build the commit_payload seedMember contents from payload.
+
+        - Update commit_payload with seedMember key set to the updated seed_member contents.
+        - Pop seed_member from payload.
+
+        ## Raises
+
+        -   `ValueError` if seed_member update fails.
+
+        """
+        try:
+            seed_member = self._update_seed_member(payload.get("seed_member", {}))
+        except ValueError as error:
+            raise ValueError(error) from error
+        payload.pop("seed_member", None)
+        commit_payload["seedMember"] = copy.deepcopy(seed_member)
+        return commit_payload
+
+    def _build_payload_nv_pairs(self, commit_payload: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
+        """
+        # Summary
+
+        Add nvPairs to commit_payload.
+
+        - Add mandatory nvPairs with default values if not present in payload.
+          - Else, use values from payload.
+        - Copy all other keys from payload to nvPairs.
+
+        ## Assumptions
+
+        - nvPairs.FABRIC_TYPE is always MFD.
+
+        ## Raises
+
+        None
+        """
+        commit_payload["nvPairs"] = copy.deepcopy(payload)
+        commit_payload["nvPairs"]["FABRIC_TYPE"] = "MFD"
+        commit_payload["nvPairs"]["default_network"] = payload.get("default_network", "Default_Network_Universal")
+        commit_payload["nvPairs"]["default_vrf"] = payload.get("default_vrf", "Default_VRF_Universal")
+        commit_payload["nvPairs"]["network_extension_template"] = payload.get("network_extension_template", "Default_Network_Extension_Universal")
+        commit_payload["nvPairs"]["scheduledTime"] = payload.get("scheduledTime", "")
+        commit_payload["nvPairs"]["vrf_extension_template"] = payload.get("vrf_extension_template", "Default_VRF_Extension_Universal")
+        commit_payload["nvPairs"]["CLOUDSEC_ALGORITHM"] = payload.get("CLOUDSEC_ALGORITHM", "")
+        commit_payload["nvPairs"]["CLOUDSEC_ENFORCEMENT"] = payload.get("CLOUDSEC_ENFORCEMENT", "")
+        commit_payload["nvPairs"]["CLOUDSEC_KEY_STRING"] = payload.get("CLOUDSEC_KEY_STRING", "")
+        commit_payload["nvPairs"]["CLOUDSEC_REPORT_TIMER"] = payload.get("CLOUDSEC_REPORT_TIMER", "")
+        commit_payload["nvPairs"]["LOOPBACK100_IPV6_RANGE"] = payload.get("LOOPBACK100_IPV6_RANGE", "")
+        commit_payload["nvPairs"]["MS_IFC_BGP_AUTH_KEY_TYPE"] = payload.get("MS_IFC_BGP_AUTH_KEY_TYPE", "")
+        commit_payload["nvPairs"]["MS_IFC_BGP_PASSWORD"] = payload.get("MS_IFC_BGP_PASSWORD", "")
+        commit_payload["nvPairs"]["V6_DCI_SUBNET_RANGE"] = payload.get("V6_DCI_SUBNET_RANGE", "")
+        commit_payload["nvPairs"]["V6_DCI_SUBNET_TARGET_MASK"] = payload.get("V6_DCI_SUBNET_TARGET_MASK", "")
+        return commit_payload
+
     def _build_payloads_to_commit(self) -> None:
         """
+        # Summary
+
         Build a list of payloads to commit.  Skip any payloads that
         already exist on the controller.
 
         Expects self.payloads to be a list of dict, with each dict
-        being a payload for the fabric create API endpoint.
+        being a payload for the fabric group create API endpoint.
 
         Populates self._payloads_to_commit with a list of payloads
         to commit.
+
+        ## Raises
+
+        -   `ValueError` if
+            - `_build_payload_top_level` raises `ValueError`.
+            - `FABRIC_NAME` is missing from any payload.
         """
-        method_name = inspect.stack()[0][3]
+        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self.fabric_groups.rest_send = self.rest_send
         self.fabric_groups.results = self.results
         self.fabric_groups.refresh()
@@ -116,62 +214,30 @@ class FabricGroupCreate(FabricGroupCommon):
         self._payloads_to_commit = []
         payload: dict[str, Any] = {}
         for payload in self.payloads:
-            commit_payload: dict[str, Any] = {}
-            if payload.get("FABRIC_NAME", None) in self.fabric_groups.fabric_group_names:
-                continue
-            seed_member: dict[str, Any] = {}
-            seed_member["clusterName"] = payload.get("seed_member", {}).get("cluster_name")
-            seed_member["fabricName"] = payload.get("seed_member", {}).get("fabric_name")
-            payload.pop("seed_member", None)
-            if not seed_member:
+            fabric_name: Union[str, None] = payload.get("FABRIC_NAME", None)
+            if fabric_name is None:
                 msg = f"{self.class_name}.{method_name}: "
-                msg += "seed_member is required in payload. "
-                msg += f"Got payload: {json.dumps(payload, indent=4, sort_keys=True)}"
+                msg += "FABRIC_NAME is missing from fabric_group config, but is mandatory."
                 raise ValueError(msg)
-            commit_payload["seedMember"] = copy.deepcopy(seed_member)
-            commit_payload["fabricName"] = payload.get("FABRIC_NAME")
-            commit_payload["fabricTechnology"] = "VXLANFabric"
-            commit_payload["fabricType"] = "MFD"
-            commit_payload["templateName"] = "MSD_Fabric"
-            commit_payload["nvPairs"] = copy.deepcopy(payload)
-            commit_payload["nvPairs"]["FABRIC_TYPE"] = "MFD"
-            commit_payload["nvPairs"]["default_network"] = payload.get("default_network", "Default_Network_Universal")
-            commit_payload["nvPairs"]["default_vrf"] = payload.get("default_vrf", "Default_VRF_Universal")
-            commit_payload["nvPairs"]["network_extension_template"] = payload.get("network_extension_template", "Default_Network_Extension_Universal")
-            commit_payload["nvPairs"]["scheduledTime"] = payload.get("scheduledTime", "")
-            commit_payload["nvPairs"]["vrf_extension_template"] = payload.get("vrf_extension_template", "Default_VRF_Extension_Universal")
-            commit_payload["nvPairs"]["CLOUDSEC_ALGORITHM"] = payload.get("CLOUDSEC_ALGORITHM", "")
-            commit_payload["nvPairs"]["CLOUDSEC_ENFORCEMENT"] = payload.get("CLOUDSEC_ENFORCEMENT", "")
-            commit_payload["nvPairs"]["CLOUDSEC_KEY_STRING"] = payload.get("CLOUDSEC_KEY_STRING", "")
-            commit_payload["nvPairs"]["CLOUDSEC_REPORT_TIMER"] = payload.get("CLOUDSEC_REPORT_TIMER", "")
-            commit_payload["nvPairs"]["LOOPBACK100_IPV6_RANGE"] = payload.get("LOOPBACK100_IPV6_RANGE", "")
-            commit_payload["nvPairs"]["MS_IFC_BGP_AUTH_KEY_TYPE"] = payload.get("MS_IFC_BGP_AUTH_KEY_TYPE", "")
-            commit_payload["nvPairs"]["MS_IFC_BGP_PASSWORD"] = payload.get("MS_IFC_BGP_PASSWORD", "")
-            commit_payload["nvPairs"]["V6_DCI_SUBNET_RANGE"] = payload.get("V6_DCI_SUBNET_RANGE", "")
-            commit_payload["nvPairs"]["V6_DCI_SUBNET_TARGET_MASK"] = payload.get("V6_DCI_SUBNET_TARGET_MASK", "")
+            # Skip any fabric-groups that already exist
+            if fabric_name in self.fabric_groups.fabric_group_names:
+                continue
+            # Order is important here
+            commit_payload = self._build_payload_top_level_keys(fabric_name)
+            commit_payload = self._build_payload_seed_member(commit_payload, payload)
+            commit_payload = self._build_payload_nv_pairs(commit_payload, payload)
             self._payloads_to_commit.append(commit_payload)
-
-    def _set_fabric_create_endpoint(self):
-        """
-        - Set the endpoint for the fabric create API call.
-        - raise ``ValueError`` if FABRIC_TYPE in the payload is invalid
-        - raise ``ValueError`` if the fabric_type to template_name mapping fails
-        - raise ``ValueError`` if the fabric_create endpoint assignment fails
-        """
-        self.path = self.endpoint.path
-        self.verb = self.endpoint.verb
 
     def _send_payloads(self):
         """
+        # Summary
+
         -   If ``check_mode`` is ``False``, send the payloads
             to the controller.
         -   If ``check_mode`` is ``True``, do not send the payloads
             to the controller.
         -   In both cases, register results.
-        -   raise ``ValueError`` if the fabric_create endpoint assignment fails
-
-        NOTES:
-        -   This overrides the parent class method.
+        -   raise ``ValueError`` if the fabric_group_create endpoint assignment fails
         """
         for payload in self._payloads_to_commit:
 
@@ -202,9 +268,12 @@ class FabricGroupCreate(FabricGroupCommon):
 
     def commit(self):
         """
-        # create fabrics.
+        # Summary
 
-        - Skip any fabrics that already exist on the controller.
+        Commit the fabric_group create payloads to the controller to
+        create fabric_groups.
+
+        - Skip any fabric_groups that already exist on the controller.
         - raise ``ValueError`` if ``payloads`` is not set.
         - raise ``ValueError`` if payload fixup fails.
         - raise ``ValueError`` if sending the payloads fails.
