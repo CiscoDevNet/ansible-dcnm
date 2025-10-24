@@ -21,6 +21,7 @@ import copy
 from unittest.mock import patch
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_vrf
+from ansible_collections.cisco.dcnm.plugins.action import dcnm_vrf as action_dcnm_vrf
 
 from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
 
@@ -42,6 +43,8 @@ class TestDcnmVrfModule(TestDcnmModule):
     fabric_details = test_data.get("fabric_details")
     fabric_details_mfd = test_data.get("fabric_details_mfd")
     fabric_details_vxlan = test_data.get("fabric_details_vxlan")
+    fabric_associations = test_data.get("mock_fabric_associations")
+    vrf_ready_data = test_data.get("mock_vrf_get_object")
 
     mock_net_from_vrf_empty = test_data.get("mock_net_from_vrf_empty")
     mock_vrf_attach_object_del_not_ready = test_data.get(
@@ -49,7 +52,12 @@ class TestDcnmVrfModule(TestDcnmModule):
     )
     mock_vrf_attach_object_del_oos = test_data.get("mock_vrf_attach_object_del_oos")
     mock_vrf_attach_object_del_ready = test_data.get("mock_vrf_attach_object_del_ready")
+    mock_msd_vrf_attach_object_del_not_ready = test_data.get("mock_msd_vrf_attach_object_del_not_ready")
+    mock_msd_vrf_attach_object_del_ready = test_data.get("mock_msd_vrf_attach_object_del_ready")
 
+    msd_attach_success_resp = test_data.get("msd_attach_success_resp")
+    msd_attach_success_resp_2 = test_data.get("msd_attach_success_resp_2")
+    update_success_rep = test_data.get("update_data")
     attach_success_resp = test_data.get("attach_success_resp")
     attach_success_resp2 = test_data.get("attach_success_resp2")
     attach_success_resp3 = test_data.get("attach_success_resp3")
@@ -61,6 +69,12 @@ class TestDcnmVrfModule(TestDcnmModule):
     delete_success_resp = test_data.get("delete_success_resp")
     blank_data = test_data.get("blank_data")
 
+    # Action plugin fixtures
+    # mock_fabric_associations = action_test_data.get("mock_fabric_associations")
+    # mock_fabric_associations_dict = action_test_data.get("mock_fabric_associations_dict")
+    # mock_standalone_fabric_details = action_test_data.get("mock_standalone_fabric_details")
+    # mock_parent_fabric_details = action_test_data.get("mock_parent_fabric_details")
+    # mock_child_fabric_details = action_test_data.get("mock_child_fabric_details")
     def init_data(self):
         # Some of the mock data is re-initialized after each test as previous test might have altered portions
         # of the mock data.
@@ -68,8 +82,26 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_sn_fab_dict = copy.deepcopy(self.test_data.get("mock_sn_fab"))
         self.mock_vrf_object = copy.deepcopy(self.test_data.get("mock_vrf_object"))
         self.mock_vrf12_object = copy.deepcopy(self.test_data.get("mock_vrf12_object"))
+        self.mock_msd_vrf_object = copy.deepcopy(
+                self.test_data.get("mock_msd_vrf_object")
+        )
+        self.mock_msd_vrf_object_2 = copy.deepcopy(
+                self.test_data.get("mock_msd_vrf_object_2")
+        )
+        self.mock_msd_parent_vrf_object = copy.deepcopy(
+                self.test_data.get("mock_msd_parent_vrf_object")
+        )
         self.mock_vrf_attach_object = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_object")
+        )
+        self.mock_msd_vrf_attach_object = copy.deepcopy(
+            self.test_data.get("mock_msd_vrf_attach_object")
+        )
+        self.mock_msd_vrf_child_attach_object = copy.deepcopy(
+            self.test_data.get("mock_msd_vrf_child_attach_object")
+        )
+        self.mock_msd_vrf_child_attach_object_2 = copy.deepcopy(
+            self.test_data.get("mock_msd_vrf_child_attach_object_2")
         )
         self.mock_vrf_attach_object_query = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_object_query")
@@ -107,16 +139,24 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_vrf_attach_get_ext_object_merge_att4_only = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_get_ext_object_merge_att4_only")
         )
+        self.mock_vrf_msd_attach_get_ext_object_dcnm_att1_only = copy.deepcopy(
+            self.test_data.get("mock_vrf_msd_attach_get_ext_object_dcnm_att1_only")
+        )
         self.mock_vrf_attach_get_ext_object_ov_att1_only = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_get_ext_object_ov_att1_only")
         )
         self.mock_vrf_attach_get_ext_object_ov_att2_only = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_get_ext_object_ov_att2_only")
         )
+        self.mock_vrf_msd_attach_get_ext_object_ov_att1_only = copy.deepcopy(
+            self.test_data.get("mock_vrf_msd_attach_get_ext_object_ov_att1_only")
+        )
         self.mock_vrf_attach_lite_object = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_lite_object")
         )
         self.mock_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_vrf_lite_obj"))
+        self.mock_msd_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_msd_vrf_lite_obj"))
+        self.mock_msd_vrf_lite_obj_2 = copy.deepcopy(self.test_data.get("mock_msd_vrf_lite_obj_2"))
         self.mock_pools_top_down_vrf_vlan = copy.deepcopy(
             self.test_data.get("mock_pools_top_down_vrf_vlan")
         )
@@ -154,6 +194,13 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
         self.run_dcnm_get_url = self.mock_dcnm_get_url.start()
 
+        # self.mock_action_wait_vrf = patch(
+        #     "ansible_collections.cisco.dcnm.plugins.action.dcnm_vrf.ActionModule.wait_for_vrf_ready"
+        # )
+        # self.run_action_wait_vrf = self.mock_action_wait_vrf.start()
+        # # Default to VRFs ready (overridden in failure tests)
+        # self.run_action_wait_vrf.return_value = (True, None)
+
     def tearDown(self):
         super(TestDcnmVrfModule, self).tearDown()
         self.mock_dcnm_send.stop()
@@ -161,6 +208,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_dcnm_fabric_details.stop()
         self.mock_dcnm_version_supported.stop()
         self.mock_dcnm_get_url.stop()
+        # self.mock_action_wait_vrf.stop()
 
     def load_fixtures(self, response=None, device=""):
 
@@ -172,9 +220,9 @@ class TestDcnmVrfModule(TestDcnmModule):
         if "vrf_blank_fabric" in self._testMethodName:
             self.run_dcnm_ip_sn.side_effect = [{}]
         else:
-            self.run_dcnm_ip_sn.side_effect = [self.vrf_inv_data]
+            self.run_dcnm_ip_sn.side_effect = [self.vrf_inv_data, self.vrf_inv_data]
 
-        self.run_dcnm_fabric_details.side_effect = [self.fabric_details]
+        self.run_dcnm_fabric_details.side_effect = [self.fabric_details, self.fabric_details]
 
         if "get_have_failure" in self._testMethodName:
             self.run_dcnm_send.side_effect = [self.get_have_failure]
@@ -610,22 +658,102 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.deploy_success_resp,
             ]
 
+        elif "_msd_merged" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict, self.mock_sn_fab_dict]
+            self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [
+                self.blank_data,
+                self.blank_data,
+                self.msd_attach_success_resp,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_object,
+                self.mock_msd_vrf_lite_obj,
+                self.update_success_rep,
+                self.deploy_success_resp
+            ]
+
+        elif "_msd_replaced" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict, self.mock_sn_fab_dict]
+            self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object, self.mock_msd_vrf_child_attach_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_msd_vrf_object,
+                self.mock_msd_vrf_lite_obj,
+                self.update_success_rep,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_object,
+                self.mock_msd_vrf_lite_obj,
+                self.update_success_rep,
+                self.deploy_success_resp
+            ]
+
+        elif "_msd_merged_nochild" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
+            # self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [
+                self.blank_data,
+                self.blank_data,
+                self.msd_attach_success_resp,
+                self.deploy_success_resp
+            ]
+
+        elif "msd_delete" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
+            self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
+            self.run_dcnm_send.side_effect = [
+                self.mock_msd_parent_vrf_object,
+                self.mock_vrf_msd_attach_get_ext_object_dcnm_att1_only,
+                self.mock_net_from_vrf_empty,
+                self.msd_attach_success_resp,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_attach_object_del_not_ready,
+                self.mock_msd_vrf_attach_object_del_ready,
+                self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
+            ]
+
+        elif "msd_override" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict, self.mock_sn_fab_dict]
+            self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object, self.mock_msd_vrf_child_attach_object_2]
+            self.run_dcnm_send.side_effect = [
+                self.mock_msd_parent_vrf_object,
+                self.mock_vrf_msd_attach_get_ext_object_ov_att1_only,
+                self.mock_net_from_vrf_empty,
+                self.msd_attach_success_resp,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_attach_object_del_not_ready,
+                self.mock_msd_vrf_attach_object_del_ready,
+                self.delete_success_resp,
+                self.mock_pools_top_down_vrf_vlan,
+                self.blank_data,
+                self.msd_attach_success_resp_2,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_object_2,
+                self.mock_msd_vrf_lite_obj_2,
+                self.update_success_rep,
+                self.deploy_success_resp
+            ]
+
         else:
             pass
 
     def test_dcnm_vrf_blank_fabric(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=True)
+        set_module_args(dict(state="merged", fabric="test_fabrics", config=playbook))
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
-            "Fabric test_fabric missing on the controller or does not have any switches",
+            "Fabric 'test_fabrics' not found in NDFC.",
         )
 
     def test_dcnm_vrf_get_have_failure(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"), "caller: get_have.  Fabric test_fabric not present on the controller"
         )
@@ -633,7 +761,8 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_merged_redeploy(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        print(f"Result config: {result}")
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
 
     def test_dcnm_vrf_merged_lite_redeploy_interface_with_extensions(self):
@@ -647,7 +776,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
 
     def test_dcnm_vrf_merged_lite_redeploy_interface_without_extensions(self):
@@ -661,7 +790,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
@@ -675,14 +804,14 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
 
     def test_dcnm_vrf_merged_new(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -712,7 +841,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -742,14 +871,14 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
     def test_dcnm_vrf_merged_duplicate(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
 
     def test_dcnm_vrf_merged_lite_duplicate(self):
@@ -761,7 +890,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
 
     def test_dcnm_vrf_merged_with_incorrect_vrfid(self):
@@ -773,10 +902,10 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
-            "DcnmVrf.diff_for_create: vrf_id for vrf test_vrf_1 cannot be updated to a different value",
+            "Pre-validation failed",
         )
 
     def test_dcnm_vrf_merged_lite_invalidrole(self):
@@ -788,7 +917,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         msg = "DcnmVrf.update_attach_params_extension_values: "
         msg += "caller: update_attach_params. "
         msg += "VRF LITE attachments are appropriate only for switches "
@@ -800,7 +929,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_merged_with_update(self):
         playbook = self.test_data.get("playbook_config_update")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertEqual(
             result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.226"
@@ -818,7 +947,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertEqual(
             result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.228"
@@ -836,7 +965,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
@@ -849,7 +978,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -881,7 +1010,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertEqual(
             result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.228"
@@ -908,21 +1037,21 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
     def test_dcnm_vrf_error1(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(result["msg"]["RETURN_CODE"], 400)
         self.assertEqual(result["msg"]["ERROR"], "There is an error")
 
     def test_dcnm_vrf_error2(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertIn(
             "Entered VRF VLAN ID 203 is in use already",
             str(result["msg"]["DATA"].values()),
@@ -931,7 +1060,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_error3(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertEqual(
             result["response"][2]["DATA"], "No switches PENDING for deployment"
         )
@@ -945,7 +1074,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], 203)
@@ -970,7 +1099,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], 202)
@@ -993,7 +1122,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
@@ -1006,7 +1135,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "202")
@@ -1031,7 +1160,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "202")
@@ -1050,7 +1179,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_replace_without_changes(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="replaced", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
 
@@ -1063,7 +1192,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
 
@@ -1078,7 +1207,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -1108,7 +1237,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
@@ -1121,7 +1250,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], 303)
@@ -1161,7 +1290,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], 202)
@@ -1187,14 +1316,14 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertFalse(result.get("changed"))
         self.assertTrue(result.get("failed"))
 
     def test_dcnm_vrf_override_without_changes(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="overridden", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
 
@@ -1207,14 +1336,14 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
 
     def test_dcnm_vrf_delete_std(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "202")
@@ -1240,7 +1369,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "202")
@@ -1259,7 +1388,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_delete_dcnm_only(self):
         set_module_args(dict(state="deleted", fabric="test_fabric", config=[]))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "402")
@@ -1279,14 +1408,14 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_delete_failure(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         msg = "DcnmVrf.push_diff_delete: Deletion of vrfs test_vrf_1 has failed"
         self.assertEqual(result["msg"]["response"][2], msg)
 
     def test_dcnm_vrf_query(self):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="query", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
         self.assertEqual(result.get("response")[0]["parent"]["vrfId"], 9008011)
@@ -1320,7 +1449,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
         self.assertEqual(result.get("response")[0]["parent"]["vrfId"], 9008011)
@@ -1359,7 +1488,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_query_lite_without_config(self):
         set_module_args(dict(state="query", fabric="test_fabric", config=[]))
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
         self.assertEqual(result.get("response")[0]["parent"]["vrfId"], 9008011)
@@ -1405,15 +1534,12 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
-        msg = "DcnmVrf.validate_input: "
-        msg += "vrf_name is mandatory under vrf parameters,"
-        msg += "ip_address is mandatory under attach parameters"
-        self.assertEqual(result["msg"], msg)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
+        self.assertEqual(result["msg"], "Pre-validation failed")
 
     def test_dcnm_vrf_validation_no_config(self):
         set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         msg = "DcnmVrf.validate_input: config element is mandatory for merged state"
         self.assertEqual(result["msg"], msg)
 
@@ -1428,7 +1554,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 config=playbook,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
@@ -1437,7 +1563,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.version = 12
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -1456,3 +1582,126 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
         self.assertEqual(result["response"][2]["DATA"]["status"], "")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+    def test_dcnm_vrf_msd_merged(self):
+        self.version = 12
+        playbook = self.test_data.get("playbook_msd_config")
+        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
+        self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224")
+        self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_id"], 9008011)
+        self.assertTrue(result.get("parent_fabric").get("response")[1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
+        self.assertEqual(result.get("parent_fabric").get("response")[2]["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("response")[2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
+        self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
+        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+    def test_dcnm_vrf_msd_replaced(self):
+        self.version = 12
+        playbook = self.test_data.get("playbook_msd_replace_config")
+        set_module_args(dict(state="replaced", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
+        self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_int_mtu"], 1500)
+        self.assertEqual(result.get("parent_fabric").get("response")[0]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["static_default_route"])
+        self.assertTrue(result.get("child_fabrics")[0]["response"][0]["MESSAGE"], "OK")
+        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+    def test_dcnm_vrf_msd_merged_nochild(self):
+        self.version = 12
+        playbook = self.test_data.get("playbook_msd_config_no_child")
+        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.assertTrue(result.get("workflow"), "Multisite Parent without Child Fabric Processing")
+        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertEqual(
+            result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224"
+        )
+        self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
+        self.assertEqual(
+            result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+        )
+        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+    def test_dcnm_vrf_msd_merged_misconfig_1(self):
+        self.version = 12
+        playbook = self.test_data.get("playbook_msd_config_misconfig_1")
+        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
+        self.assertEqual(result["msg"], "Config[1].child_fabric_config[1]: fabric is required")
+
+    def test_dcnm_vrf_msd_merged_misconfig_2(self):
+        self.version = 12
+        playbook = self.test_data.get("playbook_msd_config_misconfig_2")
+        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
+        self.assertEqual(result["msg"], "Multisite Child-Parent fabric validation failed: k_fab -> test_fabric")
+
+    def test_dcnm_vrf_msd_delete_error(self):
+        playbook = self.test_data.get("playbook_msd_config")
+        set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
+        self.assertEqual(result["msg"], "Pre-validation failed")
+
+    def test_dcnm_vrf_msd_delete(self):
+        playbook = self.test_data.get("playbook_msd_delete_config")
+        set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.assertTrue(result.get("workflow"), "Multisite Parent without Child Fabric Processing")
+        self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
+        self.assertEqual(result.get("diff")[0]["attach"][0]["vlan_id"], "2000")
+        self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
+        self.assertNotIn("vrf_id", result.get("diff")[0])
+        self.assertEqual(
+            result["response"][0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+        )
+        self.assertEqual(result["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+
+    def test_dcnm_vrf_msd_override(self):
+        playbook = self.test_data.get("playbook_msd_override_config")
+        set_module_args(
+            dict(
+                state="overridden",
+                fabric="test_fabric",
+                config=playbook,
+            )
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+        self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
+        self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["deploy"])
+        self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224")
+        self.assertEqual(result.get("parent_fabric").get("diff")[0]["attach"][0]["vlan_id"], 2001)
+        self.assertEqual(result.get("parent_fabric").get("diff")[0]["vrf_name"], "test_vrf_2")
+        self.assertEqual(result.get("parent_fabric").get("diff")[0]["vrf_id"], 9008012)
+
+        self.assertFalse(result.get("parent_fabric").get("diff")[1]["attach"][0]["deploy"])
+        self.assertEqual(result.get("parent_fabric").get("diff")[1]["attach"][0]["vlan_id"], "2000")
+        self.assertTrue(result.get("parent_fabric").get("diff")[1]["attach"][0]["ip_address"], "10.10.10.224")
+        self.assertEqual(result.get("parent_fabric").get("diff")[1]["vrf_name"], "test_vrf_1")
+        self.assertNotIn("vrf_id", result.get("parent_fabric").get("diff")[1])
+
+        self.assertEqual(
+            result.get("parent_fabric").get("response")[0]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+        )
+        self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
+        self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
+        self.assertEqual(
+            result.get("parent_fabric").get("response")[5]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+        )
+        self.assertEqual(result.get("child_fabrics")[0]["diff"][0]["vrf_name"], "test_vrf_2")
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
+        self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_host_routes"])
+        self.assertFalse(result.get("child_fabrics")[0]["diff"][0]["l3vni_wo_vlan"])
+        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["DATA"]["status"], "")
+        self.assertEqual(result.get("child_fabrics")[0]["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
