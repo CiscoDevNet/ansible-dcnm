@@ -159,6 +159,40 @@ class ErrorHandler:
     def __init__(self, logger):
         # Store logger reference for error reporting
         self.logger = logger
+    
+    def handle_failure(
+        self, msg, changed=False
+    ):
+        """
+        Handle failure scenarios with error logging and structured error responses.
+
+        This method processes failure conditions by logging the error with message context,
+        creating structured error responses suitable for Ansible module returns
+
+        Failure Processing:
+        - Logs error
+        - Creates structured error response dictionary
+
+        Args:
+            msg (str): Failure message to report
+            changed (bool): Whether any changes were made before failure
+
+        Returns:
+            dict: Structured error response with failed=True and error details
+
+        """
+
+        # Log the failure with full context
+        self.logger.error(msg)
+
+        # Create structured error response
+        error_response = {
+            "failed": True,
+            "changed": changed,
+            "msg": msg,
+        }
+
+        return error_response
 
     def handle_exception(
         self, e, operation="unknown", fabric=None, include_traceback=False
@@ -363,42 +397,39 @@ class ActionModule(ActionNetworkModule):
         # Log workflow initiation
         self.logger.info("Starting NDFC VRF action plugin execution")
 
-        try:
-            # Perform initial parameter validation
-            result = self.run_pre_validation()
-            if result.get("failed", False):
-                self.logger.error("Validation failed", operation="validation")
-                return result
+        # Perform initial parameter validation
+        result = self.run_pre_validation()
+        if result is False:
+            return self.error_handler.handle_failure("Pre-validation failed")
 
-            # Discover fabric associations from NDFC
-            fabric_data = self.obtain_fabric_associations(task_vars, tmp)
-            # Extract module arguments and fabric name
-            module_args = self._task.args.copy()
-            fabric_name = module_args.get("fabric")
+        # Discover fabric associations from NDFC
+        fabric_data = self.obtain_fabric_associations(task_vars, tmp)
+        # Extract module arguments and fabric name
+        module_args = self._task.args.copy()
+        fabric_name = module_args.get("fabric")
 
-            # Validate required fabric parameter
-            if not fabric_name:
-                raise AnsibleError("Parameter 'fabric' is required")
+        # Validate required fabric parameter
+        if not fabric_name:
+            return self.error_handler.handle_failure("Parameter 'fabric' is required")
 
-            # Log fabric processing initiation
-            self.logger.info(f"Processing fabric: {fabric_name}", fabric=fabric_name)
-            # Detect fabric type for workflow routing
-            fabric_type = self.detect_fabric_type(fabric_name, fabric_data)
-            self.logger.info(f"Detected fabric type: {fabric_type}", fabric=fabric_name)
+        # Log fabric processing initiation
+        self.logger.info(f"Processing fabric: {fabric_name}", fabric=fabric_name)
+        # Detect fabric type for workflow routing
+        fabric_type = self.detect_fabric_type(fabric_name, fabric_data)
+        if not fabric_type:
+            return self.error_handler.handle_failure(f"Fabric '{fabric_name}' not found in NDFC.")
 
-            # Route to appropriate workflow based on fabric type
-            if fabric_type == "multisite_parent":
-                result = self.handle_parent_msd_workflow(module_args, fabric_data, task_vars, tmp)
-            elif fabric_type == "multisite_child":
-                result = self.handle_child_msd_workflow(module_args, task_vars)
-            else:
-                result = self.handle_standalone_workflow(module_args, task_vars)
+        self.logger.info(f"Detected fabric type: {fabric_type}", fabric=fabric_name)
 
-            return result
+        # Route to appropriate workflow based on fabric type
+        if fabric_type == "multisite_parent":
+            result = self.handle_parent_msd_workflow(module_args, fabric_data, task_vars, tmp)
+        elif fabric_type == "multisite_child":
+            result = self.handle_child_msd_workflow(module_args, task_vars, tmp)
+        else:
+            result = self.handle_standalone_workflow(module_args, task_vars, tmp)
 
-        except Exception as e:
-            # Handle any unexpected exceptions with full context
-            return self.error_handler.handle_exception(e, "main_execution", include_traceback=True)
+        return result
 
     # =========================================================================
     # VALIDATION METHODS
@@ -427,9 +458,10 @@ class ActionModule(ActionNetworkModule):
             None (uses self._task.args for validation input)
 
         Returns:
-            dict: Validation result containing:
-                - failed (bool): True if validation failed
-                - msg (str): Detailed error message if validation failed
+            bool: True if validation passes, False if any validation fails
+
+        Raises:
+            AnsibleError: On validation failures with detailed error info
         """
         # Log validation initiation
         self.logger.debug("Starting input validation", operation="validation")
@@ -440,7 +472,7 @@ class ActionModule(ActionNetworkModule):
             config = self._task.args.get("config")
 
             # Validate configurations for create/update states
-            if state in ["merged", "overridden", "replaced"] or not state:
+            if state in ["merged", "overridden", "replaced", "query"] or not state:
                 # Iterate through each VRF configuration
                 for con_idx, con in enumerate(config):
                     # Validate attach block parameters if present
@@ -453,7 +485,7 @@ class ActionModule(ActionNetworkModule):
                                     "specified under attach block. Please specify under config block instead"
                                 )
                                 self.logger.error(msg, operation="validation")
-                                return {"failed": True, "msg": msg}
+                                return False
 
                             # Validate vrf_lite structure
                             if "vrf_lite" in at:
@@ -468,7 +500,7 @@ class ActionModule(ActionNetworkModule):
                                         "parameter under vrf_lite section in the playbook"
                                     )
                                     self.logger.error(msg, operation="validation")
-                                    return {"failed": True, "msg": msg}
+                                    return False
 
             # Validate delete state restrictions
             elif state == "deleted":
@@ -481,18 +513,13 @@ class ActionModule(ActionNetworkModule):
                                 "with state 'deleted'"
                             )
                             self.logger.error(msg, operation="validation")
-                            return {"failed": True, "msg": msg}
-            else:
-                # Unknown state provided
-                msg = f"Unknown state '{state}' provided for validation"
-                self.logger.error(msg, operation="validation")
-                return {"failed": True, "changed": False, "msg": msg}
+                            return False
 
             # Log successful validation completion
             self.logger.debug(
-                "Input validation completed successfully", operation="validation"
+                "Input pre-validation completed successfully", operation="validation"
             )
-            return {"failed": False}
+            return True
 
         except Exception as e:
             # Handle validation exceptions
@@ -611,13 +638,11 @@ class ActionModule(ActionNetworkModule):
             fabric_data (dict): Fabric associations data from NDFC
 
         Returns:
-            str: Detected fabric type:
-                - "multisite_parent": Multisite Parent fabric
-                - "multisite_child": Multisite Child fabric
-                - "standalone": Non-Multisite fabric
-
-        Raises:
-            AnsibleError: If fabric not found in NDFC associations
+            None|str: Detected fabric type:
+                - "multisite_parent"
+                - "multisite_child"
+                - "standalone"
+                - None if fabric not found
         """
         # Log fabric type detection initiation
         self.logger.debug(
@@ -626,49 +651,34 @@ class ActionModule(ActionNetworkModule):
             operation="type_detection"
         )
 
-        try:
-            # Validate fabric exists in NDFC associations
-            if fabric_name not in fabric_data:
-                available_fabrics = list(fabric_data.keys())
-                error_msg = (
-                    f"Fabric '{fabric_name}' not found in NDFC. "
-                    f"Available fabrics: {available_fabrics}"
-                )
-                raise AnsibleError(error_msg)
+        # Validate fabric exists in NDFC associations
+        if fabric_name not in fabric_data:
+            return None
 
-            # Extract fabric properties for classification
-            fabric_info = fabric_data.get(fabric_name)
-            fabric_type = fabric_info.get("fabricType")
-            fabric_state = fabric_info.get("fabricState")
+        # Extract fabric properties for classification
+        fabric_info = fabric_data.get(fabric_name)
+        fabric_type = fabric_info.get("fabricType")
+        fabric_state = fabric_info.get("fabricState")
 
-            # Classify fabric based on properties
-            if fabric_type == "MSD":
-                # Multisite type indicates parent fabric
-                detected_type = "multisite_parent"
-            elif fabric_state == "member":
-                # Member state indicates child fabric
-                detected_type = "multisite_child"
-            else:
-                # All others are standalone fabrics
-                detected_type = "standalone"
+        # Classify fabric based on properties
+        if fabric_type == "MSD":
+            # Multisite type indicates parent fabric
+            detected_type = "multisite_parent"
+        elif fabric_state == "member":
+            # Member state indicates child fabric
+            detected_type = "multisite_child"
+        else:
+            # All others are standalone fabrics
+            detected_type = "standalone"
 
-            # Log classification result with details
-            self.logger.debug(
-                f"Fabric type detected: {detected_type} "
-                f"(fabricType={fabric_type}, fabricState={fabric_state})",
-                fabric=fabric_name,
-                operation="type_detection"
-            )
-            return detected_type
-
-        except Exception as e:
-            # Log and re-raise fabric type detection failures
-            self.logger.error(
-                f"Failed to detect fabric type: {str(e)}",
-                fabric=fabric_name,
-                operation="type_detection"
-            )
-            raise
+        # Log classification result with details
+        self.logger.debug(
+            f"Fabric type detected: {detected_type} "
+            f"(fabricType={fabric_type}, fabricState={fabric_state})",
+            fabric=fabric_name,
+            operation="type_detection"
+        )
+        return detected_type
 
     def validate_child_parent_fabric(self, child_fabric, parent_fabric, fabric_data):
         """
@@ -698,9 +708,6 @@ class ActionModule(ActionNetworkModule):
 
         Returns:
             bool: True if child-parent relationship is valid, False otherwise
-
-        Raises:
-            AnsibleError: On fabric existence failures or validation errors
         """
         # Log validation initiation with context
         self.logger.debug(
@@ -709,51 +716,44 @@ class ActionModule(ActionNetworkModule):
             operation="child_parent_validation"
         )
 
-        try:
-            # Validate both fabrics exist in NDFC
-            if child_fabric not in fabric_data or parent_fabric not in fabric_data:
-                available_fabrics = list(fabric_data.keys())
-                error_msg = (
-                    f"Fabric '{child_fabric}' and/or '{parent_fabric}' not found in NDFC. "
-                    f"Available fabrics: {available_fabrics}"
-                )
-                raise AnsibleError(error_msg)
-
-            # Extract child fabric properties
-            fabric_info = fabric_data.get(child_fabric)
-            fabric_state = fabric_info.get("fabricState")
-            fabric_parent = fabric_info.get("fabricParent")
-
-            # Validate child fabric is in member state
-            if fabric_state != "member":
-                error_msg = f"Fabric '{child_fabric}' is not a Child fabric (fabricState={fabric_state})"
-                self.logger.error(
-                    error_msg, fabric=child_fabric, operation="child_parent_validation"
-                )
-                return False
-
-            # Validate parent-child relationship
-            if fabric_parent != parent_fabric:
-                error_msg = (
-                    f"Fabric '{child_fabric}' is not associated with Multisite Parent fabric '{parent_fabric}' "
-                    f"(detected parent: '{fabric_parent}')"
-                )
-                self.logger.error(
-                    error_msg, fabric=child_fabric, operation="child_parent_validation"
-                )
-                return False
-
-            # Validation passed
-            return True
-
-        except Exception as e:
-            # Log validation failure and re-raise
-            self.logger.error(
-                f"Child-parent fabric validation failed: {str(e)}",
-                fabric=child_fabric,
-                operation="child_parent_validation"
+        # Validate both fabrics exist in NDFC
+        if child_fabric not in fabric_data:
+            available_fabrics = list(fabric_data.keys())
+            error_msg = (
+                f"Fabric '{child_fabric}' and not found in NDFC. "
+                f"Available fabrics: {available_fabrics}"
             )
-            raise
+            self.logger.error(
+                error_msg, fabric=child_fabric, operation="child_parent_validation"
+            )
+            return False
+
+        # Extract child fabric properties
+        fabric_info = fabric_data.get(child_fabric)
+        fabric_state = fabric_info.get("fabricState")
+        fabric_parent = fabric_info.get("fabricParent")
+
+        # Validate child fabric is in member state
+        if fabric_state != "member":
+            error_msg = f"Fabric '{child_fabric}' is not a Child fabric (fabricState={fabric_state})"
+            self.logger.error(
+                error_msg, fabric=child_fabric, operation="child_parent_validation"
+            )
+            return False
+
+        # Validate parent-child relationship
+        if fabric_parent != parent_fabric:
+            error_msg = (
+                f"Fabric '{child_fabric}' is not associated with Multisite Parent fabric '{parent_fabric}' "
+                f"(detected parent: '{fabric_parent}')"
+            )
+            self.logger.error(
+                error_msg, fabric=child_fabric, operation="child_parent_validation"
+            )
+            return False
+
+        # Validation passed
+        return True
 
     # =========================================================================
     # WORKFLOW HANDLERS
@@ -839,12 +839,7 @@ class ActionModule(ActionNetworkModule):
                                 f"Config[{vrf_idx+1}]: child_fabric_config is required for "
                                 "Multisite Parent fabrics. It can be optionally removed when state is query."
                             )
-                            self.logger.error(
-                                error_msg,
-                                fabric=parent_fabric,
-                                operation="config_validation"
-                            )
-                            return {"failed": True, "msg": error_msg}
+                            return self.error_handler.handle_failure(error_msg)
 
                         # Validate each child fabric configuration
                         for child_idx, child_config in enumerate(child_fabric_configs):
@@ -854,28 +849,15 @@ class ActionModule(ActionNetworkModule):
                                     f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
                                     "fabric is required"
                                 )
-                                self.logger.error(
-                                    error_msg,
-                                    fabric=parent_fabric,
-                                    operation="config_validation"
-                                )
-                                return {"failed": True, "msg": error_msg}
+                                return self.error_handler.handle_failure(error_msg)
                             # Validate child fabric type and child-parent relationship
-                            try:
-                                if not self.validate_child_parent_fabric(
-                                    fabric_name, parent_fabric, fabric_data
-                                ):
-                                    error_msg = (
-                                        f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
-                                    )
-                                    self.logger.error(
-                                        error_msg,
-                                        fabric=parent_fabric,
-                                        operation="config_validation"
-                                    )
-                                    return {"failed": True, "msg": error_msg}
-                            except Exception as e:
-                                return self.error_handler.handle_exception(e, "child_config_validation", fabric_name)
+                            if not self.validate_child_parent_fabric(
+                                fabric_name, parent_fabric, fabric_data
+                            ):
+                                error_msg = (
+                                    f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
+                                )
+                                return self.error_handler.handle_failure(error_msg)
 
                             # Create child tasks and group by child fabric name
                             child_tasks_dict = self.create_child_task(
@@ -902,7 +884,7 @@ class ActionModule(ActionNetworkModule):
             parent_module_args["_fabric_type"] = "multisite_parent"
 
             # Execute parent fabric VRF operations
-            parent_result = self.execute_module_with_args(parent_module_args, task_vars)
+            parent_result = self.execute_module_with_args(parent_module_args, task_vars, tmp)
 
             # Step 3: Execute child fabric tasks if parent succeeded
             child_results = []
@@ -924,14 +906,11 @@ class ActionModule(ActionNetworkModule):
                             f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
                             "state before proceeding."
                         )
-                        self.logger.error(
-                            error_msg, fabric=child_task['fabric'], operation="vrf_readiness"
-                        )
-                        return {"failed": True, "msg": error_msg}
+                        return self.error_handler.handle_failure(error_msg, changed=True)
 
                     # Execute child fabric task
                     self.logger.info("Executing child task", fabric=child_task["fabric"], operation="child_execution")
-                    child_result = self.execute_child_task(child_task, task_vars)
+                    child_result = self.execute_child_task(child_task, task_vars, tmp)
                     child_results.append(child_result)
 
                     # Handle child task failures with immediate abort
@@ -949,7 +928,7 @@ class ActionModule(ActionNetworkModule):
             # Handle workflow-level exceptions
             return self.error_handler.handle_exception(e, "parent_multisite_workflow", parent_fabric)
 
-    def handle_child_msd_workflow(self, module_args, task_vars):
+    def handle_child_msd_workflow(self, module_args, task_vars, tmp):
         """
         Handle restricted access attempts to Child Multisite fabrics.
         This method enforces the Multisite operational model by preventing direct
@@ -973,9 +952,10 @@ class ActionModule(ActionNetworkModule):
             task_vars (dict): Ansible task variables for module execution
 
         Returns:
-            dict: Error result indicating operation restriction:
-                - failed (bool): Always True
-                - msg (str): Detailed restriction explanation
+            dict: Result indicating operation:
+                - failed (bool): True or False based on operation
+                - changed (bool): False (no changes allowed)
+                - msg (str): Operation specific data message
                 - fabric_type (str): "multisite_child"
                 - workflow (str): "Child Multisite Workflow"
         """
@@ -983,44 +963,32 @@ class ActionModule(ActionNetworkModule):
         fabric_name = module_args.get("fabric")
         state = module_args.get("state")
         self.logger.info("Starting Multisite Child workflow", operation="multisite_child_workflow")
-        try:
-            if state == "query":
-                child_module_args = {
-                    "fabric": module_args["fabric"],
-                    "state": "query",
-                    "config": module_args.get("config"),
-                    "_fabric_type": "standalone"
-                }
+        if state == "query":
+            child_module_args = {
+                "fabric": module_args["fabric"],
+                "state": "query",
+                "config": module_args.get("config"),
+                "_fabric_type": "standalone"
+            }
 
-                # Execute base dcnm_vrf module functionality
-                result = self.execute_module_with_args(child_module_args, task_vars)
+            # Execute base dcnm_vrf module functionality
+            result = self.execute_module_with_args(child_module_args, task_vars, tmp)
 
-                # Add workflow identification to result if not present
-                if "fabric_type" not in result:
-                    result["fabric_type"] = "multisite_child"
-                    result["workflow"] = "Multisite Child VRF Processing"
+            # Add workflow identification to result if not present
+            if "fabric_type" not in result:
+                result["fabric_type"] = "multisite_child"
+                result["workflow"] = "Multisite Child VRF Processing"
 
-                # Log successful completion
-                self.logger.info("Multisite Child workflow completed successfully", operation="multisite_child_workflow")
-                return result
-            else:
-                # Log attempted direct child fabric access for other states
-                self.logger.warning("Attempted direct access to Child Multisite fabric", fabric=fabric_name, operation="multisite_child_workflow")
+            # Log successful completion
+            self.logger.info("Multisite Child workflow completed successfully", operation="multisite_child_workflow")
+        else:
+            # Log attempted direct child fabric access for other states
+            error_msg = f"Attempted task on Child Multisite fabric '{fabric_name}'. State 'query' is only allowed."
+            return self.error_handler.handle_failure(error_msg)
 
-                # Return restriction error with detailed guidance
-                result = {
-                    "failed": True,
-                    "changed": False,
-                    "msg": f"Task not permitted on Child Multisite fabric '{fabric_name}'. Please perform operations through the Parent fabric.",
-                    "fabric_type": "multisite_child",
-                    "workflow": "Child Multisite Workflow"
-                }
-            return result
-        except Exception as e:
-            # Handle standalone workflow failures
-            return self.error_handler.handle_exception(e, "standalone_workflow")
+        return result
 
-    def handle_standalone_workflow(self, module_args, task_vars):
+    def handle_standalone_workflow(self, module_args, task_vars, tmp):
         """
         Execute standard VRF operations for non-Multisite (standalone) fabrics.
 
@@ -1054,31 +1022,26 @@ class ActionModule(ActionNetworkModule):
         # Log standalone workflow initiation
         self.logger.info("Starting standalone Non-Multisite workflow", operation="standalone_workflow")
 
-        try:
-            parent_module_args = {
-                "fabric": module_args["fabric"],
-                "config": module_args.get("config"),
-                "_fabric_type": "standalone"
-            }
+        parent_module_args = {
+            "fabric": module_args["fabric"],
+            "config": module_args.get("config"),
+            "_fabric_type": "standalone"
+        }
 
-            if module_args.get("state"):
-                parent_module_args["state"] = module_args["state"]
+        if module_args.get("state"):
+            parent_module_args["state"] = module_args["state"]
 
-            # Execute base dcnm_vrf module functionality
-            result = self.execute_module_with_args(parent_module_args, task_vars)
+        # Execute base dcnm_vrf module functionality
+        result = self.execute_module_with_args(parent_module_args, task_vars, tmp)
 
-            # Add workflow identification to result if not present
-            if "fabric_type" not in result:
-                result["fabric_type"] = "standalone"
-                result["workflow"] = "Standalone Fabric VRF Processing"
+        # Add workflow identification to result if not present
+        if "fabric_type" not in result:
+            result["fabric_type"] = "standalone"
+            result["workflow"] = "Standalone Fabric VRF Processing"
 
-            # Log successful completion
-            self.logger.info("Standalone workflow completed successfully", operation="standalone_workflow")
-            return result
-
-        except Exception as e:
-            # Handle standalone workflow failures
-            return self.error_handler.handle_exception(e, "standalone_workflow")
+        # Log successful completion
+        self.logger.info("Standalone workflow completed successfully", operation="standalone_workflow")
+        return result
 
     # =========================================================================
     # CHILD FABRIC TASK MANAGEMENT
@@ -1159,15 +1122,12 @@ class ActionModule(ActionNetworkModule):
 
             # Log task creation progress
             self.logger.debug(f"Created child task for VRF: {child_config['vrf_name']}",
-                              fabric=child_fabric_name, operation="create_child_task")
+                                fabric=child_fabric_name, operation="create_child_task")
             return child_tasks_dict
-
         except Exception as e:
-            # Log and handle task creation failures
-            self.logger.error(f"Failed to create child task: {str(e)}", operation="create_child_task")
-            return self.error_handler.handle_exception(e, "create_child_task")
+            raise e
 
-    def execute_child_task(self, child_task, task_vars):
+    def execute_child_task(self, child_task, task_vars, tmp):
         """
         Execute child fabric VRF operations using specialized Child Multisite workflow.
 
@@ -1220,51 +1180,46 @@ class ActionModule(ActionNetworkModule):
         # Extract fabric name for logging and result context
         fabric_name = child_task["fabric"]
 
-        try:
-            # Log child task execution initiation
-            self.logger.info(f"Executing child task for fabric: {fabric_name}", fabric=fabric_name, operation="execute_child_task")
+        # Log child task execution initiation
+        self.logger.info(f"Executing child task for fabric: {fabric_name}", fabric=fabric_name, operation="execute_child_task")
 
-            # Build child fabric module arguments
-            child_module_args = {
-                "fabric": fabric_name,
-                "config": child_task["config"],
-                "_fabric_type": "multisite_child"
-            }
+        # Build child fabric module arguments
+        child_module_args = {
+            "fabric": fabric_name,
+            "config": child_task["config"],
+            "_fabric_type": "multisite_child"
+        }
 
-            # Handle state transformations for child fabric compatibility
-            state = child_task.get("state")
-            if state:
-                if state == "overridden":
-                    # Transform overridden to replaced for child fabrics
-                    child_module_args["state"] = "replaced"
-                else:
-                    # Pass through other states unchanged
-                    child_module_args["state"] = state
+        # Handle state transformations for child fabric compatibility
+        state = child_task.get("state")
+        if state:
+            if state == "overridden":
+                # Transform overridden to replaced for child fabrics
+                child_module_args["state"] = "replaced"
+            else:
+                # Pass through other states unchanged
+                child_module_args["state"] = state
 
-            # Execute child fabric operations using base module
-            child_result = self.execute_module_with_args(child_module_args, task_vars)
+        # Execute child fabric operations using base module
+        child_result = self.execute_module_with_args(child_module_args, task_vars, tmp)
 
-            # Enhance result with child fabric context
-            child_result["child_fabric"] = fabric_name
-            child_result["invocation"] = {
-                "module_args": copy.deepcopy(child_module_args)
-            }
+        # Enhance result with child fabric context
+        child_result["child_fabric"] = fabric_name
+        child_result["invocation"] = {
+            "module_args": copy.deepcopy(child_module_args)
+        }
 
-            # Log execution outcome
-            success = not child_result.get("failed", False)
-            self.logger.info(f"Child task execution completed: {'Success' if success else 'Failed'}",
-                             fabric=fabric_name, operation="execute_child_task")
-            return child_result
-
-        except Exception as e:
-            # Handle child task execution failures
-            return self.error_handler.handle_exception(e, "execute_child_task", fabric_name)
+        # Log execution outcome
+        success = not child_result.get("failed", False)
+        self.logger.info(f"Child task execution completed: {'Success' if success else 'Failed'}",
+                            fabric=fabric_name, operation="execute_child_task")
+        return child_result
 
     # =========================================================================
     # UTILITY & HELPER METHODS
     # =========================================================================
 
-    def execute_module_with_args(self, module_args, task_vars):
+    def execute_module_with_args(self, module_args, task_vars, tmp):
         """
         Execute the dcnm_vrf module with specified arguments and context.
 
@@ -1305,7 +1260,12 @@ class ActionModule(ActionNetworkModule):
             # Temporarily replace task arguments with custom ones
             self._task.args = module_args
             # Execute base dcnm_vrf module with custom arguments
-            result = super(ActionModule, self).run(task_vars=task_vars)
+            result = self._execute_module(
+                module_name="cisco.dcnm.dcnm_vrf",
+                module_args=module_args,
+                task_vars=task_vars,
+                tmp=tmp
+            )
 
             # Add invocation details for debugging and audit trail
             result["invocation"] = {
@@ -1320,7 +1280,7 @@ class ActionModule(ActionNetworkModule):
 
         except Exception as e:
             # Handle module execution failures
-            return self.error_handler.handle_exception(e, "execute_module", fabric_name)
+            raise e
         finally:
             # Always restore original task arguments
             self._task.args = original_args
@@ -1437,7 +1397,7 @@ class ActionModule(ActionNetworkModule):
                 # Log API or processing errors
                 self.logger.error(f"VRF readiness check failed: {str(e)}",
                                   fabric=fabric_name, operation="wait_for_vrf_ready")
-                return False, vrf_list
+                raise e
 
         # Determine final outcome
         if vrf_list:
@@ -1587,4 +1547,4 @@ class ActionModule(ActionNetworkModule):
             # Handle result structuring errors
             self.logger.error(f"Failed to create structured results: {str(e)}",
                               fabric=parent_fabric, operation="create_structured_results")
-            return self.error_handler.handle_exception(e, "create_structured_results", parent_fabric)
+            raise e

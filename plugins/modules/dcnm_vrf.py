@@ -1799,7 +1799,8 @@ class DcnmVrf:
                 want["vrfId"] = have["vrfId"]
             if skip_keys:
                 for key in skip_keys:
-                    json_to_dict_want[key] = json_to_dict_have[key]
+                    if key in json_to_dict_have:
+                        json_to_dict_want[key] = json_to_dict_have[key]
                 want["vrfTemplateConfig"] = json.dumps(json_to_dict_want)
             create = want
 
@@ -4921,6 +4922,7 @@ def main():
     # Logging setup
     try:
         log = Log()
+        log.config = "/home/achengam/Desktop/VRF_Val/N2/ansible_collections/cisco/dcnm/ansible_cisco_log.json"
         log.commit()
     except (TypeError, ValueError):
         pass

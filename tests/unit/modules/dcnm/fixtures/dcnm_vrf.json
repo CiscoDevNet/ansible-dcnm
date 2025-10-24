@@ -765,10 +765,10 @@
       ],
       "child_fabric_config": [
         {
-          "fabric": "child_fab",
           "adv_host_routes": true,
           "adv_default_routes": true,
-          "l3vni_wo_vlan": false
+          "l3vni_wo_vlan": false,
+          "fabric": "child_fab"
         }
       ],
       "deploy": true
@@ -861,6 +861,25 @@
       "deploy": true
     }
   ],
+  "playbook_msd_config_misconfig_3" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vrf_template": "Default_VRF_Universal",
+      "vrf_extension_template": "Default_VRF_Extension_Universal",
+      "vlan_id": "2000",
+      "source": "None",
+      "service_vrf_template": "None",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+      ],
+      "deploy": true
+    }
+  ],
   "playbook_msd_delete_config" : [
     {
       "vrf_name": "test_vrf_1",
@@ -902,6 +921,35 @@
         }
       ],
       "deploy": true
+    }
+  ],
+  "playbook_msd_query_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "vrf_id": "9008011",
+      "vlan_id": "2000",
+      "attach": [
+        {
+          "ip_address": "10.10.10.224"
+        }
+      ],
+      "child_fabric_config": [
+        {
+          "adv_host_routes": true,
+          "adv_default_routes": true,
+          "l3vni_wo_vlan": false,
+          "fabric": "child_fab"
+        }
+      ],
+      "deploy": true
+    }
+  ],
+  "playbook_msd_child_config" : [
+    {
+      "vrf_name": "test_vrf_1",
+      "adv_host_routes": true,
+      "adv_default_routes": true,
+      "l3vni_wo_vlan": false
     }
   ],
   "mock_fabric_associations": {
@@ -1309,6 +1357,54 @@
       }
     ]
   },
+  "mock_msd_vrf_parent_attach_object_query" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "test-fabric",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
+  "mock_msd_vrf_child_attach_object_query" : {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "vrfName": "test_vrf_1",
+        "lanAttachList": [
+          {
+            "vrfName": "test_vrf_1",
+            "switchName": "n9kv_leaf1",
+            "lanAttachState": "DEPLOYED",
+            "isLanAttached": true,
+            "switchSerialNo": "XYZKSJHSMK1",
+            "switchRole": "leaf",
+            "fabricName": "child_fab",
+            "ipAddress": "10.10.10.224",
+            "vlanId": "2000",
+            "vrfId": "9008011"
+          }
+        ]
+      }
+    ]
+  },
   "mock_vrf_attach_object2" : {
     "MESSAGE": "OK",
     "METHOD": "POST",
@@ -1614,6 +1710,34 @@
                 "serialNumber": "XYZKSJHSMK2",
                 "switchName": "n9kv_leaf2",
                 "vlan": "202",
+                "vlanModifiable": true
+            }
+        ],
+        "templateName": "Default_VRF_Universal",
+        "vrfName": "test_vrf_1"
+      }
+    ]
+  },
+  "mock_msd_vrf_attach_get_ext_object_merge_att1_only": {
+    "MESSAGE": "OK",
+    "METHOD": "POST",
+    "RETURN_CODE": 200,
+    "DATA": [
+      {
+        "switchDetailsList": [
+            {
+                "errorMessage": null,
+                "extensionPrototypeValues": [],
+                "extensionValues": "",
+                "freeformConfig": "",
+                "instanceValues": "",
+                "islanAttached": true,
+                "lanAttachedState": "DEPLOYED",
+                "peerSerialNumber": null,
+                "role": "leaf",
+                "serialNumber": "XYZKSJHSMK1",
+                "switchName": "n9kv_leaf1",
+                "vlan": "2000",
                 "vlanModifiable": true
             }
         ],
