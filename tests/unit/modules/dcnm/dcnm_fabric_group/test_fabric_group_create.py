@@ -21,6 +21,10 @@
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
 # pylint: disable=invalid-name
+# pylint: disable=line-too-long
+"""
+Unit tests for FabricGroupCreate class in module_utils/fabric_group/create.py
+"""
 
 from __future__ import absolute_import, division, print_function
 

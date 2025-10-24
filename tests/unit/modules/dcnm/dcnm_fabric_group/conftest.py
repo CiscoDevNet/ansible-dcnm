@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=unused-import,line-too-long
 """
 Pytest configuration for dcnm_fabric_group tests.
 This file makes fixtures available to all test modules in this directory.
@@ -19,7 +19,7 @@ This file makes fixtures available to all test modules in this directory.
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 # Import fixtures from utils to make them available to all tests
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.utils import (  # noqa: F401, E501
