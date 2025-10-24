@@ -280,10 +280,9 @@ class FabricGroupCreate(FabricGroupCommon):
         """
         method_name = inspect.stack()[0][3]
 
-        # pylint: disable=no-member
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling commit. "
+            msg += "rest_send.params must be set prior to calling commit. "
             raise ValueError(msg)
 
         if not self.payloads:
