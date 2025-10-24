@@ -286,7 +286,7 @@ class FabricGroupCreate(FabricGroupCommon):
             msg += "rest_send must be set prior to calling commit. "
             raise ValueError(msg)
 
-        if self.payloads is None:
+        if not self.payloads:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
