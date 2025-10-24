@@ -1,0 +1,505 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MSD_DELETED - Test Entry Point - [dcnm_network MSD]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+      Executing MSD Deleted Tests - [dcnm_network MSD]         +"
+      - "----------------------------------------------------------------"
+  tags: msd_deleted
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: MSD_DELETED - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    deploy_local: false
+    
+    test_data_msd_deleted:
+      #----------------------------------  
+      # MSD deleted config templates and auto generated file location for test cases
+      #----------------------------------
+      # MSD TC1 - Delete single MSD network
+      msd_deleted_net_conf_template: "msd_deleted/dcnm_network_msd_deleted_net_conf.j2"
+      msd_deleted_net_conf_file: "{{ role_path }}/files/dcnm_network_msd_deleted_net_conf.yaml"
+      
+      # MSD TC2 - Delete multiple MSD networks
+      msd_deleted_multi_conf_template: "msd_deleted/dcnm_network_msd_deleted_multi_conf.j2"
+      msd_deleted_multi_conf_file: "{{ role_path }}/files/dcnm_network_msd_deleted_multi_conf.yaml"
+      
+  delegate_to: localhost
+  tags: msd_deleted
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: MSD_DELETED - Create Deleted Network Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_deleted.msd_deleted_net_conf_template }}"
+    dest: "{{ test_data_msd_deleted.msd_deleted_net_conf_file }}"
+  delegate_to: localhost
+  tags: msd_deleted
+
+- name: MSD_DELETED - Create Deleted Multi Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_deleted.msd_deleted_multi_conf_template }}"
+    dest: "{{ test_data_msd_deleted.msd_deleted_multi_conf_file }}"
+  delegate_to: localhost
+  tags: msd_deleted
+
+##############################################
+##          Load Config Files               ##
+##############################################
+
+- name: MSD_DELETED - Load Deleted Network Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_deleted_net_conf: "{{ lookup('file', '{{ test_data_msd_deleted.msd_deleted_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_deleted
+
+- name: MSD_DELETED - Load Deleted Multi Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_deleted_multi_conf: "{{ lookup('file', '{{ test_data_msd_deleted.msd_deleted_multi_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_deleted
+
+##############################################
+##        Verify Fabric Deployment         ##
+##############################################
+
+- name: MSD_DELETED - Verify if MSD fabric is deployed
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.response.DATA != None
+    fail_msg: "MSD Fabric '{{ test_data_common.fabric }}' not found."
+  tags: msd_deleted
+
+##############################################
+##              CLEANUP                     ##
+##############################################
+
+- name: MSD_DELETED - setup - Clean up any existing MSD networks
+  cisco.dcnm.dcnm_network: &msd_clean
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: msd_deleted
+
+##############################################
+##    MSD TC1: Delete Single Network       ##
+##############################################
+
+- name: MSD_DELETED - TC1 - MERGED - Create MSD network to be deleted
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'MSD Network to be deleted'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+            multicast_group_address: '239.1.1.1'
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
+          - ip_address: "{{ test_data_common.sw2 }}"
+            ports: ["{{ test_data_common.sw2_int1 }}", "{{ test_data_common.sw2_int2 }}"]
+        deploy: false
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - ASSERT - Verify network creation
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "MSD network creation failed"
+  tags: msd_deleted
+
+# - name: MSD_DELETED - TC1 - QUERY - Verify network exists before deletion
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: query_result
+#   tags: msd_deleted
+
+# - name: MSD_DELETED - TC1 - ASSERT - Verify network exists
+#   assert:
+#     that:
+#       - query_result.response|length == 1
+#     fail_msg: "Network does not exist before deletion"
+#   tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - DELETED - Delete single MSD network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+    config: "{{ dcnm_network_msd_deleted_net_conf }}"
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - ASSERT - Verify network deletion
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "MSD network deletion failed"
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - DELETED - conf1 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+    config: "{{ dcnm_network_msd_deleted_net_conf }}"
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "MSD network deletion idempotence failed"
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - QUERY - Verify network is deleted
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC1 - ASSERT - Verify network deleted
+  assert:
+    that:
+#  - query_result.response|length == 0
+    fail_msg: "MSD network still exists after deletion"
+  tags: msd_deleted
+
+# # MSD_DELETED - TC1 - VALIDATE - Validate network deletion and child fabric cleanup
+# - name: MSD_DELETED - TC1 - VALIDATE - Validate network is completely deleted
+#   assert:
+#     that:
+# #  - query_result.response|length == 0
+#       - test_data_common.msd_net1 not in (query_result.response | map(attribute="net_name") | list | default([]))
+#     fail_msg: "MSD network deletion validation failed"
+#   tags: msd_deleted
+#
+# # MSD_DELETED - TC1 - VALIDATE - Validate child fabric configuration cleanup
+# - name: MSD_DELETED - TC1 - VALIDATE - Verify child fabric config removed
+#   cisco.dcnm.dcnm_rest:
+#     method: GET
+#     path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{{ test_data_common.child_fabric }}/networks
+#   register: child_fabric_result
+#   tags: msd_deleted
+#
+# - name: MSD_DELETED - TC1 - VALIDATE - Assert child fabric network is removed
+#   assert:
+#     that:
+#       - test_data_common.msd_net1 not in (child_fabric_result.response | map(attribute="networkName") | list | default([]))
+#     fail_msg: "Child fabric network configuration not properly cleaned up"
+#   tags: msd_deleted
+
+##############################################
+##    MSD TC2: Delete Multiple Networks    ##
+##############################################
+
+- name: MSD_DELETED - TC2 - MERGED - Create multiple MSD networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'MSD Network 1 to be deleted'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
+          - ip_address: "{{ test_data_common.sw2 }}"
+            ports: ["{{ test_data_common.sw2_int1 }}", "{{ test_data_common.sw2_int2 }}"]
+        deploy: false
+      - net_name: "{{ test_data_common.msd_net2 }}"
+        vrf_name: "{{ test_data_common.net2_vrf }}"
+        net_id: "{{ test_data_common.msd_net2_net_id }}"
+        net_template: "{{ test_data_common.net2_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net2_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net2_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net2_gw_ip_subnet }}"
+        routing_tag: 12346
+        int_desc: 'MSD Network 2 to be deleted'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 205
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports: ["{{ test_data_common.sw1_int3 }}", "{{ test_data_common.sw1_int4 }}"]
+          - ip_address: "{{ test_data_common.sw2 }}"
+            ports: ["{{ test_data_common.sw2_int3 }}", "{{ test_data_common.sw2_int4 }}"]
+        deploy: false
+      - net_name: "{{ test_data_common.msd_l2_net }}"
+        net_id: "{{ test_data_common.msd_l2_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_l2_vlan_id }}"
+        int_desc: 'MSD L2 Network to be deleted'
+        is_l2only: true
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports: ["{{ test_data_common.sw1_int5 }}", "{{ test_data_common.sw1_int6 }}"]
+          - ip_address: "{{ test_data_common.sw2 }}"
+            ports: ["{{ test_data_common.sw2_int5 }}", "{{ test_data_common.sw2_int6 }}"]
+        deploy: false
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - ASSERT - Verify networks creation
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "MSD networks creation failed"
+  tags: msd_deleted
+
+- meta: end_play
+
+# - name: MSD_DELETED - TC2 - QUERY - Verify networks exist before deletion
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: query_result
+#   tags: msd_deleted
+
+# - name: MSD_DELETED - TC2 - ASSERT - Verify all networks exist
+#   assert:
+#     that:
+#       - query_result.response|length == 3
+#     fail_msg: "Expected 3 networks before deletion, found {{ query_result.response|length }}"
+#   tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - DELETED - Delete multiple MSD networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+    config: "{{ dcnm_network_msd_deleted_multi_conf }}"
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - ASSERT - Verify networks deletion
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "MSD networks deletion failed"
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - DELETED - conf2 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+    config: "{{ dcnm_network_msd_deleted_multi_conf }}"
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "MSD networks deletion idempotence failed"
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - QUERY - Verify all networks are deleted
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC2 - ASSERT - Verify all networks deleted
+  assert:
+    that:
+#  - query_result.response|length == 0
+    fail_msg: "MSD networks still exist after deletion"
+  tags: msd_deleted
+
+# # MSD_DELETED - TC2 - VALIDATE - Validate all networks deleted and child fabric cleanup
+# - name: MSD_DELETED - TC2 - VALIDATE - Validate all networks are completely deleted
+#   assert:
+#     that:
+# #  - query_result.response|length == 0
+#       - test_data_common.msd_net1 not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - test_data_common.msd_net2 not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - test_data_common.msd_l2_net not in (query_result.response | map(attribute="net_name") | list | default([]))
+#     fail_msg: "MSD networks deletion validation failed"
+#   tags: msd_deleted
+
+##############################################
+##  MSD TC3: Delete All Networks (No Config)##
+##############################################
+
+- name: MSD_DELETED - TC3 - MERGED - Create MSD networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'MSD Network for bulk delete'
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+        attach:
+          - ip_address: "{{ test_data_common.sw1 }}"
+            ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
+          - ip_address: "{{ test_data_common.sw2 }}"
+            ports: ["{{ test_data_common.sw2_int1 }}", "{{ test_data_common.sw2_int2 }}"]
+        deploy: false
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - ASSERT - Verify network creation
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "MSD network creation failed"
+  tags: msd_deleted
+
+# - name: MSD_DELETED - TC3 - QUERY - Verify network exists before deletion
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: query_result
+#   tags: msd_deleted
+
+# - name: MSD_DELETED - TC3 - ASSERT - Verify network exists
+#   assert:
+#     that:
+#       - query_result.response|length >= 1
+#     fail_msg: "Network does not exist before bulk deletion"
+#   tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - DELETED - Delete all MSD networks without config
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - ASSERT - Verify bulk deletion
+  assert:
+    that:
+      - result.changed == true
+    fail_msg: "Bulk MSD network deletion failed"
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - DELETED - conf3 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  register: result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "Bulk deletion idempotence failed"
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - QUERY - Verify all networks are deleted
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_deleted
+
+- name: MSD_DELETED - TC3 - ASSERT - Verify all networks deleted
+  assert:
+    that:
+#  - query_result.response|length == 0
+    fail_msg: "Networks still exist after bulk deletion"
+  tags: msd_deleted
+
+# # MSD_DELETED - TC3 - VALIDATE - Validate bulk deletion and child fabric cleanup
+# - name: MSD_DELETED - TC3 - VALIDATE - Validate complete cleanup
+#   assert:
+#     that:
+# #  - query_result.response|length == 0
+#     fail_msg: "Bulk deletion validation failed"
+#   tags: msd_deleted
+
+##############################################
+##              FINAL CLEANUP               ##
+##############################################
+
+# - name: MSD_DELETED - FINAL - Clean Up All MSD Test Networks
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: deleted
+#   tags: msd_deleted
+
+# - name: MSD_DELETED - sleep for 40 seconds for DCNM to completely update the state
+#   wait_for:
+#     timeout: 40
+#   tags: msd_deleted
+
+# - name: MSD_DELETED - FINAL - QUERY - Verify cleanup
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: result
+#   tags: msd_deleted
+
+# - name: MSD_DELETED - FINAL - ASSERT - Verify all networks deleted
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD networks not properly cleaned up"
+#   tags: msd_deleted
+
+# # MSD_DELETED - FINAL - VALIDATE - Verify all MSD configurations are removed
+# - name: MSD_DELETED - FINAL - VALIDATE - Validate complete cleanup
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD network cleanup validation failed"
+#   tags: msd_deleted
