@@ -1,0 +1,393 @@
+##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# parent_fabric
+# A Parent MSD VXLAN_EVPN fabric
+#
+# child_fabric
+# A Child MSD VXLAN_EVPN fabric associated with parent_fabric
+#
+# child_switch_1
+# - A switch in the child MSD fabric
+# - VRF-lite capable switch
+#
+# child_switch_2  
+# - A switch in the child MSD fabric
+# - VRF-lite capable switch
+#
+# interface_2a
+# - Ethernet interface on child_switch_2
+# - Used to test VRF LITE configuration in MSD environment
+##############################################
+
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version >= "12"
+
+- name: SETUP.0 - MSD OVERRIDDEN - [with_items] print vars
+  ansible.builtin.debug:
+    var: item
+  with_items:
+     - "parent_fabric : {{ parent_fabric }}"
+     - "child_fabric : {{ child_fabric }}"
+     - "child_switch_1 : {{ child_switch_1 }}"
+     - "child_switch_2 : {{ child_switch_2 }}"
+     - "interface_2a : {{ interface_2a }}"
+
+- name: SETUP.1 - MSD OVERRIDDEN - [dcnm_rest.GET] Verify parent fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - result.response.DATA != None
+
+- name: SETUP.2 - MSD OVERRIDDEN - [deleted] Delete all VRFs from Parent MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_setup_2
+
+- name: SETUP.2a - MSD OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+  when: result_setup_2.changed == true
+
+- name: SETUP.3 - MSD OVERRIDDEN - [merged] Create initial VRFs for override testing
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-msd-override-old1
+      vrf_id: 9008031
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2031
+      vrf_description: "Old VRF 1 - will be deleted"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-override-old2
+      vrf_id: 9008032
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2032
+      vrf_description: "Old VRF 2 - will be deleted"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
+      attach:
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+    - vrf_name: ansible-msd-override-keep
+      vrf_id: 9008033
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2033
+      vrf_description: "VRF to keep but modify"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+  register: result_setup_3
+
+- name: SETUP.3a - MSD OVERRIDDEN - [debug] print setup result
+  ansible.builtin.debug:
+    var: result_setup_3
+
+- name: SETUP.4 - MSD OVERRIDDEN - [query] Verify initial VRFs exist before override
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_setup_4
+
+- name: SETUP.4a - MSD OVERRIDDEN - [debug] print pre-override VRFs
+  ansible.builtin.debug:
+    var: result_setup_4
+
+###############################################
+###          MSD OVERRIDDEN TESTS           ##
+###############################################
+
+- name: TEST.1 - MSD OVERRIDDEN - [overridden] Override all VRFs with new configuration
+  cisco.dcnm.dcnm_vrf: &conf1
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-msd-override-new1
+      vrf_id: 9008041
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2041
+      vrf_description: "New VRF 1 after override"
+      vrf_int_mtu: 9000
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+        l3vni_wo_vlan: false
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-override-keep
+      vrf_id: 9008033
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2033
+      vrf_description: "Modified VRF - kept but changed"
+      vrf_int_mtu: 9216  # Changed
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false  # Changed
+        adv_host_routes: true     # Changed
+        static_default_route: false # Changed
+        bgp_password: "BGPPASS"
+        bgp_passwd_encrypt: 7
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"  # Added
+      deploy: true
+  register: result_1
+
+- name: TEST.1a - MSD OVERRIDDEN - [debug] print result_1
+  ansible.builtin.debug:
+    var: result_1
+
+- assert:
+    that:
+    - result_1.changed == true
+    - result_1.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_1.parent_fabric.fabric == parent_fabric
+    - result_1.parent_fabric.changed == true
+    - result_1.child_fabrics|length == 1  # Two VRFs with child config
+    - result_1.child_fabrics[0].diff|length == 2  # Two VRFs with child config
+    - result_1.child_fabrics[0].fabric == child_fabric
+    - result_1.child_fabrics[0].failed == false    # Verify override occurred - check for deletion in diff
+    - result_1.parent_fabric.diff|length >= 2  # Should include deletions and creations
+
+- name: TEST.1b - MSD OVERRIDDEN - [query] Verify old VRFs were deleted and new ones exist
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_1b
+  retries: 10
+  delay: 5
+
+- name: TEST.1c - MSD OVERRIDDEN - [debug] print query result after override
+  ansible.builtin.debug:
+    var: result_1b
+
+- assert:
+    that:
+    # Should only have the 2 VRFs specified in override
+    - result_1b.response|length == 2
+    # Verify VRF names match what we specified
+    - result_1b.response|selectattr('parent.vrfName', 'equalto', 'ansible-msd-override-new1')|list|length == 1
+    - result_1b.response|selectattr('parent.vrfName', 'equalto', 'ansible-msd-override-keep')|list|length == 1
+    # Verify old VRFs are gone
+    - result_1b.response|selectattr('parent.vrfName', 'equalto', 'ansible-msd-override-old1')|list|length == 0
+    - result_1b.response|selectattr('parent.vrfName', 'equalto', 'ansible-msd-override-old2')|list|length == 0
+
+- name: TEST.1d - MSD OVERRIDDEN - [overridden] conf1 - Idempotence
+  cisco.dcnm.dcnm_vrf: *conf1
+  register: result_1d
+
+- assert:
+    that:
+    - result_1d.changed == false
+
+- name: TEST.2 - MSD OVERRIDDEN - [overridden] Override with single VRF (delete all others)
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-msd-override-single
+      vrf_id: 9008051
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2051
+      vrf_description: "Single VRF after total override"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+        bgp_password: "SINGLEPASS789"
+        bgp_passwd_encrypt: 7
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+  register: result_2
+
+- name: TEST.2a - MSD OVERRIDDEN - [debug] print result_2
+  ansible.builtin.debug:
+    var: result_2
+
+- assert:
+    that:
+    - result_2.changed == true
+    - result_2.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_2.child_fabrics|length == 1
+    - result_2.child_fabrics[0].fabric == child_fabric
+    - result_2.child_fabrics[0].failed == false
+
+- name: TEST.2b - MSD OVERRIDDEN - [query] Verify only single VRF exists
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_2b
+  retries: 10
+  delay: 5
+
+- name: TEST.2c - MSD OVERRIDDEN - [debug] print single VRF query result
+  ansible.builtin.debug:
+    var: result_2b
+
+- assert:
+    that:
+    - result_2b.response|length == 1
+    - result_2b.response[0].parent.vrfName == "ansible-msd-override-single"
+
+- name: TEST.3 - MSD OVERRIDDEN - [overridden] Override with VRF-Lite configuration
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-msd-override-lite
+      vrf_id: 9008061
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2061
+      vrf_description: "VRF with VRF-Lite after override"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"
+        vrf_lite:
+        - interface: "{{ interface_2a }}"
+          ipv4_addr: 10.10.1.2/30
+          neighbor_ipv4: 10.10.1.1
+          peer_vrf: external_override_vrf
+          dot1q: 300
+      deploy: true
+  register: result_3
+
+- name: TEST.3a - MSD OVERRIDDEN - [debug] print result_3
+  ansible.builtin.debug:
+    var: result_3
+
+- assert:
+    that:
+    - result_3.changed == true
+    - result_3.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_3.child_fabrics|length == 1
+    - result_3.child_fabrics[0].failed == false
+
+- name: TEST.4 - MSD OVERRIDDEN - [overridden] Override with no Child fabric config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config:
+    - vrf_name: ansible-msd-override-parent-only
+      vrf_id: 9008071
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2071
+      vrf_description: "Parent-only VRF after override"
+      # No child_fabric_config specified
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+  register: result_4
+
+- name: TEST.4a - MSD OVERRIDDEN - [debug] print result_4
+  ansible.builtin.debug:
+    var: result_4
+
+- assert:
+    that:
+    - result_4.changed == true
+    - result_4.workflow == "Multisite Parent without Child Fabric Processing"
+    # No child_fabrics section when no child config
+    - "'child_fabrics' not in result_4 or result_4.child_fabrics|length == 0"
+
+- name: TEST.5 - MSD OVERRIDDEN - [overridden] Override with empty config (delete all VRFs)
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: overridden
+    config: []  # Empty config should delete all VRFs
+  register: result_5
+
+- name: TEST.5a - MSD OVERRIDDEN - [debug] print result_5
+  ansible.builtin.debug:
+    var: result_5
+
+- assert:
+    that:
+    - result_5.changed == true
+
+- name: TEST.5b - MSD OVERRIDDEN - [query] Verify all VRFs were deleted
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+  register: result_5b
+  retries: 10
+  delay: 5
+
+- name: TEST.5c - MSD OVERRIDDEN - [debug] print empty fabric query result
+  ansible.builtin.debug:
+    var: result_5b
+
+- assert:
+    that:
+    - result_5b.response|length == 0
+
+###############################################
+###              CLEANUP                    ##
+###############################################
+
+- name: CLEANUP.1 - MSD OVERRIDDEN - [deleted] Ensure all VRFs are deleted
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_cleanup_1
+
+- name: CLEANUP.1a - MSD OVERRIDDEN - [debug] print cleanup result
+  ansible.builtin.debug:
+    var: result_cleanup_1
+
+- assert:
+    that:
+    - result_cleanup_1.changed in [true, false]  # May or may not have VRFs to delete
+
+- name: CLEANUP.2 - MSD OVERRIDDEN - [wait_for] Wait 60 seconds for cleanup to complete
+  wait_for:
+    timeout: 60
+  when: result_cleanup_1.changed == true
