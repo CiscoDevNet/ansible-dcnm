@@ -21,7 +21,6 @@ import copy
 from unittest.mock import patch
 
 from ansible_collections.cisco.dcnm.plugins.modules import dcnm_vrf
-from ansible_collections.cisco.dcnm.plugins.action import dcnm_vrf as action_dcnm_vrf
 
 from .dcnm_module import TestDcnmModule, loadPlaybookData, set_module_args
 
@@ -83,13 +82,13 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_vrf_object = copy.deepcopy(self.test_data.get("mock_vrf_object"))
         self.mock_vrf12_object = copy.deepcopy(self.test_data.get("mock_vrf12_object"))
         self.mock_msd_vrf_object = copy.deepcopy(
-                self.test_data.get("mock_msd_vrf_object")
+            self.test_data.get("mock_msd_vrf_object")
         )
         self.mock_msd_vrf_object_2 = copy.deepcopy(
-                self.test_data.get("mock_msd_vrf_object_2")
+            self.test_data.get("mock_msd_vrf_object_2")
         )
         self.mock_msd_parent_vrf_object = copy.deepcopy(
-                self.test_data.get("mock_msd_parent_vrf_object")
+            self.test_data.get("mock_msd_parent_vrf_object")
         )
         self.mock_vrf_attach_object = copy.deepcopy(
             self.test_data.get("mock_vrf_attach_object")
@@ -1692,7 +1691,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         print(result)
-        self.assertEqual(result["msg"], 
+        self.assertEqual(result["msg"],
                          "Config[1]: child_fabric_config is required for Multisite Parent fabrics. It can be optionally removed when state is query.")
 
     def test_dcnm_vrf_msd_delete_error(self):

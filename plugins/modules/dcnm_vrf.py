@@ -4934,7 +4934,11 @@ def main():
             default="merged",
             choices=["merged", "replaced", "deleted", "overridden", "query"],
         ),
-        _fabric_type=dict(default="standalone", required=False, type="str")
+        _fabric_type=dict(
+            default="standalone",
+            choices=['multisite_child', 'multisite_parent', 'standalone'],
+            required=False,
+            type="str")
     )
 
     module = AnsibleModule(argument_spec=element_spec, supports_check_mode=True)

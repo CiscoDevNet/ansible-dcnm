@@ -159,7 +159,7 @@ class ErrorHandler:
     def __init__(self, logger):
         # Store logger reference for error reporting
         self.logger = logger
-    
+
     def handle_failure(
         self, msg, changed=False
     ):
@@ -1121,8 +1121,8 @@ class ActionModule(ActionNetworkModule):
                 child_tasks_dict[child_fabric_name] = child_task
 
             # Log task creation progress
-            self.logger.debug(f"Created child task for VRF: {child_config['vrf_name']}",
-                                fabric=child_fabric_name, operation="create_child_task")
+            self.logger.debug(f"Created child task for VRF: {child_config['vrf_name']}", fabric=child_fabric_name,
+                              operation="create_child_task")
             return child_tasks_dict
         except Exception as e:
             raise e
@@ -1212,7 +1212,7 @@ class ActionModule(ActionNetworkModule):
         # Log execution outcome
         success = not child_result.get("failed", False)
         self.logger.info(f"Child task execution completed: {'Success' if success else 'Failed'}",
-                            fabric=fabric_name, operation="execute_child_task")
+                         fabric=fabric_name, operation="execute_child_task")
         return child_result
 
     # =========================================================================
