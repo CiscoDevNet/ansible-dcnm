@@ -22,7 +22,7 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 
 # Import fixtures from utils to make them available to all tests
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.utils import (  # noqa: F401, E501
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.utils import (
     fabric_group_create_fixture,
     fabric_groups_fixture,
 )
