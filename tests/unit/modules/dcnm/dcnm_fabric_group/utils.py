@@ -25,6 +25,7 @@ from contextlib import contextmanager
 import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.create import FabricGroupCreate
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.delete import FabricGroupDelete
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_groups import FabricGroups
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.query import FabricGroupQuery
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.fixture import load_fixture
@@ -37,6 +38,12 @@ params = {
 
 params_query = {
     "state": "query",
+    "config": {"fabric_groups": [{"FABRIC_NAME": "MFG1"}]},
+    "check_mode": False,
+}
+
+params_delete = {
+    "state": "deleted",
     "config": {"fabric_groups": [{"FABRIC_NAME": "MFG1"}]},
     "check_mode": False,
 }
@@ -118,6 +125,14 @@ def fabric_group_query_fixture():
     return FabricGroupQuery()
 
 
+@pytest.fixture(name="fabric_group_delete")
+def fabric_group_delete_fixture():
+    """
+    Return FabricGroupDelete() instance.
+    """
+    return FabricGroupDelete()
+
+
 @contextmanager
 def does_not_raise():
     """
@@ -171,6 +186,26 @@ def responses_fabric_group_details(key: str) -> dict[str, str]:
     Return responses for FabricGroupDetails
     """
     data_file = "responses_FabricGroupDetails"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_group_member_info(key: str) -> dict[str, str]:
+    """
+    Return responses for FabricGroupMemberInfo
+    """
+    data_file = "responses_FabricGroupMemberInfo"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_group_delete(key: str) -> dict[str, str]:
+    """
+    Return responses for FabricGroupDelete endpoint
+    """
+    data_file = "responses_FabricGroupDelete"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data

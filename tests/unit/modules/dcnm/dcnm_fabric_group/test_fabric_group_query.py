@@ -259,7 +259,8 @@ def test_fabric_group_query_00030(fabric_group_query) -> None:
     -   FabricGroupQuery.fabric_group_names is set to contain one fabric group name
         (MFG1) that exists on the controller.
     -   FabricGroupQuery.commit() calls FabricGroupDetails().refresh()
-        which returns a dict with keys DATA == [{MFG1 fabric group data dict}],
+        which first checks if fabric exists via FabricGroups().refresh(),
+        then gets fabric details, returning DATA == [{MFG1 fabric group data dict}],
         RETURN_CODE == 200
     -   FabricGroupQuery.commit() sets results.diff_current to a dict containing
         the fabric group details for MFG1
@@ -268,6 +269,9 @@ def test_fabric_group_query_00030(fabric_group_query) -> None:
     key = f"{method_name}a"
 
     def responses():
+        # FabricGroups.refresh() - called by FabricGroupDetails to check if fabric exists
+        yield responses_fabric_group_details(key)
+        # FabricGroupDetails.refresh() - actual fabric details
         yield responses_fabric_group_details(key)
 
     gen_responses = ResponseGenerator(responses())
@@ -344,7 +348,7 @@ def test_fabric_group_query_00031(fabric_group_query) -> None:
     -   FabricGroupQuery.fabric_group_names is set to contain two fabric group names
         (MFG1 and MFG2) that exist on the controller.
     -   FabricGroupQuery.commit() calls FabricGroupDetails().refresh() twice
-        (once for each fabric group)
+        (once for each fabric group), and each refresh() calls FabricGroups().refresh()
         which returns a dict with keys DATA == [{MFG1 fabric group data dict},
         {MFG2 fabric group data dict}], RETURN_CODE == 200
     -   FabricGroupQuery.commit() sets results.diff_current to a dict containing
@@ -355,8 +359,15 @@ def test_fabric_group_query_00031(fabric_group_query) -> None:
     key = f"{method_name}a"
 
     def responses():
-        # FabricGroupDetails.refresh() is called once per fabric_group_name
+        # For MFG1:
+        # FabricGroups.refresh() - check if MFG1 exists
         yield responses_fabric_group_details(key)
+        # FabricGroupDetails.refresh() - get MFG1 details
+        yield responses_fabric_group_details(key)
+        # For MFG2:
+        # FabricGroups.refresh() - check if MFG2 exists
+        yield responses_fabric_group_details(key)
+        # FabricGroupDetails.refresh() - get MFG2 details
         yield responses_fabric_group_details(key)
 
     gen_responses = ResponseGenerator(responses())

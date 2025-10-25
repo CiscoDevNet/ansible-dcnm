@@ -31,6 +31,7 @@ from ..common.api.onemanage.endpoints import EpOneManageFabricDetails
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
+from .fabric_groups import FabricGroups
 
 
 class FabricGroupDetails:
@@ -214,6 +215,28 @@ class FabricGroupDetails:
                 return
             self.data[fabric_group_name] = item
 
+    def fabric_group_exists(self, fabric_group_name: str) -> bool:
+        """
+        # Summary
+
+        Check whether the specified fabric group name exists on the controller.
+
+        ## Raises
+
+        None
+
+        ## Returns
+        -   True if the fabric group exists on the controller.
+        -   False otherwise.
+        """
+        instance = FabricGroups()
+        instance.rest_send = self.rest_send
+        instance.results = Results()
+        instance.refresh()
+        if fabric_group_name in instance.fabric_group_names:
+            return True
+        return False
+
     def refresh(self) -> None:
         """
         ### Summary
@@ -238,6 +261,14 @@ class FabricGroupDetails:
             msg += f"Error detail: {error}."
             raise ValueError(msg) from error
 
+        if not self.fabric_group_exists(self.fabric_group_name):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Fabric group {self.fabric_group_name} does not exist on the controller."
+            self.log.debug(msg)
+            self.data = {}
+            self._refreshed = True
+            return
+
         try:
             self.rest_send.path = self.ep_onemanage_fabric_group_details.path
             self.rest_send.verb = self.ep_onemanage_fabric_group_details.verb
@@ -251,11 +282,17 @@ class FabricGroupDetails:
             raise ValueError(error) from error
 
         if self.rest_send is None:
-            # We should never hit this.
-            return
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.rest_send is None. "
+            msg += "We should never hit this."
+            self.log.debug(msg)
+            raise ValueError(msg)
         if self.rest_send.response_current is None:
-            # We should never hit this.
-            return
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "self.rest_send.response_current is None. "
+            msg += "We should never hit this."
+            self.log.debug(msg)
+            raise ValueError(msg)
         if self.rest_send.response_current["DATA"] is None:
             msg = f"{self.class_name}.{method_name}: "
             msg += "DATA key is missing from response."
