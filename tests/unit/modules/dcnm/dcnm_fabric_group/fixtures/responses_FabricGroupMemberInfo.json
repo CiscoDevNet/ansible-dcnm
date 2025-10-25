@@ -1,0 +1,64 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for FabricGroupMemberInfo.refresh() unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric_group/test_fabric_group_delete.py",
+        "",
+        "INSTRUCTIONS FOR GATHERING RESPONSES:",
+        "1. Use the NDFC API endpoint: GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/{fabric_name}",
+        "2. Responses should contain fabric group member information"
+    ],
+    "test_fabric_group_delete_00030a": {
+        "TEST_NOTES": [
+            "Fabric group MFG1 exists and has no members (can be deleted)",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1",
+        "MESSAGE": "OK",
+        "DATA": {
+            "clusterName": "",
+            "fabrics": {}
+        }
+    },
+    "test_fabric_group_delete_00031a": {
+        "TEST_NOTES": [
+            "Fabric group MFG1 exists but has members (cannot be deleted)",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1",
+        "MESSAGE": "OK",
+        "DATA": {
+            "clusterName": "nd-cluster-1",
+            "fabrics": {
+                "FABRIC-1": {
+                    "asn": "65001",
+                    "clusterIpAddresses": ["192.168.1.1"],
+                    "clusterName": "nd-cluster-1",
+                    "fabricId": 1,
+                    "fabricName": "FABRIC-1",
+                    "fabricParent": "MFG1",
+                    "fabricState": "member",
+                    "fabricTechnology": "VXLANFabric",
+                    "fabricType": "Switch_Fabric"
+                }
+            }
+        }
+    },
+    "test_fabric_group_delete_00032a": {
+        "TEST_NOTES": [
+            "Fabric group MFG1 exists and has no members",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MFG1",
+        "MESSAGE": "OK",
+        "DATA": {
+            "clusterName": "",
+            "fabrics": {}
+        }
+    }
+}

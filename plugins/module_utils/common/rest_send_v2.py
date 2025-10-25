@@ -302,7 +302,7 @@ class RestSend:
 
         self._verify_commit_parameters()
 
-        response_current = {}
+        response_current: dict = {}
         response_current["RETURN_CODE"] = 200
         response_current["METHOD"] = self.verb
         response_current["REQUEST_PATH"] = self.path
