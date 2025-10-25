@@ -163,12 +163,6 @@ class FabricGroupQuery:
             msg += "fabric_group_names must be set before calling commit."
             raise ValueError(msg)
 
-        # pylint: disable=no-member
-        if self.rest_send is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set before calling commit."
-            raise ValueError(msg)
-
         # pylint: disable=access-member-before-definition
         if self.results is None:
             # Instantiate Results() to register the failure
@@ -197,11 +191,13 @@ class FabricGroupQuery:
                 msg = f"{self.class_name}.commit: "
                 msg += "rest_send.params must be set before calling commit."
                 raise ValueError(f"{error}, {msg}") from error
-            if self.rest_send is not None:
+            if self.rest_send.check_mode in {True, False}:
                 self.results.check_mode = self.rest_send.check_mode
-                self.results.state = self.rest_send.state
             else:
                 self.results.check_mode = False
+            if self.rest_send.state:
+                self.results.state = self.rest_send.state
+            else:
                 self.results.state = "query"
             self.results.register_task_result()
             raise ValueError(error) from error
