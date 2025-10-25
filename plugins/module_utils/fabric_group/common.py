@@ -22,6 +22,7 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
+from typing import Any, Union
 
 from ..common.conversion import ConversionUtils
 from ..common.rest_send_v2 import RestSend
@@ -46,13 +47,13 @@ class FabricGroupCommon:
         ...
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
-        self.action = None
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
+        self.action: str = ""
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        msg = f"ENTERED {self.class_name}()"
+        msg: str = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
 
         self.conversion: ConversionUtils = ConversionUtils()
@@ -85,7 +86,7 @@ class FabricGroupCommon:
         # - self._fabric_group_needs_update_for_replaced_state()
         self._fabric_group_update_required: set[bool] = set()
 
-        self._payloads_to_commit: list = []
+        self._payloads_to_commit: list[dict[str, Any]] = []
 
         self.path: str = ""
         self.verb: str = ""
@@ -94,7 +95,7 @@ class FabricGroupCommon:
         self._fabric_summary: FabricSummary = FabricSummary()
         self._fabric_type: str = "VXLAN_EVPN"
 
-    def _prepare_parameter_value_for_comparison(self, value):
+    def _prepare_parameter_value_for_comparison(self, value: Any) -> Union[str, Any]:
         """
         convert payload values to controller formats
 
@@ -112,7 +113,7 @@ class FabricGroupCommon:
         return value
 
     @staticmethod
-    def rename_key(dictionary: dict, old_key: str, new_key: str) -> dict[str, str]:
+    def rename_key(dictionary: dict[str, Any], old_key: str, new_key: str) -> dict[str, Any]:
         """
         #  Summary
 
@@ -126,7 +127,7 @@ class FabricGroupCommon:
             dictionary[new_key] = dictionary.pop(old_key)
         return dictionary
 
-    def _update_seed_member(self, seed_member: dict[str, str]) -> dict[str, str]:
+    def _update_seed_member(self, seed_member: dict[str, Any]) -> dict[str, Any]:
         """
         # Summary
 
@@ -184,7 +185,7 @@ class FabricGroupCommon:
             controller expects.
         -   Raise ``ValueError`` if the translation fails.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
             if "ANYCAST_GW_MAC" not in payload:
                 continue
@@ -205,7 +206,7 @@ class FabricGroupCommon:
         """
         Raise ``ValueError`` if BGP_AS is not a valid BGP ASN.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         for payload in self._payloads_to_commit:
             if "BGP_AS" not in payload:
                 continue
@@ -226,13 +227,13 @@ class FabricGroupCommon:
         for payload in self._payloads_to_commit:
             payload.pop("DEPLOY", None)
 
-    def _verify_payload(self, payload) -> None:
+    def _verify_payload(self, payload: dict[str, Any]) -> None:
         """
         - Verify that the payload is a dict and contains all mandatory keys
         - raise ``ValueError`` if the payload is not a dict
         - raise ``ValueError`` if the payload is missing mandatory keys
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if self.action not in {"fabric_group_create", "fabric_group_replace", "fabric_group_update"}:
             return
         msg = f"{self.class_name}.{method_name}: "
@@ -330,10 +331,10 @@ class FabricGroupCommon:
         return self._fabric_group_type
 
     @fabric_group_type.setter
-    def fabric_group_type(self, value: str):
-        method_name = inspect.stack()[0][3]
+    def fabric_group_type(self, value: str) -> None:
+        method_name: str = inspect.stack()[0][3]
         if value not in self.fabric_group_types.valid_fabric_group_types:
-            msg = f"{self.class_name}.{method_name}: "
+            msg: str = f"{self.class_name}.{method_name}: "
             msg += "fabric_group_type must be one of "
             msg += f"{self.fabric_group_types.valid_fabric_group_types}. "
             msg += f"Got {value}"
@@ -350,8 +351,8 @@ class FabricGroupCommon:
     @rest_send.setter
     def rest_send(self, value: RestSend) -> None:
         if not value.params:
-            method_name = inspect.stack()[0][3]
-            msg = f"{self.class_name}.{method_name}: "
+            method_name: str = inspect.stack()[0][3]
+            msg: str = f"{self.class_name}.{method_name}: "
             msg += "rest_send must have params set."
             raise ValueError(msg)
         self._rest_send = value
