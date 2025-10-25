@@ -11,10 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=line-too-long
+"""
+Utilities for dcnm_fabric_group module unit tests.
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 
 from contextlib import contextmanager
@@ -23,10 +26,17 @@ import pytest
 from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.create import FabricGroupCreate
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_groups import FabricGroups
+from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.query import FabricGroupQuery
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.fixture import load_fixture
 
 params = {
     "state": "merged",
+    "config": {"fabric_groups": [{"FABRIC_NAME": "MFG1"}]},
+    "check_mode": False,
+}
+
+params_query = {
+    "state": "query",
     "config": {"fabric_groups": [{"FABRIC_NAME": "MFG1"}]},
     "check_mode": False,
 }
@@ -100,6 +110,14 @@ def fabric_groups_fixture():
     return FabricGroups()
 
 
+@pytest.fixture(name="fabric_group_query")
+def fabric_group_query_fixture():
+    """
+    Return FabricGroupQuery() instance.
+    """
+    return FabricGroupQuery()
+
+
 @contextmanager
 def does_not_raise():
     """
@@ -143,6 +161,16 @@ def rest_send_response_current(key: str) -> dict[str, str]:
     Responses for RestSend().response_current property
     """
     data_file = "responses_RestSend"
+    data = load_fixture(data_file).get(key)
+    print(f"{data_file}: {key} : {data}")
+    return data
+
+
+def responses_fabric_group_details(key: str) -> dict[str, str]:
+    """
+    Return responses for FabricGroupDetails
+    """
+    data_file = "responses_FabricGroupDetails"
     data = load_fixture(data_file).get(key)
     print(f"{data_file}: {key} : {data}")
     return data
