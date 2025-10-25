@@ -171,6 +171,7 @@ class FabricGroupCreate(FabricGroupCommon):
         """
         commit_payload["nvPairs"] = copy.deepcopy(payload)
         commit_payload["nvPairs"]["FABRIC_TYPE"] = "MFD"
+        commit_payload["nvPairs"]["FF"] = "MSD"
         commit_payload["nvPairs"]["default_network"] = payload.get("default_network", "Default_Network_Universal")
         commit_payload["nvPairs"]["default_vrf"] = payload.get("default_vrf", "Default_VRF_Universal")
         commit_payload["nvPairs"]["network_extension_template"] = payload.get("network_extension_template", "Default_Network_Extension_Universal")
