@@ -326,8 +326,10 @@ def test_fabric_group_delete_00030(fabric_group_delete) -> None:
     assert True not in instance.results.failed
     # The final result shows changed=True
     assert True in instance.results.changed
-    # But intermediate results (FabricGroupDetails, FabricGroupMemberInfo) show changed=False
-    # so both True and False are in results.changed
+    # Query operations add False to instance.results.changed
+    # The DELETE operation adds True to instance.results.changed
+    # Hence both are present in instance.results.changed
+    assert False in instance.results.changed
 
 
 def test_fabric_group_delete_00031(fabric_group_delete) -> None:

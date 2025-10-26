@@ -29,6 +29,7 @@ import logging
 from typing import Any, Union
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricCreate
+from ..common.operation_type import OperationType
 from .common import FabricGroupCommon
 from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
@@ -81,6 +82,7 @@ class FabricGroupCreate(FabricGroupCommon):
         super().__init__()
         self.class_name = self.__class__.__name__
         self.action = "fabric_group_create"
+        self.operation_type: OperationType = OperationType.CREATE
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -258,6 +260,7 @@ class FabricGroupCreate(FabricGroupCommon):
             else:
                 self.results.diff_current = copy.deepcopy(payload)
             self.results.action = self.action
+            self.results.operation_type = self.operation_type
             self.results.state = self.rest_send.state
             self.results.check_mode = self.rest_send.check_mode
             self.results.response_current = copy.deepcopy(self.rest_send.response_current)

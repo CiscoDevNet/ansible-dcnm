@@ -472,6 +472,7 @@ import logging
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricsGet
 from ..common.conversion import ConversionUtils
+from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
 
@@ -542,6 +543,7 @@ class FabricGroups:
     instance.rest_send = rest_send
     instance.results = Results()
     instance.refresh()
+    fabric_group_names: list[str] = instance.fabric_group_names
     all_fabric_groups = instance.all_data
     ```
 
@@ -553,6 +555,8 @@ class FabricGroups:
         self.class_name: str = self.__class__.__name__
 
         self.action: str = "fabric_groups"
+        self.operation_type: OperationType = OperationType.QUERY
+
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = f"ENTERED {self.class_name}"
@@ -580,15 +584,12 @@ class FabricGroups:
         """
         method_name = inspect.stack()[0][3]
         try:
-            self.results.action = self.action
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
             if self.results.response_current.get("RETURN_CODE") == 200:
                 self.results.failed = False
             else:
                 self.results.failed = True
-            # FabricDetails never changes the controller state
-            self.results.changed = False
             self.results.register_task_result()
         except TypeError as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -1114,3 +1115,6 @@ class FabricGroups:
     @results.setter
     def results(self, value: Results) -> None:
         self._results = value
+        self._results.action = self.action
+        self._results.operation_type = self.operation_type
+        self._results.changed = False

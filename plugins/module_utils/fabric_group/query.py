@@ -25,6 +25,7 @@ import copy
 import inspect
 import logging
 
+from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
 from ..fabric_group.fabric_group_details import FabricGroupDetails
@@ -88,6 +89,7 @@ class FabricGroupQuery:
         super().__init__()
         self.class_name = self.__class__.__name__
         self.action = "fabric_group_query"
+        self.operation_type: OperationType = OperationType.QUERY
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -184,8 +186,6 @@ class FabricGroupQuery:
         try:
             self._validate_commit_parameters()
         except ValueError as error:
-            self.results.action = self.action
-            self.results.changed = False
             self.results.failed = True
             if not self.rest_send.params:
                 msg = f"{self.class_name}.commit: "
@@ -205,7 +205,6 @@ class FabricGroupQuery:
         self.fabric_group_details.results = Results()
         self.fabric_group_details.rest_send = self.rest_send
 
-        self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
 
@@ -262,3 +261,6 @@ class FabricGroupQuery:
     @results.setter
     def results(self, value: Results) -> None:
         self._results = value
+        self._results.action = self.action
+        self._results.changed = False
+        self._results.operation_type = self.operation_type

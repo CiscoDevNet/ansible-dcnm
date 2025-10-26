@@ -374,8 +374,11 @@ def test_fabric_group_create_00030(fabric_group_create) -> None:
 
     assert False in instance.results.failed
     assert True not in instance.results.failed
+    # Query operations add False to instance.results.changed
+    # The CREATE operation adds True to instance.results.changed
+    # Hence, both True and False are in instance.results.changed
+    assert False in instance.results.changed
     assert True in instance.results.changed
-    # Note: False is also in changed because fabric_groups.refresh() doesn't change anything
 
 
 def test_fabric_group_create_00031(fabric_group_create) -> None:

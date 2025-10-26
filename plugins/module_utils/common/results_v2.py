@@ -18,7 +18,7 @@ Exposes public class Results to collect results across tasks.
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type  # pylint: disable=invalid-name
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
@@ -26,50 +26,56 @@ import inspect
 import json
 import logging
 
+from .operation_type import OperationType
+
 
 class Results:
     """
-    ### Summary
+    # Summary
+
     Collect results across tasks.
 
-    ### Raises
-    -   ``TypeError``: if properties are not of the correct type.
+    ## Raises
 
-    ### Description
+    -   `TypeError`: if properties are not of the correct type.
+
+    ## Description
+
     Provides a mechanism to collect results across tasks.  The task classes
     must support this Results class.  Specifically, they must implement the
     following:
 
-    1.  Accept an instantiation of`` Results()``
+    1.  Accept an instantiation of `Results()`
         -   Typically a class property is used for this
-    2.  Populate the ``Results`` instance with the results of the task
-        -   Typically done by transferring ``RestSend()``'s responses to the
-            ``Results`` instance
-    3. Register the results of the task with ``Results``, using:
-        -   ``Results.register_task_result()``
+    2.  Populate the `Results` instance with the results of the task
+        -   Typically done by transferring `RestSend()`'s responses to the
+            `Results` instance
+    3. Register the results of the task with `Results`, using:
+        -   `Results.register_task_result()`
         -   Typically done after the task is complete
 
-    ``Results`` should be instantiated in the main Ansible Task class and
-    passed to all other task classes.  The task classes should populate the
-    ``Results`` instance with the results of the task and then register the
-    results with ``Results.register_task_result()``.
+    `Results` should be instantiated in the main Ansible Task class and
+    passed to all other task classes for which results are to be collected.
+    The task classes should populate the `Results` instance with the results
+    of the task and then register the results with `Results.register_task_result()`.
 
     This may be done within a separate class (as in the example below, where
-    the ``FabricDelete()`` class is called from the ``TaskDelete()`` class.
-    The ``Results`` instance can then be used to build the final result, by
-    calling ``Results.build_final_result()``.
+    the `FabricDelete()` class is called from the `TaskDelete()` class.
+    The `Results` instance can then be used to build the final result, by
+    calling `Results.build_final_result()`.
 
-    ### Example Usage
+    ## Example Usage
+
     We assume an Ansible module structure as follows:
 
-    -   ``TaskCommon()`` : Common methods used by the various ansible
+    -   `TaskCommon()`: Common methods used by the various ansible
         state classes.
-    -   ``TaskDelete(TaskCommon)`` : Implements the delete state
-    -   ``TaskMerge(TaskCommon)``  : Implements the merge state
-    -   ``TaskQuery(TaskCommon)``  : Implements the query state
+    -   `TaskDelete(TaskCommon)`: Implements the delete state
+    -   `TaskMerge(TaskCommon)`: Implements the merge state
+    -   `TaskQuery(TaskCommon)`: Implements the query state
     -   etc...
 
-    In TaskCommon, ``Results`` is instantiated and, hence, is inherited by all
+    In TaskCommon, `Results` is instantiated and, hence, is inherited by all
     state classes.:
 
     ```python
@@ -180,15 +186,48 @@ class Results:
     ``sequence_number`` indicates the order in which the task was registered
     with ``Results``.  It provides a way to correlate the diff, response,
     result, and metadata across all tasks.
+
+    ## Typical usage within a task class such as FabricDelete
+
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.operation_type import OperationType
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+    ...
+    class FabricDelete:
+        def __init__(self, ansible_module):
+            ...
+            self.action = "fabric_delete"
+            self.operation_type = OperationType.DELETE  # Determines if changes might occur
+            self.rest_send = RestSend(params)
+            self.results = Results()
+            ...
+
+        def commit(self):
+            ...
+            self.results.changed = True  # or False, depending on whether changes were made
+            self.results.response_current = self.rest_send.response_current
+            self.results.result_current = self.rest_send.result_current
+            self.results.register_task_result()
+            ...
+
+        @property
+        def results(self) -> Results:
+            '''
+            An instance of the Results class.
+            '''
+            return self._results
+        @results.setter
+        def results(self, value: Results) -> None:
+            self._results = value
+            self._results.action = self.action
+            self._results.operation_type = self.operation_type
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.class_name: str = self.__class__.__name__
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
-
-        msg = f"ENTERED {self.class_name}():"
-        self.log.debug(msg)
 
         self.diff_keys: list = ["deleted", "merged", "query"]
         self.response_keys: list = ["deleted", "merged", "query"]
@@ -197,10 +236,8 @@ class Results:
         self.task_sequence_number: int = 0
 
         self.final_result: dict = {}
-        self._build_properties()
-
-    def _build_properties(self):
         self._action: str = ""
+        self._operation_type: OperationType = OperationType.QUERY
         self._changed: set = set()
         self._check_mode: bool = False
         self._diff: list[dict] = []
@@ -214,9 +251,18 @@ class Results:
         self._result_current: dict = {}
         self._state: str = ""
 
+        msg = f"ENTERED {self.class_name}():"
+        self.log.debug(msg)
+
     def increment_task_sequence_number(self) -> None:
         """
+        # Summary
+
         Increment a unique task sequence number.
+
+        ## Raises
+
+        None
         """
         self.task_sequence_number += 1
         msg = f"self.task_sequence_number: {self.task_sequence_number}"
@@ -224,31 +270,42 @@ class Results:
 
     def did_anything_change(self) -> bool:  # pylint: disable=too-many-return-statements
         """
-        Return True if there were any changes
-        Otherwise, return False
+        # Summary
+
+        Determine if anything changed in the current task.
+
+        - Return True if there were any changes
+        - Return False otherwise
+
+        ## Raises
+
+        None
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: ENTERED: "
         msg += f"self.action: {self.action}, "
+        msg += f"self.operation_type: {self.operation_type}, "
         msg += f"self.state: {self.state}, "
+        msg += f"self.failed: {self.failed}, "
         msg += f"self.result_current: {self.result_current}, "
-        msg += f"self.diff: {self.diff}, "
-        msg += f"self.failed: {self.failed}"
+        msg += f"self.diff: {self.diff}"
         self.log.debug(msg)
 
         something_changed: bool = False
         if self.check_mode is True:
             return False
-        if self.action == "query" or self.state == "query":
+
+        # Check operation_type first (preferred method)
+        if self.operation_type.is_read_only():
             return False
-        if self.result_current is None:
+
+        # Fallback: Check action string for backward compatibility
+        if "query" in self.action or self.state == "query":
             return False
         if self.result_current.get("changed", False) is True:
             return True
         if self.result_current.get("changed", True) is False:
-            return False
-        if "changed" not in self.result_current:
             return False
         for diff in self.diff:
             something_changed = False
@@ -261,12 +318,14 @@ class Results:
         self.log.debug(msg)
         return something_changed
 
-    def register_task_result(self):
+    def register_task_result(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Register a task's result.
 
-        ### Description
+        ## Description
+
         1.  Append result_current, response_current, diff_current and
             metadata_current their respective lists (result, response, diff,
             and metadata)
@@ -282,7 +341,7 @@ class Results:
         - self.diff      : list of diffs
         - self.metadata  : list of metadata
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"ENTERED: self.action: {self.action}, "
@@ -327,13 +386,16 @@ class Results:
         msg += f"self.result: {json.dumps(self.result, indent=4, sort_keys=True)}, "
         self.log.debug(msg)
 
-    def build_final_result(self):
+    def build_final_result(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build the final result.
 
-        ### Description
+        ## Description
+
         The final result consists of the following:
+
         ```json
         {
             "changed": True, # or False
@@ -407,19 +469,21 @@ class Results:
         return result
 
     @property
-    def action(self):
+    def action(self) -> str:
         """
-        ### Summary
+        # Summary
+
         Added to results to indicate the action that was taken
 
-        ### Raises
-        -   ``TypeError``: if value is not a string
+        ## Raises
+
+        -   `TypeError`: if value is not a string
         """
         return self._action
 
     @action.setter
-    def action(self, value):
-        method_name = inspect.stack()[0][3]
+    def action(self, value: str) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.{method_name} must be a string. "
@@ -431,25 +495,73 @@ class Results:
         self._action = value
 
     @property
+    def operation_type(self) -> OperationType:
+        """
+        # Summary
+
+        The operation type for the current operation.
+
+        Used to determine if the operation might change controller state.
+
+        ## Raises
+
+        - `ValueError`: if operation type is not an OperationType enum value
+
+        ## Returns
+
+        The current operation type (OperationType enum value)
+        """
+        return self._operation_type
+
+    @operation_type.setter
+    def operation_type(self, value: OperationType) -> None:
+        """
+        # Summary
+
+        Set the operation type.
+
+        ## Raises
+
+        - `TypeError`: if value is not an OperationType instance
+
+        ## Parameters
+
+        - value: The operation type to set (must be an OperationType enum value)
+        """
+        method_name: str = inspect.stack()[0][3]
+        if not isinstance(value, OperationType):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "value must be an OperationType instance. "
+            msg += f"Got type {type(value)}, value {value}."
+            raise TypeError(msg)
+        msg = f"{self.class_name}.{method_name}: "
+        msg += f"value: {value}"
+        self.log.debug(msg)
+        self._operation_type = value
+
+    @property
     def changed(self) -> set:
         """
-        ### Summary
-        - A ``set()`` containing boolean values indicating whether
-        anything changed.
+        # Summary
+
+        A set() containing boolean values indicating whether anything changed.
+
         - The setter adds a boolean value to the set.
         - The getter returns the set.
 
-        ### Raises
-        -   setter: ``TypeError``: if value is not a bool
+        ## Raises
 
-        ### Returns
+        -   setter: `TypeError`: if value is not a bool
+
+        ## Returns
+
         -   A set() of Boolean values indicating whether any tasks changed
         """
         return self._changed
 
     @changed.setter
-    def changed(self, value):
-        method_name = inspect.stack()[0][3]
+    def changed(self, value) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.changed must be a bool. Got {value}"
@@ -459,18 +571,20 @@ class Results:
     @property
     def check_mode(self) -> bool:
         """
-        ### Summary
-        - A boolean indicating whether Ansible check_mode is enabled.
-        - ``True`` if check_mode is enabled, ``False`` otherwise.
+        # Summary
 
-        ### Raises
-        -   ``TypeError``: if value is not a bool
+        - A boolean indicating whether Ansible check_mode is enabled.
+        - `True` if check_mode is enabled, `False` otherwise.
+
+        ## Raises
+
+        -   `TypeError`: if value is not a bool
         """
         return self._check_mode
 
     @check_mode.setter
     def check_mode(self, value: bool) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, bool):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.{method_name} must be a bool. "
@@ -481,19 +595,22 @@ class Results:
     @property
     def diff(self) -> list[dict]:
         """
-        ### Summary
-        - A list of dicts representing the changes made.
+        # Summary
+
+        A list of dicts representing the changes made.
+
         - The setter appends a dict to the list.
         - The getter returns the list.
 
-        ### Raises
-        -   setter: ``TypeError``: if value is not a dict
+        ## Raises
+
+        -   setter: `TypeError`: if value is not a dict
         """
         return self._diff
 
     @diff.setter
-    def diff(self, value: dict):
-        method_name = inspect.stack()[0][3]
+    def diff(self, value: dict) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.diff must be a dict. Got {value}"
@@ -504,20 +621,24 @@ class Results:
     @property
     def diff_current(self) -> dict:
         """
-        ### Summary
+        # Summary
+
+        A dict representing the current diff.
+
         -   getter: Return the current diff
         -   setter: Set the current diff
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not a dict.
+        ## Raises
+
+        -   setter: `TypeError` if value is not a dict.
         """
         value = self._diff_current
         value["sequence_number"] = self.task_sequence_number
         return value
 
     @diff_current.setter
-    def diff_current(self, value: dict):
-        method_name = inspect.stack()[0][3]
+    def diff_current(self, value: dict) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.diff_current must be a dict. "
@@ -528,19 +649,24 @@ class Results:
     @property
     def failed(self) -> set[bool]:
         """
-        ### Summary
-        - A set() of Boolean values indicating whether any tasks failed
+        # Summary
+
+        A set() of Boolean values indicating whether any tasks failed
+
         - If the set contains True, at least one task failed.
         - If the set contains only False all tasks succeeded.
+        - The setter adds a boolean value to the set.
+        - The getter returns the set.
 
-        ### Raises
-        - ``TypeError`` if value is not a bool.
+        ## Raises
+
+        - `TypeError` if value is not a bool.
         """
         return self._failed
 
     @failed.setter
     def failed(self, value: bool) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, bool):
             # Setting failed, itself failed(!)
             # Add True to failed to indicate this.
@@ -553,19 +679,22 @@ class Results:
     @property
     def metadata(self) -> list[dict]:
         """
-        ### Summary
-        - List of dicts representing the metadata (if any) for each diff.
+        # Summary
+
+        A list of dicts representing the metadata (if any) for each diff.
+
         -   getter: Return the metadata.
         -   setter: Append value to the metadata list.
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not a dict.
+        ## Raises
+
+        -   setter: `TypeError` if value is not a dict.
         """
         return self._metadata
 
     @metadata.setter
-    def metadata(self, value: dict):
-        method_name = inspect.stack()[0][3]
+    def metadata(self, value: dict) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.metadata must be a dict. Got {value}"
@@ -574,41 +703,50 @@ class Results:
         self._metadata.append(copy.deepcopy(value))
 
     @property
-    def metadata_current(self):
+    def metadata_current(self) -> dict:
         """
-        ### Summary
-        -   getter: Return the current metadata which is comprised of the
-            properties action, check_mode, and state.
+        # Summary
 
-        ### Raises
+        Return the current metadata which is comprised of the following properties:
+
+        - action
+        - check_mode
+        - sequence_number
+        - state
+
+        ## Raises
+
         None
         """
         value = {}
         value["action"] = self.action
         value["check_mode"] = self.check_mode
-        value["state"] = self.state
         value["sequence_number"] = self.task_sequence_number
+        value["state"] = self.state
         return value
 
     @property
     def response_current(self) -> dict:
         """
-        ### Summary
-        - Return a ``dict`` containing the current response from the controller.
-        ``instance.commit()`` must be called first.
+        # Summary
+
+        Return a `dict` containing the current response from the controller.
+        `instance.commit()` must be called first.
+
         -   getter: Return the current response.
         -   setter: Set the current response.
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not a dict.
+        ## Raises
+
+        -   setter: `TypeError` if value is not a dict.
         """
         value = self._response_current
         value["sequence_number"] = self.task_sequence_number
         return value
 
     @response_current.setter
-    def response_current(self, value: dict):
-        method_name = inspect.stack()[0][3]
+    def response_current(self, value: dict) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.response_current must be a dict. "
@@ -619,20 +757,22 @@ class Results:
     @property
     def response(self) -> list[dict]:
         """
-        ### Summary
-        -   A ``list`` of ``dict``, where each ``dict`` contains a response
-            from the controller.
-        -   getter: Return the response list.
-        -   setter: Append ``dict`` to the response list.
+        # Summary
 
-        ### Raises
-        - setter: ``TypeError``: if value is not a dict.
+        A `list` of `dict`, where each `dict` contains a response from the controller.
+
+        -   getter: Return the response list.
+        -   setter: Append `dict` to the response list.
+
+        ## Raises
+
+        - setter: `TypeError`: if value is not a dict.
         """
         return self._response
 
     @response.setter
-    def response(self, value: dict):
-        method_name = inspect.stack()[0][3]
+    def response(self, value: dict) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.response must be a dict. "
@@ -644,12 +784,16 @@ class Results:
     @property
     def response_data(self) -> list[dict]:
         """
-        ### Summary
+        # Summary
+
+        A `list` of `dict`, where each `dict` contains the contents of the DATA key
+        within `current_response`.
+
         -   getter: Return the contents of the DATA key within
-            ``current_response``.
-        -   setter: set ``response_data`` to the value passed in
+            `current_response`.
+        -   setter: set `response_data` to the value passed in
             which should be the contents of the DATA key within
-            ``current_response``.
+            `current_response`.
 
         ### Raises
         None
@@ -657,25 +801,28 @@ class Results:
         return self._response_data
 
     @response_data.setter
-    def response_data(self, value: dict):
+    def response_data(self, value: dict) -> None:
         self._response_data.append(value)
 
     @property
     def result(self) -> list[dict]:
         """
-        ### Summary
-        -   A ``list`` of ``dict``, where each ``dict`` contains a result.
-        -   getter: Return the result list.
-        -   setter: Append ``dict`` to the result list.
+        # Summary
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not a dict
+        A `list` of `dict`, where each `dict` contains a result.
+
+        -   getter: Return the result list.
+        -   setter: Append `dict` to the result list.
+
+        ## Raises
+
+        -   setter: `TypeError` if value is not a dict
         """
         return self._result
 
     @result.setter
-    def result(self, value: dict):
-        method_name = inspect.stack()[0][3]
+    def result(self, value: dict) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.result must be a dict. "
@@ -685,23 +832,26 @@ class Results:
         self._result.append(copy.deepcopy(value))
 
     @property
-    def result_current(self):
+    def result_current(self) -> dict:
         """
-        ### Summary
-        -   The current result.
+        # Summary
+
+        A `dict` representing the current result.
+
         -   getter: Return the current result.
         -   setter: Set the current result.
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not a dict
+        ## Raises
+
+        -   setter: `TypeError` if value is not a dict
         """
         value = self._result_current
         value["sequence_number"] = self.task_sequence_number
         return value
 
     @result_current.setter
-    def result_current(self, value):
-        method_name = inspect.stack()[0][3]
+    def result_current(self, value) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "instance.result_current must be a dict. "
@@ -710,21 +860,24 @@ class Results:
         self._result_current = value
 
     @property
-    def state(self):
+    def state(self) -> str:
         """
-        ### Summary
-        -   The Ansible state
+        # Summary
+
+        The Ansible state
+
         -   getter: Return the state.
         -   setter: Set the state.
 
-        ### Raises
-        -   setter: ``TypeError`` if value is not a string
+        ## Raises
+
+        -   setter: `TypeError` if value is not a string
         """
         return self._state
 
     @state.setter
-    def state(self, value):
-        method_name = inspect.stack()[0][3]
+    def state(self, value) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += f"instance.{method_name} must be a string. "

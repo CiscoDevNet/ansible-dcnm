@@ -27,6 +27,7 @@ from typing import Union
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricDelete
 from ..common.exceptions import ControllerResponseError
+from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 
 # Import Results() only for the case where the user has not set Results()
@@ -90,8 +91,9 @@ class FabricGroupDelete:
     def __init__(self) -> None:
         self.class_name: str = self.__class__.__name__
         self.action: str = "fabric_group_delete"
+        self.operation_type: OperationType = OperationType.DELETE
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._fabric_groups_to_delete: list[str] = []
         self.ep_fabric_group_delete: EpOneManageFabricDelete = EpOneManageFabricDelete()
@@ -122,7 +124,7 @@ class FabricGroupDelete:
             -   Any fabric group in `fabric_group_names` cannot be deleted.
             -   Error querying fabric group details from the controller.
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name} ENTERED"
         self.log.debug(msg)
 
@@ -159,7 +161,7 @@ class FabricGroupDelete:
         - Raise `ValueError` if the fabric cannot be deleted
         - Return otherwise
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name} ENTERED"
         self.log.debug(msg)
 
@@ -227,10 +229,15 @@ class FabricGroupDelete:
             self.register_result(None)
             raise ValueError(error) from error
 
-        self.results.action = self.action
-        self.results.check_mode = self.rest_send.check_mode
-        self.results.state = self.rest_send.state
-        self.results.diff_current = {}
+        if self.rest_send.check_mode in {True, False}:
+            self._results.check_mode = self.rest_send.check_mode
+        else:
+            self._results.check_mode = False
+        if self.rest_send.state:
+            self._results.state = self.rest_send.state
+        else:
+            self._results.state = "deleted"
+        self._results.diff_current = {}
 
         try:
             self._get_fabric_groups_to_delete()
@@ -340,6 +347,7 @@ class FabricGroupDelete:
         None
         """
         self.results.action = self.action
+        self.results.operation_type = self.operation_type
         if self.rest_send.check_mode in {True, False}:
             self.results.check_mode = self.rest_send.check_mode
         else:
@@ -386,7 +394,7 @@ class FabricGroupDelete:
 
     @fabric_group_names.setter
     def fabric_group_names(self, value: list[str]) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, list):
             msg = f"{self.class_name}.{method_name}: "
             msg += "fabric_group_names must be a list. "
@@ -439,3 +447,5 @@ class FabricGroupDelete:
     @results.setter
     def results(self, value: Results) -> None:
         self._results = value
+        self._results.action = self.action
+        self._results.operation_type = self.operation_type

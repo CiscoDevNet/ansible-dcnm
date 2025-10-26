@@ -383,6 +383,7 @@ import logging
 from typing import Union
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricGroupMembersGet
+from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
 
@@ -426,6 +427,8 @@ class FabricGroupMemberInfo:
         self.class_name: str = self.__class__.__name__
 
         self.action: str = "fabric_group_member_info"
+        self.operation_type: OperationType = OperationType.QUERY
+
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED FabricGroupMemberInfo"
@@ -455,15 +458,12 @@ class FabricGroupMemberInfo:
         """
         method_name = inspect.stack()[0][3]
         try:
-            self.results.action = self.action
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
             if self.results.response_current.get("RETURN_CODE") == 200:
                 self.results.failed = False
             else:
                 self.results.failed = True
-            # FabricGroupMemberInfo never changes the controller state
-            self.results.changed = False
             self.results.register_task_result()
         except TypeError as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -699,3 +699,6 @@ class FabricGroupMemberInfo:
     @results.setter
     def results(self, value: Results) -> None:
         self._results = value
+        self._results.action = self.action
+        self._results.changed = False
+        self._results.operation_type = self.operation_type
