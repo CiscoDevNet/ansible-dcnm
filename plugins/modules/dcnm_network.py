@@ -1302,11 +1302,11 @@ class DcnmNetwork:
             template_conf["vrfDhcp3"] = ""
         if template_conf["dhcpServers"] == []:
             dhcp_srvr_list = []
-            if template_conf["dhcpServerAddr1"] != "":  # and template_conf["vrfDhcp"] != "":
+            if template_conf["dhcpServerAddr1"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
-            if template_conf["dhcpServerAddr2"] != "":  # and template_conf["vrfDhcp2"] != "":
+            if template_conf["dhcpServerAddr2"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
-            if template_conf["dhcpServerAddr3"] != "":  # and template_conf["vrfDhcp3"] != "":
+            if template_conf["dhcpServerAddr3"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
             if dhcp_srvr_list != []:
                 template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
