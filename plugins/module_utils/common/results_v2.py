@@ -25,6 +25,7 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any
 
 from .operation_type import OperationType
 
@@ -718,7 +719,7 @@ class Results:
 
         None
         """
-        value = {}
+        value: dict[str, Any] = {}
         value["action"] = self.action
         value["check_mode"] = self.check_mode
         value["sequence_number"] = self.task_sequence_number
