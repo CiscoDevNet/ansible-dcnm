@@ -30,9 +30,9 @@ from typing import Any, Union
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricCreate
 from ..common.operation_type import OperationType
-from .common import FabricGroupCommon
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
+from .common import FabricGroupCommon
 from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
 
@@ -222,14 +222,22 @@ class FabricGroupCreate(FabricGroupCommon):
 
         self._payloads_to_commit = []
         payload: dict[str, Any] = {}
+        msg = f"{self.class_name}.{method_name}: "
+        msg += "self.fabric_groups.fabric_group_names: "
+        msg += f"{self.fabric_groups.fabric_group_names}"
+        self.log.debug(msg)
         for payload in self.payloads:
             fabric_name: Union[str, None] = payload.get("FABRIC_NAME", None)
             if fabric_name is None:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += "FABRIC_NAME is missing from fabric_group config, but is mandatory."
+                self.log.debug(msg)
                 raise ValueError(msg)
             # Skip any fabric-groups that already exist
             if fabric_name in self.fabric_groups.fabric_group_names:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric group {fabric_name} already exists on controller; skipping create."
+                self.log.debug(msg)
                 continue
             # Order is important here
             commit_payload = self._build_payload_top_level_keys(fabric_name)
