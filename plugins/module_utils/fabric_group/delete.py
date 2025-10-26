@@ -30,6 +30,7 @@ from ..common.exceptions import ControllerResponseError
 from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 
+from ..common.rest_send_v2 import RestSend
 # Import Results() only for the case where the user has not set Results()
 # prior to calling commit().  In this case, we instantiate Results()
 # in _validate_commit_parameters() so that we can register the failure
@@ -103,6 +104,7 @@ class FabricGroupDelete:
 
         self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
         self._fabric_group_member_info: FabricGroupMemberInfo = FabricGroupMemberInfo()
+
         # Properties to be set by caller
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
@@ -435,6 +437,10 @@ class FabricGroupDelete:
 
     @rest_send.setter
     def rest_send(self, value: RestSend) -> None:
+        if not value.params:
+            msg = f"{self.class_name}.rest_send must be set to an "
+            msg += "instance of RestSend with params set."
+            raise ValueError(msg)
         self._rest_send = value
 
     @property
@@ -448,4 +454,5 @@ class FabricGroupDelete:
     def results(self, value: Results) -> None:
         self._results = value
         self._results.action = self.action
+        self._results.changed = False
         self._results.operation_type = self.operation_type

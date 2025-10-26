@@ -31,6 +31,8 @@ from typing import Any, Union
 from ..common.api.onemanage.endpoints import EpOneManageFabricCreate
 from ..common.operation_type import OperationType
 from .common import FabricGroupCommon
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
 
@@ -95,6 +97,10 @@ class FabricGroupCreate(FabricGroupCommon):
 
         self._payloads: list[dict] = []
         self._payloads_to_commit: list[dict[str, Any]] = []
+
+        # Properties to be set by caller
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
 
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
@@ -351,3 +357,32 @@ class FabricGroupCreate(FabricGroupCommon):
             except ValueError as error:
                 raise ValueError(error) from error
         self._payloads = value
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        An instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        if not value.params:
+            msg = f"{self.class_name}.rest_send must be set to an "
+            msg += "instance of RestSend with params set."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        An instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        self._results = value
+        self._results.action = self.action
+        self._results.changed = False
+        self._results.operation_type = self.operation_type

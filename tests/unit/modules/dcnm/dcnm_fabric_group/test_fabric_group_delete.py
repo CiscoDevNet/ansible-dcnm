@@ -189,42 +189,28 @@ def test_fabric_group_delete_00025(fabric_group_delete) -> None:
 
     - FabricGroupDelete
         - __init__()
-        - commit()
-        - register_result()
+        - rest_send setter
 
     ### Summary
-    Verify behavior when attempting to call commit with fabric_group_names but
-    rest_send.params is empty.
+    Verify behavior when attempting to set rest_send when rest_send.params
+    is empty.
 
     ### Test
     -   ``ValueError`` is raised because rest_send.params is empty
-    -   The error is caught and results are registered before re-raising
-    -   register_result() properly handles rest_send.state being None by
-        defaulting to "deleted"
-
-    ### Note
-    -   This test validates the fix in delete.py lines 280-287 where
-        check_mode and state are now properly checked and defaulted if None.
+    -   The error is caught in the rest_send setter and a ValueError is raised
+        indicating that rest_send must be set to an instance of RestSend with
+        params set.
     """
     with does_not_raise():
         instance = fabric_group_delete
         instance.fabric_group_names = ["MFG1"]
         instance.results = Results()
-        # Set rest_send with empty params - this will trigger validation error
-        instance.rest_send = RestSend({})
 
-    match = r"FabricGroupDelete\._validate_commit_parameters: "
-    match += r"rest_send\.params must be set prior to calling commit\."
+    match = r"FabricGroupDelete\.rest_send must be set to an instance "
+    match += r"of RestSend with params set\."
 
     with pytest.raises(ValueError, match=match):
-        instance.commit()
-
-    # Verify that results were registered even though the commit failed
-    assert len(instance.results.result) == 1
-    assert instance.results.result[0].get("success") is False
-    assert instance.results.result[0].get("changed") is False
-    # Verify that state was defaulted to "deleted"
-    assert instance.results.metadata[0].get("state") == "deleted"
+        instance.rest_send = RestSend({})
 
 
 def test_fabric_group_delete_00030(fabric_group_delete) -> None:

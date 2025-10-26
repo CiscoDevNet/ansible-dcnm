@@ -96,6 +96,7 @@ class FabricGroupQuery:
         self._fabric_group_names: list[str] = []
         self.fabric_group_details: FabricGroupDetails = FabricGroupDetails()
 
+        # Properties to be set by caller
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
 

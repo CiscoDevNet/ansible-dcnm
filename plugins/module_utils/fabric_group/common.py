@@ -25,8 +25,6 @@ import logging
 from typing import Any, Union
 
 from ..common.conversion import ConversionUtils
-from ..common.rest_send_v2 import RestSend
-from ..common.results_v2 import Results
 from ..fabric.fabric_summary_v2 import FabricSummary
 from ..fabric_group.fabric_group_details import FabricGroupDetails
 from .fabric_group_types import FabricGroupTypes
@@ -58,9 +56,6 @@ class FabricGroupCommon:
 
         self.conversion: ConversionUtils = ConversionUtils()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
-
-        self._rest_send: RestSend = RestSend({})
-        self._results: Results = Results()
 
         # key: fabric_name, value: boolean
         # If True, the operation was successful
@@ -340,30 +335,3 @@ class FabricGroupCommon:
             msg += f"Got {value}"
             raise ValueError(msg)
         self._fabric_group_type = value
-
-    @property
-    def rest_send(self) -> RestSend:
-        """
-        An instance of the RestSend class.
-        """
-        return self._rest_send
-
-    @rest_send.setter
-    def rest_send(self, value: RestSend) -> None:
-        if not value.params:
-            method_name: str = inspect.stack()[0][3]
-            msg: str = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must have params set."
-            raise ValueError(msg)
-        self._rest_send = value
-
-    @property
-    def results(self) -> Results:
-        """
-        An instance of the Results class.
-        """
-        return self._results
-
-    @results.setter
-    def results(self, value: Results) -> None:
-        self._results = value

@@ -32,9 +32,12 @@ import logging
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricGroupUpdate
 from ..common.conversion import ConversionUtils
+from ..common.operation_type import OperationType
 from .common import FabricGroupCommon
 from .config_deploy import FabricGroupConfigDeploy
 from .config_save import FabricGroupConfigSave
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
 
@@ -80,6 +83,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         super().__init__()
         self.class_name: str = self.__class__.__name__
         self.action: str = "fabric_group_update"
+        self.operation_type: OperationType = OperationType.UPDATE
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -94,6 +98,11 @@ class FabricGroupUpdate(FabricGroupCommon):
         self.fabric_group_type: str = "MCFG"
         self.fabric_groups: FabricGroups = FabricGroups()
         self._payloads: list[dict] = []
+
+        # Properties to be set by caller
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
+
         msg = f"ENTERED {self.class_name}"
         self.log.debug(msg)
 
@@ -421,7 +430,6 @@ class FabricGroupUpdate(FabricGroupCommon):
             self.results.diff_current = copy.deepcopy(payload)
 
         self.send_payload_result[fabric_name] = self.rest_send.result_current["success"]
-        self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
@@ -497,7 +505,6 @@ class FabricGroupUpdate(FabricGroupCommon):
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
-        self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
 
@@ -528,3 +535,32 @@ class FabricGroupUpdate(FabricGroupCommon):
             }
             self.results.register_task_result()
             raise ValueError(error) from error
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        An instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        if not value.params:
+            msg = f"{self.class_name}.rest_send must be set to an "
+            msg += "instance of RestSend with params set."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        An instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        self._results = value
+        self._results.action = self.action
+        self._results.changed = False
+        self._results.operation_type = self.operation_type
