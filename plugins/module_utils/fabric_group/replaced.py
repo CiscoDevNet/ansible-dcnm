@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=too-many-instance-attributes
 """
 Update fabric groups in bulk for replaced state
 """
@@ -24,32 +25,70 @@ import copy
 import inspect
 import json
 import logging
+from typing import Any, Union
 
 from ..common.api.onemanage.endpoints import EpOneManageFabricGroupUpdate
 from ..common.conversion import ConversionUtils
 from ..common.exceptions import ControllerResponseError
-from .common import FabricGroupCommon
-from .fabric_group_types import FabricGroupTypes
-from ..fabric.config_save_v2 import FabricConfigSave
+from ..common.operation_type import OperationType
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from ..fabric.config_deploy_v2 import FabricConfigDeploy
+from ..fabric.config_save_v2 import FabricConfigSave
 from ..fabric.param_info import ParamInfo
 from ..fabric.ruleset import RuleSet
 from ..fabric.template_get_v2 import TemplateGet
-from ..fabric.verify_playbook_params import VerifyPlaybookParams
+from .common import FabricGroupCommon
+from .fabric_group_types import FabricGroupTypes
+from .verify_playbook_params import VerifyPlaybookParams
 
 
-class FabricGroupReplacedCommon(FabricGroupCommon):
+class FabricGroupReplaced(FabricGroupCommon):
     """
-    Common methods and properties for:
-    - FabricGroupReplacedBulk
+    Update fabric groups in bulk for replaced state.
+
+    Usage (where params is an AnsibleModule.params dictionary):
+    ```python
+    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.replaced import \\
+        FabricGroupReplaced
+    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \\
+        Results
+
+    payloads = [
+        { "FABRIC_NAME": "fabric1", "FABRIC_TYPE": "VXLAN_EVPN", "BGP_AS": 65000, "DEPLOY": True },
+        { "FABRIC_NAME": "fabric2", "FABRIC_TYPE": "LAN_CLASSIC", "DEPLOY: False }
+    ]
+    results = Results()
+    instance = FabricGroupReplaced()
+    instance.payloads = payloads
+    instance.results = results
+    instance.commit()
+    results.build_final_result()
+
+    # diff contains a dictionary of payloads that succeeded and/or failed
+    diff = results.diff
+    # result contains the result(s) of the fabric create request
+    result = results.result
+    # response contains the response(s) from the controller
+    response = results.response
+
+    # results.final_result contains all of the above info, and can be passed
+    # to the exit_json and fail_json methods of AnsibleModule:
+
+    if True in results.failed:
+        msg = "Fabric update(s) failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
+    ```
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
-        self.class_name = self.__class__.__name__
-        self.action = "fabric_replace"
+        self.class_name: str = self.__class__.__name__
+        self.action: str = "fabric_group_replace"
+        self.operation_type: OperationType = OperationType.UPDATE
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
         self.config_save: FabricConfigSave = FabricConfigSave()
         self.config_deploy: FabricConfigDeploy = FabricConfigDeploy()
@@ -74,7 +113,13 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
         self._controller_config: dict[str, dict] = {}
 
         self._key_translations: dict[str, str] = {}
+        self._payloads: list[dict] = []
         self._payloads_to_commit: list[dict] = []
+
+        # Properties to be set by caller
+        self._rest_send: RestSend = RestSend({})
+        self._results: Results = Results()
+
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
 
@@ -88,12 +133,13 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
         -   Translate the format of user values to the format expected by
             the controller.
         """
-        translated_payload = {}
+        translated_payload: dict[str, Any] = {}
         for payload_key, payload_value in payload.items():
             # Translate payload keys to equivilent keys on the controller
             # if necessary.  This handles cases where the controller key
             # is misspelled and we want our users to use the correct
             # spelling.
+            user_parameter: Union[str, None] = ""
             if payload_key in self._key_translations:
                 user_parameter = self._key_translations[payload_key]
             else:
@@ -123,15 +169,18 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
             translated_payload[user_parameter] = user_value
         return copy.deepcopy(translated_payload)
 
-    def update_site_id(self, playbook, controller):
+    def update_site_id(self, playbook, controller) -> Union[dict, None]:
         """
-        ### Summary
+        # Summary
+
         Special-case handling for fabric SITE_ID parameter update.
 
-        ### Raises
+        ## Raises
+
         None
 
-        ### Discussion
+        ## Discussion
+
         -   If playbook.SITE_ID == controller.SITE_ID, no change is needed.
             Return None.
         -   If playbook.SITE_ID == controller.BGP_AS, no change is needed.
@@ -153,9 +202,10 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
             return {"SITE_ID": bgp_as}
         return None
 
-    def update_replaced_payload(self, parameter, playbook, controller, default):
+    def update_replaced_payload(self, parameter: str, playbook: Any, controller: Any, default: Any) -> Union[dict, None]:
         """
-        ### Summary
+        # Summary
+
         Given a parameter, and the parameter's values from:
 
         -   playbook config
@@ -168,7 +218,8 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
         -   A dict with the parameter and playbook value if the parameter
             needs to be updated.
 
-        ### Usage:
+        ## Usage
+
         ```python
         payload_to_send_to_controller = {}
         for parameter, controller in _controller_config.items():
@@ -180,7 +231,8 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
             payload_to_send_to_controller.update(result)
         ```
 
-        ### NOTES
+        ## NOTES
+
         -   Special-case SITE_ID.
             -   The template default value is "", but the actual default value
                 is BGP_AS.
@@ -203,9 +255,7 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
             return None
         return {parameter: playbook}
 
-    def _verify_value_types_for_comparison(
-        self, fabric_name, parameter, user_value, controller_value, default_value
-    ) -> None:
+    def _verify_value_types_for_comparison(self, fabric_name, parameter, user_value, controller_value, default_value) -> None:
         """
         -   Raise ``ValueError`` if the value types differ between:
             playbook, controller, and default values.
@@ -266,9 +316,7 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
         fabric_type = payload.get("FABRIC_TYPE", None)
 
         self._fabric_changes_payload[fabric_name] = {}
-        self._controller_config = self.fabric_details.all_data[fabric_name].get(
-            "nvPairs", {}
-        )
+        self._controller_config = self.fabric_details.all_data[fabric_name].get("nvPairs", {})
 
         # Refresh ParamInfo() with the fabric template
         try:
@@ -323,13 +371,9 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
             msg += f"type: {type(default_value)}"
             self.log.debug(msg)
 
-            self._verify_value_types_for_comparison(
-                fabric_name, parameter, user_value, controller_value, default_value
-            )
+            self._verify_value_types_for_comparison(fabric_name, parameter, user_value, controller_value, default_value)
 
-            result = self.update_replaced_payload(
-                parameter, user_value, controller_value, default_value
-            )
+            result = self.update_replaced_payload(parameter, user_value, controller_value, default_value)
             if result is None:
                 continue
             msg = f"UPDATE _fabric_changes_payload with result: {result}"
@@ -417,9 +461,7 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
 
             if True not in self._fabric_group_update_required:
                 continue
-            self._payloads_to_commit.append(
-                copy.deepcopy(self._fabric_changes_payload[fabric_name])
-            )
+            self._payloads_to_commit.append(copy.deepcopy(self._fabric_changes_payload[fabric_name]))
 
     def _initial_payload_validation(self, payload) -> None:
         """
@@ -443,9 +485,7 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
             self.verify_playbook_params.template = self.fabric_templates[fabric_group_type]
         except TypeError as error:
             raise ValueError(error) from error
-        config_controller = self.fabric_details.all_data.get(fabric_name, {}).get(
-            "nvPairs", {}
-        )
+        config_controller = self.fabric_details.all_data.get(fabric_name, {}).get("nvPairs", {})
 
         try:
             self.verify_playbook_params.config_controller = config_controller
@@ -557,10 +597,7 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
         else:
             self.results.diff_current = copy.deepcopy(payload)
 
-        self.send_payload_result[payload["FABRIC_NAME"]] = (
-            self.rest_send.result_current["success"]
-        )
-        self.results.action = self.action
+        self.send_payload_result[payload["FABRIC_NAME"]] = self.rest_send.result_current["success"]
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
         self.results.response_current = copy.deepcopy(self.rest_send.response_current)
@@ -596,56 +633,6 @@ class FabricGroupReplacedCommon(FabricGroupCommon):
                 raise ValueError(error) from error
         self._payloads = value
 
-
-class FabricGroupReplacedBulk(FabricGroupReplacedCommon):
-    """
-    Update fabric groups in bulk for replaced state.
-
-    Usage (where params is an AnsibleModule.params dictionary):
-    ```python
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric.update import \
-        FabricGroupReplacedBulk
-    from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
-        Results
-
-    payloads = [
-        { "FABRIC_NAME": "fabric1", "FABRIC_TYPE": "VXLAN_EVPN", "BGP_AS": 65000, "DEPLOY": True },
-        { "FABRIC_NAME": "fabric2", "FABRIC_TYPE": "LAN_CLASSIC", "DEPLOY: False }
-    ]
-    results = Results()
-    instance = FabricGroupReplacedBulk(params)
-    instance.payloads = payloads
-    instance.results = results
-    instance.commit()
-    results.build_final_result()
-
-    # diff contains a dictionary of payloads that succeeded and/or failed
-    diff = results.diff
-    # result contains the result(s) of the fabric create request
-    result = results.result
-    # response contains the response(s) from the controller
-    response = results.response
-
-    # results.final_result contains all of the above info, and can be passed
-    # to the exit_json and fail_json methods of AnsibleModule:
-
-    if True in results.failed:
-        msg = "Fabric update(s) failed."
-        ansible_module.fail_json(msg, **task.results.final_result)
-    ansible_module.exit_json(**task.results.final_result)
-    ```
-    """
-
-    def __init__(self):
-        super().__init__()
-        self.class_name = self.__class__.__name__
-
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-        self._payloads: list[dict] = []
-
-        msg = f"ENTERED {self.class_name}()"
-        self.log.debug(msg)
-
     def commit(self):
         """
         - Update fabric groups and register results.
@@ -679,7 +666,6 @@ class FabricGroupReplacedBulk(FabricGroupReplacedCommon):
             msg += "rest_send must be set prior to calling commit."
             raise ValueError(msg)
 
-        self.results.action = self.action
         self.results.check_mode = self.rest_send.check_mode
         self.results.state = self.rest_send.state
 
@@ -711,3 +697,32 @@ class FabricGroupReplacedBulk(FabricGroupReplacedCommon):
             }
             self.results.register_task_result()
             raise ValueError(error) from error
+
+    @property
+    def rest_send(self) -> RestSend:
+        """
+        An instance of the RestSend class.
+        """
+        return self._rest_send
+
+    @rest_send.setter
+    def rest_send(self, value: RestSend) -> None:
+        if not value.params:
+            msg = f"{self.class_name}.rest_send must be set to an "
+            msg += "instance of RestSend with params set."
+            raise ValueError(msg)
+        self._rest_send = value
+
+    @property
+    def results(self) -> Results:
+        """
+        An instance of the Results class.
+        """
+        return self._results
+
+    @results.setter
+    def results(self, value: Results) -> None:
+        self._results = value
+        self._results.action = self.action
+        self._results.changed = False
+        self._results.operation_type = self.operation_type

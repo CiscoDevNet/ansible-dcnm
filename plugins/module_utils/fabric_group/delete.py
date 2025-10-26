@@ -29,14 +29,8 @@ from ..common.api.onemanage.endpoints import EpOneManageFabricDelete
 from ..common.exceptions import ControllerResponseError
 from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
-
-from ..common.rest_send_v2 import RestSend
-# Import Results() only for the case where the user has not set Results()
-# prior to calling commit().  In this case, we instantiate Results()
-# in _validate_commit_parameters() so that we can register the failure
-# in commit().
 from ..common.results_v2 import Results
-from ..fabric_group.fabric_group_details import FabricGroupDetails
+from ..fabric_group.fabric_groups import FabricGroups
 from ..fabric_group.fabric_group_member_info import FabricGroupMemberInfo
 
 
@@ -102,7 +96,7 @@ class FabricGroupDelete:
 
         self._cannot_delete_fabric_reason: str = ""
 
-        self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
+        self._fabric_groups: FabricGroups = FabricGroups()
         self._fabric_group_member_info: FabricGroupMemberInfo = FabricGroupMemberInfo()
 
         # Properties to be set by caller
@@ -130,21 +124,12 @@ class FabricGroupDelete:
         msg = f"{self.class_name}.{method_name} ENTERED"
         self.log.debug(msg)
 
-        self.fabric_group_details.rest_send = self.rest_send
-        self.fabric_group_details.results = self.results
+        self._fabric_groups.rest_send = self.rest_send
+        self._fabric_groups.results = Results()
+        self._fabric_groups.refresh()
         self._fabric_groups_to_delete = []
         for fabric_group_name in self.fabric_group_names:
-            self.fabric_group_details.fabric_group_name = fabric_group_name
-            try:
-                self.fabric_group_details.refresh()
-            except (ControllerResponseError, ValueError) as error:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Error querying fabric group {fabric_group_name}: "
-                msg += f"{error}"
-                self.log.debug(msg)
-                raise ValueError(msg) from error
-
-            if fabric_group_name not in self.fabric_group_details.all_data:
+            if fabric_group_name not in self._fabric_groups.fabric_group_names:
                 continue
 
             msg = f"{self.class_name}.{method_name}: "
@@ -168,7 +153,7 @@ class FabricGroupDelete:
         self.log.debug(msg)
 
         self._fabric_group_member_info.rest_send = self.rest_send
-        self._fabric_group_member_info.results = self.results
+        self._fabric_group_member_info.results = Results()
         self._fabric_group_member_info.fabric_group_name = fabric_group_name
         try:
             self._fabric_group_member_info.refresh()
@@ -416,17 +401,6 @@ class FabricGroupDelete:
                 msg += f"value {item}"
                 raise ValueError(msg)
         self._fabric_group_names = value
-
-    @property
-    def fabric_group_details(self) -> FabricGroupDetails:
-        """
-        An instance of FabricGroupDetails.
-        """
-        return self._fabric_group_details
-
-    @fabric_group_details.setter
-    def fabric_group_details(self, value: FabricGroupDetails) -> None:
-        self._fabric_group_details = value
 
     @property
     def rest_send(self) -> RestSend:

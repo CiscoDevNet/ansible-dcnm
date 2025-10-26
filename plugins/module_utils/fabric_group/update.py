@@ -305,7 +305,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         """
         method_name: str = inspect.stack()[0][3]
         self.fabric_groups.rest_send = self.rest_send
-        self.fabric_groups.results = self.results
+        self.fabric_groups.results = Results()
         self.fabric_groups.refresh()
         self._payloads_to_commit = []
 
@@ -475,8 +475,6 @@ class FabricGroupUpdate(FabricGroupCommon):
         """
         - Update fabrics and register results.
         - Return if there are no fabrics to update for merged state.
-        - raise ``ValueError`` if ``fabric_group_details`` is not set
-        - raise ``ValueError`` if ``fabric_summary`` is not set
         - raise ``ValueError`` if ``payloads`` is not set
         - raise ``ValueError`` if ``rest_send`` is not set
         - raise ``ValueError`` if ``_build_payloads`` fails
@@ -485,24 +483,15 @@ class FabricGroupUpdate(FabricGroupCommon):
         method_name: str = inspect.stack()[0][3]
         msg: str = f"{self.class_name}.{method_name}: ENTERED"
         self.log.debug(msg)
-        if self.fabric_group_details is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_group_details must be set prior to calling commit."
-            raise ValueError(msg)
-
-        if self.fabric_summary is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "fabric_summary must be set prior to calling commit."
-            raise ValueError(msg)
 
         if not self.payloads:
             msg = f"{self.class_name}.{method_name}: "
             msg += "payloads must be set prior to calling commit."
             raise ValueError(msg)
 
-        if self.rest_send is None:
+        if not self.rest_send.params:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "rest_send must be set prior to calling commit."
+            msg += "rest_send.params must be set prior to calling commit."
             raise ValueError(msg)
 
         self.results.check_mode = self.rest_send.check_mode

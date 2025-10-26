@@ -446,17 +446,16 @@ try:
     from ..module_utils.common.rest_send_v2 import RestSend
     from ..module_utils.common.results_v2 import Results
     from ..module_utils.common.sender_dcnm import Sender
-    from ..module_utils.fabric.fabric_summary_v2 import FabricSummary
     from ..module_utils.fabric.template_get_v2 import TemplateGet
     from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
     from ..module_utils.fabric_group.common import FabricGroupCommon
     from ..module_utils.fabric_group.create import FabricGroupCreate
     from ..module_utils.fabric_group.delete import FabricGroupDelete
-    from ..module_utils.fabric_group.fabric_group_details import FabricGroupDetails
     from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
     from ..module_utils.fabric_group.fabric_groups import FabricGroups
     from ..module_utils.fabric_group.query import FabricGroupQuery
-    from ..module_utils.fabric_group.replaced import FabricGroupReplacedBulk
+
+    # from ..module_utils.fabric_group.replaced import FabricGroupReplaced
     from ..module_utils.fabric_group.update import FabricGroupUpdate
 
     HAS_PYDANTIC_DEPS = True
@@ -496,7 +495,6 @@ class Common(CommonBase):
 
         self.controller_features: ControllerFeatures = ControllerFeatures()
         self.controller_version: ControllerVersion = ControllerVersion()
-        self.fabric_summary: FabricSummary = FabricSummary()
 
         self.features = {}
         self._implemented_states = set()
@@ -708,7 +706,6 @@ class Deleted(Common):
 
         self.action: str = "fabric_delete"
         self.delete: FabricGroupDelete = FabricGroupDelete()
-        self.fabric_group_details: FabricGroupDetails = FabricGroupDetails()
         self._implemented_states.add("deleted")
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
@@ -737,10 +734,6 @@ class Deleted(Common):
 
         self.delete.rest_send = self.rest_send
         self.delete.results = self.results
-
-        msg = f"ZZZ: {self.class_name}.{method_name}: "
-        msg += f"Fabrics to delete: {json_pretty(self.want)}"
-        self.log.debug(msg)
 
         fabric_group_names_to_delete: list = []
         for want in self.want:
@@ -786,8 +779,6 @@ class Merged(Common):
         self.action = "fabric_group_create"
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.fabric_group_details: FabricGroupDetails = FabricGroupDetails()
-        self.fabric_summary: FabricSummary = FabricSummary()
         self.fabric_group_create: FabricGroupCreate = FabricGroupCreate()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
         self.fabric_group_update: FabricGroupUpdate = FabricGroupUpdate()
@@ -970,8 +961,14 @@ class Merged(Common):
             # Append to need_create if the fabric does not exist.
             # Otherwise, append to need_update.
             if fabric_name not in self.have.fabric_group_names:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric {fabric_name} does not exist on the controller. Will create."
+                self.log.debug(msg)
                 self.update_need_create(want)
             else:
+                msg = f"{self.class_name}.{method_name}: "
+                msg += f"Fabric {fabric_name} exists on the controller. Will update."
+                self.log.debug(msg)
                 self.update_need_update(want)
 
     def commit(self):
@@ -997,12 +994,6 @@ class Merged(Common):
         self.log.debug(msg)
 
         self.get_controller_version()
-
-        self.fabric_group_details.rest_send = self.rest_send
-        self.fabric_summary.rest_send = self.rest_send
-
-        self.fabric_group_details.results = Results()
-        self.fabric_summary.results = Results()
 
         self.get_controller_features()
         self.get_want()
@@ -1078,8 +1069,6 @@ class Merged(Common):
             self.log.debug(msg)
             return
 
-        self.fabric_group_update.fabric_group_details = self.fabric_group_details
-        self.fabric_group_update.fabric_summary = self.fabric_summary
         self.fabric_group_update.rest_send = self.rest_send
         self.fabric_group_update.results = self.results
 
@@ -1157,171 +1146,6 @@ class Query(Common):
             raise ValueError(f"{error}") from error
 
 
-class Replaced(Common):
-    """
-    ### Summary
-    Handle replaced state.
-
-    ### Raises
-
-    -   ``ValueError`` if:
-        -   The controller features required for the fabric type are not
-            running on the controller.
-        -   The playbook parameters are invalid.
-        -   The controller returns an error when attempting to retrieve
-            the template.
-        -   The controller returns an error when attempting to retrieve
-            the fabric details.
-        -   The controller returns an error when attempting to create
-            the fabric.
-        -   The controller returns an error when attempting to update
-    """
-
-    def __init__(self, params):
-        self.class_name = self.__class__.__name__
-        super().__init__(params)
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-
-        self.action = "fabric_replaced"
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
-
-        self.fabric_group_details = FabricGroupDetails()
-        self.fabric_group_replaced = FabricGroupReplacedBulk()
-        self.fabric_summary = FabricSummary()
-        self.fabric_group_types = FabricGroupTypes()
-        self.merged = None
-        self.need_create = []
-        self.need_replaced = []
-        self.template = TemplateGet()
-        self._implemented_states.add("replaced")
-
-        msg = f"ENTERED Replaced.{method_name}: "
-        msg += f"state: {self.state}, "
-        msg += f"check_mode: {self.check_mode}"
-        self.log.debug(msg)
-
-    def get_need(self):
-        """
-        ### Summary
-        Build ``self.need`` for replaced state.
-
-        ### Raises
-        -   ``ValueError`` if:
-            -   The controller features required for the fabric type are not
-                running on the controller.
-        """
-        method_name = inspect.stack()[0][3]
-        self.payloads = {}
-        for want in self.want:
-
-            fabric_name = want.get("FABRIC_NAME", None)
-            fabric_type = want.get("FABRIC_TYPE", None)
-
-            # If fabrics do not exist on the controller, add them to
-            # need_create.  These will be created by Merged() in
-            # Replaced.send_need_replaced()
-            if fabric_name not in self.have.all_data:
-                self.need_create.append(want)
-                continue
-
-            is_4x = self.controller_version.is_controller_version_4x
-
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"fabric_type: {fabric_type}, "
-            msg += f"configurable: {self.features.get(fabric_type)}, "
-            msg += f"is_4x: {is_4x}"
-            self.log.debug(msg)
-
-            if self.features.get(fabric_type) is False and is_4x is False:
-                msg = f"{self.class_name}.{method_name}: "
-                msg += f"Features required for fabric {fabric_name} "
-                msg += f"of type {fabric_type} are not running on the "
-                msg += "controller. Review controller settings at "
-                msg += "Fabric Controller -> Admin -> System Settings -> "
-                msg += "Feature Management"
-                raise ValueError(msg)
-
-            self.need_replaced.append(want)
-
-    def commit(self):
-        """
-        ### Summary
-        Commit the replaced state request.
-
-        ### Raises
-
-        -   ``ValueError`` if:
-            -   The controller features required for the fabric type are not
-                running on the controller.
-        """
-        method_name = inspect.stack()[0][3]
-        msg = f"{self.class_name}.{method_name}: entered"
-        self.log.debug(msg)
-
-        self.get_controller_version()
-
-        self.fabric_group_details.rest_send = self.rest_send
-        self.fabric_summary.rest_send = self.rest_send
-
-        self.fabric_group_details.results = Results()
-        self.fabric_summary.results = Results()
-
-        self.get_controller_features()
-        self.get_want()
-        self.get_have()
-        self.get_need()
-        self.send_need_replaced()
-
-    def send_need_replaced(self) -> None:
-        """
-        ### Summary
-        Build and send the payload to modify fabrics specified in the
-        playbook per replaced state handling.
-
-        ### Raises
-
-        -   ``ValueError`` if:
-            -   Any payload is invalid.
-            -   The controller returns an error when attempting to
-                 update the fabric.
-        """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        msg = f"{self.class_name}.{method_name}: entered. "
-        msg += "self.need_replaced: "
-        msg += f"{json_pretty(self.need_replaced)}"
-        self.log.debug(msg)
-
-        if len(self.need_create) != 0:
-            self.merged = Merged(self.params)
-            self.merged.rest_send = self.rest_send
-            self.merged.fabric_group_details.rest_send = self.rest_send
-            self.merged.fabric_summary.rest_send = self.rest_send
-            self.merged.results = self.results
-            self.merged.need_create = self.need_create
-            self.merged.send_need_create()
-
-        if len(self.need_replaced) == 0:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "No fabrics to update for replaced state."
-            self.log.debug(msg)
-            return
-
-        self.fabric_group_replaced.fabric_group_details = self.fabric_group_details
-        self.fabric_group_replaced.fabric_summary = self.fabric_summary
-        self.fabric_group_replaced.rest_send = self.rest_send
-        self.fabric_group_replaced.results = self.results
-
-        try:
-            self.fabric_group_replaced.payloads = self.need_replaced
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
-
-        try:
-            self.fabric_group_replaced.commit()
-        except ValueError as error:
-            raise ValueError(f"{error}") from error
-
-
 def main():
     """
     ### Summary
@@ -1376,7 +1200,8 @@ def main():
 
     if params.get("state") not in ["deleted", "merged", "query", "replaced"]:
         ansible_module.fail_json(f"Invalid state: {params['state']}")
-    task: Union[Deleted, Merged, Query, Replaced, None] = None
+    # task: Union[Deleted, Merged, Query, Replaced, None] = None
+    task: Union[Deleted, Merged, Query, None] = None
     try:
         if params["state"] == "merged":
             task = Merged(params)
@@ -1384,8 +1209,8 @@ def main():
             task = Deleted(params)
         elif params["state"] == "query":
             task = Query(params)
-        elif params["state"] == "replaced":
-            task = Replaced(params)
+        # elif params["state"] == "replaced":
+        #     task = Replaced(params)
     except ValueError as error:
         ansible_module.fail_json(f"Failed to initialize task: {error}")
 

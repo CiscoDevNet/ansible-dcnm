@@ -40,7 +40,6 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import Results
 from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_group_details import FabricGroupDetails
 from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_group_member_info import FabricGroupMemberInfo
 from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.utils import (
@@ -49,7 +48,7 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.ut
     fabric_group_delete_fixture,
     params_delete,
     responses_fabric_group_delete,
-    responses_fabric_group_details,
+    responses_fabric_groups,
     responses_fabric_group_member_info,
 )
 
@@ -69,7 +68,7 @@ def test_fabric_group_delete_00000(fabric_group_delete) -> None:
         instance = fabric_group_delete
     assert instance.class_name == "FabricGroupDelete"
     assert instance.action == "fabric_group_delete"
-    assert instance.fabric_group_details.class_name == "FabricGroupDetails"
+    assert instance._fabric_groups.class_name == "FabricGroups"
     assert instance._fabric_group_member_info.class_name == "FabricGroupMemberInfo"
 
 
@@ -220,7 +219,7 @@ def test_fabric_group_delete_00030(fabric_group_delete) -> None:
     - FabricGroupDelete()
         - __init__()
         - commit()
-    - FabricGroupDetails()
+    - FabricGroups()
         - __init__()
         - refresh()
     - FabricGroupMemberInfo()
@@ -235,7 +234,7 @@ def test_fabric_group_delete_00030(fabric_group_delete) -> None:
 
     -   FabricGroupDelete.fabric_group_names is set to contain one fabric group name
         (MFG1) that exists on the controller.
-    -   FabricGroupDelete.commit() calls FabricGroupDetails().refresh()
+    -   FabricGroupDelete.commit() calls FabricGroups().refresh()
         which returns fabric group info
     -   FabricGroupDelete.commit() calls FabricGroupMemberInfo().refresh()
         which returns that the fabric group has no members
@@ -247,10 +246,8 @@ def test_fabric_group_delete_00030(fabric_group_delete) -> None:
     key_delete = f"{method_name}b"
 
     def responses():
-        # FabricGroups.refresh() - called by FabricGroupDetails to check if fabric exists
-        yield responses_fabric_group_details("test_fabric_group_query_00030a")
-        # FabricGroupDetails.refresh()
-        yield responses_fabric_group_details("test_fabric_group_query_00030a")
+        # FabricGroups.refresh()
+        yield responses_fabric_groups("test_fabric_group_delete_00030a")
         # FabricGroupMemberInfo.refresh()
         yield responses_fabric_group_member_info(key_members)
         # DELETE request
@@ -269,9 +266,8 @@ def test_fabric_group_delete_00030(fabric_group_delete) -> None:
 
     with does_not_raise():
         instance = fabric_group_delete
-        instance.fabric_group_details = FabricGroupDetails()
-        instance.fabric_group_details.rest_send = rest_send
-        instance.fabric_group_details.results = Results()
+        instance._fabric_groups.rest_send = rest_send
+        instance._fabric_groups.results = Results()
         instance._fabric_group_member_info = FabricGroupMemberInfo()
         instance._fabric_group_member_info.rest_send = rest_send
         instance._fabric_group_member_info.results = Results()
@@ -284,37 +280,33 @@ def test_fabric_group_delete_00030(fabric_group_delete) -> None:
     assert isinstance(instance.results.result, list)
     assert isinstance(instance.results.response, list)
 
-    # There will be 3 results:
-    # 1. FabricGroupDetails.refresh()
-    # 2. FabricGroupMemberInfo.refresh()
-    # 3. DELETE request
-    assert len(instance.results.diff) == 3
-    assert len(instance.results.metadata) == 3
-    assert len(instance.results.response) == 3
-    assert len(instance.results.result) == 3
+    # There will be 1 result:
+    # DELETE request
+    # Note: FabricGroups and FabricGroupMemberInfo use their own Results instances
+    assert len(instance.results.diff) == 1
+    assert len(instance.results.metadata) == 1
+    assert len(instance.results.response) == 1
+    assert len(instance.results.result) == 1
 
-    # Verify the fabric was deleted (last result)
-    assert instance.results.diff[2].get("fabric_group_name") == "MFG1"
+    # Verify the fabric was deleted
+    assert instance.results.diff[0].get("fabric_group_name") == "MFG1"
 
-    assert instance.results.metadata[2].get("action", None) == "fabric_group_delete"
-    assert instance.results.metadata[2].get("check_mode", None) is False
-    assert instance.results.metadata[2].get("sequence_number", None) == 3
-    assert instance.results.metadata[2].get("state", None) == "deleted"
+    assert instance.results.metadata[0].get("action", None) == "fabric_group_delete"
+    assert instance.results.metadata[0].get("check_mode", None) is False
+    assert instance.results.metadata[0].get("sequence_number", None) == 1
+    assert instance.results.metadata[0].get("state", None) == "deleted"
 
-    assert instance.results.response[2].get("RETURN_CODE", None) == 200
-    assert instance.results.response[2].get("METHOD", None) == "DELETE"
+    assert instance.results.response[0].get("RETURN_CODE", None) == 200
+    assert instance.results.response[0].get("METHOD", None) == "DELETE"
 
     # Delete operations change the controller state
-    assert instance.results.result[2].get("changed", None) is True
-    assert instance.results.result[2].get("success", None) is True
+    assert instance.results.result[0].get("changed", None) is True
+    assert instance.results.result[0].get("success", None) is True
 
     assert False in instance.results.failed
     assert True not in instance.results.failed
-    # The final result shows changed=True
     assert True in instance.results.changed
-    # Query operations add False to instance.results.changed
-    # The DELETE operation adds True to instance.results.changed
-    # Hence both are present in instance.results.changed
+    # False is added to results.changed by the @results.setter
     assert False in instance.results.changed
 
 
@@ -325,7 +317,7 @@ def test_fabric_group_delete_00031(fabric_group_delete) -> None:
     - FabricGroupDelete()
         - __init__()
         - commit()
-    - FabricGroupDetails()
+    - FabricGroups()
         - __init__()
         - refresh()
     - FabricGroupMemberInfo()
@@ -339,9 +331,8 @@ def test_fabric_group_delete_00031(fabric_group_delete) -> None:
 
     -   FabricGroupDelete.fabric_group_names is set to contain one fabric group name
         (MFG1) that exists on the controller but has members.
-    -   FabricGroupDelete.commit() calls FabricGroupDetails().refresh()
-        which first checks if fabric exists via FabricGroups().refresh(),
-        then returns fabric group info
+    -   FabricGroupDelete.commit() calls FabricGroups().refresh()
+        which returns fabric group info
     -   FabricGroupDelete.commit() calls FabricGroupMemberInfo().refresh()
         which returns that the fabric group has 1 member
     -   FabricGroupDelete._verify_fabric_group_can_be_deleted() raises ValueError
@@ -351,10 +342,8 @@ def test_fabric_group_delete_00031(fabric_group_delete) -> None:
     key_members = f"{method_name}a"
 
     def responses():
-        # FabricGroups.refresh() - called by FabricGroupDetails to check if fabric exists
-        yield responses_fabric_group_details("test_fabric_group_query_00030a")
-        # FabricGroupDetails.refresh()
-        yield responses_fabric_group_details("test_fabric_group_query_00030a")
+        # FabricGroups.refresh()
+        yield responses_fabric_groups("test_fabric_group_delete_00030a")
         # FabricGroupMemberInfo.refresh()
         yield responses_fabric_group_member_info(key_members)
 
@@ -371,9 +360,8 @@ def test_fabric_group_delete_00031(fabric_group_delete) -> None:
 
     with does_not_raise():
         instance = fabric_group_delete
-        instance.fabric_group_details = FabricGroupDetails()
-        instance.fabric_group_details.rest_send = rest_send
-        instance.fabric_group_details.results = Results()
+        instance._fabric_groups.rest_send = rest_send
+        instance._fabric_groups.results = Results()
         instance._fabric_group_member_info = FabricGroupMemberInfo()
         instance._fabric_group_member_info.rest_send = rest_send
         instance._fabric_group_member_info.results = Results()
@@ -394,7 +382,7 @@ def test_fabric_group_delete_00032(fabric_group_delete) -> None:
     - FabricGroupDelete()
         - __init__()
         - commit()
-    - FabricGroupDetails()
+    - FabricGroups()
         - __init__()
         - refresh()
 
@@ -406,17 +394,15 @@ def test_fabric_group_delete_00032(fabric_group_delete) -> None:
 
     -   FabricGroupDelete.fabric_group_names is set to contain one fabric group name
         (MFG1) that does not exist on the controller.
-    -   FabricGroupDelete.commit() calls FabricGroupDetails().refresh()
-        which first calls FabricGroups().refresh() and discovers the fabric
-        does not exist, so it returns early with empty data (no second API call)
+    -   FabricGroupDelete.commit() calls FabricGroups().refresh()
+        which returns empty list (no fabric groups exist)
     -   No DELETE request is sent
     -   Results indicate no changes made
     """
 
     def responses():
         # FabricGroups.refresh() - returns empty list (no fabric groups)
-        yield responses_fabric_group_details("test_fabric_group_query_00032a")
-        # No second response needed - FabricGroupDetails.refresh() returns early
+        yield responses_fabric_groups("test_fabric_group_delete_00032a")
 
     gen_responses = ResponseGenerator(responses())
 
@@ -431,9 +417,8 @@ def test_fabric_group_delete_00032(fabric_group_delete) -> None:
 
     with does_not_raise():
         instance = fabric_group_delete
-        instance.fabric_group_details = FabricGroupDetails()
-        instance.fabric_group_details.rest_send = rest_send
-        instance.fabric_group_details.results = Results()
+        instance._fabric_groups.rest_send = rest_send
+        instance._fabric_groups.results = Results()
         instance._fabric_group_member_info = FabricGroupMemberInfo()
         instance._fabric_group_member_info.rest_send = rest_send
         instance._fabric_group_member_info.results = Results()
@@ -444,8 +429,6 @@ def test_fabric_group_delete_00032(fabric_group_delete) -> None:
 
     # There will be 1 result:
     # FabricGroupDelete final result (no fabrics to delete)
-    # Note: FabricGroupDetails.refresh() returns early WITHOUT registering a result
-    # when the fabric doesn't exist (it only sets self.data = {} and returns)
     assert len(instance.results.diff) == 1
     assert len(instance.results.metadata) == 1
     assert len(instance.results.response) == 1
