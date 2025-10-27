@@ -1,6 +1,3 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
-
 # Copyright (c) 2020-2022 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -137,7 +134,7 @@ class ActionModule(ActionBase):
 
         if fabrics is None:
             result['failed'] = True
-            result['msg'] = f"Failed to get fabric associations"
+            result['msg'] = "Failed to get fabric associations"
             return result
 
         # Validate fabric hierarchy before processing
@@ -209,7 +206,7 @@ class ActionModule(ActionBase):
         )
         # Check if the API call was successful
         if msd_fabric_associations.get('failed'):
-            display.error(f"Fabric associations API call failed")
+            display.error("Fabric associations API call failed")
             return
 
         msd_fabric_associations = msd_fabric_associations.get('response', {}).get('DATA', {})
@@ -345,7 +342,7 @@ class ActionModule(ActionBase):
                 # Check if attach configuration is present in child fabric config
                 if 'attach' in child_config:
                     return None, f"Child fabric config for '{child_fabric_name}' in network '{net_config.get('net_name', 'unknown')}' " \
-                        f"cannot contain 'attach' configuration. Attachments should only be configured on the parent fabric."
+                        "cannot contain 'attach' configuration. Attachments should only be configured on the parent fabric."
 
                 # Check if child fabric exists in fabrics dict
                 if child_fabric_name not in fabrics:
@@ -512,7 +509,7 @@ class ActionModule(ActionBase):
                 display.vvv(f"Fabric: {fabric_module_args['fabric']}")
                 display.vvv(f"Fabric Type: {fabric_module_args['_fabric_type']}")
                 display.vvv(f"State: {fabric_module_args['state']}")
-                display.vvv(f"Networks being processed:")
+                display.vvv("Networks being processed:")
                 for i, net_config in enumerate(fabric_module_args['config'], 1):
                     net_name = net_config.get('net_name', 'unknown')
                     vrf_name = net_config.get('vrf_name', 'N/A')
