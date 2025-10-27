@@ -163,7 +163,7 @@ options:
             dhcp_srvr3_ip, dhcp_srvr3_vrf
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
             dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
-            indicaitng these are mutually exclusive options
+            indicating these are mutually exclusive options
         type: list
         elements: dict
         required: false

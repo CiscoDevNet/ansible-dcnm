@@ -264,7 +264,7 @@ Parameters
                 <td>
                         <div>List of DHCP server_vrf pairs where &#x27;srvr_ip&#x27; is the IP key and &#x27;srvr_vrf&#x27; is the VRF key</div>
                         <div>This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf</div>
-                        <div>If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated indicaitng these are mutually exclusive options</div>
+                        <div>If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated indicating these are mutually exclusive options</div>
                 </td>
             </tr>
             <tr>
