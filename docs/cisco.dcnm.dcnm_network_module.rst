@@ -252,6 +252,25 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="3">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>dhcp_servers</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>List of DHCP server_vrf pairs where &#x27;srvr_ip&#x27; is the IP key and &#x27;srvr_vrf&#x27; is the VRF key</div>
+                        <div>This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf</div>
+                        <div>If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated indicating these are mutually exclusive options</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>dhcp_srvr1_ip</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -895,6 +914,27 @@ Examples
             net_extension_template: Default_Network_Extension_Universal
             vlan_id: 150
             gw_ip_subnet: '192.168.30.1/24'
+            dhcp_servers:
+            - srvr_ip: 192.168.1.1
+              srvr_vrf: vrf_01
+            - srvr_ip: 192.168.2.1
+              srvr_vrf: vrf_02
+            - srvr_ip: 192.168.3.1
+              srvr_vrf: vrf_03
+            - srvr_ip: 192.168.4.1
+              srvr_vrf: vrf_04
+            - srvr_ip: 192.168.5.1
+              srvr_vrf: vrf_05
+            - srvr_ip: 192.168.6.1
+              srvr_vrf: vrf_06
+            - srvr_ip: 192.168.7.1
+              srvr_vrf: vrf_07
+            - srvr_ip: 192.168.8.1
+              srvr_vrf: vrf_08
+            - srvr_ip: 192.168.9.1
+              srvr_vrf: vrf_09
+            - srvr_ip: 192.168.10.1
+              srvr_vrf: vrf_10
             attach:
             - ip_address: 192.168.1.224
               # Replace the ports with new ports
