@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2020-2023 Cisco and/or its affiliates.
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -155,6 +155,17 @@ options:
         description:
         - VRF ID of third DHCP server
         type: str
+        required: false
+      dhcp_servers:
+        description:
+        - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
+        - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
+            dhcp_srvr3_ip, dhcp_srvr3_vrf
+        - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
+            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
+            indicating these are mutually exclusive options
+        type: list
+        elements: dict
         required: false
       dhcp_loopback_id:
         description:
@@ -370,6 +381,27 @@ EXAMPLES = """
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 150
         gw_ip_subnet: '192.168.30.1/24'
+        dhcp_servers:
+        - srvr_ip: 192.168.1.1
+          srvr_vrf: vrf_01
+        - srvr_ip: 192.168.2.1
+          srvr_vrf: vrf_02
+        - srvr_ip: 192.168.3.1
+          srvr_vrf: vrf_03
+        - srvr_ip: 192.168.4.1
+          srvr_vrf: vrf_04
+        - srvr_ip: 192.168.5.1
+          srvr_vrf: vrf_05
+        - srvr_ip: 192.168.6.1
+          srvr_vrf: vrf_06
+        - srvr_ip: 192.168.7.1
+          srvr_vrf: vrf_07
+        - srvr_ip: 192.168.8.1
+          srvr_vrf: vrf_08
+        - srvr_ip: 192.168.9.1
+          srvr_vrf: vrf_09
+        - srvr_ip: 192.168.10.1
+          srvr_vrf: vrf_10
         attach:
         - ip_address: 192.168.1.224
           # Replace the ports with new ports
@@ -480,6 +512,7 @@ from ansible_collections.cisco.dcnm.plugins.module_utils.network.dcnm.dcnm impor
     get_fabric_inventory_details,
     get_ip_sn_dict,
     get_ip_sn_fabric_dict,
+    has_partial_dhcp_config,
     validate_list_of_dicts,
 )
 
@@ -605,6 +638,7 @@ class DcnmNetwork:
     def diff_for_attach_deploy(self, want_a, have_a, replace=False):
 
         attach_list = []
+        atch_tor_ports = []
 
         if not want_a:
             return attach_list
@@ -628,7 +662,6 @@ class DcnmNetwork:
                                         if have.get("torports"):
                                             for tor_h in have["torports"]:
                                                 if tor_w["switch"] == tor_h["switch"]:
-                                                    atch_tor_ports = []
                                                     torports_present = True
                                                     h_tor_ports = tor_h["torPorts"].split(",") if tor_h["torPorts"] else []
                                                     w_tor_ports = tor_w["torPorts"].split(",") if tor_w["torPorts"] else []
@@ -668,9 +701,10 @@ class DcnmNetwork:
                                     else:
                                         # Dont update torports_configured to True.
                                         # If at all there is any other config change, this attach to will be appended attach_list there
+                                        torconfig_list = []
                                         for tor_h in have.get("torports"):
-                                            torconfig = tor_h["switch"] + "(" + tor_h["torPorts"] + ")"
-                                            want.update({"torPorts": torconfig})
+                                            torconfig_list.append(tor_h["switch"] + "(" + tor_h["torPorts"] + ")")
+                                        want.update({"torPorts": " ".join(torconfig_list)})
 
                                     del have["torports"]
 
@@ -750,9 +784,10 @@ class DcnmNetwork:
                                     continue
                                 del want["isAttached"]
                                 if want.get("torports"):
+                                    torconfig_list = []
                                     for tor_w in want["torports"]:
-                                        torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                        want.update({"torPorts": torconfig})
+                                        torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                                    want.update({"torPorts": " ".join(torconfig_list)})
                                 del want["torports"]
                                 want.update({"deployment": True})
                                 attach_list.append(want)
@@ -774,9 +809,10 @@ class DcnmNetwork:
             if not found:
                 if bool(want["isAttached"]):
                     if want.get("torports"):
+                        torconfig_list = []
                         for tor_w in want["torports"]:
-                            torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                            want.update({"torPorts": torconfig})
+                            torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                        want.update({"torPorts": " ".join(torconfig_list)})
                     del want["torports"]
                     del want["isAttached"]
                     want["deployment"] = True
@@ -848,11 +884,11 @@ class DcnmNetwork:
         attach.update({"freeformConfig": ""})
         attach.update({"is_deploy": deploy})
         if attach.get("tor_ports"):
-            torports = {}
             if role.lower() != "leaf":
                 msg = "tor_ports for Networks cannot be attached to switch {0} with role {1}".format(attach["ip_address"], role)
                 self.module.fail_json(msg=msg)
             for tor in attach.get("tor_ports"):
+                torports = {}
                 torports.update({"switch": self.inventory_data[tor["ip_address"]].get("logicalName")})
                 torports.update({"torPorts": ",".join(tor["ports"])})
                 torlist.append(torports)
@@ -890,6 +926,7 @@ class DcnmNetwork:
         dhcp1_vrf_changed = False
         dhcp2_vrf_changed = False
         dhcp3_vrf_changed = False
+        dhcp_servers_changed = False
         dhcp_loopback_changed = False
         multicast_group_address_changed = False
         gwv6_changed = False
@@ -931,7 +968,6 @@ class DcnmNetwork:
         arpsup_want = str(json_to_dict_want.get("suppressArp", "")).lower()
         arpsup_have = json_to_dict_have.get("suppressArp", "")
         dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
-        dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
         dhcp1_ip_have = json_to_dict_have.get("dhcpServerAddr1", "")
         dhcp2_ip_want = json_to_dict_want.get("dhcpServerAddr2", "")
         dhcp2_ip_have = json_to_dict_have.get("dhcpServerAddr2", "")
@@ -943,6 +979,8 @@ class DcnmNetwork:
         dhcp2_vrf_have = json_to_dict_have.get("vrfDhcp2", "")
         dhcp3_vrf_want = json_to_dict_want.get("vrfDhcp3", "")
         dhcp3_vrf_have = json_to_dict_have.get("vrfDhcp3", "")
+        dhcp_servers_want = json_to_dict_want.get("dhcpServers", "")
+        dhcp_servers_have = json_to_dict_have.get("dhcpServers", "")
         dhcp_loopback_want = json_to_dict_want.get("loopbackId", "")
         dhcp_loopback_have = json_to_dict_have.get("loopbackId", "")
         multicast_group_address_want = json_to_dict_want.get("mcastGroup", "")
@@ -998,6 +1036,7 @@ class DcnmNetwork:
                 or dhcp1_vrf_have != dhcp1_vrf_want
                 or dhcp2_vrf_have != dhcp2_vrf_want
                 or dhcp3_vrf_have != dhcp3_vrf_want
+                or dhcp_servers_have != dhcp_servers_want
                 or dhcp_loopback_have != dhcp_loopback_want
                 or multicast_group_address_have != multicast_group_address_want
                 or gw_ipv6_have != gw_ipv6_want
@@ -1044,6 +1083,8 @@ class DcnmNetwork:
                     dhcp2_vrf_changed = True
                 if dhcp3_vrf_have != dhcp3_vrf_want:
                     dhcp3_vrf_changed = True
+                if dhcp_servers_have != dhcp_servers_want:
+                    dhcp_servers_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
                 if multicast_group_address_have != multicast_group_address_want:
@@ -1093,6 +1134,7 @@ class DcnmNetwork:
                 or dhcp1_vrf_have != dhcp1_vrf_want
                 or dhcp2_vrf_have != dhcp2_vrf_want
                 or dhcp3_vrf_have != dhcp3_vrf_want
+                or dhcp_servers_have != dhcp_servers_want
                 or dhcp_loopback_have != dhcp_loopback_want
                 or multicast_group_address_have != multicast_group_address_want
                 or gw_ipv6_have != gw_ipv6_want
@@ -1136,6 +1178,8 @@ class DcnmNetwork:
                     dhcp2_vrf_changed = True
                 if dhcp3_vrf_have != dhcp3_vrf_want:
                     dhcp3_vrf_changed = True
+                if dhcp_servers_have != dhcp_servers_want:
+                    dhcp_servers_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
                     dhcp_loopback_changed = True
                 if multicast_group_address_have != multicast_group_address_want:
@@ -1183,6 +1227,7 @@ class DcnmNetwork:
             dhcp1_vrf_changed,
             dhcp2_vrf_changed,
             dhcp3_vrf_changed,
+            dhcp_servers_changed,
             dhcp_loopback_changed,
             multicast_group_address_changed,
             gwv6_changed,
@@ -1241,6 +1286,9 @@ class DcnmNetwork:
             "vrfDhcp": net.get("dhcp_srvr1_vrf", ""),
             "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
             "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
+            "dhcpServers": [
+                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr["srvr_vrf"]} for srvr in net.get("dhcp_servers", [])
+            ],
             "loopbackId": net.get("dhcp_loopback_id", ""),
             "mcastGroup": net.get("multicast_group_address", ""),
             "gatewayIpV6Address": net.get("gw_ipv6_subnet", ""),
@@ -1274,6 +1322,30 @@ class DcnmNetwork:
             template_conf["vrfDhcp2"] = ""
         if template_conf["vrfDhcp3"] is None:
             template_conf["vrfDhcp3"] = ""
+        if template_conf["dhcpServers"] == []:
+            dhcp_srvr_list = []
+            if template_conf["dhcpServerAddr1"] != "" and template_conf["vrfDhcp"] != "":
+                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
+            if template_conf["dhcpServerAddr2"] != "" and template_conf["vrfDhcp2"] != "":
+                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
+            if template_conf["dhcpServerAddr3"] != "" and template_conf["vrfDhcp3"] != "":
+                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
+            if dhcp_srvr_list != []:
+                template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
+            else:
+                template_conf["dhcpServers"] = ""
+        elif template_conf["dhcpServers"] != []:
+            dhcp_srvr_list = template_conf["dhcpServers"]
+            if dhcp_srvr_list[0:1]:
+                template_conf["dhcpServerAddr1"] = dhcp_srvr_list[0]["srvrAddr"]
+                template_conf["vrfDhcp"] = dhcp_srvr_list[0]["srvrVrf"]
+            if dhcp_srvr_list[1:2]:
+                template_conf["dhcpServerAddr2"] = dhcp_srvr_list[1]["srvrAddr"]
+                template_conf["vrfDhcp2"] = dhcp_srvr_list[1]["srvrVrf"]
+            if dhcp_srvr_list[2:3]:
+                template_conf["dhcpServerAddr3"] = dhcp_srvr_list[2]["srvrAddr"]
+                template_conf["vrfDhcp3"] = dhcp_srvr_list[2]["srvrVrf"]
+            template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
         if template_conf["loopbackId"] is None:
             template_conf["loopbackId"] = ""
         if self.is_ms_fabric is True:
@@ -1291,6 +1363,7 @@ class DcnmNetwork:
             template_conf["secondaryGW3"] = ""
         if template_conf["secondaryGW4"] is None:
             template_conf["secondaryGW4"] = ""
+
         if self.dcnm_version > 11:
             if template_conf["SVI_NETFLOW_MONITOR"] is None:
                 template_conf["SVI_NETFLOW_MONITOR"] = ""
@@ -1372,6 +1445,7 @@ class DcnmNetwork:
                     "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                     "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
                     "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -1425,6 +1499,7 @@ class DcnmNetwork:
                             "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                             "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                             "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                            "dhcpServers": json_to_dict.get("dhcpServers", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
                             "mcastGroup": json_to_dict.get("mcastGroup", ""),
                             "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -1865,6 +1940,7 @@ class DcnmNetwork:
         dhcp1_vrf_changed = {}
         dhcp2_vrf_changed = {}
         dhcp3_vrf_changed = {}
+        dhcp_servers_changed = {}
         dhcp_loopback_changed = {}
         multicast_group_address_changed = {}
         gwv6_changed = {}
@@ -1901,6 +1977,7 @@ class DcnmNetwork:
                         dhcp1_vrf_chg,
                         dhcp2_vrf_chg,
                         dhcp3_vrf_chg,
+                        dhcp_servers_chg,
                         dhcp_loopbk_chg,
                         mcast_grp_chg,
                         gwv6_chg,
@@ -1928,6 +2005,7 @@ class DcnmNetwork:
                     dhcp1_vrf_changed.update({want_c["networkName"]: dhcp1_vrf_chg})
                     dhcp2_vrf_changed.update({want_c["networkName"]: dhcp2_vrf_chg})
                     dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
+                    dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
                     dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
                     if self.is_ms_fabric is False:
                         multicast_group_address_changed.update({want_c["networkName"]: mcast_grp_chg})
@@ -2040,6 +2118,7 @@ class DcnmNetwork:
                             or dhcp1_vrf_changed.get(want_a["networkName"], False)
                             or dhcp2_vrf_changed.get(want_a["networkName"], False)
                             or dhcp3_vrf_changed.get(want_a["networkName"], False)
+                            or dhcp_servers_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
                             or multicast_group_address_changed.get(want_a["networkName"], False)
                             or gwv6_changed.get(want_a["networkName"], False)
@@ -2062,9 +2141,10 @@ class DcnmNetwork:
                     # Saftey check
                     if attach.get("isAttached"):
                         if attach.get("torports"):
+                            torconfig_list = []
                             for tor_w in attach["torports"]:
-                                torconfig = tor_w["switch"] + "(" + tor_w["torPorts"] + ")"
-                                attach.update({"torPorts": torconfig})
+                                torconfig_list.append(tor_w["switch"] + "(" + tor_w["torPorts"] + ")")
+                            attach.update({"torPorts": " ".join(torconfig_list)})
                         del attach["torports"]
                         del attach["isAttached"]
                         atch_list.append(attach)
@@ -2147,6 +2227,7 @@ class DcnmNetwork:
             found_c.update({"dhcp_srvr1_vrf": json_to_dict.get("vrfDhcp", "")})
             found_c.update({"dhcp_srvr2_vrf": json_to_dict.get("vrfDhcp2", "")})
             found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
+            found_c.update({"dhcp_servers": json_to_dict.get("dhcpServers", "")})
             found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
             found_c.update({"multicast_group_address": json_to_dict.get("mcastGroup", "")})
             found_c.update({"gw_ipv6_subnet": json_to_dict.get("gatewayIpV6Address", "")})
@@ -2527,6 +2608,7 @@ class DcnmNetwork:
                     "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                     "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
                     "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -2639,6 +2721,26 @@ class DcnmNetwork:
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
 
+        # Make sure mutually exclusive dhcp properties are not set
+        for net in self.config:
+            if net.get("dhcp_servers"):
+                conflicting_keys = []
+                dhcp_individual_keys = [
+                    "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
+                    "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
+                    "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
+                ]
+
+                for key in dhcp_individual_keys:
+                    if net.get(key) is not None:
+                        conflicting_keys.append(key)
+
+                if conflicting_keys:
+                    msg = "Network '{0}': dhcp_servers cannot be used together with individual DHCP server properties: {1}".format(
+                        net.get("net_name", "unknown"), ", ".join(conflicting_keys)
+                    )
+                    self.module.fail_json(msg=msg)
+
         state = self.params["state"]
 
         if state == "query":
@@ -2667,6 +2769,7 @@ class DcnmNetwork:
                 dhcp_srvr1_vrf=dict(type="str", length_max=32),
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
+                dhcp_servers=dict(type="list", elements="dict", default=[]),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
                 multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
                 gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
@@ -2733,6 +2836,7 @@ class DcnmNetwork:
                 dhcp_srvr1_vrf=dict(type="str", length_max=32),
                 dhcp_srvr2_vrf=dict(type="str", length_max=32),
                 dhcp_srvr3_vrf=dict(type="str", length_max=32),
+                dhcp_servers=dict(type="list", elements="dict", default=[]),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
                 multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
                 gw_ipv6_subnet=dict(type="ipv6_subnet", default=""),
@@ -2794,15 +2898,19 @@ class DcnmNetwork:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
 
-                        if (
-                            (net.get("dhcp_srvr1_ip") and not net.get("dhcp_srvr1_vrf"))
-                            or (net.get("dhcp_srvr1_vrf") and not net.get("dhcp_srvr1_ip"))
-                            or (net.get("dhcp_srvr2_ip") and not net.get("dhcp_srvr2_vrf"))
-                            or (net.get("dhcp_srvr2_vrf") and not net.get("dhcp_srvr2_ip"))
-                            or (net.get("dhcp_srvr3_ip") and not net.get("dhcp_srvr3_vrf"))
-                            or (net.get("dhcp_srvr3_vrf") and not net.get("dhcp_srvr3_ip"))
-                        ):
+                        if any(has_partial_dhcp_config(srvr) for srvr in [
+                            dict(srvr_ip=net.get("dhcp_srvr1_ip"), srvr_vrf=net.get("dhcp_srvr1_vrf")),
+                            dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
+                            dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
+                        ]):
                             invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
+
+                        if net.get("dhcp_servers"):
+                            dhcp_servers = net.get("dhcp_servers")
+                            if len(dhcp_servers) > 16:
+                                invalid_params.append("A maximum of 16 DHCP servers can be specified")
+                            if any(has_partial_dhcp_config(srvr) for srvr in dhcp_servers):
+                                invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
@@ -2977,6 +3085,26 @@ class DcnmNetwork:
 
         if cfg.get("dhcp_srvr3_vrf", None) is None:
             json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
+
+        if cfg.get("dhcp_servers", None) is None:
+            want_have_dhcp_servers = [None] * 3
+            if cfg.get("dhcp_srvr1_ip", None) is not None:
+                want_have_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=cfg.get("dhcp_srvr1_vrf"))
+            elif json_to_dict_have["dhcpServerAddr1"] != "":
+                want_have_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
+            if cfg.get("dhcp_srvr2_ip", None) is not None:
+                want_have_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=cfg.get("dhcp_srvr2_vrf"))
+            elif json_to_dict_have["dhcpServerAddr2"] != "":
+                want_have_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
+            if cfg.get("dhcp_srvr3_ip", None) is not None:
+                want_have_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=cfg.get("dhcp_srvr3_vrf"))
+            elif json_to_dict_have["dhcpServerAddr3"] != "":
+                want_have_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
+            want_have_dhcp_servers = [srvr for srvr in want_have_dhcp_servers[:] if srvr is not None]
+            if want_have_dhcp_servers != []:
+                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_have_dhcp_servers, separators=(",", ":")))
+            else:
+                json_to_dict_want["dhcpServers"] = json_to_dict_have["dhcpServers"]
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
