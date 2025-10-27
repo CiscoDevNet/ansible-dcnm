@@ -23,7 +23,6 @@ __author__ = "Allen Robel"
 
 import copy
 import inspect
-import json
 import logging
 from typing import Any
 
@@ -94,7 +93,15 @@ class FabricGroupDefault:
 
     def commit(self) -> None:
         """
-        Build the default fabric group configuration from template.
+        # Summary
+
+        Build the default fabric group configuration from the provided template.
+
+        ## Raises
+
+        -   `ValueError` if:
+            -   `fabric_group_name` is not set.
+            -   `rest_send` is not set.
         """
         method_name = inspect.stack()[0][3]
         msg: str = ""
@@ -108,16 +115,17 @@ class FabricGroupDefault:
             msg += "rest_send must be set to an instance of RestSend with params set."
             raise ValueError(msg)
 
-        if not self.results:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "results must be set to an instance of Results."
-            raise ValueError(msg)
-
         self._build_fabric_group_default_config()
 
     def _get_template(self) -> None:
         """
+        # Summary
+
         Retrieve the template from the controller.
+
+        ## Raises
+
+        -   `ValueError` if unable to retrieve template from controller.
         """
         method_name = inspect.stack()[0][3]
         msg: str = f"{self.class_name}.{method_name}: "
@@ -136,14 +144,15 @@ class FabricGroupDefault:
             raise ValueError(msg) from error
         self._template = self._template_get.template
 
-        # msg = f"{self.class_name}.{method_name}: "
-        # msg += "Retrieved template: "
-        # msg += f"{json.dumps(self._template, indent=4)}"
-        self.log.debug(msg)
-
     def _set_parameter_names(self) -> None:
         """
+        # Summary
+
         Build a list of parameter names from the template.
+
+        ## Raises
+
+        None
         """
         self._parameter_names = [param["name"] for param in self._template.get("parameters", [])]
 
@@ -156,9 +165,14 @@ class FabricGroupDefault:
 
     def _skip(self, param_name: str) -> bool:
         """
+        # Summary
+
         Determine if a parameter should be skipped.
+
+        ## Raises
+
+        None
         """
-        # Currently no parameters are skipped.
         if "_PREV" in param_name:
             return True
         if "DCNM_ID" in param_name:
@@ -167,9 +181,14 @@ class FabricGroupDefault:
 
     def _build_config_top_level(self) -> None:
         """
+        # Summary
+
         Build the top-level fabric group default config.
+
+        ## Raises
+
+        None
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         self._config_top_level["fabricName"] = self.fabric_group_name
         self._config_top_level["fabricTechnology"] = "VXLANFabric"
         self._config_top_level["fabricType"] = "MSD"
@@ -177,7 +196,13 @@ class FabricGroupDefault:
 
     def _build_nv_pairs(self) -> None:
         """
-        Build NV pairs for the fabric group default config.
+        # Summary
+
+        Build nvPairs for the fabric group default config.
+
+        ## Raises
+
+        None
         """
         method_name = inspect.stack()[0][3]
         msg: str = f"{self.class_name}.{method_name}: "
@@ -192,19 +217,17 @@ class FabricGroupDefault:
             _nv_pairs[param_name] = self._param_info.parameter_default
         self._config_nv_pairs = _nv_pairs
         self._config_nv_pairs["FABRIC_NAME"] = self.fabric_group_name
-        # msg = f"{self.class_name}.{method_name}: "
-        # msg += f"NV pairs: {json.dumps(self._config_nv_pairs, indent=4, sort_keys=True)}"
-        # self.log.debug(msg)
 
     def _build_fabric_group_default_config(self) -> None:
         """
-        Build the default fabric group configuration from the template.
-        """
-        method_name = inspect.stack()[0][3]
-        msg: str = f"{self.class_name}.{method_name}: "
-        msg += f"Building default config for fabric group {self.fabric_group_name}"
-        self.log.debug(msg)
+        # Summary
 
+        Build the default fabric group configuration from the template.
+
+        ## Raises
+
+        None
+        """
         self._get_template()
         self._parse_parameter_info()
         self._set_parameter_names()
@@ -234,7 +257,13 @@ class FabricGroupDefault:
     @property
     def rest_send(self) -> RestSend:
         """
+        # Summary
+
         An instance of the RestSend class.
+
+        ## Raises
+
+        -   `ValueError` if `params` is not set on the RestSend instance.
         """
         return self._rest_send
 
@@ -249,58 +278,23 @@ class FabricGroupDefault:
     @property
     def results(self) -> Results:
         """
+        # Summary
+
         An instance of the Results class.
+
+        ## Raises
+
+        -  `ValueError` if the value passed to the setter is not an instance of Results.
         """
         return self._results
 
     @results.setter
     def results(self, value: Results) -> None:
+        if not isinstance(value, Results):
+            msg = f"{self.class_name}.results must be set to an "
+            msg += "instance of Results."
+            raise ValueError(msg)
         self._results = value
         self._results.action = self.action
         self._results.changed = False
         self._results.operation_type = self.operation_type
-
-
-if __name__ == "__main__":
-    from os import environ
-    from sys import exit as sys_exit
-
-    from ..common.log_v2 import Log
-    from ..common.response_handler import ResponseHandler
-    from ..common.sender_requests import Sender
-
-    # Logging setup
-    try:
-        log = Log()
-        log.commit()
-    except ValueError as error:
-        print(f"Failed to initialize logging: {error}")
-        sys_exit(1)
-
-    nd_ip4 = environ.get("ND_IP4")
-    nd_password = environ.get("ND_PASSWORD")
-    nd_username = environ.get("ND_USERNAME", "admin")
-
-    if nd_ip4 is None or nd_password is None or nd_username is None:
-        raise ValueError("ND_IP4, ND_PASSWORD, and ND_USERNAME must be set")
-
-    sender = Sender()
-    sender.ip4 = nd_ip4
-    sender.username = nd_username
-    sender.password = nd_password
-    sender.login()
-
-    params: dict[str, Any] = {}
-    params["state"] = "query"
-    params["config"] = {}
-    rest_send = RestSend(params)
-    rest_send.response_handler = ResponseHandler()
-    rest_send.sender = sender
-    instance = FabricGroupDefault()
-    instance.fabric_group_name = "MCF1"
-    instance.rest_send = rest_send
-    instance.results = Results()
-    instance.commit()
-    MESSAGE = f"Fabric Group Default Config for {instance.fabric_group_name}:\n"
-    MESSAGE += f"{json.dumps(instance.config, indent=4)}"
-    print(MESSAGE)
