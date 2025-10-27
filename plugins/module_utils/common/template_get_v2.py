@@ -23,11 +23,12 @@ __author__ = "Allen Robel"
 import copy
 import inspect
 import logging
+from typing import Any
 
-from ..common.api.v1.configtemplate.rest.config.templates.templates import EpTemplate
-from ..common.exceptions import ControllerResponseError
-from ..common.rest_send_v2 import RestSend
-from ..common.results_v2 import Results
+from .api.v1.configtemplate.rest.config.templates.templates import EpTemplate
+from .exceptions import ControllerResponseError
+from .rest_send_v2 import RestSend
+from .results_v2 import Results
 
 
 class TemplateGet:
@@ -67,7 +68,7 @@ class TemplateGet:
 
         self._rest_send: RestSend = RestSend({})
         self._results = Results()
-        self._template = None
+        self._template: dict[str, Any] = {}
         self._template_name: str = ""
 
     def _set_template_endpoint(self) -> None:

@@ -446,7 +446,7 @@ try:
     from ..module_utils.common.rest_send_v2 import RestSend
     from ..module_utils.common.results_v2 import Results
     from ..module_utils.common.sender_dcnm import Sender
-    from ..module_utils.fabric.template_get_v2 import TemplateGet
+    from ..module_utils.common.template_get_v2 import TemplateGet
     from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
     from ..module_utils.fabric_group.common import FabricGroupCommon
     from ..module_utils.fabric_group.create import FabricGroupCreate
