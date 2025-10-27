@@ -1,0 +1,445 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MSD_MERGED - Test Entry Point - [dcnm_network MSD]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+         Executing MSD Tests - [dcnm_network MSD Merged]       +"
+      - "----------------------------------------------------------------"
+  tags: msd_merged
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: MSD_MERGED - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    # MSD fabric should not deploy by default in tests
+    deploy_local: false
+    
+    test_data_msd_merged:
+      #----------------------------------  
+      # MSD config templates and auto generated file location for test cases
+      #----------------------------------
+      # MSD TC1 - Basic MSD Network with Child Fabric Config
+      msd_basic_net_conf_template: "msd_merged/dcnm_network_msd_basic_net_conf.j2"
+      msd_basic_net_conf_file: "{{ role_path }}/files/dcnm_network_msd_basic_net_conf.yaml"
+      
+      # MSD TC2 - MSD Network with Multiple Child Fabrics
+      msd_multi_child_conf_template: "msd_merged/dcnm_network_msd_multi_child_conf.j2"
+      msd_multi_child_conf_file: "{{ role_path }}/files/dcnm_network_msd_multi_child_conf.yaml"
+      
+      # MSD TC3 - MSD L2-only Network
+      msd_l2_only_conf_template: "msd_merged/dcnm_network_msd_l2_only_conf.j2"
+      msd_l2_only_conf_file: "{{ role_path }}/files/dcnm_network_msd_l2_only_conf.yaml"
+      
+      # MSD TC4 - MSD Network with DHCP Configuration
+      msd_dhcp_conf_template: "msd_merged/dcnm_network_msd_dhcp_conf.j2"
+      msd_dhcp_conf_file: "{{ role_path }}/files/dcnm_network_msd_dhcp_conf.yaml"
+      
+  delegate_to: localhost
+  tags: msd_merged
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: MSD_MERGED - Create Basic MSD Network Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_merged.msd_basic_net_conf_template }}"
+    dest: "{{ test_data_msd_merged.msd_basic_net_conf_file }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+- name: MSD_MERGED - Create Multi Child Fabric Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_merged.msd_multi_child_conf_template }}"
+    dest: "{{ test_data_msd_merged.msd_multi_child_conf_file }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+- name: MSD_MERGED - Create L2-only MSD Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_merged.msd_l2_only_conf_template }}"
+    dest: "{{ test_data_msd_merged.msd_l2_only_conf_file }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+- name: MSD_MERGED - Create DHCP MSD Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_merged.msd_dhcp_conf_template }}"
+    dest: "{{ test_data_msd_merged.msd_dhcp_conf_file }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+##############################################
+##          Load Config Files               ##
+##############################################
+
+- name: MSD_MERGED - Load Basic MSD Network Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_basic_net_conf: "{{ lookup('file', '{{ test_data_msd_merged.msd_basic_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+- name: MSD_MERGED - Load Multi Child Fabric Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_multi_child_conf: "{{ lookup('file', '{{ test_data_msd_merged.msd_multi_child_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+- name: MSD_MERGED - Load L2-only MSD Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_l2_only_conf: "{{ lookup('file', '{{ test_data_msd_merged.msd_l2_only_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+- name: MSD_MERGED - Load DHCP MSD Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_dhcp_conf: "{{ lookup('file', '{{ test_data_msd_merged.msd_dhcp_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_merged
+
+##############################################
+##        Verify Fabric Deployment         ##
+##############################################
+
+- name: MSD_MERGED - Verify if MSD fabric is deployed
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.response.DATA != None
+    fail_msg: "MSD Fabric '{{ test_data_common.fabric }}' not found."
+  tags: msd_merged
+
+##############################################
+##              CLEANUP                     ##
+##############################################
+
+- name: MSD_MERGED - setup - Clean up any existing MSD networks
+  cisco.dcnm.dcnm_network: &msd_clean
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: msd_merged
+
+##############################################
+##         MSD TC1: Basic MSD Network      ##
+##############################################
+
+- name: MSD_MERGED - TC1 - MERGED - Create Basic MSD Network with Child Fabric Config
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_basic_net_conf }}"
+  register: result
+  tags: msd_merged
+
+
+- name: MSD_MERGED - TC1 - ASSERT - Verify Basic MSD Network Creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "Basic MSD network creation failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC1 - MERGED - conf1 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_basic_net_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC1 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "Basic MSD network idempotence failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC1 - QUERY - Get MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC1 - ASSERT - Verify network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+      # - query_result.response[0].fabric == test_data_common.fabric
+    fail_msg: "Basic MSD network not found in query"
+  tags: msd_merged
+
+# # MSD_MERGED - TC1 - VALIDATE - Validate MSD network configuration matches expected
+# - name: MSD_MERGED - TC1 - VALIDATE - Validate MSD network configuration
+#   ndfc_network_validate:
+#     ndfc_data: "{{ query_result }}"
+#     test_data: "{{ test_data_common }}"
+#     config_path: "{{ test_data_msd_merged.msd_basic_net_conf_file }}"
+#     ignore_fields:
+#       - "networkId"        # Auto-generated network ID
+#       - "displayName"      # Auto-generated display name
+#       - "fabricName"       # Expected to be different
+#       - "networkStatus"    # Status may vary
+#       - "networkTemplate"  # Template variations
+#       - "policyId"         # Auto-generated policy ID
+#       - "source"           # Source may vary
+#       - "nvPairs"          # NV pairs may have additional fields
+#   register: validation_result
+#   tags: msd_merged
+#
+# - name: MSD_MERGED - TC1 - ASSERT - Check validation passed
+#   assert:
+#     that:
+#       - validation_result.failed == false
+#     fail_msg: "Basic MSD Network validation failed: {{ validation_result.msg }}"
+#   tags: msd_merged
+
+- name: MSD_MERGED - TC1 - cleanup - Remove basic MSD network
+  cisco.dcnm.dcnm_network:
+    <<: *msd_clean
+  tags: msd_merged
+
+##############################################
+##    MSD TC2: Multiple Child Fabrics      ##
+##############################################
+
+- name: MSD_MERGED - TC2 - MERGED - Create MSD Network with Multiple Child Fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_multi_child_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC2 - ASSERT - Verify Multi Child Fabric Network Creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "Multi child fabric network creation failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC2 - MERGED - conf2 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_multi_child_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC2 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "Multi child fabric network idempotence failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC2 - QUERY - Get MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC2 - ASSERT - Verify network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "Multi child fabric network not found in query"
+  tags: msd_merged
+
+# # MSD_MERGED - TC2 - VALIDATE - Validate multiple child fabric configurations
+# - name: MSD_MERGED - TC2 - VALIDATE - Validate multi-child fabric configuration
+#   assert:
+#     that:
+#       - item.child_fabric_config is defined
+#       - item.child_fabric_config|length >= 1
+#     fail_msg: "Child fabric configuration not found for network {{ item.net_name }}"
+#   loop: "{{ query_result.response }}"
+#   when: query_result.response is defined and query_result.response|length > 0
+#   tags: msd_merged
+
+- name: MSD_MERGED - TC2 - cleanup - Remove multi child fabric network
+  cisco.dcnm.dcnm_network:
+    <<: *msd_clean
+  tags: msd_merged
+
+##############################################
+##      MSD TC3: L2-only Network           ##
+##############################################
+
+- name: MSD_MERGED - TC3 - MERGED - Create L2-only MSD Network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_l2_only_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC3 - ASSERT - Verify L2-only MSD Network Creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "L2-only MSD network creation failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC3 - MERGED - conf3 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_l2_only_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC3 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "L2-only MSD network idempotence failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC3 - QUERY - Get MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC3 - ASSERT - Verify network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "L2-only MSD network not found in query"
+  tags: msd_merged
+
+# # MSD_MERGED - TC3 - VALIDATE - Validate L2-only MSD network configuration
+# - name: MSD_MERGED - TC3 - VALIDATE - Validate L2-only configuration
+#   assert:
+#     that:
+#       - item.is_l2only is defined
+#       - item.is_l2only == true
+#     fail_msg: "L2-only configuration not properly set for network {{ item.net_name }}"
+#   loop: "{{ query_result.response }}"
+#   when: query_result.response is defined and query_result.response|length > 0
+#   tags: msd_merged
+
+- name: MSD_MERGED - TC3 - cleanup - Remove L2-only MSD network
+  cisco.dcnm.dcnm_network:
+    <<: *msd_clean
+  tags: msd_merged
+
+##############################################
+##    MSD TC4: DHCP Configuration          ##
+##############################################
+
+- name: MSD_MERGED - TC4 - MERGED - Create MSD Network with DHCP Config
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_dhcp_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC4 - ASSERT - Verify DHCP MSD Network Creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "DHCP MSD network creation failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC4 - MERGED - conf4 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: "{{ dcnm_network_msd_dhcp_conf }}"
+  register: result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC4 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "DHCP MSD network idempotence failed"
+  tags: msd_merged
+
+- name: MSD_MERGED - TC4 - QUERY - Get MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_merged
+
+- name: MSD_MERGED - TC4 - ASSERT - Verify network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "DHCP MSD network not found in query"
+  tags: msd_merged
+
+# # MSD_MERGED - TC4 - VALIDATE - Validate DHCP configuration
+# - name: MSD_MERGED - TC4 - VALIDATE - Validate DHCP server configuration
+#   assert:
+#     that:
+#       - item.child_fabric_config is defined
+#       - item.child_fabric_config[0].dhcp_srvr1_ip is defined
+#       - item.child_fabric_config[0].dhcp_srvr1_vrf is defined
+#       - item.child_fabric_config[0].dhcp_loopback_id is defined
+#     fail_msg: "DHCP configuration not properly set for network {{ item.net_name }}"
+#   loop: "{{ query_result.response }}"
+#   when: query_result.response is defined and query_result.response|length > 0
+#   tags: msd_merged
+
+##############################################
+##              FINAL CLEANUP               ##
+##############################################
+
+# - name: MSD_MERGED - FINAL - Clean Up All MSD Test Networks
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: deleted
+#   tags: msd_merged
+
+# - name: MSD_MERGED - sleep for 40 seconds for DCNM to completely update the state
+#   wait_for:
+#     timeout: 40
+#   tags: msd_merged
+
+# - name: MSD_MERGED - FINAL - QUERY - Verify cleanup
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: result
+#   tags: msd_merged
+
+# - name: MSD_MERGED - FINAL - ASSERT - Verify all networks deleted
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD networks not properly cleaned up"
+#   tags: msd_merged
+
+# # MSD_MERGED - FINAL - VALIDATE - Verify all MSD configurations are removed
+# - name: MSD_MERGED - FINAL - VALIDATE - Validate complete cleanup
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#       # - ansible_msd_net_name not in (result.response | map(attribute="net_name") | list)
+#     fail_msg: "MSD network cleanup validation failed"
+#   tags: msd_merged

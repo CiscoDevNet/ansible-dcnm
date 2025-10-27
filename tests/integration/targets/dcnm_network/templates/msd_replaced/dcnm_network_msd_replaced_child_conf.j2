@@ -1,0 +1,27 @@
+---
+# This MSD test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+# ------------------------------
+# Replaced Child Fabric Configuration
+# ------------------------------
+- net_name: "{{ test_data_common.msd_net2 }}"
+  vrf_name: "{{ test_data_common.net2_vrf }}"
+  net_id: "{{ test_data_common.msd_net2_net_id }}"
+  net_template: "{{ test_data_common.net2_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net2_net_extension_template }}"
+  vlan_id: "{{ test_data_common.msd_net2_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.msd_net2_gw_ip_subnet }}"
+  routing_tag: 12346
+  int_desc: 'Replaced Child Fabric Config'
+  mtu_l3intf: 9216
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      netflow_enable: false  # Changed from false
+      l3gw_on_border: False  # Changed from True
+      dhcp_loopback_id: 208  # Changed from 207
+      multicast_group_address: '239.1.1.5'  # Changed from 239.1.1.2
+      dhcp_srvr1_ip: '192.168.1.110'  # Added
+      dhcp_srvr1_vrf: 'management'  # Added
+  deploy: {{ deploy_local | bool }}
