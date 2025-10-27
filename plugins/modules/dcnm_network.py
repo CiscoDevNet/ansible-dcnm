@@ -42,6 +42,7 @@ options:
     - This parameter is used internally by the action plugin for MSD fabric processing
     type: str
     required: false
+    default: standalone
     choices: ['multisite_child', 'standalone', 'multisite_parent']
   state:
     description:
@@ -1029,7 +1030,7 @@ class DcnmNetwork:
         # Get skipped attributes for parent fabrics
         skipped_attributes = self.get_skipped_attributes()
         template_mapping = self.get_template_config_mapping()
-        
+
         # Convert skipped spec attributes to template config keys
         skipped_template_keys = set()
         for attr in skipped_attributes:
@@ -1148,31 +1149,31 @@ class DcnmNetwork:
 
             # Build comparison conditions, skipping those in skipped_template_keys
             comparisons = []
-            
+
             # Always compare network templates
             template_diff = have["networkTemplate"] != want["networkTemplate"]
             comparisons.append(template_diff)
-            
+
             ext_template_diff = have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
             comparisons.append(ext_template_diff)
-            
+
             # Compare other attributes only if not skipped
             if "gatewayIpAddress" not in skipped_template_keys:
                 gw_diff = gw_ip_have != gw_ip_want
                 comparisons.append(gw_diff)
-                
+
             if "vlanId" not in skipped_template_keys:
                 vlan_diff = vlanId_have != vlanId_want
                 comparisons.append(vlan_diff)
-                
+
             if "tag" not in skipped_template_keys:
                 tag_diff = tag_have != tag_want
                 comparisons.append(tag_diff)
-                
+
             if "isLayer2Only" not in skipped_template_keys:
                 l2_diff = l2only_have != l2only_want
                 comparisons.append(l2_diff)
-                
+
             if "vlanName" not in skipped_template_keys:
                 vname_diff = vlanName_have != vlanName_want
                 comparisons.append(vname_diff)
@@ -1180,23 +1181,23 @@ class DcnmNetwork:
             if "intfDescription" not in skipped_template_keys:
                 intdesc_diff = intDesc_have != intDesc_want
                 comparisons.append(intdesc_diff)
-                
+
             if "mtu" not in skipped_template_keys:
                 mtu_diff = mtu_have != mtu_want
                 comparisons.append(mtu_diff)
-                
+
             if "suppressArp" not in skipped_template_keys:
                 arp_diff = arpsup_have != arpsup_want
                 comparisons.append(arp_diff)
-                
+
             if "dhcpServerAddr1" not in skipped_template_keys:
                 dhcp1_diff = dhcp1_ip_have != dhcp1_ip_want
                 comparisons.append(dhcp1_diff)
-                
+
             if "dhcpServerAddr2" not in skipped_template_keys:
                 dhcp2_diff = dhcp2_ip_have != dhcp2_ip_want
                 comparisons.append(dhcp2_diff)
-                
+
             if "dhcpServerAddr3" not in skipped_template_keys:
                 dhcp3_diff = dhcp3_ip_have != dhcp3_ip_want
                 comparisons.append(dhcp3_diff)
@@ -1204,67 +1205,67 @@ class DcnmNetwork:
             if "vrfDhcp" not in skipped_template_keys:
                 dhcp1vrf_diff = dhcp1_vrf_have != dhcp1_vrf_want
                 comparisons.append(dhcp1vrf_diff)
-                
+
             if "vrfDhcp2" not in skipped_template_keys:
                 dhcp2vrf_diff = dhcp2_vrf_have != dhcp2_vrf_want
                 comparisons.append(dhcp2vrf_diff)
-                
+
             if "vrfDhcp3" not in skipped_template_keys:
                 dhcp3vrf_diff = dhcp3_vrf_have != dhcp3_vrf_want
                 comparisons.append(dhcp3vrf_diff)
-                
+
             if "dhcpServers" not in skipped_template_keys:
                 dhcp_servers_diff = dhcp_servers_have != dhcp_servers_want
                 comparisons.append(dhcp_servers_diff)
-                
+
             if "loopbackId" not in skipped_template_keys:
                 loopback_diff = dhcp_loopback_have != dhcp_loopback_want
                 comparisons.append(loopback_diff)
-                
+
             if "mcastGroup" not in skipped_template_keys:
                 mcast_diff = multicast_group_address_have != multicast_group_address_want
                 comparisons.append(mcast_diff)
-                
+
             if "gatewayIpV6Address" not in skipped_template_keys:
                 gwv6_diff = gw_ipv6_have != gw_ipv6_want
                 comparisons.append(gwv6_diff)
-                
+
             if "secondaryGW1" not in skipped_template_keys:
                 secgw1_diff = secip_gw1_have != secip_gw1_want
                 comparisons.append(secgw1_diff)
-                
+
             if "secondaryGW2" not in skipped_template_keys:
                 secgw2_diff = secip_gw2_have != secip_gw2_want
                 comparisons.append(secgw2_diff)
-                
+
             if "secondaryGW3" not in skipped_template_keys:
                 secgw3_diff = secip_gw3_have != secip_gw3_want
                 comparisons.append(secgw3_diff)
-                
+
             if "secondaryGW4" not in skipped_template_keys:
                 secgw4_diff = secip_gw4_have != secip_gw4_want
                 comparisons.append(secgw4_diff)
-                
+
             if "trmEnabled" not in skipped_template_keys:
                 trm_diff = trmen_have != trmen_want
                 comparisons.append(trm_diff)
-                
+
             if "rtBothAuto" not in skipped_template_keys:
                 rt_diff = rt_both_have != rt_both_want
                 comparisons.append(rt_diff)
-                
+
             if "enableL3OnBorder" not in skipped_template_keys:
                 l3border_diff = l3gw_onbd_have != l3gw_onbd_want
                 comparisons.append(l3border_diff)
-                
+
             if "ENABLE_NETFLOW" not in skipped_template_keys:
                 nf_diff = nf_en_have != nf_en_want
                 comparisons.append(nf_diff)
-                
+
             if "SVI_NETFLOW_MONITOR" not in skipped_template_keys:
                 svi_nf_diff = intvlan_nfen_have != intvlan_nfen_want
                 comparisons.append(svi_nf_diff)
-                
+
             if "VLAN_NETFLOW_MONITOR" not in skipped_template_keys:
                 vlan_nf_diff = vlan_nfen_have != vlan_nfen_want
                 comparisons.append(vlan_nf_diff)
@@ -1339,67 +1340,67 @@ class DcnmNetwork:
 
             # Build comparison conditions, skipping those in skipped_template_keys
             comparisons = []
-            
+
             # Always compare network templates
             template_diff = have["networkTemplate"] != want["networkTemplate"]
             comparisons.append(template_diff)
-            
+
             ext_template_diff = have["networkExtensionTemplate"] != want["networkExtensionTemplate"]
             comparisons.append(ext_template_diff)
-            
+
             # Compare other attributes only if not skipped
             if "gatewayIpAddress" not in skipped_template_keys:
                 gw_diff = gw_ip_have != gw_ip_want
                 comparisons.append(gw_diff)
-                
+
             if "vlanId" not in skipped_template_keys:
                 vlan_diff = vlanId_have != vlanId_want
                 comparisons.append(vlan_diff)
-                
+
             if "tag" not in skipped_template_keys:
                 tag_diff = tag_have != tag_want
                 comparisons.append(tag_diff)
-                
+
             if "isLayer2Only" not in skipped_template_keys:
                 l2_diff = l2only_have != l2only_want
                 comparisons.append(l2_diff)
-                
+
             if "vlanName" not in skipped_template_keys:
                 vname_diff = vlanName_have != vlanName_want
                 comparisons.append(vname_diff)
-                
+
             if "intfDescription" not in skipped_template_keys:
                 intdesc_diff = intDesc_have != intDesc_want
                 comparisons.append(intdesc_diff)
-                
+
             if "mtu" not in skipped_template_keys:
                 mtu_diff = mtu_have != mtu_want
                 comparisons.append(mtu_diff)
-                
+
             if "suppressArp" not in skipped_template_keys:
                 arp_diff = arpsup_have != arpsup_want
                 comparisons.append(arp_diff)
-                
+
             if "dhcpServerAddr1" not in skipped_template_keys:
                 dhcp1_diff = dhcp1_ip_have != dhcp1_ip_want
                 comparisons.append(dhcp1_diff)
-                
+
             if "dhcpServerAddr2" not in skipped_template_keys:
                 dhcp2_diff = dhcp2_ip_have != dhcp2_ip_want
                 comparisons.append(dhcp2_diff)
-                
+
             if "dhcpServerAddr3" not in skipped_template_keys:
                 dhcp3_diff = dhcp3_ip_have != dhcp3_ip_want
                 comparisons.append(dhcp3_diff)
-                
+
             if "vrfDhcp" not in skipped_template_keys:
                 dhcp1vrf_diff = dhcp1_vrf_have != dhcp1_vrf_want
                 comparisons.append(dhcp1vrf_diff)
-                
+
             if "vrfDhcp2" not in skipped_template_keys:
                 dhcp2vrf_diff = dhcp2_vrf_have != dhcp2_vrf_want
                 comparisons.append(dhcp2vrf_diff)
-                
+
             if "vrfDhcp3" not in skipped_template_keys:
                 dhcp3vrf_diff = dhcp3_vrf_have != dhcp3_vrf_want
                 comparisons.append(dhcp3vrf_diff)
@@ -1407,51 +1408,51 @@ class DcnmNetwork:
             if "loopbackId" not in skipped_template_keys:
                 loopback_diff = dhcp_loopback_have != dhcp_loopback_want
                 comparisons.append(loopback_diff)
-                
+
             if "mcastGroup" not in skipped_template_keys:
                 mcast_diff = multicast_group_address_have != multicast_group_address_want
                 comparisons.append(mcast_diff)
-                
+
             if "gatewayIpV6Address" not in skipped_template_keys:
                 gwv6_diff = gw_ipv6_have != gw_ipv6_want
                 comparisons.append(gwv6_diff)
-                
+
             if "secondaryGW1" not in skipped_template_keys:
                 secgw1_diff = secip_gw1_have != secip_gw1_want
                 comparisons.append(secgw1_diff)
-                
+
             if "secondaryGW2" not in skipped_template_keys:
                 secgw2_diff = secip_gw2_have != secip_gw2_want
                 comparisons.append(secgw2_diff)
-                
+
             if "secondaryGW3" not in skipped_template_keys:
                 secgw3_diff = secip_gw3_have != secip_gw3_want
                 comparisons.append(secgw3_diff)
-                
+
             if "secondaryGW4" not in skipped_template_keys:
                 secgw4_diff = secip_gw4_have != secip_gw4_want
                 comparisons.append(secgw4_diff)
-                
+
             if "trmEnabled" not in skipped_template_keys:
                 trm_diff = trmen_have != trmen_want
                 comparisons.append(trm_diff)
-                
+
             if "rtBothAuto" not in skipped_template_keys:
                 rt_diff = rt_both_have != rt_both_want
                 comparisons.append(rt_diff)
-                
+
             if "enableL3OnBorder" not in skipped_template_keys:
                 l3border_diff = l3gw_onbd_have != l3gw_onbd_want
                 comparisons.append(l3border_diff)
-                
+
             if "ENABLE_NETFLOW" not in skipped_template_keys:
                 nf_diff = nf_en_have != nf_en_want
                 comparisons.append(nf_diff)
-                
+
             if "SVI_NETFLOW_MONITOR" not in skipped_template_keys:
                 svi_nf_diff = intvlan_nfen_have != intvlan_nfen_want
                 comparisons.append(svi_nf_diff)
-                
+
             if "VLAN_NETFLOW_MONITOR" not in skipped_template_keys:
                 vlan_nf_diff = vlan_nfen_have != vlan_nfen_want
                 comparisons.append(vlan_nf_diff)
@@ -1598,7 +1599,7 @@ class DcnmNetwork:
                 {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr["srvr_vrf"]} for srvr in net.get("dhcp_servers", [])
             ],
         }
-        
+
         dhcp_loopback_val = net.get("dhcp_loopback_id", "")
 
         template_conf.update({
@@ -2007,26 +2008,26 @@ class DcnmNetwork:
 
     def check_want_networks_deployment_state(self):
         """
-        Check deployment state of wanted networks and wait for networks that are not 
+        Check deployment state of wanted networks and wait for networks that are not
         in pending, out-of-sync, or deployed state to become ready before proceeding.
-        
-        This method should be called right after get_have() to ensure networks from 
+
+        This method should be called right after get_have() to ensure networks from
         the playbook (want) are in a stable state before making any changes.
         """
 
         time.sleep(3)
         networks_to_check = set()
-        
+
         # Get networks from want_create that exist in DCNM and need to be checked
         for want_net in self.want_create:
             want_net_name = want_net['networkName']
-            
+
             # Find corresponding network in have_attach to see if it exists
             have_net = next(
                 (net for net in self.have_attach if net["networkName"] == want_net_name),
                 None
             )
-            
+
             if have_net:
                 # Network exists in DCNM, check if any attachments need deployment check
                 needs_check = False
@@ -2036,7 +2037,7 @@ class DcnmNetwork:
                         if not attach.get("is_deploy", False):
                             needs_check = True
                             break
-                            
+
                 if needs_check:
                     networks_to_check.add(want_net_name)
 
@@ -2044,16 +2045,16 @@ class DcnmNetwork:
         if networks_to_check:
             networks_list = list(networks_to_check)
             deployment_states = self.wait_for_deploy_ready(networks_list)
-            
+
             # Store deployment_states as instance variable for use in diff methods
             self.deployment_states = deployment_states
-            
+
             # Check if any networks failed to reach ready state
             # Success states: DEPLOYED, PENDING, OUT-OF-SYNC, NA
             # Failure states: FAILED, TIMEOUT and any other unexpected states
-            failed_networks = [net for net, state in deployment_states.items() 
-                             if state not in ['DEPLOYED', 'PENDING', 'OUT-OF-SYNC', 'NA']]
-            
+            failed_networks = [net for net, state in deployment_states.items()
+                               if state not in ['DEPLOYED', 'PENDING', 'OUT-OF-SYNC', 'NA']]
+
             if failed_networks:
                 error_msg = f"Pre-operation deployment check failed. Want networks not ready: {failed_networks}. Network states: {deployment_states}"
 
@@ -2062,6 +2063,7 @@ class DcnmNetwork:
         else:
             # Initialize empty deployment_states when no networks need checking
             self.deployment_states = {}
+
     def get_diff_delete(self):
 
         diff_detach = []
@@ -2547,7 +2549,7 @@ class DcnmNetwork:
         for cfg in self.config:
             net_name = cfg.get("net_name")
             deploy_setting = cfg.get("deploy", True)  # Default to True if not specified
-            
+
             # Only check networks that have deploy=True and are not already in modified_all_nets
             if deploy_setting and net_name and net_name not in modified_all_nets:
                 # Check if this network exists in DCNM (have_attach or have_create)
@@ -2556,13 +2558,13 @@ class DcnmNetwork:
                     if have_net.get("networkName") == net_name:
                         network_exists = True
                         break
-                        
+
                 if not network_exists:
                     for have_net in self.have_attach:
                         if have_net.get("networkName") == net_name:
                             network_exists = True
                             break
-                
+
                 if network_exists:
                     # Check deployment status from cached deployment_states
                     if net_name in self.deployment_states:
@@ -2580,7 +2582,7 @@ class DcnmNetwork:
             modified_all_nets = list(set(modified_all_nets))
             final_count = len(modified_all_nets)
             added_count = final_count - original_count
-            
+
         if modified_all_nets:
             diff_deploy.update({"networkNames": ",".join(modified_all_nets)})
 
@@ -2892,32 +2894,32 @@ class DcnmNetwork:
     def wait_for_deploy_ready(self, networks_to_check):
         """
         Wait for networks to reach a ready state for operations.
-        
+
         Based on the actual API response structure:
         - networkStatus can be: "DEPLOYED", "PENDING", "OUT-OF-SYNC", "FAILED", etc.
         - DEPLOYED, PENDING, NA are immediately ready
         - OUT-OF-SYNC and FAILED require two consecutive checks to be considered ready
-        
+
         Parameters:
             networks_to_check (list): List of network names to check deployment status
-            
+
         Returns:
             dict: Dictionary mapping network names to their final states
         """
-        
+
         method = "GET"
         network_states = {}
-        
+
         if not networks_to_check:
             return network_states
-            
+
         for net in networks_to_check:
             state_achieved = False
             path = self.paths["GET_NET_STATUS"].format(self.fabric, net)
             retry = max(100 // self.WAIT_TIME_FOR_DELETE_LOOP, 1)
             # Track previous state for this network to detect consecutive OUT-OF-SYNC states
             prev_state = None
-            
+
             while not state_achieved and retry >= 0:
                 retry -= 1
                 resp = dcnm_send(self.module, method, path)
@@ -2950,7 +2952,7 @@ class DcnmNetwork:
                 else:
                     # No data received, treat as not ready
                     time.sleep(self.WAIT_TIME_FOR_DELETE_LOOP)
-            
+
             # Handle timeout case
             if retry < 0:
                 network_states[net] = "TIMEOUT"
@@ -2967,7 +2969,6 @@ class DcnmNetwork:
 
     def push_to_remote(self, is_rollback=False):
 
-
         path = self.paths["GET_NET"].format(self.fabric)
 
         method = "PUT"
@@ -2975,7 +2976,7 @@ class DcnmNetwork:
             # Get skipped attributes for parent fabrics
             skipped_attributes = self.get_skipped_attributes()
             template_mapping = self.get_template_config_mapping()
-            
+
             # Convert skipped spec attributes to template config keys
             skipped_template_keys = set()
             for attr in skipped_attributes:
@@ -3082,7 +3083,7 @@ class DcnmNetwork:
             # Get skipped attributes for parent fabrics
             skipped_attributes = self.get_skipped_attributes()
             template_mapping = self.get_template_config_mapping()
-            
+
             # Convert skipped spec attributes to template config keys
             skipped_template_keys = set()
             for attr in skipped_attributes:
@@ -3232,36 +3233,36 @@ class DcnmNetwork:
     def get_skipped_attributes(self):
         """
         Get list of attributes that should be skipped for parent fabrics.
-        
+
         For parent fabrics, returns all child spec attributes except net_name and deploy.
         For child and standalone fabrics, returns empty list.
-        
+
         Returns:
             list: List of attribute names to skip
         """
         if self.fabric_type != "multisite_parent":
             return []
-        
+
         # Get child spec dynamically using parameter
         child_net_spec = self.get_network_spec(fabric_type="multisite_child")
-        
+
         # Extract all attribute names except net_name and deploy
-        skipped_attrs = [attr for attr in child_net_spec.keys() 
-                           if attr not in ["net_name", "deploy", "vlan_id", "vrf_name", "is_l2only"]]
-        
+        skipped_attrs = [attr for attr in child_net_spec.keys()
+                         if attr not in ["net_name", "deploy", "vlan_id", "vrf_name", "is_l2only"]]
+
         return skipped_attrs
 
     def get_template_config_mapping(self):
         """
         Get mapping from network spec attributes to template config keys.
-        
+
         Returns:
             dict: Mapping from spec attribute to template config key
         """
         mapping = {
             "vlan_id": "vlanId",
             "gw_ip_subnet": "gatewayIpAddress",
-            "is_l2only": "isLayer2Only", 
+            "is_l2only": "isLayer2Only",
             "routing_tag": "tag",
             "vlan_name": "vlanName",
             "int_desc": "intfDescription",
@@ -3293,19 +3294,19 @@ class DcnmNetwork:
     def get_network_spec(self, fabric_type=None):
         """
         Get network specification based on fabric type and state.
-        
+
         Args:
             fabric_type (str, optional): Override fabric type. If None, uses self.fabric_type.
-        
+
         Returns:
             dict: Network specification dictionary
         """
         mcast_group_addr = self.get_fabric_multicast_group_address()
         is_query_state = self.params["state"] == "query"
-        
+
         # Use parameter if provided, otherwise use instance fabric_type
         net_fabric_type = fabric_type if fabric_type is not None else self.fabric_type
-        
+
         # Define the restricted spec for MSD child configurations
         if net_fabric_type == "multisite_child":
             net_spec = dict(
@@ -3353,7 +3354,7 @@ class DcnmNetwork:
                 route_target_both=dict(type="bool", default=False),
                 intfvlan_nf_monitor=dict(type="str"),
             )
-            
+
             # Adjust deploy field for query state
             if is_query_state:
                 net_spec["deploy"] = dict(type="bool")
@@ -3396,11 +3397,11 @@ class DcnmNetwork:
                 intfvlan_nf_monitor=dict(type="str"),
                 vlan_nf_monitor=dict(type="str"),
             )
-            
+
             # Adjust deploy field for query state
             if is_query_state:
                 net_spec["deploy"] = dict(type="bool")
-                
+
         return net_spec
 
     def validate_input(self):
@@ -3430,7 +3431,7 @@ class DcnmNetwork:
                     # Check for attachment attributes in MSD child fabrics
                     if self.fabric_type == "multisite_child" and net.get("attach"):
                         self.module.fail_json(msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are not allowed for MSD child networks. MSD child fabrics do not support network attachments.")
-                    
+
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
                         net["attach"] = valid_att
@@ -3468,7 +3469,7 @@ class DcnmNetwork:
                     # Check for attachment attributes in MSD child fabrics
                     if self.fabric_type == "multisite_child" and net.get("attach"):
                         self.module.fail_json(msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are not allowed for MSD child networks. MSD child fabrics do not support network attachments.")
-                    
+
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
                         net["attach"] = valid_att
@@ -3602,7 +3603,6 @@ class DcnmNetwork:
         self.get_diff_override()
 
         self.push_to_remote(True)
-        
 
         if self.failed_to_rollback:
             msg1 = "FAILED - Attempted rollback of the task has failed, may need manual intervention"
@@ -3629,12 +3629,12 @@ class DcnmNetwork:
     def dcnm_update_network_information(self, want, have, cfg):
         # Check if this is a replaced state with MSD child fabric
         is_replaced_multisite_child = (
-            self.module.params["state"] == "replaced" and
-            self.fabric_type == "multisite_child"
+            self.module.params["state"] == "replaced"
+            and self.fabric_type == "multisite_child"
         )
 
         # MSD child configurable attributes (can be updated in replaced state):
-        # dhcp_loopback_id, netflow_enable, vlan_nf_monitor, trm_enable, 
+        # dhcp_loopback_id, netflow_enable, vlan_nf_monitor, trm_enable,
         # multicast_group_address, l3gw_on_border
 
         # Update basic network information
@@ -3842,8 +3842,8 @@ def main():
     element_spec = dict(
         fabric=dict(required=True, type="str"),
         _fabric_type=dict(
-            required=False, 
-            type="str", 
+            required=False,
+            type="str",
             default="standalone",
             choices=["multisite_child", "standalone", "multisite_parent"]
         ),
@@ -3867,8 +3867,6 @@ def main():
     dcnm_net.get_have()
     if module.params["_fabric_type"] == "multisite_child":
         dcnm_net.check_want_networks_deployment_state()
-
-
 
     warn_msg = None
 

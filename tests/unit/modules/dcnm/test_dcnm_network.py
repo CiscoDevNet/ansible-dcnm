@@ -83,7 +83,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     mock_msd_child_net_object = test_data.get("mock_msd_child_net_object")
     mock_msd_child_net_attach_object = test_data.get("mock_msd_child_net_attach_object")
     mock_msd_child_net_update_response = test_data.get("mock_msd_child_net_update_response")
-    
+
     # MSD DHCP test data
     playbook_msd_dhcp_config = test_data.get("playbook_msd_dhcp_config")
     mock_msd_dhcp_net_create_response = test_data.get("mock_msd_dhcp_net_create_response")
@@ -453,7 +453,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.attach_success_resp,
                 self.deploy_success_resp,
             ]
-        
+
         elif "_merged_msd_basic" in self._testMethodName:
             self.init_data()
             self.run_dcnm_fabric_details.side_effect = [
@@ -477,7 +477,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.mock_msd_child_net_update_response,
                 self.deploy_success_resp,
             ]
-        
+
         elif "_merged_msd_dhcp" in self._testMethodName:
             self.init_data()
             self.run_dcnm_fabric_details.side_effect = [
@@ -501,7 +501,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.mock_msd_dhcp_child_net_update_response,
                 self.deploy_success_resp,
             ]
-        
+
         elif "_msd_override_with_different_attachments" in self._testMethodName:
             self.init_data()
             self.run_dcnm_fabric_details.side_effect = [
@@ -1006,7 +1006,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     def test_dcnm_net_merged_msd_basic(self):
         """
         Test MSD network creation with child fabric configuration.
-        
+
         This test verifies:
         - MSD network creation at parent MSD fabric level
         - Network attachment configuration in child fabric
@@ -1018,13 +1018,13 @@ class TestDcnmNetworkModule(TestDcnmModule):
             dict(state="merged", fabric="msd-parent", config=self.playbook_msd_config)
         )
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
-        
+
         # Verify overall result structure
         self.assertTrue(result.get("changed"))
         self.assertIn("parent_fabric", result)
         self.assertIn("child_fabrics", result)
         self.assertEqual(result.get("workflow"), "Parent MSD with Child Fabric Processing")
-        
+
         # Verify parent fabric section
         parent = result.get("parent_fabric")
         self.assertTrue(parent.get("changed"))
@@ -1032,7 +1032,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent.get("fabric_name"), "msd-parent")
         self.assertIn("diff", parent)
         self.assertIn("response", parent)
-        
+
         # Verify parent fabric diff
         parent_diff = parent.get("diff")[0]
         self.assertEqual(parent_diff["net_name"], "ansible-msd-net1")
@@ -1043,43 +1043,43 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent_diff["int_desc"], "MSD Network managed by Ansible")
         self.assertEqual(parent_diff["mtu_l3intf"], 9214)
         self.assertFalse(parent_diff["is_l2only"])
-        
+
         # Verify parent fabric attachments
         self.assertEqual(len(parent_diff["attach"]), 2)
         self.assertTrue(parent_diff["attach"][0]["deploy"])
         self.assertTrue(parent_diff["attach"][1]["deploy"])
-        
+
         # Verify parent fabric response (create, attach, deploy)
         parent_response = parent.get("response")
         self.assertEqual(len(parent_response), 3)
-        
+
         # Verify create response
         self.assertEqual(parent_response[0]["RETURN_CODE"], 200)
         self.assertEqual(parent_response[0]["METHOD"], "POST")
         self.assertIn("Network Id", parent_response[0]["DATA"])
         self.assertEqual(parent_response[0]["DATA"]["Network Id"], 8001)
         self.assertEqual(parent_response[0]["DATA"]["Network Name"], "ansible-msd-net1")
-        
+
         # Verify attachment response
         self.assertEqual(parent_response[1]["RETURN_CODE"], 200)
         self.assertEqual(parent_response[1]["METHOD"], "POST")
         self.assertIn("ansible-msd-net1", str(parent_response[1]["DATA"]))
-        
+
         # Verify deploy response
         self.assertEqual(parent_response[2]["RETURN_CODE"], 200)
         self.assertEqual(parent_response[2]["METHOD"], "POST")
-        
+
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
         self.assertEqual(len(child_fabrics), 1)
-        
+
         child = child_fabrics[0]
         self.assertTrue(child.get("changed"))
         self.assertFalse(child.get("failed"))
         self.assertEqual(child.get("fabric_name"), "msd-child-1")
         self.assertIn("diff", child)
         self.assertIn("response", child)
-        
+
         # Verify child fabric diff
         child_diff = child.get("diff")[0]
         self.assertEqual(child_diff["net_name"], "ansible-msd-net1")
@@ -1087,7 +1087,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(child_diff["net_id"], 8001)
         self.assertEqual(child_diff["vlan_id"], 2101)
         self.assertEqual(child_diff["gw_ip_subnet"], "192.168.101.1/24")
-        
+
         # Verify child fabric specific configuration
         self.assertEqual(child_diff["dhcp_srvr1_ip"], "192.168.1.101")
         self.assertEqual(child_diff["dhcp_srvr1_vrf"], "management")
@@ -1095,13 +1095,13 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(child_diff["multicast_group_address"], "239.1.1.1")
         self.assertTrue(child_diff["l3gw_on_border"])
         self.assertEqual(child_diff["vlan_nf_monitor"], "monitor1")
-        
+
         # Verify child fabric response (query response showing OUT-OF-SYNC state)
         child_response = child.get("response")
         self.assertEqual(len(child_response), 1)
         self.assertEqual(child_response[0]["RETURN_CODE"], 200)
         self.assertEqual(child_response[0]["METHOD"], "GET")
-        
+
         # Verify the child fabric response contains network attach information
         data = child_response[0]["DATA"]
         self.assertIsInstance(data, list)
@@ -1109,7 +1109,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(data[0]["networkName"], "ansible-msd-net1")
         self.assertIn("lanAttachList", data[0])
         self.assertEqual(len(data[0]["lanAttachList"]), 2)
-        
+
         # Verify attachment states
         lan_attach = data[0]["lanAttachList"]
         self.assertEqual(lan_attach[0]["lanAttachState"], "OUT-OF-SYNC")
@@ -1118,7 +1118,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     def test_dcnm_net_merged_msd_dhcp(self):
         """
         Test MSD network creation with DHCP configuration in child fabric.
-        
+
         This test verifies:
         - MSD network creation with multiple DHCP servers
         - DHCP server configuration (IP, VRF) in child fabric
@@ -1131,19 +1131,19 @@ class TestDcnmNetworkModule(TestDcnmModule):
             dict(state="merged", fabric="msd-parent", config=self.playbook_msd_dhcp_config)
         )
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
-        
+
         # Verify overall result structure
         self.assertTrue(result.get("changed"))
         self.assertIn("parent_fabric", result)
         self.assertIn("child_fabrics", result)
         self.assertEqual(result.get("workflow"), "Parent MSD with Child Fabric Processing")
-        
+
         # Verify parent fabric section
         parent = result.get("parent_fabric")
         self.assertTrue(parent.get("changed"))
         self.assertFalse(parent.get("failed"))
         self.assertEqual(parent.get("fabric_name"), "msd-parent")
-        
+
         # Verify parent fabric diff - key network parameters
         parent_diff = parent.get("diff")[0]
         self.assertEqual(parent_diff["net_name"], "ansible-msd-dhcp-net")
@@ -1153,17 +1153,17 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent_diff["gw_ip_subnet"], "192.168.104.1/24")
         self.assertEqual(parent_diff["int_desc"], "MSD DHCP Network")
         self.assertEqual(parent_diff["mtu_l3intf"], 9214)
-        
+
         # Verify parent fabric does NOT have DHCP config (should be empty/false)
         self.assertEqual(parent_diff["dhcp_srvr1_ip"], "")
         self.assertEqual(parent_diff["dhcp_loopback_id"], "")
         self.assertFalse(parent_diff["l3gw_on_border"])
-        
+
         # Verify parent fabric attachments
         self.assertEqual(len(parent_diff["attach"]), 2)
         self.assertEqual(parent_diff["attach"][0]["ip_address"], "192.168.10.203")
         self.assertEqual(parent_diff["attach"][1]["ip_address"], "192.168.10.204")
-        
+
         # Verify parent fabric response
         parent_response = parent.get("response")
         self.assertEqual(len(parent_response), 3)
@@ -1171,23 +1171,23 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent_response[0]["DATA"]["Network Name"], "ansible-msd-dhcp-net")
         self.assertIn("9R518K2AT3R", str(parent_response[1]["DATA"]))
         self.assertIn("915KQ8P3NS8", str(parent_response[1]["DATA"]))
-        
+
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
         self.assertEqual(len(child_fabrics), 1)
-        
+
         child = child_fabrics[0]
         self.assertTrue(child.get("changed"))
         self.assertFalse(child.get("failed"))
         self.assertEqual(child.get("fabric_name"), "msd-child-1")
-        
+
         # Verify child fabric diff - DHCP configuration is present
         child_diff = child.get("diff")[0]
         self.assertEqual(child_diff["net_name"], "ansible-msd-dhcp-net")
         self.assertEqual(child_diff["vrf_name"], "Tenant-1")
         self.assertEqual(child_diff["net_id"], "8004")
         self.assertEqual(child_diff["vlan_id"], 2104)
-        
+
         # Verify DHCP servers configuration
         self.assertEqual(child_diff["dhcp_srvr1_ip"], "192.168.1.102")
         self.assertEqual(child_diff["dhcp_srvr1_vrf"], "management")
@@ -1195,20 +1195,20 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(child_diff["dhcp_srvr2_vrf"], "default")
         self.assertEqual(child_diff["dhcp_srvr3_ip"], "192.168.1.106")
         self.assertEqual(child_diff["dhcp_srvr3_vrf"], "management")
-        
+
         # Verify child-specific parameters
         self.assertEqual(child_diff["dhcp_loopback_id"], 207)
         self.assertEqual(child_diff["multicast_group_address"], "239.1.1.4")
         self.assertTrue(child_diff["l3gw_on_border"])
         self.assertFalse(child_diff["netflow_enable"])
         self.assertEqual(child_diff["vlan_nf_monitor"], "monitor2")
-        
+
         # Verify child fabric response
         child_response = child.get("response")
         self.assertEqual(len(child_response), 1)
         self.assertEqual(child_response[0]["RETURN_CODE"], 200)
         self.assertEqual(child_response[0]["METHOD"], "GET")
-        
+
         # Verify child fabric attachment data
         attach_data = child_response[0]["DATA"]
         self.assertEqual(len(attach_data), 2)
@@ -1222,7 +1222,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     def test_dcnm_net_msd_override_with_different_attachments(self):
         """
         Test MSD network override with different attachments.
-        
+
         This test verifies:
         - MSD network exists with old attachments (Ethernet1/17,Ethernet1/18)
         - Override state updates attachments to new ports (Ethernet1/16,Ethernet1/17)
@@ -1235,13 +1235,13 @@ class TestDcnmNetworkModule(TestDcnmModule):
             dict(state="overridden", fabric="msd-parent", config=self.playbook_msd_override_config)
         )
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
-        
+
         # Verify overall result structure
         self.assertTrue(result.get("changed"))
         self.assertIn("parent_fabric", result)
         self.assertIn("child_fabrics", result)
         self.assertEqual(result.get("workflow"), "Parent MSD with Child Fabric Processing")
-        
+
         # Verify parent fabric section
         parent = result.get("parent_fabric")
         self.assertTrue(parent.get("changed"))
@@ -1249,31 +1249,31 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(parent.get("fabric_name"), "msd-parent")
         self.assertIn("diff", parent)
         self.assertIn("response", parent)
-        
+
         # Verify parent fabric diff shows updated attachments (minimal structure)
         parent_diff = parent.get("diff")[0]
         self.assertEqual(parent_diff["net_name"], "ansible-msd-dhcp-net")
         self.assertIn("attach", parent_diff)
-        
+
         # Verify parent fabric updated attachments - NEW PORTS
         self.assertEqual(len(parent_diff["attach"]), 2)
-        
+
         # Check first switch attachment (leaf3) has new ports
         attach1 = parent_diff["attach"][0]
         self.assertEqual(attach1["ip_address"], "192.168.10.203")
         self.assertEqual(attach1["ports"], "Ethernet1/16,Ethernet1/17")
         self.assertTrue(attach1["deploy"])
-        
+
         # Check second switch attachment (leaf4) has new ports
         attach2 = parent_diff["attach"][1]
         self.assertEqual(attach2["ip_address"], "192.168.10.204")
         self.assertEqual(attach2["ports"], "Ethernet1/16,Ethernet1/17")
         self.assertTrue(attach2["deploy"])
-        
+
         # Verify parent fabric response includes attachment update and deploy
         parent_response = parent.get("response")
         self.assertEqual(len(parent_response), 2)
-        
+
         # Verify attachment update response (index 0)
         attach_resp = parent_response[0]
         self.assertEqual(attach_resp["RETURN_CODE"], 200)
@@ -1282,24 +1282,24 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[9R518K2AT3R/leaf3]"], "SUCCESS")
         self.assertIn("ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]", attach_resp["DATA"])
         self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]"], "SUCCESS")
-        
+
         # Verify deploy response (index 1)
         deploy_resp = parent_response[1]
         self.assertEqual(deploy_resp["RETURN_CODE"], 200)
         self.assertEqual(deploy_resp["METHOD"], "POST")
         self.assertIn("status", deploy_resp["DATA"])
-        
+
         # Verify child fabrics section
         child_fabrics = result.get("child_fabrics")
         self.assertEqual(len(child_fabrics), 1)
-        
+
         child = child_fabrics[0]
         self.assertTrue(child.get("changed"))
         self.assertFalse(child.get("failed"))
         self.assertEqual(child.get("fabric_name"), "msd-child-1")
         self.assertIn("diff", child)
         self.assertIn("response", child)
-        
+
         # Verify child fabric diff - includes all network parameters
         child_diff = child.get("diff")[0]
         self.assertEqual(child_diff["net_name"], "ansible-msd-dhcp-net")
@@ -1314,26 +1314,26 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(child_diff["mtu_l3intf"], 9216)
         self.assertFalse(child_diff["route_target_both"])
         self.assertFalse(child_diff["l3gw_on_border"])
-        
+
         # Verify child fabric has empty attach list (attachments shown in response only)
         self.assertEqual(len(child_diff["attach"]), 0)
-        
+
         # Verify child fabric response shows IN PROGRESS state
         child_response = child.get("response")
         self.assertEqual(len(child_response), 1)
         self.assertEqual(child_response[0]["RETURN_CODE"], 200)
         self.assertEqual(child_response[0]["METHOD"], "GET")
-        
+
         # Verify child fabric attachment data reflects new port configuration
         child_attach_data = child_response[0]["DATA"]
         self.assertEqual(len(child_attach_data), 1)
         self.assertEqual(child_attach_data[0]["networkName"], "ansible-msd-dhcp-net")
         self.assertIn("lanAttachList", child_attach_data[0])
-        
+
         # Verify lanAttachList has 2 switches
         lan_attach_list = child_attach_data[0]["lanAttachList"]
         self.assertEqual(len(lan_attach_list), 2)
-        
+
         # Verify first switch in child fabric (leaf3)
         leaf3_attach = lan_attach_list[0]
         self.assertEqual(leaf3_attach["switchSerialNo"], "9R518K2AT3R")
@@ -1345,7 +1345,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         self.assertEqual(leaf3_attach["portNames"], "Ethernet1/16,Ethernet1/17")
         self.assertEqual(leaf3_attach["lanAttachState"], "IN PROGRESS")
         self.assertTrue(leaf3_attach["isLanAttached"])
-        
+
         # Verify second switch in child fabric (leaf4)
         leaf4_attach = lan_attach_list[1]
         self.assertEqual(leaf4_attach["switchSerialNo"], "915KQ8P3NS8")
