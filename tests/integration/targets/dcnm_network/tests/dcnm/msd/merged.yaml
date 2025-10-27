@@ -141,7 +141,6 @@
   register: result
   tags: msd_merged
 
-- meta: end_play
 
 - name: MSD_MERGED - TC1 - ASSERT - Verify Basic MSD Network Creation
   assert:

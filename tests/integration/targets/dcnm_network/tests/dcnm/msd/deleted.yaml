@@ -291,7 +291,6 @@
     fail_msg: "MSD networks creation failed"
   tags: msd_deleted
 
-- meta: end_play
 
 # - name: MSD_DELETED - TC2 - QUERY - Verify networks exist before deletion
 #   cisco.dcnm.dcnm_network:
