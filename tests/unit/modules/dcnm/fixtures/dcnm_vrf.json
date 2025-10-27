@@ -2580,6 +2580,36 @@
       }
     ]
   },
+  "mock_pools_top_down_dot1q": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": [
+      {
+        "allocatedFlag": true,
+        "allocatedIp": "5",
+        "allocatedOn": 1734051260507,
+        "allocatedScopeValue": "XYZKSJHSMK1",
+        "entityName": "test_vrf_1",
+        "entityType": "DeviceInterface",
+        "hierarchicalKey": "0",
+        "id": 6613,
+        "ipAddress": "10.10.10.224",
+        "resourcePool": {
+            "dynamicSubnetRange": null,
+            "fabricName": "test-fabric",
+            "hierarchicalKey": "test-fabric",
+            "id": 0,
+            "overlapAllowed": false,
+            "poolName": "TOP_DOWN_L3_DOT1Q",
+            "poolType": "ID_POOL",
+            "targetSubnet": 0,
+            "vrfName": "VRF_1"
+        },
+        "switchName": "n9kv_leaf1"
+      }
+    ]
+  },
   "mock_vrf_lite_obj": {
    "RETURN_CODE":200,
    "METHOD":"GET",

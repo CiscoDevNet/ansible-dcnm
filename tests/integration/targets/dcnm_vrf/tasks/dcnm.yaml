@@ -31,9 +31,9 @@
   block:
     - name: set pattern for all standalone tests
       set_fact:
-        standalone_pattern: "*.yaml"
+        standalone_pattern: "{{ testcase }}"
     - import_tasks: dcnm_standalone.yaml
-  when: testcase == "standalone/*"
+  when: testcase is match("standalone/.*")
   tags: sanity
 
 # Handle specific MSD test
@@ -52,12 +52,10 @@
 # Handle specific standalone test
 - name: run specific standalone test
   block:
-    - name: extract standalone test name
-      set_fact:
-        standalone_test_name: "{{ testcase | regex_replace('^standalone/', '') }}"
     - name: set pattern for specific standalone test
       set_fact:
-        standalone_pattern: "{{ standalone_test_name }}.yaml"
+        standalone_pattern: "{{ testcase }}"
     - import_tasks: dcnm_standalone.yaml
-  when: testcase.startswith("standalone/") and testcase != "standalone/*"
+  when: 
+    - testcase is match("standalone/[^/]+\.yaml$")
   tags: sanity

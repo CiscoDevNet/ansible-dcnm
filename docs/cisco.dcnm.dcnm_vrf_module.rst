@@ -38,6 +38,29 @@ Parameters
             <tr>
                 <td colspan="5">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>_fabric_type</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>multisite_child</li>
+                                    <li>multisite_parent</li>
+                                    <li><div style="color: blue"><b>standalone</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>INTERNAL PARAMETER - DO NOT USE</div>
+                        <div>Fabric type is determined by the module&#x27;s action plugin</div>
+                        <div>This parameter is used internally by the module for multisite fabric processing</div>
+                        <div>Valid values are &#x27;multisite_child&#x27;, &#x27;multisite_parent&#x27; and &#x27;standalone&#x27;</div>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="5">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>config</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -69,6 +92,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag to Control Advertisement of Default Route Internally</div>
+                        <div>Not applicable at Multisite Parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -89,6 +113,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag to Control Advertisement of /32 and /128 Routes to Edge Routers</div>
+                        <div>Not applicable at Multisite Parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -361,6 +386,7 @@ Parameters
                 <td>
                         <div>VRF Lite BGP Key Encryption Type</div>
                         <div>Allowed values are 3 (3DES) and 7 (Cisco)</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -378,8 +404,436 @@ Parameters
                 <td>
                         <div>VRF Lite BGP neighbor password</div>
                         <div>Password should be in Hex string format</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>child_fabric_config</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">list</span>
+                         / <span style="color: purple">elements=dictionary</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Configuration for Child fabrics in multisite (MSD) deployments</div>
+                        <div>Only applicable for Parent multisite fabrics</div>
+                        <div>Defines VRF behavior on each Child fabric</div>
+                        <div>If not specified, Child fabrics will default the required properties</div>
+                        <div>Not supported with state &#x27;deleted&#x27;</div>
+                </td>
+            </tr>
+                                <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>adv_default_routes</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Advertise default routes on Child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>adv_host_routes</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Advertise host routes on Child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bgp_passwd_encrypt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>3</b>&nbsp;&larr;</div></li>
+                                    <li>7</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>BGP password encryption type on Child fabric</div>
+                        <div>3 for 3DES encryption, 7 for Cisco encryption</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>bgp_password</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>BGP password for Child fabric VRF Lite</div>
+                        <div>Password should be in Hex string format</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>deploy</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Control whether to deploy the specified attachment on Child fabric.</div>
+                        <div>If not specified, defaults to value specified at Multisite Parent fabric level.</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>export_mvpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>MVPN routes to export on Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>fabric</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                         / <span style="color: red">required</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Name of the Child fabric</div>
+                        <div>Must be a valid Child fabric associated with the Parent</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>import_mvpn_rt</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>MVPN routes to import on Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                        <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>l3vni_wo_vlan</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable L3 VNI without VLAN on Child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>netflow_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable netflow on Child fabric</div>
+                        <div>Netflow is supported only if it is enabled on fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>nf_monitor</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Netflow monitor on Child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>no_rp</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>No RP, only SSM is used on Child fabric</div>
+                        <div>Cannot be used with TRM enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>overlay_mcast_group</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Overlay IPv4 Multicast group on Child fabric</div>
+                        <div>Format (224.0.0.0/4 to 239.255.255.255/4)</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rp_address</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>IPv4 Address of RP (Rendezvous Point) on Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rp_external</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Specifies if RP is external to the Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>rp_loopback_id</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">integer</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Loopback ID of RP on Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                        <div>Range 0-1023</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>static_default_route</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li><div style="color: blue"><b>yes</b>&nbsp;&larr;</div></li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Configure static default route on Child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>trm_bgw_msite</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable TRM on Border Gateway Multisite for Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                        <div>Required for multicast across sites</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>trm_enable</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li><div style="color: blue"><b>no</b>&nbsp;&larr;</div></li>
+                                    <li>yes</li>
+                        </ul>
+                </td>
+                <td>
+                        <div>Enable TRM (Tenant Routed Multicast) on Child fabric</div>
+                        <div>Required for multicast traffic within VRF on Child fabric</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="3">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>underlay_mcast_ip</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                </td>
+                <td>
+                        <div>Underlay IPv4 Multicast Address on Child fabric</div>
+                        <div>Can be configured only when TRM is enabled</div>
+                </td>
+            </tr>
+
             <tr>
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
@@ -401,7 +855,8 @@ Parameters
                         <div>Ansible NDFC Collection Behavior for Version 2.0.1 and earlier</div>
                         <div>This knob will create and deploy the attachment in DCNM only when set to &quot;True&quot; in playbook</div>
                         <div>Ansible NDFC Collection Behavior for Version 2.1.0 and later</div>
-                        <div>Attachments specified in the playbook will always be created in DCNM. This knob, when set to &quot;True&quot;,  will deploy the attachment in DCNM, by pushing the configs to switch. If set to &quot;False&quot;, the attachments will be created in DCNM, but will not be deployed</div>
+                        <div>Attachments specified in the playbook will always be created in DCNM This knob, when set to &quot;True&quot;,  will deploy the attachment in DCNM, by pushing the configs to switch. If set to &quot;False&quot;, the attachments will be created in DCNM, but will not be deployed</div>
+                        <div>In case of Multisite fabrics, deploy flag on parent will be inherited by the specified child fabrics, unless overridden at child fabric config level.</div>
                 </td>
             </tr>
             <tr>
@@ -460,6 +915,7 @@ Parameters
                         <div>supported on NDFC only</div>
                         <div>Can be configured only when TRM is enabled</div>
                         <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -515,6 +971,7 @@ Parameters
                         <div>supported on NDFC only</div>
                         <div>Can be configured only when TRM is enabled</div>
                         <div>Use &#x27;,&#x27; to separate multiple route-targets</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -573,6 +1030,7 @@ Parameters
                 </td>
                 <td>
                         <div>Enable L3 VNI without VLAN</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -646,6 +1104,7 @@ Parameters
                         <div>Enable netflow on VRF-LITE Sub-interface</div>
                         <div>Netflow is supported only if it is enabled on fabric</div>
                         <div>Netflow configs are supported on NDFC only</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -663,6 +1122,7 @@ Parameters
                 <td>
                         <div>Netflow Monitor</div>
                         <div>Netflow configs are supported on NDFC only</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -684,6 +1144,7 @@ Parameters
                 <td>
                         <div>No RP, only SSM is used</div>
                         <div>supported on NDFC only</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -701,6 +1162,7 @@ Parameters
                 <td>
                         <div>Underlay IPv4 Multicast group (224.0.0.0/4 to 239.255.255.255/4)</div>
                         <div>Can be configured only when TRM is enabled</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -735,6 +1197,7 @@ Parameters
                 <td>
                         <div>IPv4 Address of RP</div>
                         <div>Can be configured only when TRM is enabled</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -756,6 +1219,7 @@ Parameters
                 <td>
                         <div>Specifies if RP is external to the fabric</div>
                         <div>Can be configured only when TRM is enabled</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -773,6 +1237,7 @@ Parameters
                 <td>
                         <div>loopback ID of RP</div>
                         <div>Can be configured only when TRM is enabled</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -810,6 +1275,7 @@ Parameters
                 </td>
                 <td>
                         <div>Flag to Control Static Default Route Configuration</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -831,6 +1297,7 @@ Parameters
                 <td>
                         <div>Enable TRM on Border Gateway Multisite</div>
                         <div>Can be configured only when TRM is enabled</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -851,6 +1318,7 @@ Parameters
                 </td>
                 <td>
                         <div>Enable Tenant Routed Multicast</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -868,6 +1336,7 @@ Parameters
                 <td>
                         <div>Underlay IPv4 Multicast Address</div>
                         <div>Can be configured only when TRM is enabled</div>
+                        <div>Not applicable at Multisite parent fabric level</div>
                 </td>
             </tr>
             <tr>
@@ -1132,147 +1601,382 @@ Examples
     #     and push the diff payloads to DCNM.
     # If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
 
-    # The two VRFs below will be merged into the target fabric.
-    - name: Merge vrfs
+    # ===========================================================================
+    # Non-MSD/Standalone Fabric Examples
+    # ===========================================================================
+
+    - name: MERGE | Create two VRFs on a standalone fabric
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: merged
         config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
-          attach:
-          - ip_address: 192.168.1.224
-          - ip_address: 192.168.1.225
-        - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          service_vrf_template: null
-          attach:
-          - ip_address: 192.168.1.224
-          - ip_address: 192.168.1.225
+          - vrf_name: ansible-vrf-r1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            service_vrf_template: null
+            attach:
+              - ip_address: 192.168.1.224
+              - ip_address: 192.168.1.225
+          - vrf_name: ansible-vrf-r2
+            vrf_id: 9008012
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            service_vrf_template: null
+            attach:
+              - ip_address: 192.168.1.224
+              - ip_address: 192.168.1.225
 
-    # VRF LITE Extension attached
-    - name: Merge vrfs
+    - name: MERGE | Create a VRF with VRF-Lite extensions
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: merged
         config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
-          attach:
-          - ip_address: 192.168.1.224
-          - ip_address: 192.168.1.225
-            vrf_lite:
-              - peer_vrf: test_vrf_1 # optional
-                interface: Ethernet1/16 # mandatory
-                ipv4_addr: 10.33.0.2/30 # optional
-                neighbor_ipv4: 10.33.0.1 # optional
-                ipv6_addr: 2010::10:34:0:7/64 # optional
-                neighbor_ipv6: 2010::10:34:0:3 # optional
-                dot1q: 2 # dot1q can be got from dcnm/optional
-              - peer_vrf: test_vrf_2 # optional
-                interface: Ethernet1/17 # mandatory
-                ipv4_addr: 20.33.0.2/30 # optional
-                neighbor_ipv4: 20.33.0.1 # optional
-                ipv6_addr: 3010::10:34:0:7/64 # optional
-                neighbor_ipv6: 3010::10:34:0:3 # optional
-                dot1q: 3 # dot1q can be got from dcnm/optional
+          - vrf_name: ansible-vrf-r1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            service_vrf_template: null
+            attach:
+              - ip_address: 192.168.1.224
+              - ip_address: 192.168.1.225
+                vrf_lite:
+                  - peer_vrf: test_vrf_1 # optional
+                    interface: Ethernet1/16 # mandatory
+                    ipv4_addr: 10.33.0.2/30 # optional
+                    neighbor_ipv4: 10.33.0.1 # optional
+                    ipv6_addr: 2010::10:34:0:7/64 # optional
+                    neighbor_ipv6: 2010::10:34:0:3 # optional
+                    dot1q: 2 # dot1q can be got from dcnm/optional
+                  - peer_vrf: test_vrf_2 # optional
+                    interface: Ethernet1/17 # mandatory
+                    ipv4_addr: 20.33.0.2/30 # optional
+                    neighbor_ipv4: 20.33.0.1 # optional
+                    ipv6_addr: 3010::10:34:0:7/64 # optional
+                    neighbor_ipv6: 3010::10:34:0:3 # optional
+                    dot1q: 3 # dot1q can be got from dcnm/optional
 
-    # The two VRFs below will be replaced in the target fabric.
-    - name: Replace vrfs
+    - name: REPLACE | Update attachments for a VRF
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: replaced
         config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
-          attach:
-          - ip_address: 192.168.1.224
-          # Delete this attachment
-          # - ip_address: 192.168.1.225
-          # Create the following attachment
-          - ip_address: 192.168.1.226
-        # Dont touch this if its present on DCNM
-        # - vrf_name: ansible-vrf-r2
-        #   vrf_id: 9008012
-        #   vrf_template: Default_VRF_Universal
-        #   vrf_extension_template: Default_VRF_Extension_Universal
-        #   attach:
-        #   - ip_address: 192.168.1.224
-        #   - ip_address: 192.168.1.225
+          - vrf_name: ansible-vrf-r1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            service_vrf_template: null
+            attach:
+              - ip_address: 192.168.1.224
+              # Delete this attachment
+              # - ip_address: 192.168.1.225
+              # Create the following attachment
+              - ip_address: 192.168.1.226
+          # Dont touch this if its present on DCNM
+          # - vrf_name: ansible-vrf-r2
+          #   vrf_id: 9008012
+          #   vrf_template: Default_VRF_Universal
+          #   vrf_extension_template: Default_VRF_Extension_Universal
+          #   attach:
+          #   - ip_address: 192.168.1.224
+          #   - ip_address: 192.168.1.225
 
-    # The two VRFs below will be overridden in the target fabric.
-    - name: Override vrfs
+    - name: OVERRIDE | Override all VRFs on a fabric
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: overridden
         config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
-          attach:
-          - ip_address: 192.168.1.224
-          # Delete this attachment
-          # - ip_address: 192.168.1.225
-          # Create the following attachment
-          - ip_address: 192.168.1.226
-        # Delete this vrf
-        # - vrf_name: ansible-vrf-r2
-        #   vrf_id: 9008012
-        #   vrf_template: Default_VRF_Universal
-        #   vrf_extension_template: Default_VRF_Extension_Universal
-        #   vlan_id: 2000
-        #   service_vrf_template: null
-        #   attach:
-        #   - ip_address: 192.168.1.224
-        #   - ip_address: 192.168.1.225
+          - vrf_name: ansible-vrf-r1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            service_vrf_template: null
+            attach:
+              - ip_address: 192.168.1.224
+              # Delete this attachment
+              # - ip_address: 192.168.1.225
+              # Create the following attachment
+              - ip_address: 192.168.1.226
+          # Delete this vrf
+          # - vrf_name: ansible-vrf-r2
+          #   vrf_id: 9008012
+          #   vrf_template: Default_VRF_Universal
+          #   vrf_extension_template: Default_VRF_Extension_Universal
+          #   vlan_id: 2000
+          #   service_vrf_template: null
+          #   attach:
+          #   - ip_address: 192.168.1.224
+          #   - ip_address: 192.168.1.225
 
-    - name: Delete selected vrfs
+    - name: DELETE | Delete selected VRFs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: deleted
         config:
-        - vrf_name: ansible-vrf-r1
-          vrf_id: 9008011
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
-        - vrf_name: ansible-vrf-r2
-          vrf_id: 9008012
-          vrf_template: Default_VRF_Universal
-          vrf_extension_template: Default_VRF_Extension_Universal
-          vlan_id: 2000
-          service_vrf_template: null
+          - vrf_name: ansible-vrf-r1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            service_vrf_template: null
+          - vrf_name: ansible-vrf-r2
+            vrf_id: 9008012
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            service_vrf_template: null
 
-    - name: Delete all the vrfs
+    - name: DELETE | Delete all VRFs on a fabric
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: deleted
 
-    - name: Query vrfs
+    - name: QUERY | Query specific VRFs
       cisco.dcnm.dcnm_vrf:
         fabric: vxlan-fabric
         state: query
         config:
-        - vrf_name: ansible-vrf-r1
-        - vrf_name: ansible-vrf-r2
+          - vrf_name: ansible-vrf-r1
+          - vrf_name: ansible-vrf-r2
+
+    # ===========================================================================
+    # MSD (Multi-Site Domain) Fabric Examples
+    # ===========================================================================
+
+    # Note: For fabrics which are "member" (part of an MSD fabric),
+    # operations are permitted only through the parent MSD fabric tasks.
+
+    # ---------------------------------------------------------------------------
+    # STATE: MERGED - Create/Update VRFs on Parent and Child Fabrics
+    # ---------------------------------------------------------------------------
+
+    - name: MSD MERGE | Create a VRF on Parent and extend to Child fabrics
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric # Must be the Parent MSD fabric
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-msd-1
+            vrf_id: 9008011
+            vlan_id: 2000
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            service_vrf_template: null
+            # Attachments are for switches at the Parent fabric
+            attach:
+              - ip_address: 192.168.1.224
+              - ip_address: 192.168.1.225
+            # Define how this VRF behaves on each Child fabric
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+                adv_default_routes: true
+                adv_host_routes: false
+              - fabric: vxlan-child-fabric2
+                adv_default_routes: false
+                adv_host_routes: true
+          - vrf_name: ansible-vrf-msd-2 # A second VRF in the same task
+            vrf_id: 9008012
+            vlan_id: 2001
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+                adv_default_routes: false
+                adv_host_routes: false
+            # Attachments are for switches at the Parent fabric
+            attach:
+              - ip_address: 192.168.1.224
+              - ip_address: 192.168.1.225
+
+    - name: MSD MERGE | Create VRF with L3VNI and advanced routing settings
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: merged
+        config:
+          - vrf_name: ansible-vrf-advanced
+            vrf_id: 9008020
+            vlan_id: 2020
+            vrf_int_mtu: 9000
+            max_bgp_paths: 4
+            max_ibgp_paths: 4
+            ipv6_linklocal_enable: true
+            # Parent-specific settings
+            redist_direct_rmap: CUSTOM-RMAP-REDIST
+            v6_redist_direct_rmap: CUSTOM-RMAP-REDIST-V6
+            # Child fabric configuration with multicast settings
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+                l3vni_wo_vlan: true
+                trm_enable: true
+                trm_bgw_msite: true
+                rp_address: 10.1.1.1
+                underlay_mcast_ip: 239.1.1.1
+                overlay_mcast_group: 239.2.1.1
+              - fabric: vxlan-child-fabric2
+                bgp_password: 1234ABCD
+                bgp_passwd_encrypt: 7
+                netflow_enable: true
+                nf_monitor: NETFLOW_MONITOR_1
+
+    # ---------------------------------------------------------------------------
+    # STATE: REPLACED - Replace VRF configuration on Parent and Child Fabrics
+    # ---------------------------------------------------------------------------
+
+    - name: MSD REPLACE | Update VRF properties on Parent and Child fabrics
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: replaced
+        config:
+          - vrf_name: ansible-vrf-msd-1
+            vrf_id: 9008011
+            vrf_template: Default_VRF_Universal
+            vrf_extension_template: Default_VRF_Extension_Universal
+            vlan_id: 2000
+            vrf_int_mtu: 9000 # Update MTU on Parent
+            service_vrf_template: null
+            # Child fabric configs are replaced: child1 is updated
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+                adv_default_routes: false # Value is updated
+                adv_host_routes: true     # Value is updated
+            attach:
+              - ip_address: 192.168.1.224
+              # Delete this attachment
+              # - ip_address: 192.168.1.225
+              # Create the following attachment
+              - ip_address: 192.168.1.226
+          # Dont touch this if its present on NDFC
+          # - vrf_name: ansible-vrf-r2
+          #   vrf_id: 9008012
+          #   vrf_template: Default_VRF_Universal
+          #   vrf_extension_template: Default_VRF_Extension_Universal
+          #   attach:
+          #   - ip_address: 192.168.1.224
+          #   - ip_address: 192.168.1.225
+
+    - name: MSD REPLACE | Update VRF with route-target configuration
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: replaced
+        config:
+          - vrf_name: ansible-vrf-advanced
+            vrf_id: 9008020
+            vlan_id: 2020
+            # Parent route-target settings
+            disable_rt_auto: false
+            import_vpn_rt: "65000:10001,65000:10002"
+            export_vpn_rt: "65000:10001,65000:10002"
+            import_evpn_rt: "65000:20001,65000:20002"
+            export_evpn_rt: "65000:20001,65000:20002"
+            # Child fabric configuration updates
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+                trm_enable: true
+                import_mvpn_rt: "65000:30001"
+                export_mvpn_rt: "65000:30001"
+
+    # ---------------------------------------------------------------------------
+    # STATE: OVERRIDDEN - Override all VRFs on Parent and Child Fabrics
+    # ---------------------------------------------------------------------------
+
+    - name: MSD OVERRIDE | Override all VRFs ensuring only specified ones exist
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: overridden
+        config:
+          - vrf_name: ansible-vrf-production
+            vrf_id: 9008050
+            vlan_id: 2050
+            vrf_description: "Production VRF for critical workloads"
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+                adv_default_routes: true
+                static_default_route: true
+              - fabric: vxlan-child-fabric2
+                adv_default_routes: true
+                static_default_route: true
+            attach:
+              - ip_address: 192.168.1.224
+              - ip_address: 192.168.1.225
+          # All other VRFs will be deleted from both parent and child fabrics
+
+    # ---------------------------------------------------------------------------
+    # STATE: DELETED - Delete VRFs from Parent and all Child Fabrics
+    # ---------------------------------------------------------------------------
+
+    - name: MSD DELETE | Delete a VRF from the Parent and all associated Child fabrics
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: deleted
+        config:
+          - vrf_name: ansible-vrf-msd-1
+          # The 'child_fabric_config' parameter is not used or allowed for 'deleted' state.
+
+    - name: MSD DELETE | Delete multiple VRFs from Parent and Child fabrics
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: deleted
+        config:
+          - vrf_name: ansible-vrf-msd-1
+          - vrf_name: ansible-vrf-msd-2
+          - vrf_name: ansible-vrf-advanced
+
+    - name: MSD DELETE | Delete all VRFs from the Parent and all associated Child fabrics
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: deleted
+
+    # ---------------------------------------------------------------------------
+    # STATE: QUERY - Query VRFs
+    # ---------------------------------------------------------------------------
+
+    - name: MSD QUERY | Query specific VRFs on the Parent MSD fabric
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: query
+        config:
+          - vrf_name: ansible-vrf-msd-1
+          - vrf_name: ansible-vrf-msd-2
+          # The query will return the VRF's configuration on the parent
+          # and its attachments on all associated child fabrics.
+
+    - name: MSD QUERY | Query all VRFs on the Parent MSD fabric
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: query
+        # No config specified - returns all VRFs
+
+    - name: MSD QUERY | Query specific VRFs on the Child MSD fabric
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-child-fabric1
+        state: query
+        config:
+          - vrf_name: ansible-vrf-msd-1
+          - vrf_name: ansible-vrf-msd-2
+          # The query will return the VRF's configuration on the child
+          # and its attachments.
+
+    - name: MSD QUERY | Query all VRFs on the Child MSD fabric
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-child-fabric1
+        state: query
+        # No config specified - returns all VRFs on the child.
+
+    - name: MSD QUERY | Query specific VRFs on Parent & Child fabric
+      cisco.dcnm.dcnm_vrf:
+        fabric: vxlan-parent-fabric
+        state: query
+        config:
+          - vrf_name: ansible-vrf-msd-1
+            child_fabric_config:
+              - fabric: vxlan-child-fabric1
+          - vrf_name: ansible-vrf-msd-2
+            child_fabric_config:
+              - fabric: vxlan-child-fabric2
+          # The query will return the VRF's configuration on the parent and the
+          # configuration on the specified childs and its attachments at
+          # the parent and child level respectively.
 
 
 

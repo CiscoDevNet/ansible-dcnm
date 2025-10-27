@@ -143,12 +143,14 @@ options:
       l3vni_wo_vlan:
         description:
         - Enable L3 VNI without VLAN
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -156,6 +158,7 @@ options:
         description:
         - No RP, only SSM is used
         - supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -163,6 +166,7 @@ options:
         description:
         - Specifies if RP is external to the fabric
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -170,48 +174,56 @@ options:
         description:
         - IPv4 Address of RP
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       rp_loopback_id:
         description:
         - loopback ID of RP
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: int
         required: false
       underlay_mcast_ip:
         description:
         - Underlay IPv4 Multicast Address
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       overlay_mcast_group:
         description:
         - Underlay IPv4 Multicast group (224.0.0.0/4 to 239.255.255.255/4)
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       trm_bgw_msite:
         description:
         - Enable TRM on Border Gateway Multisite
         - Can be configured only when TRM is enabled
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
       adv_host_routes:
         description:
         - Flag to Control Advertisement of /32 and /128 Routes to Edge Routers
+        - Not applicable at Multisite Parent fabric level
         type: bool
         required: false
         default: false
       adv_default_routes:
         description:
         - Flag to Control Advertisement of Default Route Internally
+        - Not applicable at Multisite Parent fabric level
         type: bool
         required: false
         default: true
       static_default_route:
         description:
         - Flag to Control Static Default Route Configuration
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: true
@@ -219,12 +231,14 @@ options:
         description:
         - VRF Lite BGP neighbor password
         - Password should be in Hex string format
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       bgp_passwd_encrypt:
         description:
         - VRF Lite BGP Key Encryption Type
         - Allowed values are 3 (3DES) and 7 (Cisco)
+        - Not applicable at Multisite parent fabric level
         type: int
         choices:
           - 3
@@ -236,6 +250,7 @@ options:
         - Enable netflow on VRF-LITE Sub-interface
         - Netflow is supported only if it is enabled on fabric
         - Netflow configs are supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -243,6 +258,7 @@ options:
         description:
         - Netflow Monitor
         - Netflow configs are supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       disable_rt_auto:
@@ -286,6 +302,7 @@ options:
         - supported on NDFC only
         - Can be configured only when TRM is enabled
         - Use ',' to separate multiple route-targets
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       export_mvpn_rt:
@@ -294,15 +311,16 @@ options:
         - supported on NDFC only
         - Can be configured only when TRM is enabled
         - Use ',' to separate multiple route-targets
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       child_fabric_config:
         description:
-        - Configuration for Child fabrics in MSD deployments
-        - Only applicable for Parent MSD fabrics
+        - Configuration for Child fabrics in multisite (MSD) deployments
+        - Only applicable for Parent multisite fabrics
         - Defines VRF behavior on each Child fabric
+        - If not specified, Child fabrics will default the required properties
         - Not supported with state 'deleted'
-        - "Parent MSD Fabric Only"
         type: list
         elements: dict
         required: false
@@ -357,14 +375,12 @@ options:
             description:
             - Enable netflow on Child fabric
             - Netflow is supported only if it is enabled on fabric
-            - Netflow configs are supported on NDFC only
             type: bool
             required: false
             default: false
           nf_monitor:
             description:
             - Netflow monitor on Child fabric
-            - Netflow configs are supported on NDFC only
             type: str
             required: false
           trm_enable:
@@ -377,7 +393,6 @@ options:
           no_rp:
             description:
             - No RP, only SSM is used on Child fabric
-            - Supported on NDFC only
             - Cannot be used with TRM enabled
             type: bool
             required: false
@@ -426,7 +441,6 @@ options:
           import_mvpn_rt:
             description:
             - MVPN routes to import on Child fabric
-            - Supported on NDFC only
             - Can be configured only when TRM is enabled
             - Use ',' to separate multiple route-targets
             type: str
@@ -434,10 +448,15 @@ options:
           export_mvpn_rt:
             description:
             - MVPN routes to export on Child fabric
-            - Supported on NDFC only
             - Can be configured only when TRM is enabled
             - Use ',' to separate multiple route-targets
             type: str
+            required: false
+          deploy:
+            description:
+            - Control whether to deploy the specified attachment on Child fabric.
+            - If not specified, defaults to value specified at Multisite Parent fabric level.
+            type: bool
             required: false
       attach:
         description:
@@ -830,7 +849,7 @@ EXAMPLES = """
           # - ip_address: 192.168.1.225
           # Create the following attachment
           - ip_address: 192.168.1.226
-      # Dont touch this if its present on DCNM
+      # Dont touch this if its present on NDFC
       # - vrf_name: ansible-vrf-r2
       #   vrf_id: 9008012
       #   vrf_template: Default_VRF_Universal
@@ -912,7 +931,7 @@ EXAMPLES = """
     state: deleted
 
 # ---------------------------------------------------------------------------
-# STATE: QUERY - Query VRFs on Parent MSD Fabric
+# STATE: QUERY - Query VRFs
 # ---------------------------------------------------------------------------
 
 - name: MSD QUERY | Query specific VRFs on the Parent MSD fabric
@@ -930,6 +949,37 @@ EXAMPLES = """
     fabric: vxlan-parent-fabric
     state: query
     # No config specified - returns all VRFs
+
+- name: MSD QUERY | Query specific VRFs on the Child MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-child-fabric1
+    state: query
+    config:
+      - vrf_name: ansible-vrf-msd-1
+      - vrf_name: ansible-vrf-msd-2
+      # The query will return the VRF's configuration on the child
+      # and its attachments.
+
+- name: MSD QUERY | Query all VRFs on the Child MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-child-fabric1
+    state: query
+    # No config specified - returns all VRFs on the child.
+
+- name: MSD QUERY | Query specific VRFs on Parent & Child fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - vrf_name: ansible-vrf-msd-1
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+      - vrf_name: ansible-vrf-msd-2
+        child_fabric_config:
+          - fabric: vxlan-child-fabric2
+      # The query will return the VRF's configuration on the parent and the
+      # configuration on the specified childs and its attachments at
+      # the parent and child level respectively.
 
 """
 import ast
@@ -4248,33 +4298,33 @@ class DcnmVrf:
                 self.failure(resp)
 
             delete_ids = []
-            for item in resp["DATA"]:
-                if "entityName" not in item:
-                    continue
-                if item["entityName"] not in vrf_del_list:
-                    continue
-                if item.get("allocatedFlag") is not False:
-                    continue
-                if item.get("id") is None:
-                    continue
-                # Resources with no ipAddress or switchName
-                # are invalid and of Fabric's scope and
-                # should not be attempted to be deleted here.
-                if not item.get("ipAddress"):
-                    continue
-                if not item.get("switchName"):
-                    continue
+            if resp.get("DATA"):
+                for item in resp["DATA"]:
+                    if "entityName" not in item:
+                        continue
+                    if item["entityName"] not in vrf_del_list:
+                        continue
+                    if item.get("allocatedFlag") is not False:
+                        continue
+                    if item.get("id") is None:
+                        continue
+                    # Resources with no ipAddress or switchName
+                    # are invalid and of Fabric's scope and
+                    # should not be attempted to be deleted here.
+                    if not item.get("ipAddress"):
+                        continue
+                    if not item.get("switchName"):
+                        continue
 
-                msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+                    msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+                    self.log.debug(msg)
+
+                    delete_ids.append(item["id"])
+
+            if len(delete_ids) != 0:
+                msg = f"Releasing orphaned resources with IDs:{delete_ids}"
                 self.log.debug(msg)
-
-                delete_ids.append(item["id"])
-
-            if len(delete_ids) == 0:
-                return
-            msg = f"Releasing orphaned resources with IDs:{delete_ids}"
-            self.log.debug(msg)
-            self.release_resources_by_id(delete_ids)
+                self.release_resources_by_id(delete_ids)
 
     def push_to_remote(self, is_rollback=False):
         """

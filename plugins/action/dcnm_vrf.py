@@ -473,34 +473,35 @@ class ActionModule(ActionNetworkModule):
 
             # Validate configurations for create/update states
             if state in ["merged", "overridden", "replaced", "query"] or not state:
-                # Iterate through each VRF configuration
-                for con_idx, con in enumerate(config):
-                    # Validate attach block parameters if present
-                    if "attach" in con:
-                        for at_idx, at in enumerate(con["attach"]):
-                            # Check for vlan_id misplacement
-                            if "vlan_id" in at:
-                                msg = (
-                                    f"Config[{con_idx}].attach[{at_idx}]: vlan_id should not be "
-                                    "specified under attach block. Please specify under config block instead"
-                                )
-                                self.logger.error(msg, operation="validation")
-                                return False
-
-                            # Validate vrf_lite structure
-                            if "vrf_lite" in at:
-                                try:
-                                    # Attempt to iterate vrf_lite to check structure
-                                    for vl in at["vrf_lite"]:
-                                        continue
-                                except TypeError:
-                                    # vrf_lite is not iterable - missing interface parameter
+                if config:
+                    # Iterate through each VRF configuration
+                    for con_idx, con in enumerate(config):
+                        # Validate attach block parameters if present
+                        if "attach" in con:
+                            for at_idx, at in enumerate(con["attach"]):
+                                # Check for vlan_id misplacement
+                                if "vlan_id" in at:
                                     msg = (
-                                        f"Config[{con_idx}].attach[{at_idx}]: Please specify interface "
-                                        "parameter under vrf_lite section in the playbook"
+                                        f"Config[{con_idx}].attach[{at_idx}]: vlan_id should not be "
+                                        "specified under attach block. Please specify under config block instead"
                                     )
                                     self.logger.error(msg, operation="validation")
                                     return False
+
+                                # Validate vrf_lite structure
+                                if "vrf_lite" in at:
+                                    try:
+                                        # Attempt to iterate vrf_lite to check structure
+                                        for vl in at["vrf_lite"]:
+                                            continue
+                                    except TypeError:
+                                        # vrf_lite is not iterable - missing interface parameter
+                                        msg = (
+                                            f"Config[{con_idx}].attach[{at_idx}]: Please specify interface "
+                                            "parameter under vrf_lite section in the playbook"
+                                        )
+                                        self.logger.error(msg, operation="validation")
+                                        return False
 
             # Validate delete state restrictions
             elif state == "deleted":
@@ -825,6 +826,7 @@ class ActionModule(ActionNetworkModule):
         try:
             # Step 1: Validate and split parent/child configurations
             config = module_args.get("config")
+            state = module_args.get("state")
             parent_config = []
             child_tasks_dict = {}
 
@@ -893,20 +895,21 @@ class ActionModule(ActionNetworkModule):
                                  fabric=parent_fabric, operation="child_execution")
 
                 for child_task in child_tasks_dict.values():
-                    # Wait for VRF readiness on child fabric before processing
-                    all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
-                        child_task["vrf_list"],
-                        child_task["fabric"],
-                        task_vars,
-                        tmp
-                    )
-                    if not all_vrf_ready:
-                        error_msg = (
-                            f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric "
-                            f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
-                            "state before proceeding."
+                    if state != "query":
+                        # Wait for VRF readiness on child fabric before processing
+                        all_vrf_ready, vrf_not_ready = self.wait_for_vrf_ready(
+                            child_task["vrf_list"],
+                            child_task["fabric"],
+                            task_vars,
+                            tmp
                         )
-                        return self.error_handler.handle_failure(error_msg, changed=True)
+                        if not all_vrf_ready:
+                            error_msg = (
+                                f"VRF(s) {', '.join(vrf_not_ready)} not in a deployable state on fabric "
+                                f"{child_task['fabric']}. Please ensure VRF(s) are in DEPLOYED/PENDING/NA "
+                                "state before proceeding."
+                            )
+                            return self.error_handler.handle_failure(error_msg, changed=True)
 
                     # Execute child fabric task
                     self.logger.info("Executing child task", fabric=child_task["fabric"], operation="child_execution")
@@ -1096,6 +1099,7 @@ class ActionModule(ActionNetworkModule):
             Exception: On task creation failures with context preservation
         """
         try:
+            child_config = copy.deepcopy(child_config)
             # Extract and remove fabric name from child configuration
             child_fabric_name = child_config["fabric"]
             del child_config["fabric"]

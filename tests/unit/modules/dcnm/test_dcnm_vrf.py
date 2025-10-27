@@ -168,6 +168,9 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.mock_pools_top_down_vrf_vlan = copy.deepcopy(
             self.test_data.get("mock_pools_top_down_vrf_vlan")
         )
+        self.mock_pools_top_down_dot1q = copy.deepcopy(
+            self.test_data.get("mock_pools_top_down_dot1q")
+        )
 
     def setUp(self):
         super(TestDcnmVrfModule, self).setUp()
@@ -507,6 +510,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_dot1q,
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -545,6 +549,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_dot1q,
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -598,6 +603,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 obj2,
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_dot1q,
             ]
 
         elif "vrf_query" in self._testMethodName:
@@ -713,6 +719,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_vrf_attach_object_del_ready,
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_dot1q,
             ]
 
         elif "msd_override" in self._testMethodName:
@@ -729,6 +736,7 @@ class TestDcnmVrfModule(TestDcnmModule):
                 self.mock_msd_vrf_attach_object_del_ready,
                 self.delete_success_resp,
                 self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_dot1q,
                 self.blank_data,
                 self.msd_attach_success_resp_2,
                 self.deploy_success_resp,
@@ -800,7 +808,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         playbook = self.test_data.get("playbook_config")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
-        print(f"Result config: {result}")
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
 
     def test_dcnm_vrf_merged_lite_redeploy_interface_with_extensions(self):
@@ -1311,10 +1318,10 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["DATA"]["status"], "")
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
+            result["response"][6]["DATA"]["test-vrf-2--XYZKSJHSMK2(leaf2)"], "SUCCESS"
         )
         self.assertEqual(
-            result["response"][5]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
+            result["response"][6]["DATA"]["test-vrf-2--XYZKSJHSMK3(leaf3)"], "SUCCESS"
         )
 
     def test_dcnm_vrf_lite_override_with_deletions_interface_with_extensions(self):
@@ -1690,7 +1697,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         playbook = self.test_data.get("playbook_msd_config_misconfig_3")
         set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
-        print(result)
         self.assertEqual(result["msg"],
                          "Config[1]: child_fabric_config is required for Multisite Parent fabrics. It can be optionally removed when state is query.")
 
@@ -1744,7 +1750,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result.get("parent_fabric").get("response")[1]["DATA"]["status"], "")
         self.assertEqual(result.get("parent_fabric").get("response")[1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
         self.assertEqual(
-            result.get("parent_fabric").get("response")[5]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
+            result.get("parent_fabric").get("response")[6]["DATA"]["test-vrf-2--XYZKSJHSMK1(leaf1)"], "SUCCESS"
         )
         self.assertEqual(result.get("child_fabrics")[0]["diff"][0]["vrf_name"], "test_vrf_2")
         self.assertTrue(result.get("child_fabrics")[0]["diff"][0]["adv_default_routes"])
@@ -1808,7 +1814,6 @@ class TestDcnmVrfModule(TestDcnmModule):
         playbook = self.test_data.get("playbook_msd_child_config")
         set_module_args(dict(state="query", fabric="child_fab", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
-        print(result)
         self.assertTrue(result.get("workflow"), "Multisite Child VRF Processing")
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
         self.assertEqual(result.get("response")[0]["parent"]["vrfId"], 9008011)
