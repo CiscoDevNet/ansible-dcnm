@@ -328,7 +328,11 @@ class ActionModule(ActionBase):
 
             # Check if child_fabric_config key is present but empty or has no value
             if 'child_fabric_config' in net_config and not child_fabric_configs:
-                return None, f"Network '{net_config.get('net_name', 'unknown')}' has 'child_fabric_config' key but no child fabric configurations provided. Either remove the key or provide child fabric configurations."
+                return None, (
+                    f"Network '{net_config.get('net_name', 'unknown')}' has 'child_fabric_config' key "
+                    "but no child fabric configurations provided. Either remove the key or provide "
+                    "child fabric configurations."
+                )
 
             if not child_fabric_configs:
                 continue
@@ -537,7 +541,10 @@ class ActionModule(ActionBase):
             # FAIL FAST on first error
             if fabric_result.get('failed'):
                 result['failed'] = True
-                result['msg'] = f"Failed processing fabric '{fabric_config['fabric']}' ({fabric_config['_fabric_type']}): {fabric_result.get('msg', 'Unknown error')}"
+                result['msg'] = (
+                    f"Failed processing fabric '{fabric_config['fabric']}' "
+                    f"({fabric_config['_fabric_type']}): {fabric_result.get('msg', 'Unknown error')}"
+                )
                 return result
 
             # Set overall changed flag if any fabric changed

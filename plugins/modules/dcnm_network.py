@@ -3412,7 +3412,10 @@ class DcnmNetwork:
         # Check for invalid state combinations with MSD child
         if self.fabric_type == "multisite_child":
             if state in ["overridden", "deleted"]:
-                self.module.fail_json(msg=f"State '{state}' is not allowed for MSD child networks. Networks cannot be deleted or overridden in MSD child fabrics.")
+                self.module.fail_json(
+                    msg=f"State '{state}' is not allowed for MSD child networks. Networks cannot be "
+                    "deleted or overridden in MSD child fabrics."
+                )
 
         if state == "query":
 
@@ -3430,7 +3433,11 @@ class DcnmNetwork:
                 for net in valid_net:
                     # Check for attachment attributes in MSD child fabrics
                     if self.fabric_type == "multisite_child" and net.get("attach"):
-                        self.module.fail_json(msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are not allowed for MSD child networks. MSD child fabrics do not support network attachments.")
+                        self.module.fail_json(
+                            msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are "
+                            "not allowed for MSD child networks. MSD child fabrics do not support "
+                            "network attachments."
+                        )
 
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
@@ -3468,7 +3475,11 @@ class DcnmNetwork:
                 for net in valid_net:
                     # Check for attachment attributes in MSD child fabrics
                     if self.fabric_type == "multisite_child" and net.get("attach"):
-                        self.module.fail_json(msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are not allowed for MSD child networks. MSD child fabrics do not support network attachments.")
+                        self.module.fail_json(
+                            msg=f"Network '{net.get('net_name', 'unknown')}': Attachment attributes are "
+                            "not allowed for MSD child networks. MSD child fabrics do not support "
+                            "network attachments."
+                        )
 
                     if net.get("attach"):
                         valid_att, invalid_att = validate_list_of_dicts(net["attach"], att_spec, check_extra_params=self.check_extra_params)
