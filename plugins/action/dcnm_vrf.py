@@ -291,9 +291,6 @@ class ErrorHandler:
 
         Returns:
             dict: Validated response['response'] section with DATA
-
-        Raises:
-            AnsibleError: On any validation failure with detailed error info
         """
         # Check for response existence
         if not response:
@@ -390,9 +387,6 @@ class ActionModule(ActionNetworkModule):
                 - fabric_type (str): Detected fabric type
                 - workflow (str): Executed workflow description
                 - Additional workflow-specific result data
-
-        Raises:
-            AnsibleError: On validation failures or execution errors
         """
         # Log workflow initiation
         self.logger.info("Starting NDFC VRF action plugin execution")
@@ -1177,9 +1171,6 @@ class ActionModule(ActionNetworkModule):
                 - child_fabric (str): Child fabric identifier
                 - invocation (dict): Module arguments used for execution
                 - Error details if execution failed
-
-        Raises:
-            Exception: On child task execution failures with context
         """
         # Extract fabric name for logging and result context
         fabric_name = child_task["fabric"]
