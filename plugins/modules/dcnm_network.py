@@ -162,7 +162,7 @@ options:
         - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
             dhcp_srvr3_ip, dhcp_srvr3_vrf
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
-            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified, unexpected results may occur
+            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified, dhcp_servers will take precedence
         type: list
         elements: dict
         required: false
@@ -3045,7 +3045,7 @@ class DcnmNetwork:
             json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
 
         if cfg.get("dhcp_servers", None) is None:
-            want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"]).get("dhcpServers", [])
+            want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
             want_dhcp_servers += [None] * (16 - len(want_dhcp_servers))
             if json_to_dict_have["dhcpServerAddr1"] != "":
                 want_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
@@ -3066,7 +3066,10 @@ class DcnmNetwork:
                 if cfg.get("dhcp_srvr3_vrf", None) is not None:
                     want_dhcp_servers[2].update({"srvrVrf": cfg.get("dhcp_srvr3_vrf")})
             want_dhcp_servers = [srvr for srvr in want_dhcp_servers[:] if srvr is not None]
-            json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_dhcp_servers), separators=(",", ":"))
+            if want_dhcp_servers == []:
+                json_to_dict_want["dhcpServers"] = ""
+            else:
+                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_dhcp_servers), separators=(",", ":"))
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
