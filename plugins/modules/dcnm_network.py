@@ -2722,24 +2722,25 @@ class DcnmNetwork:
         """Parse the playbook values, validate to param specs."""
 
         # Make sure mutually exclusive dhcp properties are not set
-        for net in self.config:
-            if net.get("dhcp_servers"):
-                conflicting_keys = []
-                dhcp_individual_keys = [
-                    "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
-                    "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
-                    "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
-                ]
+        if self.config:
+            for net in self.config:
+                if net.get("dhcp_servers"):
+                    conflicting_keys = []
+                    dhcp_individual_keys = [
+                        "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
+                        "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
+                        "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
+                    ]
 
-                for key in dhcp_individual_keys:
-                    if net.get(key) is not None:
-                        conflicting_keys.append(key)
+                    for key in dhcp_individual_keys:
+                        if net.get(key) is not None:
+                            conflicting_keys.append(key)
 
-                if conflicting_keys:
-                    msg = "Network '{0}': dhcp_servers cannot be used together with individual DHCP server properties: {1}".format(
-                        net.get("net_name", "unknown"), ", ".join(conflicting_keys)
-                    )
-                    self.module.fail_json(msg=msg)
+                    if conflicting_keys:
+                        msg = "Network '{0}': dhcp_servers cannot be used together with individual DHCP server properties: {1}".format(
+                            net.get("net_name", "unknown"), ", ".join(conflicting_keys)
+                        )
+                        self.module.fail_json(msg=msg)
 
         state = self.params["state"]
 
