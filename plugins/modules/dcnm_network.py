@@ -3589,6 +3589,11 @@ class DcnmNetwork:
                     fail = True
                     changed = False
                     break
+                # Check for multisite overlay link error
+                if isinstance(value, str) and "multisite overlay link should be available to extend multisite" in value.lower():
+                    fail = True
+                    changed = False
+                    break
 
         return fail, changed
 
