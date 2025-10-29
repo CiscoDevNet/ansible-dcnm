@@ -20,6 +20,7 @@
 # pylint: disable=redefined-outer-name
 # pylint: disable=protected-access
 # pylint: disable=unused-argument
+# pylint: disable=unused-variable
 # pylint: disable=invalid-name
 # pylint: disable=line-too-long
 # pylint: disable=too-many-lines
@@ -146,7 +147,7 @@ def test_fabric_group_details_00021(fabric_group_details) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance = fabric_group_details
-        _ = instance.rest_send  # pylint: disable=pointless-statement
+        result = instance.rest_send  # pylint: disable=pointless-statement
 
 
 def test_fabric_group_details_00030(fabric_group_details) -> None:
@@ -194,7 +195,7 @@ def test_fabric_group_details_00031(fabric_group_details) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance = fabric_group_details
-        _ = instance.results  # pylint: disable=pointless-statement
+        result = instance.results  # pylint: disable=pointless-statement
 
 
 def test_fabric_group_details_00040(fabric_group_details) -> None:
@@ -405,7 +406,7 @@ def test_fabric_group_details_00061(fabric_group_details) -> None:
 
     with pytest.raises(ValueError, match=match):
         instance = fabric_group_details
-        _ = instance.filtered_data  # pylint: disable=pointless-statement
+        result = instance.filtered_data  # pylint: disable=pointless-statement
 
 
 def test_fabric_group_details_00062(fabric_group_details) -> None:
@@ -925,7 +926,7 @@ def test_fabric_group_details_00170(fabric_group_details) -> None:
         instance.refresh()
 
     with pytest.raises(ValueError, match=match):
-        _ = instance._get("fabricId")
+        result = instance._get("fabricId")
 
 
 def test_fabric_group_details_00171(fabric_group_details) -> None:
@@ -973,7 +974,7 @@ def test_fabric_group_details_00171(fabric_group_details) -> None:
         instance.fabric_group_name = "NON_EXISTENT"
 
     with pytest.raises(ValueError, match=match):
-        _ = instance._get("fabricId")
+        result = instance._get("fabricId")
 
 
 def test_fabric_group_details_00172(fabric_group_details) -> None:
@@ -1019,7 +1020,7 @@ def test_fabric_group_details_00172(fabric_group_details) -> None:
         instance.refresh()
 
     with pytest.raises(ValueError, match=match):
-        _ = instance._get("INVALID_PROPERTY")
+        result = instance._get("INVALID_PROPERTY")
 
 
 def test_fabric_group_details_00180(fabric_group_details) -> None:
@@ -1066,7 +1067,7 @@ def test_fabric_group_details_00180(fabric_group_details) -> None:
         instance.refresh()
 
     with pytest.raises(ValueError, match=match):
-        _ = instance._get_nv_pair("FABRIC_NAME")
+        result = instance._get_nv_pair("FABRIC_NAME")
 
 
 def test_fabric_group_details_00181(fabric_group_details) -> None:
@@ -1115,7 +1116,7 @@ def test_fabric_group_details_00181(fabric_group_details) -> None:
         instance.fabric_group_name = "NON_EXISTENT"
 
     with pytest.raises(ValueError, match=match):
-        _ = instance._get_nv_pair("FABRIC_NAME")
+        result = instance._get_nv_pair("FABRIC_NAME")
 
 
 def test_fabric_group_details_00182(fabric_group_details) -> None:
@@ -1163,7 +1164,7 @@ def test_fabric_group_details_00182(fabric_group_details) -> None:
         instance.refresh()
 
     with pytest.raises(ValueError, match=match):
-        _ = instance._get_nv_pair("INVALID_PROPERTY")
+        result = instance._get_nv_pair("INVALID_PROPERTY")
 
 
 def test_fabric_group_details_00190(fabric_group_details) -> None:
