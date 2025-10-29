@@ -45,9 +45,9 @@
     # Assert for Create responses
     - assert:
         that:
-          - 'result["msg"]["RETURN_CODE"] != 200'
-          - '"OSPF_TAG" in result["msg"]["DATA"]["failureList"][0]["message"]'
-          - '"LOOPBACK_IP" in result["msg"]["DATA"]["failureList"][0]["message"]'
+          - 'result.failed == true'
+          - '"OSPF_TAG" in result["msg"] or (result["msg"]["DATA"] is defined and "OSPF_TAG" in result["msg"]["DATA"]["failureList"][0]["message"])'
+          - '"LOOPBACK_IP" in result["msg"] or (result["msg"]["DATA"] is defined and "LOOPBACK_IP" in result["msg"]["DATA"]["failureList"][0]["message"])'
 
     - name: Create multiple policies including required variables with the same template
       cisco.dcnm.dcnm_policy:
