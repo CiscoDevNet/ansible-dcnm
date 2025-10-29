@@ -261,5 +261,335 @@
         "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
         "MESSAGE": "OK",
         "DATA": []
+    },
+    "test_fabric_group_details_00040a": {
+        "TEST_NOTES": [
+            "Fabric group MFG1 exists on the controller",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+            "Used by test_fabric_group_details_00040"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "asn": "",
+                "clusterName": "",
+                "createdOn": 1761331049,
+                "deviceType": "",
+                "fabricId": "MC-FABRIC-69",
+                "fabricName": "MFG1",
+                "fabricTechnology": "VXLANFabric",
+                "fabricTechnologyFriendly": "VXLAN EVPN",
+                "fabricType": "MFD",
+                "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+                "id": 69,
+                "members": [],
+                "modifiedOn": 1761331049,
+                "networkExtensionTemplate": "",
+                "networkTemplate": "",
+                "nvPairs": {
+                    "FABRIC_NAME": "MFG1",
+                    "FABRIC_TYPE": "MFD"
+                },
+                "operStatus": "HEALTHY",
+                "provisionMode": "",
+                "replicationMode": "",
+                "siteId": "",
+                "templateName": "MSD_Fabric",
+                "vrfExtensionTemplate": "",
+                "vrfTemplate": ""
+            }
+        ]
+    },
+    "test_fabric_group_details_00050a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00050"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00060a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00060"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00070a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00070"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00080a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00080"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00090a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00090"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00100a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00100"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00110a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00110"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00120a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00120"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00130a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00130"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00140a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00140"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00150a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00150"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00160a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00160"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00170a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00170"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00171a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00171"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00172a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00172"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00180a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00180"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00181a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00181"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00182a": {
+        "TEST_NOTES": ["Fabric group MFG1 exists", "Used by test_fabric_group_details_00182"],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [{"asn": "", "clusterName": "", "createdOn": 1761331049, "deviceType": "", "fabricId": "MC-FABRIC-69", "fabricName": "MFG1", "fabricTechnology": "VXLANFabric", "fabricTechnologyFriendly": "VXLAN EVPN", "fabricType": "MFD", "fabricTypeFriendly": "VXLAN EVPN Multi-Site", "id": 69, "members": [], "modifiedOn": 1761331049, "networkExtensionTemplate": "", "networkTemplate": "", "nvPairs": {"FABRIC_NAME": "MFG1", "FABRIC_TYPE": "MFD"}, "operStatus": "HEALTHY", "provisionMode": "", "replicationMode": "", "siteId": "", "templateName": "MSD_Fabric", "vrfExtensionTemplate": "", "vrfTemplate": ""}]
+    },
+    "test_fabric_group_details_00041a": {
+        "TEST_NOTES": [
+            "No fabric groups exist on the controller",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+            "Used by test_fabric_group_details_00041"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": []
+    },
+    "test_fabric_group_details_00062a": {
+        "TEST_NOTES": [
+            "No fabric groups exist on the controller",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+            "Used by test_fabric_group_details_00062"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": []
+    },
+    "test_fabric_group_details_00190a": {
+        "TEST_NOTES": [
+            "Fabric group MFG1 exists on the controller",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+            "Used by test_fabric_group_details_00190"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": [
+            {
+                "asn": "",
+                "clusterName": "",
+                "createdOn": 1761331049,
+                "deviceType": "",
+                "fabricId": "MC-FABRIC-69",
+                "fabricName": "MFG1",
+                "fabricTechnology": "VXLANFabric",
+                "fabricTechnologyFriendly": "VXLAN EVPN",
+                "fabricType": "MFD",
+                "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+                "id": 69,
+                "members": [],
+                "modifiedOn": 1761331049,
+                "networkExtensionTemplate": "",
+                "networkTemplate": "",
+                "nvPairs": {
+                    "ANYCAST_GW_MAC": "2020.0000.00aa",
+                    "BGP_RP_ASN": "",
+                    "BGW_ROUTING_TAG": "54321",
+                    "BGW_ROUTING_TAG_PREV": "54321",
+                    "BORDER_GWY_CONNECTIONS": "Manual",
+                    "CLOUDSEC_ALGORITHM": "",
+                    "CLOUDSEC_AUTOCONFIG": "false",
+                    "CLOUDSEC_ENFORCEMENT": "",
+                    "CLOUDSEC_KEY_STRING": "",
+                    "CLOUDSEC_REPORT_TIMER": "",
+                    "DCI_SUBNET_RANGE": "10.10.1.0/24",
+                    "DCI_SUBNET_TARGET_MASK": "30",
+                    "DCNM_ID": "",
+                    "DELAY_RESTORE": "300",
+                    "ENABLE_BGP_BFD": false,
+                    "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": false,
+                    "ENABLE_BGP_SEND_COMM": false,
+                    "ENABLE_PVLAN": "false",
+                    "ENABLE_PVLAN_PREV": "",
+                    "ENABLE_RS_REDIST_DIRECT": false,
+                    "ENABLE_SGT": "off",
+                    "ENABLE_SGT_PREV": "off",
+                    "ENABLE_TRM_TRMv6": "false",
+                    "ENABLE_TRM_TRMv6_PREV": "",
+                    "EXT_FABRIC_TYPE": "",
+                    "FABRIC_NAME": "MFG1",
+                    "FABRIC_TYPE": "MFD",
+                    "FF": "MSD",
+                    "L2_SEGMENT_ID_RANGE": "30000-49000",
+                    "L3_PARTITION_ID_RANGE": "50000-59000",
+                    "LOOPBACK100_IPV6_RANGE": "",
+                    "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+                    "MSO_CONTROLER_ID": "",
+                    "MSO_SITE_GROUP_NAME": "",
+                    "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+                    "MS_IFC_BGP_AUTH_KEY_TYPE_PREV": "",
+                    "MS_IFC_BGP_PASSWORD": "",
+                    "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+                    "MS_IFC_BGP_PASSWORD_ENABLE_PREV": "",
+                    "MS_IFC_BGP_PASSWORD_PREV": "",
+                    "MS_LOOPBACK_ID": "100",
+                    "MS_UNDERLAY_AUTOCONFIG": "false",
+                    "PARENT_ONEMANAGE_FABRIC": "",
+                    "PREMSO_PARENT_FABRIC": "",
+                    "RP_SERVER_IP": "",
+                    "RS_ROUTING_TAG": "",
+                    "SGT_ID_RANGE": "",
+                    "SGT_ID_RANGE_PREV": "10000-14000",
+                    "SGT_NAME_PREFIX": "",
+                    "SGT_NAME_PREFIX_PREV": "SG_",
+                    "SGT_OPER_STATUS": "off",
+                    "SGT_PREPROVISION": false,
+                    "SGT_PREPROVISION_PREV": "false",
+                    "SGT_PREPROV_RECALC_STATUS": "empty",
+                    "SGT_RECALC_STATUS": "empty",
+                    "TOR_AUTO_DEPLOY": "false",
+                    "V6_DCI_SUBNET_RANGE": "",
+                    "V6_DCI_SUBNET_TARGET_MASK": "",
+                    "VXLAN_UNDERLAY_IS_V6": "false",
+                    "default_network": "Default_Network_Universal",
+                    "default_pvlan_sec_network": "",
+                    "default_vrf": "Default_VRF_Universal",
+                    "enableScheduledBackup": "",
+                    "network_extension_template": "Default_Network_Extension_Universal",
+                    "scheduledTime": "",
+                    "vrf_extension_template": "Default_VRF_Extension_Universal"
+                },
+                "operStatus": "HEALTHY",
+                "provisionMode": "",
+                "replicationMode": "",
+                "siteId": "",
+                "templateName": "MSD_Fabric",
+                "vrfExtensionTemplate": "",
+                "vrfTemplate": "",
+                "seedMember": {
+                    "clusterName": "nd-cluster-1",
+                    "fabricName": "FABRIC-1"
+                }
+            }
+        ]
+    },
+    "test_fabric_group_details_00191a": {
+        "TEST_NOTES": [
+            "No fabric groups exist on the controller",
+            "NDFC Response for GET /appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+            "Used by test_fabric_group_details_00191"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+        "MESSAGE": "OK",
+        "DATA": []
     }
 }
