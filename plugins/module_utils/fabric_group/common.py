@@ -25,7 +25,6 @@ import logging
 from typing import Any, Union
 
 from ..common.conversion import ConversionUtils
-from ..fabric.fabric_summary_v2 import FabricSummary
 from ..fabric_group.fabric_group_details import FabricGroupDetails
 from .fabric_group_types import FabricGroupTypes
 
@@ -87,7 +86,6 @@ class FabricGroupCommon:
         self.verb: str = ""
 
         self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
-        self._fabric_summary: FabricSummary = FabricSummary()
         self._fabric_type: str = "VXLAN_EVPN"
 
     def _prepare_parameter_value_for_comparison(self, value: Any) -> Union[str, Any]:
@@ -302,17 +300,6 @@ class FabricGroupCommon:
     @fabric_group_details.setter
     def fabric_group_details(self, value: FabricGroupDetails) -> None:
         self._fabric_group_details = value
-
-    @property
-    def fabric_summary(self) -> FabricSummary:
-        """
-        An instance of the FabricSummary class.
-        """
-        return self._fabric_summary
-
-    @fabric_summary.setter
-    def fabric_summary(self, value: FabricSummary) -> None:
-        self._fabric_summary = value
 
     @property
     def fabric_group_type(self) -> str:
