@@ -13,7 +13,7 @@
 # limitations under the License.
 # pylint: disable=too-many-instance-attributes
 """
-Retrieve a template from the controller.
+Retrieve from the controller a template's parameter list.
 """
 from __future__ import absolute_import, division, print_function
 
@@ -33,9 +33,11 @@ from .results_v2 import Results
 
 class TemplateGet:
     """
-    -   Retrieve a template from the controller.
+    # Summary
 
-    -   Usage
+    Retrieve from the controller a template's parameter list.
+
+    ## Usage
 
     ```python
     instance = TemplateGet()
@@ -43,45 +45,79 @@ class TemplateGet:
     instance.template_name = "Easy_Fabric"
     instance.refresh()
     template = instance.template
+    template_name = instance.template_name
     ```
 
-    TODO: We are not using the `results` property in this class. We should
-    remove it or decide whether we want to record the results in the main
-    task result.  If we do decide to remove it, we also need to remove the
-    unit test that checks for it.
+    `instance.template` will be a dict with the following top-level keys:
+
+    -   "template_name": The name of the template.
+    -   "parameters": A list of parameters for template_name.
+
+    ## Example instance.template
+
+    ```json
+    {
+        "template_name": "Easy_Fabric",
+        "parameters": [
+            {
+                "annotations": {
+                    "Description": "Please provide the fabric name to create it (Max Size 64)",
+                    "DisplayName": "Fabric Name",
+                    "IsFabricName": "true",
+                    "IsMandatory": "true"
+                },
+                "defaultValue": null,
+                "description": null,
+                "metaProperties": {
+                    "maxLength": "64",
+                    "minLength": "1"
+                },
+                "name": "FABRIC_NAME",
+                "optional": false,
+                "parameterType": "string",
+                "parameterTypeStructure": false,
+                "structureParameters": {}
+            },
+            ...
+        ]
+    }
+    ```
     """
 
-    def __init__(self):
-        self.class_name = self.__class__.__name__
+    def __init__(self) -> None:
+        self.class_name: str = self.__class__.__name__
 
-        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
         msg = "ENTERED TemplateGet(): "
         self.log.debug(msg)
 
-        self.ep_template = EpTemplate()
+        self.ep_template: EpTemplate = EpTemplate()
 
-        self.response = []
-        self.response_current = {}
-        self.result = []
-        self.result_current = {}
+        self.response: list[dict[str, Any]] = []
+        self.response_current: dict[str, Any] = {}
+        self.result: list[dict[str, Any]] = []
+        self.result_current: dict[str, Any] = {}
 
         self._rest_send: RestSend = RestSend({})
-        self._results = Results()
+        self._results: Results = Results()
         self._template: dict[str, Any] = {}
         self._template_name: str = ""
 
     def _set_template_endpoint(self) -> None:
         """
-        -   Set the endpoint for the template to be retrieved from
-            the controller.
-        -   Raise ``ValueError`` if the endpoint assignment fails.
+        # Summary
+
+        -   Set the endpoint for the template to be retrieved from the controller.
+
+        ## Raises
+
+        -   `ValueError` if the endpoint assignment fails.
         """
-        method_name = inspect.stack()[0][3]
-        if self.template_name is None:
+        method_name: str = inspect.stack()[0][3]
+        if not self.template_name:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Set instance.template_name property before "
-            msg += "calling instance.refresh()"
+            msg += "Set instance.template_name property before calling instance.refresh()"
             self.log.error(msg)
             raise ValueError(msg)
 
@@ -90,15 +126,19 @@ class TemplateGet:
         except TypeError as error:
             raise ValueError(error) from error
 
-    def refresh(self):
+    def refresh(self) -> None:
         """
+        # Summary
+
         -   Retrieve the template from the controller.
-        -   raise ``ValueError`` if the template endpoint assignment fails
-        -   raise ``ControllerResponseError`` if the controller
-            ``RETURN_CODE`` != 200
+        -   Populate the instance.template property.
+
+        # Raises
+
+        -   `ValueError` if the template endpoint assignment fails
+        -   `ControllerResponseError` if the controller `RETURN_CODE` != 200
         """
-        # pylint: disable=no-member
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
 
         try:
             self._set_template_endpoint()
@@ -107,8 +147,7 @@ class TemplateGet:
 
         if self.rest_send is None:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "Set instance.rest_send property before "
-            msg += "calling instance.refresh()"
+            msg += "Set instance.rest_send property before calling instance.refresh()"
             self.log.debug(msg)
             raise ValueError(msg)
 
@@ -134,19 +173,26 @@ class TemplateGet:
             raise ControllerResponseError(msg)
 
         self.template = {}
+        self.template["template_name"] = self.response_current.get("DATA", {}).get("name", "")
         self.template["parameters"] = self.response_current.get("DATA", {}).get("parameters", [])
 
     @property
     def rest_send(self) -> RestSend:
         """
+        # Summary
+
         An instance of the RestSend class.
+
+        ## Raises
+
+        -   setter: `ValueError` if RestSend.params is not set.
         """
         return self._rest_send
 
     @rest_send.setter
     def rest_send(self, value: RestSend) -> None:
+        method_name: str = inspect.stack()[0][3]
         if not value.params:
-            method_name = inspect.stack()[0][3]
             msg = f"{self.class_name}.{method_name}: "
             msg += "rest_send must have params set."
             raise ValueError(msg)
@@ -155,6 +201,8 @@ class TemplateGet:
     @property
     def results(self) -> Results:
         """
+        # Summary
+
         An instance of the Results class.
         """
         return self._results
@@ -164,18 +212,23 @@ class TemplateGet:
         self._results = value
 
     @property
-    def template(self):
+    def template(self) -> dict[str, Any]:
         """
+        # Summary
+
         -   getter: Return the template retrieved from the controller.
         -   setter: Set the template.
         -   The template must be a template retrieved from the controller.
-        -   setter: Raise ``TypeError`` if the value is not a dict.
+
+        ## Raises
+
+        -   setter: `TypeError` if the value is not a dict.
         """
         return self._template
 
     @template.setter
     def template(self, value) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "template must be an instance of dict."
@@ -186,17 +239,23 @@ class TemplateGet:
     @property
     def template_name(self) -> str:
         """
+        # Summary
+
         -   getter: Return the template name of the template to be retrieved
             from the controller.
         -   setter: Set the template name of the template to be retrieved
             from the controller.
         -   setter: Raise ``TypeError`` if the value is not a str.
+
+        ## Raises
+
+        -   `TypeError` if the value passed to the setter is not an instance of str.
         """
         return self._template_name
 
     @template_name.setter
     def template_name(self, value: str) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, str):
             msg = f"{self.class_name}.{method_name}: "
             msg += "template_name must be an instance of str. "
