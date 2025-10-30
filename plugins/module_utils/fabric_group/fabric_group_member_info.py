@@ -17,7 +17,7 @@
 # Summary
 
 Provides one public class:
--   FabricGroupDetails
+-   FabricGroupMemberInfo
 
 ## Returned data structure example:
 
@@ -420,6 +420,10 @@ class FabricGroupMemberInfo:
     instance.results = Results()
     instance.refresh()
     instance.fabric_group_name = "MyFabricGroup"
+
+    print(instance.cluster_name)
+    print(f"Member count: {instance.count}")
+    print(f"Members: {instance.members}")
     ```
     """
 
