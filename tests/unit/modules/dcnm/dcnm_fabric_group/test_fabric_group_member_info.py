@@ -83,9 +83,9 @@ def test_fabric_group_member_info_00000(fabric_group_member_info) -> None:
     assert instance.class_name == "FabricGroupMemberInfo"
     assert instance.action == "fabric_group_member_info"
     assert instance._cluster_name == ""
-    assert instance._count == 0
+    assert instance._member_fabric_count == 0
     assert instance.data == {}
-    assert instance._members == []
+    assert instance._member_fabric_names == []
     assert instance._fabric_group_name == ""
     assert instance._refreshed is False
     assert instance._rest_send is None
@@ -262,7 +262,7 @@ def test_fabric_group_member_info_00070(fabric_group_member_info) -> None:
     - fabric_group_name is set to "MCFG1"
     - refresh() is called
     - data is populated with member fabric information
-    - cluster_name, count, and members are accessible
+    - cluster_name, member_fabric_count, and member_fabric_names are accessible
     - Exception is not raised
     """
     method_name = inspect.stack()[0][3]
@@ -291,8 +291,8 @@ def test_fabric_group_member_info_00070(fabric_group_member_info) -> None:
 
     assert instance.refreshed is True
     assert instance.cluster_name == "ND3"
-    assert instance.count == 1
-    assert "SITE1" in instance.members
+    assert instance.member_fabric_count == 1
+    assert "SITE1" in instance.member_fabric_names
     assert instance.data.get("clusterName") == "ND3"
     assert "SITE1" in instance.data.get("fabrics", {})
 
@@ -315,8 +315,8 @@ def test_fabric_group_member_info_00080(fabric_group_member_info) -> None:
     - refresh() is called
     - data is set to empty dict
     - cluster_name is empty string
-    - count is 0
-    - members is empty list
+    - member_fabric_count is 0
+    - member_fabric_names is empty list
     - Exception is not raised
     """
     method_name = inspect.stack()[0][3]
@@ -345,8 +345,8 @@ def test_fabric_group_member_info_00080(fabric_group_member_info) -> None:
 
     assert instance.refreshed is True
     assert instance.cluster_name == ""
-    assert instance.count == 0
-    assert instance.members == []
+    assert instance.member_fabric_count == 0
+    assert instance.member_fabric_names == []
     assert instance.data == {}
 
 
@@ -451,65 +451,65 @@ def test_fabric_group_member_info_00130(fabric_group_member_info) -> None:
     """
     # Summary
 
-    Verify count property raises ValueError when accessed before refresh()
+    Verify member_fabric_count property raises ValueError when accessed before refresh()
 
     ## Classes and Methods
 
     - FabricGroupMemberInfo
         - __init__()
-        - count property getter
+        - member_fabric_count property getter
 
     ## Test
 
     - rest_send, results, and fabric_group_name are set
     - refresh() is NOT called
-    - count property raises ValueError with appropriate message
+    - member_fabric_count property raises ValueError with appropriate message
     """
     rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
 
-    match = r"FabricGroupMemberInfo\.data_count: "
-    match += r"refresh\(\) must be called before accessing data_count\."
+    match = r"FabricGroupMemberInfo\.member_fabric_count: "
+    match += r"refresh\(\) must be called before accessing member_fabric_count\."
 
     with pytest.raises(ValueError, match=match):
         instance = fabric_group_member_info
         instance.rest_send = rest_send
         instance.results = Results()
         instance.fabric_group_name = "MCFG1"
-        result = instance.count  # pylint: disable=pointless-statement
+        result = instance.member_fabric_count  # pylint: disable=pointless-statement
 
 
 def test_fabric_group_member_info_00140(fabric_group_member_info) -> None:
     """
     # Summary
 
-    Verify members property raises ValueError when accessed before refresh()
+    Verify member_fabric_names property raises ValueError when accessed before refresh()
 
     ## Classes and Methods
 
     - FabricGroupMemberInfo
         - __init__()
-        - members property getter
+        - member_fabric_names property getter
 
     ## Test
 
     - rest_send, results, and fabric_group_name are set
     - refresh() is NOT called
-    - members property raises ValueError with appropriate message
+    - member_fabric_names property raises ValueError with appropriate message
     """
     rest_send = RestSend(params)
     rest_send.unit_test = True
     rest_send.timeout = 1
     rest_send.response_handler = ResponseHandler()
 
-    match = r"FabricGroupMemberInfo\.data_members: "
-    match += r"refresh\(\) must be called before accessing data_members\."
+    match = r"FabricGroupMemberInfo\.member_fabric_names: "
+    match += r"refresh\(\) must be called before accessing member_fabric_names\."
 
     with pytest.raises(ValueError, match=match):
         instance = fabric_group_member_info
         instance.rest_send = rest_send
         instance.results = Results()
         instance.fabric_group_name = "MCFG1"
-        result = instance.members  # pylint: disable=pointless-statement
+        result = instance.member_fabric_names  # pylint: disable=pointless-statement

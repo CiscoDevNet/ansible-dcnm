@@ -30,8 +30,8 @@ from ..common.exceptions import ControllerResponseError
 from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
-from ..fabric_group.fabric_groups import FabricGroups
 from ..fabric_group.fabric_group_member_info import FabricGroupMemberInfo
+from ..fabric_group.fabric_groups import FabricGroups
 
 
 class FabricGroupDelete:
@@ -160,15 +160,15 @@ class FabricGroupDelete:
         except (ControllerResponseError, ValueError) as error:
             raise ValueError(error) from error
 
-        if self._fabric_group_member_info.count == 0:
+        if self._fabric_group_member_info.member_fabric_count == 0:
             return
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"Fabric group {fabric_group_name} "
         msg += f"in cluster {self._fabric_group_member_info.cluster_name} "
         msg += "cannot be deleted since it contains "
-        msg += f"{self._fabric_group_member_info.count} members "
-        msg += f"{self._fabric_group_member_info.members}. "
+        msg += f"{self._fabric_group_member_info.member_fabric_count} members "
+        msg += f"{self._fabric_group_member_info.member_fabric_names}. "
         msg += "Remove all members from the fabric group and try again."
         raise ValueError(msg)
 

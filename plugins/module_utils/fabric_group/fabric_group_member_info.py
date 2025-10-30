@@ -390,17 +390,19 @@ from ..common.results_v2 import Results
 
 class FabricGroupMemberInfo:
     """
-    ### Summary
+    # Summary
+
     Retrieve fabric group member information from the controller and provide
     property accessors for the fabric group member attributes.
 
-    ### Raises
-    -   ``ValueError`` if:
-            -   ``refresh()`` raises ``ValueError``.
-            -   ``fabric_group_name`` is not set before accessing properties.
-            -   ``fabric_group_name`` does not exist on the controller.
+    ## Raises
 
-    ### Usage
+    -   `ValueError` if:
+            -   `refresh()` raises `ValueError`.
+            -   `fabric_group_name` is not set before accessing properties.
+            -   `fabric_group_name` does not exist on the controller.
+
+    ## Usage
 
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
@@ -439,9 +441,9 @@ class FabricGroupMemberInfo:
         self.log.debug(msg)
 
         self._cluster_name: str = ""
-        self._count: int = 0  # Number of members in the fabric group
+        self._member_fabric_count: int = 0  # Number of members in the fabric group
         self.data: dict = {}
-        self._members: list = []  # List of member fabric names
+        self._member_fabric_names: list = []  # List of member fabric names
 
         self.endpoint: EpOneManageFabricGroupMembersGet = EpOneManageFabricGroupMembersGet()
 
@@ -452,13 +454,15 @@ class FabricGroupMemberInfo:
 
     def register_result(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Update the results object with the current state of the fabric
         group membership and register the result.
 
-        ### Raises
-        -   ``ValueError``if:
-                -    ``Results()`` raises ``TypeError``
+        ## Raises
+
+        -   `ValueError`if:
+                -    `Results()` raises `TypeError`
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -477,13 +481,15 @@ class FabricGroupMemberInfo:
 
     def validate_refresh_parameters(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Validate that mandatory parameters are set before calling refresh().
 
-        ### Raises
-        -   ``ValueError``if:
-                -   ``rest_send`` is not set.
-                -   ``results`` is not set.
+        ## Raises
+
+        -   `ValueError`if:
+                -   `rest_send` is not set.
+                -   `results` is not set.
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
@@ -531,19 +537,25 @@ class FabricGroupMemberInfo:
 
     def refresh(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Refresh fabric_group_name current details from the controller.
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   Mandatory properties are not set.
-                -   ``validate_refresh_parameters()`` raises ``ValueError``.
-                -   ``RestSend`` raises ``TypeError`` or ``ValueError``.
-                -   ``register_result()`` raises ``ValueError``.
+        ## Raises
 
-        ### Notes
-        -   ``self.data`` is a dictionary of fabric details, keyed on
-            fabric name.
+        -   `ValueError` if:
+                -   Mandatory properties are not set.
+                -   `validate_refresh_parameters()` raises `ValueError`.
+                -   `RestSend` raises `TypeError` or `ValueError`.
+                -   `register_result()` raises `ValueError`.
+
+        ## Notes
+
+        -   `self.data` dictionary of fabric group details for fabric_group_name.
+            - top-level keys:
+                -   clusterName
+                -   fabrics - dictionary of member fabrics
+                -   localGroupName
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -578,85 +590,87 @@ class FabricGroupMemberInfo:
         self._refreshed = True
 
         if not self.data.get("fabrics"):
-            self._members = []
-            self._count = 0
+            self._member_fabric_names = []
+            self._member_fabric_count = 0
             return
-        self._members = list(self.data["fabrics"].keys())
-        self._count = len(self._members)
+        self._cluster_name = self.data.get("clusterName", "")
+        self._member_fabric_names = list(self.data["fabrics"].keys())
+        self._member_fabric_count = len(self._member_fabric_names)
 
     @property
     def cluster_name(self) -> str:
         """
-        ### Summary
-        The cluster name of the fabric group.
+        # Summary
 
-        ### Raises
-        -   ``ValueError`` if:
-                -   ``refresh()`` has not been called.
-                -   ``self.data`` does not contain the clusterName key.
-        ### Type
-        str
+        The cluster name associated with the fabric group.
+
+        ## Raises
+
+        -   `ValueError` if:
+                -   `refresh()` has not been called.
         """
         if not self._refreshed:
             msg = f"{self.class_name}.data_cluster_name: "
             msg += "refresh() must be called before accessing data_cluster_name."
             self.log.debug(msg)
             raise ValueError(msg)
-        return self.data.get("clusterName", "")
+        return self._cluster_name
 
     @property
-    def count(self) -> int:
+    def member_fabric_count(self) -> int:
         """
-        ### Summary
+        # Summary
+
         The number of fabric group members.
 
-        ### Raises
+        ## Raises
+
         -   ``ValueError`` if:
                 -   ``refresh()`` has not been called.
                 -   ``self.data`` does not contain the members key.
-        ### Type
-        int
         """
+        method_name = inspect.stack()[0][3]
         if not self._refreshed:
-            msg = f"{self.class_name}.data_count: "
-            msg += "refresh() must be called before accessing data_count."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"refresh() must be called before accessing {method_name}."
             self.log.debug(msg)
             raise ValueError(msg)
-        return self._count
+        return self._member_fabric_count
 
     @property
-    def members(self) -> list:
+    def member_fabric_names(self) -> list:
         """
-        ### Summary
-        The list of fabric group members.
+        # Summary
 
-        ### Raises
+        The list of member fabric names in the fabric group.
+
+        ## Raises
+
         -   ``ValueError`` if:
                 -   ``refresh()`` has not been called.
                 -   ``self.data`` does not contain the members key.
-        ### Type
-        list
         """
+        method_name = inspect.stack()[0][3]
         if not self._refreshed:
-            msg = f"{self.class_name}.data_members: "
-            msg += "refresh() must be called before accessing data_members."
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"refresh() must be called before accessing {method_name}."
             self.log.debug(msg)
             raise ValueError(msg)
-        return self._members
+        return self._member_fabric_names
 
     @property
     def fabric_group_name(self) -> str:
         """
-        ### Summary
+        # Summary
+
         The fabric group name to query.
 
-        ### Raises
+        ## Raises
+
         None
 
-        ### Type
-        string
+        ## Returns
 
-        ### Returns
         - e.g. MyFabricGroup
         - "" (empty string) if fabric group name is not set
         """
