@@ -423,9 +423,11 @@ class FabricGroupMemberInfo:
     instance.refresh()
     instance.fabric_group_name = "MyFabricGroup"
 
-    print(instance.cluster_name)
-    print(f"Member count: {instance.count}")
-    print(f"Members: {instance.members}")
+    print(f"Fabric Group: {instance.fabric_group_name}")
+    print(f"  Cluster Name: {instance.cluster_name}")
+    print(f"  Member Fabric Count: {instance.member_fabric_count}")
+    print(f"  Member Fabric Names: {instance.member_fabric_names}")
+    print(f"  Full Data: {instance.data}")
     ```
     """
 
@@ -642,7 +644,7 @@ class FabricGroupMemberInfo:
         """
         # Summary
 
-        The list of member fabric names in the fabric group.
+        A Python list of member fabric names in the fabric group.
 
         ## Raises
 
