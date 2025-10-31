@@ -79,6 +79,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         # of the mock data.
 
         self.mock_sn_fab_dict = copy.deepcopy(self.test_data.get("mock_sn_fab"))
+        self.mock_sn_fab_msd_dict = copy.deepcopy(self.test_data.get("mock_sn_fab_msd"))
         self.mock_vrf_object = copy.deepcopy(self.test_data.get("mock_vrf_object"))
         self.mock_vrf12_object = copy.deepcopy(self.test_data.get("mock_vrf12_object"))
         self.mock_msd_vrf_object = copy.deepcopy(
@@ -666,7 +667,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_msd_merged" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict, self.mock_sn_fab_dict]
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_msd_dict, self.mock_sn_fab_msd_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
@@ -681,7 +682,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_msd_replaced" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict, self.mock_sn_fab_dict]
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_msd_dict, self.mock_sn_fab_msd_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object, self.mock_msd_vrf_child_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_msd_vrf_object,
@@ -696,7 +697,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "_msd_merged_nochild" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_msd_dict]
             # self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.blank_data,
@@ -707,7 +708,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "msd_delete" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict]
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_msd_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object]
             self.run_dcnm_send.side_effect = [
                 self.mock_msd_parent_vrf_object,
@@ -724,7 +725,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
         elif "msd_override" in self._testMethodName:
             self.init_data()
-            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_dict, self.mock_sn_fab_dict]
+            self.run_dcnm_sn_fab.side_effect = [self.mock_sn_fab_msd_dict, self.mock_sn_fab_msd_dict]
             self.run_dcnm_get_url.side_effect = [self.mock_msd_vrf_attach_object, self.mock_msd_vrf_child_attach_object_2]
             self.run_dcnm_send.side_effect = [
                 self.mock_msd_parent_vrf_object,
@@ -798,15 +799,15 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_get_have_failure(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
-            result.get("msg"), "caller: get_have.  Fabric test_fabric not present on the controller"
+            result.get("msg"), "caller: get_have.  Fabric standalone_fabric not present on the controller"
         )
 
     def test_dcnm_vrf_merged_redeploy(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertEqual(result.get("diff")[0]["vrf_name"], "test_vrf_1")
 
@@ -817,7 +818,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -831,7 +832,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -845,7 +846,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(
                 _ansible_check_mode=True,
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -855,7 +856,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_merged_new(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -882,7 +883,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -912,7 +913,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -922,7 +923,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_merged_duplicate(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
 
@@ -931,7 +932,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -943,7 +944,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -958,7 +959,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -973,7 +974,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_merged_with_update(self):
         playbook = self.test_data.get("playbook_config_update")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertEqual(
@@ -988,7 +989,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1006,7 +1007,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1019,7 +1020,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1051,7 +1052,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1078,7 +1079,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1088,14 +1089,14 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_error1(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(result["msg"]["RETURN_CODE"], 400)
         self.assertEqual(result["msg"]["ERROR"], "There is an error")
 
     def test_dcnm_vrf_error2(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertIn(
             "Entered VRF VLAN ID 203 is in use already",
@@ -1104,8 +1105,8 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_error3(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertEqual(
             result["response"][2]["DATA"], "No switches PENDING for deployment"
         )
@@ -1115,7 +1116,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="replaced",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1140,7 +1141,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="replaced",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1163,7 +1164,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="replaced",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1176,7 +1177,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="replaced",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1201,7 +1202,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="replaced",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1223,7 +1224,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_replace_without_changes(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="replaced", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="replaced", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
@@ -1233,7 +1234,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="replaced",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1248,7 +1249,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1278,7 +1279,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1291,7 +1292,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1331,7 +1332,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1357,7 +1358,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1367,7 +1368,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_override_without_changes(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="overridden", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="overridden", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertFalse(result.get("response"))
@@ -1377,7 +1378,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1387,7 +1388,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_delete_std(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="deleted", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
@@ -1410,7 +1411,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="deleted",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1432,7 +1433,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["response"][1]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_delete_dcnm_only(self):
-        set_module_args(dict(state="deleted", fabric="test_fabric", config=[]))
+        set_module_args(dict(state="deleted", fabric="standalone_fabric", config=[]))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
@@ -1452,14 +1453,14 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_delete_failure(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="deleted", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         msg = "DcnmVrf.push_diff_delete: Deletion of vrfs test_vrf_1 has failed"
         self.assertEqual(result["msg"]["response"][2], msg)
 
     def test_dcnm_vrf_query(self):
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="query", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="query", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
@@ -1490,7 +1491,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="query",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1532,7 +1533,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         )
 
     def test_dcnm_vrf_query_lite_without_config(self):
-        set_module_args(dict(state="query", fabric="test_fabric", config=[]))
+        set_module_args(dict(state="query", fabric="standalone_fabric", config=[]))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
@@ -1575,7 +1576,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1583,7 +1584,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         self.assertEqual(result["msg"], "Pre-validation failed")
 
     def test_dcnm_vrf_validation_no_config(self):
-        set_module_args(dict(state="merged", fabric="test_fabric", config=[]))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=[]))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         msg = "DcnmVrf.validate_input: config element is mandatory for merged state"
         self.assertEqual(result["msg"], msg)
@@ -1595,7 +1596,7 @@ class TestDcnmVrfModule(TestDcnmModule):
             dict(
                 _ansible_check_mode=True,
                 state="merged",
-                fabric="test_fabric",
+                fabric="standalone_fabric",
                 config=playbook,
             )
         )
@@ -1607,7 +1608,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_12merged_new(self):
         self.version = 12
         playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="standalone_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
@@ -1631,7 +1632,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_msd_merged(self):
         self.version = 12
         playbook = self.test_data.get("playbook_msd_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["attach"][0]["deploy"])
@@ -1648,7 +1649,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_msd_replaced(self):
         self.version = 12
         playbook = self.test_data.get("playbook_msd_replace_config")
-        set_module_args(dict(state="replaced", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="replaced", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
         self.assertTrue(result.get("parent_fabric").get("diff")[0]["vrf_int_mtu"], 1500)
@@ -1664,7 +1665,7 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_msd_merged_nochild(self):
         self.version = 12
         playbook = self.test_data.get("playbook_msd_config_no_child")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("workflow"), "Multisite Parent without Child Fabric Processing")
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
@@ -1681,34 +1682,28 @@ class TestDcnmVrfModule(TestDcnmModule):
     def test_dcnm_vrf_msd_merged_misconfig_1(self):
         self.version = 12
         playbook = self.test_data.get("playbook_msd_config_misconfig_1")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(result["msg"], "Config[1].child_fabric_config[1]: fabric is required")
 
     def test_dcnm_vrf_msd_merged_misconfig_2(self):
         self.version = 12
         playbook = self.test_data.get("playbook_msd_config_misconfig_2")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
-        self.assertEqual(result["msg"], "Multisite Child-Parent fabric validation failed: k_fab -> test_fabric")
+        self.assertEqual(result["msg"], "Multisite Child-Parent fabric validation failed: k_fab -> parent_fabric")
 
     def test_dcnm_vrf_msd_merged_misconfig_3(self):
         self.version = 12
         playbook = self.test_data.get("playbook_msd_config_misconfig_3")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="merged", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(result["msg"],
-                         "Config[1]: child_fabric_config is required for Multisite Parent fabrics. It can be optionally removed when state is query.")
-
-    def test_dcnm_vrf_msd_delete_error(self):
-        playbook = self.test_data.get("playbook_msd_config")
-        set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
-        self.assertEqual(result["msg"], "Pre-validation failed")
+                         "Config[1]: child_fabric_config is required for Multisite Parent fabrics. It can be optionally removed when state is query/deleted.")
 
     def test_dcnm_vrf_msd_delete(self):
         playbook = self.test_data.get("playbook_msd_delete_config")
-        set_module_args(dict(state="deleted", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="deleted", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("workflow"), "Multisite Parent without Child Fabric Processing")
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
@@ -1726,7 +1721,7 @@ class TestDcnmVrfModule(TestDcnmModule):
         set_module_args(
             dict(
                 state="overridden",
-                fabric="test_fabric",
+                fabric="parent_fabric",
                 config=playbook,
             )
         )
@@ -1761,7 +1756,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_nochild_msd_query(self):
         playbook = self.test_data.get("playbook_msd_config_no_child")
-        set_module_args(dict(state="query", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="query", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertTrue(result.get("workflow"), "Multisite Parent without Child Fabric Processing")
@@ -1780,7 +1775,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_msd_query(self):
         playbook = self.test_data.get("playbook_msd_query_config")
-        set_module_args(dict(state="query", fabric="test_fabric", config=playbook))
+        set_module_args(dict(state="query", fabric="parent_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("workflow"), "Multisite Parent with Child Fabric Processing")
         self.assertFalse(result.get("parent_fabric").get("diff"))
@@ -1812,7 +1807,7 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_child_msd_query(self):
         playbook = self.test_data.get("playbook_msd_child_config")
-        set_module_args(dict(state="query", fabric="child_fab", config=playbook))
+        set_module_args(dict(state="query", fabric="child_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("workflow"), "Multisite Child VRF Processing")
         self.assertEqual(result.get("response")[0]["parent"]["vrfName"], "test_vrf_1")
@@ -1830,6 +1825,6 @@ class TestDcnmVrfModule(TestDcnmModule):
 
     def test_dcnm_vrf_child_msd_invalid_config(self):
         playbook = self.test_data.get("playbook_msd_child_config")
-        set_module_args(dict(state="merged", fabric="child_fab", config=playbook))
+        set_module_args(dict(state="merged", fabric="child_fabric", config=playbook))
         result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
-        self.assertTrue(result.get("msg"), "Attempted task on Child Multisite fabric 'child_fab'. State 'query' is only allowed.")
+        self.assertTrue(result.get("msg"), "Attempted task on Child Multisite fabric 'child_fabric'. State 'query' is only allowed.")

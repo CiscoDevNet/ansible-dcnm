@@ -153,11 +153,10 @@
     that:
     - result_1.changed == true
     - result_1.workflow == "Multisite Parent without Child Fabric Processing"
-    - result_1.diff | length == 4
-    - result_1.diff | selectattr('vrf_name', 'equalto', 'ansible-msd-override-basic') | list | length == 1
-    - result_1.diff | selectattr('vrf_name', 'equalto', 'ansible-msd-override-initial1') | selectattr('attach', 'defined') | selectattr('attach', 'length', 1) | list | length == 1
-    - result_1.diff | selectattr('vrf_name', 'equalto', 'ansible-msd-override-initial2') | selectattr('attach', 'defined') | selectattr('attach', 'length', 1) | list | length == 1
-    - result_1.diff | selectattr('vrf_name', 'equalto', 'ansible-msd-override-initial3') | selectattr('attach', 'defined') | selectattr('attach', 'length', 1) | list | length == 1
+    - result_1.diff[0].vrf_name == "ansible-msd-override-basic"
+    - result_1.diff[1].vrf_name == "ansible-msd-override-initial1"
+    - result_1.diff[2].vrf_name == "ansible-msd-override-initial2"
+    - result_1.diff[3].vrf_name == "ansible-msd-override-initial3"
     - result_1.response[0].RETURN_CODE == 200
 
 - name: TEST.1b - MSD OVERRIDDEN - [query] Verify override result
@@ -227,10 +226,8 @@
     - result_2.changed == true
     - result_2.workflow == "Multisite Parent with Child Fabric Processing"
     - result_2.parent_fabric.changed == true
-    - result_2.parent_fabric.diff | length == 2
-    - result_2.parent_fabric.diff | selectattr('vrf_name', 'equalto', 'ansible-msd-override-child') | list | length == 1
-    - result_2.parent_fabric.diff | selectattr('vrf_name', 'equalto', 'ansible-msd-override-basic') | selectattr('attach', 'defined') | list | length == 1
-    - result_2.child_fabrics | length == 1
+    - result_2.parent_fabric.diff[0].vrf_name == "ansible-msd-override-child"
+    - result_2.parent_fabric.diff[1].vrf_name == "ansible-msd-override-basic"
     - result_2.child_fabrics[0].fabric == "AK-RT"
     - result_2.child_fabrics[0].diff[0].vrf_name == "ansible-msd-override-child"
     - result_2.parent_fabric.response[0].RETURN_CODE == 200

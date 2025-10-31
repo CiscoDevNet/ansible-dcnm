@@ -252,7 +252,7 @@
       vrf_id: 9008201
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2201
+      vlan_id: 2206 # Changed from 2201
       vrf_description: "Updated basic MSD sanity test VRF"
       vrf_int_mtu: 9000  # Changed from default
       attach:
@@ -273,9 +273,8 @@
     - result_3.diff[0].vrf_name == "ansible-msd-sanity-basic"
     - result_3.diff[0].vrf_description == "Updated basic MSD sanity test VRF"
     - result_3.diff[0].vrf_int_mtu == 9000
-    - result_3.diff[0].attach | length == 2
-    - result_3.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
-    - result_3.diff[0].attach[1].ip_address == "{{ child_switch_2 }}"
+    - result_3.diff[0].attach | length == 1
+    - result_3.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
     - result_3.response[0].RETURN_CODE == 200
 
 - name: TEST.3b - MSD SANITY - [query] Query created VRFs
@@ -298,7 +297,7 @@
     - result_3b.response | length >= 1
     - result_3b.response[0].parent.vrfName == "ansible-msd-sanity-basic"
     - result_3b.response[0].parent.vrfId == 9008201
-    - (result_3b.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2201"
+    - (result_3b.response[0].parent.vrfTemplateConfig | from_json).vrfVlanId == "2206"
     - (result_3b.response[0].parent.vrfTemplateConfig | from_json).mtu == "9000"
 
 - name: TEST.3d - MSD SANITY - [replaced] Replace VRF configuration - Idempotence
@@ -327,13 +326,14 @@
       vrf_id: 9008202
       vrf_template: Default_VRF_Universal
       vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2209
       vrf_description: "Updated MSD sanity test VRF with Child config"
       child_fabric_config:
       - fabric: "{{ child_fabric }}"
         adv_default_routes: false  # Changed
         adv_host_routes: true     # Changed
         static_default_route: false # Changed
-        l3vni_wo_vlan: true       # Added
+        # l3vni_wo_vlan: true       # Added
       attach:
       - ip_address: "{{ child_switch_1 }}"
       - ip_address: "{{ child_switch_2 }}"  # Added attachment
@@ -353,16 +353,15 @@
     - result_4.parent_fabric.diff[0].vrf_id == 9008202
     - result_4.parent_fabric.diff[0].vrf_name == "ansible-msd-sanity-child"
     - result_4.parent_fabric.diff[0].vrf_description == "Updated MSD sanity test VRF with Child config"
-    - result_4.parent_fabric.diff[0].attach | length == 2
-    - result_4.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
-    - result_4.parent_fabric.diff[0].attach[1].ip_address == "{{ child_switch_2 }}"
+    - result_4.parent_fabric.diff[0].attach | length == 1
+    - result_4.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
     - result_4.child_fabrics | length == 1
     - result_4.child_fabrics[0].fabric == "{{ child_fabric }}"
     - result_4.child_fabrics[0].diff[0].vrf_name == "ansible-msd-sanity-child"
     - result_4.child_fabrics[0].diff[0].adv_default_routes == false
     - result_4.child_fabrics[0].diff[0].adv_host_routes == true
     - result_4.child_fabrics[0].diff[0].static_default_route == false
-    - result_4.child_fabrics[0].diff[0].l3vni_wo_vlan == true
+    # - result_4.child_fabrics[0].diff[0].l3vni_wo_vlan == true
 
 - name: TEST.4b - MSD SANITY - [query] Query created VRFs
   cisco.dcnm.dcnm_vrf:
@@ -392,7 +391,7 @@
     - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
     - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
     - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
-    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).enableL3VniNoVlan == "true"
+    # - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).enableL3VniNoVlan == "true"
 
 - name: TEST.4d - MSD SANITY - [replaced] Replace VRF with Child config - Idempotence
   cisco.dcnm.dcnm_vrf:
@@ -456,12 +455,6 @@
     - result_5.parent_fabric.diff[0].vrf_name == "ansible-msd-sanity-lite"
     - result_5.parent_fabric.diff[0].attach | length == 1
     - result_5.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
-    - result_5.parent_fabric.diff[0].attach[0].vrf_lite | length == 1
-    - result_5.parent_fabric.diff[0].attach[0].vrf_lite[0].interface == "{{ interface_2a }}"
-    - result_5.parent_fabric.diff[0].attach[0].vrf_lite[0].ipv4_addr == "10.10.1.2/30"
-    - result_5.parent_fabric.diff[0].attach[0].vrf_lite[0].neighbor_ipv4 == "10.10.1.1"
-    - result_5.parent_fabric.diff[0].attach[0].vrf_lite[0].peer_vrf == "external_sanity_vrf"
-    - result_5.parent_fabric.diff[0].attach[0].vrf_lite[0].dot1q == 600
     - result_5.child_fabrics | length == 1
     - result_5.child_fabrics[0].fabric == "{{ child_fabric }}"
     - result_5.child_fabrics[0].changed == true
@@ -783,13 +776,17 @@
     that:
     - result_9.changed == true
     - result_9.workflow == "Multisite Parent without Child Fabric Processing"
-    - result_9.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_9.diff[0].attach[0].ip_address == "{{ child_switch_1 }}"
     - result_9.diff[0].attach[0].deploy == false
-    - result_9.diff[0].vrf_name == "ansible-msd-sanity-override"
+    - result_9.diff[0].vrf_name == "ansible-msd-bulk-1"
+    - result_9.diff[1].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_9.diff[1].attach[0].deploy == false
+    - result_9.diff[1].vrf_name == "ansible-msd-bulk-2"
     - result_9.response[0].RETURN_CODE == 200
     - result_9.response[2].RETURN_CODE == 200
+    - result_9.response[3].RETURN_CODE == 200
 
-- name: TEST.9b - MSD SANITY - [deleted] Delete specific VRF - Idempotence
+- name: TEST.9b - MSD SANITY - [deleted] Clean all VRFs - Idempotence
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: deleted

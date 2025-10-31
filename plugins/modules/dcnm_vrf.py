@@ -21,10 +21,10 @@ __author__ = "Shrishail Kariyappanavar, Karthik Babu Harichandra Babu, Praveen R
 DOCUMENTATION = """
 ---
 module: dcnm_vrf
-short_description: Add and remove VRFs from a DCNM managed VXLAN fabric.
+short_description: Add and remove VRFs from a ND managed VXLAN fabric.
 version_added: "0.9.0"
 description:
-    - "Add and remove VRFs and VRF Lite Extension from a DCNM managed VXLAN fabric."
+    - "Add and remove VRFs and VRF Lite Extension from a ND managed VXLAN fabric."
     - "In Multisite fabrics, VRFs can be created only on Multisite fabric"
     - "In Multisite fabrics, VRFs cannot be created on member fabric"
 author: Shrishail Kariyappanavar(@nkshrishail), Karthik Babu Harichandra Babu (@kharicha), Praveen Ramoorthy(@praveenramoorthy)
@@ -36,7 +36,7 @@ options:
     required: yes
   state:
     description:
-    - The state of DCNM after module completion.
+    - The state of ND after module completion.
     type: str
     choices:
       - merged
@@ -64,7 +64,7 @@ options:
       vlan_id:
         description:
         - vlan ID for the vrf attachment
-        - If not specified in the playbook, DCNM will auto-select an available vlan_id
+        - If not specified in the playbook, ND will auto-select an available vlan_id
         type: int
         required: false
       vrf_template:
@@ -161,7 +161,7 @@ options:
       no_rp:
         description:
         - No RP, only SSM is used
-        - supported on NDFC only
+        - supported on ND only
         - Not applicable at Multisite parent fabric level
         type: bool
         required: false
@@ -253,7 +253,7 @@ options:
         description:
         - Enable netflow on VRF-LITE Sub-interface
         - Netflow is supported only if it is enabled on fabric
-        - Netflow configs are supported on NDFC only
+        - Netflow configs are supported on ND only
         - Not applicable at Multisite parent fabric level
         type: bool
         required: false
@@ -261,49 +261,49 @@ options:
       nf_monitor:
         description:
         - Netflow Monitor
-        - Netflow configs are supported on NDFC only
+        - Netflow configs are supported on ND only
         - Not applicable at Multisite parent fabric level
         type: str
         required: false
       disable_rt_auto:
         description:
         - Disable RT Auto-Generate
-        - supported on NDFC only
+        - supported on ND only
         type: bool
         required: false
         default: false
       import_vpn_rt:
         description:
         - VPN routes to import
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       export_vpn_rt:
         description:
         - VPN routes to export
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       import_evpn_rt:
         description:
         - EVPN routes to import
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       export_evpn_rt:
         description:
         - EVPN routes to export
-        - supported on NDFC only
+        - supported on ND only
         - Use ',' to separate multiple route-targets
         type: str
         required: false
       import_mvpn_rt:
         description:
         - MVPN routes to import
-        - supported on NDFC only
+        - supported on ND only
         - Can be configured only when TRM is enabled
         - Use ',' to separate multiple route-targets
         - Not applicable at Multisite parent fabric level
@@ -312,7 +312,7 @@ options:
       export_mvpn_rt:
         description:
         - MVPN routes to export
-        - supported on NDFC only
+        - supported on ND only
         - Can be configured only when TRM is enabled
         - Use ',' to separate multiple route-targets
         - Not applicable at Multisite parent fabric level
@@ -323,7 +323,6 @@ options:
         - Configuration for Child fabrics in multisite (MSD) deployments
         - Only applicable for Parent multisite fabrics
         - Defines VRF behavior on each Child fabric
-        - If not specified, Child fabrics will default the required properties
         - Not supported with state 'deleted'
         type: list
         elements: dict
@@ -456,12 +455,6 @@ options:
             - Use ',' to separate multiple route-targets
             type: str
             required: false
-          deploy:
-            description:
-            - Control whether to deploy the specified attachment on Child fabric.
-            - If not specified, defaults to value specified at Multisite Parent fabric level.
-            type: bool
-            required: false
       attach:
         description:
         - List of vrf attachment details
@@ -519,35 +512,34 @@ options:
           import_evpn_rt:
             description:
             - import evpn route-target
-            - supported on NDFC only
+            - supported on ND only
             - Use ',' to separate multiple route-targets
             type: str
             required: false
           export_evpn_rt:
             description:
             - export evpn route-target
-            - supported on NDFC only
+            - supported on ND only
             - Use ',' to separate multiple route-targets
             type: str
             required: false
           deploy:
             description:
             - Per switch knob to control whether to deploy the attachment
-            - This knob has been deprecated from Ansible NDFC Collection Version 2.1.0 onwards.
+            - This knob has been deprecated from Ansible ND Collection Version 2.1.0 onwards.
               There will not be any functional impact if specified in playbook.
             type: bool
             default: true
       deploy:
         description:
         - Global knob to control whether to deploy the attachment
-        - Ansible NDFC Collection Behavior for Version 2.0.1 and earlier
-        - This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
-        - Ansible NDFC Collection Behavior for Version 2.1.0 and later
-        - Attachments specified in the playbook will always be created in DCNM
-          This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
-          If set to "False", the attachments will be created in DCNM, but will not be deployed
-        - In case of Multisite fabrics, deploy flag on parent will be inherited by the specified child fabrics, unless
-          overridden at child fabric config level.
+        - Ansible ND Collection Behavior for Version 2.0.1 and earlier
+        - This knob will create and deploy the attachment in ND only when set to "True" in playbook
+        - Ansible ND Collection Behavior for Version 2.1.0 and later
+        - Attachments specified in the playbook will always be created in ND
+          This knob, when set to "True",  will deploy the attachment in ND, by pushing the configs to switch.
+          If set to "False", the attachments will be created in ND, but will not be deployed
+        - In case of Multisite fabrics, deploy flag on parent will be inherited by the specified child fabrics.
         type: bool
         default: true
   _fabric_type:
@@ -592,20 +584,20 @@ EXAMPLES = """
 #
 # Deleted:
 #   VRFs defined in the playbook will be deleted.
-#   If no VRFs are provided in the playbook, all VRFs present on that DCNM fabric will be deleted.
+#   If no VRFs are provided in the playbook, all VRFs present on that ND fabric will be deleted.
 #
 # Query:
-#   Returns the current DCNM state for the VRFs listed in the playbook.
+#   Returns the current ND state for the VRFs listed in the playbook.
 #
 # rollback functionality:
 # This module supports task level rollback functionality. If any task runs into failures, as part of failure
-# handling, the module tries to bring the state of the DCNM back to the state captured in have structure at the
+# handling, the module tries to bring the state of the ND back to the state captured in have structure at the
 # beginning of the task execution. Following few lines provide a logical description of how this works,
 # if (failure)
 #     want data = have data
-#     have data = get state of DCNM
+#     have data = get state of ND
 #     Run the module in override state with above set of data to produce the required set of diffs
-#     and push the diff payloads to DCNM.
+#     and push the diff payloads to ND.
 # If rollback fails, the module does not attempt to rollback again, it just quits with appropriate error messages.
 
 # ===========================================================================
@@ -622,7 +614,6 @@ EXAMPLES = """
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
-        service_vrf_template: null
         attach:
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
@@ -630,7 +621,6 @@ EXAMPLES = """
         vrf_id: 9008012
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        service_vrf_template: null
         attach:
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
@@ -645,25 +635,24 @@ EXAMPLES = """
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
-        service_vrf_template: null
         attach:
           - ip_address: 192.168.1.224
           - ip_address: 192.168.1.225
             vrf_lite:
               - peer_vrf: test_vrf_1 # optional
                 interface: Ethernet1/16 # mandatory
-                ipv4_addr: 10.33.0.2/30 # optional
-                neighbor_ipv4: 10.33.0.1 # optional
-                ipv6_addr: 2010::10:34:0:7/64 # optional
-                neighbor_ipv6: 2010::10:34:0:3 # optional
-                dot1q: 2 # dot1q can be got from dcnm/optional
+                ipv4_addr: 192.168.0.2/30 # optional
+                neighbor_ipv4: 192.168.0.1 # optional
+                ipv6_addr: 2012::30:34:0:7/64 # optional
+                neighbor_ipv6: 2012::30:34:0:3 # optional
+                dot1q: 2 # dot1q can be got from ND/optional
               - peer_vrf: test_vrf_2 # optional
                 interface: Ethernet1/17 # mandatory
-                ipv4_addr: 20.33.0.2/30 # optional
-                neighbor_ipv4: 20.33.0.1 # optional
-                ipv6_addr: 3010::10:34:0:7/64 # optional
-                neighbor_ipv6: 3010::10:34:0:3 # optional
-                dot1q: 3 # dot1q can be got from dcnm/optional
+                ipv4_addr: 192.169.0.2/30 # optional
+                neighbor_ipv4: 192.169.0.1 # optional
+                ipv6_addr: 3000::30:34:0:7/64 # optional
+                neighbor_ipv6: 3000::30:34:0:3 # optional
+                dot1q: 3 # dot1q can be got from ND/optional
 
 - name: REPLACE | Update attachments for a VRF
   cisco.dcnm.dcnm_vrf:
@@ -675,14 +664,13 @@ EXAMPLES = """
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
-        service_vrf_template: null
         attach:
           - ip_address: 192.168.1.224
           # Delete this attachment
           # - ip_address: 192.168.1.225
           # Create the following attachment
           - ip_address: 192.168.1.226
-      # Dont touch this if its present on DCNM
+      # Dont touch this if its present on ND
       # - vrf_name: ansible-vrf-r2
       #   vrf_id: 9008012
       #   vrf_template: Default_VRF_Universal
@@ -701,7 +689,6 @@ EXAMPLES = """
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
-        service_vrf_template: null
         attach:
           - ip_address: 192.168.1.224
           # Delete this attachment
@@ -714,7 +701,6 @@ EXAMPLES = """
       #   vrf_template: Default_VRF_Universal
       #   vrf_extension_template: Default_VRF_Extension_Universal
       #   vlan_id: 2000
-      #   service_vrf_template: null
       #   attach:
       #   - ip_address: 192.168.1.224
       #   - ip_address: 192.168.1.225
@@ -729,13 +715,11 @@ EXAMPLES = """
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
-        service_vrf_template: null
       - vrf_name: ansible-vrf-r2
         vrf_id: 9008012
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
-        service_vrf_template: null
 
 - name: DELETE | Delete all VRFs on a fabric
   cisco.dcnm.dcnm_vrf:
@@ -771,7 +755,6 @@ EXAMPLES = """
         vlan_id: 2000
         vrf_template: Default_VRF_Universal
         vrf_extension_template: Default_VRF_Extension_Universal
-        service_vrf_template: null
         # Attachments are for switches at the Parent fabric
         attach:
           - ip_address: 192.168.1.224
@@ -841,7 +824,6 @@ EXAMPLES = """
         vrf_extension_template: Default_VRF_Extension_Universal
         vlan_id: 2000
         vrf_int_mtu: 9000 # Update MTU on Parent
-        service_vrf_template: null
         # Child fabric configs are replaced: child1 is updated
         child_fabric_config:
           - fabric: vxlan-child-fabric1
@@ -853,7 +835,7 @@ EXAMPLES = """
           # - ip_address: 192.168.1.225
           # Create the following attachment
           - ip_address: 192.168.1.226
-      # Dont touch this if its present on NDFC
+      # Dont touch this if its present on ND
       # - vrf_name: ansible-vrf-r2
       #   vrf_id: 9008012
       #   vrf_template: Default_VRF_Universal
@@ -1562,9 +1544,9 @@ class DcnmVrf:
                     {
                         "dot1q": 2,
                         "interface": "Ethernet1/2",
-                        "ipv4_addr": "10.33.0.2/30",
+                        "ipv4_addr": "192.168.0.2/30",
                         "ipv6_addr": "2010::10:34:0:7/64",
-                        "neighbor_ipv4": "10.33.0.1",
+                        "neighbor_ipv4": "192.168.0.1",
                         "neighbor_ipv6": "2010::10:34:0:3",
                         "peer_vrf": "ansible-vrf-int1"
                     }
@@ -2070,7 +2052,7 @@ class DcnmVrf:
                     "configureStaticDefaultRouteFlag", True
                 ),
                 "bgpPassword": json_to_dict.get("bgpPassword", ""),
-                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", "3"),
+                "bgpPasswordKeyType": json_to_dict.get("bgpPasswordKeyType", 3),
             }
 
             if self.dcnm_version > 11:
@@ -4743,7 +4725,7 @@ class DcnmVrf:
             "bgp_passwd_encrypt": "bgpPasswordKeyType",
         }
 
-        # Add DCNM version 12+ specific properties
+        # Add ND version 12+ specific properties
         if self.dcnm_version > 11:
             dcnm_12_mappings = {
                 "no_rp": "isRPAbsent",
@@ -4947,8 +4929,6 @@ class DcnmVrf:
         if op == "attach" and "is in use already" in str(res.values()):
             fail = True
             changed = False
-        if op == "deploy" and "No switches PENDING for deployment" in str(res.values()):
-            changed = False
 
         return fail, changed
 
@@ -5005,7 +4985,6 @@ def main():
     # Logging setup
     try:
         log = Log()
-        log.config = "/home/achengam/Desktop/VRF_Val/N2/ansible_collections/cisco/dcnm/ansible_cisco_log.json"
         log.commit()
     except (TypeError, ValueError):
         pass

@@ -178,7 +178,6 @@
 
 - assert:
     that:
-    - result_1b.response | length == 1
     - result_1b.parent_fabric.response | length == 1
     - result_1b.parent_fabric.response[0].parent.vrfName == "ansible-msd-replace-1"
     - result_1b.parent_fabric.response[0].parent.vrfStatus == "DEPLOYED"
@@ -213,7 +212,7 @@
     - result_1d.child_fabrics[0].diff | length == 0
     - result_1d.child_fabrics[0].response | length == 0
 
-- name: TEST.2 - MSD REPLACED - [replaced] Replace VRF by removing Child config
+- name: TEST.2 - MSD REPLACED - [replaced] Replace VRF - Remove one attachment
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: replaced
@@ -224,7 +223,6 @@
       vrf_extension_template: Default_VRF_Extension_Universal
       vlan_id: 2022
       vrf_description: "VRF with removed Child config"
-      # child_fabric_config removed - should reset to defaults
       attach:
       - ip_address: "{{ child_switch_1 }}"
       # Removed child_switch_2 attachment
@@ -239,13 +237,12 @@
     that:
     - result_2.changed == true
     - result_2.workflow == "Multisite Parent without Child Fabric Processing"
-    - result_2.parent_fabric.fabric == "{{ parent_fabric }}"
-    - result_2.parent_fabric.changed == true
-    - result_2.parent_fabric.diff[0].vrf_name == "ansible-msd-replace-2"
-    - result_2.parent_fabric.diff[0].attach | length == 1
-    - result_2.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
-    - result_2.parent_fabric.diff[0].attach[0].deploy == false
-    - result_2.parent_fabric.response[0].RETURN_CODE == 200
+    - result_2.changed == true
+    - result_2.diff[0].vrf_name == "ansible-msd-replace-2"
+    - result_2.diff[0].attach | length == 1
+    - result_2.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_2.diff[0].attach[0].deploy == false
+    - result_2.response[0].RETURN_CODE == 200
 
 - name: TEST.2b - MSD REPLACED - [query] Query replaced VRFs
   cisco.dcnm.dcnm_vrf:
@@ -288,7 +285,7 @@
     - result_2d.diff | length == 0
     - result_2d.response | length == 0
 
-- name: TEST.3 - MSD REPLACED - [replaced] Replace VRF with new Child fabric config
+- name: TEST.3 - MSD REPLACED - [replaced] Replace VRF with Child fabric config
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ parent_fabric }}"
     state: replaced
@@ -328,8 +325,10 @@
     - result_3.parent_fabric.response[0].RETURN_CODE == 200
     - result_3.child_fabrics | length == 1
     - result_3.child_fabrics[0].fabric == "{{ child_fabric }}"
-    - result_3.child_fabrics[0].diff | length == 0
-    - result_3.child_fabrics[0].response | length == 0
+    - result_3.child_fabrics[0].diff[0].vrf_name == "ansible-msd-replace-2"
+    - result_3.child_fabrics[0].diff[0].adv_default_routes == true
+    - result_3.child_fabrics[0].diff[0].adv_host_routes == false
+    - result_3.child_fabrics[0].diff[0].static_default_route == true
 
 - name: TEST.3b - MSD REPLACED - [query] Query replaced VRFs
   cisco.dcnm.dcnm_vrf:

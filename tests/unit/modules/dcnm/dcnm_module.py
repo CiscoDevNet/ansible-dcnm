@@ -222,7 +222,6 @@ class TestDcnmModule(ModuleTestCase):
             if module_name == "cisco.dcnm.dcnm_rest":
                 # Return the mocked fabric_associations response directly
                 path = module_args.get('path', '') if module_args else ''
-                method = module_args.get('method', 'GET') if module_args else 'GET'
                 if '/fabric-associations' in path:
                     if hasattr(self, 'fabric_associations'):
                         return {'response': self.fabric_associations, 'failed': False}

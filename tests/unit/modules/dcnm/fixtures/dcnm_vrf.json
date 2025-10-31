@@ -7,18 +7,22 @@
       "10.10.10.228": "XYZKSJHSMK5"
     },
     "mock_ip_fab" : {
-        "10.10.10.224": "test_fabric",
-        "10.10.10.225": "test_fabric",
-        "10.10.10.226": "test_fabric",
-        "10.10.10.227": "test_fabric",
-        "10.10.10.228": "test_fabric"
+        "10.10.10.224": "standalone_fabric",
+        "10.10.10.225": "standalone_fabric",
+        "10.10.10.226": "standalone_fabric",
+        "10.10.10.227": "standalone_fabric",
+        "10.10.10.228": "standalone_fabric"
     },
     "mock_sn_fab" : {
-        "XYZKSJHSMK1": "test_fabric",
-        "XYZKSJHSMK2": "test_fabric",
-        "XYZKSJHSMK3": "test_fabric",
-        "XYZKSJHSMK4": "test_fabric",
-        "XYZKSJHSMK5": "test_fabric"
+        "XYZKSJHSMK1": "standalone_fabric",
+        "XYZKSJHSMK2": "standalone_fabric",
+        "XYZKSJHSMK3": "standalone_fabric",
+        "XYZKSJHSMK4": "standalone_fabric",
+        "XYZKSJHSMK5": "standalone_fabric"
+    },
+    "mock_sn_fab_msd" : {
+        "XYZKSJHSMK1": "parent_fabric",
+        "XYZKSJHSMK2": "parent_fabric"
     },
     "playbook_config_input_validation" : [
       {
@@ -768,7 +772,7 @@
           "adv_host_routes": true,
           "adv_default_routes": true,
           "l3vni_wo_vlan": false,
-          "fabric": "child_fab"
+          "fabric": "child_fabric"
         }
       ],
       "deploy": true
@@ -788,7 +792,7 @@
       ],
       "child_fabric_config": [
         {
-          "fabric": "child_fab",
+          "fabric": "child_fabric",
           "static_default_route": true,
           "l3vni_wo_vlan": true
         }
@@ -914,7 +918,7 @@
       ],
       "child_fabric_config": [
         {
-          "fabric": "child_fab",
+          "fabric": "child_fabric",
           "adv_host_routes": true,
           "adv_default_routes": true,
           "l3vni_wo_vlan": false
@@ -938,7 +942,7 @@
           "adv_host_routes": true,
           "adv_default_routes": true,
           "l3vni_wo_vlan": false,
-          "fabric": "child_fab"
+          "fabric": "child_fabric"
         }
       ],
       "deploy": true
@@ -956,7 +960,7 @@
     "DATA": [
       {
         "fabricId": 38,
-        "fabricName": "test_fabric",
+        "fabricName": "parent_fabric",
         "fabricParent": "None",
         "fabricState": "msd",
         "fabricTechnology": "VXLANFabric",
@@ -964,15 +968,15 @@
       },
       {
         "fabricId": 40,
-        "fabricName": "child_fab",
-        "fabricParent": "test_fabric",
+        "fabricName": "child_fabric",
+        "fabricParent": "parent_fabric",
         "fabricState": "member",
         "fabricTechnology": "VXLANFabric",
         "fabricType": "Switch_Fabric"
       },
       {
         "fabricId": 11,
-        "fabricName": "test_fabric_st",
+        "fabricName": "standalone_fabric",
         "fabricParent": "None",
         "fabricState": "standalone",
         "fabricTechnology": "VXLANFabric",
@@ -989,7 +993,7 @@
     "MESSAGE": "OK",
     "DATA":[
       {
-        "fabric": "child_fab",
+        "fabric": "child_fabric",
         "vrfName": "test_vrf_1",
         "enforce": null,
         "defaultSGTag": null,
@@ -1002,10 +1006,10 @@
         "serviceVrfTemplate": null,
         "source": null,
         "vrfStatus": "DEPLOYED",
-        "hierarchicalKey": "child_fab"
+        "hierarchicalKey": "child_fabric"
       },
       {
-        "fabric": "child_fab",
+        "fabric": "child_fabric",
         "vrfName": "test_vrf_2",
         "enforce": null,
         "defaultSGTag": null,
@@ -1018,7 +1022,7 @@
         "serviceVrfTemplate": null,
         "source": null,
         "vrfStatus": "DEPLOYED",
-        "hierarchicalKey": "child_fab"
+        "hierarchicalKey": "child_fabric"
       }
     ]
   },
@@ -1118,7 +1122,7 @@
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "standalone_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -1136,7 +1140,7 @@
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "parent_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -1154,7 +1158,7 @@
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "child_fab",
+        "fabric": "child_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -1172,7 +1176,7 @@
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "child_fab",
+        "fabric": "child_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -1263,7 +1267,7 @@
             "isLanAttached": true,
             "switchSerialNo": "XYZKSJHSMK1",
             "switchRole": "leaf",
-            "fabricName": "child_fab",
+            "fabricName": "child_fabric",
             "ipAddress": "10.10.10.224",
             "vlanId": "2000",
             "vrfId": "9008011"
@@ -1288,7 +1292,7 @@
             "isLanAttached": true,
             "switchSerialNo": "XYZKSJHSMK1",
             "switchRole": "leaf",
-            "fabricName": "child_fab",
+            "fabricName": "child_fabric",
             "ipAddress": "10.10.10.224",
             "vlanId": "2001",
             "vrfId": "9008012"
@@ -1372,7 +1376,7 @@
             "isLanAttached": true,
             "switchSerialNo": "XYZKSJHSMK1",
             "switchRole": "leaf",
-            "fabricName": "test-fabric",
+            "fabricName": "parent_fabric",
             "ipAddress": "10.10.10.224",
             "vlanId": "2000",
             "vrfId": "9008011"
@@ -1396,7 +1400,7 @@
             "isLanAttached": true,
             "switchSerialNo": "XYZKSJHSMK1",
             "switchRole": "leaf",
-            "fabricName": "child_fab",
+            "fabricName": "child_fabric",
             "ipAddress": "10.10.10.224",
             "vlanId": "2000",
             "vrfId": "9008011"
@@ -1488,7 +1492,7 @@
           {
             "deployment": true,
             "extensionValues": "",
-            "fabric": "test_fabric",
+            "fabric": "standalone_fabric",
             "freeformConfig": "",
             "instanceValues": "",
             "serialNumber": "XYZKSJHSMK1",
@@ -1499,7 +1503,7 @@
           {
             "deployment": true,
             "extensionValues": "{\"VRF_LITE_CONN\":\"{\\\"VRF_LITE_CONN\\\":[{\\\"IF_NAME\\\":\\\"Ethernet1/16\\\",\\\"DOT1Q_ID\\\":\\\"2\\\",\\\"IP_MASK\\\":\\\"10.33.0.2/30\\\",\\\"NEIGHBOR_IP\\\":\\\"10.33.0.1\\\",\\\"NEIGHBOR_ASN\\\":\\\"65535\\\",\\\"IPV6_MASK\\\":\\\"2010::10:34:0:7/64\\\",\\\"IPV6_NEIGHBOR\\\":\\\"2010::10:34:0:3\\\",\\\"AUTO_VRF_LITE_FLAG\\\":\\\"false\\\",\\\"PEER_VRF_NAME\\\":\\\"ansible-vrf-int1\\\",\\\"VRF_LITE_JYTHON_TEMPLATE\\\":\\\"Ext_VRF_Lite_Jython\\\"}]}\",\"MULTISITE_CONN\":\"{\\\"MULTISITE_CONN\\\":[]}\"}",
-            "fabric": "test_fabric",
+            "fabric": "standalone_fabric",
             "freeformConfig": "",
             "instanceValues": "{\"loopbackId\":\"\",\"loopbackIpAddress\":\"\",\"loopbackIpV6Address\":\"\",\"switchRouteTargetImportEvpn\":\"5000:100\",\"switchRouteTargetExportEvpn\":\"5000:100\"}",
             "serialNumber": "XYZKSJHSMK4",
@@ -1552,7 +1556,7 @@
     "MESSAGE": "OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "standalone_fabric",
         "vrfName": "test_vrf_dcnm",
         "vrfTemplate": "Default_VRF_Universal",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -2054,7 +2058,7 @@
   },
   "fabric_details_mfd": {
         "id": 4,
-        "fabricId": "FABRIC-4",
+        "fabricId": "standalone_fabric_mfd",
         "fabricName": "MSD",
         "fabricType": "MFD",
         "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
@@ -2538,7 +2542,7 @@
     "MESSAGE":"OK",
     "DATA": [
       {
-        "fabric": "test_fabric",
+        "fabric": "standalone_fabric",
         "serviceVrfTemplate": "None",
         "source": "None",
         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
@@ -2597,8 +2601,8 @@
         "ipAddress": "10.10.10.224",
         "resourcePool": {
             "dynamicSubnetRange": null,
-            "fabricName": "test-fabric",
-            "hierarchicalKey": "test-fabric",
+            "fabricName": "parent_fabric",
+            "hierarchicalKey": "parent_fabric",
             "id": 0,
             "overlapAllowed": false,
             "poolName": "TOP_DOWN_L3_DOT1Q",

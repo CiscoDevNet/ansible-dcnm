@@ -497,19 +497,6 @@ class ActionModule(ActionNetworkModule):
                                         self.logger.error(msg, operation="validation")
                                         return False
 
-            # Validate delete state restrictions
-            elif state == "deleted":
-                if config:
-                    for vrf_idx, vrf in enumerate(config):
-                        # Check for unsupported child_fabric_config in delete operations
-                        if vrf.get("child_fabric_config"):
-                            msg = (
-                                f"Config[{vrf_idx}]: child_fabric_config is not supported "
-                                "with state 'deleted'"
-                            )
-                            self.logger.error(msg, operation="validation")
-                            return False
-
             # Log successful validation completion
             self.logger.debug(
                 "Input pre-validation completed successfully", operation="validation"
@@ -829,36 +816,37 @@ class ActionModule(ActionNetworkModule):
                 for vrf_idx, vrf in enumerate(config):
                     child_fabric_configs = vrf.get("child_fabric_config")
                     if "child_fabric_config" in vrf:
-                        child_fabric_configs = vrf.get("child_fabric_config")
-                        if not child_fabric_configs:
-                            error_msg = (
-                                f"Config[{vrf_idx+1}]: child_fabric_config is required for "
-                                "Multisite Parent fabrics. It can be optionally removed when state is query."
-                            )
-                            return self.error_handler.handle_failure(error_msg)
-
-                        # Validate each child fabric configuration
-                        for child_idx, child_config in enumerate(child_fabric_configs):
-                            fabric_name = child_config.get("fabric")
-                            if not fabric_name:
+                        if state != "deleted":
+                            child_fabric_configs = vrf.get("child_fabric_config")
+                            if not child_fabric_configs:
                                 error_msg = (
-                                    f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
-                                    "fabric is required"
-                                )
-                                return self.error_handler.handle_failure(error_msg)
-                            # Validate child fabric type and child-parent relationship
-                            if not self.validate_child_parent_fabric(
-                                fabric_name, parent_fabric, fabric_data
-                            ):
-                                error_msg = (
-                                    f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
+                                    f"Config[{vrf_idx+1}]: child_fabric_config is required for "
+                                    "Multisite Parent fabrics. It can be optionally removed when state is query/deleted."
                                 )
                                 return self.error_handler.handle_failure(error_msg)
 
-                            # Create child tasks and group by child fabric name
-                            child_tasks_dict = self.create_child_task(
-                                vrf, child_config, module_args, child_tasks_dict
-                            )
+                            # Validate each child fabric configuration
+                            for child_idx, child_config in enumerate(child_fabric_configs):
+                                fabric_name = child_config.get("fabric")
+                                if not fabric_name:
+                                    error_msg = (
+                                        f"Config[{vrf_idx+1}].child_fabric_config[{child_idx+1}]: "
+                                        "fabric is required"
+                                    )
+                                    return self.error_handler.handle_failure(error_msg)
+                                # Validate child fabric type and child-parent relationship
+                                if not self.validate_child_parent_fabric(
+                                    fabric_name, parent_fabric, fabric_data
+                                ):
+                                    error_msg = (
+                                        f"Multisite Child-Parent fabric validation failed: {fabric_name} -> {parent_fabric}"
+                                    )
+                                    return self.error_handler.handle_failure(error_msg)
+
+                                # Create child tasks and group by child fabric name
+                                child_tasks_dict = self.create_child_task(
+                                    vrf, child_config, module_args, child_tasks_dict
+                                )
 
                         # Create parent VRF without child_fabric_config
                         parent_vrf = copy.deepcopy(vrf)
@@ -1100,6 +1088,10 @@ class ActionModule(ActionNetworkModule):
 
             # Inherit VRF context from parent configuration
             child_config["vrf_name"] = parent_vrf["vrf_name"]
+
+            # Inherit deploy setting from parent only
+            if "deploy" in child_config:
+                del child_config["deploy"]
             if "deploy" in parent_vrf:
                 child_config["deploy"] = parent_vrf["deploy"]
 
