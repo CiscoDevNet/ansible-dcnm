@@ -1,0 +1,627 @@
+##############################################
+##            REQUIRED VARS                 ##
+##############################################
+# parent_fabric
+# A Parent MSD VXLAN_EVPN fabric
+#
+# child_fabric
+# A Child MSD VXLAN_EVPN fabric associated with parent_fabric
+#
+# child_switch_1
+# - A switch in the child MSD fabric
+# - VRF-lite capable switch
+#
+# child_switch_2  
+# - A switch in the child MSD fabric
+# - VRF-lite capable switch
+#
+# interface_2a
+# - Ethernet interface on child_switch_2
+# - Used to test VRF LITE configuration in MSD environment
+##############################################
+
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- set_fact:
+    rest_path: "/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version == "11"
+
+- set_fact:
+    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ parent_fabric }}"
+  when: controller_version >= "12"
+
+- name: SETUP.0 - MSD REPLACED - [with_items] print vars
+  ansible.builtin.debug:
+    var: item
+  with_items:
+     - "parent_fabric : {{ parent_fabric }}"
+     - "child_fabric : {{ child_fabric }}"
+     - "child_switch_1 : {{ child_switch_1 }}"
+     - "child_switch_2 : {{ child_switch_2 }}"
+     - "interface_2a : {{ interface_2a }}"
+
+- name: SETUP.1 - MSD REPLACED - [dcnm_rest.GET] Verify parent fabric is deployed.
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: "{{ rest_path }}"
+  register: result
+
+- assert:
+    that:
+    - result.response.DATA != None
+
+- name: SETUP.2 - MSD REPLACED - [deleted] Delete all VRFs from Parent MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_setup_2
+
+- name: SETUP.2a - MSD REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+  when: result_setup_2.changed == true
+
+- name: SETUP.3 - MSD REPLACED - [merged] Create initial VRFs for replacement testing
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: merged
+    config:
+    - vrf_name: ansible-msd-replace-1
+      vrf_id: 9008021
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2021
+      vrf_description: "Initial VRF for replacement test"
+      vrf_int_mtu: 9000
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-replace-2
+      vrf_id: 9008022
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2022
+      vrf_description: "Second VRF for replacement test"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
+        l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+  register: result_setup_3
+
+- name: SETUP.3a - MSD REPLACED - [debug] print setup result
+  ansible.builtin.debug:
+    var: result_setup_3
+
+###############################################
+###           MSD REPLACED TESTS            ##
+###############################################
+
+- name: TEST.1 - MSD REPLACED - [replaced] Replace VRF properties and Child config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: &conf1
+    - vrf_name: ansible-msd-replace-1
+      vrf_id: 9008021
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2021
+      vrf_description: "Updated VRF description after replacement"
+      vrf_int_mtu: 9216  # Changed from 9000
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false  # Changed from true
+        adv_host_routes: true     # Changed from false
+        static_default_route: false # Changed from true
+        l3vni_wo_vlan: true       # New parameter
+        netflow_enable: false     # New parameter
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"  # Added new attachment
+      deploy: true
+  register: result_1
+
+- name: TEST.1a - MSD REPLACED - [debug] print result_1
+  ansible.builtin.debug:
+    var: result_1
+
+- assert:
+    that:
+    - result_1.changed == true
+    - result_1.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_1.parent_fabric.fabric == "{{ parent_fabric }}"
+    - result_1.parent_fabric.changed == true
+    - result_1.parent_fabric.diff[0].vrf_id == 9008021
+    - result_1.parent_fabric.diff[0].vrf_name == "ansible-msd-replace-1"
+    - result_1.parent_fabric.diff[0].vrf_description == "Updated VRF description after replacement"
+    - result_1.parent_fabric.diff[0].vrf_int_mtu == 9216
+    - result_1.parent_fabric.diff[0].attach | length == 1
+    - result_1.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_1.parent_fabric.diff[0].attach[0].deploy == true
+    - result_1.child_fabrics | length == 1
+    - result_1.child_fabrics[0].fabric == "{{ child_fabric }}"
+    - result_1.child_fabrics[0].diff[0].vrf_name == "ansible-msd-replace-1"
+    - result_1.child_fabrics[0].diff[0].adv_default_routes == false
+    - result_1.child_fabrics[0].diff[0].adv_host_routes == true
+    - result_1.child_fabrics[0].diff[0].static_default_route == false
+    - result_1.child_fabrics[0].diff[0].l3vni_wo_vlan == true
+    - result_1.child_fabrics[0].response[0].RETURN_CODE == 200
+
+- name: TEST.1b - MSD REPLACED - [query] Query replaced VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf1
+  register: result_1b
+  until:
+    - "result_1b.parent_fabric.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_1b.child_fabrics[0].response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 20
+  delay: 3
+
+- name: TEST.1c - MSD REPLACED - [debug] print result_1b
+  ansible.builtin.debug:
+    var: result_1b
+
+- assert:
+    that:
+    - result_1b.response | length == 1
+    - result_1b.parent_fabric.response | length == 1
+    - result_1b.parent_fabric.response[0].parent.vrfName == "ansible-msd-replace-1"
+    - result_1b.parent_fabric.response[0].parent.vrfStatus == "DEPLOYED"
+    - (result_1b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).mtu == "9216"
+    - result_1b.child_fabrics | length == 1
+    - result_1b.child_fabrics[0].response | length == 1
+    - result_1b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-replace-1"
+    - result_1b.child_fabrics[0].response[0].parent.vrfStatus == "DEPLOYED"
+    - (result_1b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_1b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - (result_1b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "false"
+    - (result_1b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).enableL3VniNoVlan == "true"
+
+- name: TEST.1d - MSD REPLACED - [replaced] Replace VRF - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: *conf1
+  register: result_1d
+
+- name: TEST.1e - MSD REPLACED - [debug] print result_1d
+  ansible.builtin.debug:
+    var: result_1d
+
+- assert:
+    that:
+    - result_1d.changed == false
+    - result_1d.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_1d.parent_fabric.diff | length == 0
+    - result_1d.parent_fabric.response | length == 0
+    - result_1d.child_fabrics | length == 1
+    - result_1d.child_fabrics[0].diff | length == 0
+    - result_1d.child_fabrics[0].response | length == 0
+
+- name: TEST.2 - MSD REPLACED - [replaced] Replace VRF by removing Child config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: &conf2
+    - vrf_name: ansible-msd-replace-2
+      vrf_id: 9008022
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2022
+      vrf_description: "VRF with removed Child config"
+      # child_fabric_config removed - should reset to defaults
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      # Removed child_switch_2 attachment
+      deploy: true
+  register: result_2
+
+- name: TEST.2a - MSD REPLACED - [debug] print result_2
+  ansible.builtin.debug:
+    var: result_2
+
+- assert:
+    that:
+    - result_2.changed == true
+    - result_2.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_2.parent_fabric.fabric == "{{ parent_fabric }}"
+    - result_2.parent_fabric.changed == true
+    - result_2.parent_fabric.diff[0].vrf_name == "ansible-msd-replace-2"
+    - result_2.parent_fabric.diff[0].attach | length == 1
+    - result_2.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_2.parent_fabric.diff[0].attach[0].deploy == false
+    - result_2.parent_fabric.response[0].RETURN_CODE == 200
+
+- name: TEST.2b - MSD REPLACED - [query] Query replaced VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf2
+  register: result_2b
+  until:
+    - "result_2b.response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 20
+  delay: 3
+
+- name: TEST.2c - MSD REPLACED - [debug] print result_2b
+  ansible.builtin.debug:
+    var: result_2b
+
+- assert:
+    that:
+    - result_2b.response | length == 1
+    - result_2b.response[0].parent.vrfName == "ansible-msd-replace-2"
+    - result_2b.response[0].parent.vrfStatus == "DEPLOYED"
+    - (result_2b.response[0].parent.vrfTemplateConfig | from_json).vrfDescription == "VRF with removed Child config"
+    - result_2b.workflow == "Multisite Parent without Child Fabric Processing"
+
+- name: TEST.2d - MSD REPLACED - [replaced] Replace VRF - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: *conf2
+  register: result_2d
+
+- name: TEST.2e - MSD REPLACED - [debug] print result_2d
+  ansible.builtin.debug:
+    var: result_2d
+
+- assert:
+    that:
+    - result_2d.changed == false
+    - result_2d.workflow == "Multisite Parent without Child Fabric Processing"
+    - result_2d.diff | length == 0
+    - result_2d.response | length == 0
+
+- name: TEST.3 - MSD REPLACED - [replaced] Replace VRF with new Child fabric config
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: &conf3
+    - vrf_name: ansible-msd-replace-2
+      vrf_id: 9008022
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2022
+      vrf_description: "VRF with new Child config"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+  register: result_3
+
+- name: TEST.3a - MSD REPLACED - [debug] print result_3
+  ansible.builtin.debug:
+    var: result_3
+
+- assert:
+    that:
+    - result_3.changed == true
+    - result_3.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_3.parent_fabric.fabric == "{{ parent_fabric }}"
+    - result_3.parent_fabric.changed == true
+    - result_3.parent_fabric.diff[0].vrf_id == 9008022
+    - result_3.parent_fabric.diff[0].vrf_name == "ansible-msd-replace-2"
+    - result_3.parent_fabric.diff[0].vrf_description == "VRF with new Child config"
+    - result_3.parent_fabric.diff[0].attach | length == 1
+    - result_3.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_3.parent_fabric.response[0].RETURN_CODE == 200
+    - result_3.child_fabrics | length == 1
+    - result_3.child_fabrics[0].fabric == "{{ child_fabric }}"
+    - result_3.child_fabrics[0].diff | length == 0
+    - result_3.child_fabrics[0].response | length == 0
+
+- name: TEST.3b - MSD REPLACED - [query] Query replaced VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf3
+  register: result_3b
+  until:
+    - "result_3b.parent_fabric.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_3b.child_fabrics[0].response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 20
+  delay: 3
+
+- name: TEST.3c - MSD REPLACED - [debug] print result_3b
+  ansible.builtin.debug:
+    var: result_3b
+
+- assert:
+    that:
+    - result_3b.parent_fabric.response | length == 1
+    - result_3b.parent_fabric.response[0].parent.vrfName == "ansible-msd-replace-2"
+    - result_3b.parent_fabric.response[0].parent.vrfStatus == "DEPLOYED"
+    - (result_3b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfDescription == "VRF with new Child config"
+    - result_3b.child_fabrics | length == 1
+    - result_3b.child_fabrics[0].response | length == 1
+    - result_3b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-replace-2"
+    - result_3b.child_fabrics[0].response[0].parent.vrfStatus == "DEPLOYED"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "false"
+    - (result_3b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).configureStaticDefaultRouteFlag == "true"
+    - result_3b.workflow == "Multisite Parent with Child Fabric Processing"
+
+- name: TEST.3d - MSD REPLACED - [replaced] Replace VRF - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: *conf3
+  register: result_3d
+
+- name: TEST.3e - MSD REPLACED - [debug] print result_3d
+  ansible.builtin.debug:
+    var: result_3d
+
+- assert:
+    that:
+    - result_3d.changed == false
+    - result_3d.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_3d.parent_fabric.changed == false
+    - result_3d.parent_fabric.diff | length == 0
+    - result_3d.child_fabrics[0].diff | length == 0
+    - result_3d.child_fabrics[0].response | length == 0
+
+- name: TEST.4 - MSD REPLACED - [replaced] Replace VRF with VRF-Lite configuration
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: &conf4
+    - vrf_name: ansible-msd-replace-1
+      vrf_id: 9008021
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2021
+      vrf_description: "VRF with VRF-Lite after replacement"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: true
+        adv_host_routes: false
+        static_default_route: true
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      - ip_address: "{{ child_switch_2 }}"
+        vrf_lite:
+        - interface: "{{ interface_2a }}"
+          ipv4_addr: 10.10.1.2/30
+          neighbor_ipv4: 10.10.1.1
+          peer_vrf: external_replace_vrf
+          dot1q: 200
+      deploy: true
+  register: result_4
+
+- name: TEST.4a - MSD REPLACED - [debug] print result_4
+  ansible.builtin.debug:
+    var: result_4
+
+- assert:
+    that:
+    - result_4.changed == true
+    - result_4.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_4.parent_fabric.fabric == "{{ parent_fabric }}"
+    - result_4.parent_fabric.changed == true
+    - result_4.parent_fabric.diff[0].vrf_id == 9008021
+    - result_4.parent_fabric.diff[0].vrf_name == "ansible-msd-replace-1"
+    - result_4.parent_fabric.diff[0].vrf_description == "VRF with VRF-Lite after replacement"
+    - result_4.parent_fabric.diff[0].attach | length == 1
+    - result_4.parent_fabric.diff[0].attach[0].ip_address == "{{ child_switch_2 }}"
+    - result_4.parent_fabric.response[0].RETURN_CODE == 200
+    - result_4.child_fabrics | length == 1
+    - result_4.child_fabrics[0].fabric == "{{ child_fabric }}"
+    - result_4.child_fabrics[0].diff[0].vrf_name == "ansible-msd-replace-1"
+    - result_4.child_fabrics[0].response[0].RETURN_CODE == 200
+
+- name: TEST.4b - MSD REPLACED - [query] Query replaced VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf4
+  register: result_4b
+  until:
+    - "result_4b.parent_fabric.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_4b.child_fabrics[0].response[0].parent.vrfStatus is search('DEPLOYED')"
+  retries: 20
+  delay: 3
+
+- name: TEST.4c - MSD REPLACED - [debug] print result_4b
+  ansible.builtin.debug:
+    var: result_4b
+
+- assert:
+    that:
+    - result_4b.parent_fabric.response | length == 1
+    - result_4b.parent_fabric.response[0].parent.vrfName == "ansible-msd-replace-1"
+    - result_4b.parent_fabric.response[0].parent.vrfId == 9008021
+    - (result_4b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).vrfDescription == "VRF with VRF-Lite after replacement"
+    - result_4b.child_fabrics | length == 1
+    - result_4b.child_fabrics[0].response | length == 1
+    - result_4b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-replace-1"
+    - result_4b.child_fabrics[0].response[0].parent.vrfId == 9008021
+    - (result_4b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "true"
+    - result_4b.workflow == "Multisite Parent with Child Fabric Processing"
+
+- name: TEST.4d - MSD REPLACED - [replaced] Replace VRF - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: *conf4
+  register: result_4d
+
+- name: TEST.4e - MSD REPLACED - [debug] print result_4d
+  ansible.builtin.debug:
+    var: result_4d
+
+- assert:
+    that:
+    - result_4d.changed == true
+    - result_4d.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_4d.parent_fabric.changed == false
+    - result_4d.parent_fabric.diff | length == 0
+    - result_4d.parent_fabric.response | length == 0
+    - result_4d.child_fabrics[0].diff | length == 0
+    - result_4d.child_fabrics[0].response | length == 0
+
+- name: TEST.5 - MSD REPLACED - [replaced] Replace multiple VRFs simultaneously
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: &conf5
+    - vrf_name: ansible-msd-replace-1
+      vrf_id: 9008021
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2021
+      vrf_description: "Multi-replace VRF 1"
+      vrf_int_mtu: 9000
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
+      attach:
+      - ip_address: "{{ child_switch_1 }}"
+      deploy: true
+    - vrf_name: ansible-msd-replace-2
+      vrf_id: 9008022
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      vlan_id: 2022
+      vrf_description: "Multi-replace VRF 2"
+      child_fabric_config:
+      - fabric: "{{ child_fabric }}"
+        adv_default_routes: false
+        adv_host_routes: true
+        static_default_route: false
+        l3vni_wo_vlan: false
+      attach:
+      - ip_address: "{{ child_switch_2 }}"
+      deploy: true
+  register: result_5
+
+- name: TEST.5a - MSD REPLACED - [debug] print result_5
+  ansible.builtin.debug:
+    var: result_5
+
+- assert:
+    that:
+    - result_5.changed == true
+    - result_5.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_5.parent_fabric.fabric == "{{ parent_fabric }}"
+    - result_5.parent_fabric.changed == true
+    - result_5.parent_fabric.diff | length == 4
+    - result_5.parent_fabric.diff[0].vrf_name == "ansible-msd-replace-1"
+    - result_5.parent_fabric.diff[0].vrf_int_mtu == 9000
+    - result_5.parent_fabric.diff[0].attach[0].deploy == false
+    - result_5.parent_fabric.diff[1].vrf_name == "ansible-msd-replace-2"
+    - result_5.parent_fabric.diff[1].attach[0].deploy == false
+    - result_5.parent_fabric.response[0].RETURN_CODE == 200
+    - result_5.child_fabrics | length == 1
+    - result_5.child_fabrics[0].fabric == "{{ child_fabric }}"
+    - result_5.child_fabrics[0].diff | length == 2
+    - result_5.child_fabrics[0].diff[0].vrf_name == "ansible-msd-replace-1"
+    - result_5.child_fabrics[0].diff[0].adv_default_routes == false
+    - result_5.child_fabrics[0].diff[0].adv_host_routes == true
+    - result_5.child_fabrics[0].diff[1].vrf_name == "ansible-msd-replace-2"
+    - result_5.child_fabrics[0].response[0].RETURN_CODE == 200
+
+- name: TEST.5b - MSD REPLACED - [query] Query replaced VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: query
+    config: *conf5
+  register: result_5b
+  until:
+    - "result_5b.parent_fabric.response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_5b.parent_fabric.response[1].parent.vrfStatus is search('DEPLOYED')"
+    - "result_5b.child_fabrics[0].response[0].parent.vrfStatus is search('DEPLOYED')"
+    - "result_5b.child_fabrics[0].response[1].parent.vrfStatus is search('DEPLOYED')"
+  retries: 20
+  delay: 3
+
+- name: TEST.5c - MSD REPLACED - [debug] print result_5b
+  ansible.builtin.debug:
+    var: result_5b
+
+- assert:
+    that:
+    - result_5b.parent_fabric.response | length == 2
+    - result_5b.parent_fabric.response[0].parent.vrfName == "ansible-msd-replace-1"
+    - result_5b.parent_fabric.response[0].parent.vrfId == 9008021
+    - result_5b.parent_fabric.response[0].parent.vrfStatus == "DEPLOYED"
+    - result_5b.parent_fabric.response[1].parent.vrfName == "ansible-msd-replace-2"
+    - result_5b.parent_fabric.response[1].parent.vrfId == 9008022
+    - result_5b.parent_fabric.response[1].parent.vrfStatus == "DEPLOYED"
+    - (result_5b.parent_fabric.response[0].parent.vrfTemplateConfig | from_json).mtu == "9000"
+    - result_5b.child_fabrics | length == 1
+    - result_5b.child_fabrics[0].response | length == 2
+    - result_5b.child_fabrics[0].response[0].parent.vrfName == "ansible-msd-replace-1"
+    - result_5b.child_fabrics[0].response[0].parent.vrfStatus == "DEPLOYED"
+    - result_5b.child_fabrics[0].response[1].parent.vrfName == "ansible-msd-replace-2"
+    - result_5b.child_fabrics[0].response[1].parent.vrfStatus == "DEPLOYED"
+    - (result_5b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseDefaultRouteFlag == "false"
+    - (result_5b.child_fabrics[0].response[0].parent.vrfTemplateConfig | from_json).advertiseHostRouteFlag == "true"
+    - result_5b.workflow == "Multisite Parent with Child Fabric Processing"
+
+- name: TEST.5d - MSD REPLACED - [replaced] Replace multiple VRFs - Idempotence
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: replaced
+    config: *conf5
+  register: result_5d
+
+- name: TEST.5e - MSD REPLACED - [debug] print result_5d
+  ansible.builtin.debug:
+    var: result_5d
+
+- assert:
+    that:
+    - result_5d.changed == false
+    - result_5d.workflow == "Multisite Parent with Child Fabric Processing"
+    - result_5d.parent_fabric.changed == false
+    - result_5d.parent_fabric.diff | length == 0
+    - result_5d.parent_fabric.response | length == 0
+    - result_5d.child_fabrics[0].diff | length == 0
+    - result_5d.child_fabrics[0].response | length == 0
+
+###############################################
+###              CLEANUP                    ##
+###############################################
+
+- name: CLEANUP.1 - MSD REPLACED - [deleted] Delete all VRFs from Parent MSD fabric
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ parent_fabric }}"
+    state: deleted
+  register: result_cleanup_1
+
+- name: CLEANUP.1a - MSD REPLACED - [debug] print cleanup result
+  ansible.builtin.debug:
+    var: result_cleanup_1
+
+- assert:
+    that:
+    - result_cleanup_1.changed in [true, false]
+
+- name: CLEANUP.2 - MSD REPLACED - [wait_for] Wait 60 seconds for cleanup to complete
+  wait_for:
+    timeout: 60
+  when: result_cleanup_1.changed == true
