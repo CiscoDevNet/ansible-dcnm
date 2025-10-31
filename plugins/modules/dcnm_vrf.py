@@ -4582,7 +4582,7 @@ class DcnmVrf:
     def get_child_msd_specs(self):
         """Return Child MSD specific VRF parameters"""
         spec = {
-            "l3vni_wo_vlan": {"default": False, "type": "bool"},
+            "l3vni_wo_vlan": {"default": self.fabric_l3vni_wo_vlan, "type": "bool"},
             "adv_default_routes": {"default": True, "type": "bool"},
             "adv_host_routes": {"default": False, "type": "bool"},
             "static_default_route": {"default": True, "type": "bool"},
@@ -4618,7 +4618,7 @@ class DcnmVrf:
             "import_mvpn_rt": {"default": "", "type": "str"},
             "import_vpn_rt": {"default": "", "type": "str"},
             "ipv6_linklocal_enable": {"default": True, "type": "bool"},
-            "l3vni_wo_vlan": {"default": False, "type": "bool"},
+            "l3vni_wo_vlan": {"default": self.fabric_l3vni_wo_vlan, "type": "bool"},
             "loopback_route_tag": {
                 "default": 12345,
                 "range_max": 4294967295,
