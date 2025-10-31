@@ -6,3 +6,4 @@ pytest-xdist
 coverage==4.5.4
 deepdiff==8.6.1
 pydantic==2.11.4
+ansible.netcommon>=8.1.0
