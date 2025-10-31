@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,20 +33,24 @@ import logging
 from ..common.api.onemanage.endpoints import EpOneManageFabricGroupUpdate
 from ..common.conversion import ConversionUtils
 from ..common.operation_type import OperationType
+from ..common.rest_send_v2 import RestSend
+from ..common.results_v2 import Results
 from .common import FabricGroupCommon
 from .config_deploy import FabricGroupConfigDeploy
 from .config_save import FabricGroupConfigSave
-from ..common.rest_send_v2 import RestSend
-from ..common.results_v2 import Results
 from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
 
 
 class FabricGroupUpdate(FabricGroupCommon):
     """
+    # Summary
+
     Update fabrics in bulk.
 
-    Usage:
+    ## Usage
+
+    ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.update import \
         FabricGroupUpdate
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results_v2 import \
@@ -77,6 +81,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         msg = "Fabric update(s) failed."
         ansible_module.fail_json(msg, **task.results.final_result)
     ansible_module.exit_json(**task.results.final_result)
+    ```
     """
 
     def __init__(self) -> None:
@@ -137,7 +142,7 @@ class FabricGroupUpdate(FabricGroupCommon):
 
         ## Raises
 
-        -   ``ValueError`` if ANYCAST_GW_MAC translation fails.
+        -   `ValueError` if ANYCAST_GW_MAC translation fails.
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -294,14 +299,14 @@ class FabricGroupUpdate(FabricGroupCommon):
         -   Populate self._payloads_to_commit. A list of dict of payloads to
             commit for merged state.
         -   Skip payloads for fabrics that do not exist on the controller.
-        -   raise ``ValueError`` if ``_merge_payload``
+        -   raise `ValueError` if `_merge_payload`
             fails.
         -   Expects self.payloads to be a list of dict, with each dict
-            being a payload for the fabric create API endpoint.
+            being a payload for the fabric group create API endpoint.
 
         ## Raises
 
-        -   ``ValueError`` if ``_merge_payload`` fails.
+        -   `ValueError` if `_merge_payload` fails.
         """
         method_name: str = inspect.stack()[0][3]
         self.fabric_groups.rest_send = self.rest_send
@@ -339,16 +344,21 @@ class FabricGroupUpdate(FabricGroupCommon):
 
     def _send_payloads(self) -> None:
         """
-        -   If ``check_mode`` is ``False``, send the payloads
-            to the controller.
-        -   If ``check_mode`` is ``True``, do not send the payloads
-            to the controller.
+        # Summary
+
+        Send the fabric update payloads to the controller.
+
+        -   If `check_mode` is `False`, send the payloads to the controller.
+        -   If `check_mode` is `True`, do not send the payloads to the controller.
         -   In both cases, register results.
-        -   Re-raise ``ValueError`` if any of the following fail:
-            -   ``FabricCommon()._fixup_payloads_to_commit()``
-            -   ``FabricUpdateCommon()._send_payload()``
-            -   ``FabricUpdateCommon()._config_save()``
-            -   ``FabricUpdateCommon()._config_deploy()``
+
+        ## Raises
+
+        -   `ValueError` if any of the following fail:
+            -   `FabricCommon()._fixup_payloads_to_commit()`
+            -   `FabricUpdateCommon()._send_payload()`
+            -   `FabricUpdateCommon()._config_save()`
+            -   `FabricUpdateCommon()._config_deploy()`
         """
         method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -366,32 +376,18 @@ class FabricGroupUpdate(FabricGroupCommon):
             except ValueError as error:
                 raise ValueError(error) from error
 
-        # Skip config-save if prior actions encountered errors.
-        # if True in self.results.failed:
-        #     return
-
-        # TODO: Ask Mike/Matt if we need to do config-save and config-deploy
-        # for fabric group updates.
-        # for payload in self._payloads_to_commit:
-        #     try:
-        #         self._config_save.payload = payload
-        #     except ValueError as error:
-        #         raise ValueError(error) from error
-
-        # # Skip config-deploy if prior actions encountered errors.
-        # if True in self.results.failed:
-        #     return
-
-        # for payload in self._payloads_to_commit:
-        #     try:
-        #         self._config_deploy.payload = payload
-        #     except (ControllerResponseError, ValueError) as error:
-        #         raise ValueError(error) from error
-
     def _send_payload(self, payload: dict) -> None:
         """
-        - Send one fabric update payload
-        - raise ``ValueError`` if the endpoint assignment fails
+        # Summary
+
+        Send a single fabric update payload to the controller.
+
+        ## Raises
+
+        - `ValueError` if
+            - `fabric_name` is missing from payload nvPairs
+            - The endpoint assignment fails
+
         """
         method_name: str = inspect.stack()[0][3]
 
@@ -439,13 +435,20 @@ class FabricGroupUpdate(FabricGroupCommon):
     @property
     def payloads(self) -> list[dict[str, Any]]:
         """
-        Payloads must be a ``list`` of ``dict`` of payloads for the
-        ``fabric_update`` endpoint.
+        # Summary
+
+        Get the fabric update payloads.
+
+        Payloads must be a `list` of `dict` of payloads for the `fabric_update` endpoint.
 
         - getter: Return the fabric update payloads
         - setter: Set the fabric update payloads
-        - setter: raise ``ValueError`` if ``payloads`` is not a ``list`` of ``dict``
-        - setter: raise ``ValueError`` if any payload is missing mandatory keys
+
+        ## Raises
+
+        - `ValueError` if
+          - `payloads` is not a `list` of `dict`
+          - any payload is missing mandatory keys
         """
         return self._payloads
 
@@ -473,12 +476,20 @@ class FabricGroupUpdate(FabricGroupCommon):
 
     def commit(self) -> None:
         """
+        # Summary
+
+        Commit the fabric update payloads to the controller.
+
         - Update fabrics and register results.
         - Return if there are no fabrics to update for merged state.
-        - raise ``ValueError`` if ``payloads`` is not set
-        - raise ``ValueError`` if ``rest_send`` is not set
-        - raise ``ValueError`` if ``_build_payloads`` fails
-        - raise ``ValueError`` if ``_send_payloads`` fails
+
+        ## Raises
+
+        - `ValueError` if
+            -   `payloads` is not set
+            -   `rest_send` is not set
+            -   `_build_payloads` fails
+            -   `_send_payloads` fails
         """
         method_name: str = inspect.stack()[0][3]
         msg: str = f"{self.class_name}.{method_name}: ENTERED"
@@ -528,7 +539,16 @@ class FabricGroupUpdate(FabricGroupCommon):
     @property
     def rest_send(self) -> RestSend:
         """
+        # Summary
+
         An instance of the RestSend class.
+
+        - getter: Return the RestSend instance
+        - setter: Set the RestSend instance
+
+        ## Raises
+
+        - `ValueError` if `rest_send.params` is not set
         """
         return self._rest_send
 
@@ -543,7 +563,13 @@ class FabricGroupUpdate(FabricGroupCommon):
     @property
     def results(self) -> Results:
         """
+        # Summary
+
         An instance of the Results class.
+
+        ## Raises
+
+        None
         """
         return self._results
 
