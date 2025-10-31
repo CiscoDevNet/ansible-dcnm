@@ -1,19 +1,31 @@
 from __future__ import absolute_import, division, print_function
 from typing import List, Optional, Annotated
-from ansible.module_utils.six import raise_from
-from ansible.errors import AnsibleError
 
 try:
-    from pydantic import BaseModel, model_validator, BeforeValidator
-except ImportError as imp_exc:
-    PYDANTIC_IMPORT_ERROR = imp_exc
-else:
-    PYDANTIC_IMPORT_ERROR = None
+    from pydantic import BaseModel, field_validator, model_validator
+    HAS_PYDANTIC = True
+except ImportError:
+    HAS_PYDANTIC = False
+    # Create dummy classes to allow import without pydantic
+    BaseModel = object
 
-if PYDANTIC_IMPORT_ERROR:
-    raise_from(
-        AnsibleError('Pydantic must be installed to use this plugin. Use pip or install test-requirements.'),
-        PYDANTIC_IMPORT_ERROR)
+    def field_validator(*args, **kwargs):
+        """Dummy field_validator decorator that accepts any arguments"""
+        def decorator(func):
+            return func
+        return decorator
+
+    def model_validator(*args, **kwargs):
+        """Dummy model_validator decorator that accepts any arguments"""
+        def decorator(func):
+            return func
+        return decorator
+
+    def BeforeValidator(func):
+        """Dummy BeforeValidator wrapper"""
+        return func
+
+# Note: If pydantic is not available, schemas will be imported but non-functional
 
 # Top level schema
 # Format: ModuleMethodSchema

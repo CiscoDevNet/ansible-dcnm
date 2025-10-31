@@ -1,0 +1,36 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2020-2025 Cisco and/or its affiliates.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+
+from __future__ import absolute_import, division, print_function
+__metaclass__ = type
+
+
+DOCUMENTATION = """
+---
+module: schemas
+short_description: Pydantic schemas for DCNM VPC pair validation.
+version_added: "3.5.0"
+author: Mike Wiebe (@mikewiebe)
+description:
+- Provides Pydantic schemas for validating DCNM VPC pair configurations.
+- Used internally by test validation action plugins.
+"""
+
+EXAMPLES = """
+# This module is not meant to be used directly
+"""
