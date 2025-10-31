@@ -467,7 +467,13 @@ except ImportError as imp_exc:
 
 def json_pretty(msg):
     """
+    # Summary
+
     Return a pretty-printed JSON string for logging messages
+
+    ## Raises
+
+    None
     """
     return json.dumps(msg, indent=4, sort_keys=True)
 
@@ -482,7 +488,13 @@ else:
 
 class Common(CommonBase):
     """
+    # Summary
+
     Common methods, properties, and resources for all states.
+
+    ## Raises
+
+    None
     """
 
     def __init__(self, params):
@@ -525,11 +537,13 @@ class Common(CommonBase):
 
     def populate_check_mode(self):
         """
-        ### Summary
+        # Summary
+
         Populate ``check_mode`` with the playbook check_mode.
 
-        ### Raises
-        -   ValueError if check_mode is not provided.
+        ## Raises
+
+        -   `ValueError` if check_mode is not provided.
         """
         method_name = inspect.stack()[0][3]
         self.check_mode = self.params.get("check_mode", None)
@@ -540,13 +554,15 @@ class Common(CommonBase):
 
     def populate_config(self):
         """
-        ### Summary
+        # Summary
+
         Populate ``config`` with the playbook config.
 
-        ### Raises
-        -   ValueError if:
-                -   ``state`` is "merged" or "replaced" and ``config`` is None.
-                -   ``config`` is not a list.
+        ## Raises
+
+        -   `ValueError` if:
+            -   ``state`` is "merged" or "replaced" and ``config`` is None.
+            -   ``config`` is not a list.
         """
         method_name = inspect.stack()[0][3]
         states_requiring_config = {"merged", "replaced"}
@@ -564,13 +580,15 @@ class Common(CommonBase):
 
     def populate_state(self):
         """
-        ### Summary
+        # Summary
+
         Populate ``state`` with the playbook state.
 
-        ### Raises
-        -   ValueError if:
-                -   ``state`` is not provided.
-                -   ``state`` is not a valid state.
+        ## Raises
+
+        -   `ValueError` if:
+            -   ``state`` is not provided.
+            -   ``state`` is not a valid state.
         """
         method_name = inspect.stack()[0][3]
 
@@ -618,12 +636,14 @@ class Common(CommonBase):
 
     def get_want(self) -> None:
         """
-        ### Summary
+        # Summary
+
         -   Validate the playbook configs.
         -   Update self.want with the playbook configs.
 
-        ### Raises
-        -   ``ValueError`` if the playbook configs are invalid.
+        ## Raises
+
+        -   `ValueError` if the playbook configs are invalid.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         merged_configs: list[dict] = []
@@ -640,18 +660,18 @@ class Common(CommonBase):
 
     def get_controller_features(self) -> None:
         """
-        ### Summary
+        # Summary
 
         -   Retrieve the state of relevant controller features
         -   Populate self.features
-                -   key: FABRIC_TYPE
-                -   value: True or False
-                        -   True if feature is started for this fabric type
-                        -   False otherwise
+            -   key: FABRIC_TYPE
+            -   value: True or False
+                -   True if feature is started for this fabric type
+                -   False otherwise
 
-        ### Raises
+        ## Raises
 
-        -   ``ValueError`` if the controller returns an error when attempting to
+        -   `ValueError` if the controller returns an error when attempting to
             retrieve the controller features.
         """
         method_name = inspect.stack()[0][3]
@@ -673,12 +693,13 @@ class Common(CommonBase):
 
     def get_controller_version(self):
         """
-        ### Summary
+        # Summary
+
         Initialize and refresh self.controller_version.
 
-        ### Raises
+        ## Raises
 
-        -   ``ValueError`` if the controller returns an error when attempting
+        -   `ValueError` if the controller returns an error when attempting
             to retrieve the controller version.
         """
         method_name = inspect.stack()[0][3]
@@ -698,6 +719,10 @@ class Deleted(Common):
     # Summary
 
     Handle deleted state for fabric groups
+
+    ## Raises
+
+    None
     """
 
     def __init__(self, params) -> None:
@@ -723,7 +748,7 @@ class Deleted(Common):
 
         ## Raises
 
-        -   ``ValueError`` if the controller returns an error when attempting to
+        -   `ValueError` if the controller returns an error when attempting to
             delete the fabric groups.
         """
         self.get_want()
@@ -752,12 +777,13 @@ class Deleted(Common):
 
 class Merged(Common):
     """
-    ### Summary
+    # Summary
+
     Handle merged state.
 
-    ### Raises
+    ## Raises
 
-    -   ``ValueError`` if:
+    -   `ValueError` if:
         -   The controller features required for the fabric type are not
             running on the controller.
         -   The playbook parameters are invalid.
@@ -799,6 +825,11 @@ class Merged(Common):
         # Summary
 
         Retrieve the template for the fabric type in self.fabric_group_types.
+
+        ## Raises
+
+        -   `ValueError` if the controller returns an error when attempting to
+            retrieve the template.
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -829,8 +860,7 @@ class Merged(Common):
 
         ## Raises
 
-        -   ``ValueError`` if the playbook config in ``want`` is invalid.
-
+        -   `ValueError` if the playbook config in ``want`` is invalid.
         """
         method_name = inspect.stack()[0][3]
         try:
@@ -861,8 +891,7 @@ class Merged(Common):
 
         ## Raises
 
-        -   ``ValueError`` if the playbook config in ``want`` is invalid.
-
+        -   `ValueError` if the playbook config in ``want`` is invalid.
         """
         method_name = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: ENTERED"
@@ -893,11 +922,13 @@ class Merged(Common):
 
     def get_need(self):
         """
-        ### Summary
+        # Summary
+
         Build ``self.need`` for merged state.
 
-        ### Raises
-        -   ``ValueError`` if:
+        ## Raises
+
+        -   `ValueError` if:
             -   The controller features required for the fabric type are not
                 running on the controller.
             -   The playbook parameters are invalid.
@@ -973,11 +1004,13 @@ class Merged(Common):
 
     def commit(self):
         """
-        ### Summary
+        # Summary
+
         Commit the merged state request.
 
-        ### Raises
-        -   ``ValueError`` if:
+        ## Raises
+
+        -   `ValueError` if:
             -   The controller features required for the fabric type are not
                 running on the controller.
             -   The playbook parameters are invalid.
@@ -988,6 +1021,7 @@ class Merged(Common):
             -   The controller returns an error when attempting to create
                 the fabric.
             -   The controller returns an error when attempting to update
+                the fabric.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
         msg = f"{self.class_name}.{method_name}: entered"
@@ -1011,12 +1045,13 @@ class Merged(Common):
 
     def send_need_create(self) -> None:
         """
-        ### Summary
+        # Summary
+
         Build and send the payload to create fabrics specified in the playbook.
 
-        ### Raises
+        ## Raises
 
-        -   ``ValueError`` if:
+        -   `ValueError` if:
             -   Any payload is invalid.
             -   The controller returns an error when attempting to create
                 the fabric.
@@ -1047,12 +1082,13 @@ class Merged(Common):
 
     def send_need_update(self) -> None:
         """
-        ### Summary
-        Build and send the payload to create fabric_groups specified in the playbook.
+        # Summary
 
-        ### Raises
+        Build and send the payload to update fabric_groups specified in the playbook.
 
-        -   ``ValueError`` if:
+        ## Raises
+
+        -   `ValueError` if:
             -   Any payload is invalid.
             -   The controller returns an error when attempting to update
                 the fabric.
@@ -1089,12 +1125,13 @@ class Merged(Common):
 
 class Query(Common):
     """
-    ### Summary
+    # Summary
+
     Handle query state.
 
-    ### Raises
+    ## Raises
 
-    -   ``ValueError`` if:
+    -   `ValueError` if:
         -   The playbook parameters are invalid.
         -   The controller returns an error when attempting to retrieve
             the fabric group details.
@@ -1118,7 +1155,7 @@ class Query(Common):
         """
         # Summary
 
-        query the fabrics in `self.want` that exist on the controller.
+        Query the fabrics in `self.want` that exist on the controller.
 
         ## Raises
 
@@ -1148,15 +1185,17 @@ class Query(Common):
 
 def main():
     """
-    ### Summary
+    # Summary
+
     main entry point for module execution.
 
     -   In the event that ``ValueError`` is raised, ``AnsibleModule.fail_json``
         is called with the error message.
     -   Else, ``AnsibleModule.exit_json`` is called with the final result.
 
-    ### Raises
-    -   ``ValueError`` if:
+    ## Raises
+
+    -   `ValueError` if:
         -   The playbook parameters are invalid.
         -   The controller returns an error when attempting to
             delete, create, query, or update the fabrics.
