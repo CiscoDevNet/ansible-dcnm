@@ -33,8 +33,7 @@ class ParamInfo:
     """
     # Summary
 
-    Methods and properties for parsing and accessing parameter information
-    from fabric templates.
+    Methods and properties for parsing and accessing parameter information from fabric templates.
 
     ## Raises
 
@@ -49,7 +48,7 @@ class ParamInfo:
         - parameter_name is not set
         - parameter_name is not found in the template
 
-    Usage:
+    ## Usage
 
     ```python
     instance = ParamInfo()
@@ -96,7 +95,7 @@ class ParamInfo:
             - template has no parameters key
             - template[parameters] is not a list
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         if self.template is None:
             msg += "Call instance.template before calling instance.refresh()."
@@ -109,65 +108,6 @@ class ParamInfo:
             raise ValueError(msg)
 
         self._build_info()
-
-    def parameter(self, value: str) -> dict[str, Any]:
-        """
-        # Summary
-
-        Return parameter information from the template for value (parameter name).
-
-        Deprecated: Use properties instead:
-            - parameter_choices
-            - parameter_default
-            - parameter_max
-            - parameter_min
-            - parameter_type
-
-        ## Raises
-
-        `KeyError` if:
-            - parameter is not found
-
-        ## Usage
-
-        ```python
-        try:
-            parameter_info = instance.parameter("my_parameter")
-        except KeyError as error:
-            print(error)
-            exit(1)
-        ```
-
-        ## Returns
-
-        `parameter_info` is returned as a python dict:
-
-        ```json
-        {
-            "type": str,
-            "choices": ["Ingress", "Multicast"],
-            "min": None,
-            "max": None,
-            "default": "Multicast"
-        }
-        ```
-
-        - type: (`bool, str, int, dict, set, list, None`),
-        - choices: (`list`, or `None`)
-        - min: (`int`, or `None`)
-        - max: (`int`, or `None`)
-        - default: (`str`, `int`, etc, or "")
-
-        """
-        method_name = inspect.stack()[0][3]
-        try:
-            return self.info[value]
-        except KeyError as error:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += f"Parameter {value} not found in fabric template. "
-            msg += f"This likely means that the parameter {value} is not "
-            msg += "appropriate for the fabric type."
-            raise KeyError(msg) from error
 
     def _get_choices(self, parameter: dict[str, Any]) -> Union[list[Any], None]:
         """
@@ -251,8 +191,7 @@ class ParamInfo:
         """
         # Summary
 
-        -   Return the parameter's annotations.IsInternal value,
-            if specified in the template.
+        -   Return the parameter's annotations.IsInternal value, if specified in the template.
         -   Return None otherwise.
 
         ## Raises
@@ -264,21 +203,27 @@ class ParamInfo:
             return None
         return self.conversion.make_boolean(value)
 
-    def _get_min(self, parameter: dict[str, Any]) -> Union[int, None]:
+    def _get_mandatory(self, parameter: dict[str, Any]) -> bool:
         """
         # Summary
 
-        - Return the parameter's minimum value, if specified in the template.
-        - Return None otherwise.
+        - Return the parameter's mandatory value, if specified in the template.
 
         ## Raises
 
-        None
+        - `ValueError` if metaProperties.IsMandatory key is not found in the parameter dict.
         """
-        value = parameter.get("metaProperties", {}).get("min", None)
+        method_name: str = inspect.stack()[0][3]
+        value = parameter.get("metaProperties", {}).get("IsMandatory", None)
         if value is None:
-            return None
-        return self.conversion.make_int(value)
+            value = parameter.get("annotations", {}).get("IsMandatory", None)
+        if value is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter.get('name')} has no "
+            msg += "metaProperties.IsMandatory key."
+            self.log.debug(msg)
+            raise ValueError(msg)
+        return self.conversion.make_boolean(value)
 
     def _get_max(self, parameter: dict[str, Any]) -> Union[int, None]:
         """
@@ -296,6 +241,41 @@ class ParamInfo:
             return None
         return self.conversion.make_int(value)
 
+    def _get_min(self, parameter: dict[str, Any]) -> Union[int, None]:
+        """
+        # Summary
+
+        - Return the parameter's minimum value, if specified in the template.
+        - Return None otherwise.
+
+        ## Raises
+
+        None
+        """
+        value = parameter.get("metaProperties", {}).get("min", None)
+        if value is None:
+            return None
+        return self.conversion.make_int(value)
+
+    def _get_optional(self, parameter: dict[str, Any]) -> bool:
+        """
+        # Summary
+
+        - Return the parameter's optional value as a boolean.
+
+        ## Raises
+
+        - `ValueError` if optional key is not found in the parameter dict.
+        """
+        method_name: str = inspect.stack()[0][3]
+        value = parameter.get("optional")
+        if value is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter.get('name')} has no optional key."
+            self.log.debug(msg)
+            raise ValueError(msg)
+        return self.conversion.make_boolean(value)
+
     def _get_param_name(self, parameter: dict[str, Any]) -> str:
         """
         # Summary
@@ -307,10 +287,7 @@ class ParamInfo:
 
         None
         """
-        param_name = parameter.get("name", None)
-        if param_name is None:
-            return ""
-        return param_name
+        return parameter.get("name", None) or ""
 
     def _get_type(self, parameter: dict[str, Any]) -> Union[str, None]:
         """
@@ -379,7 +356,7 @@ class ParamInfo:
         ```
 
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         self.info = {}
         for parameter in self.template.get("parameters", []):
             msg = f"{self.class_name}.{method_name}: "
@@ -390,8 +367,10 @@ class ParamInfo:
                 self.info[param_name] = {}
             self.info[param_name]["choices"] = self._get_choices(parameter)
             self.info[param_name]["default"] = self._get_default(parameter)
+            self.info[param_name]["mandatory"] = self._get_mandatory(parameter)
             self.info[param_name]["max"] = self._get_max(parameter)
             self.info[param_name]["min"] = self._get_min(parameter)
+            self.info[param_name]["optional"] = self._get_optional(parameter)
             self.info[param_name]["type"] = self._get_type(parameter)
             self.info[param_name]["internal"] = self._get_internal(parameter)
             self.info[param_name]["type"] = self._get_type(parameter)
@@ -409,7 +388,7 @@ class ParamInfo:
             - parameter_name is not set
             - parameter_name is not found in self.info
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         msg = f"{self.class_name}.{method_name}: "
         if not self.template:
             msg += "Call instance.template before accessing getter properties."
@@ -437,7 +416,7 @@ class ParamInfo:
             - parameter_name is not set
             - parameter_name is not found in the template
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
             self._validate_property_prerequisites()
             return self.info[self.parameter_name]["choices"]
@@ -460,10 +439,33 @@ class ParamInfo:
             - parameter_name is not set
             - parameter_name is not found in the template
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
             self._validate_property_prerequisites()
             return self.info[self.parameter_name]["default"]
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
+
+    @property
+    def parameter_mandatory(self) -> bool:
+        """
+        # Summary
+
+        Return the parameter mandatory for parameter name.
+
+        ## Raises
+
+        `ValueError` if:
+            - template is not set
+            - parameter_name is not set
+            - parameter_name is not found in the template
+        """
+        method_name: str = inspect.stack()[0][3]
+        try:
+            self._validate_property_prerequisites()
+            return self.info[self.parameter_name]["mandatory"]
         except ValueError as error:
             msg = f"{self.class_name}.{method_name}: {error}"
             self.log.debug(msg)
@@ -483,7 +485,7 @@ class ParamInfo:
             - parameter_name is not set
             - parameter_name is not found in the template
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
             self._validate_property_prerequisites()
             return self.info[self.parameter_name]["max"]
@@ -506,7 +508,7 @@ class ParamInfo:
             - parameter_name is not set
             - parameter_name is not found in the template
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
             self._validate_property_prerequisites()
             return self.info[self.parameter_name]["min"]
@@ -527,12 +529,35 @@ class ParamInfo:
         `ValueError` if:
             - template is not set
         """
-        method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
+        method_name: str = inspect.stack()[0][3]  # pylint: disable=unused-variable
         if not self.template:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Call {self.class_name}.template before accessing parameter_names."
             raise ValueError(msg)
         return sorted(list(self.info.keys()))
+
+    @property
+    def parameter_optional(self) -> bool:
+        """
+        # Summary
+
+        Return the parameter optional for parameter name.
+
+        ## Raises
+
+        `ValueError` if:
+            - template is not set
+            - parameter_name is not set
+            - parameter_name is not found in the template
+        """
+        method_name: str = inspect.stack()[0][3]
+        try:
+            self._validate_property_prerequisites()
+            return self.info[self.parameter_name]["optional"]
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
 
     @property
     def parameter_type(self) -> Union[str, None]:
@@ -548,7 +573,7 @@ class ParamInfo:
             - parameter_name is not set
             - parameter_name is not found in the template
         """
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         try:
             self._validate_property_prerequisites()
             return self.info[self.parameter_name]["type"]
@@ -560,7 +585,14 @@ class ParamInfo:
     @property
     def parameter_name(self) -> str:
         """
-        Return the parameter name.
+        # Summary
+
+        - getter: Return the parameter name.
+        - setter: Set the parameter name.
+
+        ## Raises
+
+        None
         """
         return self._parameter_name
 
@@ -571,15 +603,20 @@ class ParamInfo:
     @property
     def template(self) -> dict[str, Any]:
         """
-        - getter : return the template used to cull parameter info.
-        - setter : set the template used to cull parameter info.
-        - setter : raise ``TypeError`` if template is not a dict
+        # Summary
+
+        - getter: return the template used to cull parameter info.
+        - setter: set the template used to cull parameter info.
+
+        ## Raises
+
+        - `TypeError` if template is not a dict
         """
         return self._template
 
     @template.setter
     def template(self, value: dict[str, Any]) -> None:
-        method_name = inspect.stack()[0][3]
+        method_name: str = inspect.stack()[0][3]
         if not isinstance(value, dict):
             msg = f"{self.class_name}.{method_name}: "
             msg += "template must be a dict. "
