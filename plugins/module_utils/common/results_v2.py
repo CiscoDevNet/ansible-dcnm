@@ -207,8 +207,8 @@ class Results:
         def commit(self):
             ...
             self._results.add_changed(True)  # or False, depending on whether changes were made
-            self._results.add_response(self.rest_send.response_current)
-            self._results.add_result(self.rest_send.result_current)
+            self._results.add_response(self._rest_send.response_current)
+            self._results.add_result(self._rest_send.result_current)
             self._results.register_task_result()
             ...
 
