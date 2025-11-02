@@ -1,5 +1,5 @@
-# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -79,7 +79,28 @@ class ParamInfo:
 
         self.info: dict[str, Any] = {}
         self._parameter_name: str = ""
+        self._raise_on_missing: bool = True
         self._template: dict[str, Any] = {}
+
+    @staticmethod
+    def _cleanup_string(value: str) -> str:
+        """
+        # Summary
+
+        Clean up a string value by removing unwanted characters and replacing
+        HTML entities with their corresponding characters.
+
+        ## Raises
+
+        None
+        """
+        value = re.sub('"', "", value)
+        value = re.sub("<br />", " ", value)
+        value = re.sub("&amp;", "&", value)
+        value = re.sub("&#39;", "'", value)
+        value = re.sub("&gt;", ">", value)
+        value = re.sub("&lt;", "<", value)
+        return value
 
     def refresh(self) -> None:
         """
@@ -148,7 +169,7 @@ class ParamInfo:
         if isinstance(choices, str):
             choices = re.sub(r'^\\"|\\$"', "", choices)
             choices = choices.split(",")
-            choices = [re.sub(r"\"", "", choice) for choice in choices]
+            choices = [self._cleanup_string(choice) for choice in choices]
         choices = [self.conversion.make_int(choice) for choice in choices]
         return choices
 
@@ -187,12 +208,59 @@ class ParamInfo:
             return value
         return self.conversion.make_boolean(value)
 
+    def _get_description(self, parameter: dict[str, Any]) -> str:
+        """
+        # Summary
+
+        - Return the parameter's description value, if specified in the template at either location below.
+          - annotations.Description
+          - description
+        - Return "" for parameters with no description value.
+
+        ## Raises
+
+        None
+
+        ## Notes
+
+        -  The value can be in two places. Check both places.:
+            - annotations.Description
+            - description
+        """
+        value = parameter.get("annotations", {}).get("Description", None)
+        if value is None:
+            value = parameter.get("description", None)
+        if value is None:
+            return ""
+        return self._cleanup_string(value)
+
+    def _get_display_name(self, parameter: dict[str, Any]) -> str:
+        """
+        # Summary
+
+        - Return the parameter's GUI display name (field name), if specified in the template.
+        - Return "" otherwise.
+
+        ## Raises
+
+        - None
+        """
+        method_name: str = inspect.stack()[0][3]
+        value = parameter.get("annotations", {}).get("DisplayName", None)
+        if value is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter.get('name')} has no "
+            msg += "annotations.DisplayName key."
+            self.log.debug(msg)
+            return ""
+        return self._cleanup_string(value)
+
     def _get_internal(self, parameter: dict[str, Any]) -> Union[bool, None]:
         """
         # Summary
 
-        -   Return the parameter's annotations.IsInternal value, if specified in the template.
-        -   Return None otherwise.
+        -   Return the parameter's annotations.IsInternal value, if found in the template.
+        -   Return False if not found in the template.
 
         ## Raises
 
@@ -200,7 +268,7 @@ class ParamInfo:
         """
         value = parameter.get("annotations", {}).get("IsInternal", None)
         if value is None:
-            return None
+            return False
         return self.conversion.make_boolean(value)
 
     def _get_mandatory(self, parameter: dict[str, Any]) -> bool:
@@ -211,18 +279,21 @@ class ParamInfo:
 
         ## Raises
 
-        - `ValueError` if metaProperties.IsMandatory key is not found in the parameter dict.
+        - `ValueError` if
+            -   metaProperties.IsMandatory key is not found in the parameter dict and self.raise_on_missing is True
         """
         method_name: str = inspect.stack()[0][3]
         value = parameter.get("metaProperties", {}).get("IsMandatory", None)
         if value is None:
             value = parameter.get("annotations", {}).get("IsMandatory", None)
-        if value is None:
+        if value is None and self.raise_on_missing:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"parameter: {parameter.get('name')} has no "
             msg += "metaProperties.IsMandatory key."
             self.log.debug(msg)
             raise ValueError(msg)
+        if value is None:
+            return False
         return self.conversion.make_boolean(value)
 
     def _get_max(self, parameter: dict[str, Any]) -> Union[int, None]:
@@ -265,15 +336,21 @@ class ParamInfo:
 
         ## Raises
 
-        - `ValueError` if optional key is not found in the parameter dict.
+        - `ValueError` if
+            -   optional key is not found in the parameter dict and self.raise_on_missing is True.
         """
         method_name: str = inspect.stack()[0][3]
         value = parameter.get("optional")
-        if value is None:
+        if value is None and self.raise_on_missing:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"parameter: {parameter.get('name')} has no optional key."
             self.log.debug(msg)
             raise ValueError(msg)
+        if value is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter.get('name')} has no optional key. Returning True."
+            self.log.debug(msg)
+            return True
         return self.conversion.make_boolean(value)
 
     def _get_param_name(self, parameter: dict[str, Any]) -> str:
@@ -288,6 +365,28 @@ class ParamInfo:
         None
         """
         return parameter.get("name", None) or ""
+
+    def _get_section(self, parameter: dict[str, Any]) -> str:
+        """
+        # Summary
+
+        - Return the parameter's GUI section (tab) in which display_name is located, if specified in the template.
+        - Return "" otherwise.
+
+        ## Raises
+
+        - None
+        """
+        method_name: str = inspect.stack()[0][3]
+        value = parameter.get("annotations", {}).get("Section", None)
+        value = re.sub('"', "", value) if value else value
+        if value is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"parameter: {parameter.get('name')} has no "
+            msg += "annotations.Section key."
+            self.log.debug(msg)
+            return ""
+        return value
 
     def _get_type(self, parameter: dict[str, Any]) -> Union[str, None]:
         """
@@ -367,12 +466,15 @@ class ParamInfo:
                 self.info[param_name] = {}
             self.info[param_name]["choices"] = self._get_choices(parameter)
             self.info[param_name]["default"] = self._get_default(parameter)
+            self.info[param_name]["description"] = self._get_description(parameter)
+            self.info[param_name]["display_name"] = self._get_display_name(parameter)
+            self.info[param_name]["internal"] = self._get_internal(parameter)
             self.info[param_name]["mandatory"] = self._get_mandatory(parameter)
             self.info[param_name]["max"] = self._get_max(parameter)
             self.info[param_name]["min"] = self._get_min(parameter)
             self.info[param_name]["optional"] = self._get_optional(parameter)
+            self.info[param_name]["section"] = self._get_section(parameter)
             self.info[param_name]["type"] = self._get_type(parameter)
-            self.info[param_name]["internal"] = self._get_internal(parameter)
             self.info[param_name]["type"] = self._get_type(parameter)
 
     def _validate_property_prerequisites(self) -> None:
@@ -449,6 +551,81 @@ class ParamInfo:
             raise ValueError(msg) from error
 
     @property
+    def parameter_description(self) -> Any:
+        """
+        # Summary
+
+        Return the parameter description for parameter name.
+
+        ## Raises
+
+        `ValueError` if:
+            - template is not set
+            - parameter_name is not set
+            - parameter_name is not found in the template
+        """
+        method_name: str = inspect.stack()[0][3]
+        try:
+            self._validate_property_prerequisites()
+            return self.info[self.parameter_name]["description"]
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
+
+    @property
+    def parameter_display_name(self) -> str:
+        """
+        # Summary
+
+        Return the parameter display name (GUI field name) for parameter_name.
+
+        ## Raises
+
+        `ValueError` if:
+            - template is not set
+            - parameter_name is not set
+            - parameter_name is not found in the template
+        """
+        method_name: str = inspect.stack()[0][3]
+        try:
+            self._validate_property_prerequisites()
+            return self.info[self.parameter_name]["display_name"]
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
+
+    @property
+    def parameter_internal(self) -> bool:
+        """
+        # Summary
+
+        Return whether parameter_name is internal or not.
+
+        If the template does not specify, return True.
+
+        ## Raises
+
+        `ValueError` if:
+            - template is not set
+            - parameter_name is not set
+            - parameter_name is not found in the template
+
+        ## Notes
+
+        - annotations.IsInternal
+        """
+        method_name: str = inspect.stack()[0][3]
+        try:
+            self._validate_property_prerequisites()
+            return self.info[self.parameter_name]["internal"]
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
+
+    @property
     def parameter_mandatory(self) -> bool:
         """
         # Summary
@@ -518,6 +695,24 @@ class ParamInfo:
             raise ValueError(msg) from error
 
     @property
+    def parameter_name(self) -> str:
+        """
+        # Summary
+
+        - getter: Return the parameter name.
+        - setter: Set the parameter name.
+
+        ## Raises
+
+        None
+        """
+        return self._parameter_name
+
+    @parameter_name.setter
+    def parameter_name(self, value: str) -> None:
+        self._parameter_name = value
+
+    @property
     def parameter_names(self) -> list[str]:
         """
         # Summary
@@ -583,22 +778,45 @@ class ParamInfo:
             raise ValueError(msg) from error
 
     @property
-    def parameter_name(self) -> str:
+    def parameter_section(self) -> str:
         """
         # Summary
 
-        - getter: Return the parameter name.
-        - setter: Set the parameter name.
+        Return the section (tab) in the GUI where the field for parameter_name is located.
+
+        ## Raises
+
+        `ValueError` if:
+            - template is not set
+            - parameter_name is not set
+            - parameter_name is not found in the template
+        """
+        method_name: str = inspect.stack()[0][3]
+        try:
+            self._validate_property_prerequisites()
+            return self.info[self.parameter_name]["section"]
+        except ValueError as error:
+            msg = f"{self.class_name}.{method_name}: {error}"
+            self.log.debug(msg)
+            raise ValueError(msg) from error
+
+    @property
+    def raise_on_missing(self) -> bool:
+        """
+        # Summary
+
+        - getter: return whether to raise an exception on missing parameter info.
+        - setter: set whether to raise an exception on missing parameter info.
 
         ## Raises
 
         None
         """
-        return self._parameter_name
+        return self._raise_on_missing
 
-    @parameter_name.setter
-    def parameter_name(self, value: str) -> None:
-        self._parameter_name = value
+    @raise_on_missing.setter
+    def raise_on_missing(self, value: bool) -> None:
+        self._raise_on_missing = value
 
     @property
     def template(self) -> dict[str, Any]:
