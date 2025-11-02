@@ -48,8 +48,8 @@ from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_fabric_group.ut
     fabric_group_delete_fixture,
     params_delete,
     responses_fabric_group_delete,
-    responses_fabric_groups,
     responses_fabric_group_member_info,
+    responses_fabric_groups,
 )
 
 
