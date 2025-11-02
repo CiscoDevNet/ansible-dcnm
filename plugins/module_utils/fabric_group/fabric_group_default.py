@@ -30,9 +30,9 @@ from ..common.exceptions import ControllerResponseError
 from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
+from ..common.ruleset_v2 import RuleSet
 from ..common.template_get_v2 import TemplateGet
 from ..fabric.param_info_v2 import ParamInfo
-from ..fabric.ruleset import RuleSet
 
 
 class FabricGroupDefault:
@@ -296,5 +296,5 @@ class FabricGroupDefault:
             raise ValueError(msg)
         self._results = value
         self._results.action = self.action
-        self._results.changed = False
+        self._results.add_changed(False)
         self._results.operation_type = self.operation_type
