@@ -211,8 +211,8 @@ class FabricGroupDelete:
         try:
             self._validate_commit_parameters()
         except ValueError as error:
-            self.results.changed = False
-            self.results.failed = True
+            self.results.add_changed(False)
+            self.results.add_failed(True)
             self.register_result(None)
             raise ValueError(error) from error
 
@@ -229,8 +229,8 @@ class FabricGroupDelete:
         try:
             self._get_fabric_groups_to_delete()
         except ValueError as error:
-            self.results.changed = False
-            self.results.failed = True
+            self.results.add_changed(False)
+            self.results.add_failed(True)
             self.register_result(None)
             raise ValueError(error) from error
 
@@ -238,14 +238,14 @@ class FabricGroupDelete:
             try:
                 self._send_requests()
             except ValueError as error:
-                self.results.changed = False
-                self.results.failed = True
+                self.results.add_changed(False)
+                self.results.add_failed(True)
                 self.register_result(None)
                 raise ValueError(error) from error
             return
 
-        self.results.changed = False
-        self.results.failed = False
+        self.results.add_changed(False)
+        self.results.add_failed(False)
         self.results.result_current = {"success": True, "changed": False}
         msg = "No fabric groups to delete"
         self.results.response_current = {"RETURN_CODE": 200, "MESSAGE": msg}
@@ -277,8 +277,8 @@ class FabricGroupDelete:
             try:
                 self._send_request(fabric_group_name)
             except ValueError as error:
-                self.results.changed = False
-                self.results.failed = True
+                self.results.add_changed(False)
+                self.results.add_failed(True)
                 self.register_result(fabric_group_name)
                 raise ValueError(error) from error
         self.rest_send.restore_settings()
@@ -428,5 +428,5 @@ class FabricGroupDelete:
     def results(self, value: Results) -> None:
         self._results = value
         self._results.action = self.action
-        self._results.changed = False
+        self._results.add_changed(False)
         self._results.operation_type = self.operation_type

@@ -126,7 +126,7 @@ class FabricGroupDetails:
         self._rest_send: Union[RestSend, None] = None
         self._results: Union[Results, None] = None
 
-    def register_result(self) -> None:
+    def _register_result(self) -> None:
         """
         ### Summary
         Update the results object with the current state of the fabric
@@ -141,9 +141,9 @@ class FabricGroupDetails:
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
             if self.results.response_current.get("RETURN_CODE") == 200:
-                self.results.failed = False
+                self.results.add_failed(False)
             else:
-                self.results.failed = True
+                self.results.add_failed(True)
             self.results.register_task_result()
         except TypeError as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -162,9 +162,6 @@ class FabricGroupDetails:
                 -   ``results`` is not set.
         """
         # method_name = inspect.stack()[0][3]
-        # msg = f"ZZZ: {self.class_name}.{method_name}: "
-        # msg += "ENTERED validate_refresh_parameters()"
-        # self.log.debug(msg)
         # if self._rest_send is None:
         #     msg = f"{self.class_name}.{method_name}: "
         #     msg += f"{self.class_name}.rest_send must be set before calling "
@@ -178,11 +175,7 @@ class FabricGroupDetails:
         #     self.log.debug(msg)
         #     raise ValueError(msg)
 
-        # msg = f"ZZZ: {self.class_name}.{method_name}: "
-        # msg += "Exiting validate_refresh_parameters()"
-        # self.log.debug(msg)
-
-    def build_data(self) -> None:
+    def _build_data(self) -> None:
         """
         # Summary
 
@@ -247,19 +240,25 @@ class FabricGroupDetails:
                 -   Mandatory properties are not set.
                 -   ``validate_refresh_parameters()`` raises ``ValueError``.
                 -   ``RestSend`` raises ``TypeError`` or ``ValueError``.
-                -   ``register_result()`` raises ``ValueError``.
+                -   ``_register_result()`` raises ``ValueError``.
 
         ### Notes
         -   ``self.data`` is a dictionary of fabric details, keyed on
             fabric name.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        try:
-            self.validate_refresh_parameters()
-        except ValueError as error:
-            msg = "Failed to refresh fabric group details: "
-            msg += f"Error detail: {error}."
-            raise ValueError(msg) from error
+        if self._rest_send is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{self.class_name}.rest_send must be set before calling "
+            msg += f"{self.class_name}.refresh()."
+            self.log.debug(msg)
+            raise ValueError(msg)
+        if self._results is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"{self.class_name}.results must be set before calling "
+            msg += f"{self.class_name}.refresh()."
+            self.log.debug(msg)
+            raise ValueError(msg)
 
         if not self.fabric_group_exists(self.fabric_group_name):
             msg = f"{self.class_name}.{method_name}: "
@@ -281,15 +280,9 @@ class FabricGroupDetails:
         except (TypeError, ValueError) as error:
             raise ValueError(error) from error
 
-        if self.rest_send is None:
+        if not self.rest_send.response_current:
             msg = f"{self.class_name}.{method_name}: "
-            msg += "self.rest_send is None. "
-            msg += "We should never hit this."
-            self.log.debug(msg)
-            raise ValueError(msg)
-        if self.rest_send.response_current is None:
-            msg = f"{self.class_name}.{method_name}: "
-            msg += "self.rest_send.response_current is None. "
+            msg += "self.rest_send.response_current is empty. "
             msg += "We should never hit this."
             self.log.debug(msg)
             raise ValueError(msg)
@@ -299,10 +292,10 @@ class FabricGroupDetails:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        self.build_data()
+        self._build_data()
 
         try:
-            self.register_result()
+            self._register_result()
         except ValueError as error:
             raise ValueError(error) from error
 
@@ -722,5 +715,5 @@ class FabricGroupDetails:
     def results(self, value: Results) -> None:
         self._results = value
         self._results.action = self.action
-        self._results.changed = False
+        self._results.add_changed(False)
         self._results.operation_type = self.operation_type

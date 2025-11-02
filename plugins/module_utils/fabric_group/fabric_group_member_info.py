@@ -471,9 +471,9 @@ class FabricGroupMemberInfo:
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
             if self.results.response_current.get("RETURN_CODE") == 200:
-                self.results.failed = False
+                self.results.add_failed(False)
             else:
-                self.results.failed = True
+                self.results.add_failed(True)
             self.results.register_task_result()
         except TypeError as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -720,5 +720,5 @@ class FabricGroupMemberInfo:
     def results(self, value: Results) -> None:
         self._results = value
         self._results.action = self.action
-        self._results.changed = False
+        self._results.add_changed(False)
         self._results.operation_type = self.operation_type

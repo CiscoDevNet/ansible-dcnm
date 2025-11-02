@@ -187,7 +187,7 @@ class FabricGroupQuery:
         try:
             self._validate_commit_parameters()
         except ValueError as error:
-            self.results.failed = True
+            self.results.add_failed(True)
             if not self.rest_send.params:
                 msg = f"{self.class_name}.commit: "
                 msg += "rest_send.params must be set before calling commit."
@@ -263,5 +263,5 @@ class FabricGroupQuery:
     def results(self, value: Results) -> None:
         self._results = value
         self._results.action = self.action
-        self._results.changed = False
+        self._results.add_changed(False)
         self._results.operation_type = self.operation_type

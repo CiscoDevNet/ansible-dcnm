@@ -218,8 +218,8 @@ class FabricCommon:
             mac_address = self.conversion.translate_mac_address(mac_address)
         except ValueError as error:
             # pylint: disable=no-member
-            self.results.failed = True
-            self.results.changed = False
+            self.results.add_failed(True)
+            self.results.add_changed(False)
             self.results.register_task_result()
 
             msg = f"{self.class_name}.{method_name}: "
@@ -249,8 +249,8 @@ class FabricCommon:
             self._fixup_bgp_as()
         except ValueError as error:
             # pylint: disable=no-member
-            self.results.failed = True
-            self.results.changed = False
+            self.results.add_failed(True)
+            self.results.add_changed(False)
             self.results.register_task_result()
             raise ValueError(error) from error
 

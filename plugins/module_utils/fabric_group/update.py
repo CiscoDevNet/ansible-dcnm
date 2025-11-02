@@ -67,7 +67,7 @@ class FabricGroupUpdate(FabricGroupCommon):
     instance.commit()
     results.build_final_result()
 
-    # diff contains a dictionary of payloads that succeeded and/or failed
+    # diff contains a list of dictionaries of payloads that succeeded and/or failed
     diff = results.diff
     # result contains the result(s) of the fabric create request
     result = results.result
@@ -577,5 +577,5 @@ class FabricGroupUpdate(FabricGroupCommon):
     def results(self, value: Results) -> None:
         self._results = value
         self._results.action = self.action
-        self._results.changed = False
+        self._results.add_changed(False)
         self._results.operation_type = self.operation_type

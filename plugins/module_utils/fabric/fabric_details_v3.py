@@ -81,11 +81,11 @@ class FabricDetails:
             self.results.response_current = self.rest_send.response_current
             self.results.result_current = self.rest_send.result_current
             if self.results.response_current.get("RETURN_CODE") == 200:
-                self.results.failed = False
+                self.results.add_failed(False)
             else:
-                self.results.failed = True
+                self.results.add_failed(True)
             # FabricDetails never changes the controller state
-            self.results.changed = False
+            self.results.add_changed(False)
             self.results.register_task_result()
         except TypeError as error:
             msg = f"{self.class_name}.{method_name}: "
@@ -778,11 +778,11 @@ class FabricDetailsByNvPair(FabricDetails):
         self._refreshed = True
 
         if len(self.data) == 0:
-            self.results.diff = {}
-            self.results.response = self.rest_send.response_current
-            self.results.result = self.rest_send.result_current
-            self.results.failed = True
-            self.results.changed = False
+            self.results.add_diff({})
+            self.results.add_response(self.rest_send.response_current)
+            self.results.add_result(self.rest_send.result_current)
+            self.results.add_failed(True)
+            self.results.add_changed(False)
             return
         for item, value in self.data.items():
             if value.get("nvPairs", {}).get(self.filter_key) == self.filter_value:
