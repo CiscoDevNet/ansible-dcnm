@@ -67,7 +67,7 @@ class FabricGroupQuery:
     instance.commit()
     results.build_final_result()
 
-    # diff contains a dictionary of fabric group details for each fabric group
+    # diff contains a list of dictionaries of fabric group details for each fabric group
     # in instance.fabric_names
     diff = results.diff
     # result contains the result(s) of the query request
