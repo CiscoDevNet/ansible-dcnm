@@ -1189,7 +1189,7 @@ def main():
     }
     argument_spec["state"] = {
         "default": "merged",
-        "choices": valid_states.keys(),
+        "choices": list(valid_states),
     }
 
     ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
