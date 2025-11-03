@@ -35,7 +35,6 @@ options:
         - deleted
         - merged
         - query
-        - replaced
         default: merged
         description:
         - The state of the feature or object after module completion
@@ -51,12 +50,6 @@ options:
         type: list
         elements: dict
         suboptions:
-            DEPLOY:
-                default: False
-                description:
-                - Save and deploy the fabric configuration.
-                required: false
-                type: bool
             FABRIC_NAME:
                 description:
                 - The name of the fabric.
@@ -369,19 +362,6 @@ EXAMPLES = """
         ANYCAST_GW_MAC: 0001.aabb.ccdd
         DEPLOY: false
 
-# Use replaced state to return the fabrics to their default configurations.
-
-- name: Return fabrics to default configuration.
-  cisco.dcnm.dcnm_fabric:
-    state: replaced
-    config:
-    -   FABRIC_NAME: MCFG
-        FABRIC_TYPE: MCFG
-        DEPLOY: false
-  register: result
-- debug:
-    var: result
-
 # Query the fabrics to get their current configurations.
 
 - name: Query the fabrics.
@@ -454,8 +434,6 @@ try:
     from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
     from ..module_utils.fabric_group.fabric_groups import FabricGroups
     from ..module_utils.fabric_group.query import FabricGroupQuery
-
-    # from ..module_utils.fabric_group.replaced import FabricGroupReplaced
     from ..module_utils.fabric_group.update import FabricGroupUpdate
 
     HAS_PYDANTIC_DEPS = True
@@ -561,11 +539,11 @@ class Common(CommonBase):
         ## Raises
 
         -   `ValueError` if:
-            -   ``state`` is "merged" or "replaced" and ``config`` is None.
+            -   ``state`` is "merged" and ``config`` is None.
             -   ``config`` is not a list.
         """
         method_name = inspect.stack()[0][3]
-        states_requiring_config = {"merged", "replaced"}
+        states_requiring_config = {"merged"}
         self.config: list[dict] = self.params.get("config", None)
         if self.state in states_requiring_config:
             if self.config is None:
@@ -592,7 +570,7 @@ class Common(CommonBase):
         """
         method_name = inspect.stack()[0][3]
 
-        valid_states = ["deleted", "merged", "query", "replaced"]
+        valid_states = ["deleted", "merged", "query"]
 
         self.state = self.params.get("state", None)
         if self.state is None:
@@ -729,7 +707,7 @@ class Deleted(Common):
         self.class_name: str = self.__class__.__name__
         super().__init__(params)
 
-        self.action: str = "fabric_delete"
+        self.action: str = "fabric_group_delete"
         self.delete: FabricGroupDelete = FabricGroupDelete()
         self._implemented_states.add("deleted")
 
@@ -1200,6 +1178,8 @@ def main():
         -   The controller returns an error when attempting to
             delete, create, query, or update the fabrics.
     """
+    valid_states: dict[str, Type[Union[Deleted, Merged, Query]]] = {"deleted": Deleted, "merged": Merged, "query": Query}
+
 
     argument_spec = {}
     argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
@@ -1210,7 +1190,7 @@ def main():
     }
     argument_spec["state"] = {
         "default": "merged",
-        "choices": ["deleted", "merged", "query", "replaced"],
+        "choices": valid_states.keys(),
     }
 
     ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
@@ -1228,8 +1208,10 @@ def main():
     try:
         log = Log()
         log.commit()
-    except ValueError as error:
-        ansible_module.fail_json(str(error))
+    except (AttributeError, ValueError) as error:
+        msg = "Failed to initialize logging. "
+        msg += f"Error detail: {error}"
+        ansible_module.fail_json(msg=msg)
 
     sender = Sender()
     sender.ansible_module = ansible_module
@@ -1237,41 +1219,26 @@ def main():
     rest_send.response_handler = ResponseHandler()
     rest_send.sender = sender
 
-    if params.get("state") not in ["deleted", "merged", "query", "replaced"]:
+    if params.get("state") not in valid_states:
         ansible_module.fail_json(f"Invalid state: {params['state']}")
-    # task: Union[Deleted, Merged, Query, Replaced, None] = None
-    task: Union[Deleted, Merged, Query, None] = None
+    # Need to initialize task outside try/except to satisfy mypy
+    task: Union[Deleted, Merged, Query] = Query(params)
     try:
-        if params["state"] == "merged":
-            task = Merged(params)
-        elif params["state"] == "deleted":
-            task = Deleted(params)
-        elif params["state"] == "query":
-            task = Query(params)
-        # elif params["state"] == "replaced":
-        #     task = Replaced(params)
+        task = valid_states[params["state"]](params)
     except ValueError as error:
-        ansible_module.fail_json(f"Failed to initialize task: {error}")
+        ansible_module.fail_json(msg=f"Failed to initialize task: {error}", exception=traceback.format_exc())
 
-    if task is None:
-        ansible_module.fail_json("Task is None. Exiting.")
-    else:
-        # else is needed here since pylint doesn't understand fail_json
-        # and thinks task can be None below.
-        try:
-            task.rest_send = rest_send
-            task.commit()
-            task.results.build_final_result()
-        except ValueError as error:
-            ansible_module.fail_json(f"{error}", **task.results.failed_result)
+    try:
+        task.rest_send = rest_send
+        task.commit()
+        task.results.build_final_result()
+    except ValueError as error:
+        ansible_module.fail_json(f"{error}", **task.results.failed_result)
 
-        # Results().failed is a property that returns a set()
-        # of boolean values.  pylint doesn't seem to understand this so we've
-        # disabled the unsupported-membership-test warning.
-        if True in task.results.failed:  # pylint: disable=unsupported-membership-test
-            msg = "Module failed."
-            ansible_module.fail_json(msg, **task.results.final_result)
-        ansible_module.exit_json(**task.results.final_result)
+    if True in task.results.failed:
+        msg = "Module failed."
+        ansible_module.fail_json(msg, **task.results.final_result)
+    ansible_module.exit_json(**task.results.final_result)
 
 
 if __name__ == "__main__":
