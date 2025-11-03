@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,13 @@
 # Due to the above, we also need to disable unused-import
 # pylint: disable=unused-import
 # Some fixtures need to use *args to match the signature of the function they are mocking
-# pylint: disable=protected-access
-
+# pylint: disable=protected-access,too-many-lines
+"""
+Unit tests for rest_send_v2.py
+"""
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
 __copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
@@ -126,7 +128,7 @@ def test_rest_send_v2_00100() -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details:\s+"
-    match += r"RestSend\._verify_commit_parameters:\s+"
+    match += r"RestSend\._commit_normal_mode:\s+"
     match += r"path must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -169,7 +171,7 @@ def test_rest_send_v2_00110() -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details:\s+"
-    match += r"RestSend\._verify_commit_parameters:\s+"
+    match += r"RestSend\._commit_normal_mode:\s+"
     match += r"response_handler must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -212,7 +214,7 @@ def test_rest_send_v2_00120() -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details:\s+"
-    match += r"RestSend\._verify_commit_parameters:\s+"
+    match += r"RestSend\._commit_normal_mode:\s+"
     match += r"sender must be set before calling commit\(\)."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -255,7 +257,7 @@ def test_rest_send_v2_00130() -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details:\s+"
-    match = r"RestSend\._verify_commit_parameters:\s+"
+    match = r"RestSend\._commit_normal_mode:\s+"
     match += r"verb must be set before calling commit\(\)\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -305,9 +307,7 @@ def test_rest_send_v2_00200() -> None:
         instance.verb = "GET"
         instance.commit()
     assert instance.response_current["CHECK_MODE"] == instance.check_mode
-    assert (
-        instance.response_current["DATA"] == "[simulated-check-mode-response:Success]"
-    )
+    assert instance.response_current["DATA"] == "[simulated-check-mode-response:Success]"
     assert instance.response_current["MESSAGE"] == "OK"
     assert instance.response_current["METHOD"] == instance.verb
     assert instance.response_current["REQUEST_PATH"] == instance.path
@@ -362,9 +362,7 @@ def test_rest_send_v2_00210() -> None:
         instance.verb = "POST"
         instance.commit()
     assert instance.response_current["CHECK_MODE"] == instance.check_mode
-    assert (
-        instance.response_current["DATA"] == "[simulated-check-mode-response:Success]"
-    )
+    assert instance.response_current["DATA"] == "[simulated-check-mode-response:Success]"
     assert instance.response_current["MESSAGE"] == "OK"
     assert instance.response_current["METHOD"] == instance.verb
     assert instance.response_current["REQUEST_PATH"] == instance.path
@@ -452,7 +450,7 @@ def test_rest_send_v2_00220(monkeypatch) -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details:\s+"
-    match += r"RestSend\.commit_check_mode:\s+"
+    match += r"RestSend\._commit_check_mode:\s+"
     match += r"Error building response\/result\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
@@ -669,7 +667,7 @@ def test_rest_send_v2_00320(monkeypatch) -> None:
     match = r"RestSend\.commit:\s+"
     match += r"Error during commit\.\s+"
     match += r"Error details:\s+"
-    match += r"RestSend\.commit_normal_mode:\s+"
+    match += r"RestSend\._commit_normal_mode:\s+"
     match += r"Error building response\/result\."
     with pytest.raises(ValueError, match=match):
         instance.commit()
