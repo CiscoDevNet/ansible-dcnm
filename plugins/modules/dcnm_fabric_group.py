@@ -1180,7 +1180,6 @@ def main():
     """
     valid_states: dict[str, Type[Union[Deleted, Merged, Query]]] = {"deleted": Deleted, "merged": Merged, "query": Query}
 
-
     argument_spec = {}
     argument_spec["config"] = {"required": False, "type": "list", "elements": "dict"}
     argument_spec["skip_validation"] = {
