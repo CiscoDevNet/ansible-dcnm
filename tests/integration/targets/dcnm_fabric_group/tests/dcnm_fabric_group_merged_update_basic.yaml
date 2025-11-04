@@ -1,3 +1,4 @@
+---
 ################################################################################
 # RUNTIME
 ################################################################################
@@ -175,33 +176,33 @@
   cisco.dcnm.dcnm_fabric_group:
     state: merged
     config:
-        -   ANYCAST_GW_MAC: 2020.0000.00aa
-            BGW_ROUTING_TAG: "54321"
-            BORDER_GWY_CONNECTIONS: Direct_To_BGWS
-            DCI_SUBNET_RANGE: "10.10.1.0/24"
-            DCI_SUBNET_TARGET_MASK: "30"
-            DELAY_RESTORE: "300"
-            ENABLE_PVLAN: false
-            ENABLE_SGT: "off"
-            ENABLE_TRM_TRMv6: false
-            EXT_FABRIC_TYPE: ""
-            FABRIC_NAME: "{{ fabric_group_name_1 }}"
-            FABRIC_TYPE: "{{ fabric_group_type_1 }}"
-            L2_SEGMENT_ID_RANGE: 30000-49000
-            L3_PARTITION_ID_RANGE: 50000-59000
-            LOOPBACK100_IP_RANGE: 10.10.0.0/24
-            MSO_CONTROLER_ID: ""
-            MSO_SITE_GROUP_NAME: ""
-            MS_IFC_BGP_PASSWORD_ENABLE: false
-            MS_LOOPBACK_ID: "100"
-            MS_UNDERLAY_AUTOCONFIG: false
-            PARENT_ONEMANAGE_FABRIC: ""
-            PREMSO_PARENT_FABRIC: ""
-            SGT_OPER_STATUS: "off"
-            SGT_PREPROV_RECALC_STATUS: "empty"
-            SGT_RECALC_STATUS: "empty"
-            TOR_AUTO_DEPLOY: false
-            VXLAN_UNDERLAY_IS_V6: false
+      - ANYCAST_GW_MAC: 2020.0000.00aa
+        BGW_ROUTING_TAG: "54321"
+        BORDER_GWY_CONNECTIONS: Direct_To_BGWS
+        DCI_SUBNET_RANGE: "10.10.1.0/24"
+        DCI_SUBNET_TARGET_MASK: "30"
+        DELAY_RESTORE: "300"
+        ENABLE_PVLAN: false
+        ENABLE_SGT: "off"
+        ENABLE_TRM_TRMv6: false
+        EXT_FABRIC_TYPE: ""
+        FABRIC_NAME: "{{ fabric_group_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_group_type_1 }}"
+        L2_SEGMENT_ID_RANGE: 30000-49000
+        L3_PARTITION_ID_RANGE: 50000-59000
+        LOOPBACK100_IP_RANGE: 10.10.0.0/24
+        MSO_CONTROLER_ID: ""
+        MSO_SITE_GROUP_NAME: ""
+        MS_IFC_BGP_PASSWORD_ENABLE: false
+        MS_LOOPBACK_ID: "100"
+        MS_UNDERLAY_AUTOCONFIG: false
+        PARENT_ONEMANAGE_FABRIC: ""
+        PREMSO_PARENT_FABRIC: ""
+        SGT_OPER_STATUS: "off"
+        SGT_PREPROV_RECALC_STATUS: "empty"
+        SGT_RECALC_STATUS: "empty"
+        TOR_AUTO_DEPLOY: false
+        VXLAN_UNDERLAY_IS_V6: false
   register: result
 - debug:
     var: result
@@ -556,33 +557,33 @@
   cisco.dcnm.dcnm_fabric_group:
     state: merged
     config:
-        -   ANYCAST_GW_MAC: 2020.0000.00dd
-            BGW_ROUTING_TAG: "54321"
-            BORDER_GWY_CONNECTIONS: Direct_To_BGWS
-            DCI_SUBNET_RANGE: "10.10.1.0/24"
-            DCI_SUBNET_TARGET_MASK: "30"
-            DELAY_RESTORE: "300"
-            ENABLE_PVLAN: false
-            ENABLE_SGT: "off"
-            ENABLE_TRM_TRMv6: false
-            EXT_FABRIC_TYPE: ""
-            FABRIC_NAME: "{{ fabric_group_name_1 }}"
-            FABRIC_TYPE: "{{ fabric_group_type_1 }}"
-            L2_SEGMENT_ID_RANGE: 30000-49000
-            L3_PARTITION_ID_RANGE: 50000-59000
-            LOOPBACK100_IP_RANGE: 10.10.0.0/24
-            MSO_CONTROLER_ID: ""
-            MSO_SITE_GROUP_NAME: ""
-            MS_IFC_BGP_PASSWORD_ENABLE: false
-            MS_LOOPBACK_ID: "100"
-            MS_UNDERLAY_AUTOCONFIG: false
-            PARENT_ONEMANAGE_FABRIC: ""
-            PREMSO_PARENT_FABRIC: ""
-            SGT_OPER_STATUS: "off"
-            SGT_PREPROV_RECALC_STATUS: "empty"
-            SGT_RECALC_STATUS: "empty"
-            TOR_AUTO_DEPLOY: false
-            VXLAN_UNDERLAY_IS_V6: false
+      - ANYCAST_GW_MAC: 2020.0000.00dd
+        BGW_ROUTING_TAG: "54321"
+        BORDER_GWY_CONNECTIONS: Direct_To_BGWS
+        DCI_SUBNET_RANGE: "10.10.1.0/24"
+        DCI_SUBNET_TARGET_MASK: "30"
+        DELAY_RESTORE: "300"
+        ENABLE_PVLAN: false
+        ENABLE_SGT: "off"
+        ENABLE_TRM_TRMv6: false
+        EXT_FABRIC_TYPE: ""
+        FABRIC_NAME: "{{ fabric_group_name_1 }}"
+        FABRIC_TYPE: "{{ fabric_group_type_1 }}"
+        L2_SEGMENT_ID_RANGE: 30000-49000
+        L3_PARTITION_ID_RANGE: 50000-59000
+        LOOPBACK100_IP_RANGE: 10.10.0.0/24
+        MSO_CONTROLER_ID: ""
+        MSO_SITE_GROUP_NAME: ""
+        MS_IFC_BGP_PASSWORD_ENABLE: false
+        MS_LOOPBACK_ID: "100"
+        MS_UNDERLAY_AUTOCONFIG: false
+        PARENT_ONEMANAGE_FABRIC: ""
+        PREMSO_PARENT_FABRIC: ""
+        SGT_OPER_STATUS: "off"
+        SGT_PREPROV_RECALC_STATUS: "empty"
+        SGT_RECALC_STATUS: "empty"
+        TOR_AUTO_DEPLOY: false
+        VXLAN_UNDERLAY_IS_V6: false
   register: result
 - debug:
     var: result
