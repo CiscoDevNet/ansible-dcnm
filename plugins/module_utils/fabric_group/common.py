@@ -47,6 +47,8 @@ class FabricGroupCommon:
         self.class_name: str = self.__class__.__name__
         self.action = "fabric_group_common"
 
+        self.log = logging.getLogger(f"dcnm.{self.class_name}")
+
         self.conversion: ConversionUtils = ConversionUtils()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
 
