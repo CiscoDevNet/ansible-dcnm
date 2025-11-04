@@ -57,9 +57,6 @@ plugins/module_utils/fabric_group/fabric_groups.py import-3.11!skip
 plugins/module_utils/fabric_group/query.py import-3.9!skip
 plugins/module_utils/fabric_group/query.py import-3.10!skip
 plugins/module_utils/fabric_group/query.py import-3.11!skip
-plugins/module_utils/fabric_group/replaced.py import-3.9!skip
-plugins/module_utils/fabric_group/replaced.py import-3.10!skip
-plugins/module_utils/fabric_group/replaced.py import-3.11!skip
 plugins/module_utils/fabric_group/update.py import-3.9!skip
 plugins/module_utils/fabric_group/update.py import-3.10!skip
 plugins/module_utils/fabric_group/update.py import-3.11!skip
