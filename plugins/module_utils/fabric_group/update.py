@@ -88,7 +88,7 @@ class FabricGroupUpdate(FabricGroupCommon):
         super().__init__()
         self.class_name: str = self.__class__.__name__
         self.action: str = "fabric_group_update"
-        self.operation_type: OperationType = OperationType.UPDATE
+        self._operation_type: OperationType = OperationType.UPDATE
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
@@ -115,11 +115,12 @@ class FabricGroupUpdate(FabricGroupCommon):
 
         self._key_translations: dict = {}
         self._key_translations["DEPLOY"] = ""
-        self.endpoint: EpOneManageFabricGroupUpdate = EpOneManageFabricGroupUpdate()
+        self._endpoint: EpOneManageFabricGroupUpdate = EpOneManageFabricGroupUpdate()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
         self.fabric_group_type: str = "MCFG"
         self.fabric_groups: FabricGroups = FabricGroups()
         self._payloads: list[dict] = []
+        self._payloads_to_commit: list[dict[str, Any]] = []
 
         # Properties to be set by caller
         self._rest_send: RestSend = RestSend({})
@@ -421,12 +422,12 @@ class FabricGroupUpdate(FabricGroupCommon):
             raise ValueError(msg)
 
         try:
-            self.endpoint.fabric_name = fabric_name
+            self._endpoint.fabric_name = fabric_name
         except ValueError as error:
             raise ValueError(error) from error
 
-        self.path = self.endpoint.path
-        self.verb = self.endpoint.verb
+        self.path = self._endpoint.path
+        self.verb = self._endpoint.verb
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"verb: {self.verb}, path: {self.path}, "
@@ -600,4 +601,4 @@ class FabricGroupUpdate(FabricGroupCommon):
         self._results = value
         self._results.action = self.action
         self._results.add_changed(False)
-        self._results.operation_type = self.operation_type
+        self._results.operation_type = self._operation_type
