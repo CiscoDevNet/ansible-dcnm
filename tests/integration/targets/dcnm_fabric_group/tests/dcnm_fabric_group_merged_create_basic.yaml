@@ -1,0 +1,512 @@
+################################################################################
+# RUNTIME
+################################################################################
+# Recent run times (MM:SS.ms):
+# TBD
+################################################################################
+# DESCRIPTION - BASIC FABRIC GROUP MERGED (create) STATE TEST
+#
+# Test basic merge(create) of fabric group configurations and verify results.
+################################################################################
+# STEPS
+################################################################################
+# SETUP
+################################################################################
+# 1. The following fabric groups must be empty on the controller
+#    See vars: section in cisco/dcnm/playbooks/dcnm_tests.yaml
+#    - fabric_group_name_1  # MCFG1
+#    - fabric_group_type_1  # MCFG
+# 2. Delete fabric groups under test, if they exist
+#    - fabric_group_name_1
+################################################################################
+# TEST
+################################################################################
+# 3. Create fabric groups and verify result
+#    - fabric_group_name_1
+#
+# 4. Query fabric group configurations and verify results
+################################################################################
+# CLEANUP
+################################################################################
+# 5. Delete fabric groups under test
+#    - fabric_group_name_1
+################################################################################
+# REQUIREMENTS
+################################################################################
+# Inventory:
+# ./playbooks/roles/dcnm_fabric_group/dcnm_hosts.yaml
+# Playbook:
+# ./playbooks/roles/dcnm_fabric_group/dcnm_tests.yaml
+# Roles:
+# ./tests/integration/targets/dcnm_fabric_group/tests/*.yaml
+#
+# Example vars:
+#
+# vars:
+#   testcase: dcnm_fabric_group_query_basic
+#   fabric_group_name_1: MCFG_Fabric_Group
+#   fabric_group_type_1: MCFG
+################################################################################
+# MERGED (create) - SETUP - Delete fabric groups
+################################################################################
+- name: MERGED (create) - SETUP - Delete fabric groups
+  cisco.dcnm.dcnm_fabric_group:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_group_name_1 }}"
+  register: result
+- debug:
+    var: result
+################################################################################
+# MERGED (create) - TEST - Create fabric group with basic config
+################################################################################
+# Expected result
+# - All untested nvPairs removed for brevity.
+# - Fabric group global keys in DATA removed for brevity.
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "fabricName": "MCFG1",
+#                 "fabricTechnology": "VXLANFabric",
+#                 "fabricType": "MFD",
+#                 "nvPairs": {
+#                     "ANYCAST_GW_MAC": "2020.0000.00dc",
+#                     "BGW_ROUTING_TAG": "54321",
+#                     "BORDER_GWY_CONNECTIONS": "Direct_To_BGWS",
+#                     "CLOUDSEC_ALGORITHM": "",
+#                     "CLOUDSEC_ENFORCEMENT": "",
+#                     "CLOUDSEC_KEY_STRING": "",
+#                     "CLOUDSEC_REPORT_TIMER": "",
+#                     "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                     "DCI_SUBNET_TARGET_MASK": "30",
+#                     "DELAY_RESTORE": "300",
+#                     "ENABLE_PVLAN": false,
+#                     "ENABLE_SGT": "off",
+#                     "ENABLE_TRM_TRMv6": false,
+#                     "EXT_FABRIC_TYPE": "",
+#                     "FABRIC_NAME": "MCFG1",
+#                     "FABRIC_TYPE": "MFD",
+#                     "FF": "MSD",
+#                     "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                     "L3_PARTITION_ID_RANGE": "50000-59000",
+#                     "LOOPBACK100_IPV6_RANGE": "",
+#                     "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                     "MSO_CONTROLER_ID": "",
+#                     "MSO_SITE_GROUP_NAME": "",
+#                     "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                     "MS_IFC_BGP_PASSWORD": "",
+#                     "MS_IFC_BGP_PASSWORD_ENABLE": false,
+#                     "MS_LOOPBACK_ID": "100",
+#                     "MS_UNDERLAY_AUTOCONFIG": false,
+#                     "PARENT_ONEMANAGE_FABRIC": "",
+#                     "PREMSO_PARENT_FABRIC": "",
+#                     "SGT_OPER_STATUS": "off",
+#                     "SGT_PREPROV_RECALC_STATUS": "empty",
+#                     "SGT_RECALC_STATUS": "empty",
+#                     "TOR_AUTO_DEPLOY": false,
+#                     "V6_DCI_SUBNET_RANGE": "",
+#                     "V6_DCI_SUBNET_TARGET_MASK": "",
+#                     "VXLAN_UNDERLAY_IS_V6": false,
+#                     "default_network": "Default_Network_Universal",
+#                     "default_vrf": "Default_VRF_Universal",
+#                     "network_extension_template": "Default_Network_Extension_Universal",
+#                     "scheduledTime": "",
+#                     "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                 },
+#                 "seedMember": {},
+#                 "sequence_number": 2,
+#                 "templateName": "MSD_Fabric"
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_groups",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             },
+#             {
+#                 "action": "fabric_group_create",
+#                 "check_mode": false,
+#                 "sequence_number": 2,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": [],
+#                 "MESSAGE": "OK",
+#                 "METHOD": "GET",
+#                 "REQUEST_PATH": "https://192.168.7.8:443/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             },
+#             {
+#                 "DATA": {},
+#                 "MESSAGE": "OK",
+#                 "METHOD": "POST",
+#                 "REQUEST_PATH": "https://192.168.7.8:443/appcenter/cisco/ndfc/api/v1/onemanage/fabrics",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 2
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             },
+#             {
+#                 "changed": true,
+#                 "sequence_number": 2,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: MERGED (create) - TEST - Create fabric group with minimal config
+  cisco.dcnm.dcnm_fabric_group:
+    state: merged
+    config:
+        -   ANYCAST_GW_MAC: 2020.0000.00dc
+            BGW_ROUTING_TAG: "54321"
+            BORDER_GWY_CONNECTIONS: Direct_To_BGWS
+            DCI_SUBNET_RANGE: "10.10.1.0/24"
+            DCI_SUBNET_TARGET_MASK: "30"
+            DELAY_RESTORE: "300"
+            ENABLE_PVLAN: false
+            ENABLE_SGT: "off"
+            ENABLE_TRM_TRMv6: false
+            EXT_FABRIC_TYPE: ""
+            FABRIC_NAME: "{{ fabric_group_name_1 }}"
+            FABRIC_TYPE: "{{ fabric_group_type_1 }}"
+            L2_SEGMENT_ID_RANGE: 30000-49000
+            L3_PARTITION_ID_RANGE: 50000-59000
+            LOOPBACK100_IP_RANGE: 10.10.0.0/24
+            MSO_CONTROLER_ID: ""
+            MSO_SITE_GROUP_NAME: ""
+            MS_IFC_BGP_PASSWORD_ENABLE: false
+            MS_LOOPBACK_ID: "100"
+            MS_UNDERLAY_AUTOCONFIG: false
+            PARENT_ONEMANAGE_FABRIC: ""
+            PREMSO_PARENT_FABRIC: ""
+            SGT_OPER_STATUS: "off"
+            SGT_PREPROV_RECALC_STATUS: "empty"
+            SGT_RECALC_STATUS: "empty"
+            TOR_AUTO_DEPLOY: false
+            VXLAN_UNDERLAY_IS_V6: false
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 2
+      - result.diff[1].nvPairs.ANYCAST_GW_MAC == "2020.0000.00dc"
+      - result.diff[1].nvPairs.BGW_ROUTING_TAG == "54321"
+      - result.diff[1].nvPairs.DCI_SUBNET_RANGE == "10.10.1.0/24"
+      - result.diff[1].nvPairs.DCI_SUBNET_TARGET_MASK == "30"
+      - result.diff[1].nvPairs.DELAY_RESTORE == "300"
+      - result.diff[1].nvPairs.ENABLE_PVLAN == False
+      - result.diff[1].nvPairs.ENABLE_SGT == "off"
+      - result.diff[1].nvPairs.ENABLE_TRM_TRMv6 == False
+      - result.diff[1].nvPairs.EXT_FABRIC_TYPE == ""
+      - result.diff[1].nvPairs.FABRIC_TYPE == "MFD"
+      - result.diff[1].nvPairs.FABRIC_NAME == fabric_group_name_1
+      - result.diff[1].nvPairs.L2_SEGMENT_ID_RANGE == "30000-49000"
+      - result.diff[1].nvPairs.L3_PARTITION_ID_RANGE == "50000-59000"
+      - result.diff[1].nvPairs.LOOPBACK100_IP_RANGE == "10.10.0.0/24"
+      - result.diff[1].nvPairs.MSO_CONTROLER_ID == ""
+      - result.diff[1].nvPairs.MSO_SITE_GROUP_NAME == ""
+      - result.diff[1].nvPairs.MS_IFC_BGP_PASSWORD_ENABLE == False
+      - result.diff[1].nvPairs.MS_LOOPBACK_ID == "100"
+      - result.diff[1].nvPairs.MS_UNDERLAY_AUTOCONFIG == False
+      - result.diff[1].nvPairs.PARENT_ONEMANAGE_FABRIC == ""
+      - result.diff[1].nvPairs.PREMSO_PARENT_FABRIC == ""
+      - result.diff[1].nvPairs.SGT_OPER_STATUS == "off"
+      - result.diff[1].nvPairs.SGT_PREPROV_RECALC_STATUS == "empty"
+      - result.diff[1].nvPairs.SGT_RECALC_STATUS == "empty"
+      - result.diff[1].nvPairs.TOR_AUTO_DEPLOY == False
+      - result.diff[1].nvPairs.VXLAN_UNDERLAY_IS_V6 == False
+      - result.diff[1].sequence_number == 2
+      - result.metadata[1].action == "fabric_group_create"
+      - result.metadata[1].check_mode == False
+      - result.metadata[1].sequence_number == 2
+      - result.metadata[1].state == "merged"
+      - (result.response | length) == 2
+      - result.response[1].sequence_number == 2
+      - result.response[1].MESSAGE == "OK"
+      - result.response[1].METHOD == "POST"
+      - result.response[1].RETURN_CODE == 200
+################################################################################
+# MERGED (create) - Query the fabric groups
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "MCFG_Fabric_Group": {
+#                     "createdOn": 1721954059451,
+#                     "deviceType": "n9k",
+#                     "fabricId": "FABRIC-3",
+#                     "fabricName": "MCFG_Fabric_Group",
+#                     "fabricTechnology": "VXLANFabric",
+#                     "fabricTechnologyFriendly": "VXLAN EVPN",
+#                     "fabricType": "MFD",
+#                     "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+#                     "id": 3,
+#                     "modifiedOn": 1721954059701,
+#                     "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                     "networkTemplate": "Default_Network_Universal",
+#                     "nvPairs": {
+#                         "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                         "BGP_RP_ASN": "",
+#                         "BGW_ROUTING_TAG": "54321",
+#                         "BORDER_GWY_CONNECTIONS": "Manual",
+#                         "CLOUDSEC_ALGORITHM": "",
+#                         "CLOUDSEC_AUTOCONFIG": "false",
+#                         "CLOUDSEC_ENFORCEMENT": "",
+#                         "CLOUDSEC_KEY_STRING": "",
+#                         "CLOUDSEC_REPORT_TIMER": "",
+#                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                         "DCI_SUBNET_TARGET_MASK": "30",
+#                         "DCNM_ID": "",
+#                         "DELAY_RESTORE": "300",
+#                         "ENABLE_BGP_BFD": "",
+#                         "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": "",
+#                         "ENABLE_BGP_SEND_COMM": "",
+#                         "ENABLE_PVLAN": "false",
+#                         "ENABLE_RS_REDIST_DIRECT": "",
+#                         "FABRIC_NAME": "MCFG_Fabric_Group",
+#                         "FABRIC_TYPE": "MFD",
+#                         "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                         "L3_PARTITION_ID_RANGE": "50000-59000",
+#                         "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                         "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                         "MS_IFC_BGP_PASSWORD": "",
+#                         "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+#                         "MS_LOOPBACK_ID": "100",
+#                         "MS_UNDERLAY_AUTOCONFIG": "false",
+#                         "RP_SERVER_IP": "",
+#                         "RS_ROUTING_TAG": "",
+#                         "TOR_AUTO_DEPLOY": "false",
+#                         "default_network": "Default_Network_Universal",
+#                         "default_pvlan_sec_network": "",
+#                         "default_vrf": "Default_VRF_Universal",
+#                         "enableScheduledBackup": "",
+#                         "network_extension_template": "Default_Network_Extension_Universal",
+#                         "scheduledTime": "",
+#                         "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                     },
+#                     "operStatus": "HEALTHY",
+#                     "provisionMode": "DCNMTopDown",
+#                     "replicationMode": "IngressReplication",
+#                     "templateName": "MSD_Fabric",
+#                     "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                     "vrfTemplate": "Default_VRF_Universal"
+#                 },
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_query",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "query"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": [
+#                     {
+#                         "createdOn": 1721954059451,
+#                         "deviceType": "n9k",
+#                         "fabricId": "FABRIC-3",
+#                         "fabricName": "MCFG_Fabric_Group",
+#                         "fabricTechnology": "VXLANFabric",
+#                         "fabricTechnologyFriendly": "VXLAN EVPN",
+#                         "fabricType": "MFD",
+#                         "fabricTypeFriendly": "VXLAN EVPN Multi-Site",
+#                         "id": 3,
+#                         "modifiedOn": 1721954059701,
+#                         "networkExtensionTemplate": "Default_Network_Extension_Universal",
+#                         "networkTemplate": "Default_Network_Universal",
+#                         "nvPairs": {
+#                             "ANYCAST_GW_MAC": "2020.0000.00aa",
+#                             "BGP_RP_ASN": "",
+#                             "BGW_ROUTING_TAG": "54321",
+#                             "BORDER_GWY_CONNECTIONS": "Manual",
+#                             "CLOUDSEC_ALGORITHM": "",
+#                             "CLOUDSEC_AUTOCONFIG": "false",
+#                             "CLOUDSEC_ENFORCEMENT": "",
+#                             "CLOUDSEC_KEY_STRING": "",
+#                             "CLOUDSEC_REPORT_TIMER": "",
+#                             "DCI_SUBNET_RANGE": "10.10.1.0/24",
+#                             "DCI_SUBNET_TARGET_MASK": "30",
+#                             "DCNM_ID": "",
+#                             "DELAY_RESTORE": "300",
+#                             "ENABLE_BGP_BFD": "",
+#                             "ENABLE_BGP_LOG_NEIGHBOR_CHANGE": "",
+#                             "ENABLE_BGP_SEND_COMM": "",
+#                             "ENABLE_PVLAN": "false",
+#                             "ENABLE_RS_REDIST_DIRECT": "",
+#                             "FABRIC_NAME": "MCFG_Fabric_Group",
+#                             "FABRIC_TYPE": "MFD",
+#                             "L2_SEGMENT_ID_RANGE": "30000-49000",
+#                             "L3_PARTITION_ID_RANGE": "50000-59000",
+#                             "LOOPBACK100_IP_RANGE": "10.10.0.0/24",
+#                             "MS_IFC_BGP_AUTH_KEY_TYPE": "",
+#                             "MS_IFC_BGP_PASSWORD": "",
+#                             "MS_IFC_BGP_PASSWORD_ENABLE": "false",
+#                             "MS_LOOPBACK_ID": "100",
+#                             "MS_UNDERLAY_AUTOCONFIG": "false",
+#                             "RP_SERVER_IP": "",
+#                             "RS_ROUTING_TAG": "",
+#                             "TOR_AUTO_DEPLOY": "false",
+#                             "default_network": "Default_Network_Universal",
+#                             "default_pvlan_sec_network": "",
+#                             "default_vrf": "Default_VRF_Universal",
+#                             "enableScheduledBackup": "",
+#                             "network_extension_template": "Default_Network_Extension_Universal",
+#                             "scheduledTime": "",
+#                             "vrf_extension_template": "Default_VRF_Extension_Universal"
+#                         },
+#                         "operStatus": "HEALTHY",
+#                         "provisionMode": "DCNMTopDown",
+#                         "replicationMode": "IngressReplication",
+#                         "templateName": "MSD_Fabric",
+#                         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
+#                         "vrfTemplate": "Default_VRF_Universal"
+#                     }
+#                 ],
+#                 "MESSAGE": "OK",
+#                 "METHOD": "GET",
+#                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: MERGED (create) - TEST - Query the fabric groups
+  cisco.dcnm.dcnm_fabric_group:
+    state: query
+    config:
+      - FABRIC_NAME: "{{ fabric_group_name_1 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - fabric_group_name_1 in result.diff[0]
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_query"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "query"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "GET"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.response[0].DATA | length) >= 1
+      - result.result[0].found == true
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
+
+################################################################################
+# MERGED (create) - CLEANUP - Delete the fabric groups
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": true,
+#         "diff": [
+#             {
+#                 "fabric_group_name": "MCFG1",
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "DATA": {},
+#                 "MESSAGE": "OK",
+#                 "METHOD": "DELETE",
+#                 "REQUEST_PATH": "https://192.168.7.8:443/appcenter/cisco/ndfc/api/v1/onemanage/fabrics/MCFG1",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": true,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: MERGED (create) - CLEANUP - Delete the fabric groups
+  cisco.dcnm.dcnm_fabric_group:
+    state: deleted
+    config:
+      - FABRIC_NAME: "{{ fabric_group_name_1 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == true
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].fabric_group_name == fabric_group_name_1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].DATA is match '{.*}'
+      - result.response[0].MESSAGE == "OK"
+      - result.response[0].METHOD == "DELETE"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
