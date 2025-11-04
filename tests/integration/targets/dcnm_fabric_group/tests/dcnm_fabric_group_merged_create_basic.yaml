@@ -22,15 +22,13 @@
 ################################################################################
 # TEST
 ################################################################################
-# 3. Create fabric groups and verify result
-#    - fabric_group_name_1
-#
-# 4. Query fabric group configurations and verify results
+# 3. Create fabric_group_name_1 and verify results
+# 4. Query fabric_group_name_1 and verify results
+# 5. Idempotency check on fabric_group_name_1 create operation
 ################################################################################
 # CLEANUP
 ################################################################################
-# 5. Delete fabric groups under test
-#    - fabric_group_name_1
+# 6. Delete fabric group fabric_group_name_1
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -175,7 +173,7 @@
 - name: MERGED (create) - TEST - Create fabric group with minimal config
   cisco.dcnm.dcnm_fabric_group:
     state: merged
-    config:
+    config: &config_create_basic
       - ANYCAST_GW_MAC: 2020.0000.00dc
         BGW_ROUTING_TAG: "54321"
         BORDER_GWY_CONNECTIONS: Direct_To_BGWS
@@ -238,6 +236,7 @@
       - result.diff[1].nvPairs.TOR_AUTO_DEPLOY == False
       - result.diff[1].nvPairs.VXLAN_UNDERLAY_IS_V6 == False
       - result.diff[1].sequence_number == 2
+      - (result.metadata | length) == 2
       - result.metadata[1].action == "fabric_group_create"
       - result.metadata[1].check_mode == False
       - result.metadata[1].sequence_number == 2
@@ -247,6 +246,14 @@
       - result.response[1].MESSAGE == "OK"
       - result.response[1].METHOD == "POST"
       - result.response[1].RETURN_CODE == 200
+      - (result.result | length) == 2
+      - result.result[0].found == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+      - result.result[1].changed == true
+      - result.result[1].success == true
+      - result.result[1].sequence_number == 2
+
 ################################################################################
 # MERGED (create) - Query the fabric groups
 ################################################################################
@@ -438,6 +445,71 @@
       - result.result[0].found == true
       - result.result[0].sequence_number == 1
       - result.result[0].success == true
+
+################################################################################
+# MERGED (create) - TEST - Idempotency check on fabric group create
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_update",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to update for merged state.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: MERGED (create) - TEST - Idempotency check on fabric group create
+  cisco.dcnm.dcnm_fabric_group:
+    state: merged
+    config: *config_create_basic
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_update"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - (result.response | length) == 1
+      - result.response[0].sequence_number == 1
+      - result.response[0].MESSAGE == "No fabrics to update for merged state."
+      - result.response[0].RETURN_CODE == 200
+      - (result.result | length) == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
 
 ################################################################################
 # MERGED (create) - CLEANUP - Delete the fabric groups
