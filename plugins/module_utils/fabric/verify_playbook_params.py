@@ -19,6 +19,7 @@ __author__ = "Allen Robel"
 import inspect
 import json
 import logging
+from typing import Any, Callable
 
 from ..common.conversion import ConversionUtils
 from .param_info import ParamInfo
@@ -263,14 +264,21 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        eval_string = f"user_value {operator} rule_value"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"eval_string {eval_string}"
-        self.log.debug(msg)
-        # While eval() can be dangerous with unknown input, the input
-        # we're feeding it is from a known source and has been pretty
-        # heavily massaged before it gets here.
-        result = eval(eval_string)  # pylint: disable=eval-used
+        operators: dict[str, Callable[[Any, Any], bool]] = {
+            '==': lambda a, b: a == b,
+            '!=': lambda a, b: a != b,
+            '>': lambda a, b: a > b,
+            '<': lambda a, b: a < b,
+            '>=': lambda a, b: a >= b,
+            '<=': lambda a, b: a <= b,
+        }
+
+        if operator not in operators:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Unsupported operator: {operator}"
+            raise ValueError(msg)
+
+        result = operators[operator](user_value, rule_value)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
