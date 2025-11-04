@@ -22,13 +22,13 @@
 ################################################################################
 # TEST
 ################################################################################
-# 3. Create fabric groups and verify result
-#    - fabric_group_name_1
+# 3. Create fabric group fabric_group_name_1 and verify results
+# 4. Delete fabric group fabric_group_name_1 and verify results
+# 5. Delete fabric group fabric_group_name_1 again to verify idempotency
 ################################################################################
 # CLEANUP
 ################################################################################
-# 4. Delete fabric groups under test
-#    - fabric_group_name_1
+# None required
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -57,7 +57,7 @@
 - debug:
     var: result
 ################################################################################
-# DELETED - TEST - Create fabric group with basic config
+# DELETED - SETUP - Create fabric group with basic config
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -170,11 +170,11 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - TEST - Create fabric group with minimal config
+- name: DELETED - SETUP - Create fabric group with minimal config
   cisco.dcnm.dcnm_fabric_group:
     state: merged
     config:
-      - ANYCAST_GW_MAC: 2020.0000.00dc
+      - ANYCAST_GW_MAC: 2020.0000.00aa
         BGW_ROUTING_TAG: "54321"
         BORDER_GWY_CONNECTIONS: Direct_To_BGWS
         DCI_SUBNET_RANGE: "10.10.1.0/24"
@@ -223,7 +223,7 @@
 
 
 ################################################################################
-# DELETED - CLEANUP - Delete the fabric groups
+# DELETED - TEST - Delete fabric group fabric_group_name_1 and verify results
 ################################################################################
 # Expected result
 # ok: [192.168.7.8] => {
@@ -264,10 +264,10 @@
 #     }
 # }
 ################################################################################
-- name: DELETED - CLEANUP - Delete the fabric groups
+- name: DELETED - TEST - Delete fabric group fabric_group_name_1 and verify results
   cisco.dcnm.dcnm_fabric_group:
     state: deleted
-    config:
+    config: &config_deleted
       - FABRIC_NAME: "{{ fabric_group_name_1 }}"
   register: result
 - debug:
@@ -292,5 +292,70 @@
       - result.response[0].sequence_number == 1
       - (result.result | length) == 1
       - result.result[0].changed == true
+      - result.result[0].success == true
+      - result.result[0].sequence_number == 1
+
+################################################################################
+# DELETED - TEST - Idempotency - Delete fabric group fabric_group_name_1
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_delete",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "deleted"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabric groups to delete",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: DELETED - TEST - Idempotency - Delete fabric group fabric_group_name_1
+  cisco.dcnm.dcnm_fabric_group:
+    state: deleted
+    config: *config_deleted
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_delete"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "deleted"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No fabric groups to delete"
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - (result.result | length) == 1
+      - result.result[0].changed == false
       - result.result[0].success == true
       - result.result[0].sequence_number == 1
