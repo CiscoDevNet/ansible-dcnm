@@ -105,6 +105,21 @@ class FabricGroupCreate(FabricGroupCommon):
         msg = f"ENTERED {self.class_name}()"
         self.log.debug(msg)
 
+    @staticmethod
+    def rename_key(dictionary: dict[str, Any], old_key: str, new_key: str) -> dict[str, Any]:
+        """
+        #  Summary
+
+        Rename a key in a dictionary from old_key to new_key.
+
+        ## Raises
+
+        None
+        """
+        if old_key in dictionary:
+            dictionary[new_key] = dictionary.pop(old_key)
+        return dictionary
+
     def _build_payload_top_level_keys(self, fabric_name: str) -> dict[str, str]:
         """
         # Summary

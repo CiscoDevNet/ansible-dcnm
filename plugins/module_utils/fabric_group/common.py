@@ -22,7 +22,7 @@ __author__ = "Allen Robel"
 
 import inspect
 import logging
-from typing import Any, Union
+from typing import Any
 
 from ..common.conversion import ConversionUtils
 from ..fabric_group.fabric_group_details import FabricGroupDetails
@@ -56,30 +56,10 @@ class FabricGroupCommon:
         self.conversion: ConversionUtils = ConversionUtils()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
 
-        # key: fabric_name, value: boolean
-        # If True, the operation was successful
-        # If False, the operation was not successful
-        self.send_payload_result: dict[str, bool] = {}
-
-        # key: fabric_name, value: dict
-        # Depending on state, updated in:
-        # - self._fabric_group_needs_update_for_merged_state()
-        # - self._fabric_group_needs_update_for_replaced_state()
-        # Used to update the fabric configuration on the controller
-        # with key/values that bring the controller to the intended
-        # configuration.  This may include values not in the user
-        # configuration that are needed to set the fabric to its
-        # intended state.
-        self._fabric_changes_payload: dict[str, dict] = {}
-
-        # Reset (depending on state) in:
-        # - self._build_payloads_for_merged_state()
-        # - self._build_payloads_for_replaced_state()
-        # Updated (depending on state) in:
-        # - self._fabric_group_needs_update_for_merged_state()
-        # - self._fabric_group_needs_update_for_replaced_state()
-        self._fabric_group_update_required: set[bool] = set()
-
+        # self._payloads_to_commit
+        # Used in:
+        #   - FabricGroupCreate
+        #   - FabricGroupUpdate
         self._payloads_to_commit: list[dict[str, Any]] = []
 
         self.path: str = ""
@@ -88,46 +68,26 @@ class FabricGroupCommon:
         self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
         self._fabric_type: str = "VXLAN_EVPN"
 
-    def _prepare_parameter_value_for_comparison(self, value: Any) -> Union[str, Any]:
-        """
-        convert payload values to controller formats
-
-        Comparison order is important.
-        bool needs to be checked before int since:
-            isinstance(True, int) == True
-            isinstance(False, int) == True
-        """
-        if isinstance(value, bool):
-            return str(value).lower()
-        if isinstance(value, int):
-            return str(value)
-        if isinstance(value, float):
-            return str(value)
-        return value
-
-    @staticmethod
-    def rename_key(dictionary: dict[str, Any], old_key: str, new_key: str) -> dict[str, Any]:
-        """
-        #  Summary
-
-        Rename a key in a dictionary from old_key to new_key.
-
-        ## Raises
-
-        None
-        """
-        if old_key in dictionary:
-            dictionary[new_key] = dictionary.pop(old_key)
-        return dictionary
-
     def _fixup_payloads_to_commit(self) -> None:
         """
+        # Summary
+
         -   Make any modifications to the payloads prior to sending them
             to the controller.
         -   raise ``ValueError`` if any modifications fail.
 
-        NOTES:
-        1. Add any modifications to the Modifications list below.
+        ## Raises
+
+        -   ``ValueError``: if any modifications fail.
+
+        ## Notes
+
+        1. Used in
+
+        - FabricGroupCreate
+        - FabricGroupUpdate
+
+        2. Add any modifications to the Modifications list below.
 
         Modifications:
         - Translate ANYCAST_GW_MAC to a format the controller understands

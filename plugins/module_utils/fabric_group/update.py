@@ -95,7 +95,24 @@ class FabricGroupUpdate(FabricGroupCommon):
         self._config_deploy: FabricGroupConfigDeploy = FabricGroupConfigDeploy()
         self._config_save: FabricGroupConfigSave = FabricGroupConfigSave()
         self.conversion: ConversionUtils = ConversionUtils()
-        self._fabric_group_update_required: set = set()
+
+        # self._fabric_changes_payload
+        # key: fabric_name, value: dict
+        # Updated in:
+        # - self._merge_payload()
+        # - self._add_mandatory_keys_to_payload()
+        # Used to update the fabric configuration on the controller with key/values that
+        # bring the controller to the intended configuration.  This may include values not
+        # in the user configuration that are needed to set the fabric to its intended state.
+        self._fabric_changes_payload: dict[str, dict] = {}
+
+        # self._fabric_group_update_required
+        # Reset (depending on state) in:
+        # - self._build_payloads_for_merged_state()
+        # Updated (depending on state) in:
+        # - FabricGroupUpdate._merge_payload()
+        self._fabric_group_update_required: set[bool] = set()
+
         self._key_translations: dict = {}
         self._key_translations["DEPLOY"] = ""
         self.endpoint: EpOneManageFabricGroupUpdate = EpOneManageFabricGroupUpdate()
@@ -107,6 +124,11 @@ class FabricGroupUpdate(FabricGroupCommon):
         # Properties to be set by caller
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
+
+        # key: fabric_name, value: boolean
+        # If True, the operation was successful
+        # If False, the operation was not successful
+        self.send_payload_result: dict[str, bool] = {}
 
         msg = f"ENTERED {self.class_name}"
         self.log.debug(msg)
