@@ -139,6 +139,37 @@ class FabricGroupCreate(FabricGroupCommon):
         commit_payload["templateName"] = "MSD_Fabric"
         return commit_payload
 
+    def _update_seed_member(self, seed_member: dict[str, Any]) -> dict[str, Any]:
+        """
+        # Summary
+
+        Update the seed_member information in the payload by renaming
+        cluster_name to clusterName and fabric_name to fabricName.
+
+        ## Raises
+
+        -  `ValueError` if `seed_member` is not a `dict`
+        """
+        method_name: str = inspect.stack()[0][3]
+        if not isinstance(seed_member, dict):
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "seed_member must be a dictionary."
+            raise ValueError(msg)
+        if not seed_member:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "seed_member is empty. Returning empty dictionary."
+            self.log.debug(msg)
+            return {}
+        seed_member = self.rename_key(seed_member, "cluster_name", "clusterName")
+        seed_member = self.rename_key(seed_member, "fabric_name", "fabricName")
+        if "clusterName" in seed_member and "fabricName" in seed_member:
+            return seed_member
+        msg = f"{self.class_name}._update_seed_member: "
+        msg += "seed_member payload missing cluster_name or fabric_name. "
+        msg += "Returning empty dictionary."
+        self.log.debug(msg)
+        return {}
+
     def _build_payload_seed_member(self, commit_payload: dict[str, Any], payload: dict[str, Any]) -> dict[str, Any]:
         """
         Build the commit_payload seedMember contents from payload.
