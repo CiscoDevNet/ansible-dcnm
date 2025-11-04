@@ -161,7 +161,7 @@ class FabricGroupTypes:
         -   `ValueError` if `fabric_group_type` is not set.
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_group_type is None:
+        if not self.fabric_group_type:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Set {self.class_name}.fabric_group_type before accessing "
             msg += f"{self.class_name}.{method_name}"
@@ -181,7 +181,7 @@ class FabricGroupTypes:
         -   `ValueError` if `fabric_group_type` is not set.
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_group_type is None:
+        if not self.fabric_group_type:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Set {self.class_name}.fabric_group_type before accessing "
             msg += f"{self.class_name}.{method_name}"
@@ -200,7 +200,7 @@ class FabricGroupTypes:
         -   `ValueError` if `fabric_group_type` is not set.
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_group_type is None:
+        if not self.fabric_group_type:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Set {self.class_name}.fabric_group_type before accessing "
             msg += f"{self.class_name}.{method_name}"
@@ -220,7 +220,7 @@ class FabricGroupTypes:
             -   `fabric_group_type` is not set.
         """
         method_name = inspect.stack()[0][3]
-        if self.fabric_group_type is None:
+        if not self.fabric_group_type:
             msg = f"{self.class_name}.{method_name}: "
             msg += f"Set {self.class_name}.fabric_group_type before accessing "
             msg += f"{self.class_name}.{method_name}"
