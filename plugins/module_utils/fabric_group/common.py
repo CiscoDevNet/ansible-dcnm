@@ -25,7 +25,6 @@ import logging
 from typing import Any
 
 from ..common.conversion import ConversionUtils
-from ..fabric_group.fabric_group_details import FabricGroupDetails
 from .fabric_group_types import FabricGroupTypes
 
 # pylint: disable=too-many-instance-attributes
@@ -46,26 +45,18 @@ class FabricGroupCommon:
 
     def __init__(self) -> None:
         self.class_name: str = self.__class__.__name__
-        self.action: str = ""
-
-        self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
-
-        msg: str = f"ENTERED {self.class_name}()"
-        self.log.debug(msg)
+        self.action = "fabric_group_common"
 
         self.conversion: ConversionUtils = ConversionUtils()
         self.fabric_group_types: FabricGroupTypes = FabricGroupTypes()
 
         # self._payloads_to_commit
-        # Used in:
-        #   - FabricGroupCreate
-        #   - FabricGroupUpdate
+        # Already added to all subclasses
         self._payloads_to_commit: list[dict[str, Any]] = []
 
         self.path: str = ""
         self.verb: str = ""
 
-        self._fabric_group_details: FabricGroupDetails = FabricGroupDetails()
         self._fabric_type: str = "VXLAN_EVPN"
 
     def _fixup_payloads_to_commit(self) -> None:
@@ -218,17 +209,6 @@ class FabricGroupCommon:
         msg += f"{sorted(missing_parameters)}. "
         msg += f"Bad configuration: {sorted_payload}"
         raise ValueError(msg)
-
-    @property
-    def fabric_group_details(self) -> FabricGroupDetails:
-        """
-        An instance of the FabricGroupDetails class.
-        """
-        return self._fabric_group_details
-
-    @fabric_group_details.setter
-    def fabric_group_details(self, value: FabricGroupDetails) -> None:
-        self._fabric_group_details = value
 
     @property
     def fabric_group_type(self) -> str:
