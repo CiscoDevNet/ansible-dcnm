@@ -33,7 +33,6 @@ from ..common.operation_type import OperationType
 from ..common.rest_send_v2 import RestSend
 from ..common.results_v2 import Results
 from .common import FabricGroupCommon
-from .fabric_group_types import FabricGroupTypes
 from .fabric_groups import FabricGroups
 
 
@@ -46,20 +45,15 @@ class FabricGroupCreate(FabricGroupCommon):
     ```python
     from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.create import FabricGroupCreate
     from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
-    from ansible_collections.cisco.dcnm.plugins.module_utils.fabric_group.fabric_group_details import FabricGroupDetails
     payloads = [
         { "FABRIC_NAME": "fabric1", "BGP_AS": 65000 },
         { "FABRIC_NAME": "fabric2", "BGP_AS": 65001 }
     ]
     results = Results()
-    fabric_group_details = FabricGroupDetails()
-    fabric_group_details.rest_send = rest_send_instance
-    fabric_group_details.results = results
     instance = FabricGroupCreate()
     instance.rest_send = rest_send_instance
     instance.results = results
     instance.payloads = payloads
-    instance.fabric_group_details = fabric_group_details
     instance.commit()
     results.build_final_result()
 
@@ -82,19 +76,14 @@ class FabricGroupCreate(FabricGroupCommon):
 
     def __init__(self):
         super().__init__()
-        self.class_name = self.__class__.__name__
-        self.action = "fabric_group_create"
-        self.operation_type: OperationType = OperationType.CREATE
+        self.class_name: str = self.__class__.__name__
+        self.action: str = "fabric_group_create"
 
         self.log = logging.getLogger(f"dcnm.{self.class_name}")
 
-        self.endpoint = EpOneManageFabricCreate()
-        self.fabric_groups = FabricGroups()
-        self.fabric_group_types = FabricGroupTypes()
-
-        self.path: str = self.endpoint.path
-        self.verb: str = self.endpoint.verb
-
+        self._endpoint: EpOneManageFabricCreate = EpOneManageFabricCreate()
+        self._fabric_groups: FabricGroups = FabricGroups()
+        self._operation_type: OperationType = OperationType.CREATE
         self._payloads: list[dict] = []
         self._payloads_to_commit: list[dict[str, Any]] = []
 
@@ -262,15 +251,15 @@ class FabricGroupCreate(FabricGroupCommon):
             - `FABRIC_NAME` is missing from any payload.
         """
         method_name = inspect.stack()[0][3]  # pylint: disable=unused-variable
-        self.fabric_groups.rest_send = self.rest_send
-        self.fabric_groups.results = self.results
-        self.fabric_groups.refresh()
+        self._fabric_groups.rest_send = self.rest_send
+        self._fabric_groups.results = self.results
+        self._fabric_groups.refresh()
 
         self._payloads_to_commit = []
         payload: dict[str, Any] = {}
         msg = f"{self.class_name}.{method_name}: "
-        msg += "self.fabric_groups.fabric_group_names: "
-        msg += f"{self.fabric_groups.fabric_group_names}"
+        msg += "self._fabric_groups.fabric_group_names: "
+        msg += f"{self._fabric_groups.fabric_group_names}"
         self.log.debug(msg)
         for payload in self.payloads:
             fabric_name: Union[str, None] = payload.get("FABRIC_NAME", None)
@@ -280,7 +269,7 @@ class FabricGroupCreate(FabricGroupCommon):
                 self.log.debug(msg)
                 raise ValueError(msg)
             # Skip any fabric-groups that already exist
-            if fabric_name in self.fabric_groups.fabric_group_names:
+            if fabric_name in self._fabric_groups.fabric_group_names:
                 msg = f"{self.class_name}.{method_name}: "
                 msg += f"Fabric group {fabric_name} already exists on controller; skipping create."
                 self.log.debug(msg)
@@ -310,8 +299,8 @@ class FabricGroupCreate(FabricGroupCommon):
             # pylint: disable=no-member
             self.rest_send.timeout = 1
 
-            self.rest_send.path = self.path
-            self.rest_send.verb = self.verb
+            self.rest_send.path = self._endpoint.path
+            self.rest_send.verb = self._endpoint.verb
             self.rest_send.payload = payload
             self.rest_send.commit()
 
@@ -320,7 +309,7 @@ class FabricGroupCreate(FabricGroupCommon):
             else:
                 self.results.diff_current = copy.deepcopy(payload)
             self.results.action = self.action
-            self.results.operation_type = self.operation_type
+            self.results.operation_type = self._operation_type
             self.results.state = self.rest_send.state
             self.results.check_mode = self.rest_send.check_mode
             self.results.response_current = copy.deepcopy(self.rest_send.response_current)
@@ -439,4 +428,4 @@ class FabricGroupCreate(FabricGroupCommon):
         self._results = value
         self._results.action = self.action
         self._results.add_changed(False)
-        self._results.operation_type = self.operation_type
+        self._results.operation_type = self._operation_type
