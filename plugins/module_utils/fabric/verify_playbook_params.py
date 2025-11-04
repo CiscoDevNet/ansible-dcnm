@@ -13,13 +13,13 @@
 # limitations under the License.
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import inspect
 import json
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Union
 
 from ..common.conversion import ConversionUtils
 from .param_info import ParamInfo
@@ -123,7 +123,7 @@ class VerifyPlaybookParams:
         """
         self.properties holds property values for the class
         """
-        self.properties = {}
+        self.properties: dict[str, Any] = {}
         self.properties["config_playbook"] = None
         self.properties["config_controller"] = None
         self.properties["template"] = None
@@ -290,7 +290,7 @@ class VerifyPlaybookParams:
 
         return result
 
-    def controller_param_is_valid(self, item) -> bool:
+    def controller_param_is_valid(self, item) -> Union[bool, None]:
         """
         -   Return None in the following cases
             -   The fabric does not exist on the controller.
@@ -299,14 +299,11 @@ class VerifyPlaybookParams:
             -   The controller fabric config does not contain the dependent
                 parameter (this is not likely)
 
-        Returning One removes the controller result from consideration
+        Returning None removes the controller result from consideration
         when determining parameter validity.
 
         -   Return the evaluated result (True or False) if the controller
-            fabric config does contain the dependent parameter.  The
-            evaluated result is calculated from:
-
-        eval(controller_param_value rule_operator rule_value)
+            fabric config does contain the dependent parameter.
 
         -   raise KeyError if self.eval_parameter_rule() fails
         """
@@ -362,7 +359,7 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def playbook_param_is_valid(self, item) -> bool:
+    def playbook_param_is_valid(self, item) -> Union[bool, None]:
         """
         -   Return None if the playbook config does not contain the
             dependent parameter. This removes the playbook parameter from
@@ -414,7 +411,7 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def default_param_is_valid(self, item) -> bool:
+    def default_param_is_valid(self, item) -> Union[bool, None]:
         """
         -   Return None if the fabric defaults (in the fabric template)
             do not contain the dependent parameter. This removes the
@@ -794,9 +791,9 @@ class VerifyPlaybookParams:
         bad_param["boolean_operator"] = "or"
         self.bad_params[self.fabric_name][self.parameter].append(bad_param)
 
-    def update_decision_set_for_na_rules(self, param_rule) -> str:
+    def update_decision_set_for_na_rules(self, param_rule) -> None:
         """
-        -   eval() a rule that contains the key 'na'
+        -   evaluate a rule that contains the key 'na'
         -   Raise ``KeyError`` if the rule does not contain keys:
             - ["na"]
             - ["na"]["terms")
