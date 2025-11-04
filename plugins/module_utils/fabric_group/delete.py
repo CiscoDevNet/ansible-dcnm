@@ -86,12 +86,12 @@ class FabricGroupDelete:
     def __init__(self) -> None:
         self.class_name: str = self.__class__.__name__
         self.action: str = "fabric_group_delete"
-        self.operation_type: OperationType = OperationType.DELETE
+        self._operation_type: OperationType = OperationType.DELETE
 
         self.log: logging.Logger = logging.getLogger(f"dcnm.{self.class_name}")
 
         self._fabric_groups_to_delete: list[str] = []
-        self.ep_fabric_group_delete: EpOneManageFabricDelete = EpOneManageFabricDelete()
+        self._endpoint: EpOneManageFabricDelete = EpOneManageFabricDelete()
         self._fabric_group_names: list[str] = []
 
         self._cannot_delete_fabric_reason: str = ""
@@ -99,7 +99,7 @@ class FabricGroupDelete:
         self._fabric_groups: FabricGroups = FabricGroups()
         self._fabric_group_member_info: FabricGroupMemberInfo = FabricGroupMemberInfo()
 
-        # Properties to be set by caller
+        # Properties to be set by the caller
         self._rest_send: RestSend = RestSend({})
         self._results: Results = Results()
 
@@ -294,9 +294,9 @@ class FabricGroupDelete:
         -   `ValueError` if the fabric group delete endpoint cannot be set.
         """
         try:
-            self.ep_fabric_group_delete.fabric_name = fabric_group_name
-            self.rest_send.path = self.ep_fabric_group_delete.path
-            self.rest_send.verb = self.ep_fabric_group_delete.verb
+            self._endpoint.fabric_name = fabric_group_name
+            self.rest_send.path = self._endpoint.path
+            self.rest_send.verb = self._endpoint.verb
         except (ValueError, TypeError) as error:
             raise ValueError(error) from error
 
@@ -334,7 +334,7 @@ class FabricGroupDelete:
         None
         """
         self.results.action = self.action
-        self.results.operation_type = self.operation_type
+        self.results.operation_type = self._operation_type
         if self.rest_send.check_mode in {True, False}:
             self.results.check_mode = self.rest_send.check_mode
         else:
@@ -429,4 +429,4 @@ class FabricGroupDelete:
         self._results = value
         self._results.action = self.action
         self._results.add_changed(False)
-        self._results.operation_type = self.operation_type
+        self._results.operation_type = self._operation_type
