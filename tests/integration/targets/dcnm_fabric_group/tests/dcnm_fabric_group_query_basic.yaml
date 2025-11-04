@@ -22,14 +22,13 @@
 ################################################################################
 # TEST
 ################################################################################
-# 3. Create fabric groups and verify result
-#    - fabric_group_name_1
-#
-# 4. Query fabric group configurations and verify results
+# 3. Query non-existing fabric group and verify result
+# 4. Create fabric group fabric_group_name_1 and verify result
+# 5. Query existing fabric group and verify results
 ################################################################################
 # CLEANUP
 ################################################################################
-# 5. Delete fabric groups under test
+# 6. Delete fabric groups under test
 #    - fabric_group_name_1
 ################################################################################
 # REQUIREMENTS
@@ -59,7 +58,72 @@
 - debug:
     var: result
 ################################################################################
-# QUERY - TEST - Create fabric group with basic config
+# QUERY - Query non-existing fabric group
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_query",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "query"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "found": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: QUERY - TEST - Query non-existing fabric group
+  cisco.dcnm.dcnm_fabric_group:
+    state: query
+    config:
+      - FABRIC_NAME: "{{ fabric_group_name_1 }}"
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - fabric_group_name_1 not in result.diff[0]
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_query"
+      - result.metadata[0].check_mode == false
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "query"
+      - (result.response | length) == 1
+      - '"DATA" not in result.response[0]'
+      - '"MESSAGE" not in result.response[0]'
+      - '"METHOD" not in result.response[0]'
+      - '"RETURN_CODE" not in result.response[0]'
+      - result.response[0].sequence_number == 1
+      - result.result[0].found == false
+      - result.result[0].sequence_number == 1
+      - result.result[0].success == true
+################################################################################
+# QUERY - TEST - Create fabric group with minimal config
 ################################################################################
 # Expected result
 # - All untested nvPairs removed for brevity.
@@ -223,7 +287,7 @@
       - result.response[1].METHOD == "POST"
       - result.response[1].RETURN_CODE == 200
 ################################################################################
-# QUERY - Query the fabric groups
+# QUERY - Query existing fabric group
 ################################################################################
 # Expected result
 # ok: [192.168.7.8] => {
@@ -384,7 +448,7 @@
 #     }
 # }
 ################################################################################
-- name: QUERY - TEST - Query the fabric groups
+- name: QUERY - TEST - Query existing fabric group
   cisco.dcnm.dcnm_fabric_group:
     state: query
     config:
