@@ -1,0 +1,241 @@
+{
+    "TEST_NOTES": [
+        "Mocked responses for TemplateGet unit tests.",
+        "tests/unit/modules/dcnm/dcnm_fabric_group/test_fabric_group_default.py",
+        "",
+        "INSTRUCTIONS FOR GATHERING RESPONSES:",
+        "1. Use the NDFC API endpoint: GET /appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/{template_name}",
+        "2. For test_fabric_group_default_00050a: Return MSD_Fabric template with parameters",
+        "3. For test_fabric_group_default_00090a: Return 500 error (failed to retrieve template)"
+    ],
+    "test_fabric_group_default_00050a": {
+        "TEST_NOTES": [
+            "MSD_Fabric template successfully retrieved",
+            "Used by test_fabric_group_default_00050"
+        ],
+        "RETURN_CODE": 200,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/MSD_Fabric",
+        "MESSAGE": "OK",
+        "DATA": {
+            "_implements": "",
+            "assignedInstanceClassId": 0,
+            "content": "##template properties\nname =MSD_Fabric;",
+            "contentType": "PYTHON",
+            "dependencies": "",
+            "description": "Domain that can contain multiple VXLAN EVPN Fabrics with Layer-2/Layer-3 Overlay Extensions and other Fabric Types.",
+            "fileName": "MSD_Fabric.template",
+            "implements": "",
+            "importedTemplates": null,
+            "instanceClassId": 1006,
+            "instanceName": "com.cisco.dcbu.dcm.model.cfgtemplate.ConfigTemplate:name=MSD_Fabric:type=true",
+            "name": "MSD_Fabric",
+            "newContent": "##template properties\nname =MSD_Fabric;",
+            "parameters": [
+                {
+                    "annotations": {
+                        "Description": "Please provide the fabric name to create it (Max Size 64)",
+                        "DisplayName": "Fabric Name",
+                        "IsFabricName": "true",
+                        "IsMandatory": "true"
+                    },
+                    "defaultValue": "",
+                    "description": null,
+                    "metaProperties": {
+                        "maxLength": "64",
+                        "minLength": "1"
+                    },
+                    "name": "FABRIC_NAME",
+                    "optional": false,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "Fabric Type",
+                        "DisplayName": "Fabric Type",
+                        "IsMandatory": "true"
+                    },
+                    "defaultValue": "MFD",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "FABRIC_TYPE",
+                    "optional": false,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "Deployment freeze flag",
+                        "DisplayName": "Deployment Freeze",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "false",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "DEPLOYMENT_FREEZE",
+                    "optional": true,
+                    "parameterType": "boolean",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "Enable PBR",
+                        "DisplayName": "Enable PBR",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "false",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "ENABLE_PBR",
+                    "optional": true,
+                    "parameterType": "boolean",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "BGP ASN previous value (internal use)",
+                        "IsInternal": "true",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "BGP_AS_PREV",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "DCNM ID (internal use)",
+                        "IsInternal": "true",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "DCNM_ID",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "Anycast Gateway MAC",
+                        "DisplayName": "Anycast Gateway MAC",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "2020.0000.00aa",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "ANYCAST_GW_MAC",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "DCI Subnet Range",
+                        "DisplayName": "DCI Subnet Range",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "10.10.1.0/24",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "DCI_SUBNET_RANGE",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "DCI Subnet Target Mask",
+                        "DisplayName": "DCI Subnet Target Mask",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "30",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "DCI_SUBNET_TARGET_MASK",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "Loopback100 IP Range",
+                        "DisplayName": "Loopback100 IP Range",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "10.10.0.0/24",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "LOOPBACK100_IP_RANGE",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "L2 Segment ID Range",
+                        "DisplayName": "L2 Segment ID Range",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "30000-49000",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "L2_SEGMENT_ID_RANGE",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                },
+                {
+                    "annotations": {
+                        "Description": "L3 Partition ID Range",
+                        "DisplayName": "L3 Partition ID Range",
+                        "IsMandatory": "false"
+                    },
+                    "defaultValue": "50000-59000",
+                    "description": null,
+                    "metaProperties": {},
+                    "name": "L3_PARTITION_ID_RANGE",
+                    "optional": true,
+                    "parameterType": "string",
+                    "parameterTypeStructure": false,
+                    "structureParameters": {}
+                }
+            ],
+            "published": false,
+            "referenceCount": 0,
+            "supportedPlatforms": "All",
+            "tags": "[VXLAN EVPN Multi-Site]",
+            "templateSubType": "NA",
+            "templateType": "FABRIC",
+            "timestamp": "2024-02-02 23:04:09",
+            "userDefined": true
+        }
+    },
+    "test_fabric_group_default_00090a": {
+        "TEST_NOTES": [
+            "Failed to retrieve template - Internal Server Error",
+            "Used by test_fabric_group_default_00090"
+        ],
+        "RETURN_CODE": 500,
+        "METHOD": "GET",
+        "REQUEST_PATH": "/appcenter/cisco/ndfc/api/v1/configtemplate/rest/config/templates/MSD_Fabric",
+        "MESSAGE": "Internal Server Error",
+        "DATA": {}
+    }
+}
