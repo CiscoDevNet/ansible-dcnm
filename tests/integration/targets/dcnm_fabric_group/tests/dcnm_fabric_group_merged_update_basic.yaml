@@ -22,15 +22,14 @@
 ################################################################################
 # TEST
 ################################################################################
-# 3. Create fabric groups and verify result
-#    - fabric_group_name_1
-#
-# 4. Query fabric group configurations and verify results
+# 3. Create fabric group fabric_group_name_1 and verify results
+# 4. Query fabric group and verify results
+# 5. Update fabric group ANYCAST_GW_MAC and verify results
+# 6. Idempotency check on update of fabric group ANYCAST_GW_MAC
 ################################################################################
 # CLEANUP
 ################################################################################
-# 5. Delete fabric groups under test
-#    - fabric_group_name_1
+# 7. Delete fabric group fabric_group_name_1
 ################################################################################
 # REQUIREMENTS
 ################################################################################
@@ -556,7 +555,7 @@
 - name: MERGED (update) - TEST - Update fabric group ANYCAST_GW_MAC
   cisco.dcnm.dcnm_fabric_group:
     state: merged
-    config:
+    config: &config_update_anycast_gw_mac
       - ANYCAST_GW_MAC: 2020.0000.00dd
         BGW_ROUTING_TAG: "54321"
         BORDER_GWY_CONNECTIONS: Direct_To_BGWS
@@ -629,6 +628,73 @@
       - result.response[0].MESSAGE == "OK"
       - result.response[0].METHOD == "PUT"
       - result.response[0].RETURN_CODE == 200
+      - result.result[0].sequence_number == 1
+      - result.result[0].changed == true
+      - result.result[0].success == true
+
+################################################################################
+# MERGED (update) - TEST - idempotency
+################################################################################
+# Expected result
+# ok: [192.168.7.8] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [
+#             {
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "failed": false,
+#         "metadata": [
+#             {
+#                 "action": "fabric_group_update",
+#                 "check_mode": false,
+#                 "sequence_number": 1,
+#                 "state": "merged"
+#             }
+#         ],
+#         "response": [
+#             {
+#                 "MESSAGE": "No fabrics to update for merged state.",
+#                 "RETURN_CODE": 200,
+#                 "sequence_number": 1
+#             }
+#         ],
+#         "result": [
+#             {
+#                 "changed": false,
+#                 "sequence_number": 1,
+#                 "success": true
+#             }
+#         ]
+#     }
+# }
+################################################################################
+- name: MERGED (update) - TEST - idempotency
+  cisco.dcnm.dcnm_fabric_group:
+    state: merged
+    config: *config_update_anycast_gw_mac
+  register: result
+- debug:
+    var: result
+- assert:
+    that:
+      - result.changed == false
+      - result.failed == false
+      - (result.diff | length) == 1
+      - result.diff[0].sequence_number == 1
+      - (result.metadata | length) == 1
+      - result.metadata[0].action == "fabric_group_update"
+      - result.metadata[0].check_mode == False
+      - result.metadata[0].sequence_number == 1
+      - result.metadata[0].state == "merged"
+      - (result.response | length) == 1
+      - result.response[0].MESSAGE == "No fabrics to update for merged state."
+      - result.response[0].RETURN_CODE == 200
+      - result.response[0].sequence_number == 1
+      - result.result[0].sequence_number == 1
+      - result.result[0].changed == false
+      - result.result[0].success == true
 
 ################################################################################
 # MERGED (update) - CLEANUP - Delete the fabric groups
