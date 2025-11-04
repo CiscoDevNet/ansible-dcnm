@@ -240,11 +240,7 @@ class VerifyPlaybookParams:
             raise KeyError(msg)
 
         # Ensure consistent type conversion for rule_value
-        rule_value = self.conversion.make_none(
-            self.conversion.make_int(
-                self.conversion.make_boolean(rule_value)
-            )
-        )
+        rule_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(rule_value)))
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter: {parameter}, "
@@ -265,12 +261,12 @@ class VerifyPlaybookParams:
             raise ValueError(msg)
 
         operators: dict[str, Callable[[Any, Any], bool]] = {
-            '==': lambda a, b: a == b,
-            '!=': lambda a, b: a != b,
-            '>': lambda a, b: a > b,
-            '<': lambda a, b: a < b,
-            '>=': lambda a, b: a >= b,
-            '<=': lambda a, b: a <= b,
+            "==": lambda a, b: a == b,
+            "!=": lambda a, b: a != b,
+            ">": lambda a, b: a > b,
+            "<": lambda a, b: a < b,
+            ">=": lambda a, b: a >= b,
+            "<=": lambda a, b: a <= b,
         }
 
         if operator not in operators:
@@ -334,11 +330,7 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        controller_value = self.conversion.make_none(
-            self.conversion.make_int(
-                self.conversion.make_boolean(self.config_controller[rule_parameter])
-            )
-        )
+        controller_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(self.config_controller[rule_parameter])))
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter {rule_parameter}, "
@@ -392,11 +384,7 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        playbook_value = self.conversion.make_none(
-            self.conversion.make_int(
-                self.conversion.make_boolean(self.config_playbook[rule_parameter])
-            )
-        )
+        playbook_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(self.config_playbook[rule_parameter])))
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter {rule_parameter}, "
@@ -460,11 +448,7 @@ class VerifyPlaybookParams:
             return None
 
         # Convert default value to ensure consistent type handling
-        default_value = self.conversion.make_none(
-            self.conversion.make_int(
-                self.conversion.make_boolean(default_value)
-            )
-        )
+        default_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(default_value)))
 
         # update item with user's parameter value
         item["user_value"] = default_value
@@ -874,12 +858,8 @@ class VerifyPlaybookParams:
         self.log.debug(msg)
 
         param_rule = self._ruleset.ruleset[self.parameter]
-        case_and_rule = "and" in param_rule.get("terms") and "or" not in param_rule.get(
-            "terms"
-        )
-        case_or_rule = "or" in param_rule.get("terms") and "and" not in param_rule.get(
-            "terms"
-        )
+        case_and_rule = "and" in param_rule.get("terms") and "or" not in param_rule.get("terms")
+        case_or_rule = "or" in param_rule.get("terms") and "and" not in param_rule.get("terms")
         case_na_rule = "na" in param_rule.get("terms")
         msg = f"{self.class_name}.{method_name}: "
         msg += f"PRE_UPDATE: self.params_are_valid: {self.params_are_valid}"
