@@ -664,6 +664,12 @@ class FabricGroups:
         if self.rest_send.response_current["DATA"] is None:
             # The DATA key should always be present. We should never hit this.
             return
+        if not isinstance(self.rest_send.response_current["DATA"], list):
+            # The DATA key should always be a list. We should never hit this.
+            msg = f"{self.class_name}.{method_name}: "
+            msg += "Unexpected response format from controller. "
+            msg += f"Expected list, got {type(self.rest_send.response_current['DATA'])}."
+            raise ValueError(msg)
         for item in self.rest_send.response_current["DATA"]:
             fabric_name = item.get("nvPairs", {}).get("FABRIC_NAME", None)
             if fabric_name is None:
