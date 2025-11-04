@@ -815,19 +815,16 @@ class ActionModule(ActionNetworkModule):
                 # Process each VRF configuration for parent/child splitting
                 for vrf_idx, vrf in enumerate(config):
                     child_fabric_configs = vrf.get("child_fabric_config")
-                    if child_fabric_configs is None:
-                        child_fabric_configs = []
                     if "child_fabric_config" in vrf:
                         if state != "deleted":
 
-                            # Discuss with team
-                            # child_fabric_configs = vrf.get("child_fabric_config")
-                            # if not child_fabric_configs:
-                            #     error_msg = (
-                            #         f"Config[{vrf_idx+1}]: child_fabric_config is required for "
-                            #         "Multisite Parent fabrics. It can be optionally removed when state is query/deleted."
-                            #     )
-                            #     return self.error_handler.handle_failure(error_msg)
+                            child_fabric_configs = vrf.get("child_fabric_config")
+                            if not child_fabric_configs:
+                                error_msg = (
+                                    f"Config[{vrf_idx+1}]: child_fabric_config is required for "
+                                    "Multisite Parent fabrics. It can be optionally removed when state is query/deleted."
+                                )
+                                return self.error_handler.handle_failure(error_msg)
 
                             # Validate each child fabric configuration
                             for child_idx, child_config in enumerate(child_fabric_configs):
