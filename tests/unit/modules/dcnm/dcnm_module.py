@@ -221,10 +221,14 @@ class TestDcnmModule(ModuleTestCase):
             # Handle fabric associations API call from action plugin
             if module_name == "cisco.dcnm.dcnm_rest":
                 # Return the mocked fabric_associations response directly
-                if hasattr(self, 'fabric_associations'):
-                    return {'response': self.fabric_associations, 'failed': False}
-                else:
-                    return {'failed': True, 'msg': 'Fabric associations not mocked'}
+                path = module_args.get('path', '') if module_args else ''
+                if '/fabric-associations' in path:
+                    if hasattr(self, 'fabric_associations'):
+                        return {'response': self.fabric_associations, 'failed': False}
+                elif 'vrfs' in path:
+                    if '/vrfs' in path or 'top-down' in path:
+                        return {'response': self.vrf_ready_data, 'failed': False}
+                return {'failed': True, 'msg': 'Rest Module Mocks not provided'}
 
             # Set the module args if provided for dcnm_network module
             if module_args:

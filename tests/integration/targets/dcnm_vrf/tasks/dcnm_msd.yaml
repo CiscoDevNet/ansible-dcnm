@@ -1,0 +1,25 @@
+---
+- name: collect MSD test cases
+  find:
+    paths: "{{ role_path }}/tests/dcnm/msd"
+    patterns: "{{ msd_pattern }}"
+    recurse: false
+  connection: local
+  register: msd_cases
+  tags: sanity
+
+- name: set MSD test_items
+  set_fact: 
+    msd_test_items: "{{ msd_cases.files | map(attribute='path') | list }}"
+  tags: sanity
+
+- name: debug MSD test items
+  debug:
+    var: msd_test_items
+
+- name: run MSD test cases
+  include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ msd_test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+  tags: sanity
