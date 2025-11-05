@@ -532,7 +532,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
-            "Fabric test_network missing on DCNM or does not have any switches",
+            "Fabric test_network missing on ND or does not have any switches",
         )
 
     def test_dcnm_net_get_have_failure(self):
