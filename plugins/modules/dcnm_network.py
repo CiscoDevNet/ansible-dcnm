@@ -21,10 +21,10 @@ __author__ = "Chris Van Heuveln, Shrishail Kariyappanavar, Karthik Babu Harichan
 DOCUMENTATION = """
 ---
 module: dcnm_network
-short_description: Add and remove Networks from a DCNM managed VXLAN fabric.
+short_description: Add and remove Networks from a ND managed VXLAN fabric.
 version_added: "0.9.0"
 description:
-    - "Add and remove Networks from a DCNM managed VXLAN fabric."
+    - "Add and remove Networks from a ND managed VXLAN fabric."
     - "For multisite (MSD) fabrics, child fabric configurations can be specified using the child_fabric_config parameter"
     - "The attribute _fabric_type (standalone, multisite_parent, multisite_child) is automatically detected and should not be manually specified by the user"
 author: Chris Van Heuveln(@chrisvanheuveln), Shrishail Kariyappanavar(@nkshrishail) Praveen Ramoorthy(@praveenramoorthy)
@@ -46,7 +46,7 @@ options:
     choices: ['multisite_child', 'standalone', 'multisite_parent']
   state:
     description:
-    - The state of DCNM after module completion.
+    - The state of ND after module completion.
     type: str
     choices:
       - merged
@@ -75,7 +75,7 @@ options:
       net_id:
         description:
         - ID of the network being managed
-        - If not specified in the playbook, DCNM will auto-select an available net_id
+        - If not specified in the playbook, ND will auto-select an available net_id
         type: int
         required: false
       net_template:
@@ -91,7 +91,7 @@ options:
       vlan_id:
         description:
         - VLAN ID for the network.
-        - If not specified in the playbook, DCNM will auto-select an available vlan_id
+        - If not specified in the playbook, ND will auto-select an available vlan_id
         type: int
         required: false
       routing_tag:
@@ -140,31 +140,37 @@ options:
       dhcp_srvr1_ip:
         description:
         - DHCP relay IP address of the first DHCP server
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       dhcp_srvr1_vrf:
         description:
         - VRF ID of first DHCP server
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       dhcp_srvr2_ip:
         description:
         - DHCP relay IP address of the second DHCP server
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       dhcp_srvr2_vrf:
         description:
         - VRF ID of second DHCP server
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       dhcp_srvr3_ip:
         description:
         - DHCP relay IP address of the third DHCP server
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       dhcp_srvr3_vrf:
         description:
         - VRF ID of third DHCP server
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       dhcp_servers:
@@ -175,6 +181,7 @@ options:
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
             dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
             indicating these are mutually exclusive options. Max of 16 servers can be specified.
+        - Not applicable at Multisite parent fabric level
         type: list
         elements: dict
         required: false
@@ -182,11 +189,13 @@ options:
         description:
         - Loopback ID for DHCP Relay interface
         - Configured ID value should be in range 0-1023
+        - Not applicable at Multisite parent fabric level
         type: int
         required: false
       multicast_group_address:
         description:
         - The multicast IP address for the network
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       gw_ipv6_subnet:
@@ -217,6 +226,7 @@ options:
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -229,6 +239,7 @@ options:
       l3gw_on_border:
         description:
         - Enable L3 Gateway on Border
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -237,6 +248,7 @@ options:
         - Enable Netflow
         - Netflow is supported only if it is enabled on fabric
         - Netflow configs are supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: bool
         required: false
         default: false
@@ -252,6 +264,7 @@ options:
         - Vlan Netflow Monitor
         - Provide monitor name defined in fabric setting for Layer 3 Record
         - Netflow configs are supported on NDFC only
+        - Not applicable at Multisite parent fabric level
         type: str
         required: false
       attach:
@@ -301,7 +314,7 @@ options:
         description:
         - Global knob to control whether to deploy the attachment
         - Ansible NDFC Collection Behavior for Version 2.0.1 and earlier
-        - This knob will create and deploy the attachment in DCNM only when set to "True" in playbook
+        - This knob will create and deploy the attachment in ND only when set to "True" in playbook
         - Ansible NDFC Collection Behavior for Version 2.1.0 and later
         - Attachments specified in the playbook will always be created in DCNM.
           This knob, when set to "True",  will deploy the attachment in DCNM, by pushing the configs to switch.
@@ -404,10 +417,10 @@ EXAMPLES = """
 #
 # Deleted:
 #   Networks defined in the playbook will be deleted.
-#   If no Networks are provided in the playbook, all Networks present on that DCNM fabric will be deleted.
+#   If no Networks are provided in the playbook, all Networks present on that ND fabric will be deleted.
 #
 # Query:
-#   Returns the current DCNM state for the Networks listed in the playbook.
+#   Returns the current ND state for the Networks listed in the playbook.
 #
 # MSD (Multi-Site Domain) Fabric Support:
 # - The module automatically detects fabric type (standalone, multisite_parent, multisite_child) using fabric associations API
@@ -416,6 +429,13 @@ EXAMPLES = """
 # - Attachments (attach parameter) can only be specified at parent fabric level, not in child_fabric_config
 # - When parent state is 'overridden', child fabrics use 'replaced' state (never 'overridden')
 # - Deploy defaults to true for both parent and child configurations
+
+# ===========================================================================
+# Standalone Fabric Examples
+# ===========================================================================
+# ---------------------------------------------------------------------------
+# STATE: MERGED - Merge Network Configuration
+# ---------------------------------------------------------------------------
 
 - name: Merge networks
   cisco.dcnm.dcnm_network:
@@ -451,6 +471,10 @@ EXAMPLES = """
       - ip_address: 192.168.1.225
         ports: [Ethernet1/11, Ethernet1/12]
       deploy: false
+
+# ---------------------------------------------------------------------------
+# STATE: REPLACED - Replace Network Configuration
+# ---------------------------------------------------------------------------
 
 - name: Replace networks
   cisco.dcnm.dcnm_network:
@@ -509,6 +533,10 @@ EXAMPLES = """
         #       ports: [Ethernet1/11, Ethernet1/12]
         #   deploy: false
 
+# ---------------------------------------------------------------------------
+# STATE: OVERRIDDEN - Override all Networks
+# ---------------------------------------------------------------------------
+
 - name: Override networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -545,6 +573,10 @@ EXAMPLES = """
       #     ports: [Ethernet1/11, Ethernet1/12]
       #   deploy: false
 
+# ---------------------------------------------------------------------------
+# STATE: DELETED - Delete Networks
+# ---------------------------------------------------------------------------
+
 - name: Delete selected networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -571,6 +603,10 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: deleted
 
+# ---------------------------------------------------------------------------
+# STATE: QUERY - Query Networks
+# ---------------------------------------------------------------------------
+
 - name: Query Networks
   cisco.dcnm.dcnm_network:
     fabric: vxlan-fabric
@@ -579,52 +615,265 @@ EXAMPLES = """
     - net_name: ansible-net13
     - net_name: ansible-net12
 
-# MSD (Multi-Site Domain) Example with Child Fabric Configuration
-- name: Create network on MSD parent fabric with child fabric configuration
+# ===========================================================================
+# MSD (Multi-Site Domain) Fabric Examples
+# ===========================================================================
+
+# Note: The module automatically detects fabric type using fabric associations API.
+
+# ---------------------------------------------------------------------------
+# STATE: MERGED - Create/Update Networks on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD MERGE | Create a Network on Parent and extend to Child fabrics
   cisco.dcnm.dcnm_network:
-    fabric: msd-parent-fabric
+    fabric: vxlan-parent-fabric  # Must be the Parent MSD fabric
     state: merged
     config:
-    - net_name: ansible-test-network
-      vrf_name: NaC-VRF01
-      net_template: Default_Network_Universal
-      net_extension_template: Default_Network_Extension_Universal
-      net_id: 130001
-      vlan_id: 2301
-      vlan_name: NaC-Net01_vlan2301
-      gw_ip_subnet: '192.168.12.1/24'
-      routing_tag: 1234
-      int_desc: "Configured by Ansible NetAsCode"
-      mtu_l3intf: 9216
-      arp_suppress: false
-      route_target_both: false
-      is_l2only: false
-      # Child fabric specific configurations
-      child_fabric_config:
-        - fabric: child-fabric-1
-          # Child-specific parameters not allowed on parent fabrics
-          netflow_enable: false
-          l3gw_on_border: true
-          dhcp_loopback_id: 204
-          multicast_group_address: '239.1.1.1'
-          dhcp_srvr1_ip: '192.168.1.101'
-          dhcp_srvr1_vrf: 'management'
-          deploy: true  # Override parent deploy setting
-        - fabric: child-fabric-2
-          # Different configuration for second child
-          l3gw_on_border: false
-          dhcp_loopback_id: 205
-          # deploy not specified - inherits from parent
-      # Attachments are only configured on parent fabric, not in child_fabric_config
-      attach:
-        - ip_address: 192.168.10.203
-          ports: [Ethernet1/13, Ethernet1/14]
-        - ip_address: 192.168.10.204
-          ports: [Ethernet1/13, Ethernet1/14]
-      deploy: true  # Parent deploy setting, inherited by children unless overridden
+      - net_name: ansible-net-msd-1
+        vrf_name: Tenant-1
+        net_id: 130001
+        vlan_id: 2301
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        gw_ip_subnet: '192.168.12.1/24'
+        routing_tag: 1234
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/13, Ethernet1/14]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/13, Ethernet1/14]
+        # Define how this Network behaves on each Child fabric
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3gw_on_border: true
+            dhcp_loopback_id: 204
+            multicast_group_address: '239.1.1.1'
+          - fabric: vxlan-child-fabric2
+            l3gw_on_border: false
+            dhcp_loopback_id: 205
+        deploy: true
+      - net_name: ansible-net-msd-2  # A second Network in the same task
+        vrf_name: Tenant-2
+        net_id: 130002
+        vlan_id: 2302
+        gw_ip_subnet: '192.168.13.1/24'
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            netflow_enable: false
+        # Attachments are for switches at the Parent fabric
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/15, Ethernet1/16]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/15, Ethernet1/16]
 
-# For additional MSD examples, see:
-# playbooks/roles/dcnm_network/dcnm_tests.yaml
+- name: MSD MERGE | Create Network with advanced DHCP and multicast settings
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: merged
+    config:
+      - net_name: ansible-net-advanced
+        vrf_name: Tenant-1
+        net_id: 130010
+        vlan_id: 2310
+        vlan_name: advanced_network_vlan2310
+        gw_ip_subnet: '192.168.20.1/24'
+        int_desc: "Advanced Network Configuration"
+        mtu_l3intf: 9216
+        arp_suppress: true
+        route_target_both: true
+        # Parent-specific DHCP settings
+        dhcp_servers:
+          - srvr_ip: 192.168.1.1
+            srvr_vrf: management
+          - srvr_ip: 192.168.1.2
+            srvr_vrf: management
+        # Child fabric configuration with different settings per child
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            multicast_group_address: '239.2.1.1'
+            dhcp_loopback_id: 210
+            dhcp_srvr1_ip: '10.1.1.10'
+            dhcp_srvr1_vrf: 'management'
+          - fabric: vxlan-child-fabric2
+            multicast_group_address: '239.2.2.1'
+            l3gw_on_border: true
+            deploy: false  # Override parent deploy setting
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/17, Ethernet1/18]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/17, Ethernet1/18]
+        deploy: true  # Parent deploy setting, inherited by children unless overridden
+
+# ---------------------------------------------------------------------------
+# STATE: REPLACED - Replace Network configuration on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD REPLACE | Update Network properties on Parent and Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - net_name: ansible-net-msd-1
+        vrf_name: Tenant-1
+        net_id: 130001
+        net_template: Default_Network_Universal
+        net_extension_template: Default_Network_Extension_Universal
+        vlan_id: 2301
+        gw_ip_subnet: '192.168.12.1/24'
+        mtu_l3intf: 9000  # Update MTU on Parent
+        # Child fabric configs are replaced: child1 is updated
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3gw_on_border: false  # Value is updated
+            dhcp_loopback_id: 205  # Value is updated
+        attach:
+          - ip_address: 192.168.10.203
+          # Delete this attachment
+          # - ip_address: 192.168.10.204
+          # Create the following attachment
+          - ip_address: 192.168.10.205
+            ports: [Ethernet1/13, Ethernet1/14]
+      # Dont touch this if its present on ND
+      # - net_name: ansible-net-msd-2
+      #   vrf_name: Tenant-2
+      #   net_id: 130002
+      #   net_template: Default_Network_Universal
+      #   net_extension_template: Default_Network_Extension_Universal
+      #   attach:
+      #   - ip_address: 192.168.10.203
+      #     ports: [Ethernet1/15, Ethernet1/16]
+      #   - ip_address: 192.168.10.204
+      #     ports: [Ethernet1/15, Ethernet1/16]
+
+- name: MSD REPLACE | Update Network with netflow configuration
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: replaced
+    config:
+      - net_name: ansible-net-advanced
+        vrf_name: Tenant-1
+        net_id: 130010
+        vlan_id: 2310
+        gw_ip_subnet: '192.168.20.1/24'
+        # Parent settings
+        arp_suppress: false  # Updated value
+        # Child fabric configuration updates
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            netflow_enable: true
+            vlan_nf_monitor: NETFLOW_MONITOR_2  # Updated monitor
+            multicast_group_address: '239.2.1.2'  # Updated address
+
+# ---------------------------------------------------------------------------
+# STATE: OVERRIDDEN - Override all Networks on Parent and Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD OVERRIDE | Override all Networks ensuring only specified ones exist
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: overridden
+    config:
+      - net_name: ansible-net-production
+        vrf_name: Tenant-Production
+        net_id: 140001
+        vlan_id: 3001
+        gw_ip_subnet: '172.16.1.1/24'
+        int_desc: "Production Network for critical workloads"
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+            l3gw_on_border: true
+            netflow_enable: true
+          - fabric: vxlan-child-fabric2
+            l3gw_on_border: true
+            netflow_enable: true
+        attach:
+          - ip_address: 192.168.10.203
+            ports: [Ethernet1/19, Ethernet1/20]
+          - ip_address: 192.168.10.204
+            ports: [Ethernet1/19, Ethernet1/20]
+        deploy: true
+      # All other Networks will be deleted from both parent and child fabrics
+
+# ---------------------------------------------------------------------------
+# STATE: DELETED - Delete Networks from Parent and all Child Fabrics
+# ---------------------------------------------------------------------------
+
+- name: MSD DELETE | Delete a Network from the Parent and all associated Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - net_name: ansible-net-msd-1
+      # The 'child_fabric_config' parameter is ignored for 'deleted' state.
+
+- name: MSD DELETE | Delete multiple Networks from Parent and Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: deleted
+    config:
+      - net_name: ansible-net-msd-1
+      - net_name: ansible-net-msd-2
+      - net_name: ansible-net-advanced
+
+- name: MSD DELETE | Delete all Networks from the Parent and all associated Child fabrics
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: deleted
+
+# ---------------------------------------------------------------------------
+# STATE: QUERY - Query Networks
+# ---------------------------------------------------------------------------
+
+- name: MSD QUERY | Query specific Networks on the Parent MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - net_name: ansible-net-msd-1
+      - net_name: ansible-net-msd-2
+      # The query will return the Network's configuration on the parent
+      # and its attachments on all associated child fabrics.
+
+- name: MSD QUERY | Query all Networks on the Parent MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: query
+    # No config specified - returns all Networks
+
+- name: MSD QUERY | Query specific Networks on the Child MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-child-fabric1
+    state: query
+    config:
+      - net_name: ansible-net-msd-1
+      - net_name: ansible-net-msd-2
+      # The query will return the Network's configuration on the child
+      # and its attachments.
+
+- name: MSD QUERY | Query all Networks on the Child MSD fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-child-fabric1
+    state: query
+    # No config specified - returns all Networks on the child.
+
+- name: MSD QUERY | Query specific Networks on Parent & Child fabric
+  cisco.dcnm.dcnm_network:
+    fabric: vxlan-parent-fabric
+    state: query
+    config:
+      - net_name: ansible-net-msd-1
+        child_fabric_config:
+          - fabric: vxlan-child-fabric1
+      - net_name: ansible-net-msd-2
+        child_fabric_config:
+          - fabric: vxlan-child-fabric2
+      # The query will return the Network's configuration on the parent and the
+      # configuration on the specified childs and its attachments at
+      # the parent and child level respectively.
 """
 
 import copy
@@ -685,7 +934,7 @@ class DcnmNetwork:
         self.diff_create = []
         self.diff_create_update = []
         # This variable is created specifically to hold all the create payloads which are missing a
-        # networkId. These payloads are sent to DCNM out of band (basically in the get_diff_merge())
+        # networkId. These payloads are sent to ND out of band (basically in the get_diff_merge())
         # We lose diffs for these without this variable. The content stored here will be helpful for
         # cases like "check_mode" and to print diffs[] in the output of each task.
         self.diff_create_quick = []
@@ -853,7 +1102,7 @@ class DcnmNetwork:
 
                                 # This is needed to handle cases where vlan is updated after deploying the network
                                 # and attachments. This ensures that the attachments before vlan update will use previous
-                                # vlan id. All the active attachments on DCNM will have a vlan-id.
+                                # vlan id. All the active attachments on ND will have a vlan-id.
                                 if have.get("vlan"):
                                     want["vlan"] = have.get("vlan")
 
@@ -2045,7 +2294,7 @@ class DcnmNetwork:
         time.sleep(3)
         networks_to_check = set()
 
-        # Get networks from want_create that exist in DCNM and need to be checked
+        # Get networks from want_create that exist in ND and need to be checked
         for want_net in self.want_create:
             want_net_name = want_net['networkName']
 
@@ -2167,7 +2416,7 @@ class DcnmNetwork:
         diff_undeploy = self.diff_undeploy
 
         for have_a in self.have_attach:
-            # This block will take care of deleting all the networks that are only present on DCNM but not on playbook
+            # This block will take care of deleting all the networks that are only present on ND but not on playbook
             # The "if not found" block will go through all attachments under those networks and update them so that
             # they will be detached and also the network name will be added to delete payload.
 
@@ -2220,7 +2469,7 @@ class DcnmNetwork:
             for want_a in self.want_attach:
                 # This block will take care of deleting any attachments that are present only on DCNM
                 # but, not on the playbook. In this case, the playbook will have a network and few attaches under it,
-                # but, the attaches may be different to what the DCNM has for the same network.
+                # but, the attaches may be different to what the ND has for the same network.
                 if have_a["networkName"] == want_a["networkName"]:
                     h_in_w = True
                     atch_h = have_a["lanAttachList"]
@@ -2244,7 +2493,7 @@ class DcnmNetwork:
                     break
 
             if not h_in_w:
-                # This block will take care of deleting all the attachments which are in DCNM but
+                # This block will take care of deleting all the attachments which are in ND but
                 # are not mentioned in the playbook. The playbook just has the network, but, does not have any attach
                 # under it.
                 found = next(
@@ -2312,7 +2561,7 @@ class DcnmNetwork:
         # 2. Update vlan-id on an existing network:
         #    This change will only affect new attachments of the same network.
         # 3. Auto generate networkId if its not mentioned by user:
-        #    In this case, we need to query the DCNM to get a usable ID and use it in the payload.
+        #    In this case, we need to query the ND to get a usable ID and use it in the payload.
         #    And also, any such network create requests need to be pushed individually(not bulk op).
 
         diff_create = []
@@ -2425,7 +2674,7 @@ class DcnmNetwork:
 
                 if not net_id:
                     # networkId(VNI-id) is not provided by user.
-                    # Need to query DCNM to fetch next available networkId and use it here.
+                    # Need to query ND to fetch next available networkId and use it here.
 
                     method = "POST"
 
@@ -2454,7 +2703,7 @@ class DcnmNetwork:
                         elif self.dcnm_version >= 12:
                             net_id = net_id_obj["DATA"].get("l2vni")
                         else:
-                            msg = "Unsupported DCNM version: version {0}".format(self.dcnm_version)
+                            msg = "Unsupported ND version: version {0}".format(self.dcnm_version)
                             self.module.fail_json(msg)
 
                         if net_id != prev_net_id_fetched:
@@ -2580,7 +2829,7 @@ class DcnmNetwork:
 
             # Only check networks that have deploy=True and are not already in modified_all_nets
             if deploy_setting and net_name and net_name not in modified_all_nets:
-                # Check if this network exists in DCNM (have_attach or have_create)
+                # Check if this network exists in ND (have_attach or have_create)
                 network_exists = False
                 for have_net in self.have_create:
                     if have_net.get("networkName") == net_name:
@@ -3231,7 +3480,7 @@ class DcnmNetwork:
         -   If fabric REPLICATION_MODE is "Ingress", default multicast group
             address should be set to ""
         -   If fabric REPLICATION_MODE is "Multicast", default multicast group
-            address is set to 239.1.1.0 for DCNM version 11, and 239.1.1.1 for
+            address is set to 239.1.1.0 for ND version 11, and 239.1.1.1 for
             NDFC version 12
 
         ## Raises
@@ -3677,7 +3926,7 @@ class DcnmNetwork:
             self.module.fail_json(msg=resp)
             return
 
-        # Implementing a per task rollback logic here so that we rollback DCNM to the have state
+        # Implementing a per task rollback logic here so that we rollback ND to the have state
         # whenever there is a failure in any of the APIs.
         # The idea would be to run overridden state with want=have and have=dcnm_state
         self.want_create = self.have_create
@@ -3947,7 +4196,7 @@ def main():
     dcnm_net = DcnmNetwork(module)
 
     if not dcnm_net.ip_sn:
-        module.fail_json(msg="Fabric {0} missing on DCNM or does not have any switches".format(dcnm_net.fabric))
+        module.fail_json(msg="Fabric {0} missing on ND or does not have any switches".format(dcnm_net.fabric))
 
     dcnm_net.validate_input()
 
