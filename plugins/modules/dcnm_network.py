@@ -607,7 +607,6 @@ EXAMPLES = """
           l3gw_on_border: true
           dhcp_loopback_id: 204
           multicast_group_address: '239.1.1.1'
-          vlan_nf_monitor: 'monitor1'
           dhcp_srvr1_ip: '192.168.1.101'
           dhcp_srvr1_vrf: 'management'
           deploy: true  # Override parent deploy setting
