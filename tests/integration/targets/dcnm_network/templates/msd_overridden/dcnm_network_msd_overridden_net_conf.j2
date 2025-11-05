@@ -1,0 +1,28 @@
+---
+# This MSD test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+# ------------------------------
+# Overridden MSD Network - replaces all networks
+# ------------------------------
+- net_name: "{{ test_data_common.msd_dhcp_net }}"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_id: "{{ test_data_common.msd_dhcp_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.msd_dhcp_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.msd_dhcp_gw_ip_subnet }}"
+  routing_tag: 99999
+  int_desc: 'MSD Overridden Network'
+  mtu_l3intf: 9214
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      netflow_enable: false
+      l3gw_on_border: True
+      dhcp_loopback_id: 210
+      multicast_group_address: '239.1.1.10'
+      vlan_nf_monitor: 'monitor-override'
+      dhcp_srvr1_ip: '192.168.1.200'
+      dhcp_srvr1_vrf: 'management'
+  deploy: {{ deploy_local | bool }}

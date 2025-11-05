@@ -41,6 +41,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     net_inv_data = test_data.get("net_inv_data")
     fabric_details = test_data.get("fabric_details")
     fabric_details_vxlan_fabric = test_data.get("fabric_details_vxlan_fabric")
+    fabric_associations = test_data.get("fabric_associations")
 
     playbook_config = test_data.get("playbook_config")
     playbook_config_incorrect_netid = test_data.get("playbook_config_incorrect_netid")
@@ -69,6 +70,35 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
     delete_success_resp = test_data.get("delete_success_resp")
     blank_data = test_data.get("blank_data")
+    empty_network_list = test_data.get("empty_network_list")
+
+    # MSD test data
+    playbook_msd_config = test_data.get("playbook_msd_config")
+    mock_msd_fabric_details = test_data.get("mock_msd_fabric_details")
+    mock_msd_child_fabric_details = test_data.get("mock_msd_child_fabric_details")
+    mock_msd_ip_sn = test_data.get("mock_msd_ip_sn")
+    mock_msd_vrf_object = test_data.get("mock_msd_vrf_object")
+    mock_msd_net_create_response = test_data.get("mock_msd_net_create_response")
+    mock_msd_net_attach_response = test_data.get("mock_msd_net_attach_response")
+    mock_msd_child_net_object = test_data.get("mock_msd_child_net_object")
+    mock_msd_child_net_attach_object = test_data.get("mock_msd_child_net_attach_object")
+    mock_msd_child_net_update_response = test_data.get("mock_msd_child_net_update_response")
+
+    # MSD DHCP test data
+    playbook_msd_dhcp_config = test_data.get("playbook_msd_dhcp_config")
+    mock_msd_dhcp_net_create_response = test_data.get("mock_msd_dhcp_net_create_response")
+    mock_msd_dhcp_net_attach_response = test_data.get("mock_msd_dhcp_net_attach_response")
+    mock_msd_dhcp_child_net_object = test_data.get("mock_msd_dhcp_child_net_object")
+    mock_msd_dhcp_child_net_attach_object = test_data.get("mock_msd_dhcp_child_net_attach_object")
+    mock_msd_dhcp_child_net_update_response = test_data.get("mock_msd_dhcp_child_net_update_response")
+
+    # MSD Override test data
+    playbook_msd_override_config = test_data.get("playbook_msd_override_config")
+    mock_msd_override_parent_net_object = test_data.get("mock_msd_override_parent_net_object")
+    mock_msd_override_parent_net_attach_object = test_data.get("mock_msd_override_parent_net_attach_object")
+    mock_msd_override_attach_response = test_data.get("mock_msd_override_attach_response")
+    mock_msd_override_child_net_object = test_data.get("mock_msd_override_child_net_object")
+    mock_msd_override_child_net_attach_object = test_data.get("mock_msd_override_child_net_attach_object")
 
     def init_data(self):
         # Some of the mock data is re-initialized after each test as previous test might have altered portions
@@ -423,6 +453,75 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 self.attach_success_resp,
                 self.deploy_success_resp,
             ]
+
+        elif "_merged_msd_basic" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_fabric_details.side_effect = [
+                self.mock_msd_fabric_details,
+                self.mock_msd_child_fabric_details,
+            ]
+
+            self.run_dcnm_ip_sn.side_effect = [
+                self.mock_msd_ip_sn,
+                self.mock_msd_ip_sn,
+            ]
+            self.run_dcnm_send.side_effect = [
+                self.mock_msd_vrf_object,
+                self.blank_data,
+                self.mock_msd_net_create_response,
+                self.mock_msd_net_attach_response,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_object,
+                self.mock_msd_child_net_object,
+                self.mock_msd_child_net_attach_object,
+                self.mock_msd_child_net_update_response,
+                self.deploy_success_resp,
+            ]
+
+        elif "_merged_msd_dhcp" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_fabric_details.side_effect = [
+                self.mock_msd_fabric_details,
+                self.mock_msd_child_fabric_details,
+            ]
+
+            self.run_dcnm_ip_sn.side_effect = [
+                self.mock_msd_ip_sn,
+                self.mock_msd_ip_sn,
+            ]
+            self.run_dcnm_send.side_effect = [
+                self.mock_msd_vrf_object,
+                self.blank_data,
+                self.mock_msd_dhcp_net_create_response,
+                self.mock_msd_dhcp_net_attach_response,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_object,
+                self.mock_msd_dhcp_child_net_object,
+                self.mock_msd_dhcp_child_net_attach_object,
+                self.mock_msd_dhcp_child_net_update_response,
+                self.deploy_success_resp,
+            ]
+
+        elif "_msd_override_with_different_attachments" in self._testMethodName:
+            self.init_data()
+            self.run_dcnm_fabric_details.side_effect = [
+                self.mock_msd_fabric_details,
+                self.mock_msd_child_fabric_details,
+            ]
+
+            self.run_dcnm_ip_sn.side_effect = [
+                self.mock_msd_ip_sn,
+                self.mock_msd_ip_sn,
+            ]
+            self.run_dcnm_send.side_effect = [
+                self.mock_msd_vrf_object,
+                self.mock_msd_override_parent_net_object,
+                self.mock_msd_override_attach_response,
+                self.deploy_success_resp,
+                self.mock_msd_vrf_object,
+                self.mock_msd_override_child_net_object,
+                self.mock_msd_override_child_net_attach_object,
+            ]
         else:
             pass
 
@@ -430,7 +529,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
             "Fabric test_network missing on DCNM or does not have any switches",
@@ -440,7 +539,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(result.get("msg"), "Fabric test_network not present on DCNM")
 
     def test_dcnm_net_check_mode(self):
@@ -452,7 +551,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff"))
         self.assertFalse(result.get("response"))
 
@@ -466,7 +565,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config,
             )
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff"))
         self.assertFalse(result.get("response"))
@@ -475,7 +574,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -487,7 +586,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -499,7 +598,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config_novlan)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -510,7 +609,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(result["msg"]["RETURN_CODE"], 400)
         self.assertEqual(result["msg"]["ERROR"], "There is an error")
 
@@ -518,7 +617,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertIn(
             "Entered Network VLAN ID 203 is in use already",
             str(result["msg"]["DATA"].values()),
@@ -528,7 +627,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertEqual(
             result["response"][2]["DATA"], "No switches PENDING for deployment"
         )
@@ -537,7 +636,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
 
     def test_dcnm_net_merged_with_incorrect_netid(self):
@@ -548,7 +647,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config_incorrect_netid,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
             "networkId can not be updated on existing network: test_network",
@@ -562,7 +661,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config_incorrect_vrf,
             )
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
             "VRF: ansible-vrf-int2 is missing in fabric: test_network",
@@ -574,7 +673,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 state="merged", fabric="test_network", config=self.playbook_config_update
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -593,7 +692,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config_replace,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertEqual(result.get("diff")[0]["vlan_id"], 203)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
@@ -614,7 +713,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config_replace_no_atch,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["net_name"], "test_network")
@@ -637,7 +736,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     #     set_module_args(
     #         dict(state="replaced", fabric="test_network", config=self.playbook_config)
     #     )
-    #     result = self.execute_module(changed=False, failed=False)
+    #     result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
     #     self.assertFalse(result.get("diff"))
     #     self.assertFalse(result.get("response"))
 
@@ -645,14 +744,14 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertEqual(result.get("diff")[0]["net_name"], "test_network")
 
     def test_dcnm_net_override_with_additions(self):
         set_module_args(
             dict(state="overridden", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(
@@ -680,7 +779,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
     #     set_module_args(
     #         dict(state="overridden", fabric="test_network", config=self.playbook_config)
     #     )
-    #     result = self.execute_module(changed=False, failed=False)
+    #     result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
     #     self.assertFalse(result.get("diff"))
     #     self.assertFalse(result.get("response"))
 
@@ -692,7 +791,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 config=self.playbook_config_override,
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["vlan_id"], 303)
@@ -722,7 +821,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="deleted", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["net_name"], "test_network")
@@ -739,7 +838,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
 
     def test_dcnm_net_delete_without_config(self):
         set_module_args(dict(state="deleted", fabric="test_network", config=[]))
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertFalse(result.get("diff")[0]["attach"][1]["deploy"])
         self.assertEqual(result.get("diff")[0]["net_name"], "test_network")
@@ -758,7 +857,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="query", fabric="test_network", config=self.playbook_config)
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["networkName"], "test_network")
         self.assertEqual(result.get("response")[0]["parent"]["networkId"], 9008011)
@@ -781,7 +880,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="query", fabric="test_network", config=[])
         )
-        result = self.execute_module(changed=False, failed=False)
+        result = self.execute_module(changed=False, failed=False, use_action_plugin=True)
         self.assertFalse(result.get("diff"))
         self.assertEqual(result.get("response")[0]["parent"]["networkName"], "test_network")
         self.assertEqual(result.get("response")[0]["parent"]["networkId"], 9008011)
@@ -805,7 +904,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_tor_config)
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -817,7 +916,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_tor_config)
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.assertEqual(
             result.get("msg"),
             "Invalid parameters in playbook: tor_ports configurations are supported only on NDFC",
@@ -828,7 +927,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
         set_module_args(
             dict(state="merged", fabric="test_network", config=self.playbook_tor_roleerr_config)
         )
-        result = self.execute_module(changed=False, failed=True)
+        result = self.execute_module(changed=False, failed=True, use_action_plugin=True)
         self.version = 11
         self.assertEqual(
             result.get("msg"),
@@ -842,7 +941,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 state="merged", fabric="test_network", config=self.playbook_tor_config_update
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -861,7 +960,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 state="replaced", fabric="test_network", config=self.playbook_tor_config_update
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -886,7 +985,7 @@ class TestDcnmNetworkModule(TestDcnmModule):
                 state="overridden", fabric="test_network", config=self.playbook_tor_config_update
             )
         )
-        result = self.execute_module(changed=True, failed=False)
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
         self.version = 11
         self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
         self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
@@ -903,3 +1002,358 @@ class TestDcnmNetworkModule(TestDcnmModule):
             result.get("diff")[0]["attach"][1]["tor_ports"], "dt-n9k7(Ethernet1/13,Ethernet1/14)"
         )
         self.assertEqual(result.get("diff")[0]["vrf_name"], "ansible-vrf-int1")
+
+    def test_dcnm_net_merged_msd_basic(self):
+        """
+        Test MSD network creation with child fabric configuration.
+
+        This test verifies:
+        - MSD network creation at parent MSD fabric level
+        - Network attachment configuration in child fabric
+        - Child fabric network configuration with DHCP and other parameters
+        - Proper output structure with parent_fabric and child_fabrics sections
+        """
+        self.version = 12
+        set_module_args(
+            dict(state="merged", fabric="msd-parent", config=self.playbook_msd_config)
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+
+        # Verify overall result structure
+        self.assertTrue(result.get("changed"))
+        self.assertIn("parent_fabric", result)
+        self.assertIn("child_fabrics", result)
+        self.assertEqual(result.get("workflow"), "Parent MSD with Child Fabric Processing")
+
+        # Verify parent fabric section
+        parent = result.get("parent_fabric")
+        self.assertTrue(parent.get("changed"))
+        self.assertFalse(parent.get("failed"))
+        self.assertEqual(parent.get("fabric_name"), "msd-parent")
+        self.assertIn("diff", parent)
+        self.assertIn("response", parent)
+
+        # Verify parent fabric diff
+        parent_diff = parent.get("diff")[0]
+        self.assertEqual(parent_diff["net_name"], "ansible-msd-net1")
+        self.assertEqual(parent_diff["vrf_name"], "Tenant-1")
+        self.assertEqual(parent_diff["net_id"], 8001)
+        self.assertEqual(parent_diff["vlan_id"], 2101)
+        self.assertEqual(parent_diff["gw_ip_subnet"], "192.168.101.1/24")
+        self.assertEqual(parent_diff["int_desc"], "MSD Network managed by Ansible")
+        self.assertEqual(parent_diff["mtu_l3intf"], 9214)
+        self.assertFalse(parent_diff["is_l2only"])
+
+        # Verify parent fabric attachments
+        self.assertEqual(len(parent_diff["attach"]), 2)
+        self.assertTrue(parent_diff["attach"][0]["deploy"])
+        self.assertTrue(parent_diff["attach"][1]["deploy"])
+
+        # Verify parent fabric response (create, attach, deploy)
+        parent_response = parent.get("response")
+        self.assertEqual(len(parent_response), 3)
+
+        # Verify create response
+        self.assertEqual(parent_response[0]["RETURN_CODE"], 200)
+        self.assertEqual(parent_response[0]["METHOD"], "POST")
+        self.assertIn("Network Id", parent_response[0]["DATA"])
+        self.assertEqual(parent_response[0]["DATA"]["Network Id"], 8001)
+        self.assertEqual(parent_response[0]["DATA"]["Network Name"], "ansible-msd-net1")
+
+        # Verify attachment response
+        self.assertEqual(parent_response[1]["RETURN_CODE"], 200)
+        self.assertEqual(parent_response[1]["METHOD"], "POST")
+        self.assertIn("ansible-msd-net1", str(parent_response[1]["DATA"]))
+
+        # Verify deploy response
+        self.assertEqual(parent_response[2]["RETURN_CODE"], 200)
+        self.assertEqual(parent_response[2]["METHOD"], "POST")
+
+        # Verify child fabrics section
+        child_fabrics = result.get("child_fabrics")
+        self.assertEqual(len(child_fabrics), 1)
+
+        child = child_fabrics[0]
+        self.assertTrue(child.get("changed"))
+        self.assertFalse(child.get("failed"))
+        self.assertEqual(child.get("fabric_name"), "msd-child-1")
+        self.assertIn("diff", child)
+        self.assertIn("response", child)
+
+        # Verify child fabric diff
+        child_diff = child.get("diff")[0]
+        self.assertEqual(child_diff["net_name"], "ansible-msd-net1")
+        self.assertEqual(child_diff["vrf_name"], "Tenant-1")
+        self.assertEqual(child_diff["net_id"], 8001)
+        self.assertEqual(child_diff["vlan_id"], 2101)
+        self.assertEqual(child_diff["gw_ip_subnet"], "192.168.101.1/24")
+
+        # Verify child fabric specific configuration
+        self.assertEqual(child_diff["dhcp_srvr1_ip"], "192.168.1.101")
+        self.assertEqual(child_diff["dhcp_srvr1_vrf"], "management")
+        self.assertEqual(child_diff["dhcp_loopback_id"], 204)
+        self.assertEqual(child_diff["multicast_group_address"], "239.1.1.1")
+        self.assertTrue(child_diff["l3gw_on_border"])
+        self.assertEqual(child_diff["vlan_nf_monitor"], "monitor1")
+
+        # Verify child fabric response (query response showing OUT-OF-SYNC state)
+        child_response = child.get("response")
+        self.assertEqual(len(child_response), 1)
+        self.assertEqual(child_response[0]["RETURN_CODE"], 200)
+        self.assertEqual(child_response[0]["METHOD"], "GET")
+
+        # Verify the child fabric response contains network attach information
+        data = child_response[0]["DATA"]
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+        self.assertEqual(data[0]["networkName"], "ansible-msd-net1")
+        self.assertIn("lanAttachList", data[0])
+        self.assertEqual(len(data[0]["lanAttachList"]), 2)
+
+        # Verify attachment states
+        lan_attach = data[0]["lanAttachList"]
+        self.assertEqual(lan_attach[0]["lanAttachState"], "OUT-OF-SYNC")
+        self.assertEqual(lan_attach[1]["lanAttachState"], "OUT-OF-SYNC")
+
+    def test_dcnm_net_merged_msd_dhcp(self):
+        """
+        Test MSD network creation with DHCP configuration in child fabric.
+
+        This test verifies:
+        - MSD network creation with multiple DHCP servers
+        - DHCP server configuration (IP, VRF) in child fabric
+        - DHCP loopback ID configuration
+        - Additional parameters like l3gw_on_border, multicast_group_address, netflow_enable, vlan_nf_monitor
+        - Proper output structure with parent_fabric and child_fabrics sections
+        """
+        self.version = 12
+        set_module_args(
+            dict(state="merged", fabric="msd-parent", config=self.playbook_msd_dhcp_config)
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+
+        # Verify overall result structure
+        self.assertTrue(result.get("changed"))
+        self.assertIn("parent_fabric", result)
+        self.assertIn("child_fabrics", result)
+        self.assertEqual(result.get("workflow"), "Parent MSD with Child Fabric Processing")
+
+        # Verify parent fabric section
+        parent = result.get("parent_fabric")
+        self.assertTrue(parent.get("changed"))
+        self.assertFalse(parent.get("failed"))
+        self.assertEqual(parent.get("fabric_name"), "msd-parent")
+
+        # Verify parent fabric diff - key network parameters
+        parent_diff = parent.get("diff")[0]
+        self.assertEqual(parent_diff["net_name"], "ansible-msd-dhcp-net")
+        self.assertEqual(parent_diff["vrf_name"], "Tenant-1")
+        self.assertEqual(parent_diff["net_id"], 8004)
+        self.assertEqual(parent_diff["vlan_id"], 2104)
+        self.assertEqual(parent_diff["gw_ip_subnet"], "192.168.104.1/24")
+        self.assertEqual(parent_diff["int_desc"], "MSD DHCP Network")
+        self.assertEqual(parent_diff["mtu_l3intf"], 9214)
+
+        # Verify parent fabric does NOT have DHCP config (should be empty/false)
+        self.assertEqual(parent_diff["dhcp_srvr1_ip"], "")
+        self.assertEqual(parent_diff["dhcp_loopback_id"], "")
+        self.assertFalse(parent_diff["l3gw_on_border"])
+
+        # Verify parent fabric attachments
+        self.assertEqual(len(parent_diff["attach"]), 2)
+        self.assertEqual(parent_diff["attach"][0]["ip_address"], "192.168.10.203")
+        self.assertEqual(parent_diff["attach"][1]["ip_address"], "192.168.10.204")
+
+        # Verify parent fabric response
+        parent_response = parent.get("response")
+        self.assertEqual(len(parent_response), 3)
+        self.assertEqual(parent_response[0]["DATA"]["Network Id"], 8004)
+        self.assertEqual(parent_response[0]["DATA"]["Network Name"], "ansible-msd-dhcp-net")
+        self.assertIn("9R518K2AT3R", str(parent_response[1]["DATA"]))
+        self.assertIn("915KQ8P3NS8", str(parent_response[1]["DATA"]))
+
+        # Verify child fabrics section
+        child_fabrics = result.get("child_fabrics")
+        self.assertEqual(len(child_fabrics), 1)
+
+        child = child_fabrics[0]
+        self.assertTrue(child.get("changed"))
+        self.assertFalse(child.get("failed"))
+        self.assertEqual(child.get("fabric_name"), "msd-child-1")
+
+        # Verify child fabric diff - DHCP configuration is present
+        child_diff = child.get("diff")[0]
+        self.assertEqual(child_diff["net_name"], "ansible-msd-dhcp-net")
+        self.assertEqual(child_diff["vrf_name"], "Tenant-1")
+        self.assertEqual(child_diff["net_id"], "8004")
+        self.assertEqual(child_diff["vlan_id"], 2104)
+
+        # Verify DHCP servers configuration
+        self.assertEqual(child_diff["dhcp_srvr1_ip"], "192.168.1.102")
+        self.assertEqual(child_diff["dhcp_srvr1_vrf"], "management")
+        self.assertEqual(child_diff["dhcp_srvr2_ip"], "192.168.1.105")
+        self.assertEqual(child_diff["dhcp_srvr2_vrf"], "default")
+        self.assertEqual(child_diff["dhcp_srvr3_ip"], "192.168.1.106")
+        self.assertEqual(child_diff["dhcp_srvr3_vrf"], "management")
+
+        # Verify child-specific parameters
+        self.assertEqual(child_diff["dhcp_loopback_id"], 207)
+        self.assertEqual(child_diff["multicast_group_address"], "239.1.1.4")
+        self.assertTrue(child_diff["l3gw_on_border"])
+        self.assertFalse(child_diff["netflow_enable"])
+        self.assertEqual(child_diff["vlan_nf_monitor"], "monitor2")
+
+        # Verify child fabric response
+        child_response = child.get("response")
+        self.assertEqual(len(child_response), 1)
+        self.assertEqual(child_response[0]["RETURN_CODE"], 200)
+        self.assertEqual(child_response[0]["METHOD"], "GET")
+
+        # Verify child fabric attachment data
+        attach_data = child_response[0]["DATA"]
+        self.assertEqual(len(attach_data), 2)
+        self.assertEqual(attach_data[0]["serialNumber"], "9R518K2AT3R")
+        self.assertEqual(attach_data[0]["ipAddress"], "192.168.10.203")
+        self.assertEqual(attach_data[0]["lanAttachedState"], "DEPLOYED")
+        self.assertEqual(attach_data[1]["serialNumber"], "915KQ8P3NS8")
+        self.assertEqual(attach_data[1]["ipAddress"], "192.168.10.204")
+        self.assertEqual(attach_data[1]["lanAttachedState"], "DEPLOYED")
+
+    def test_dcnm_net_msd_override_with_different_attachments(self):
+        """
+        Test MSD network override with different attachments.
+
+        This test verifies:
+        - MSD network exists with old attachments (Ethernet1/17,Ethernet1/18)
+        - Override state updates attachments to new ports (Ethernet1/16,Ethernet1/17)
+        - Parent fabric processes attachment updates correctly
+        - Child fabric reflects the updated attachment configuration
+        - Proper detachment of old ports and attachment of new ports
+        """
+        self.version = 12
+        set_module_args(
+            dict(state="overridden", fabric="msd-parent", config=self.playbook_msd_override_config)
+        )
+        result = self.execute_module(changed=True, failed=False, use_action_plugin=True)
+
+        # Verify overall result structure
+        self.assertTrue(result.get("changed"))
+        self.assertIn("parent_fabric", result)
+        self.assertIn("child_fabrics", result)
+        self.assertEqual(result.get("workflow"), "Parent MSD with Child Fabric Processing")
+
+        # Verify parent fabric section
+        parent = result.get("parent_fabric")
+        self.assertTrue(parent.get("changed"))
+        self.assertFalse(parent.get("failed"))
+        self.assertEqual(parent.get("fabric_name"), "msd-parent")
+        self.assertIn("diff", parent)
+        self.assertIn("response", parent)
+
+        # Verify parent fabric diff shows updated attachments (minimal structure)
+        parent_diff = parent.get("diff")[0]
+        self.assertEqual(parent_diff["net_name"], "ansible-msd-dhcp-net")
+        self.assertIn("attach", parent_diff)
+
+        # Verify parent fabric updated attachments - NEW PORTS
+        self.assertEqual(len(parent_diff["attach"]), 2)
+
+        # Check first switch attachment (leaf3) has new ports
+        attach1 = parent_diff["attach"][0]
+        self.assertEqual(attach1["ip_address"], "192.168.10.203")
+        self.assertEqual(attach1["ports"], "Ethernet1/16,Ethernet1/17")
+        self.assertTrue(attach1["deploy"])
+
+        # Check second switch attachment (leaf4) has new ports
+        attach2 = parent_diff["attach"][1]
+        self.assertEqual(attach2["ip_address"], "192.168.10.204")
+        self.assertEqual(attach2["ports"], "Ethernet1/16,Ethernet1/17")
+        self.assertTrue(attach2["deploy"])
+
+        # Verify parent fabric response includes attachment update and deploy
+        parent_response = parent.get("response")
+        self.assertEqual(len(parent_response), 2)
+
+        # Verify attachment update response (index 0)
+        attach_resp = parent_response[0]
+        self.assertEqual(attach_resp["RETURN_CODE"], 200)
+        self.assertEqual(attach_resp["METHOD"], "POST")
+        self.assertIn("ansible-msd-dhcp-net-[9R518K2AT3R/leaf3]", attach_resp["DATA"])
+        self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[9R518K2AT3R/leaf3]"], "SUCCESS")
+        self.assertIn("ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]", attach_resp["DATA"])
+        self.assertEqual(attach_resp["DATA"]["ansible-msd-dhcp-net-[915KQ8P3NS8/leaf4]"], "SUCCESS")
+
+        # Verify deploy response (index 1)
+        deploy_resp = parent_response[1]
+        self.assertEqual(deploy_resp["RETURN_CODE"], 200)
+        self.assertEqual(deploy_resp["METHOD"], "POST")
+        self.assertIn("status", deploy_resp["DATA"])
+
+        # Verify child fabrics section
+        child_fabrics = result.get("child_fabrics")
+        self.assertEqual(len(child_fabrics), 1)
+
+        child = child_fabrics[0]
+        self.assertTrue(child.get("changed"))
+        self.assertFalse(child.get("failed"))
+        self.assertEqual(child.get("fabric_name"), "msd-child-1")
+        self.assertIn("diff", child)
+        self.assertIn("response", child)
+
+        # Verify child fabric diff - includes all network parameters
+        child_diff = child.get("diff")[0]
+        self.assertEqual(child_diff["net_name"], "ansible-msd-dhcp-net")
+        self.assertEqual(child_diff["vrf_name"], "Tenant-1")
+        self.assertEqual(child_diff["net_id"], 8004)
+        self.assertEqual(child_diff["vlan_id"], 2104)
+        self.assertEqual(child_diff["gw_ip_subnet"], "192.168.104.1/24")
+        self.assertEqual(child_diff["net_template"], "Default_Network_Universal")
+        self.assertEqual(child_diff["net_extension_template"], "Default_Network_Extension_Universal")
+        self.assertFalse(child_diff["is_l2only"])
+        self.assertEqual(child_diff["int_desc"], "MSD DHCP Network")
+        self.assertEqual(child_diff["mtu_l3intf"], 9216)
+        self.assertFalse(child_diff["route_target_both"])
+        self.assertFalse(child_diff["l3gw_on_border"])
+
+        # Verify child fabric has empty attach list (attachments shown in response only)
+        self.assertEqual(len(child_diff["attach"]), 0)
+
+        # Verify child fabric response shows IN PROGRESS state
+        child_response = child.get("response")
+        self.assertEqual(len(child_response), 1)
+        self.assertEqual(child_response[0]["RETURN_CODE"], 200)
+        self.assertEqual(child_response[0]["METHOD"], "GET")
+
+        # Verify child fabric attachment data reflects new port configuration
+        child_attach_data = child_response[0]["DATA"]
+        self.assertEqual(len(child_attach_data), 1)
+        self.assertEqual(child_attach_data[0]["networkName"], "ansible-msd-dhcp-net")
+        self.assertIn("lanAttachList", child_attach_data[0])
+
+        # Verify lanAttachList has 2 switches
+        lan_attach_list = child_attach_data[0]["lanAttachList"]
+        self.assertEqual(len(lan_attach_list), 2)
+
+        # Verify first switch in child fabric (leaf3)
+        leaf3_attach = lan_attach_list[0]
+        self.assertEqual(leaf3_attach["switchSerialNo"], "9R518K2AT3R")
+        self.assertEqual(leaf3_attach["ipAddress"], "192.168.10.203")
+        self.assertEqual(leaf3_attach["switchName"], "leaf3")
+        self.assertEqual(leaf3_attach["fabricName"], "msd-child-1")
+        self.assertEqual(leaf3_attach["networkId"], 8004)
+        self.assertEqual(leaf3_attach["vlanId"], 2104)
+        self.assertEqual(leaf3_attach["portNames"], "Ethernet1/16,Ethernet1/17")
+        self.assertEqual(leaf3_attach["lanAttachState"], "IN PROGRESS")
+        self.assertTrue(leaf3_attach["isLanAttached"])
+
+        # Verify second switch in child fabric (leaf4)
+        leaf4_attach = lan_attach_list[1]
+        self.assertEqual(leaf4_attach["switchSerialNo"], "915KQ8P3NS8")
+        self.assertEqual(leaf4_attach["ipAddress"], "192.168.10.204")
+        self.assertEqual(leaf4_attach["switchName"], "leaf4")
+        self.assertEqual(leaf4_attach["fabricName"], "msd-child-1")
+        self.assertEqual(leaf4_attach["networkId"], 8004)
+        self.assertEqual(leaf4_attach["vlanId"], 2104)
+        self.assertEqual(leaf4_attach["portNames"], "Ethernet1/16,Ethernet1/17")
+        self.assertEqual(leaf4_attach["lanAttachState"], "IN PROGRESS")
+        self.assertTrue(leaf4_attach["isLanAttached"])

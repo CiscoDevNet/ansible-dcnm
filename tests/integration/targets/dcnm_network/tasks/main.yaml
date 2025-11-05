@@ -39,6 +39,13 @@
   delegate_to: localhost
   tags: always
 
+- name: MAIN - DELETED - delete all networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: always
+
+
 - name: MAIN - OVERRIDDEN - Create vrfs required for this test and remove all other vrfs
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ test_data_common.fabric }}"
@@ -46,19 +53,36 @@
     config: "{{ dcnm_network_setup_vrf_conf }}"
   tags: always
 
-- name: MAIN - Collect DCNM Network Test Cases
-  find:
-    paths: ["{{ role_path }}/tests/dcnm", "{{ role_path }}/tests/dcnm/self-contained-tests"]
-    patterns: "{{ testcase }}.yaml"
-  connection: local
-  register: dcnm_cases
+- name: MAIN - Set Full Test Case Path
+  set_fact:
+    full_testcase_path: "{{ role_path }}/tests/dcnm/{{ testcase }}.yaml"
+    testcase_is_glob: "{{ testcase.endswith('/*') }}"
+    testcase_dir: "{{ role_path }}/tests/dcnm/{{ testcase | regex_replace('/\\*$', '') }}"
   delegate_to: localhost
+  tags: always
+
+- name: MAIN - Check if Test Case File Exists (single file)
+  stat:
+    path: "{{ full_testcase_path }}"
+  register: testcase_stat
+  delegate_to: localhost
+  when: not testcase_is_glob
+  tags: always
+
+- name: MAIN - Find Test Case Files (glob pattern)
+  find:
+    paths: "{{ testcase_dir }}"
+    patterns: "*.yaml"
+    recurse: no
+  register: testcase_glob
+  delegate_to: localhost
+  when: testcase_is_glob
   tags: always
 
 - name: MAIN - Set Test Cases Fact
   set_fact:
     test_cases:
-      files: "{{ dcnm_cases.files }}"
+      files: "{{ [{'path': full_testcase_path}] if (not testcase_is_glob and testcase_stat.stat.exists) else (testcase_glob.files if testcase_is_glob else []) }}"
   delegate_to: localhost
   tags: always
 
@@ -72,6 +96,12 @@
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run
+  tags: always
+
+- name: MAIN - DELETED - delete all networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
   tags: always
 
 - name: MAIN - DELETED - Clean Up Any Existing VRFs
