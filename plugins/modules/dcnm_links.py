@@ -2478,51 +2478,51 @@ class DcnmLinks:
                     }
                 )
             if (
-                wlink["nvPairs"]["PEER1_DESC"]
-                != hlink["nvPairs"]["PEER1_DESC"]
+                wlink.get("nvPairs", {}).get("PEER1_DESC", "")
+                != hlink.get("nvPairs", {}).get("PEER1_DESC", "")
             ):
                 mismatch_reasons.append(
                     {
                         "PEER1_DESC_MISMATCH": [
-                            wlink["nvPairs"]["PEER1_DESC"],
-                            hlink["nvPairs"]["PEER1_DESC"],
+                            wlink.get("nvPairs", {}).get("PEER1_DESC", ""),
+                            hlink.get("nvPairs", {}).get("PEER1_DESC", ""),
                         ]
                     }
                 )
             if (
-                wlink["nvPairs"]["PEER2_DESC"]
-                != hlink["nvPairs"]["PEER2_DESC"]
+                wlink.get("nvPairs", {}).get("PEER2_DESC", "")
+                != hlink.get("nvPairs", {}).get("PEER2_DESC", "")
             ):
                 mismatch_reasons.append(
                     {
                         "PEER2_DESC_MISMATCH": [
-                            wlink["nvPairs"]["PEER2_DESC"],
-                            hlink["nvPairs"]["PEER2_DESC"],
+                            wlink.get("nvPairs", {}).get("PEER2_DESC", ""),
+                            hlink.get("nvPairs", {}).get("PEER2_DESC", ""),
                         ]
                     }
                 )
 
             if (
-                wlink["nvPairs"]["PEER1_CONF"]
-                != hlink["nvPairs"]["PEER1_CONF"]
+                wlink.get("nvPairs", {}).get("PEER1_CONF", "")
+                != hlink.get("nvPairs", {}).get("PEER1_CONF", "")
             ):
                 mismatch_reasons.append(
                     {
                         "PEER1_CONF_MISMATCH": [
-                            wlink["nvPairs"]["PEER1_CONF"],
-                            hlink["nvPairs"]["PEER1_CONF"],
+                            wlink.get("nvPairs", {}).get("PEER1_CONF", ""),
+                            hlink.get("nvPairs", {}).get("PEER1_CONF", ""),
                         ]
                     }
                 )
             if (
-                wlink["nvPairs"]["PEER2_CONF"]
-                != hlink["nvPairs"]["PEER2_CONF"]
+                wlink.get("nvPairs", {}).get("PEER2_CONF", "")
+                != hlink.get("nvPairs", {}).get("PEER2_CONF", "")
             ):
                 mismatch_reasons.append(
                     {
                         "PEER2_CONF_MISMATCH": [
-                            wlink["nvPairs"]["PEER2_CONF"],
-                            hlink["nvPairs"]["PEER2_CONF"],
+                            wlink.get("nvPairs", {}).get("PEER2_CONF", ""),
+                            hlink.get("nvPairs", {}).get("PEER2_CONF", ""),
                         ]
                     }
                 )
