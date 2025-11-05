@@ -78,10 +78,11 @@ class ActionModule(ActionBase):
        MSD workflows with comprehensive error handling
 
     MSD Configuration Features:
-    - Automatic deploy flag inheritance from parent to child (with override)
+    - Automatic deploy flag inheritance from parent to child (no override allowed)
     - VRF and L2-only settings propagation to child fabrics
     - State transformation (parent 'overridden' becomes child 'replaced')
     - Attachment restriction enforcement (parent-only configuration)
+    - Deploy flag restriction enforcement (parent-only configuration)
     - Comprehensive validation of fabric hierarchy relationships
 
     Error Handling:
@@ -271,15 +272,17 @@ class ActionModule(ActionBase):
         1. Top-level fabric must not be a child (fabricParent is 'None')
         2. Child fabric configs must be members with correct parent relationship
         3. Child fabrics cannot contain 'attach' configurations (parent-only)
-        4. Child fabric configurations must reference valid MSD member fabrics
+        4. Child fabrics cannot contain 'deploy' flag (must inherit from parent)
+        5. Child fabric configurations must reference valid MSD member fabrics
 
         Configuration Processing:
         1. Split config into parent fabric config (without child_fabric_config) and
            separate child fabric configs (with only net_name and child-specific settings)
         2. State handling: If parent state is 'overridden', child state is set to 'replaced'.
            Child state is never 'overridden'.
-        3. Deploy handling: Both parent and child default to deploy=True. Child-level config
-           takes priority over parent-level config.
+        3. Deploy handling: Child fabrics always inherit the deploy flag from parent level.
+           Users cannot specify deploy at child level (validation error thrown).
+           Default to deploy=True if not specified at parent level.
         4. Automatic copying of is_l2only and vrf_name from parent to child
 
         Args:
@@ -299,7 +302,7 @@ class ActionModule(ActionBase):
                     'fabric': fabric_name,
                     '_fabric_type': fabric_type,  # 'multisite_parent', 'multisite_child', 'standalone', or 'unknown'
                     'state': state,  # For parent: original state; For child: 'replaced' if parent state is 'overridden', otherwise original state
-                    'config': [network_configs...]  # deploy defaults to True, child-level takes priority
+                    'config': [network_configs...]  # deploy defaults to True, child always inherits from parent
                 }
         """
         # Check if top-level fabric exists in fabrics dict
@@ -348,6 +351,11 @@ class ActionModule(ActionBase):
                     return None, f"Child fabric config for '{child_fabric_name}' in network '{net_config.get('net_name', 'unknown')}' " \
                         "cannot contain 'attach' configuration. Attachments should only be configured on the parent fabric."
 
+                # Check if deploy flag is present in child fabric config
+                if 'deploy' in child_config:
+                    return None, f"Child fabric config for '{child_fabric_name}' in network '{net_config.get('net_name', 'unknown')}' " \
+                        "cannot contain 'deploy' flag. The deploy flag is automatically inherited from the parent fabric configuration."
+
                 # Check if child fabric exists in fabrics dict
                 if child_fabric_name not in fabrics:
                     return None, f"Child fabric '{child_fabric_name}' not found in fabric associations"
@@ -379,17 +387,15 @@ class ActionModule(ActionBase):
                 if 'vrf_name' in net_config:
                     child_net_config['vrf_name'] = net_config['vrf_name']
 
-                # Handle deploy flag: child-level takes priority, default to True
-                if 'deploy' in child_config:
-                    child_net_config['deploy'] = child_config['deploy']
-                elif 'deploy' in net_config:
+                # Always inherit deploy flag from parent level (default to True if not specified)
+                if 'deploy' in net_config:
                     child_net_config['deploy'] = net_config['deploy']
                 else:
                     child_net_config['deploy'] = True
 
-                # Add all child-specific settings except 'fabric'
+                # Add all child-specific settings except 'fabric' and 'deploy'
                 for key, value in child_config.items():
-                    if key != 'fabric':
+                    if key not in ['fabric', 'deploy']:
                         child_net_config[key] = value
 
                 child_fabric_configs_by_fabric[child_fabric_name].append(child_net_config)

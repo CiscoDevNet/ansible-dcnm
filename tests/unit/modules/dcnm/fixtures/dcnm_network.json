@@ -1197,7 +1197,6 @@
                     "l3gw_on_border": true,
                     "dhcp_loopback_id": 204,
                     "multicast_group_address": "239.1.1.1",
-                    "vlan_nf_monitor": "monitor1",
                     "dhcp_srvr1_ip": "192.168.1.101",
                     "dhcp_srvr1_vrf": "management"
                 }
@@ -1410,7 +1409,6 @@
                     "l3gw_on_border": true,
                     "dhcp_loopback_id": 207,
                     "multicast_group_address": "239.1.1.4",
-                    "vlan_nf_monitor": "monitor2",
                     "dhcp_srvr1_ip": "192.168.1.102",
                     "dhcp_srvr1_vrf": "management",
                     "dhcp_srvr2_ip": "192.168.1.105",

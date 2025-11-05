@@ -174,7 +174,7 @@ options:
             dhcp_srvr3_ip, dhcp_srvr3_vrf
         - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
             dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
-            indicating these are mutually exclusive options
+            indicating these are mutually exclusive options. Max of 16 servers can be specified.
         type: list
         elements: dict
         required: false
@@ -1427,6 +1427,10 @@ class DcnmNetwork:
                 dhcp3vrf_diff = dhcp3_vrf_have != dhcp3_vrf_want
                 comparisons.append(dhcp3vrf_diff)
 
+            if "dhcpServers" not in skipped_template_keys:
+                dhcp_servers_diff = dhcp_servers_have != dhcp_servers_want
+                comparisons.append(dhcp_servers_diff)
+
             if "loopbackId" not in skipped_template_keys:
                 loopback_diff = dhcp_loopback_have != dhcp_loopback_want
                 comparisons.append(loopback_diff)
@@ -1780,6 +1784,7 @@ class DcnmNetwork:
                     "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                     "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                     "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                    "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
                     "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -1833,6 +1838,7 @@ class DcnmNetwork:
                             "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
                             "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
                             "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
+                            "dhcpServers": json_to_dict.get("dhcpServers", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
                             "mcastGroup": json_to_dict.get("mcastGroup", ""),
                             "gatewayIpV6Address": json_to_dict.get("gatewayIpV6Address", ""),
@@ -2514,6 +2520,7 @@ class DcnmNetwork:
                             or dhcp1_vrf_changed.get(want_a["networkName"], False)
                             or dhcp2_vrf_changed.get(want_a["networkName"], False)
                             or dhcp3_vrf_changed.get(want_a["networkName"], False)
+                            or dhcp_servers_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
                             or multicast_group_address_changed.get(want_a["networkName"], False)
                             or gwv6_changed.get(want_a["networkName"], False)
@@ -3578,6 +3585,23 @@ class DcnmNetwork:
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
                                 invalid_params.append("Netflow configurations are supported only on NDFC")
+
+                        # Check if netflow monitors are specified without enabling netflow
+                        netflow_enable = net.get("netflow_enable", False)
+                        intfvlan_nf_monitor = net.get("intfvlan_nf_monitor")
+                        vlan_nf_monitor = net.get("vlan_nf_monitor")
+
+                        if not netflow_enable:
+                            if intfvlan_nf_monitor:
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': intfvlan_nf_monitor "
+                                    "(Interface VLAN Netflow Monitor) cannot be specified when netflow_enable is False or not set"
+                                )
+                            if vlan_nf_monitor:
+                                invalid_params.append(
+                                    f"Network '{net.get('net_name', 'unknown')}': vlan_nf_monitor "
+                                    "(VLAN Netflow Monitor) cannot be specified when netflow_enable is False or not set"
+                                )
 
                     self.validated.append(net)
 
