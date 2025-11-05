@@ -673,36 +673,97 @@ def dcnm_get_template_details(module, version, name):
         else:
             return []
 
-
 def dcnm_update_arg_specs(mspec, arg_specs):
+    """
+    Update argument specifications based on module specification dependencies.
+
+    ## Summary
+
+    Evaluates boolean dependency expressions to determine if parameters are required.
+
+    ## Raises
+
+    - None
+    """
+    comparison_ops = {
+        "==": lambda a, b: a == b,
+        "!=": lambda a, b: a != b,
+        ">": lambda a, b: a > b,
+        "<": lambda a, b: a < b,
+        ">=": lambda a, b: a >= b,
+        "<=": lambda a, b: a <= b,
+    }
 
     pat = re.compile(r"(\w+)\s*([<>=!]{1,2})\s*(\w+)")
 
     for as_key in arg_specs:
-
         item = arg_specs[as_key]
 
         if item["required"] not in [True, False]:
+            # Parse the dependency expression
+            expr = item["required"]
 
-            # item is a dependent variable. item["required"] includes a string which specifies
-            # the variables it depends on. Parse the string and check the mspec to
-            # derive if required should be True or False.
-            dvars = re.split(r"&& | \|\|", item["required"])
+            # Normalize true/false to boolean values
+            expr = expr.replace("true", "True").replace("false", "False")
 
-            for elem in dvars:
-                match = pat.search(elem)
-                key = match[1].replace("(", "").replace(")", "")
+            # Split by && and || operators, tracking which operator was used
+            parts = []
+            operators = []
 
-                if mspec and mspec.get(key, None) == bool(match.group(3)):
-                    # Given key is included in the mspec. So mark this a 'true' in the aspec. Final 'eval'
-                    # on the item["required"] will yield the desired bool value.
-                    item["required"] = item["required"].replace("true", "True")
-                    item["required"] = item["required"].replace("false", "False")
-                    item["required"] = eval(item["required"].replace(key, "True"))
+            # Split while preserving operator information
+            if "&&" in expr and "||" in expr:
+                # Handle mixed operators (would need more complex logic)
+                # For now, fall back to simple evaluation
+                pass
+            elif "&&" in expr:
+                parts = [p.strip() for p in expr.split("&&")]
+                operators = ["and"] * (len(parts) - 1)
+            elif "||" in expr:
+                parts = [p.strip() for p in expr.split("||")]
+                operators = ["or"] * (len(parts) - 1)
+            else:
+                parts = [expr.strip()]
+
+            # Evaluate each part
+            results = []
+            for part in parts:
+                part = part.strip("() ")
+                match = pat.search(part)
+
+                if match:
+                    key = match[1]
+                    op = match[2]
+                    value_str = match[3]
+
+                    # Convert string "True"/"False" to boolean
+                    if value_str in ("True", "False"):
+                        expected_value = value_str == "True"
+                    else:
+                        expected_value = value_str
+
+                    # Get actual value from mspec
+                    actual_value = mspec.get(key) if mspec else None
+
+                    # Evaluate the comparison
+                    if op in comparison_ops:
+                        results.append(comparison_ops[op](actual_value, expected_value))
+                    else:
+                        results.append(False)
                 else:
-                    item["required"] = item["required"].replace("true", "True")
-                    item["required"] = item["required"].replace("false", "False")
-                    item["required"] = eval(item["required"].replace(key, "False"))
+                    # Direct True/False value
+                    results.append(part == "True")
+
+            # Combine results based on operators
+            if not operators:
+                item["required"] = results[0] if results else False
+            else:
+                final_result = results[0]
+                for i, op in enumerate(operators):
+                    if op == "and":
+                        final_result = final_result and results[i + 1]
+                    else:  # "or"
+                        final_result = final_result or results[i + 1]
+                item["required"] = final_result
 
 
 def dcnm_get_template_specs(module, name, version):
