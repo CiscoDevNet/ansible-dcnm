@@ -673,6 +673,7 @@ def dcnm_get_template_details(module, version, name):
         else:
             return []
 
+
 def dcnm_update_arg_specs(mspec, arg_specs):
     """
     Update argument specifications based on module specification dependencies.
