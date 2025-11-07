@@ -194,6 +194,19 @@ class FabricGroupUpdate(FabricGroupCommon):
             if key in controller_nv_pairs:
                 if isinstance(controller_nv_pairs.get(key), bool):
                     payload_value = self._string_to_bool(payload_value)
+                elif isinstance(controller_nv_pairs.get(key), int):
+                    try:
+                        payload_value = int(payload_value)
+                    except (ValueError, TypeError) as error:
+                        msg = f"{self.class_name}.{method_name}: "
+                        msg += f"Cannot convert value {payload_value} "
+                        msg += f"of key {key} to int."
+                        self.log.error(msg)
+                        raise ValueError(msg) from error
+                elif isinstance(controller_nv_pairs.get(key), str):
+                    payload_value = str(payload_value)
+                    if payload_value in ["False", "True"]:
+                        payload_value = payload_value.lower()
                 controller_nv_pairs[key] = payload_value
         return controller_nv_pairs
 

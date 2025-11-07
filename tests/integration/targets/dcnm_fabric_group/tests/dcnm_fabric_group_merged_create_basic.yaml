@@ -175,11 +175,11 @@
     state: merged
     config: &config_create_basic
       - ANYCAST_GW_MAC: 2020.0000.00dc
-        BGW_ROUTING_TAG: "54321"
+        BGW_ROUTING_TAG: 54321
         BORDER_GWY_CONNECTIONS: Direct_To_BGWS
         DCI_SUBNET_RANGE: "10.10.1.0/24"
-        DCI_SUBNET_TARGET_MASK: "30"
-        DELAY_RESTORE: "300"
+        DCI_SUBNET_TARGET_MASK: 30
+        DELAY_RESTORE: 300
         ENABLE_PVLAN: false
         ENABLE_SGT: "off"
         ENABLE_TRM_TRMv6: false
@@ -214,9 +214,9 @@
       - result.diff[1].nvPairs.DCI_SUBNET_RANGE == "10.10.1.0/24"
       - result.diff[1].nvPairs.DCI_SUBNET_TARGET_MASK == "30"
       - result.diff[1].nvPairs.DELAY_RESTORE == "300"
-      - result.diff[1].nvPairs.ENABLE_PVLAN == False
+      - result.diff[1].nvPairs.ENABLE_PVLAN == "false"
       - result.diff[1].nvPairs.ENABLE_SGT == "off"
-      - result.diff[1].nvPairs.ENABLE_TRM_TRMv6 == False
+      - result.diff[1].nvPairs.ENABLE_TRM_TRMv6 == "false"
       - result.diff[1].nvPairs.EXT_FABRIC_TYPE == ""
       - result.diff[1].nvPairs.FABRIC_TYPE == "MFD"
       - result.diff[1].nvPairs.FABRIC_NAME == fabric_group_name_1
@@ -225,16 +225,16 @@
       - result.diff[1].nvPairs.LOOPBACK100_IP_RANGE == "10.10.0.0/24"
       - result.diff[1].nvPairs.MSO_CONTROLER_ID == ""
       - result.diff[1].nvPairs.MSO_SITE_GROUP_NAME == ""
-      - result.diff[1].nvPairs.MS_IFC_BGP_PASSWORD_ENABLE == False
+      - result.diff[1].nvPairs.MS_IFC_BGP_PASSWORD_ENABLE == "false"
       - result.diff[1].nvPairs.MS_LOOPBACK_ID == "100"
-      - result.diff[1].nvPairs.MS_UNDERLAY_AUTOCONFIG == False
+      - result.diff[1].nvPairs.MS_UNDERLAY_AUTOCONFIG == "false"
       - result.diff[1].nvPairs.PARENT_ONEMANAGE_FABRIC == ""
       - result.diff[1].nvPairs.PREMSO_PARENT_FABRIC == ""
       - result.diff[1].nvPairs.SGT_OPER_STATUS == "off"
       - result.diff[1].nvPairs.SGT_PREPROV_RECALC_STATUS == "empty"
       - result.diff[1].nvPairs.SGT_RECALC_STATUS == "empty"
-      - result.diff[1].nvPairs.TOR_AUTO_DEPLOY == False
-      - result.diff[1].nvPairs.VXLAN_UNDERLAY_IS_V6 == False
+      - result.diff[1].nvPairs.TOR_AUTO_DEPLOY == "false"
+      - result.diff[1].nvPairs.VXLAN_UNDERLAY_IS_V6 == "false"
       - result.diff[1].sequence_number == 2
       - (result.metadata | length) == 2
       - result.metadata[1].action == "fabric_group_create"

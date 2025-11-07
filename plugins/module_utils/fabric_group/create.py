@@ -212,6 +212,14 @@ class FabricGroupCreate(FabricGroupCommon):
 
         None
         """
+        for key, value in payload.items():
+            if isinstance(value, bool):
+                payload[key] = str(value).lower()
+            elif isinstance(value, int):
+                payload[key] = str(value)
+            else:
+                pass
+
         commit_payload["nvPairs"] = copy.deepcopy(payload)
         commit_payload["nvPairs"]["FABRIC_TYPE"] = "MFD"
         commit_payload["nvPairs"]["FF"] = "MSD"
