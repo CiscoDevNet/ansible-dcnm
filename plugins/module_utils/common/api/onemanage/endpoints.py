@@ -31,11 +31,28 @@ try:
     from pydantic import BaseModel, Field
 except ImportError:
     HAS_PYDANTIC = False
-    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()
-    BaseModel = object
+    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment,misc]
+
+    # Fallback: Field that does nothing
+    def Field(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: field_validator decorator that does nothing
+    def field_validator(*args, **kwargs):  # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
 else:
     HAS_PYDANTIC = True
-    PYDANTIC_IMPORT_ERROR = None
+    PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
 
 from ..base_paths import BasePath
 from ..query_params import EndpointQueryParams
