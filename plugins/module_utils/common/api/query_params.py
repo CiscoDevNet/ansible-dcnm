@@ -36,7 +36,7 @@ except ImportError:
 else:
     HAS_PYDANTIC = True
     PYDANTIC_IMPORT_ERROR = None
-
+    BaseModel = object
 
 class QueryParams(ABC):
     """
