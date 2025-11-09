@@ -33,10 +33,11 @@ try:
 except ImportError:
     HAS_PYDANTIC = False
     PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()
+    BaseModel = object
 else:
     HAS_PYDANTIC = True
     PYDANTIC_IMPORT_ERROR = None
-    BaseModel = object
+
 
 class QueryParams(ABC):
     """
