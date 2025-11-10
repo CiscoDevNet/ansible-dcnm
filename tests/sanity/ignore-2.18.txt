@@ -17,9 +17,6 @@ plugins/action/tests/plugin_utils/tools.py action-plugin-docs
 plugins/httpapi/dcnm.py validate-modules:missing-gplv3-license
 plugins/module_utils/common/sender_requests.py import-3.10
 plugins/module_utils/common/sender_requests.py import-3.11
-plugins/module_utils/fabric_group/common.py import-3.9!skip
-plugins/module_utils/fabric_group/common.py import-3.10!skip
-plugins/module_utils/fabric_group/common.py import-3.11!skip
 plugins/module_utils/fabric_group/config_deploy.py import-3.9!skip
 plugins/module_utils/fabric_group/config_deploy.py import-3.10!skip
 plugins/module_utils/fabric_group/config_deploy.py import-3.11!skip

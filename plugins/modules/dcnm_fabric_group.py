@@ -416,31 +416,52 @@ from typing import Type, Union
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore[import-untyped]
 
-# Import guard for pydantic-dependent modules
 try:
-    from ..module_utils.common.controller_features_v2 import ControllerFeatures
-    from ..module_utils.common.controller_version_v2 import ControllerVersion
-    from ..module_utils.common.exceptions import ControllerResponseError
-    from ..module_utils.common.log_v2 import Log
-    from ..module_utils.common.response_handler import ResponseHandler
-    from ..module_utils.common.rest_send_v2 import RestSend
-    from ..module_utils.common.results_v2 import Results
-    from ..module_utils.common.sender_dcnm import Sender
-    from ..module_utils.common.template_get_v2 import TemplateGet
-    from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
-    from ..module_utils.fabric_group.common import FabricGroupCommon
-    from ..module_utils.fabric_group.create import FabricGroupCreate
-    from ..module_utils.fabric_group.delete import FabricGroupDelete
-    from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
-    from ..module_utils.fabric_group.fabric_groups import FabricGroups
-    from ..module_utils.fabric_group.query import FabricGroupQuery
-    from ..module_utils.fabric_group.update import FabricGroupUpdate
+    from pydantic import BaseModel, Field, field_validator  # pylint: disable=unused-import
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
 
-    HAS_PYDANTIC_DEPS = True
-    PYDANTIC_DEPS_IMPORT_ERROR = None
-except ImportError as imp_exc:
-    HAS_PYDANTIC_DEPS = False
-    PYDANTIC_DEPS_IMPORT_ERROR = traceback.format_exc()
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment,misc]
+
+    # Fallback: Field that does nothing
+    def Field(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: field_validator decorator that does nothing
+    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
+
+# Import guard for pydantic-dependent modules
+# try:
+from ..module_utils.common.controller_features_v2 import ControllerFeatures
+from ..module_utils.common.controller_version_v2 import ControllerVersion
+from ..module_utils.common.exceptions import ControllerResponseError
+from ..module_utils.common.log_v2 import Log
+from ..module_utils.common.response_handler import ResponseHandler
+from ..module_utils.common.rest_send_v2 import RestSend
+from ..module_utils.common.results_v2 import Results
+from ..module_utils.common.sender_dcnm import Sender
+from ..module_utils.common.template_get_v2 import TemplateGet
+from ..module_utils.fabric.verify_playbook_params import VerifyPlaybookParams
+from ..module_utils.fabric_group.common import FabricGroupCommon
+from ..module_utils.fabric_group.create import FabricGroupCreate
+from ..module_utils.fabric_group.delete import FabricGroupDelete
+from ..module_utils.fabric_group.fabric_group_types import FabricGroupTypes
+from ..module_utils.fabric_group.fabric_groups import FabricGroups
+from ..module_utils.fabric_group.query import FabricGroupQuery
+from ..module_utils.fabric_group.update import FabricGroupUpdate
 
 
 def json_pretty(msg):
@@ -458,7 +479,7 @@ def json_pretty(msg):
 
 # Use conditional base class to support import without pydantic
 CommonBase: Type
-if HAS_PYDANTIC_DEPS:
+if HAS_PYDANTIC:
     CommonBase = FabricGroupCommon
 else:
     CommonBase = object
@@ -1195,9 +1216,9 @@ def main():
     ansible_module = AnsibleModule(argument_spec=argument_spec, supports_check_mode=True)
 
     # Check for pydantic dependency before proceeding
-    if not HAS_PYDANTIC_DEPS:
+    if not HAS_PYDANTIC:
         ansible_module.fail_json(
-            msg="The pydantic library is required to use this module. " "Install it with: pip install pydantic", exception=PYDANTIC_DEPS_IMPORT_ERROR
+            msg="The pydantic library is required to use this module. " "Install it with: pip install pydantic", exception=PYDANTIC_IMPORT_ERROR
         )
 
     params = copy.deepcopy(ansible_module.params)
