@@ -129,9 +129,9 @@ options:
       dhcp_servers:
         description:
         - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
-        - 'srvr_vrf' is a mandatory field. For L2 networks, provide vrf name as 'default'
+        - Server VRF is a mandatory field. For L2 networks, provide vrf name as 'default'
         - This is a replacement for dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
-            dhcp_srvr3_ip, dhcp_srvr3_vrf
+          dhcp_srvr3_ip, dhcp_srvr3_vrf
         type: list
         elements: dict
         required: false
