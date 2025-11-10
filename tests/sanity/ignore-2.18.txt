@@ -44,9 +44,6 @@ plugins/module_utils/fabric_group/query.py import-3.11!skip
 plugins/module_utils/fabric_group/update.py import-3.9!skip
 plugins/module_utils/fabric_group/update.py import-3.10!skip
 plugins/module_utils/fabric_group/update.py import-3.11!skip
-plugins/modules/dcnm_fabric_group.py import-3.9!skip
-plugins/modules/dcnm_fabric_group.py import-3.10!skip
-plugins/modules/dcnm_fabric_group.py import-3.11!skip
 plugins/modules/dcnm_bootflash.py validate-modules:missing-gplv3-license
 plugins/modules/dcnm_fabric.py validate-modules:missing-gplv3-license
 plugins/modules/dcnm_fabric_group.py validate-modules:missing-gplv3-license
