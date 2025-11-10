@@ -443,8 +443,6 @@ else:
     HAS_PYDANTIC = True
     PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
 
-# Import guard for pydantic-dependent modules
-# try:
 from ..module_utils.common.controller_features_v2 import ControllerFeatures
 from ..module_utils.common.controller_version_v2 import ControllerVersion
 from ..module_utils.common.exceptions import ControllerResponseError
