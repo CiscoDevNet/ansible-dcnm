@@ -93,8 +93,8 @@ class FabricConfigPreviewQueryParams(EndpointQueryParams):
     - show_brief: Show brief output (default: "false")
     """
 
-    force_show_run: Literal["false", "true"] = Field("false", description="Force show running config")
-    show_brief: Literal["false", "true"] = Field("false", description="Show brief output")
+    force_show_run: Literal["false", "true"] = Field(default="false", description="Force show running config")
+    show_brief: Literal["false", "true"] = Field(default="false", description="Show brief output")
 
     def to_query_string(self) -> str:
         """Build query string with forceShowRun and showBrief parameters."""
@@ -115,8 +115,8 @@ class LinkByUuidQueryParams(EndpointQueryParams):
     - destination_cluster_name: Destination cluster name (e.g., "nd-cluster-2")
     """
 
-    source_cluster_name: Optional[str] = Field(None, min_length=1, description="Source cluster name")
-    destination_cluster_name: Optional[str] = Field(None, min_length=1, description="Destination cluster name")
+    source_cluster_name: Optional[str] = Field(min_length=1, description="Source cluster name")
+    destination_cluster_name: Optional[str] = Field(min_length=1, description="Destination cluster name")
 
     def to_query_string(self) -> str:
         """Build query string with sourceClusterName and destinationClusterName parameters."""
@@ -136,7 +136,7 @@ class NetworkNamesQueryParams(EndpointQueryParams):
     - network_names: Comma-separated list of network names to delete e.g. "Net1,Net2,Net3"
     """
 
-    network_names: Optional[str] = Field(None, min_length=1, description="Comma-separated network names")
+    network_names: Optional[str] = Field(min_length=1, description="Comma-separated network names")
 
     def to_query_string(self) -> str:
         """Build query string with network-names parameter."""
@@ -153,7 +153,7 @@ class VrfNamesQueryParams(EndpointQueryParams):
     - vrf_names: Comma-separated list of VRF names to delete e.g. "VRF1,VRF2,VRF3"
     """
 
-    vrf_names: Optional[str] = Field(None, min_length=1, description="Comma-separated VRF names")
+    vrf_names: Optional[str] = Field(min_length=1, description="Comma-separated VRF names")
 
     def to_query_string(self) -> str:
         """Build query string with vrf-names parameter."""
@@ -190,7 +190,7 @@ class EpOneManageFabricConfigDeploy(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploy", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
     query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
 
     def __init__(self, **data):
@@ -255,8 +255,8 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploySwitch", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
-    switch_sn: Optional[str] = Field(None, min_length=1, description="Switch serial number")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
+    switch_sn: Optional[str] = Field(min_length=1, description="Switch serial number")
     query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
 
     def __init__(self, **data):
@@ -322,7 +322,7 @@ class EpOneManageFabricConfigPreview(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreview", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
     query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
 
     def __init__(self, **data):
@@ -387,8 +387,8 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreviewSwitch", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
-    switch_sn: Optional[str] = Field(None, min_length=1, description="Switch serial number")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
+    switch_sn: Optional[str] = Field(min_length=1, description="Switch serial number")
     query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
 
     def __init__(self, **data):
@@ -452,7 +452,7 @@ class EpOneManageFabricConfigSave(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigSave", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -541,7 +541,7 @@ class EpOneManageFabricDelete(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricDelete", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -591,7 +591,7 @@ class EpOneManageFabricDetails(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricDetails", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -633,7 +633,7 @@ class EpOneManageFabricGroupMembersGet(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricGroupMembersGet", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric group name")
 
     @property
     def path(self) -> str:
@@ -692,7 +692,7 @@ class EpOneManageFabricGroupUpdate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricGroupUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric group name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric group name")
 
     @property
     def path(self) -> str:
@@ -799,7 +799,7 @@ class EpOneManageFabricUpdate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageFabricUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -961,7 +961,7 @@ class EpOneManageLinkGetByUuid(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageLinkGetByUuid", description="Class name for backward compatibility")
-    link_uuid: Optional[str] = Field(None, min_length=1, description="Link UUID")
+    link_uuid: Optional[str] = Field(min_length=1, description="Link UUID")
     query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
 
     def __init__(self, **data):
@@ -1061,7 +1061,7 @@ class EpOneManageLinkUpdate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageLinkUpdate", description="Class name for backward compatibility")
-    link_uuid: Optional[str] = Field(None, min_length=1, description="Link UUID")
+    link_uuid: Optional[str] = Field(min_length=1, description="Link UUID")
     query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
 
     def __init__(self, **data):
@@ -1167,7 +1167,7 @@ class EpOneManageLinksGetByFabric(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageLinksGetByFabric", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1230,7 +1230,7 @@ class EpOneManageNetworkCreate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageNetworkCreate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1283,8 +1283,8 @@ class EpOneManageNetworkUpdate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageNetworkUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
-    network_name: Optional[str] = Field(None, min_length=1, description="Network name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
+    network_name: Optional[str] = Field(min_length=1, description="Network name")
 
     @property
     def path(self) -> str:
@@ -1341,7 +1341,7 @@ class EpOneManageNetworksDelete(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageNetworksDelete", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
     query_params: NetworkNamesQueryParams = Field(default_factory=NetworkNamesQueryParams)
 
     def __init__(self, **data):
@@ -1405,7 +1405,7 @@ class EpOneManageNetworksGet(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageNetworksGet", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1468,7 +1468,7 @@ class EpOneManageVrfCreate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageVrfCreate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
@@ -1521,8 +1521,8 @@ class EpOneManageVrfUpdate(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageVrfUpdate", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
-    vrf_name: Optional[str] = Field(None, min_length=1, description="VRF name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
+    vrf_name: Optional[str] = Field(min_length=1, description="VRF name")
 
     @property
     def path(self) -> str:
@@ -1577,7 +1577,7 @@ class EpOneManageVrfsDelete(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageVrfsDelete", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
     query_params: VrfNamesQueryParams = Field(default_factory=VrfNamesQueryParams)
 
     def __init__(self, **data):
@@ -1641,7 +1641,7 @@ class EpOneManageVrfsGet(BaseModel):
     """
 
     class_name: Optional[str] = Field(default="EpOneManageVrfsGet", description="Class name for backward compatibility")
-    fabric_name: Optional[str] = Field(None, min_length=1, description="Fabric name")
+    fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
 
     @property
     def path(self) -> str:
