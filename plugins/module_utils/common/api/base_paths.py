@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Centralized base paths for DCNM/NDFC API endpoints.
+Centralized base paths for ND API endpoints.
 
 This module provides a single location to manage all API base paths,
 allowing easy modification when API paths change. All endpoint classes
@@ -32,7 +32,7 @@ class BasePath:
     ## Centralized API Base Paths
 
     ### Description
-    Provides centralized base path definitions for all DCNM/NDFC API endpoints.
+    Provides centralized base path definitions for all ND API endpoints.
     This allows API path changes to be managed in a single location.
 
     ### Usage
