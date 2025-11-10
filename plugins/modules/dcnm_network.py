@@ -126,44 +126,12 @@ options:
         type: bool
         required: false
         default: false
-      dhcp_srvr1_ip:
-        description:
-        - DHCP relay IP address of the first DHCP server
-        type: str
-        required: false
-      dhcp_srvr1_vrf:
-        description:
-        - VRF ID of first DHCP server
-        type: str
-        required: false
-      dhcp_srvr2_ip:
-        description:
-        - DHCP relay IP address of the second DHCP server
-        type: str
-        required: false
-      dhcp_srvr2_vrf:
-        description:
-        - VRF ID of second DHCP server
-        type: str
-        required: false
-      dhcp_srvr3_ip:
-        description:
-        - DHCP relay IP address of the third DHCP server
-        type: str
-        required: false
-      dhcp_srvr3_vrf:
-        description:
-        - VRF ID of third DHCP server
-        type: str
-        required: false
       dhcp_servers:
         description:
         - List of DHCP server_vrf pairs where 'srvr_ip' is the IP key and 'srvr_vrf' is the VRF key
-        - This is an alternative to dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
+        - 'srvr_vrf' is a mandatory field. For L2 networks, provide vrf name as 'default'
+        - This is a replacement for dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip, dhcp_srvr2_vrf,
             dhcp_srvr3_ip, dhcp_srvr3_vrf
-        - If both dhcp_servers and any of dhcp_srvr1_ip, dhcp_srvr1_vrf, dhcp_srvr2_ip,
-            dhcp_srvr2_vrf, dhcp_srvr3_ip, dhcp_srvr3_vrf are specified an error message is generated
-            indicating these are mutually exclusive options
         type: list
         elements: dict
         required: false
@@ -920,12 +888,6 @@ class DcnmNetwork:
         intdesc_changed = False
         mtu_changed = False
         arpsup_changed = False
-        dhcp1_ip_changed = False
-        dhcp2_ip_changed = False
-        dhcp3_ip_changed = False
-        dhcp1_vrf_changed = False
-        dhcp2_vrf_changed = False
-        dhcp3_vrf_changed = False
         dhcp_servers_changed = False
         dhcp_loopback_changed = False
         multicast_group_address_changed = False
@@ -967,18 +929,6 @@ class DcnmNetwork:
         mtu_have = json_to_dict_have.get("mtu", "")
         arpsup_want = str(json_to_dict_want.get("suppressArp", "")).lower()
         arpsup_have = json_to_dict_have.get("suppressArp", "")
-        dhcp1_ip_want = json_to_dict_want.get("dhcpServerAddr1", "")
-        dhcp1_ip_have = json_to_dict_have.get("dhcpServerAddr1", "")
-        dhcp2_ip_want = json_to_dict_want.get("dhcpServerAddr2", "")
-        dhcp2_ip_have = json_to_dict_have.get("dhcpServerAddr2", "")
-        dhcp3_ip_want = json_to_dict_want.get("dhcpServerAddr3", "")
-        dhcp3_ip_have = json_to_dict_have.get("dhcpServerAddr3", "")
-        dhcp1_vrf_want = json_to_dict_want.get("vrfDhcp", "")
-        dhcp1_vrf_have = json_to_dict_have.get("vrfDhcp", "")
-        dhcp2_vrf_want = json_to_dict_want.get("vrfDhcp2", "")
-        dhcp2_vrf_have = json_to_dict_have.get("vrfDhcp2", "")
-        dhcp3_vrf_want = json_to_dict_want.get("vrfDhcp3", "")
-        dhcp3_vrf_have = json_to_dict_have.get("vrfDhcp3", "")
         dhcp_servers_want = json_to_dict_want.get("dhcpServers", "")
         dhcp_servers_have = json_to_dict_have.get("dhcpServers", "")
         dhcp_loopback_want = json_to_dict_want.get("loopbackId", "")
@@ -1030,12 +980,6 @@ class DcnmNetwork:
                 or intDesc_have != intDesc_want
                 or mtu_have != mtu_want
                 or arpsup_have != arpsup_want
-                or dhcp1_ip_have != dhcp1_ip_want
-                or dhcp2_ip_have != dhcp2_ip_want
-                or dhcp3_ip_have != dhcp3_ip_want
-                or dhcp1_vrf_have != dhcp1_vrf_want
-                or dhcp2_vrf_have != dhcp2_vrf_want
-                or dhcp3_vrf_have != dhcp3_vrf_want
                 or dhcp_servers_have != dhcp_servers_want
                 or dhcp_loopback_have != dhcp_loopback_want
                 or multicast_group_address_have != multicast_group_address_want
@@ -1071,18 +1015,6 @@ class DcnmNetwork:
                     mtu_changed = True
                 if arpsup_have != arpsup_want:
                     arpsup_changed = True
-                if dhcp1_ip_have != dhcp1_ip_want:
-                    dhcp1_ip_changed = True
-                if dhcp2_ip_have != dhcp2_ip_want:
-                    dhcp2_ip_changed = True
-                if dhcp3_ip_have != dhcp3_ip_want:
-                    dhcp3_ip_changed = True
-                if dhcp1_vrf_have != dhcp1_vrf_want:
-                    dhcp1_vrf_changed = True
-                if dhcp2_vrf_have != dhcp2_vrf_want:
-                    dhcp2_vrf_changed = True
-                if dhcp3_vrf_have != dhcp3_vrf_want:
-                    dhcp3_vrf_changed = True
                 if dhcp_servers_have != dhcp_servers_want:
                     dhcp_servers_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
@@ -1128,12 +1060,6 @@ class DcnmNetwork:
                 or intDesc_have != intDesc_want
                 or mtu_have != mtu_want
                 or arpsup_have != arpsup_want
-                or dhcp1_ip_have != dhcp1_ip_want
-                or dhcp2_ip_have != dhcp2_ip_want
-                or dhcp3_ip_have != dhcp3_ip_want
-                or dhcp1_vrf_have != dhcp1_vrf_want
-                or dhcp2_vrf_have != dhcp2_vrf_want
-                or dhcp3_vrf_have != dhcp3_vrf_want
                 or dhcp_servers_have != dhcp_servers_want
                 or dhcp_loopback_have != dhcp_loopback_want
                 or multicast_group_address_have != multicast_group_address_want
@@ -1166,18 +1092,6 @@ class DcnmNetwork:
                     mtu_changed = True
                 if arpsup_have != arpsup_want:
                     arpsup_changed = True
-                if dhcp1_ip_have != dhcp1_ip_want:
-                    dhcp1_ip_changed = True
-                if dhcp2_ip_have != dhcp2_ip_want:
-                    dhcp2_ip_changed = True
-                if dhcp3_ip_have != dhcp3_ip_want:
-                    dhcp3_ip_changed = True
-                if dhcp1_vrf_have != dhcp1_vrf_want:
-                    dhcp1_vrf_changed = True
-                if dhcp2_vrf_have != dhcp2_vrf_want:
-                    dhcp2_vrf_changed = True
-                if dhcp3_vrf_have != dhcp3_vrf_want:
-                    dhcp3_vrf_changed = True
                 if dhcp_servers_have != dhcp_servers_want:
                     dhcp_servers_changed = True
                 if dhcp_loopback_have != dhcp_loopback_want:
@@ -1221,12 +1135,6 @@ class DcnmNetwork:
             intdesc_changed,
             mtu_changed,
             arpsup_changed,
-            dhcp1_ip_changed,
-            dhcp2_ip_changed,
-            dhcp3_ip_changed,
-            dhcp1_vrf_changed,
-            dhcp2_vrf_changed,
-            dhcp3_vrf_changed,
             dhcp_servers_changed,
             dhcp_loopback_changed,
             multicast_group_address_changed,
@@ -1280,15 +1188,7 @@ class DcnmNetwork:
             "intfDescription": net.get("int_desc", ""),
             "mtu": net.get("mtu_l3intf", ""),
             "suppressArp": net.get("arp_suppress", False),
-            "dhcpServerAddr1": net.get("dhcp_srvr1_ip", ""),
-            "dhcpServerAddr2": net.get("dhcp_srvr2_ip", ""),
-            "dhcpServerAddr3": net.get("dhcp_srvr3_ip", ""),
-            "vrfDhcp": net.get("dhcp_srvr1_vrf", ""),
-            "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
-            "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
-            "dhcpServers": [
-                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr["srvr_vrf"]} for srvr in net.get("dhcp_servers", [])
-            ],
+            "dhcpServers": [{"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr["srvr_vrf"]} for srvr in net.get("dhcp_servers", [])],
             "loopbackId": net.get("dhcp_loopback_id", ""),
             "mcastGroup": net.get("multicast_group_address", ""),
             "gatewayIpV6Address": net.get("gw_ipv6_subnet", ""),
@@ -1316,36 +1216,10 @@ class DcnmNetwork:
             template_conf["intfDescription"] = ""
         if template_conf["mtu"] is None:
             template_conf["mtu"] = ""
-        if template_conf["vrfDhcp"] is None:
-            template_conf["vrfDhcp"] = ""
-        if template_conf["vrfDhcp2"] is None:
-            template_conf["vrfDhcp2"] = ""
-        if template_conf["vrfDhcp3"] is None:
-            template_conf["vrfDhcp3"] = ""
         if template_conf["dhcpServers"] == []:
-            dhcp_srvr_list = []
-            if template_conf["dhcpServerAddr1"] != "" and template_conf["vrfDhcp"] != "":
-                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
-            if template_conf["dhcpServerAddr2"] != "" and template_conf["vrfDhcp2"] != "":
-                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
-            if template_conf["dhcpServerAddr3"] != "" and template_conf["vrfDhcp3"] != "":
-                dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
-            if dhcp_srvr_list != []:
-                template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
-            else:
-                template_conf["dhcpServers"] = ""
-        elif template_conf["dhcpServers"] != []:
-            dhcp_srvr_list = template_conf["dhcpServers"]
-            if dhcp_srvr_list[0:1]:
-                template_conf["dhcpServerAddr1"] = dhcp_srvr_list[0]["srvrAddr"]
-                template_conf["vrfDhcp"] = dhcp_srvr_list[0]["srvrVrf"]
-            if dhcp_srvr_list[1:2]:
-                template_conf["dhcpServerAddr2"] = dhcp_srvr_list[1]["srvrAddr"]
-                template_conf["vrfDhcp2"] = dhcp_srvr_list[1]["srvrVrf"]
-            if dhcp_srvr_list[2:3]:
-                template_conf["dhcpServerAddr3"] = dhcp_srvr_list[2]["srvrAddr"]
-                template_conf["vrfDhcp3"] = dhcp_srvr_list[2]["srvrVrf"]
-            template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
+            template_conf["dhcpServers"] = ""
+        else:
+            template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=template_conf["dhcpServers"]), separators=(",", ":"))
         if template_conf["loopbackId"] is None:
             template_conf["loopbackId"] = ""
         if self.is_ms_fabric is True:
@@ -1439,12 +1313,6 @@ class DcnmNetwork:
                     "intfDescription": json_to_dict.get("intfDescription", ""),
                     "mtu": json_to_dict.get("mtu", ""),
                     "suppressArp": json_to_dict.get("suppressArp", False),
-                    "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                    "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                    "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                    "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                    "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                    "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                     "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
@@ -1493,12 +1361,6 @@ class DcnmNetwork:
                             "intfDescription": json_to_dict.get("intfDescription", ""),
                             "mtu": json_to_dict.get("mtu", ""),
                             "suppressArp": json_to_dict.get("suppressArp", False),
-                            "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                            "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                            "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                            "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                            "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                            "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                             "dhcpServers": json_to_dict.get("dhcpServers", ""),
                             "loopbackId": json_to_dict.get("loopbackId", ""),
                             "mcastGroup": json_to_dict.get("mcastGroup", ""),
@@ -1934,12 +1796,6 @@ class DcnmNetwork:
         intdesc_changed = {}
         mtu_changed = {}
         arpsup_changed = {}
-        dhcp1_ip_changed = {}
-        dhcp2_ip_changed = {}
-        dhcp3_ip_changed = {}
-        dhcp1_vrf_changed = {}
-        dhcp2_vrf_changed = {}
-        dhcp3_vrf_changed = {}
         dhcp_servers_changed = {}
         dhcp_loopback_changed = {}
         multicast_group_address_changed = {}
@@ -1971,12 +1827,6 @@ class DcnmNetwork:
                         idesc_chg,
                         mtu_chg,
                         arpsup_chg,
-                        dhcp1_ip_chg,
-                        dhcp2_ip_chg,
-                        dhcp3_ip_chg,
-                        dhcp1_vrf_chg,
-                        dhcp2_vrf_chg,
-                        dhcp3_vrf_chg,
                         dhcp_servers_chg,
                         dhcp_loopbk_chg,
                         mcast_grp_chg,
@@ -1999,12 +1849,6 @@ class DcnmNetwork:
                     intdesc_changed.update({want_c["networkName"]: idesc_chg})
                     mtu_changed.update({want_c["networkName"]: mtu_chg})
                     arpsup_changed.update({want_c["networkName"]: arpsup_chg})
-                    dhcp1_ip_changed.update({want_c["networkName"]: dhcp1_ip_chg})
-                    dhcp2_ip_changed.update({want_c["networkName"]: dhcp2_ip_chg})
-                    dhcp3_ip_changed.update({want_c["networkName"]: dhcp3_ip_chg})
-                    dhcp1_vrf_changed.update({want_c["networkName"]: dhcp1_vrf_chg})
-                    dhcp2_vrf_changed.update({want_c["networkName"]: dhcp2_vrf_chg})
-                    dhcp3_vrf_changed.update({want_c["networkName"]: dhcp3_vrf_chg})
                     dhcp_servers_changed.update({want_c["networkName"]: dhcp_servers_chg})
                     dhcp_loopback_changed.update({want_c["networkName"]: dhcp_loopbk_chg})
                     if self.is_ms_fabric is False:
@@ -2112,12 +1956,6 @@ class DcnmNetwork:
                             or intdesc_changed.get(want_a["networkName"], False)
                             or mtu_changed.get(want_a["networkName"], False)
                             or arpsup_changed.get(want_a["networkName"], False)
-                            or dhcp1_ip_changed.get(want_a["networkName"], False)
-                            or dhcp2_ip_changed.get(want_a["networkName"], False)
-                            or dhcp3_ip_changed.get(want_a["networkName"], False)
-                            or dhcp1_vrf_changed.get(want_a["networkName"], False)
-                            or dhcp2_vrf_changed.get(want_a["networkName"], False)
-                            or dhcp3_vrf_changed.get(want_a["networkName"], False)
                             or dhcp_servers_changed.get(want_a["networkName"], False)
                             or dhcp_loopback_changed.get(want_a["networkName"], False)
                             or multicast_group_address_changed.get(want_a["networkName"], False)
@@ -2221,12 +2059,6 @@ class DcnmNetwork:
             found_c.update({"int_desc": json_to_dict.get("intfDescription", "")})
             found_c.update({"mtu_l3intf": json_to_dict.get("mtu", "")})
             found_c.update({"arp_suppress": json_to_dict.get("suppressArp", False)})
-            found_c.update({"dhcp_srvr1_ip": json_to_dict.get("dhcpServerAddr1", "")})
-            found_c.update({"dhcp_srvr2_ip": json_to_dict.get("dhcpServerAddr2", "")})
-            found_c.update({"dhcp_srvr3_ip": json_to_dict.get("dhcpServerAddr3", "")})
-            found_c.update({"dhcp_srvr1_vrf": json_to_dict.get("vrfDhcp", "")})
-            found_c.update({"dhcp_srvr2_vrf": json_to_dict.get("vrfDhcp2", "")})
-            found_c.update({"dhcp_srvr3_vrf": json_to_dict.get("vrfDhcp3", "")})
             found_c.update({"dhcp_servers": json_to_dict.get("dhcpServers", "")})
             found_c.update({"dhcp_loopback_id": json_to_dict.get("loopbackId", "")})
             found_c.update({"multicast_group_address": json_to_dict.get("mcastGroup", "")})
@@ -2602,12 +2434,6 @@ class DcnmNetwork:
                     "intfDescription": json_to_dict.get("intfDescription", ""),
                     "mtu": json_to_dict.get("mtu", ""),
                     "suppressArp": json_to_dict.get("suppressArp", False),
-                    "dhcpServerAddr1": json_to_dict.get("dhcpServerAddr1", ""),
-                    "dhcpServerAddr2": json_to_dict.get("dhcpServerAddr2", ""),
-                    "dhcpServerAddr3": json_to_dict.get("dhcpServerAddr3", ""),
-                    "vrfDhcp": json_to_dict.get("vrfDhcp", ""),
-                    "vrfDhcp2": json_to_dict.get("vrfDhcp2", ""),
-                    "vrfDhcp3": json_to_dict.get("vrfDhcp3", ""),
                     "dhcpServers": json_to_dict.get("dhcpServers", ""),
                     "loopbackId": json_to_dict.get("loopbackId", ""),
                     "mcastGroup": json_to_dict.get("mcastGroup", ""),
@@ -2721,27 +2547,6 @@ class DcnmNetwork:
     def validate_input(self):
         """Parse the playbook values, validate to param specs."""
 
-        # Make sure mutually exclusive dhcp properties are not set
-        if self.config:
-            for net in self.config:
-                if net.get("dhcp_servers"):
-                    conflicting_keys = []
-                    dhcp_individual_keys = [
-                        "dhcp_srvr1_ip", "dhcp_srvr1_vrf",
-                        "dhcp_srvr2_ip", "dhcp_srvr2_vrf",
-                        "dhcp_srvr3_ip", "dhcp_srvr3_vrf"
-                    ]
-
-                    for key in dhcp_individual_keys:
-                        if net.get(key) is not None:
-                            conflicting_keys.append(key)
-
-                    if conflicting_keys:
-                        msg = "Network '{0}': dhcp_servers cannot be used together with individual DHCP server properties: {1}".format(
-                            net.get("net_name", "unknown"), ", ".join(conflicting_keys)
-                        )
-                        self.module.fail_json(msg=msg)
-
         state = self.params["state"]
 
         if state == "query":
@@ -2764,12 +2569,6 @@ class DcnmNetwork:
                 int_desc=dict(type="str", length_max=258),
                 mtu_l3intf=dict(type="int", range_min=68, range_max=9216),
                 arp_suppress=dict(type="bool", default=False),
-                dhcp_srvr1_ip=dict(type="ipv4", default=""),
-                dhcp_srvr2_ip=dict(type="ipv4", default=""),
-                dhcp_srvr3_ip=dict(type="ipv4", default=""),
-                dhcp_srvr1_vrf=dict(type="str", length_max=32),
-                dhcp_srvr2_vrf=dict(type="str", length_max=32),
-                dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_servers=dict(type="list", elements="dict", default=[]),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
                 multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
@@ -2831,12 +2630,6 @@ class DcnmNetwork:
                 int_desc=dict(type="str", length_max=258),
                 mtu_l3intf=dict(type="int", range_min=68, range_max=9216),
                 arp_suppress=dict(type="bool", default=False),
-                dhcp_srvr1_ip=dict(type="ipv4", default=""),
-                dhcp_srvr2_ip=dict(type="ipv4", default=""),
-                dhcp_srvr3_ip=dict(type="ipv4", default=""),
-                dhcp_srvr1_vrf=dict(type="str", length_max=32),
-                dhcp_srvr2_vrf=dict(type="str", length_max=32),
-                dhcp_srvr3_vrf=dict(type="str", length_max=32),
                 dhcp_servers=dict(type="list", elements="dict", default=[]),
                 dhcp_loopback_id=dict(type="int", range_min=0, range_max=1023),
                 multicast_group_address=dict(type="ipv4", default=mcast_group_addr),
@@ -2898,13 +2691,6 @@ class DcnmNetwork:
                         else:
                             if net.get("vrf_name", "") is None:
                                 invalid_params.append("vrf_name is required for L3 Networks")
-
-                        if any(has_partial_dhcp_config(srvr) for srvr in [
-                            dict(srvr_ip=net.get("dhcp_srvr1_ip"), srvr_vrf=net.get("dhcp_srvr1_vrf")),
-                            dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
-                            dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
-                        ]):
-                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                         if net.get("dhcp_servers"):
                             dhcp_servers = net.get("dhcp_servers")
@@ -3069,43 +2855,12 @@ class DcnmNetwork:
             elif str(json_to_dict_want["suppressArp"]).lower() == "false":
                 json_to_dict_want["suppressArp"] = False
 
-        if cfg.get("dhcp_srvr1_ip", None) is None:
-            json_to_dict_want["dhcpServerAddr1"] = json_to_dict_have["dhcpServerAddr1"]
-
-        if cfg.get("dhcp_srvr2_ip", None) is None:
-            json_to_dict_want["dhcpServerAddr2"] = json_to_dict_have["dhcpServerAddr2"]
-
-        if cfg.get("dhcp_srvr3_ip", None) is None:
-            json_to_dict_want["dhcpServerAddr3"] = json_to_dict_have["dhcpServerAddr3"]
-
-        if cfg.get("dhcp_srvr1_vrf", None) is None:
-            json_to_dict_want["vrfDhcp"] = json_to_dict_have["vrfDhcp"]
-
-        if cfg.get("dhcp_srvr2_vrf", None) is None:
-            json_to_dict_want["vrfDhcp2"] = json_to_dict_have["vrfDhcp2"]
-
-        if cfg.get("dhcp_srvr3_vrf", None) is None:
-            json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
-
         if cfg.get("dhcp_servers", None) is None:
-            want_have_dhcp_servers = [None] * 3
-            if cfg.get("dhcp_srvr1_ip", None) is not None:
-                want_have_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=cfg.get("dhcp_srvr1_vrf"))
-            elif json_to_dict_have["dhcpServerAddr1"] != "":
-                want_have_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
-            if cfg.get("dhcp_srvr2_ip", None) is not None:
-                want_have_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=cfg.get("dhcp_srvr2_vrf"))
-            elif json_to_dict_have["dhcpServerAddr2"] != "":
-                want_have_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
-            if cfg.get("dhcp_srvr3_ip", None) is not None:
-                want_have_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=cfg.get("dhcp_srvr3_vrf"))
-            elif json_to_dict_have["dhcpServerAddr3"] != "":
-                want_have_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
-            want_have_dhcp_servers = [srvr for srvr in want_have_dhcp_servers[:] if srvr is not None]
-            if want_have_dhcp_servers != []:
-                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_have_dhcp_servers, separators=(",", ":")))
+            want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
+            if want_dhcp_servers == []:
+                json_to_dict_want["dhcpServers"] = ""
             else:
-                json_to_dict_want["dhcpServers"] = json_to_dict_have["dhcpServers"]
+                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_dhcp_servers), separators=(",", ":"))
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]

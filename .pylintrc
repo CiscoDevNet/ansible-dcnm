@@ -1,0 +1,12 @@
+[MASTER]
+# Load plugins if you use any (example: pylint.extensions.docparams)
+# load-plugins=pylint.extensions.docparams
+
+# Files or directories to ignore (glob patterns)
+ignore=venv,build,.git,.github,.vscode
+
+[MESSAGE CONTROL]
+disable=all
+enable=
+#    R1735,                          # use-dict-literal
+    W0311,                          # bad-indentation
