@@ -191,7 +191,7 @@ class EpOneManageFabricConfigDeploy(BaseModel):
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploy", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
-    query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
+    query_params: FabricConfigDeployQueryParams = Field(default_factory=lambda: FabricConfigDeployQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -257,7 +257,7 @@ class EpOneManageFabricConfigDeploySwitch(BaseModel):
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigDeploySwitch", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
     switch_sn: Optional[str] = Field(min_length=1, description="Switch serial number")
-    query_params: FabricConfigDeployQueryParams = Field(default_factory=FabricConfigDeployQueryParams)
+    query_params: FabricConfigDeployQueryParams = Field(default_factory=lambda: FabricConfigDeployQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -323,7 +323,7 @@ class EpOneManageFabricConfigPreview(BaseModel):
 
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreview", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
-    query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
+    query_params: FabricConfigPreviewQueryParams = Field(default_factory=lambda: FabricConfigPreviewQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -389,7 +389,7 @@ class EpOneManageFabricConfigPreviewSwitch(BaseModel):
     class_name: Optional[str] = Field(default="EpOneManageFabricConfigPreviewSwitch", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
     switch_sn: Optional[str] = Field(min_length=1, description="Switch serial number")
-    query_params: FabricConfigPreviewQueryParams = Field(default_factory=FabricConfigPreviewQueryParams)
+    query_params: FabricConfigPreviewQueryParams = Field(default_factory=lambda: FabricConfigPreviewQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -962,7 +962,7 @@ class EpOneManageLinkGetByUuid(BaseModel):
 
     class_name: Optional[str] = Field(default="EpOneManageLinkGetByUuid", description="Class name for backward compatibility")
     link_uuid: Optional[str] = Field(min_length=1, description="Link UUID")
-    query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
+    query_params: LinkByUuidQueryParams = Field(default_factory=lambda: LinkByUuidQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -1062,7 +1062,7 @@ class EpOneManageLinkUpdate(BaseModel):
 
     class_name: Optional[str] = Field(default="EpOneManageLinkUpdate", description="Class name for backward compatibility")
     link_uuid: Optional[str] = Field(min_length=1, description="Link UUID")
-    query_params: LinkByUuidQueryParams = Field(default_factory=LinkByUuidQueryParams)
+    query_params: LinkByUuidQueryParams = Field(default_factory=lambda: LinkByUuidQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -1342,7 +1342,7 @@ class EpOneManageNetworksDelete(BaseModel):
 
     class_name: Optional[str] = Field(default="EpOneManageNetworksDelete", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
-    query_params: NetworkNamesQueryParams = Field(default_factory=NetworkNamesQueryParams)
+    query_params: NetworkNamesQueryParams = Field(default_factory=lambda: NetworkNamesQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
@@ -1578,7 +1578,7 @@ class EpOneManageVrfsDelete(BaseModel):
 
     class_name: Optional[str] = Field(default="EpOneManageVrfsDelete", description="Class name for backward compatibility")
     fabric_name: Optional[str] = Field(min_length=1, description="Fabric name")
-    query_params: VrfNamesQueryParams = Field(default_factory=VrfNamesQueryParams)
+    query_params: VrfNamesQueryParams = Field(default_factory=lambda: VrfNamesQueryParams().to_query_string())
 
     def __init__(self, **data):
         """Initialize with default query parameter objects."""
