@@ -16,16 +16,9 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-try:
-    from ansible_collections.ansible.netcommon.plugins.action.network import (
-        ActionModule as ActionNetworkModule,
-    )
-    NETCOMMON_IMPORT_ERROR = None
-except ImportError as imp_exc:
-    # Create a dummy base class if netcommon is not available
-    NETCOMMON_IMPORT_ERROR = imp_exc
-    ActionNetworkModule = object
-
+from ansible_collections.ansible.netcommon.plugins.action.network import (
+    ActionModule as ActionNetworkModule,
+)
 from ansible.utils.display import Display
 
 display = Display()
@@ -33,11 +26,6 @@ display = Display()
 
 class ActionModule(ActionNetworkModule):
     def run(self, tmp=None, task_vars=None):
-        if NETCOMMON_IMPORT_ERROR:
-            from ansible.errors import AnsibleError
-            raise AnsibleError(
-                'ansible.netcommon collection must be installed to use this plugin'
-            ) from NETCOMMON_IMPORT_ERROR
 
         if (
             self._task.args.get("state") == "merged"
