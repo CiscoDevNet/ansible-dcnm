@@ -179,11 +179,11 @@ class LuceneQueryParams(BaseModel):
     - NOT conditions: `NOT state:deleted`
     """
 
-    filter: Optional[str] = Field(description="Lucene filter expression")
-    max: Optional[int] = Field(ge=1, le=10000, description="Maximum results")
-    offset: Optional[int] = Field(ge=0, description="Pagination offset")
-    sort: Optional[str] = Field(description="Sort field and direction (e.g., 'name:asc')")
-    fields: Optional[str] = Field(description="Comma-separated list of fields to return")
+    filter: Optional[str] = Field(default=None, description="Lucene filter expression")
+    max: Optional[int] = Field(default=None, ge=1, le=10000, description="Maximum results")
+    offset: Optional[int] = Field(default=None, ge=0, description="Pagination offset")
+    sort: Optional[str] = Field(default=None, description="Sort field and direction (e.g., 'name:asc')")
+    fields: Optional[str] = Field(default=None, description="Comma-separated list of fields to return")
 
     @field_validator("sort")
     @classmethod
