@@ -71,8 +71,8 @@ class FabricConfigDeployQueryParams(EndpointQueryParams):
     - incl_all_msd_switches: If true and MSD fabric, deploy all child fabric changes; if false, skip child fabrics (default: "false")
     """
 
-    force_show_run: Literal["false", "true"] = Field("false", description="Fetch latest running config from device")
-    incl_all_msd_switches: Literal["false", "true"] = Field("false", description="Deploy all MSD child fabric changes")
+    force_show_run: Literal["false", "true"] = Field(default="false", description="Fetch latest running config from device")
+    incl_all_msd_switches: Literal["false", "true"] = Field(default="false", description="Deploy all MSD child fabric changes")
 
     def to_query_string(self) -> str:
         """Build query string with forceShowRun and inclAllMSDSwitches parameters."""
