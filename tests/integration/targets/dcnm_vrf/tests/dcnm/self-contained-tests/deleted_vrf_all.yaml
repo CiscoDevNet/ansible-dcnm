@@ -23,11 +23,11 @@
 
 - set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
-  when: controller_version == 11
+  when: controller_version == "11"
 
 - set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
-  when: controller_version >= 12
+  when: controller_version >= "12"
 
 - name: DELETE_ALL - Verify if fabric is deployed.
   cisco.dcnm.dcnm_rest:
