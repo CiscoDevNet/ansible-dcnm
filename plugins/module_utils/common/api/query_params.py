@@ -24,10 +24,36 @@ from __future__ import absolute_import, division, print_function
 __metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
+import traceback
 from abc import ABC, abstractmethod
 from typing import Optional, Union
 
-from pydantic import BaseModel, Field, field_validator
+try:
+    from pydantic import BaseModel, Field, field_validator
+except ImportError:
+    HAS_PYDANTIC = False
+    PYDANTIC_IMPORT_ERROR: Union[str, None] = traceback.format_exc()  # pylint: disable=invalid-name
+
+    # Fallback: object base class
+    BaseModel = object  # type: ignore[assignment,misc]
+
+    # Fallback: Field that does nothing
+    def Field(**kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic Field fallback when pydantic is not available."""
+        return None
+
+    # Fallback: field_validator decorator that does nothing
+    def field_validator(*args, **kwargs):  # type: ignore[no-redef] # pylint: disable=unused-argument,invalid-name
+        """Pydantic field_validator fallback when pydantic is not available."""
+
+        def decorator(func):
+            return func
+
+        return decorator
+
+else:
+    HAS_PYDANTIC = True
+    PYDANTIC_IMPORT_ERROR = None  # pylint: disable=invalid-name
 
 
 class QueryParams(ABC):
