@@ -2,18 +2,12 @@ from __future__ import absolute_import, division, print_function
 from typing import List, Optional, Annotated
 
 try:
-    from pydantic import BaseModel, field_validator, model_validator
+    from pydantic import BaseModel, model_validator, BeforeValidator
     HAS_PYDANTIC = True
 except ImportError:
     HAS_PYDANTIC = False
     # Create dummy classes to allow import without pydantic
     BaseModel = object
-
-    def field_validator(*args, **kwargs):
-        """Dummy field_validator decorator that accepts any arguments"""
-        def decorator(func):
-            return func
-        return decorator
 
     def model_validator(*args, **kwargs):
         """Dummy model_validator decorator that accepts any arguments"""
