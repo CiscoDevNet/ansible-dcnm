@@ -1,0 +1,24 @@
+---
+# This MSD test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+# ------------------------------
+# MSD L2-only Network
+# ------------------------------
+- net_name: "{{ test_data_common.msd_l2_net }}"
+  net_id: "{{ test_data_common.msd_l2_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.msd_l2_vlan_id }}"
+  int_desc: 'MSD L2-only Network'
+  is_l2only: true
+  child_fabric_config:
+    - fabric: "{{ test_data_common.child_fabric }}"
+      # L2-only network child fabric config
+  attach:
+    - ip_address: "{{ test_data_common.sw1 }}"
+      ports: ["{{ test_data_common.sw1_int4 }}"]
+    - ip_address: "{{ test_data_common.sw2 }}"
+      ports: ["{{ test_data_common.sw2_int4 }}"]
+  deploy: {{ deploy_local | bool }}

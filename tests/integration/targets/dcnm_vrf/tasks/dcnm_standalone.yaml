@@ -1,0 +1,53 @@
+---
+- name: Parse standalone pattern
+  set_fact:
+    # Extract the directory part (e.g., "standalone/self-contained-tests")
+    standalone_dir: "{{ (standalone_pattern | default('standalone/*.yaml')).split('/')[:-1] | join('/') }}"
+    # Extract the file pattern (e.g., "*" or "*.yaml" or "merged_vrf_all.yaml")
+    standalone_file_pattern_raw: "{{ (standalone_pattern | default('standalone/*.yaml')).split('/')[-1] }}"
+
+- name: Add .yaml extension if needed
+  set_fact:
+    standalone_file_pattern: "{{ standalone_file_pattern_raw }}.yaml"
+  when: 
+    - not standalone_file_pattern_raw.endswith('.yaml')
+    - standalone_file_pattern_raw != '*'
+
+- name: Keep pattern as-is if wildcard
+  set_fact:
+    standalone_file_pattern: "*.yaml"
+  when: standalone_file_pattern_raw == '*'
+
+- name: Keep pattern as-is if already has extension
+  set_fact:
+    standalone_file_pattern: "{{ standalone_file_pattern_raw }}"
+  when: standalone_file_pattern_raw.endswith('.yaml')
+
+- name: Set search path
+  set_fact:
+    standalone_search_path: "{{ role_path }}/tests/dcnm/{{ standalone_dir }}"
+
+- name: Debug paths
+  debug:
+    msg:
+      - "Pattern: {{ standalone_pattern }}"
+      - "Search path: {{ standalone_search_path }}"
+      - "File pattern: {{ standalone_file_pattern }}"
+
+- name: Find standalone test files
+  find:
+    paths: "{{ standalone_search_path }}"
+    patterns: "{{ standalone_file_pattern }}"
+    recurse: no
+  register: standalone_test_files
+  delegate_to: localhost
+
+- name: debug standalone test items
+  debug:
+    var: standalone_test_files
+
+- name: Run standalone tests
+  include_tasks: "{{ item.path }}"
+  loop: "{{ standalone_test_files.files }}"
+  loop_control:
+    label: "{{ item.path | basename }}"

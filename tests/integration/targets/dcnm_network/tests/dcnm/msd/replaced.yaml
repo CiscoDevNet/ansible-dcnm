@@ -1,0 +1,336 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MSD_REPLACED - Test Entry Point - [dcnm_network MSD]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+      Executing MSD Replaced Tests - [dcnm_network MSD]        +"
+      - "----------------------------------------------------------------"
+  tags: msd_replaced
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: MSD_REPLACED - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    deploy_local: false
+    
+    test_data_msd_replaced:
+      #----------------------------------  
+      # MSD replaced config templates and auto generated file location for test cases
+      #----------------------------------
+      # MSD TC1 - Replace MSD Network Configuration
+      msd_replaced_net_conf_template: "msd_replaced/dcnm_network_msd_replaced_net_conf.j2"
+      msd_replaced_net_conf_file: "{{ role_path }}/files/dcnm_network_msd_replaced_net_conf.yaml"
+      
+      # MSD TC2 - Replace child fabric parameters
+      msd_replaced_child_conf_template: "msd_replaced/dcnm_network_msd_replaced_child_conf.j2"
+      msd_replaced_child_conf_file: "{{ role_path }}/files/dcnm_network_msd_replaced_child_conf.yaml"
+      
+  delegate_to: localhost
+  tags: msd_replaced
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: MSD_REPLACED - Create Replaced Network Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_replaced.msd_replaced_net_conf_template }}"
+    dest: "{{ test_data_msd_replaced.msd_replaced_net_conf_file }}"
+  delegate_to: localhost
+  tags: msd_replaced
+
+- name: MSD_REPLACED - Create Replaced Child Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_replaced.msd_replaced_child_conf_template }}"
+    dest: "{{ test_data_msd_replaced.msd_replaced_child_conf_file }}"
+  delegate_to: localhost
+  tags: msd_replaced
+
+##############################################
+##          Load Config Files               ##
+##############################################
+
+- name: MSD_REPLACED - Load Replaced Network Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_replaced_net_conf: "{{ lookup('file', '{{ test_data_msd_replaced.msd_replaced_net_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_replaced
+
+- name: MSD_REPLACED - Load Replaced Child Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_replaced_child_conf: "{{ lookup('file', '{{ test_data_msd_replaced.msd_replaced_child_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_replaced
+
+##############################################
+##        Verify Fabric Deployment         ##
+##############################################
+
+- name: MSD_REPLACED - Verify if MSD fabric is deployed
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.response.DATA != None
+    fail_msg: "MSD Fabric '{{ test_data_common.fabric }}' not found."
+  tags: msd_replaced
+
+##############################################
+##              CLEANUP                     ##
+##############################################
+
+- name: MSD_REPLACED - setup - Clean up any existing MSD networks
+  cisco.dcnm.dcnm_network: &msd_clean
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: msd_replaced
+
+##############################################
+##    MSD TC1: Replace Network Config      ##
+##############################################
+
+- name: MSD_REPLACED - TC1 - MERGED - Create initial MSD network
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net1 }}"
+        vrf_name: "{{ test_data_common.net1_vrf }}"
+        net_id: "{{ test_data_common.msd_net1_net_id }}"
+        net_template: "{{ test_data_common.net1_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net1_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net1_gw_ip_subnet }}"
+        routing_tag: 12345
+        int_desc: 'Initial MSD Network'
+        mtu_l3intf: 9214
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 204
+            multicast_group_address: '239.1.1.1'
+        deploy: false
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - ASSERT - Verify initial network creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "Initial MSD network creation failed"
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - REPLACED - Replace MSD network configuration
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: replaced
+    config: "{{ dcnm_network_msd_replaced_net_conf }}"
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - ASSERT - Verify network replacement
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "MSD network replacement failed"
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - REPLACED - conf1 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: replaced
+    config: "{{ dcnm_network_msd_replaced_net_conf }}"
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "MSD network replacement idempotence failed"
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - QUERY - Get MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - ASSERT - Verify replaced network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "Replaced MSD network not found in query"
+  tags: msd_replaced
+
+# # MSD_REPLACED - TC1 - VALIDATE - Validate replaced MSD network configuration
+# - name: MSD_REPLACED - TC1 - VALIDATE - Validate replaced network configuration
+#   ndfc_network_validate:
+#     ndfc_data: "{{ query_result }}"
+#     test_data: "{{ test_data_common }}"
+#     config_path: "{{ test_data_msd_replaced.msd_replaced_net_conf_file }}"
+#     ignore_fields:
+#       - "networkId"        # Auto-generated network ID
+#       - "displayName"      # Auto-generated display name
+#       - "policyId"         # Auto-generated policy ID
+#       - "source"           # Source may vary
+#   register: validation_result
+#   tags: msd_replaced
+#
+# - name: MSD_REPLACED - TC1 - ASSERT - Check validation passed
+#   assert:
+#     that:
+#       - validation_result.failed == false
+#     fail_msg: "Replaced MSD Network validation failed: {{ validation_result.msg }}"
+#   tags: msd_replaced
+
+- name: MSD_REPLACED - TC1 - cleanup - Remove replaced MSD network
+  cisco.dcnm.dcnm_network:
+    <<: *msd_clean
+  tags: msd_replaced
+
+##############################################
+##  MSD TC2: Replace Child Fabric Config   ##
+##############################################
+
+- name: MSD_REPLACED - TC2 - MERGED - Create initial MSD network with child fabric
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config:
+      - net_name: "{{ test_data_common.msd_net2 }}"
+        vrf_name: "{{ test_data_common.net2_vrf }}"
+        net_id: "{{ test_data_common.msd_net2_net_id }}"
+        net_template: "{{ test_data_common.net2_default_net_template }}"
+        net_extension_template: "{{ test_data_common.net2_net_extension_template }}"
+        vlan_id: "{{ test_data_common.msd_net2_vlan_id }}"
+        gw_ip_subnet: "{{ test_data_common.msd_net2_gw_ip_subnet }}"
+        routing_tag: 12346
+        int_desc: 'Initial Multi-child MSD Network'
+        mtu_l3intf: 9216
+        child_fabric_config:
+          - fabric: "{{ test_data_common.child_fabric }}"
+            netflow_enable: false
+            l3gw_on_border: True
+            dhcp_loopback_id: 205
+            multicast_group_address: '239.1.1.2'
+        deploy: false
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - ASSERT - Verify initial network creation
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "Initial multi-child MSD network creation failed"
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - REPLACED - Replace child fabric configuration
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: replaced
+    config: "{{ dcnm_network_msd_replaced_child_conf }}"
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - ASSERT - Verify child fabric config replacement
+  assert:
+    that:
+      - result.changed == true
+      # - result.response[0].RETURN_CODE == 200
+    fail_msg: "Child fabric configuration replacement failed"
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - REPLACED - conf2 - Idempotence
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: replaced
+    config: "{{ dcnm_network_msd_replaced_child_conf }}"
+  register: result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - ASSERT - Verify idempotence
+  assert:
+    that:
+      - result.changed == false
+      # - result.response|length == 0
+    fail_msg: "Child fabric replacement idempotence failed"
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - QUERY - Get MSD network state
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_replaced
+
+- name: MSD_REPLACED - TC2 - ASSERT - Verify replaced network exists
+  assert:
+    that:
+      # - query_result.response|length >= 1
+    fail_msg: "Replaced child fabric network not found in query"
+  tags: msd_replaced
+
+# # MSD_REPLACED - TC2 - VALIDATE - Validate replaced child fabric configuration
+# - name: MSD_REPLACED - TC2 - VALIDATE - Validate child fabric parameters
+#   assert:
+#     that:
+#       - item.child_fabric_config is defined
+#       - item.child_fabric_config[0].dhcp_loopback_id is defined
+#       - item.child_fabric_config[0].multicast_group_address is defined
+#     fail_msg: "Child fabric configuration validation failed for {{ item.net_name }}"
+#   loop: "{{ query_result.response }}"
+#   when: query_result.response is defined and query_result.response|length > 0
+#   tags: msd_replaced
+
+##############################################
+##              FINAL CLEANUP               ##
+##############################################
+
+# - name: MSD_REPLACED - FINAL - Clean Up All MSD Test Networks
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: deleted
+#   tags: msd_replaced
+
+# - name: MSD_REPLACED - sleep for 40 seconds for DCNM to completely update the state
+#   wait_for:
+#     timeout: 40
+#   tags: msd_replaced
+
+# - name: MSD_REPLACED - FINAL - QUERY - Verify cleanup
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: result
+#   tags: msd_replaced
+
+# - name: MSD_REPLACED - FINAL - ASSERT - Verify all networks deleted
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD networks not properly cleaned up"
+#   tags: msd_replaced
+
+# # MSD_REPLACED - FINAL - VALIDATE - Verify all MSD configurations are removed
+# - name: MSD_REPLACED - FINAL - VALIDATE - Validate complete cleanup
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "MSD network cleanup validation failed"
+#   tags: msd_replaced

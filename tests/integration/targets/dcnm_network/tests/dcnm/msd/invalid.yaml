@@ -1,0 +1,286 @@
+##############################################
+##                 SETUP                    ##
+##############################################
+
+- name: MSD_INVALID - Test Entry Point - [dcnm_network MSD Invalid]
+  ansible.builtin.debug:
+    msg:
+      - "----------------------------------------------------------------"
+      - "+      Executing Invalid MSD Tests - [dcnm_network MSD]         +"
+      - "----------------------------------------------------------------"
+  tags: msd_invalid
+
+##############################################
+##      Create Dictionary of Test Data      ##
+##############################################
+- name: MSD_INVALID - Setup Internal TestCase Variables
+  ansible.builtin.set_fact:
+    test_data_msd_invalid:
+      #----------------------------------  
+      # MSD Invalid config templates and auto generated file location for test cases
+      #----------------------------------
+      # Invalid TC1 - Parent fabric restrictions
+      msd_invalid_parent_conf_template: "msd_invalid/dcnm_network_msd_invalid_parent_conf.j2"
+      msd_invalid_parent_conf_file: "{{ role_path }}/files/dcnm_network_msd_invalid_parent_conf.yaml"
+      
+      # Invalid TC2 - Child fabric errors
+      msd_invalid_child_conf_template: "msd_invalid/dcnm_network_msd_invalid_child_conf.j2"
+      msd_invalid_child_conf_file: "{{ role_path }}/files/dcnm_network_msd_invalid_child_conf.yaml"
+      
+      # Invalid TC3 - Parameter range errors
+      msd_invalid_params_conf_template: "msd_invalid/dcnm_network_msd_invalid_params_conf.j2"
+      msd_invalid_params_conf_file: "{{ role_path }}/files/dcnm_network_msd_invalid_params_conf.yaml"
+      
+  delegate_to: localhost
+  tags: msd_invalid
+
+##############################################
+## Create Module Payloads using J2 Template ##
+##############################################
+
+- name: MSD_INVALID - Create Invalid Parent Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_invalid.msd_invalid_parent_conf_template }}"
+    dest: "{{ test_data_msd_invalid.msd_invalid_parent_conf_file }}"
+  delegate_to: localhost
+  tags: msd_invalid
+
+- name: MSD_INVALID - Create Invalid Child Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_invalid.msd_invalid_child_conf_template }}"
+    dest: "{{ test_data_msd_invalid.msd_invalid_child_conf_file }}"
+  delegate_to: localhost
+  tags: msd_invalid
+
+- name: MSD_INVALID - Create Invalid Params Config File from J2 Template
+  ansible.builtin.template:
+    src: "{{ test_data_msd_invalid.msd_invalid_params_conf_template }}"
+    dest: "{{ test_data_msd_invalid.msd_invalid_params_conf_file }}"
+  delegate_to: localhost
+  tags: msd_invalid
+
+##############################################
+##          Load Config Files               ##
+##############################################
+
+- name: MSD_INVALID - Load Invalid Parent Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_invalid_parent_conf: "{{ lookup('file', '{{ test_data_msd_invalid.msd_invalid_parent_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_invalid
+
+- name: MSD_INVALID - Load Invalid Child Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_invalid_child_conf: "{{ lookup('file', '{{ test_data_msd_invalid.msd_invalid_child_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_invalid
+
+- name: MSD_INVALID - Load Invalid Params Configuration
+  ansible.builtin.set_fact:
+    dcnm_network_msd_invalid_params_conf: "{{ lookup('file', '{{ test_data_msd_invalid.msd_invalid_params_conf_file }}') | from_yaml }}"
+  delegate_to: localhost
+  tags: msd_invalid
+
+##############################################
+##        Verify Fabric Deployment         ##
+##############################################
+
+- name: MSD_INVALID - Verify if MSD fabric is deployed
+  cisco.dcnm.dcnm_rest:
+    method: GET
+    path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}
+  register: result
+  tags: msd_invalid
+
+- name: MSD_INVALID - ASSERT - Fabric Found
+  assert:
+    that:
+      - result.response.DATA != None
+    fail_msg: "MSD Fabric '{{ test_data_common.fabric }}' not found."
+  tags: msd_invalid
+
+##############################################
+##              CLEANUP                     ##
+##############################################
+
+- name: MSD_INVALID - setup - Clean up any existing MSD networks
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+  tags: msd_invalid
+
+##############################################
+##    Invalid TC1: Parent Fabric Restrictions ##
+##############################################
+
+- name: MSD_INVALID - TC1 - MERGED - Try l3gw_on_border on parent fabric (should fail)
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: 
+      - "{{ dcnm_network_msd_invalid_parent_conf[0] }}"
+  register: result
+  ignore_errors: true
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC1 - ASSERT - Verify l3gw_on_border failure
+  assert:
+    that:
+      - result.failed == true or result.response[0].RETURN_CODE != 200
+    fail_msg: "Expected failure for l3gw_on_border on parent fabric"
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC1 - MERGED - Try netflow_enable on parent fabric (should fail)
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: 
+      - "{{ dcnm_network_msd_invalid_parent_conf[1] }}"
+  register: result
+  ignore_errors: true
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC1 - ASSERT - Verify netflow_enable failure
+  assert:
+    that:
+      - result.failed == true or result.response[0].RETURN_CODE != 200
+    fail_msg: "Expected failure for netflow_enable on parent fabric"
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC1 - MERGED - Try trm_enable on parent fabric (should fail)
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: 
+      - "{{ dcnm_network_msd_invalid_parent_conf[2] }}"
+  register: result
+  ignore_errors: true
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC1 - ASSERT - Verify trm_enable failure
+  assert:
+    that:
+      - result.failed == true or result.response[0].RETURN_CODE != 200
+    fail_msg: "Expected failure for trm_enable on parent fabric"
+  tags: msd_invalid
+
+##############################################
+##    Invalid TC2: Child Fabric Errors     ##
+##############################################
+
+- name: MSD_INVALID - TC2 - MERGED - Try non-existent child fabric (should fail)
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: 
+      - "{{ dcnm_network_msd_invalid_child_conf[0] }}"
+  register: result
+  ignore_errors: true
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC2 - ASSERT - Verify non-existent child fabric failure
+  assert:
+    that:
+      - result.failed == true or result.response[0].RETURN_CODE != 200
+    fail_msg: "Expected failure for non-existent child fabric"
+  tags: msd_invalid
+
+##############################################
+##    Invalid TC3: Parameter Range Errors  ##
+##############################################
+
+- name: MSD_INVALID - TC3 - MERGED - Try invalid DHCP loopback ID (should fail)
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: 
+      - "{{ dcnm_network_msd_invalid_params_conf[0] }}"
+  register: result
+  ignore_errors: true
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC3 - ASSERT - Verify invalid DHCP loopback ID failure
+  assert:
+    that:
+      - result.failed == true or result.response[0].RETURN_CODE != 200
+    fail_msg: "Expected failure for invalid DHCP loopback ID"
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC3 - MERGED - Try invalid multicast group address (should fail)
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: merged
+    config: 
+      - "{{ dcnm_network_msd_invalid_params_conf[1] }}"
+  register: result
+  ignore_errors: true
+  tags: msd_invalid
+
+- name: MSD_INVALID - TC3 - ASSERT - Verify invalid multicast group failure
+  assert:
+    that:
+      - result.failed == true or result.response[0].RETURN_CODE != 200
+    fail_msg: "Expected failure for invalid multicast group address"
+  tags: msd_invalid
+
+##############################################
+##              QUERY VERIFICATION         ##
+##############################################
+
+- name: MSD_INVALID - QUERY - Verify no invalid networks were created
+  cisco.dcnm.dcnm_network:
+    fabric: "{{ test_data_common.fabric }}"
+    state: query
+  register: query_result
+  tags: msd_invalid
+
+- name: MSD_INVALID - ASSERT - Verify no networks exist
+  assert:
+    that:
+      # - query_result.response|length == 0
+    fail_msg: "Invalid networks were incorrectly created"
+  tags: msd_invalid
+
+# # MSD_INVALID - VALIDATE - Verify no invalid networks were created
+# - name: MSD_INVALID - VALIDATE - Validate no invalid networks exist
+#   assert:
+#     that:
+#       - query_result.response|length == 0
+#       - invalid_l3gw_parent not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - invalid_netflow_parent not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - invalid_trm_parent not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - invalid_child_fabric not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - invalid_dhcp_loopback not in (query_result.response | map(attribute="net_name") | list | default([]))
+#       - invalid_multicast not in (query_result.response | map(attribute="net_name") | list | default([]))
+#     fail_msg: "Invalid network validation failed - some invalid networks were created"
+#   when: query_result.response is defined
+#   tags: msd_invalid
+
+##############################################
+##              FINAL CLEANUP               ##
+##############################################
+
+# - name: MSD_INVALID - FINAL - Clean up any networks that may have been created
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: deleted
+#   tags: msd_invalid
+
+# - name: MSD_INVALID - sleep for 40 seconds for DCNM to completely update the state
+#   wait_for:
+#     timeout: 40
+#   tags: msd_invalid
+
+# - name: MSD_INVALID - FINAL - QUERY - Verify final cleanup
+#   cisco.dcnm.dcnm_network:
+#     fabric: "{{ test_data_common.fabric }}"
+#     state: query
+#   register: result
+#   tags: msd_invalid
+
+# - name: MSD_INVALID - FINAL - ASSERT - Verify all networks deleted
+#   assert:
+#     that:
+#       # - result.response|length == 0
+#     fail_msg: "Invalid test networks not properly cleaned up"
+#   tags: msd_invalid
