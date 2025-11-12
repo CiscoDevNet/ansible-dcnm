@@ -66,6 +66,7 @@ dcnm_vrf_paths: dict = {
     "GET_VRF_SWITCH": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfs/switches?vrf-names={}&serial-numbers={}",
     "GET_VRF_ID": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/vrfinfo",
     "GET_VLAN": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/vlan/{}?vlanUsageType=TOP_DOWN_VRF_VLAN",
+    "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}",
 }
 
 
@@ -3125,6 +3126,48 @@ class NdfcVrf12:
         )
         self.send_to_controller(args)
 
+    def check_network_attachments(self, vrf_name: str) -> None:
+        """
+        # Summary
+
+        Check if a VRF has any attached networks before deletion.
+
+        ## Raises
+
+        Calls fail_json if the VRF has attached networks.
+
+        ## Parameters
+
+        - vrf_name: The VRF name to check
+
+        ## Notes
+
+        Networks must be removed before deleting a VRF.
+        Use the dcnm_network module to remove network attachments.
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"vrf_name: {vrf_name}"
+        self.log.debug(msg)
+
+        path = self.paths["GET_NET_VRF"].format(self.fabric, vrf_name)
+        resp = dcnm_send(self.module, "GET", path)
+
+        if resp.get("DATA") is None:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Invalid Response from Controller. {resp}"
+            self.module.fail_json(msg=msg)
+
+        if resp["DATA"] != []:
+            msg = f"{vrf_name} in fabric: {self.fabric} has associated network attachments. "
+            self.log.debug("%s. Number of networks: %d", msg, len(resp["DATA"]))
+            msg += "Please remove the network attachments "
+            msg += "before deleting the VRF. (maybe using dcnm_network module)"
+            self.module.fail_json(msg=msg)
+
     def push_diff_delete(self, is_rollback=False) -> None:
         """
         # Summary
@@ -3971,6 +4014,10 @@ class NdfcVrf12:
         # attachment being deleted is re-used on a new vrf attachment being
         # created. This is needed specially for state: overridden
 
+        # Check for network attachments before attempting VRF deletion
+        for vrf_name in self.diff_delete:
+            self.check_network_attachments(vrf_name)
+
         self.push_diff_detach(is_rollback=is_rollback)
         self.push_diff_undeploy(is_rollback=is_rollback)
 
@@ -4003,6 +4050,10 @@ class NdfcVrf12:
         # create,attach and deploy to address cases where a VLAN for vrf
         # attachment being deleted is re-used on a new vrf attachment being
         # created. This is needed specially for state: overridden
+
+        # Check for network attachments before attempting VRF deletion
+        for vrf_name in self.diff_delete:
+            self.check_network_attachments(vrf_name)
 
         self.push_diff_detach(is_rollback=is_rollback)
         self.push_diff_undeploy(is_rollback=is_rollback)
