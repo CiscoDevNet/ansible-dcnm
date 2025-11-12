@@ -754,7 +754,7 @@ class DcnmVrf:
             msg = "size must be an integer. "
             msg += f"Got {type(size)}."
             raise ValueError(msg)
-        return [lst[x : x + size] for x in range(0, len(lst), size)]
+        return [lst[x: x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
     def find_dict_in_list_by_key_value(search: list, key: str, value: str):

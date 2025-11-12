@@ -150,7 +150,7 @@ class InventoryValidate(BaseModel):
                 if ((seed_ip_one is not None and ip_address_two is not None and ip_address_two == seed_ip_one) or (ignore_fields['seed_ip'])):
                     seed_ip_match = True
 
-                if ((role_one is not None and switch_role_two is not None and switch_role_two == role_one) or (ignore_fields['role'])) :
+                if ((role_one is not None and switch_role_two is not None and switch_role_two == role_one) or (ignore_fields['role'])):
                     role_match = True
 
                 if seed_ip_match and role_match:
