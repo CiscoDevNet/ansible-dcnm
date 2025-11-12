@@ -259,6 +259,7 @@ class PlaybookVrfModelV12(BaseModel):
         - no_rp - boolean
         - overlay_mcast_group - string (IPv4 multicast group address without prefix)
         - redist_direct_rmap - string
+        - v6_redist_direct_rmap - string
         - rp_address - string (IPv4 host address without prefix)
         - rp_external - boolean
         - rp_loopback_id - int range (0-1023)
@@ -306,6 +307,7 @@ class PlaybookVrfModelV12(BaseModel):
     no_rp: StrictBool = Field(default=False)  # isRPAbsent
     overlay_mcast_group: str = Field(default="")  # multicastGroup
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET")  # vrfRouteMap
+    v6_redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET")  # v6VrfRouteMap
     rp_address: str = Field(default="")  # rpAddress
     rp_external: StrictBool = Field(default=False)  # isRPExternal
     rp_loopback_id: Optional[Union[int, str]] = Field(default="", ge=-1, le=1023)  # loopbackNumber

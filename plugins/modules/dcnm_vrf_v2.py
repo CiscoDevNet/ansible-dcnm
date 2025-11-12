@@ -123,6 +123,12 @@ options:
         type: str
         required: false
         default: 'FABRIC-RMAP-REDIST-SUBNET'
+      v6_redist_direct_rmap:
+        description:
+        - IPv6 Redistribute Direct Route Map
+        type: str
+        required: false
+        default: 'FABRIC-RMAP-REDIST-SUBNET'
       max_bgp_paths:
         description:
         - Max BGP Paths

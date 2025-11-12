@@ -71,6 +71,7 @@ class VrfTemplateConfigV12(BaseModel):
     no_rp: bool = Field(default=False, alias="isRPAbsent", description="There is no RP in TRMv4 as only SSM is used")
     overlay_mcast_group: str = Field(default="", alias="multicastGroup", description="Overlay Multicast group")
     redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="vrfRouteMap", description="VRF route map")
+    v6_redist_direct_rmap: str = Field(default="FABRIC-RMAP-REDIST-SUBNET", alias="v6VrfRouteMap", description="IPv6 VRF route map")
     rp_address: str = Field(
         default="",
         alias="rpAddress",
