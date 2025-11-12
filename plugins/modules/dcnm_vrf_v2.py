@@ -90,11 +90,13 @@ options:
         description:
         - VRF Vlan Name
         - if > 32 chars enable - system vlan long-name
+        - Not applicable to L3VNI w/o VLAN config
         type: str
         required: false
       vrf_intf_desc:
         description:
         - VRF Intf Description
+        - Not applicable to L3VNI w/o VLAN config
         type: str
         required: false
       vrf_description:
@@ -105,6 +107,7 @@ options:
       vrf_int_mtu:
         description:
         - VRF interface MTU
+        - Not applicable to L3VNI w/o VLAN config
         type: int
         required: false
         default: 9216
@@ -135,9 +138,16 @@ options:
       ipv6_linklocal_enable:
         description:
         - Enable IPv6 link-local Option
+        - Not applicable to L3VNI w/o VLAN config
         type: bool
         required: false
         default: true
+      l3vni_wo_vlan:
+        description:
+        - Enable L3 VNI without VLAN
+        type: bool
+        required: false
+        default: Inherited from fabric level settings
       trm_enable:
         description:
         - Enable Tenant Routed Multicast
@@ -588,8 +598,8 @@ except ImportError as import_error:
     THIRD_PARTY_FAILED_IMPORT.add("pydantic")
     THIRD_PARTY_IMPORT_ERROR = traceback.format_exc()
 
-from ..module_utils.common.log_v2 import Log
 from ..module_utils.common.enums.ansible import AnsibleStates
+from ..module_utils.common.log_v2 import Log
 from ..module_utils.network.dcnm.dcnm import dcnm_version_supported
 
 DcnmVrf11 = None  # pylint: disable=invalid-name

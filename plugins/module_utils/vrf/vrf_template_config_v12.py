@@ -50,6 +50,7 @@ class VrfTemplateConfigV12(BaseModel):
         alias="ipv6LinkLocalFlag",
         description="Enables IPv6 link-local Option under VRF SVI. Not applicable to L3VNI w/o VLAN config.",
     )
+    l3vni_wo_vlan: bool = Field(default=False, alias="enableL3VniNoVlan", description="Enable L3 VNI without VLAN")
     loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295, alias="tag", description="Loopback routing tag")
     max_bgp_paths: int = Field(
         default=1,

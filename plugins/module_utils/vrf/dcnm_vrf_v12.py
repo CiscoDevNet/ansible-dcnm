@@ -229,6 +229,14 @@ class NdfcVrf12:
             msg += "'fabricType' parameter is missing from self.fabric_data."
             self.module.fail_json(msg=msg)
 
+        # Check if fabric-level L3VNI without VLAN is enabled
+        self.fabric_nvpairs: dict = self.fabric_data.get("nvPairs", {})
+        self.fabric_l3vni_wo_vlan: bool = False
+        if self.fabric_nvpairs and self.fabric_nvpairs.get("ENABLE_L3VNI_NO_VLAN") == "true":
+            self.fabric_l3vni_wo_vlan = True
+        msg = f"self.fabric_l3vni_wo_vlan: {self.fabric_l3vni_wo_vlan}"
+        self.log.debug(msg)
+
         try:
             self.sn_fab: dict = get_sn_fabric_dict(self.inventory_data)
         except ValueError as error:
@@ -1739,7 +1747,12 @@ class NdfcVrf12:
             vrf_attach_payloads: list[dict[Any, Any]] = []
 
             vrf_deploy: bool = validated_playbook_config_model.deploy or False
-            vlan_id: int = validated_playbook_config_model.vlan_id or 0
+
+            # Handle vlan_id based on l3vni_wo_vlan setting
+            if validated_playbook_config_model.l3vni_wo_vlan:
+                vlan_id: int = 0
+            else:
+                vlan_id: int = validated_playbook_config_model.vlan_id or 0
 
             if not validated_playbook_config_model.attach:
                 msg = f"No attachments for vrf {vrf_name}. Skipping."

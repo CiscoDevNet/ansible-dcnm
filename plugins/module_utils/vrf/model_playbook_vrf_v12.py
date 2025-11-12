@@ -250,6 +250,7 @@ class PlaybookVrfModelV12(BaseModel):
         - import_mvpn_rt - string
         - import_vpn_rt - string
         - ipv6_linklocal_enable - boolean
+        - l3vni_wo_vlan - boolean
         - loopback_route_tag- integer range (0-4294967295)
         - max_bgp_paths - integer range (1-64)
         - max_ibgp_paths - integer range (1-64)
@@ -296,6 +297,7 @@ class PlaybookVrfModelV12(BaseModel):
     import_mvpn_rt: str = Field(default="")  # routeTargetImportMvpn
     import_vpn_rt: str = Field(default="")  # routeTargetImport
     ipv6_linklocal_enable: StrictBool = Field(default=True)  # ipv6LinkLocalFlag
+    l3vni_wo_vlan: StrictBool = Field(default=False)  # enableL3VniNoVlan
     loopback_route_tag: int = Field(default=12345, ge=0, le=4294967295)  # tag
     max_bgp_paths: int = Field(default=1, ge=1, le=64)  # maxBgpPaths
     max_ibgp_paths: int = Field(default=2, ge=1, le=64)  # maxIbgpPaths
