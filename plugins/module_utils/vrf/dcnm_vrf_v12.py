@@ -2336,7 +2336,19 @@ class NdfcVrf12:
             return
 
         all_vrfs.update({vrf for vrf in self.want_deploy.get("vrfNames", "").split(",") if vrf})
-        self.diff_deploy.update({"vrfNames": ",".join(all_vrfs)})
+
+        # Filter out VRFs where deploy=False
+        modified_all_vrfs: set = set()
+        for vrf in all_vrfs:
+            want_vrf_model: PlaybookVrfModelV12 = self.find_model_in_list_by_key_value(search=self.validated_playbook_config_models, key="vrf_name", value=vrf)
+            # Only include VRFs where deploy is not explicitly set to False
+            if want_vrf_model and want_vrf_model.deploy is not False:
+                modified_all_vrfs.add(vrf)
+            msg = f"VRF: {vrf}, deploy: {want_vrf_model.deploy if want_vrf_model else 'N/A'}, included: {vrf in modified_all_vrfs}"
+            self.log.debug(msg)
+
+        if modified_all_vrfs:
+            self.diff_deploy.update({"vrfNames": ",".join(modified_all_vrfs)})
 
         msg = "self.diff_attach: "
         msg += f"{json.dumps(self.diff_attach, indent=4)}"
