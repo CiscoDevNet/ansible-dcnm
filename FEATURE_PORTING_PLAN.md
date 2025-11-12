@@ -147,31 +147,34 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ---
 
-### 4. IPv6 Redistribute Route Map ⬜
+### 4. IPv6 Redistribute Route Map ✅
 
 **Issue:** #492
 **Commit:** 349bbeb6
+**Status:** COMPLETED (2025-11-12)
+**Commit:** c75ee142
 
 **Description:** Add support for IPv6 redistribute route-map configuration.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Add `v6_redist_direct_rmap` parameter to module arguments:
+- [x] Add `v6_redist_direct_rmap` parameter to module arguments:
   - Type: str
   - Default: 'FABRIC-RMAP-REDIST-SUBNET'
   - Description: "IPv6 Redistribute Direct Route Map"
+  - Implemented at `dcnm_vrf_v2.py:126-131`
 
-- [ ] Add to template config in `update_create_params()`:
-  ```python
-  template_conf.update(v6VrfRouteMap=vrf.get("v6_redist_direct_rmap", ""))
-  ```
+- [x] Add `v6_redist_direct_rmap` to PlaybookVrfModelV12:
+  - Field added at `model_playbook_vrf_v12.py:310`
+  - Maps to v6VrfRouteMap in template config
+  - Default: 'FABRIC-RMAP-REDIST-SUBNET'
 
-- [ ] Update `get_have()` template config:
-  ```python
-  t_conf.update(v6VrfRouteMap=json_to_dict.get("v6VrfRouteMap", ""))
-  ```
+- [x] Add `v6_redist_direct_rmap` to VrfTemplateConfigV12:
+  - Field added at `vrf_template_config_v12.py:74`
+  - Alias: v6VrfRouteMap
+  - Automatically serializes to/from controller payload
 
-- [ ] Update query/state methods to include `v6VrfRouteMap`
+**Note:** The Pydantic-based implementation automatically handles serialization/deserialization between playbook parameters (`v6_redist_direct_rmap`) and controller API fields (`v6VrfRouteMap`). Manual updates to `update_create_params()` and `get_have()` are not required as the models handle this automatically.
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:122-127, 1491, 1628, 2249, 2550, 3050`
 
@@ -391,9 +394,9 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 3
+- **Completed:** 4
 - **In Progress:** 0
-- **Not Started:** 8
+- **Not Started:** 7
 - **Won't Implement:** 0
 
 ### Completed Features
@@ -401,6 +404,7 @@ Use this section to track overall progress:
 1. ✅ L3VNI Without VLAN Support (2025-11-12) - Commit 954ce991
 2. ✅ Deploy Flag Handling Fix (2025-11-12) - Commit 5cf8e407
 3. ✅ VRF Lite DOT1Q Auto-Allocation (2025-11-12) - Commit ef522122
+4. ✅ IPv6 Redistribute Route Map (2025-11-12) - Commit c75ee142
 
 ---
 
