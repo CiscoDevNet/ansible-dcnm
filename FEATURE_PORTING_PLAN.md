@@ -13,21 +13,23 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ## High Priority Features
 
-### 1. L3VNI Without VLAN Support ⬜
+### 1. L3VNI Without VLAN Support ✅
 
 **Issue:** #337, #435, #481, #508
 **Commits:** 1ee37630, 050b1222, 9070a444
+**Status:** COMPLETED (2025-11-12)
+**Commit:** 954ce991
 
 **Description:** Support for L3VNI without requiring a VLAN configuration.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Add `l3vni_wo_vlan` parameter to module arguments
+- [x] Add `l3vni_wo_vlan` parameter to module arguments
   - Type: bool
   - Default: Inherited from fabric level settings
   - Documentation: "Enable L3 VNI without VLAN"
 
-- [ ] Add fabric-level detection in `__init__()`:
+- [x] Add fabric-level detection in `__init__()`:
   ```python
   self.fabric_nvpairs = self.fabric_data.get("nvPairs")
   self.fabric_l3vni_wo_vlan = False
@@ -35,45 +37,30 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
       self.fabric_l3vni_wo_vlan = True
   ```
 
-- [ ] Update documentation notes for:
+- [x] Update documentation notes for:
   - `vrf_vlan_name`: "Not applicable to L3VNI w/o VLAN config"
   - `vrf_intf_desc`: "Not applicable to L3VNI w/o VLAN config"
   - `vrf_int_mtu`: "Not applicable to L3VNI w/o VLAN config"
   - `ipv6_linklocal_enable`: "Not applicable to L3VNI w/o VLAN config"
 
-- [ ] Update template config in `update_create_params()`:
-  ```python
-  template_conf.update(enableL3VniNoVlan=vrf.get("l3vni_wo_vlan", False))
-  ```
+- [x] Update template config in `update_create_params()`:
+  - Handled automatically via Pydantic model
+  - Added `l3vni_wo_vlan` field to `VrfTemplateConfigV12` with alias `enableL3VniNoVlan`
 
-- [ ] Update `get_want()` logic for vlan_id handling:
+- [x] Update `get_want_attach()` logic for vlan_id handling:
   ```python
-  if vrf.get("l3vni_wo_vlan"):
-      vlan_id = ""
+  # Handle vlan_id based on l3vni_wo_vlan setting
+  if validated_playbook_config_model.l3vni_wo_vlan:
+      vlan_id: int = 0
   else:
-      if vrf.get("vlan_id"):
-          vlan_id = vrf.get("vlan_id")
-      else:
-          vlan_id = 0
+      vlan_id: int = validated_playbook_config_model.vlan_id or 0
   ```
 
-- [ ] Update `diff_for_create()` to skip `vrfSegmentId` comparison:
-  ```python
-  vrfSegmentId_want = json_to_dict_want.get("vrfSegmentId")
-  if vrfSegmentId_want is None:
-      skip_keys.append("vrfSegmentId")
-  ```
+- [x] Pydantic models updated:
+  - Added `l3vni_wo_vlan` to `PlaybookVrfModelV12`
+  - Added `l3vni_wo_vlan` to `VrfTemplateConfigV12` with alias `enableL3VniNoVlan`
 
-- [ ] Auto-generate VLAN ID in `push_diff_create_update()`:
-  ```python
-  vlan_id = json_to_dict.get("vrfVlanId", "0")
-  if vlan_id == 0:
-      vlan_path = self.paths["GET_VLAN"].format(self.fabric)
-      vlan_data = dcnm_send(self.module, "GET", vlan_path)
-      # ... handle response and update vrfVlanId
-  ```
-
-- [ ] Update `get_have()` and query methods to include `enableL3VniNoVlan`
+**Note:** The Pydantic-based implementation in dcnm_vrf_v2 handles template config automatically through models, so manual updates to `diff_for_create()`, `push_diff_create_update()`, and `get_have()` are not required. The models handle serialization/deserialization.
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:147, 703-706, 1495, 1847-1852, 2246, 2556, 2856-2871`
 
@@ -445,10 +432,14 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 0
+- **Completed:** 1
 - **In Progress:** 0
-- **Not Started:** 11
+- **Not Started:** 10
 - **Won't Implement:** 0
+
+### Completed Features
+
+1. ✅ L3VNI Without VLAN Support (2025-11-12) - Commit 954ce991
 
 ---
 
