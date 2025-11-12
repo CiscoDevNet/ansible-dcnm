@@ -3897,22 +3897,29 @@ class NdfcVrf12:
             )
             self.send_to_controller(args)
 
-    def release_orphaned_resources(self, vrf: str, is_rollback=False) -> None:
+    def release_orphaned_resources(self, vrf_del_list: list, is_rollback=False) -> None:
         """
         # Summary
 
-        Release orphaned resources.
+        Release orphaned resources for multiple VRFs across multiple resource pools.
 
         ## Description
 
         After a VRF delete operation, resources such as the TOP_DOWN_VRF_VLAN
-        resource below, can be orphaned from their VRFs.  Below, notice that
-        resourcePool.vrfName is null.  This method releases resources if
-        the following are true for the resources:
+        and TOP_DOWN_L3_DOT1Q resources can be orphaned from their VRFs.
+        Below, notice that resourcePool.vrfName is null.  This method releases
+        resources if the following are true for the resources:
 
         - allocatedFlag is False
-        - entityName == vrf
+        - entityName in vrf_del_list
         - fabricName == self.fabric
+        - ipAddress is not None
+        - switchName is not None
+
+        ## Parameters
+
+        - vrf_del_list: List of VRF names to release orphaned resources for
+        - is_rollback: Whether this is a rollback operation
 
         ```json
         [
@@ -3941,6 +3948,11 @@ class NdfcVrf12:
             }
         ]
         ```
+
+        ## Notes
+
+        - Processes both TOP_DOWN_VRF_VLAN and TOP_DOWN_L3_DOT1Q resource pools
+        - Resources with no ipAddress or switchName are invalid (Fabric scope) and not deleted
         """
         caller = inspect.stack()[1][3]
 
@@ -3950,46 +3962,64 @@ class NdfcVrf12:
 
         path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/"
         path += f"resource-manager/fabric/{self.fabric}/"
-        path += "pools/TOP_DOWN_VRF_VLAN"
+        resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
 
-        args = SendToControllerArgs(
-            action="release_resources",
-            path=path,
-            verb=RequestVerb.GET,
-            payload=None,
-            log_response=False,
-            is_rollback=False,
-        )
-        self.send_to_controller(args)
-        resp = copy.deepcopy(self.response)
-
-        generic_response = ControllerResponseGenericV12(**resp)
-
-        fail, self.result["changed"] = self.handle_response(generic_response, action="release_resources")
-
-        if fail:
-            if is_rollback:
-                self.failed_to_rollback = True
-                return
-            self.failure(resp)
-
-        delete_ids: list = []
-        for item in resp["DATA"]:
-            if "entityName" not in item:
-                continue
-            if item["entityName"] != vrf:
-                continue
-            if item.get("allocatedFlag") is not False:
-                continue
-            if item.get("id") is None:
-                continue
-
-            msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+        for pool in resource_pool:
+            msg = f"Processing orphaned resources in pool: {pool}"
             self.log.debug(msg)
 
-            delete_ids.append(item["id"])
+            req_path = path + f"pools/{pool}"
 
-        self.release_resources_by_id(delete_ids)
+            args = SendToControllerArgs(
+                action="release_resources",
+                path=req_path,
+                verb=RequestVerb.GET,
+                payload=None,
+                log_response=False,
+                is_rollback=False,
+            )
+            self.send_to_controller(args)
+            resp = copy.deepcopy(self.response)
+
+            generic_response = ControllerResponseGenericV12(**resp)
+
+            fail, self.result["changed"] = self.handle_response(generic_response, action="release_resources")
+
+            if fail:
+                if is_rollback:
+                    self.failed_to_rollback = True
+                    return
+                self.failure(resp)
+
+            delete_ids: list = []
+            for item in resp["DATA"]:
+                if "entityName" not in item:
+                    continue
+                if item["entityName"] not in vrf_del_list:
+                    continue
+                if item.get("allocatedFlag") is not False:
+                    continue
+                if item.get("id") is None:
+                    continue
+                # Resources with no ipAddress or switchName
+                # are invalid and of Fabric's scope and
+                # should not be attempted to be deleted here.
+                if not item.get("ipAddress"):
+                    continue
+                if not item.get("switchName"):
+                    continue
+
+                msg = f"item {json.dumps(item, indent=4, sort_keys=True)}"
+                self.log.debug(msg)
+
+                delete_ids.append(item["id"])
+
+            if len(delete_ids) == 0:
+                continue
+
+            msg = f"Releasing orphaned resources with IDs: {delete_ids}"
+            self.log.debug(msg)
+            self.release_resources_by_id(delete_ids)
 
     def push_to_remote(self, is_rollback=False) -> None:
         """
@@ -4025,8 +4055,12 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         self.push_diff_delete(is_rollback=is_rollback)
-        for vrf_name in self.diff_delete:
-            self.release_orphaned_resources(vrf=vrf_name, is_rollback=is_rollback)
+
+        if self.diff_delete:
+            vrf_del_list = list(self.diff_delete.keys())
+            msg = f"VRF(s) to be deleted: {vrf_del_list}."
+            self.log.debug(msg)
+            self.release_orphaned_resources(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback=is_rollback)
         self.push_diff_attach_model(is_rollback=is_rollback)
@@ -4062,8 +4096,12 @@ class NdfcVrf12:
         self.log.debug(msg)
 
         self.push_diff_delete(is_rollback=is_rollback)
-        for vrf_name in self.diff_delete:
-            self.release_orphaned_resources(vrf=vrf_name, is_rollback=is_rollback)
+
+        if self.diff_delete:
+            vrf_del_list = list(self.diff_delete.keys())
+            msg = f"VRF(s) to be deleted: {vrf_del_list}."
+            self.log.debug(msg)
+            self.release_orphaned_resources(vrf_del_list, is_rollback)
 
         self.push_diff_create(is_rollback=is_rollback)
         self.push_diff_attach_model(is_rollback=is_rollback)
