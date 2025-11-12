@@ -16,9 +16,6 @@ from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
 
-import sys
-sys.path.insert(0, '/Users/sivakasi/.ansible/collections/ansible_collections')
-
 from ansible_collections.ansible.netcommon.plugins.action.network import (
     ActionModule as ActionNetworkModule,
 )
