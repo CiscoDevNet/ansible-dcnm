@@ -182,24 +182,24 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ## Medium Priority Features
 
-### 5. Empty InstanceValues Handling ⬜
+### 5. Empty InstanceValues Handling ✅
 
 **Issue:** #522
 **Commit:** 3acfab8c
+**Status:** COMPLETED (2025-11-12)
+**Commit:** 4141f8ae
 
 **Description:** Better handling of empty string vs None for `instanceValues` field.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Update condition in `diff_for_attach_deploy()`:
-  ```python
-  if (
-      (want["instanceValues"] is not None and want["instanceValues"] != "")
-      and
-      (have["instanceValues"] is not None and have["instanceValues"] != "")
-  ):
-      # Process instanceValues
-  ```
+- [x] Update condition in `diff_for_attach_deploy()`:
+  - Updated at `dcnm_vrf_v12.py:705-708`
+  - Changed from simple truthy check to explicit None and empty string check
+  - Before: `if want_attach.get("instanceValues") and have_lan_attach_model.instance_values:`
+  - After: Explicitly checks `(is not None and != "")` for both want and have
+  - Prevents attempting to parse empty strings as JSON
+  - Ensures consistent handling of missing/empty instanceValues
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:901-906`
 
@@ -394,9 +394,9 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 4
+- **Completed:** 5
 - **In Progress:** 0
-- **Not Started:** 7
+- **Not Started:** 6
 - **Won't Implement:** 0
 
 ### Completed Features
@@ -405,6 +405,7 @@ Use this section to track overall progress:
 2. ✅ Deploy Flag Handling Fix (2025-11-12) - Commit 5cf8e407
 3. ✅ VRF Lite DOT1Q Auto-Allocation (2025-11-12) - Commit ef522122
 4. ✅ IPv6 Redistribute Route Map (2025-11-12) - Commit c75ee142
+5. ✅ Empty InstanceValues Handling (2025-11-12) - Commit 4141f8ae
 
 ---
 
