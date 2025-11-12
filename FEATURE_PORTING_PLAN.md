@@ -205,41 +205,35 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ---
 
-### 6. Network Attachment Check During Deletion ⬜
+### 6. Network Attachment Check During Deletion ✅
 
 **Issue:** #456
 **Commit:** 28c16fea
+**Status:** COMPLETED (2025-11-12)
+**Commit:** 40aa7bfb
 
 **Description:** Prevent VRF deletion if networks are still attached.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Add `GET_NET_VRF` path to `dcnm_vrf_paths`:
-  ```python
-  11: {
-      "GET_NET_VRF": "/rest/resource-manager/fabrics/{}/networks?vrf-name={}"
-  },
-  12: {
-      "GET_NET_VRF": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}"
-  }
-  ```
+- [x] Add `GET_NET_VRF` path to `dcnm_vrf_paths`:
+  - Added at `dcnm_vrf_v12.py:69`
+  - Path: `/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/{}/networks?vrf-name={}`
 
-- [ ] Add network check in deletion flow:
-  ```python
-  path = self.paths["GET_NET_VRF"].format(self.fabric, vrf_name)
-  resp = dcnm_send(self.module, "GET", path)
+- [x] Add network check in deletion flow:
+  - Created `check_network_attachments()` method at `dcnm_vrf_v12.py:3129-3169`
+  - Queries controller for networks attached to VRF
+  - Calls fail_json if networks are found
+  - Provides clear error message directing users to dcnm_network module
 
-  network_list = search_nested_json(resp.get("DATA"), ["networkName"])
-  if network_list:
-      msg = f"VRF {vrf_name} has attached networks: {network_list}"
-      self.module.fail_json(msg=msg)
-  ```
+- [x] Call network check before deletion:
+  - Added calls in both `push_to_remote()` and `push_to_remote_model()` methods
+  - Checks performed before `push_diff_detach()` is called
+  - Located at lines 4017-4019 and 4054-4056
 
-- [ ] Import `search_nested_json` from `dcnm` module utils
+**Note:** The implementation uses direct list comparison (`resp["DATA"] != []`) rather than `search_nested_json`, which is simpler and equally effective. The check validates data exists and provides appropriate error messages.
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:603, 611, 3926-3943`
-
-**Note:** Requires `search_nested_json` utility function.
 
 ---
 
@@ -394,9 +388,9 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 5
+- **Completed:** 6
 - **In Progress:** 0
-- **Not Started:** 6
+- **Not Started:** 5
 - **Won't Implement:** 0
 
 ### Completed Features
@@ -406,6 +400,7 @@ Use this section to track overall progress:
 3. ✅ VRF Lite DOT1Q Auto-Allocation (2025-11-12) - Commit ef522122
 4. ✅ IPv6 Redistribute Route Map (2025-11-12) - Commit c75ee142
 5. ✅ Empty InstanceValues Handling (2025-11-12) - Commit 4141f8ae
+6. ✅ Network Attachment Check During Deletion (2025-11-12) - Commit 40aa7bfb
 
 ---
 
