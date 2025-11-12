@@ -462,14 +462,25 @@ class NdfcVrf12:
 
     # pylint: enable=inconsistent-return-statements
     @staticmethod
-    def property_values_match(dict1: dict[Any, Any], dict2: dict[Any, Any], property_list: list) -> bool:
+    def property_values_match(dict1: dict[Any, Any], dict2: dict[Any, Any], property_list: list, skip_prop: Optional[list[str]] = None) -> bool:
         """
-        Given two dictionaries and a list of keys:
+        Given two dictionaries, a list of keys, and optional keys to skip:
 
-        - Return True if all property values match.
+        - Return True if all property values match (excluding skipped properties).
         - Return False otherwise
+
+        ## Parameters
+
+        - dict1: First dictionary
+        - dict2: Second dictionary
+        - property_list: List of property names to compare
+        - skip_prop: Optional list of property names to skip in comparison
         """
+        if skip_prop is None:
+            skip_prop = []
         for prop in property_list:
+            if prop in skip_prop:
+                continue
             if dict1.get(prop) != dict2.get(prop):
                 return False
         return True
@@ -528,6 +539,70 @@ class NdfcVrf12:
         msg = f"Returning vlan_id: {vlan_id} for fabric {fabric}"
         self.log.debug(msg)
         return vlan_id
+
+    def get_vrf_lite_dot1q_id(self, serial_number: str, vrf_name: str, interface: str) -> int:
+        """
+        # Summary
+
+        Given a switch serial, vrf name and interface name, return the dot1q ID
+        reserved for the vrf_lite extension on that switch.
+
+        ## Raises
+
+        Calls fail_json if DCNM fails to reserve the dot1q ID.
+
+        ## Parameters
+
+        - serial_number: The serial number of the switch
+        - vrf_name: The VRF name
+        - interface: The interface name
+
+        ## Returns
+
+        The reserved DOT1Q ID as an integer
+
+        ## Notes
+
+        - This method calls the DCNM/NDFC resource reservation API
+        - The API endpoint is version 12+ only
+        """
+        method_name = inspect.stack()[0][3]
+        caller = inspect.stack()[1][3]
+
+        msg = "ENTERED. "
+        msg += f"caller: {caller}. "
+        msg += f"serial_number: {serial_number}, "
+        msg += f"vrf_name: {vrf_name}, "
+        msg += f"interface: {interface}"
+        self.log.debug(msg)
+
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/reserve-id"
+        verb = "POST"
+        payload = {
+            "scopeType": "DeviceInterface",
+            "usageType": "TOP_DOWN_L3_DOT1Q",
+            "serialNumber": serial_number,
+            "ifName": interface,
+            "allocatedTo": vrf_name,
+        }
+
+        response: ControllerResponseInt = ControllerResponseInt(**dcnm_send(self.module, verb, path, json.dumps(payload)))
+
+        if response.RETURN_CODE != 200:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"caller: {caller}. "
+            msg += f"Failed to get dot1q ID for vrf_lite extension on switch {serial_number} "
+            msg += f"for vrf {vrf_name} and interface {interface}. "
+            msg += f"Response: {response.model_dump()}"
+            self.module.fail_json(msg=msg)
+
+        dot1q_id = response.DATA
+
+        msg = f"Successfully got dot1q ID {dot1q_id} for vrf_lite extension on switch {serial_number} "
+        msg += f"for vrf {vrf_name} and interface {interface}."
+        self.log.debug(msg)
+
+        return dot1q_id
 
     def get_next_fabric_vrf_id(self, fabric: str) -> int:
         """
@@ -752,7 +827,11 @@ class NdfcVrf12:
         for want_vrf_lite in want_vrf_lite_conn["VRF_LITE_CONN"]:
             for have_vrf_lite in have_vrf_lite_conn["VRF_LITE_CONN"]:
                 if want_vrf_lite["IF_NAME"] == have_vrf_lite["IF_NAME"]:
-                    if self.property_values_match(want_vrf_lite, have_vrf_lite, self.vrf_lite_properties):
+                    # Build skip_prop list to skip DOT1Q_ID comparison if it was auto-allocated
+                    skip_prop = []
+                    if not want_vrf_lite.get("DOT1Q_ID"):
+                        skip_prop.append("DOT1Q_ID")
+                    if self.property_values_match(want_vrf_lite, have_vrf_lite, self.vrf_lite_properties, skip_prop):
                         return True
         return False
 
@@ -805,7 +884,7 @@ class NdfcVrf12:
             self.log.debug(msg)
             return False
 
-    def update_attach_params_extension_values(self, playbook_vrf_attach_model: PlaybookVrfAttachModel) -> dict:
+    def update_attach_params_extension_values(self, playbook_vrf_attach_model: PlaybookVrfAttachModel, serial_number: str, vrf_name: str) -> dict:
         """
         # Summary
 
@@ -818,6 +897,12 @@ class NdfcVrf12:
 
         Calls fail_json() if the vrf_lite parameter is not null and the role of the switch in the playbook
         attachment object is not one of the various border roles.
+
+        ## Parameters
+
+        - playbook_vrf_attach_model: The VRF attachment model from the playbook
+        - serial_number: The serial number of the switch
+        - vrf_name: The VRF name
 
         ## Example PlaybookVrfAttachModel contents
 
@@ -912,7 +997,12 @@ class NdfcVrf12:
                 vrf_lite_conn[param] = ""
 
             vrf_lite_conn["IF_NAME"] = playbook_vrf_lite_model.interface
-            vrf_lite_conn["DOT1Q_ID"] = playbook_vrf_lite_model.dot1q
+            # Auto-allocate DOT1Q ID if not provided in the playbook
+            if playbook_vrf_lite_model.dot1q:
+                vrf_lite_conn["DOT1Q_ID"] = playbook_vrf_lite_model.dot1q
+            else:
+                dot1q_vlan = self.get_vrf_lite_dot1q_id(serial_number, vrf_name, playbook_vrf_lite_model.interface)
+                vrf_lite_conn["DOT1Q_ID"] = str(dot1q_vlan)
             vrf_lite_conn["IP_MASK"] = playbook_vrf_lite_model.ipv4_addr
             vrf_lite_conn["NEIGHBOR_IP"] = playbook_vrf_lite_model.neighbor_ipv4
             vrf_lite_conn["IPV6_MASK"] = playbook_vrf_lite_model.ipv6_addr
@@ -1002,7 +1092,9 @@ class NdfcVrf12:
             msg += f"{ip_address} with role {role} need review."
             self.module.fail_json(msg=msg)
 
-        extension_values = self.update_attach_params_extension_values(playbook_vrf_attach_model=vrf_attach_model)
+        extension_values = self.update_attach_params_extension_values(
+            playbook_vrf_attach_model=vrf_attach_model, serial_number=serial_number, vrf_name=vrf_name
+        )
         if extension_values:
             attach.update({"extensionValues": json.dumps(extension_values).replace(" ", "")})
         else:
