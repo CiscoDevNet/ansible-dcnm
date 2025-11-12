@@ -66,16 +66,18 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ---
 
-### 2. Deploy Flag Handling Fix ⬜
+### 2. Deploy Flag Handling Fix ✅
 
 **Issue:** #491
 **Commit:** 4aa56027
+**Status:** COMPLETED (2025-11-12)
+**Commit:** 5cf8e407
 
 **Description:** VRFs should never deploy when the `deploy` flag is explicitly set to False.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Update `get_diff_replace()` to filter VRFs with `deploy=False`:
+- [x] Update `get_diff_replace()` to filter VRFs with `deploy=False`:
   ```python
   modified_all_vrfs = copy.deepcopy(all_vrfs)
   for vrf in all_vrfs:
@@ -93,9 +95,9 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
           diff_deploy.update({"vrfNames": vrfs})
   ```
 
-- [ ] Apply same logic in `diff_merge_attach()`:
-  - Filter VRFs from deploy list when `deploy=False`
-  - Update both initial deploy dict and merge with existing
+- [x] Verified `diff_merge_attach()` already has correct logic:
+  - Already checks `want_config_deploy is True` before adding VRFs to deploy list (lines 2548, 2551)
+  - No changes needed - existing implementation is correct
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:2098-2113, 2411-2426`
 
@@ -432,14 +434,15 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 1
+- **Completed:** 2
 - **In Progress:** 0
-- **Not Started:** 10
+- **Not Started:** 9
 - **Won't Implement:** 0
 
 ### Completed Features
 
 1. ✅ L3VNI Without VLAN Support (2025-11-12) - Commit 954ce991
+2. ✅ Deploy Flag Handling Fix (2025-11-12) - Commit 5cf8e407
 
 ---
 
