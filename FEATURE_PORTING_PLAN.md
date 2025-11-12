@@ -108,83 +108,40 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ---
 
-### 3. VRF Lite DOT1Q Auto-Allocation ⬜
+### 3. VRF Lite DOT1Q Auto-Allocation ✅
 
 **Issue:** #210, #467
 **Commit:** c475d351
+**Status:** COMPLETED (2025-11-12)
+**Commit:** ef522122
 
 **Description:** Auto-allocate DOT1Q IDs for VRF Lite extensions when not explicitly provided.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Add new method `get_vrf_lite_dot1q_id()`:
-  ```python
-  def get_vrf_lite_dot1q_id(self, serial_number: str, vrf_name: str, interface: str) -> int:
-      """
-      # Summary
+- [x] Add new method `get_vrf_lite_dot1q_id()`:
+  - Implemented at `dcnm_vrf_v12.py:543-608`
+  - Calls NDFC resource reservation API endpoint `/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/resource-manager/reserve-id`
+  - Returns allocated DOT1Q ID or calls fail_json on error
 
-      Given a switch serial, vrf name and ifname, return the dot1q ID
-      reserved for the vrf_lite extension on that switch.
+- [x] Update `update_attach_params_extension_values()` to auto-allocate:
+  - Method signature updated to accept `serial_number` and `vrf_name` parameters
+  - Auto-allocation logic added at lines 996-1001
+  - Checks if `playbook_vrf_lite_model.dot1q` is empty
+  - If empty, calls `get_vrf_lite_dot1q_id()` to allocate DOT1Q ID
 
-      ## Raises
+- [x] Update `property_values_match()` to accept `skip_prop` parameter:
+  - Updated method signature at line 465
+  - Added logic to skip properties in `skip_prop` list
+  - Defaults to empty list if `skip_prop` is None
 
-      Calls fail_json if DCNM fails to reserve the dot1q ID.
-      """
-      path = "/appcenter/cisco/ndfc/api/v1/lan-fabric"
-      path += "/rest/resource-manager/reserve-id"
-      verb = "POST"
-      payload = {
-          "scopeType": "DeviceInterface",
-          "usageType": "TOP_DOWN_L3_DOT1Q",
-          "serialNumber": serial_number,
-          "ifName": interface,
-          "allocatedTo": vrf_name
-      }
+- [x] Use skip_prop in `_extension_values_match()`:
+  - Updated at lines 830-834
+  - Creates `skip_prop` list
+  - Adds "DOT1Q_ID" to `skip_prop` if `want_vrf_lite["DOT1Q_ID"]` is empty
+  - Passes `skip_prop` to `property_values_match()`
 
-      resp = dcnm_send(self.module, verb, path, json.dumps(payload))
-      if resp.get("RETURN_CODE") != 200:
-          # fail_json with error
-      return resp.get("DATA")
-  ```
-
-- [ ] Update `update_vrf_attach_vrf_lite_extensions()` to auto-allocate:
-  ```python
-  if item["user"]["dot1q"]:
-      nbr_dict["DOT1Q_ID"] = str(item["user"]["dot1q"])
-  else:
-      dot1q_vlan = self.get_vrf_lite_dot1q_id(
-          serial_number,
-          vrf_attach.get("vrfName"),
-          nbr_dict["IF_NAME"]
-      )
-      if dot1q_vlan is not None:
-          nbr_dict["DOT1Q_ID"] = str(dot1q_vlan)
-      else:
-          self.module.fail_json(msg="Failed to get dot1q ID...")
-  ```
-
-- [ ] Update `compare_properties()` to accept `skip_prop` parameter:
-  ```python
-  @staticmethod
-  def compare_properties(dict1, dict2, property_list, skip_prop=None):
-      for prop in property_list:
-          if skip_prop and prop in skip_prop:
-              continue
-          if dict1.get(prop) != dict2.get(prop):
-              return False
-      return True
-  ```
-
-- [ ] Use skip_prop in `diff_for_attach_deploy()`:
-  ```python
-  skip_prop = []
-  if not wlite["DOT1Q_ID"]:
-      skip_prop.append("DOT1Q_ID")
-  if not self.compare_properties(
-      wlite, hlite, self.vrf_lite_properties, skip_prop
-  ):
-      found = False
-  ```
+**Note:** The Pydantic-based implementation automatically handles serialization/deserialization through the `PlaybookVrfLiteModel`, which stores `dot1q` as a string and validates it properly.
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:3160-3209, 3338-3354, 845-857, 970-977`
 
@@ -434,15 +391,16 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 2
+- **Completed:** 3
 - **In Progress:** 0
-- **Not Started:** 9
+- **Not Started:** 8
 - **Won't Implement:** 0
 
 ### Completed Features
 
 1. ✅ L3VNI Without VLAN Support (2025-11-12) - Commit 954ce991
 2. ✅ Deploy Flag Handling Fix (2025-11-12) - Commit 5cf8e407
+3. ✅ VRF Lite DOT1Q Auto-Allocation (2025-11-12) - Commit ef522122
 
 ---
 
