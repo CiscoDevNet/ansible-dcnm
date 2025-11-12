@@ -237,38 +237,38 @@ This document tracks features to be ported from `dcnm_vrf.py` (develop branch) i
 
 ---
 
-### 7. Orphaned Resources Cleanup Enhancement ⬜
+### 7. Orphaned Resources Cleanup Enhancement ✅
 
 **Issue:** Various cleanup issues
 **Commit:** Multiple
+**Status:** COMPLETED (2025-11-12)
+**Commit:** 5f0eba0f
 
 **Description:** Improved cleanup of orphaned VRF resources across multiple pool types.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Update `release_orphaned_resources()` signature:
-  ```python
-  def release_orphaned_resources(self, vrf_del_list, is_rollback=False):
-  ```
+- [x] Update `release_orphaned_resources()` signature:
+  - Updated at `dcnm_vrf_v12.py:3900`
+  - Now accepts `vrf_del_list: list` instead of single `vrf: str`
+  - Signature: `def release_orphaned_resources(self, vrf_del_list: list, is_rollback=False) -> None:`
 
-- [ ] Support multiple resource pools:
-  ```python
-  resource_pool = ["TOP_DOWN_VRF_VLAN", "TOP_DOWN_L3_DOT1Q"]
-  for pool in resource_pool:
-      req_path = path + f"pools/{pool}"
-      resp = dcnm_send(self.module, "GET", req_path)
-      # Process resources in pool
-  ```
+- [x] Support multiple resource pools:
+  - Implemented at `dcnm_vrf_v12.py:3965-4022`
+  - Processes both TOP_DOWN_VRF_VLAN and TOP_DOWN_L3_DOT1Q pools
+  - Loops through each pool and queries for orphaned resources
 
-- [ ] Update filtering logic to use `vrf_del_list`:
-  ```python
-  for item in resp["DATA"]:
-      if "entityName" not in item:
-          continue
-      if item["entityName"] not in vrf_del_list:
-          continue
-      # ... rest of logic
-  ```
+- [x] Update filtering logic to use `vrf_del_list`:
+  - Updated at `dcnm_vrf_v12.py:3998`
+  - Changed from `if item["entityName"] != vrf:` to `if item["entityName"] not in vrf_del_list:`
+  - Added validation for ipAddress and switchName to avoid deleting invalid Fabric-scoped resources
+
+- [x] Update call sites:
+  - Modified in both `push_to_remote()` and `push_to_remote_model()` methods
+  - Changed from looping and calling once per VRF to calling once with entire list
+  - Located at lines 4058-4062 and 4099-4103
+
+**Note:** This enhancement improves efficiency by processing all VRFs in a single operation and ensures proper cleanup of both VLAN and DOT1Q resources (e.g., VRF Lite extensions).
 
 **Reference Code:** `plugins/modules/dcnm_vrf.py:3826-3885`
 
@@ -388,9 +388,9 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 6
+- **Completed:** 7
 - **In Progress:** 0
-- **Not Started:** 5
+- **Not Started:** 4
 - **Won't Implement:** 0
 
 ### Completed Features
@@ -401,6 +401,7 @@ Use this section to track overall progress:
 4. ✅ IPv6 Redistribute Route Map (2025-11-12) - Commit c75ee142
 5. ✅ Empty InstanceValues Handling (2025-11-12) - Commit 4141f8ae
 6. ✅ Network Attachment Check During Deletion (2025-11-12) - Commit 40aa7bfb
+7. ✅ Orphaned Resources Cleanup Enhancement (2025-11-12) - Commit 5f0eba0f
 
 ---
 
