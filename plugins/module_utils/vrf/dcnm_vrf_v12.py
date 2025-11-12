@@ -702,7 +702,9 @@ class NdfcVrf12:
 
                 # Copy unsupported instanceValues keys from have to want_attach
                 want_inst_values, have_inst_values = {}, {}
-                if want_attach.get("instanceValues") and have_lan_attach_model.instance_values:
+                if (want_attach.get("instanceValues") is not None and want_attach.get("instanceValues") != "") and (
+                    have_lan_attach_model.instance_values is not None and have_lan_attach_model.instance_values != ""
+                ):
                     want_inst_values = json.loads(want_attach["instanceValues"])
                     have_inst_values = json.loads(have_lan_attach_model.instance_values)
                     # These keys are not currently supported in the playbook,
