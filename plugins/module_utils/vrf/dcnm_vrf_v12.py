@@ -1572,7 +1572,8 @@ class NdfcVrf12:
                 continue
             attach_list = vrf_attach["lanAttachList"]
             for attach in attach_list:
-                deploy = attach.get("isLanAttached")
+                attach_state = bool(attach.get("isLanAttached", False))
+                deploy = attach_state
                 deployed = not (deploy and attach.get("lanAttachState") in ("OUT-OF-SYNC", "PENDING"))
                 if deployed:
                     vrf_to_deploy = attach.get("vrfName")
