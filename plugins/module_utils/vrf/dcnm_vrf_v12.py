@@ -49,7 +49,7 @@ from .inventory_ipv4_to_serial_number import InventoryIpv4ToSerialNumber
 from .inventory_ipv4_to_switch_role import InventoryIpv4ToSwitchRole
 from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
 from .inventory_serial_number_to_switch_role import InventorySerialNumberToSwitchRole
-from .model_controller_response_fabrics_easy_fabric_get import ControllerResponseFabricsEasyFabricGet
+# from .model_controller_response_fabrics_easy_fabric_get import ControllerResponseFabricsEasyFabricGet
 from .model_controller_response_generic_v12 import ControllerResponseGenericV12
 from .model_controller_response_get_fabrics_vrfinfo import ControllerResponseGetFabricsVrfinfoV12
 from .model_controller_response_get_int import ControllerResponseGetIntV12
@@ -594,7 +594,7 @@ class NdfcVrf12:
             "allocatedTo": vrf_name,
         }
 
-        response: ControllerResponseInt = ControllerResponseInt(**dcnm_send(self.module, verb, path, json.dumps(payload)))
+        response: ControllerResponseGetIntV12 = ControllerResponseGetIntV12(**dcnm_send(self.module, verb, path, json.dumps(payload)))
 
         if response.RETURN_CODE != 200:
             msg = f"{self.class_name}.{method_name}: "
