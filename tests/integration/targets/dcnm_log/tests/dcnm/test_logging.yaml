@@ -9,7 +9,7 @@
 #
 # The environment variable NDFC_LOGGING_CONFIG must be set.
 # The value is an absolute path to the logging config file.
-# 
+#
 # Example:
 #
 # export NDFC_LOGGING_CONFIG=$HOME/repos/ansible/collections/ansible_collections/cisco/dcnm/plugins/module_utils/common/logging_config.json
@@ -27,7 +27,8 @@
   ansible.builtin.debug:
     var: ndfc_logging_config
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - ndfc_logging_config != ""
 
@@ -45,7 +46,8 @@
   ansible.builtin.debug:
     var: result_1
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1.changed == false'
     - 'result_1.failed == false'
@@ -61,7 +63,8 @@
   ansible.builtin.debug:
     var: result_2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2.changed == false'
     - 'result_2.failed == false'
@@ -76,7 +79,8 @@
   ansible.builtin.debug:
     var: result_3
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3.changed == false'
     - 'result_3.failed == false'
@@ -91,7 +95,8 @@
   ansible.builtin.debug:
     var: result_4
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_4.changed == false'
     - 'result_4.failed == false'
@@ -106,7 +111,8 @@
   ansible.builtin.debug:
     var: result_5
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_5.changed == false'
     - 'result_5.failed == false'
@@ -122,10 +128,12 @@
   ansible.builtin.debug:
     var: result_6
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     error_message: value of severity must be one of
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_6.changed == false'
     - 'result_6.failed == true'
@@ -141,10 +149,12 @@
   ansible.builtin.debug:
     var: result_7
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     error_message: missing required arguments
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_7.changed == false'
     - 'result_7.failed == true'

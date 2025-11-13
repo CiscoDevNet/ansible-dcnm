@@ -12,7 +12,8 @@
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -109,7 +110,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (replace)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'

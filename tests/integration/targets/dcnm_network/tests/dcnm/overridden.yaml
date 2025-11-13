@@ -16,22 +16,22 @@
 - name: OVERRIDDEN - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_overridden:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # TC1 - OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
       double_net_conf_template: "overridden/dcnm_network_overridden_double_net_conf.j2"
       double_net_conf_file: "{{ role_path }}/files/dcnm_network_overridden_double_net_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       net1_conf_template: "overridden/dcnm_network_overridden_net1_conf.j2"
       net1_conf_file: "{{ role_path }}/files/dcnm_network_overridden_net1_conf.yaml"
       # TC2 - OVERRIDDEN - MERGED - Create, Attach and Deploy L2. L3 Network with Switch Attach
       l2_l3_net_conf_template: "overridden/dcnm_network_overridden_l2_l3_net_conf.j2"
       l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_overridden_l2_l3_net_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       l2_l3_net_changed_conf_template: "overridden/dcnm_network_overridden_l2_l3_net_changed_conf.j2"
       l2_l3_net_changed_conf_file: "{{ role_path }}/files/dcnm_network_overridden_l2_l3_net_changed_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
 
   delegate_to: localhost
   tags: overridden
@@ -92,7 +92,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC1 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: overridden
@@ -126,7 +126,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC1 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: overridden
@@ -183,7 +183,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: overridden
@@ -202,21 +202,21 @@
     test_data: "{{ test_data_common }}"
   tags: overridden
 
-- name: OVERRIDDEN - TC2 - Load Network Config File with a new L2 network 
+- name: OVERRIDDEN - TC2 - Load Network Config File with a new L2 network
   ansible.builtin.set_fact:
     dcnm_network_overridden_l2_l3_net_changed_conf: "{{ lookup('file', '{{ test_data_overridden.l2_l3_net_changed_conf_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: overridden
 
-- name: OVERRIDDEN - Override L2, L3 Networks with a new L2 network 
+- name: OVERRIDDEN - Override L2, L3 Networks with a new L2 network
   cisco.dcnm.dcnm_network: &conf2
     fabric: "{{ test_data_common.fabric }}"
     state: overridden
     config: "{{ dcnm_network_overridden_l2_l3_net_changed_conf }}"
-    
+
   register: result
 - name: OVERRIDDEN - TC2 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: overridden
@@ -241,7 +241,7 @@
   tags: overridden
 
 - name: OVERRIDDEN - TC2 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: overridden

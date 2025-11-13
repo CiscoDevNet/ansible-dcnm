@@ -10,7 +10,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -39,7 +40,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -109,14 +111,15 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
 - name: Initialize the setup - sleep for 10 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 10
   tags: sanity
 
@@ -190,6 +193,7 @@
                 - ip_address: "{{ ansible_switch2 }}"
       register: result
 
+    - name: Assert
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
@@ -221,11 +225,12 @@
               - "{{ ansible_switch1 }}"
       register: result
 
+    - name: Assert
     - assert:
         that:
         - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 - name: Initialize the setup - sleep for 180 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 180

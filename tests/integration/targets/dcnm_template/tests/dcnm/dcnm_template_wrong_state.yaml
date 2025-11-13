@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Initialize the setup
-  cisco.dcnm.dcnm_template: 
+  cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
@@ -13,9 +13,10 @@
 
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -46,7 +47,7 @@
                   snsr-grp 1 sample-interval 10000
 
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:

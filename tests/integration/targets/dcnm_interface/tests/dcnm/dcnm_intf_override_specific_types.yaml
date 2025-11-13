@@ -18,7 +18,7 @@
   register: result
 
 - name: ASSERT - Check return codes for setup
-  assert:
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -65,7 +65,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -99,7 +99,7 @@
       register: result
 
     - name: ASSERT - Check return codes for override vpc
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -124,7 +124,7 @@
       register: result
 
     - name: ASSERT - Check return codes for override pc with config
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -144,7 +144,7 @@
       register: result
 
     - name: ASSERT - Check return codes for override sub_int/lo
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -168,7 +168,7 @@
       when: IT_CONTEXT is not defined
 
     - name: ASSERT - Check return codes for cleanup
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

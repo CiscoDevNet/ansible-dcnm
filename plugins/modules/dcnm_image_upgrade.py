@@ -316,7 +316,7 @@ EXAMPLES = """
 
 # Attach image policy NR3F to two devices
 # Stage and validate the image on two devices but do not upgrade
-    -   name: stage/validate images
+- name: stage/validate images
         cisco.dcnm.dcnm_image_upgrade:
             state: merged
             config:
@@ -327,14 +327,14 @@ EXAMPLES = """
                     nxos: false
                     epld: false
                 switches:
-                -   ip_address: 192.168.1.1
-                -   ip_address: 192.168.1.2
+                    - ip_address: 192.168.1.1
+                - ip_address: 192.168.1.2
 
 # Attach image policy NR1F to device 192.168.1.1
 # Attach image policy NR2F to device 192.168.1.2
 # Stage the image on device 192.168.1.1, but do not upgrade
 # Stage the image and upgrade device 192.168.1.2
-    -   name: stage/upgrade devices
+    - name: stage/upgrade devices
         cisco.dcnm.dcnm_image_upgrade:
             state: merged
             config:
@@ -350,14 +350,14 @@ EXAMPLES = """
                         module: ALL
                         golden: false
                 switches:
-                    -   ip_address: 192.168.1.1
+                    - ip_address: 192.168.1.1
                         policy: NR1F
                         stage: true
                         validate: true
                         upgrade:
                             nxos: true
                             epld: false
-                    -   ip_address: 192.168.1.2
+                    - ip_address: 192.168.1.2
                         policy: NR2F
                         stage: true
                         validate: true
@@ -372,32 +372,31 @@ EXAMPLES = """
                                 golden: false
 
 # Detach image policy NR3F from two devices
-    -   name: stage/upgrade devices
+    - name: stage/upgrade devices
         cisco.dcnm.dcnm_image_upgrade:
             state: deleted
             config:
                 policy: NR3F
                 switches:
-                -   ip_address: 192.168.1.1
-                -   ip_address: 192.168.1.2
+                    - ip_address: 192.168.1.1
+                - ip_address: 192.168.1.2
 
 # Query ISSU details for three devices
-    -   name: query switch ISSU status
+    - name: query switch ISSU status
         cisco.dcnm.dcnm_image_upgrade:
             state: query
             config:
                 policy: KMR5
                 switches:
-                -   ip_address: 192.168.1.1
+                    - ip_address: 192.168.1.1
                     policy: OR1F
-                -   ip_address: 192.168.1.2
+                - ip_address: 192.168.1.2
                     policy: NR2F
-                -   ip_address: 192.168.1.3 # will query policy KMR5
+                - ip_address: 192.168.1.3 # will query policy KMR5
         register: result
-    -   name: print result
+    - name: print result
         ansible.builtin.debug:
             var: result
-
 """
 
 

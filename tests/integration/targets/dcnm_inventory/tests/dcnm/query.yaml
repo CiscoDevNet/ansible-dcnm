@@ -1,6 +1,6 @@
 ---
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yaml
+  ansible.builtin.import_tasks: ../base_tasks.yaml
   tags: query
 
 # ----------------------------------------------
@@ -17,7 +17,7 @@
   register: create_result
   tags: query
 
-- name: Query TC1 - Query Inventory State in Fabric 
+- name: Query TC1 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -130,7 +130,8 @@
   register: query_result
   tags: query
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - '"The queried switch is not part of the fabric configured" in query_result.response'
   tags: query
@@ -176,7 +177,8 @@
   register: query_result
   tags: query
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - '"The queried switch is not part of the fabric configured" in query_result.response'
   tags: query
@@ -198,8 +200,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: query
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: query
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: query
 
 - name: Query TC9 - Add Switch with Border Gateways to Fabric

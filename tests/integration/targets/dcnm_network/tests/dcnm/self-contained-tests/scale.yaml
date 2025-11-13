@@ -15,12 +15,12 @@
 - name: SCALED_ALL - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       scale_conf_template: "self-contained-tests/scale_conf.j2"
       scale_conf_file: "{{ role_path }}/files/self_contained_scale_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
 
 
 - name: SCALED_ALL - Create Network Config File using J2 Template
@@ -48,7 +48,7 @@
   register: result
 
 - name: SCALED_ALL - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
 
@@ -70,7 +70,7 @@
   register: result
 
 - name: SCALED_ALL - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 

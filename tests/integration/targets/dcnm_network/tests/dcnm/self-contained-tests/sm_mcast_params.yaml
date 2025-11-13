@@ -15,9 +15,9 @@
 - name: SM_MCAST_PARAMS - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       net1_mcast_template: "self-contained-tests/net1_mcast_conf.j2"
       net1_mcast_file: "{{ role_path }}/files/self_contained_net1_mcast_conf.yaml"
 
@@ -51,7 +51,7 @@
   register: result
 
 - name: SM_MCAST_PARAMS - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
 
@@ -73,7 +73,7 @@
   register: result
 
 - name: SM_MCAST_PARAMS - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 

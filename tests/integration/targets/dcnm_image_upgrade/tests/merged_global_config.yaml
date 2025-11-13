@@ -27,7 +27,7 @@
 #
 # SETUP (these should be run prior to running this playbook)
 #  1. Run 00_setup_create_fabric.yaml
-#  2. Run 01_setup_add_switches_to_fabric 
+#  2. Run 01_setup_add_switches_to_fabric
 #  3. Run 02_setup_replace_image_policies
 # PRE_TEST (this playbook)
 #  4. MERGED - PRE_TEST - Upgrade all switches using global config.
@@ -75,7 +75,7 @@
 # MERGED - PRE_TEST - Detach image policies from all switches.
 # NOTES:
 #   1. Depending on whether the switches have policies attached, the
-#      detach operation may not be performed.  Hence, we simply print the 
+#      detach operation may not be performed.  Hence, we simply print the
 #      result and do not verify it.
 ################################################################################
 
@@ -89,7 +89,8 @@
         - ip_address: "{{ ansible_switch_2 }}"
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -98,7 +99,7 @@
 #   1. Images may or may not be staged depending on the current state of the
 #      switches.  Test only that the upgrade operation is successful.
 #   2. Since we detached the image policies, image validation will be
-#      performed, so we do test for this. 
+#      performed, so we do test for this.
 ################################################################################
 
 - name: MERGED - TEST - Upgrade all switches using global config.
@@ -131,7 +132,8 @@
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -153,7 +155,7 @@
     - ansible_switch_3 in result.diff[0]
   retries: 60
   delay: 5
-  ignore_errors: yes
+  ignore_errors: true
 
 ################################################################################
 # MERGED - TEST - global_config - test idempotence.
@@ -260,9 +262,11 @@
         - ip_address: "{{ ansible_switch_2 }}"
         - ip_address: "{{ ansible_switch_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false

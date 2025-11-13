@@ -59,20 +59,19 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: myVrf
+      - vrf_name: myVrf
       vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
 
 - name: Log
   cisco.dcnm.dcnm_log:
     msg: dcnm_vrf.merged - Create VRF myVrf DONE 
-    severity: INFO
 
 """  # noqa
 

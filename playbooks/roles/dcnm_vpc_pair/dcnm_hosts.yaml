@@ -10,8 +10,8 @@ all:
       vars:
         ansible_connection: ansible.netcommon.httpapi
         ansible_network_os: cisco.dcnm.dcnm
-        ansible_httpapi_validate_certs: no
+        ansible_httpapi_validate_certs: false
       hosts:
         nac-ndfc1:
           ansible_host: 10.10.5.1
-    
+

@@ -75,7 +75,8 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -183,9 +184,11 @@
         SUBINTERFACE_RANGE: 2-100
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -251,7 +254,8 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -271,7 +275,8 @@
         # preserve_config must be True for LAN_CLASSIC
         preserve_config: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -387,9 +392,11 @@
         BGP_AS: 65535
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -576,9 +583,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -678,9 +687,11 @@
 - name: REPLACED - TEST - Replace fabric_1 config with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_1
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -743,9 +754,11 @@
 - name: REPLACED - TEST - Replace fabric_3 config with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_3
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -774,9 +787,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -790,9 +805,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -873,9 +890,11 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Initialize the setup
-  cisco.dcnm.dcnm_template: 
+  cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
@@ -13,9 +13,10 @@
 
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -25,7 +26,7 @@
 ##############################################
 
     - name: Create all templates
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: merged        # only choose form [merged, deleted, query]
         config:
           - name: template_101
@@ -100,7 +101,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
@@ -186,7 +187,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
@@ -202,7 +203,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
 
     - name: Query modified templates
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: query       # only choose form [merged, deleted, query]
         config:
           - name: template_101
@@ -238,7 +239,7 @@
   always:
 
     - name: Delete all templates created
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_101
@@ -253,7 +254,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template deletion successful" in item["DATA"]'
       loop: '{{ result.response }}'
 

@@ -73,7 +73,8 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Create fabric types that support adding switches.
@@ -173,9 +174,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -228,7 +231,8 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 - name: Merge leaf_2 into fabric_3
@@ -245,7 +249,8 @@
         # preserve_config must be True for LAN_CLASSIC
         preserve_config: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Merge additional valid configs into fabric_1 and fabric_3
@@ -450,9 +455,11 @@
         SUBINTERFACE_RANGE: 2-101
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -584,9 +591,11 @@
 - name: MERGED - TEST - Merge additional configs into fabric_1 and fabric_3 - idempotence
   cisco.dcnm.dcnm_fabric: *merge_fabric_1_3
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -614,9 +623,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -630,9 +641,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -712,9 +725,11 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

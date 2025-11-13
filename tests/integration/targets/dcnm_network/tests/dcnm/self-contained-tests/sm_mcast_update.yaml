@@ -15,12 +15,12 @@
 - name: SM_MCAST_UPDATE - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       net1_mcast_conf_template: "self-contained-tests/net1_mcast_conf.j2"
       net1_mcast_conf_file: "{{ role_path }}/files/self_contained_mcast_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       net1_mcast_changed_conf_template: "self-contained-tests/net1_mcast_changed_conf.j2"
       net1_mcast_changed_conf_file: "{{ role_path }}/files/self_contained_mcast_changed_conf.yaml"
 
@@ -59,7 +59,7 @@
   register: result
 
 - name: SM_MCAST_UPDATE - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
 
@@ -89,7 +89,7 @@
   register: result
 
 - name: SM_MCAST_UPDATE - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
 

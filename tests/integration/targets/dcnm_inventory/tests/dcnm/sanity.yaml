@@ -1,7 +1,7 @@
 ---
 
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yaml
+  ansible.builtin.import_tasks: ../base_tasks.yaml
   tags: sanity
 
 # ----------------------------------------------
@@ -9,7 +9,7 @@
 # ----------------------------------------------
 
 # ---------------------------------------------- #
-#                  Merged                        # 
+#                  Merged                        #
 # ---------------------------------------------- #
 
 # TC - 1
@@ -22,7 +22,7 @@
   register: create_result
   tags: sanity
 
-- name: Sanity TC1 - Merged - Query Inventory State in Fabric 
+- name: Sanity TC1 - Merged - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -43,14 +43,15 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and cannot be created again"'
-  tags: sanity  
+  tags: sanity
 
 # ---------------------------------------------- #
-#                  Query                         # 
+#                  Query                         #
 # ---------------------------------------------- #
 
 # TC - 3
@@ -79,7 +80,7 @@
   tags: sanity
 
 # ---------------------------------------------- #
-#                  Overridden                    # 
+#                  Overridden                    #
 # ---------------------------------------------- #
 
 # TC - 4
@@ -95,8 +96,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: sanity
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: sanity
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: sanity
 
 - name: Sanity TC4 - Overridden - Update a New Switch using GreenField Deployment - Delete and Create - default role
@@ -108,7 +109,7 @@
   register: result
   tags: sanity
 
-- name: Sanity TC4 - Overridden - Query Inventory State in Fabric 
+- name: Sanity TC4 - Overridden - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -129,14 +130,15 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response == "The switch provided is already part of the fabric and there is no more device to delete in the fabric"'
   tags: sanity
 
 # ---------------------------------------------- #
-#                  Clean-up                      # 
+#                  Clean-up                      #
 # ---------------------------------------------- #
 
 # TC - 6
@@ -154,7 +156,7 @@
   delegate_to: localhost
   tags: sanity
 
-- name: Sanity TC6 - Deleted - Query Inventory State in Fabric 
+- name: Sanity TC6 - Deleted - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -175,13 +177,14 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
 
 # ---------------------------------------------- #
-#                  Reset Fabric                  # 
+#                  Reset Fabric                  #
 # ---------------------------------------------- #
 
 # TC - 8
@@ -199,8 +202,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: sanity
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: sanity
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: sanity
 
 - name: Sanity TC8 - Reset - Setup Switches in Fabric
@@ -209,4 +212,3 @@
     config: "{{ ndfc_fabric_sanity_conf }}"
   register: result
   tags: sanity
-  

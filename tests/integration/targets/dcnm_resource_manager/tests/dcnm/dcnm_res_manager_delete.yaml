@@ -56,7 +56,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -187,7 +188,7 @@
         config:
           - entity_name: "l3_vni_fabric"               # A unique name to identify the resource
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:
@@ -204,7 +205,7 @@
         config:
           - scope_type: "fabric"
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:
@@ -223,7 +224,7 @@
             pool_name: "VPC_ID"                        # Based on the 'poolType', select appropriate name
             scope_type: "fabric"
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:
@@ -242,7 +243,7 @@
             pool_type: "ID"                            # choose from ['ID', 'IP', 'SUBNET']
             scope_type: "fabric"
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:
@@ -263,7 +264,7 @@
             scope_type: "device_pair"                  # choose from ['fabric', 'device', device_interface', 'device_pair', 'link']
 
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:

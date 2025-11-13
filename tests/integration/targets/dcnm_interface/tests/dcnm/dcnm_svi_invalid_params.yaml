@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Skip SVI tests if svi_fabric is not defined
-  meta: end_play
+  ansible.builtin.meta: end_play
   when: test_data_common.svi_fabric is not defined or test_data_common.svi_fabric == ""
 
 - name: Remove local log file
@@ -27,8 +27,8 @@
               - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
-              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"   
-      ignore_errors: yes
+              mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+      ignore_errors: true
       register: result
 
     - assert:
@@ -50,8 +50,8 @@
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
-             #mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
-      ignore_errors: yes
+             # mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
+      ignore_errors: true
       register: result
 
     - assert:
@@ -74,7 +74,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               ipv4_addr: 10.1.1.1                         # optional, Interfae IP, default is ""
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -97,7 +97,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               preempt: true                               # optional, flag to enable/disable overthrow of low priority active routers, optional is "false"
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -120,7 +120,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               enable_hsrp: true                           # optional, flag to enable/disable HSRP on the interface, default is "false"
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -144,7 +144,7 @@
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               enable_hsrp: true                           # optional, flag to enable/disable HSRP on the interface, default is "false"
               hsrp_vip: 192.129.1.1                       # optional, Virtual IP address for HSRP, default is ""
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -167,7 +167,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               enable_netflow: true                        # optional, flag to enable netflow, default is "false"
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -190,7 +190,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               dhcp_server_addr1: 192.200.1.1
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -213,7 +213,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               dhcp_server_addr2: 192.200.1.1
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:
@@ -236,7 +236,7 @@
               admin_state: true                           # Flag to enable/disable Vlan interaface
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"
               dhcp_server_addr3: 192.200.1.1
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - assert:

@@ -21,16 +21,16 @@
             dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: dcnm_links_invalid_template                # template to be applied, choose from 
+            ansible.builtin.template: dcnm_links_invalid_template                # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without source fabric
@@ -42,16 +42,16 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without destination fabric
@@ -63,16 +63,16 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without source interface
@@ -84,16 +84,16 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without destination interface
@@ -105,16 +105,16 @@
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without source device
@@ -126,16 +126,16 @@
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without destination device
@@ -147,16 +147,16 @@
             src_interface: "{{ intf_1_3 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without template
@@ -174,7 +174,7 @@
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without ipv4_subnet
@@ -187,15 +187,15 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - name: Create Links without ipv4_addr
@@ -208,16 +208,16 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
+            ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               neighbor_ip: 193.168.3.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
               trm_enabled: false                                 # optional, default is false
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - name: Create Links without neighbor_ip
@@ -230,15 +230,15 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
+            ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - name: Create Links without src_asn
@@ -251,15 +251,15 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_subnet: 193.168.1.1/24                        # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-      ignore_errors: yes
+      ignore_errors: true
       register: result
 
     - name: Create Links without dst_asn
@@ -272,15 +272,15 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
+            ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                 
+
             profile:
               ipv4_addr: 193.168.1.1                             # IP address of interface in src fabric with mask
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                  # BGP ASN in source fabric
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without profile
@@ -289,10 +289,10 @@
         src_fabric: "{{ ansible_num_fabric }}"
         config:
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
+            ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-      ignore_errors: yes          
+      ignore_errors: true
       register: result
 
     - name: Create Links without multiple profile parameters
@@ -305,10 +305,10 @@
             dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
+            ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
               dummy: 1
-      ignore_errors: yes          
+      ignore_errors: true
       register: result

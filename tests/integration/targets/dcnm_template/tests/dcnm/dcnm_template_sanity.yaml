@@ -14,7 +14,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -112,7 +113,7 @@
       loop: '{{ result.response }}'
 
     - name: Cleanup - sleep for 100 seconds for DCNM to completely update the state
-      wait_for:
+      ansible.builtin.wait_for:
         timeout: 100
 
     - name: Create templates again - Idempotence
@@ -215,7 +216,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
@@ -281,12 +282,12 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
     - name: SANITY- Delete templates along with the template which is already installed on a switch
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_inuse_1
@@ -297,7 +298,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_1" in item["DATA"])'
           - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_2" in item["DATA"])'
           - '(result["template-policy-map"] | length == 2)'
@@ -306,7 +307,7 @@
       loop: '{{ result.response }}'
 
     - name: SANITY- Delete a template which is not existing
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_1000
@@ -315,7 +316,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -323,7 +324,7 @@
 ##############################################
 
     - name: SANITY- Query a template
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: query       # only choose form [merged, deleted, query]
         config:
           - name: template_101
@@ -383,7 +384,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
 
     - name: SANITY- set_fact when error found
-      set_fact:
+      ansible.builtin.set_fact:
         error_exists: true
       loop: "{{ lookup('list', result['response'][0]['DATA']) }}"
       when: '"ERROR" == item.get("reportItemType")'
@@ -420,7 +421,7 @@
                   snsr-grp 1 sample-interval 10000
 
       register: result
-      ignore_errors: yes
+      ignore_errors: true
 
     - assert:
         that:
@@ -433,7 +434,7 @@
 
 
     - name: SANITY- Delete all templates created
-      cisco.dcnm.dcnm_template: &temp_delete 
+      cisco.dcnm.dcnm_template: &temp_delete
         state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_101

@@ -36,11 +36,13 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
@@ -59,7 +61,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -73,7 +76,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_setup_2.changed == true
 
@@ -94,7 +97,7 @@
   register: result_setup_3
 
 - name: SETUP.3a - OVERRIDDEN - [debug] print result_setup_3
-  debug:
+  ansible.builtin.debug:
     var: result_setup_3
 
 - name: SETUP.4 OVERRIDDEN - [query] query VRF state
@@ -103,7 +106,8 @@
     state: query
   register: result_setup_4
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_setup_3.changed == true'
     - 'result_setup_3.response[0].RETURN_CODE == 200'
@@ -143,10 +147,11 @@
   register: result_1a
 
 - name: TEST.1b - OVERRIDDEN - [debug] print result_1
-  debug:
+  ansible.builtin.debug:
     var: result_1
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1.changed == true'
     - 'result_1.response[0].RETURN_CODE == 200'
@@ -170,10 +175,11 @@
   register: result_1c
 
 - name: TEST.1d - OVERRIDDEN - [debug] print result_1c
-  debug:
+  ansible.builtin.debug:
     var: result_1c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1c.changed == false'
     - 'result_1c.response|length == 0'
@@ -201,7 +207,7 @@
   register: result_2
 
 - name: TEST.2a - OVERRIDDEN - [debug] print result_2
-  debug:
+  ansible.builtin.debug:
     var: result_2
 
 - name: TEST.2b - OVERRIDDEN - [query] Wait for vrfStatus == DEPLOYED
@@ -214,7 +220,8 @@
   retries: 30
   delay: 2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2.changed == true'
     - 'result_2.response[0].RETURN_CODE == 200'
@@ -255,10 +262,11 @@
   delay: 2
 
 - name: TEST.2e - OVERRIDDEN - [debug] print result_2c
-  debug:
+  ansible.builtin.debug:
     var: result_2c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2c.changed == true'
     - 'result_2c.response[0].RETURN_CODE == 200'
@@ -284,10 +292,11 @@
   register: result_2f
 
 - name: TEST.2g - OVERRIDDEN - [debug] print result_2f
-  debug:
+  ansible.builtin.debug:
     var: result_2f
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2f.changed == false'
     - 'result_2f.response|length == 0'
@@ -320,7 +329,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_3.changed == true
 
@@ -335,10 +344,11 @@
   delay: 2
 
 - name: TEST.3c - OVERRIDDEN - [debug] print result_3
-  debug:
+  ansible.builtin.debug:
     var: result_3
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3.changed == true'
     - 'result_3.response[0].RETURN_CODE == 200'
@@ -380,7 +390,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_4.changed == true
 
@@ -399,7 +409,7 @@
   when: result_4.changed == true
 
 - name: TEST.4c - OVERRIDDEN - [wait_for] Wait 60 for vrfStatus == DEPLOYED
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_4.changed == true
 
@@ -414,10 +424,11 @@
   delay: 2
 
 - name: TEST.4e - OVERRIDDEN - [debug] print result_4
-  debug:
+  ansible.builtin.debug:
     var: result_4
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_4.changed == true'
     - 'result_4.response[0].RETURN_CODE == 200'
@@ -431,10 +442,11 @@
   register: result_4f
 
 - name: TEST.4g - OVERRIDDEN - [debug] print result_4f
-  debug:
+  ansible.builtin.debug:
     var: result_4f
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_4f.changed == false'
     - 'result_4f.response|length == 0'
@@ -467,7 +479,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_5.changed == true
 
@@ -482,10 +494,11 @@
   delay: 2
 
 - name: TEST.5c - OVERRIDDEN - [debug] print result_5
-  debug:
+  ansible.builtin.debug:
     var: result_5
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_5.changed == true'
     - 'result_5.response[0].RETURN_CODE == 200'
@@ -512,10 +525,11 @@
   register: result_5d
 
 - name: TEST.5e - OVERRIDDEN - [debug] print result_5d
-  debug:
+  ansible.builtin.debug:
     var: result_5d
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_5d.changed == false'
     - 'result_5d.response|length == 0'
@@ -530,5 +544,5 @@
     state: deleted
 
 - name: CLEANUP.2 - OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60

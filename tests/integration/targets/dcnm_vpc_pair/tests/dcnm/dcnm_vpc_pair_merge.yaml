@@ -18,24 +18,24 @@
   ansible.builtin.set_fact:
     # some cases are for a specific deploy state
     deploy_local: false
-    
+
     test_data_merged:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # TC1 - Full VPC Pair Configuration
       vpc_pair_full_template: "merged/dcnm_vpc_pair_merged_full_conf.j2"
       vpc_pair_full_file: "{{ role_path }}/files/dcnm_vpc_pair_merged_full_conf.yaml"
       vpc_pair_full_deployed_file: "{{ role_path }}/files/dcnm_vpc_pair_merged_full_conf_deployed.yaml"
-      #----------------------------------
-      # TC2 - Modified VPC Pair Configuration  
+      # ----------------------------------
+      # TC2 - Modified VPC Pair Configuration
       vpc_pair_modified_template: "merged/dcnm_vpc_pair_merged_modified_conf.j2"
       vpc_pair_modified_file: "{{ role_path }}/files/dcnm_vpc_pair_merged_modified_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       # TC3 - Minimal VPC Pair Configuration
       vpc_pair_minimal_template: "merged/dcnm_vpc_pair_merged_minimal_conf.j2"
       vpc_pair_minimal_file: "{{ role_path }}/files/dcnm_vpc_pair_merged_minimal_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       # TC4 - VPC Pair without deploy flag
       vpc_pair_no_deploy_template: "merged/dcnm_vpc_pair_merged_no_deploy_conf.j2"
       vpc_pair_no_deploy_file: "{{ role_path }}/files/dcnm_vpc_pair_merged_no_deploy_conf.yaml"
@@ -114,7 +114,7 @@
   tags: merged
 
 - name: MERGED - TC1 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 1'
@@ -144,7 +144,7 @@
   tags: merged
 
 - name: MERGED - TC1 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
   tags: merged
@@ -167,7 +167,7 @@
   tags: merged
 
 - name: MERGED - TC2 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -207,7 +207,7 @@
   tags: merged
 
 - name: MERGED - TC2b - ASSERT - Check if changed flag is false for VXLAN
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -238,7 +238,7 @@
   tags: merged
 
 - name: MERGED - TC3 - ASSERT - Check if deleted successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -280,7 +280,7 @@
   tags: merged
 
 - name: MERGED - TC4 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 1'
@@ -320,7 +320,7 @@
   tags: merged
 
 - name: MERGED - TC4b - ASSERT - Check if deleted successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -340,7 +340,7 @@
   tags: merged
 
 - name: MERGED - TC5 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 1'
@@ -376,7 +376,7 @@
   tags: merged
 
 - name: MERGED - TC5b - ASSERT - Check if deleted successfully
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 0'
@@ -403,7 +403,7 @@
   tags: merged
 
 - name: MERGED - TC6 - ASSERT - Check if changed flag is true and no deploy
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - '(result["diff"][0]["merged"] | length) == 1'
@@ -445,11 +445,11 @@
           PEER1_KEEP_ALIVE_LOCAL_IP: "{{ test_data_common.peer1_ip }}"
           PEER2_KEEP_ALIVE_LOCAL_IP: "{{ test_data_common.peer2_ip }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC7 - ASSERT - Check invalid peer IP error
-  assert:
+  ansible.builtin.assert:
     that:
       - result.changed == false
   tags: merged

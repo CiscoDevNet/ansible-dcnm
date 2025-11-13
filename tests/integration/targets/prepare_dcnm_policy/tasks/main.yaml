@@ -20,12 +20,14 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -46,7 +48,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -149,6 +152,7 @@
       register: result
       tags: sanity
 
+    - name: Assert
     - assert:
         that:
           - 'result.changed == true'
@@ -157,6 +161,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
+    - name: Assert
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
@@ -172,7 +177,7 @@
             tags: "base_ospf clone"
             description: "template which is a clone of base_ospf"
             content: |
-              ##template variables
+              ## template variables
 
               #    Copyright (c) 2018 by Cisco Systems, Inc.
               #    All rights reserved.
@@ -187,7 +192,7 @@
               ipV4Address LOOPBACK_IP;
 
               ##
-              ##template content
+              ## template content
 
               router ospf $$OSPF_TAG$$
               router-id $$LOOPBACK_IP$$
@@ -195,6 +200,7 @@
               ##
       register: result
       tags: sanity
+    - name: Assert
     - assert:
         that:
           - 'result.changed == true'
@@ -203,6 +209,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
+    - name: Assert
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
@@ -222,13 +229,14 @@
             description: "internal template for enabling telemetry feature"
             content: |
               ##
-              ##template content
+              ## template content
 
               feature telemetry
 
               ##
       register: result
       tags: sanity
+    - name: Assert
     - assert:
         that:
           - 'result.changed == true'
@@ -237,6 +245,7 @@
           - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
+    - name: Assert
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
@@ -261,6 +270,7 @@
       register: result
       tags: sanity
 
+    - name: Assert
     - assert:
         that:
           - 'result.changed == true'
@@ -271,6 +281,7 @@
       tags: sanity
 
     # Assert for Create responses
+    - name: Assert
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'
@@ -282,6 +293,7 @@
       tags: sanity
 
     # Assert for deploy responses
+    - name: Assert
     - assert:
         that:
           - 'item["RETURN_CODE"] == 200'

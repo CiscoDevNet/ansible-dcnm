@@ -1,6 +1,8 @@
 ---
-- debug: msg="Starting dcnm_fabric spine_leaf_replaced test"
-- debug: msg="Role Path {{ role_path }}"
+- name: Debug
+  ansible.builtin.debug: msg="Starting dcnm_fabric spine_leaf_replaced test"
+- name: Debug
+  ansible.builtin.debug: msg="Role Path {{ role_path }}"
 
 - name: Include VRF List Items
   include_vars: ./exec_vars/vrfs.yaml

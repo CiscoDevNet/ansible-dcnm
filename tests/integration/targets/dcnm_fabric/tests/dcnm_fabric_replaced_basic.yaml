@@ -68,7 +68,8 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # REPLACED - TEST - Create all supported fabric types with non-default configs
@@ -214,9 +215,11 @@
         SUBINTERFACE_RANGE: 2-101
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -444,9 +447,11 @@
         FABRIC_TYPE: "{{ fabric_type_2 }}"
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -637,9 +642,11 @@
         IS_READ_ONLY: false
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -738,9 +745,11 @@
 - name: REPLACED - TEST - Replace config for fabric_3 with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_3
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -855,9 +864,11 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

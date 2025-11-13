@@ -1,7 +1,7 @@
 ---
 
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yaml
+  ansible.builtin.import_tasks: ../base_tasks.yaml
   tags: deleted
 
 # ----------------------------------------------
@@ -17,7 +17,7 @@
   register: merged_result
   tags: deleted
 
-- name: Deleted TC1 - Query Inventory State in Fabric 
+- name: Deleted TC1 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -48,7 +48,7 @@
   delegate_to: localhost
   tags: deleted
 
-- name: Deleted TC2 - Query Inventory State in Fabric 
+- name: Deleted TC2 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -69,7 +69,8 @@
   register: result
   tags: deleted
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
@@ -85,11 +86,11 @@
 
 - name: Deleted TC4 - Prepare Test Data
   ansible.builtin.set_fact:
-    ndfc_fabric_delete_conf: 
+    ndfc_fabric_delete_conf:
   delegate_to: localhost
   tags: deleted
 
-- name: Deleted TC4 - Query Inventory State in Fabric 
+- name: Deleted TC4 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -117,8 +118,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: delete
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: delete
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: deleted
 
 - name: Deleted TC5 - Merge a Switch using BrownField Deployment
@@ -130,7 +131,7 @@
   register: merged_result
   tags: deleted
 
-- name: Deleted TC5 - Query Inventory State in Fabric 
+- name: Deleted TC5 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -153,10 +154,11 @@
     config:
     - seed_ip:
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: deleted
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in result.msg'
@@ -174,7 +176,7 @@
   register: delete_result
   tags: deleted
 
-- name: Deleted TC7 - Query Inventory State in Fabric 
+- name: Deleted TC7 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -195,7 +197,8 @@
   register: result
   tags: deleted
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'

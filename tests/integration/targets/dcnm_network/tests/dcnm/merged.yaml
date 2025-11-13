@@ -17,25 +17,25 @@
   ansible.builtin.set_fact:
     # some cases are for a specific deploy state
     deploy_local: false
-    
+
     test_data_merged:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
-      # TC1 
+      # ----------------------------------
+      # TC1
       net1_no_attach_conf_template: "merged/dcnm_network_merged_net1_no_attach_conf.j2"
       # undeployed
       net1_no_attach_conf_file: "{{ role_path }}/files/dcnm_network_merged_net1_no_attach_conf.yaml"
       # deployed
       net1_no_attach_conf_deployed_file: "{{ role_path }}/files/dcnm_network_merged_net1_no_attach_conf_deployed.yaml"
-      #----------------------------------
+      # ----------------------------------
       # TC3
       net1_conf_template: "merged/dcnm_network_merged_net1_conf.j2"
       # undeployed
       net1_conf_file: "{{ role_path }}/files/dcnm_network_merged_net1_conf.yaml"
       # deployed
       net1_conf_deployed_file: "{{ role_path }}/files/dcnm_network_merged_net1_conf_deployed.yaml"
-      #----------------------------------
+      # ----------------------------------
       # TC5
       double_net_conf_template: "merged/dcnm_network_merged_double_net_conf.j2"
       double_let_conf_file: "{{ role_path }}/files/dcnm_network_merged_double_net_conf.yaml"
@@ -197,7 +197,7 @@
   tags: merged
 
 - name: MERGED - TC1 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -238,7 +238,7 @@
   tags: merged
 
 - name: MERGED - TC2 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -274,7 +274,7 @@
     dcnm_network_net1_conf_deployed: "{{ lookup('file', '{{ test_data_merged.net1_conf_deployed_file }}') | from_yaml }}"
   delegate_to: localhost
   tags: merged
-  
+
 - name: MERGED - TC3 - MERGED - Create New Network with Attach and global deploy
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
@@ -284,7 +284,7 @@
   tags: merged
 
 - name: MERGED - TC3 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -329,7 +329,7 @@
   tags: merged
 
 - name: MERGED - TC4 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -347,7 +347,7 @@
   tags: merged
 
 - name: MERGED - TC4 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: merged
@@ -373,7 +373,7 @@
   register: result
 
 - name: MERGED - TC5 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -398,7 +398,7 @@
   tags: merged
 
 - name: MERGED - TC5 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: merged
@@ -425,7 +425,7 @@
   tags: merged
 
 - name: MERGED - TC6 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -443,7 +443,7 @@
   tags: merged
 
 - name: MERGED - TC6 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: merged
@@ -470,7 +470,7 @@
   tags: merged
 
 - name: MERGED - TC7 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -497,7 +497,7 @@
   tags: merged
 
 - name: MERGED - TC7 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: merged
@@ -524,7 +524,7 @@
   tags: merged
 
 - name: MERGED - TC8 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -565,7 +565,7 @@
   tags: merged
 
 - name: MERGED - TC9 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -590,13 +590,13 @@
   tags: merged
 
 - name: MERGED - TC9 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: merged
 
 
-# TC10 
+# TC10
 - name: MERGED - TC10 - DELETED - Clean up any existing network
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
@@ -618,7 +618,7 @@
   tags: merged
 
 - name: MERGED - TC10 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -643,7 +643,7 @@
   tags: merged
 
 - name: MERGED - TC10 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: merged
@@ -670,7 +670,7 @@
   tags: merged
 
 - name: MERGED - TC11 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -710,7 +710,7 @@
   tags: merged
 
 - name: MERGED - TC11 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
   tags: merged
@@ -750,11 +750,11 @@
       gw_ip_subnet: '192.168.30.1/24'
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid network name
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
     - result.changed == false
@@ -774,11 +774,11 @@
       gw_ip_subnet: '192.168.30.1/24'
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid VRF name
-  assert:
+  ansible.builtin.assert:
     that:
     - '"VRF: Tenant-10000 is missing in fabric:" in result.msg'
     - result.changed == false
@@ -798,11 +798,11 @@
       gw_ip_subnet: '192.168.30.1/24'
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid vlan id
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: vlan_id:15000 : The item exceeds the allowed range of max 4094" in result.msg'
     - result.changed == false
@@ -825,11 +825,11 @@
         ports: ["{{ test_data_common.sw1_int1 }}", "{{ test_data_common.sw1_int2 }}"]
       deploy: false
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid switch
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: ip_address : Required parameter not found" in result.msg'
     - result.changed == false
@@ -850,11 +850,11 @@
       gw_ip_subnet: '192.168.30.1/24'
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid routing tag
-  assert:
+  ansible.builtin.assert:
     that:
     - '"routing_tag:4294967296 : The item exceeds the allowed range of max 4294967295" in result.msg'
     - result.changed == false
@@ -875,11 +875,11 @@
       is_l2only: True
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid vrf name
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: vrf_name should not be specified for L2 Networks" in result.msg'
     - result.changed == false
@@ -898,11 +898,11 @@
       gw_ip_subnet: '192.168.30.1/24'
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid vrf name
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: vrf_name is required for L3 Networks" in result.msg'
     - result.changed == false
@@ -923,11 +923,11 @@
       dhcp_srvr1_ip: '1.1.1.1'
       deploy: true
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: merged
 
 - name: MERGED - TC12 - ASSERT - Check invalid vrf name
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: DHCP server IP should be specified along with DHCP server VRF" in result.msg'
     - result.changed == false

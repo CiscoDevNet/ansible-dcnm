@@ -2,12 +2,12 @@
 - name: MAIN - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_setup:
-      #----------------------------------  
+      # ----------------------------------
       # config template for vrf setup
-      #----------------------------------
-      vrf_conf_template: "dcnm_network_setup_vrf_conf.j2" 
+      # ----------------------------------
+      vrf_conf_template: "dcnm_network_setup_vrf_conf.j2"
       vrf_conf_file: "{{ role_path }}/files/dcnm_network_setup_vrf_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
   delegate_to: localhost
   tags: always
 
@@ -20,7 +20,7 @@
   tags: always
 
 - name: MAIN - ASSERT - Fabric Found
-  assert:
+  ansible.builtin.assert:
     that:
       - result.result[0].found == true
     fail_msg: "Fabric '{{ test_data_common.fabric }}' not found."
@@ -47,7 +47,7 @@
   tags: always
 
 - name: MAIN - Collect DCNM Network Test Cases
-  find:
+  ansible.builtin.find:
     paths: ["{{ role_path }}/tests/dcnm", "{{ role_path }}/tests/dcnm/self-contained-tests"]
     patterns: "{{ testcase }}.yaml"
   connection: local
@@ -56,19 +56,19 @@
   tags: always
 
 - name: MAIN - Set Test Cases Fact
-  set_fact:
+  ansible.builtin.set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
   delegate_to: localhost
   tags: always
 
 - name: MAIN - Build List of Test Items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
   delegate_to: localhost
   tags: always
 
 - name: MAIN - Run Test Cases
-  include_tasks: "{{ test_case_to_run }}"
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run

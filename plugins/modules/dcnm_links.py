@@ -427,7 +427,7 @@ EXAMPLES = """
 #
 # INTRA-FABRIC
 
-    - name: Create Links
+- name: Create Links
       cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "ansible_num_fabric"
@@ -543,7 +543,7 @@ EXAMPLES = """
               ebgp_password_enable: true                         # optional, default is true
               ebgp_password: 0102030405                          # optional, required only if ebgp_password_enable flag is true, and inherit_from_msd
                                                                  # is false.
-              inherit_from_msd: True                             # optional, required only if ebgp_password_enable flag is true, default is false
+              inherit_from_msd: true # optional, required only if ebgp_password_enable flag is true, default is false
               ebgp_auth_key_type: 3                              # optional, required only if ebpg_password_enable is true, and inherit_from_msd
                                                                  # is false. Default is 3
                                                                  # choose from [3 - 3DES, 7 - Cisco ]
@@ -589,16 +589,15 @@ EXAMPLES = """
               dci_routing_proto: isis                            # Routing protocol used on the DCI MPLS link, choose from [is-is, ospf]
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
-            src_interface:  Loopback101                          # Loopback interface on the Source fabric
-            dst_interface:  Loopback1                            # Loopback interface on the Destination fabric
+            src_interface: Loopback101                          # Loopback interface on the Source fabric
+            dst_interface: Loopback1                            # Loopback interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_vxlan_mpls_overlay_setup               #Template of MPLS handoff overlay link
+            template: ext_vxlan_mpls_overlay_setup               # Template of MPLS handoff overlay link
             profile:
               neighbor_ip: 2.2.2.2 .                             # IP address of the loopback interface of destination device
               src_asn: 498278384                                 # BGP ASN in source fabric
               dst_asn: 498278384                                 # BGP ASN in destination fabric
-
 
 
 # FABRIC WITH VPC PAIRED SWITCHES

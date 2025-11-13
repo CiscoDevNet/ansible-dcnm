@@ -16,16 +16,16 @@
 - name: QUERY - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_query:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # TC1 - QUERY
-      merged_conf_template: "sanity/dcnm_network_sanity_merged_conf.j2" 
+      merged_conf_template: "sanity/dcnm_network_sanity_merged_conf.j2"
       merged_conf_file: "{{ role_path }}/files/dcnm_network_sanity_merged_conf.yaml"
       # TC5 - L2only and L3 network with dhcp, arp options
       l2_l3_net_conf_template: "deleted/dcnm_network_deleted_l2_l3_net_conf.j2"
       l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_deleted_l2_l3_net_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
 
   delegate_to: localhost
   tags: query
@@ -74,7 +74,7 @@
   tags: query
 
 - name: QUERY - TC1 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: query
@@ -111,7 +111,7 @@
   delegate_to: localhost
   tags: query
 
-# TC3 
+# TC3
 - name: QUERY - TC3 - DELETED - Delete all the networks
   cisco.dcnm.dcnm_network:
     fabric: "{{ test_data_common.fabric }}"
@@ -145,7 +145,7 @@
   tags: query
 
 - name: QUERY - TC4 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: query
@@ -166,7 +166,7 @@
   tags: query
 
 - name: QUERY - TC5 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: query

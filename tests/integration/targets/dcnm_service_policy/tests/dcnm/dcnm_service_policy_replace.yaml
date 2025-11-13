@@ -27,7 +27,8 @@
         node_name: "{{ ansible_snode_2 }}"                # mandatory
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
         - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -58,7 +59,7 @@
             policy:
               proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: any                                   # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)] 
+              dest_port: 22                                   # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
               next_hop_option:  none                          # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_10                            # optional, default value will be auto-generated
@@ -78,7 +79,7 @@
             policy:
               proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: 2000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              dest_port: 2001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
               next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
 
@@ -122,7 +123,7 @@
             policy:
               proto: udp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: 501                                   # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 502                                  # mandatory, choices=[any, Min:1, Max:65535)] 
+              dest_port: 502                                  # mandatory, choices=[any, Min:1, Max:65535)]
               action: deny                                    # optional, default=permit, choices=[permit, deny]
               next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
 
@@ -138,7 +139,7 @@
             policy:
               proto: tcp                                      # mandatory, choices=[tcp, udp, icmp, ip]
               src_port: 5000                                  # mandatory, choices=[any, Min:1, Max:65535)]
-              dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)] 
+              dest_port: 5001                                 # mandatory, choices=[any, Min:1, Max:65535)]
               action: permit                                  # optional, default=permit, choices=[permit, deny]
               next_hop_option:  drop_on_fail                  # optional, default=none, choices=[none, drop_on_fail, drop]
               acl_name: fwd_acl_21                            # optional, default value will be auto-generated

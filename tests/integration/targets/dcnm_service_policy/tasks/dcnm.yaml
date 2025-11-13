@@ -1,17 +1,18 @@
 ---
 - name: collect dcnm test cases
-  find:
+  ansible.builtin.find:
     paths: "{{ role_path }}/tests/dcnm"
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
 
 - name: set test_items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
 
 - name: run test cases (connection=httpapi)
   include: "{{ test_case_to_run }}"
@@ -21,22 +22,23 @@
 
 ############################################################
 ##                          CLEANUP                       ##
-############################################################    
+############################################################
 
 - name: Cleanup - Delete service policies
   cisco.dcnm.dcnm_service_policy:
-    fabric: "{{ ansible_it_fabric }}"                    
-    service_fabric: "{{ ansible_it_service_fabric }}" 
-    state: deleted                                    
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_it_service_fabric }}"
+    state: deleted
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
         - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 180
 
 - name: Delete feature_pbr policy
@@ -48,33 +50,35 @@
       - switch:
           - ip: "{{ ansible_switch1 }}"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 180
 
 - name: Cleanup - Delete route peerings
-  cisco.dcnm.dcnm_service_route_peering: 
-    fabric: "{{ ansible_it_fabric }}" 
-    service_fabric: "{{ ansible_it_service_fabric }}" 
+  cisco.dcnm.dcnm_service_route_peering:
+    fabric: "{{ ansible_it_fabric }}"
+    service_fabric: "{{ ansible_it_service_fabric }}"
     state: deleted
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 180 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 180
 
 - name: Cleanup - Delete Service Nodes
-  cisco.dcnm.dcnm_service_node: 
+  cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_it_service_fabric }}"
     state: deleted
@@ -95,13 +99,14 @@
         - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 - name: Cleanup - Delete Networks
@@ -159,39 +164,41 @@
         gw_ip_subnet: '42.42.42.1/24'
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - name: Cleanup - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 - name: Cleanup - Delete all VRFs
   cisco.dcnm.dcnm_vrf:
-    fabric: "{{ ansible_it_fabric }}" 
+    fabric: "{{ ansible_it_fabric }}"
     state: deleted
     config:
       - vrf_name: "{{ ansible_vrf_11 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
-      - vrf_name: "{{ ansible_vrf_21 }}" 
+      - vrf_name: "{{ ansible_vrf_21 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
-      - vrf_name: "{{ ansible_vrf_31 }}" 
+      - vrf_name: "{{ ansible_vrf_31 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
-      - vrf_name: "{{ ansible_vrf_41 }}" 
+      - vrf_name: "{{ ansible_vrf_41 }}"
         attach:
             - ip_address: "{{ ansible_switch1 }}"
             - ip_address: "{{ ansible_switch2 }}"
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'

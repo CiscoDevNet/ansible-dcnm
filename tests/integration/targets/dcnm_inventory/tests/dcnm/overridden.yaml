@@ -1,6 +1,6 @@
 ---
 - name: Import DCNM Inventory Base Tasks
-  import_tasks: ../base_tasks.yaml
+  ansible.builtin.import_tasks: ../base_tasks.yaml
   tags: overridden
 
 # ----------------------------------------------
@@ -17,7 +17,7 @@
   register: merged_result
   tags: overridden
 
-- name: Overridden TC1 - Query Inventory State in Fabric 
+- name: Overridden TC1 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -38,7 +38,8 @@
   register: result
   tags: overridden
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
   tags: overridden
@@ -56,8 +57,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: overridden
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: overridden
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: overridden
 
 - name: Overridden TC3 - Override Existing Switch - Removes Other Switches from Fabric
@@ -69,7 +70,7 @@
   register: overridden_result
   tags: overridden
 
-- name: Overridden TC3 - Query Inventory State in Fabric 
+- name: Overridden TC3 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -97,8 +98,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: overridden
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: overridden
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: overridden
 
 - name: Overridden TC4 - New Role for the Existing Switch
@@ -110,7 +111,7 @@
   register: overridden_result
   tags: overridden
 
-- name: Overridden TC4 - Query Inventory State in Fabric 
+- name: Overridden TC4 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -137,8 +138,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: overridden
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: overridden
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   tags: overridden
 
 - name: Overridden TC5 - Unspecified Role for the Existing Switch (Default, Leaf)
@@ -150,7 +151,8 @@
   register: overridden_result
   tags: overridden
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'overridden_result.changed == false'
   tags: overridden

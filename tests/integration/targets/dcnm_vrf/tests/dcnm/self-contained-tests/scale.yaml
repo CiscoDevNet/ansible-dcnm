@@ -11,11 +11,13 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
@@ -31,7 +33,8 @@
     path: "{{ rest_path }}"
   register: setup_result_1
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'setup_result_1.response.DATA != None'
 
@@ -43,17 +46,17 @@
   tags: sanity
 
 - name: SETUP.3 - SCALE - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: setup_result_2.changed == false
   tags: sanity
 
 - name: SETUP.4 - SCALE - [set_fact] Dummy set fact for leaf_attach_list
-  set_fact:
+  ansible.builtin.set_fact:
     leaf_vrf_attach: []
 
 - name: SETUP.5 - SCALE - [set_fact] Build list of VRFs to be deployed
-  set_fact:
+  ansible.builtin.set_fact:
     vrfs_list: "{{ vrfs_list|default([]) + [{ 'vrf_name': 'TEST_VRF%03d' | format(item), 'deploy': 'no', 'vrf_id': (item | int + 60000) | int, 'vlan_id': (item | int + 2000) | int, 'attach': leaf_vrf_attach }] }}"
   loop: '{{ range(0, 800) | list }}'
 
@@ -65,7 +68,7 @@
   register: result
 
 - name: TEST.1a - SCALE - [wait_for] Wait 60 seconds
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -79,7 +82,8 @@
   ansible.builtin.debug:
     var: result_2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2.changed == true'
 
@@ -91,7 +95,8 @@
   ansible.builtin.debug:
     var: result_2b
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2b.changed == false'
     - 'result_2b.response|length == 0'

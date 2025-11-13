@@ -3,7 +3,7 @@
 ##############################################
 
 - name: Skip SVI tests if svi_fabric is not defined
-  meta: end_play
+  ansible.builtin.meta: end_play
   when: test_data_common.svi_fabric is not defined or test_data_common.svi_fabric == ""
 
 - name: Remove local log file
@@ -14,11 +14,12 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.svi_fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -61,7 +62,7 @@
       register: result
 
     - name: ASSERT - Verify SVI interface creation results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -88,7 +89,7 @@
       register: result
 
     - name: ASSERT - Verify SVI interface idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - '(result["diff"][0]["merged"] | length) == 0'
@@ -116,6 +117,6 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

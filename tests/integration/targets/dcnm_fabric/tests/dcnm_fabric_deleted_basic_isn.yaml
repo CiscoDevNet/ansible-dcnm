@@ -5,7 +5,7 @@
 # 00:03.60
 ################################################################################
 # DESCRIPTION - BASIC FABRIC DELETED STATE TEST FOR ISN
-# 
+#
 # Test basic deletion of fabrics and verify results.
 # - Deletion of populated fabrics not tested here.
 ################################################################################
@@ -50,7 +50,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # DELETED - TEST - Create ISN Fabric
@@ -112,9 +113,11 @@
         BGP_AS: 65535
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -176,9 +179,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -240,9 +245,11 @@
 - name: DELETED - TEST - Delete ISN Fabric (fabric_name_5) and verify idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
