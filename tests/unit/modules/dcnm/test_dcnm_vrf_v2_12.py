@@ -643,7 +643,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
         self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "")
+        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
         self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
 
     def test_dcnm_vrf_v2_12_merged_lite_new_interface_with_extensions(self):
