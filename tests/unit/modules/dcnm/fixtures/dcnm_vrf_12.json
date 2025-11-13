@@ -1583,6 +1583,13 @@
     "MESSAGE":"OK",
     "DATA": []
   },
+  "empty_vrf_lite_data": {
+    "DATA": [],
+    "METHOD": "GET",
+    "MESSAGE": "OK",
+    "REQUEST_PATH": "https://10.1.1.1:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/top-down/fabrics/test_fabric/vrfs/switches",
+    "RETURN_CODE": 200
+  },
   "mock_vrf_lite_obj": {
    "DATA": [
       {
