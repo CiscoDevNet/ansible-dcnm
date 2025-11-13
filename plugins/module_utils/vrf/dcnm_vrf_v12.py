@@ -37,7 +37,14 @@ from pydantic import ValidationError
 
 from ...module_utils.common.api.v1.lan_fabric.rest.top_down.fabrics.vrfs.vrfs import EpVrfGet, EpVrfPost
 from ...module_utils.common.enums.http_requests import RequestVerb
-from ...module_utils.network.dcnm.dcnm import dcnm_get_ip_addr_info, dcnm_send, get_fabric_details, get_fabric_inventory_details, get_sn_fabric_dict
+from ...module_utils.network.dcnm.dcnm import (
+    dcnm_get_ip_addr_info,
+    dcnm_send,
+    get_fabric_details,
+    get_fabric_inventory_details,
+    get_sn_fabric_dict,
+    search_nested_json,
+)
 from .inventory_ipv4_to_serial_number import InventoryIpv4ToSerialNumber
 from .inventory_ipv4_to_switch_role import InventoryIpv4ToSwitchRole
 from .inventory_serial_number_to_ipv4 import InventorySerialNumberToIpv4
@@ -4469,6 +4476,11 @@ class NdfcVrf12:
         if response_model.ERROR != "":
             fail = True
             changed = False
+        if response_model.DATA:
+            resp_val = search_nested_json(response_model.DATA, "fail")
+            if resp_val:
+                fail = True
+                changed = False
         if action == "attach" and "is in use already" in str(response_model.DATA):
             fail = True
             changed = False
