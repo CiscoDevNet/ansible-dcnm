@@ -41,10 +41,12 @@
       release: "{{ nxos_release_2 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.changed == true
     - result.failed == false

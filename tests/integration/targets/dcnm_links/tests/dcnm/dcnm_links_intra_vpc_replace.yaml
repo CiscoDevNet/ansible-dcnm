@@ -11,7 +11,7 @@
 ##               DELETE                     ##
 ##############################################
 
-    - name: Initial setup - Delete Links 
+    - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_vpc_fabric }}"
@@ -58,7 +58,7 @@
 ##############################################
 
     - name: Create Links including all optional parameters
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_vpc_fabric }}"
         config:
@@ -67,11 +67,11 @@
             dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
+            ansible.builtin.template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+
             profile:
               peer1_ipv4_addr: 192.170.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.170.1.2                       # IPV4 address of the Destination interface
@@ -86,7 +86,7 @@
                 - no shutdown                                    # optional, default is ""
               peer2_cmds:                                        # Freeform config for destination device
                 - no shutdown                                    # optional, default is ""
-              intf_vrf: "test_vrf"                               # optional, default is ""  
+              intf_vrf: "test_vrf"                               # optional, default is ""
 
       register: result
 
@@ -109,7 +109,7 @@
 ##############################################
 
     - name: Replace Link
-      cisco.dcnm.dcnm_links: &links_replace 
+      cisco.dcnm.dcnm_links: &links_replace
         state: replaced                                          # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_vpc_fabric }}"
         config:
@@ -118,11 +118,11 @@
             dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
+            ansible.builtin.template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+
             profile:
               peer1_ipv4_addr: 193.170.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 193.170.1.2                       # IPV4 address of the Destination interface
@@ -137,7 +137,7 @@
                 - cdp enable                                     # optional, default is ""
               peer2_cmds:                                        # Freeform config for destination device
                 - cdp enable                                     # optional, default is ""
-              intf_vrf: "test_vrf"                               # optional, default is ""  
+              intf_vrf: "test_vrf"                               # optional, default is ""
 
       register: result
 
@@ -183,7 +183,7 @@
 
   always:
 
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
       when: IT_CONTEXT is not defined

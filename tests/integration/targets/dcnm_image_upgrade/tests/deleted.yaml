@@ -11,7 +11,7 @@
 #
 # SETUP (these should be run prior to running this playbook)
 #  1. Run 00_setup_create_fabric.yaml
-#  2. Run 01_setup_add_switches_to_fabric 
+#  2. Run 01_setup_add_switches_to_fabric
 #  3. Run 02_setup_replace_image_policies
 # PRE_TEST (this playbook)
 #  4. DELETED - PRE_TEST - Upgrade all switches using global config.
@@ -93,7 +93,8 @@
           - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -115,7 +116,7 @@
     - ansible_switch_3 in result.diff[0]
   retries: 60
   delay: 5
-  ignore_errors: yes
+  ignore_errors: true
 
 ################################################################################
 # DELETED - TEST - Detach policies from two switches and verify.
@@ -184,10 +185,12 @@
             - ip_address: "{{ ansible_switch_2 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.changed == true
     - result.failed == false
@@ -268,10 +271,12 @@
             - ip_address: "{{ ansible_switch_3 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.changed == true
     - result.failed == false

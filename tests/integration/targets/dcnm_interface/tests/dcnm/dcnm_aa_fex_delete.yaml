@@ -12,7 +12,8 @@
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -90,7 +91,7 @@
       register: verify_result
 
     - name: ASSERT - Verify AA FEX interfaces are deleted (response length should be 0)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'verify_result.response | length == 0'
 
@@ -99,7 +100,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'

@@ -26,9 +26,9 @@
 #
 #     ansible-playbook dcnm_tests.yaml -i ../../files/dynamic_inventory.py
 #
-# 
+#
 - hosts: dcnm
-  gather_facts: no
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 # Uncomment and modify if not using dynamic_inventory.py
 # See the individual test yaml files for a description of

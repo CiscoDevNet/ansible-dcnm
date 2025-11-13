@@ -68,7 +68,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -132,9 +133,11 @@
         FABRIC_MTU: 1500
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -173,7 +176,8 @@
         role: leaf
         preserve_config: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 ################################################################################
@@ -264,9 +268,11 @@
         FABRIC_TYPE: "{{ fabric_type_4 }}"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -360,9 +366,11 @@
 - name: REPLACED - TEST - Replace fabric_4 config with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_4
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -391,9 +399,11 @@
     state: deleted
     config:
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -449,9 +459,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

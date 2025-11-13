@@ -181,20 +181,20 @@ EXAMPLES = """
     service_fabric: external
     state: merged
     config:
-    - name: SN-11
+      - name: SN-11
       type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: Ethernet1/1
-      switches:
-      - 192.168.1.224
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: Ethernet1/1
+        switches:
+          - 192.168.1.224
     - name: SN-12
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: vPC1
       switches:  # up to two switches, if two switches are provided, vpc is only option
-      - 192.168.1.224
+        - 192.168.1.224
       - 192.168.1.225
 
 - name: Replace Service Nodes form factor/type parameter
@@ -203,15 +203,15 @@ EXAMPLES = """
     service_fabric: external
     state: replaced
     config:
-    - name: SN-11
-      type: firewall
+      - name: SN-11
+        type: firewall
    #  Replace can only modify the form factor
    #  form_factor: virtual  # the virtual will be changed to new physical
    #  form_factor: physical
-      svc_int_name: svc1
-      attach_interface: Ethernet1/1
-      switches:
-      - 192.168.1.224
+        svc_int_name: svc1
+        attach_interface: Ethernet1/1
+        switches:
+          - 192.168.1.224
    #   Nothing will be replaced in the below service node as there is no change
    #   Dont touch this if its present on DCNM
    # - name: SN-12
@@ -230,13 +230,13 @@ EXAMPLES = """
     state: overridden
     config:
    # Create this service node
-    - name: SN-13
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: Ethernet1/1
-      switches:
-      - 192.168.1.224
+      - name: SN-13
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: Ethernet1/1
+        switches:
+          - 192.168.1.224
    # Delete this service node from the DCNM
    # - name: SN-11
    #   type: firewall
@@ -261,20 +261,20 @@ EXAMPLES = """
     service_fabric: external
     state: deleted
     config:
-    - name: SN-11
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: Ethernet1/1
-      switches:
-      - 192.168.1.224
+      - name: SN-11
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: Ethernet1/1
+        switches:
+          - 192.168.1.224
     - name: SN-12
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: vPC1
       switches:  # up to two switches, if two switches are provided, vpc is only option
-      - 192.168.1.224
+        - 192.168.1.224
       - 192.168.1.225
 
 - name: Delete all the Service Nodes
@@ -289,20 +289,20 @@ EXAMPLES = """
     service_fabric: external
     state: query
     config:
-    - name: SN-11
-      type: firewall
-      form_factor: virtual
-      svc_int_name: svc1
-      attach_interface: Ethernet1/1
-      switches:
-      - 192.168.1.224
+      - name: SN-11
+        type: firewall
+        form_factor: virtual
+        svc_int_name: svc1
+        attach_interface: Ethernet1/1
+        switches:
+          - 192.168.1.224
     - name: SN-12
       type: firewall
       form_factor: virtual
       svc_int_name: svc1
       attach_interface: vPC1
       switches:  # up to two switches, if two switches are provided, vpc is only option
-      - 192.168.1.224
+        - 192.168.1.224
       - 192.168.1.225
 
 - name: Query all the Service Nodes

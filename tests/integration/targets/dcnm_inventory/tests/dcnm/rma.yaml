@@ -30,15 +30,15 @@
 #   ansible.builtin.set_fact:
 # - set_fact:
 #     mode_maintenance: "/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ ansible_switch1_serial }}/maintenance-mode"
-#     mode_deploy: "/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ ansible_switch1_serial }}/deploy-maintenance-mode"  
+#     mode_deploy: "/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ ansible_switch1_serial }}/deploy-maintenance-mode"
 #   when: controller_version == "11"
 #   tags: rma
 
 - name: RMA - Setup Rest Variables
   ansible.builtin.set_fact:
     mode_maintenance: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/maintenance-mode"
-    mode_deploy: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/deploy-maintenance-mode" 
-  tags: rma 
+    mode_deploy: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data.test_fabric }}/switches/{{ test_data.sw1_serial }}/deploy-maintenance-mode"
+  tags: rma
 #  when: controller_version >= "12"
 
 # ----------------------------------------------
@@ -62,7 +62,7 @@
   tags: rma
 
 - name: RMA Base Task - Assert Fabric Existence
-  assert:
+  ansible.builtin.assert:
     that:
       - found_fabric == true
     fail_msg: "Fabric '{{ test_data.test_fabric }}' not found."
@@ -88,7 +88,7 @@
   register: deleted_result
   tags: rma
 
-- name: RMA TC1 - Query Inventory State in Fabric 
+- name: RMA TC1 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -120,8 +120,8 @@
 
 - name: Import Configuration Prepare Tasks
   vars:
-    file: rma
-  import_tasks: ../conf_prep_tasks.yaml
+    ansible.builtin.file: rma
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
   when: rma_enabled == True
   tags: rma
 
@@ -135,7 +135,7 @@
   register: merged_result
   tags: rma
 
-- name: RMA TC2 - Query Inventory State in Fabric 
+- name: RMA TC2 - Query Inventory State in Fabric
   cisco.dcnm.dcnm_inventory:
     state: query
     fabric: "{{ test_data.test_fabric }}"
@@ -161,18 +161,19 @@
   register: query_result
   tags: rma
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'query_result.response != None'
   when: rma_enabled == True
   tags: rma
 
 - name: RMA TC2 - Check Query for POAP enabled swicthes
-  set_fact:
+  ansible.builtin.set_fact:
     rma_switch_present: True
   when: (rma_enabled == True and (item['serialNumber'] == "{{ test_data.sw1_serial }}"))
   loop: "{{ query_result.response }}"
-  ignore_errors: yes
+  ignore_errors: true
   tags: rma
 
 - name: RMA TC2 - Configure Maintenance Mode in Switch
@@ -192,7 +193,7 @@
   tags: rma
 
 - name: RMA TC2 - sleep for 1 minute
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: rma
 

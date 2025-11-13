@@ -8,14 +8,14 @@
 #
 # NOTES:
 # 1. For the IPFM test cases (dcnm_*_ipfm), ensure that the controller
-#    is running in IPFM mode.  i.e. Ensure that 
+#    is running in IPFM mode.  i.e. Ensure that
 #    Fabric Controller -> Admin -> System Settings -> Feature Management
 #    "IP Fabric for Media" is checked.
 # 2. For all other test cases, ensure that
 #    Fabric Controller -> Admin -> System Settings -> Feature Management
 #    "Fabric Builder" is checked.
 - hosts: dcnm
-  gather_facts: no
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:

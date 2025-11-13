@@ -34,11 +34,13 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
@@ -59,7 +61,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.response.DATA != None
 
@@ -73,7 +76,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_setup_2.changed == true
 
@@ -111,7 +114,8 @@
   ansible.builtin.debug:
     var: result_1
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_1.changed == true
     - result_1.response[0].RETURN_CODE == 200
@@ -133,7 +137,8 @@
   ansible.builtin.debug:
     var: result_1c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_1c.changed == false
     - result_1c.response|length == 0
@@ -148,7 +153,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   when: result_1e.changed == true
 
@@ -178,7 +183,8 @@
   ansible.builtin.debug:
     var: result_2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_2.changed == true
     - result_2.response[0].RETURN_CODE == 200
@@ -198,7 +204,8 @@
   ansible.builtin.debug:
     var: result_2c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_2c.changed == false
     - result_2c.response|length == 0
@@ -237,7 +244,8 @@
   ansible.builtin.debug:
     var: result_3
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_3.changed == true
     - result_3.response[0].RETURN_CODE == 200
@@ -259,7 +267,8 @@
   ansible.builtin.debug:
     var: result_3c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_3c.changed == false
     - result_3c.response|length == 0
@@ -272,7 +281,7 @@
 - name: TEST.3f - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
   # While vrf-lite extension was not configured above, we still hit VRF
   # OUT-OF-SYNC. Let's see if waiting helps here too.
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
 
 - name: TEST.4 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION ansible-vrf-int1 switch_2 (user provided VLAN)
@@ -313,7 +322,8 @@
   ansible.builtin.debug:
     var: result_4
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_4.changed == true
     - result_4.response[0].RETURN_CODE == 200
@@ -335,7 +345,8 @@
   ansible.builtin.debug:
     var: result_4c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_4c.changed == false
     - result_4c.response|length == 0
@@ -349,7 +360,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
 
 - name: TEST.5 - MERGED - [merged] Create, Attach VRF+LITE EXTENSION (L3VNI W/O VLAN)
@@ -380,7 +391,8 @@
   ansible.builtin.debug:
     var: result_5
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_5.changed == true
     - result_5.response[0].RETURN_CODE == 200
@@ -400,7 +412,8 @@
   ansible.builtin.debug:
     var: result_5c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_5c.changed == false
     - result_5c.response|length == 0
@@ -414,7 +427,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
 
 - name: TEST.6 - MERGED - [merged] Create, Attach, Deploy VLAN+VRF+LITE EXTENSION - (controller provided VLAN)
@@ -448,7 +461,8 @@
   ansible.builtin.debug:
     var: result_6
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_6.changed == true
     - result_6.response[0].RETURN_CODE == 200
@@ -475,17 +489,18 @@
           - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_7
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: TEST.7a - MERGED - [debug] print result_7
   ansible.builtin.debug:
     var: result_7
 
 - name: set fact
-  set_fact:
+  ansible.builtin.set_fact:
     TEST_PHRASE: "cannot be updated to a different value"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_7.changed == false
     - TEST_PHRASE in result_7.msg
@@ -504,17 +519,18 @@
           - ip_address: "{{ switch_2 }}"
         deploy: true
   register: result_8
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: TEST.8a - MERGED - [debug] print result_8
   ansible.builtin.debug:
     var: result_8
 
 - name: set fact
-  set_fact:
+  ansible.builtin.set_fact:
     TEST_PHRASE: "The item exceeds the allowed range of max"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_8.changed == false
     - TEST_PHRASE in result_8.msg
@@ -536,17 +552,18 @@
           - peer_vrf: ansible-vrf-int1 # optional
       deploy: true
   register: result_9
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: TEST.9a - MERGED - [debug] print result_9
   ansible.builtin.debug:
     var: result_9
 
 - name: set fact
-  set_fact:
+  ansible.builtin.set_fact:
     TEST_PHRASE: "Invalid parameters in playbook: interface : Required parameter not found"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_9.changed == false
     - TEST_PHRASE in result_9.msg
@@ -573,17 +590,18 @@
             dot1q: 2 # dot1q can be got from dcnm
       deploy: true
   register: result_10
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: TEST.10a - MERGED - [debug] print result_10
   ansible.builtin.debug:
     var: result_10
 
 - name: set fact
-  set_fact:
+  ansible.builtin.set_fact:
     TEST_PHRASE: "VRF LITE attachments are appropriate only for switches with Border roles"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result_10.changed == false
     - TEST_PHRASE in result_10.msg
@@ -598,5 +616,5 @@
     state: deleted
 
 - name: CLEANUP.2 - MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60

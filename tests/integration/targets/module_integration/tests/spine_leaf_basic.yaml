@@ -1,6 +1,8 @@
 ---
-- debug: msg="Starting dcnm_fabric spine_leaf_basic test"
-- debug: msg="Role Path {{ role_path }}"
+- name: Debug
+  ansible.builtin.debug: msg="Starting dcnm_fabric spine_leaf_basic test"
+- name: Debug
+  ansible.builtin.debug: msg="Role Path {{ role_path }}"
 
 - name: Cleanup - Reset or Default Ethernet Interfaces
   cisco.dcnm.dcnm_interface:
@@ -148,7 +150,7 @@
       - 'result.response[3].RETURN_CODE == 200'
 
   - name: Sleep for 30 seconds before checking idempotence state
-    wait_for:
+    ansible.builtin.wait_for:
       timeout: 30
 
   - name: Add Networks - Idempotence

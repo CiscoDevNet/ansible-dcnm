@@ -73,7 +73,8 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Create all supported fabric types with basic config
@@ -200,9 +201,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -412,9 +415,11 @@
         ANYCAST_GW_MAC: aa:aa:bb:bb:cc:cc
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -597,9 +602,11 @@
         SUBINTERFACE_RANGE: 2-101
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -678,9 +685,11 @@
 - name: MERGED - TEST - Merge additional config into fabric_3 - idempotence
   cisco.dcnm.dcnm_fabric: *merge_fabric_3
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -795,9 +804,11 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

@@ -11,7 +11,7 @@
 ##               DELETE                     ##
 ##############################################
 
-    - name: Initial setup - Delete Links 
+    - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
@@ -67,11 +67,11 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from 
+            ansible.builtin.template: ios_xe_int_intra_fabric_num_link           # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+
             profile:
               peer1_ipv4_addr: 192.168.2.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.168.2.2                       # IPV4 address of the Destination interface
@@ -98,7 +98,7 @@
 ###############################################
 
     - name: Query Links - with Src Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
       register: result
@@ -108,7 +108,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
@@ -120,7 +120,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
@@ -133,7 +133,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
@@ -147,7 +147,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
@@ -162,7 +162,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
@@ -178,7 +178,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_xe_fabric }}"
         config:
@@ -187,7 +187,7 @@
             dst_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_xe_switch1 }}"               # optional, Device on the Source fabric
             dst_device: "{{ ansible_xe_switch2 }}"               # optional, Device on the Destination fabric
-            template: ios_xe_int_intra_fabric_num_link           # optional, template to be applied, choose from
+            ansible.builtin.template: ios_xe_int_intra_fabric_num_link           # optional, template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -204,7 +204,7 @@
 
   always:
 
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
       when: IT_CONTEXT is not defined

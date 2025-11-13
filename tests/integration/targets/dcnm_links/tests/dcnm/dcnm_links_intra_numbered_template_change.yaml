@@ -11,7 +11,7 @@
 ##               DELETE                     ##
 ##############################################
 
-    - name: Initial setup - Delete Links 
+    - name: Initial setup - Delete Links
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
@@ -67,16 +67,16 @@
             dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_fabric_num_link                  # template to be applied, choose from 
+            ansible.builtin.template: int_intra_fabric_num_link                  # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+
             profile:
               peer1_ipv4_addr: 192.168.1.1                       # IP address of the Source interface
               peer2_ipv4_addr: 192.168.1.2                       # IP address of the Destination interface
               admin_state: true                                  # choose from [true, false]
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
 
       register: result
 
@@ -99,7 +99,7 @@
 ##############################################
 
     - name: Modify the template name
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: merged                                            # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -108,7 +108,7 @@
             dst_interface: "{{ intf_1_1 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_num_switch2 }}"              # Device on the Destination fabric
-            template: int_pre_provision_intra_fabric_link        # template to be applied, choose from 
+            ansible.builtin.template: int_pre_provision_intra_fabric_link        # template to be applied, choose from
                                                                  #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
                                                                  #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
                                                                  #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
@@ -128,14 +128,14 @@
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
-                                 
+
 ###############################################
 ###             CLEANUP                      ##
 ###############################################
 
   always:
 
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
       when: IT_CONTEXT is not defined

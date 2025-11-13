@@ -16,9 +16,9 @@
 - name: DELETED - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_deleted:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # COMMON - Create, Attach and Deploy Single Network with multiple switch Attach
       net1_conf_template: "deleted/dcnm_network_deleted_net1_conf.j2"
       net1_conf_file: "{{ role_path }}/files/dcnm_network_deleted_net1_conf.yaml"
@@ -102,7 +102,7 @@
   tags: deleted
 
 - name: DELETED - TC1 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -132,7 +132,7 @@
   tags: deleted
 
 - name: DELETED - TC1 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -159,7 +159,7 @@
   tags: deleted
 
 - name: DELETED - TC1 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: deleted
@@ -186,7 +186,7 @@
   tags: deleted
 
 - name: DELETED - TC2 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -215,7 +215,7 @@
   tags: deleted
 
 - name: DELETED - TC2 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -250,7 +250,7 @@
   tags: deleted
 
 - name: DELETED - TC2 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: deleted
@@ -264,7 +264,7 @@
   tags: deleted
 
 - name: DELETED - TC2 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -291,7 +291,7 @@
   tags: deleted
 
 - name: DELETED - TC2 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: deleted
@@ -327,7 +327,7 @@
   tags: deleted
 
 - name: DELETED - TC3 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -353,7 +353,7 @@
   tags: deleted
 
 - name: DELETED - TC3 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: deleted
@@ -376,7 +376,7 @@
   tags: deleted
 
 - name: DELETED - TC4 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -405,7 +405,7 @@
   tags: deleted
 
 - name: DELETED - TC4 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -432,7 +432,7 @@
   tags: deleted
 
 - name: DELETED - TC4 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: deleted
@@ -453,7 +453,7 @@
   tags: deleted
 
 - name: DELETED - TC5 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -481,7 +481,7 @@
   tags: deleted
 
 - name: DELETED - conf5 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
   tags: deleted
@@ -508,7 +508,7 @@
   tags: deleted
 
 - name: DELETED - TC5 - conf5 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
   tags: deleted
@@ -526,11 +526,11 @@
       vlan_id: 1500
       gw_ip_subnet: '192.168.30.1/24'
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: deleted
 
 - name: DELETED - TC6 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - '"Invalid parameters in playbook: net_name : Required parameter not found" in result.msg'
     - result.changed == false
@@ -548,11 +548,11 @@
       vlan_id: 1500
       gw_ip_subnet: '192.168.30.1/24'
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: deleted
 
 - name: DELETED - TC6 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == false
     - result.response|length == 0

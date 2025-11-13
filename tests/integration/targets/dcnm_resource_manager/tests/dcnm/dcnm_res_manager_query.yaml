@@ -56,7 +56,8 @@
           - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -152,7 +153,7 @@
           - '(result["response"] | length) != 0'
 
     - name: Creating entity_names
-      set_fact:
+      ansible.builtin.set_fact:
         entity_names:
           - "l3_vni_fabric"
           - "l2_vni_fabric"

@@ -21,7 +21,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -94,7 +95,7 @@
         index_var: my_idx
 
     - name: SANITY- Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         modify_policy_list: "{{ ( modify_policy_list | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
@@ -102,11 +103,11 @@
         index_var: my_idx
 
     - name: SANITY- Show the policy_list information
-      debug:
+      ansible.builtin.debug:
         var: modify_policy_list
 
     - name: SANITY- Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         list_len: "{{ modify_policy_list | length }}"
 
 ##############################################

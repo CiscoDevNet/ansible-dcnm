@@ -20,7 +20,8 @@
           - ip: "{{ ansible_switch2 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -37,7 +38,7 @@
         fabric: "{{ ansible_it_fabric }}"
         deploy: true
         state: merged
-        config: 
+        config:
           - name: template_101  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
             priority: 101

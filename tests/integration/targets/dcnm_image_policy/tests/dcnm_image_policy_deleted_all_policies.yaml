@@ -83,7 +83,8 @@
     - name: "{{ image_policy_2 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # DELETED - TEST - Create two image policies and verify
@@ -185,10 +186,12 @@
       release: "{{ nxos_release_2 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.changed == true
     - result.failed == false
@@ -270,10 +273,12 @@
       state: deleted
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.changed == true
     - result.failed == false

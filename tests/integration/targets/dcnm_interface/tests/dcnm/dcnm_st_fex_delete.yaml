@@ -28,11 +28,12 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -71,7 +72,7 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_delete_conf }}"
-            
+
       register: result
 
     - name: QUERY - Get ST FEX interface state in NDFC (merge)
@@ -120,7 +121,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence (delete)
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -142,6 +143,6 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

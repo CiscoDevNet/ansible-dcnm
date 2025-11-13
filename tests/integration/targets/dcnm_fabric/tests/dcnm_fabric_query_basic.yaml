@@ -71,7 +71,8 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # QUERY - TEST - Create all supported fabric types with basic config
@@ -198,9 +199,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -262,7 +265,7 @@
 #                         "ALLOW_NXC_PREV": "true",
 #                         "BOOTSTRAP_CONF": "",
 #                         "BOOTSTRAP_ENABLE": "false",
-#                         "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                         "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                         "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                         "CDP_ENABLE": "false",
 #                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
@@ -384,7 +387,7 @@
 #                         "BOOTSTRAP_CONF": "",
 #                         "BOOTSTRAP_ENABLE": "false",
 #                         "BOOTSTRAP_ENABLE_PREV": "false",
-#                         "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                         "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                         "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                         "BRFIELD_DEBUG_FLAG": "Disable",
 #                         "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
@@ -809,7 +812,7 @@
 #                             "ALLOW_NXC_PREV": "true",
 #                             "BOOTSTRAP_CONF": "",
 #                             "BOOTSTRAP_ENABLE": "false",
-#                             "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                             "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                             "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                             "CDP_ENABLE": "false",
 #                             "DCI_SUBNET_RANGE": "10.10.1.0/24",
@@ -931,7 +934,7 @@
 #                             "BOOTSTRAP_CONF": "",
 #                             "BOOTSTRAP_ENABLE": "false",
 #                             "BOOTSTRAP_ENABLE_PREV": "false",
-#                             "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                             "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                             "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                             "BRFIELD_DEBUG_FLAG": "Disable",
 #                             "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
@@ -1209,9 +1212,11 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -1331,9 +1336,11 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

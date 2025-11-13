@@ -88,7 +88,6 @@ EXAMPLES = """
     path: /fm/fmrest/config/templates/validate
     json_data: "{{ data }}"
     register: result
-
 """  # noqa
 
 RETURN = """

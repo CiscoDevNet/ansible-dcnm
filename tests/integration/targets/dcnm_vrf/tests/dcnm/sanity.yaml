@@ -21,13 +21,15 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
   tags:
     - sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
   tags:
@@ -48,7 +50,8 @@
   register: result_setup_1
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_setup_1.response.DATA != None'
   tags: sanity
@@ -60,7 +63,7 @@
   tags: sanity
 
 - name: SETUP.3 - SANITY - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -101,7 +104,8 @@
     var: result_1
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1.changed == true'
     - 'result_1.response[0].RETURN_CODE == 200'
@@ -126,7 +130,8 @@
     var: result_1c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1c.changed == false'
     - 'result_1c.response|length == 0'
@@ -139,7 +144,7 @@
   tags: sanity
 
 - name: TEST.1f - SANITY MERGED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -172,7 +177,8 @@
     var: result_1g
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1g.changed == true'
     - 'result_1g.response[0].RETURN_CODE == 200'
@@ -195,7 +201,8 @@
     var: result_1j
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1j.changed == false'
     - 'result_1j.response|length == 0'
@@ -244,7 +251,8 @@
     var: result_2
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2.changed == true'
     - 'result_2.response[0].RETURN_CODE == 200'
@@ -271,7 +279,7 @@
   tags: sanity
 
 - name: TEST.2d - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -291,7 +299,8 @@
     var: result_2c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2c.changed == true'
     - 'result_2c.response[0].RETURN_CODE == 200'
@@ -313,7 +322,8 @@
     var: result_2g
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2g.changed == false'
   tags: sanity
@@ -336,7 +346,7 @@
   tags: sanity
 
 - name: TEST.2j - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -356,7 +366,8 @@
     var: result_2i
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2i.changed == true'
     - 'result_2i.response[0].RETURN_CODE == 200'
@@ -380,7 +391,8 @@
     var: result_2m
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2m.changed == false'
   tags: sanity
@@ -392,7 +404,7 @@
   tags: sanity
 
 - name: TEST.2p - SANITY REPLACED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -433,7 +445,8 @@
     var: result_3
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3.changed == true'
     - 'result_3.response[0].RETURN_CODE == 200'
@@ -481,7 +494,8 @@
     var: result_3c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3c.changed == true'
     - 'result_3c.response[0].RETURN_CODE == 200'
@@ -512,7 +526,8 @@
     var: result_3f
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3f.changed == false'
     - 'result_3f.response|length == 0'
@@ -525,7 +540,7 @@
   tags: sanity
 
 - name: TEST.3i - SANITY OVERRIDDEN - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -566,7 +581,8 @@
     var: result_4
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_4.changed == true'
     - 'result_4.response[0].RETURN_CODE == 200'
@@ -603,7 +619,8 @@
     var: result_4c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_4c.changed == false'
     - 'result_4c.response[0].parent.vrfName == "ansible-vrf-int1"'
@@ -624,7 +641,7 @@
   tags: sanity
 
 - name: TEST.4f - SANITY QUERY - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
   tags: sanity
 
@@ -665,7 +682,8 @@
     var: result_5
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_5.changed == true'
     - 'result_5.response[0].RETURN_CODE == 200'
@@ -697,7 +715,8 @@
     var: result_5c
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_5c.changed == true'
     - 'result_5c.response[0].RETURN_CODE == 200'
@@ -722,7 +741,8 @@
     var: result_5e
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_5e.changed == false'
     - 'result_5e.response|length == 0'

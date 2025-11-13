@@ -7,7 +7,7 @@
 # Modify the vars section with details for your testing setup.
 #
 - hosts: ndfc
-  gather_facts: no
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:

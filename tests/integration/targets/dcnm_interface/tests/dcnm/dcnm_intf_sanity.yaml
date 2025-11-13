@@ -14,7 +14,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -82,10 +83,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
@@ -120,10 +121,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC after replace
@@ -145,7 +146,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -167,9 +168,9 @@
       when: IT_CONTEXT is not defined
 
     - name: ASSERT - Check return codes for cleanup
-      assert:
+      ansible.builtin.assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -190,10 +191,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
@@ -223,10 +224,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC after replace
@@ -248,7 +249,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -271,7 +272,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -297,10 +298,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for PC
@@ -335,10 +336,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes for replace
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for PC replace
@@ -359,7 +360,7 @@
       cisco.dcnm.dcnm_interface: *pc_replace
       register: result
 
-    # possible bug 
+    # possible bug
     # - name: ASSERT - Check changed flag is false and return codes for idempotence
     #   assert:
     #     that:
@@ -384,7 +385,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -410,10 +411,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes for sub-interfaces
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for sub-interfaces
@@ -448,10 +449,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes for sub-interface replace
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for sub-interface replace
@@ -473,7 +474,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for sub-interface idempotence
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -496,7 +497,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined
 
@@ -522,10 +523,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes for multi-interface creation
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for multi-interfaces
@@ -556,10 +557,10 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes for mixed modified interfaces
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC for mixed modified interfaces
@@ -592,6 +593,6 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

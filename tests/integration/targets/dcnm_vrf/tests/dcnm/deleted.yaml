@@ -25,11 +25,13 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
@@ -48,7 +50,8 @@
     path: "{{ rest_path }}"
   register: result_setup_1
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_setup_1.response.DATA != None'
 
@@ -59,7 +62,7 @@
   register: result_setup_2
 
 - name: SETUP.2a - DELETED - [wait_for] Wait 40 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
   when: result_setup_2.changed == true
 
@@ -90,10 +93,11 @@
   delay: 2
 
 - name: SETUP.4a - DELETED - [debug] print result_setup_3
-  debug:
+  ansible.builtin.debug:
     var: result_setup_3
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_setup_3.changed == true'
     - 'result_setup_3.response[0].RETURN_CODE == 200'
@@ -123,14 +127,15 @@
   register: result_1
 
 - name: TEST.1a - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
 
 - name: TEST.1b - DELETED - [debug] print result_1
-  debug:
+  ansible.builtin.debug:
     var: result_1
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1.changed == true'
     - 'result_1.response[0].RETURN_CODE == 200'
@@ -149,10 +154,11 @@
   register: result_1c
 
 - name: TEST.1d - DELETED - [debug] print result_1c
-  debug:
+  ansible.builtin.debug:
     var: result_1c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1c.changed == false'
     - 'result_1c.response|length == 0'
@@ -181,10 +187,11 @@
   register: result_1f
 
 - name: TEST.1g - DELETED - [debug] print result_1e
-  debug:
+  ansible.builtin.debug:
     var: result_1e
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1e.changed == true'
     - 'result_1e.response[0].RETURN_CODE == 200'
@@ -208,10 +215,11 @@
   register: result_1h
 
 - name: TEST.1j - DELETED - [debug] print result_1
-  debug:
+  ansible.builtin.debug:
     var: result_1h
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1h.changed == true'
     - 'result_1h.response[0].RETURN_CODE == 200'
@@ -230,10 +238,11 @@
   register: result_1k
 
 - name: TEST.1l - DELETED - [debug] print result_1k
-  debug:
+  ansible.builtin.debug:
     var: result_1k
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_1k.changed == false'
     - 'result_1k.response|length == 0'
@@ -274,10 +283,11 @@
   delay: 2
 
 - name: TEST.2b - DELETED - [debug] print result_2
-  debug:
+  ansible.builtin.debug:
     var: result_2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2.changed == true'
     - 'result_2.response[0].RETURN_CODE == 200'
@@ -316,10 +326,11 @@
   register: result_2b
 
 - name: TEST.2c - DELETED - [debug] print result_2b
-  debug:
+  ansible.builtin.debug:
     var: result_2b
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2b.changed == true'
     - 'result_2b.response[0].RETURN_CODE == 200'
@@ -337,7 +348,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
 
 - name: TEST.2e - DELETED - [deleted] conf2 - Idempotence
@@ -345,10 +356,11 @@
   register: result_2e
 
 - name: TEST.2f - DELETED - [debug] print result_2e
-  debug:
+  ansible.builtin.debug:
     var: result_2e
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_2e.changed == false'
     - 'result_2e.response|length == 0'
@@ -389,10 +401,11 @@
   delay: 2
 
 - name: TEST.3b - DELETED - [debug] print result_3
-  debug:
+  ansible.builtin.debug:
     var: result_3
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3.changed == true'
     - 'result_3.response[0].RETURN_CODE == 200'
@@ -414,10 +427,11 @@
   register: result_3c
 
 - name: TEST.3d - DELETED - [debug] print result_3c
-  debug:
+  ansible.builtin.debug:
     var: result_3c
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3c.changed == true'
     - 'result_3c.response[0].RETURN_CODE == 200'
@@ -435,7 +449,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch
   # takes time to remove the profile so wait for some time before creating
   # a new vrf, else the switch goes into OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60
 
 - name: TEST.3e - DELETED - conf3 - Idempotence
@@ -443,10 +457,11 @@
   register: result_3e
 
 - name: TEST.3f - DELETED - [debug] print result_3e
-  debug:
+  ansible.builtin.debug:
     var: result_3e
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result_3e.changed == false'
     - 'result_3e.response|length == 0'
@@ -462,5 +477,5 @@
     state: deleted
 
 - name: CLEANUP.2 - DELETED - [wait_for] Wait 60 seconds for controller and switch to sync
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 60

@@ -6,7 +6,8 @@
   connection: local
   register: ndfc_testcases
 
-- ansible.builtin.set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     test_cases:
       files: "{{ ndfc_testcases.files }}"
 

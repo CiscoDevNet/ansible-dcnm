@@ -1,6 +1,7 @@
 ---
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "Unable to determine controller version"
   tags: sanity
 
@@ -9,13 +10,14 @@
     method: GET
     path: /appcenter/cisco/ndfc/api/about/version
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
+  ignore_errors: true
   tags: sanity
 
 - name: Determine version of DCNM or NDFC
@@ -23,17 +25,19 @@
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
+  ignore_errors: true
   tags: sanity
 
 # No need to continue if we cannot determine the DCNM/NDFC controller version
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'controller_version != "Unable to determine controller version"'
   tags: sanity

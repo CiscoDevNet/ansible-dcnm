@@ -2,12 +2,14 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version >= "12"
@@ -18,7 +20,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -28,7 +31,8 @@
     path: "{{ rest_ext_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -66,7 +70,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -80,7 +85,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 ###############################################
@@ -103,7 +108,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -117,19 +123,20 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 - name: REPLACED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: REPLACED - Replace Service Node with form factor virtual
@@ -148,7 +155,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -162,14 +170,15 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 - name: REPLACED - conf1 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf1
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 
@@ -206,7 +215,8 @@
       - "{{ ansible_switch4 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -220,7 +230,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: REPLACED - Replace Service Node with form factor physical
@@ -238,7 +248,8 @@
       - "{{ ansible_switch4 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -252,19 +263,20 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: REPLACED - conf2 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf2
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: REPLACED - Replace Service Node with type load balancer
@@ -282,7 +294,8 @@
       - "{{ ansible_switch4 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -296,7 +309,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: REPLACED - Replace Service Node with type virtual network function
@@ -314,7 +327,8 @@
       - "{{ ansible_switch4 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -328,7 +342,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: REPLACED - Replace Service Node with a new creation of service node, since the sn is not created already
@@ -345,9 +359,10 @@
       switches:
       - "{{ ansible_switch4 }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -374,9 +389,10 @@
       switches:
       - "{{ ansible_switch4 }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 
@@ -394,9 +410,10 @@
       switches:
       - "{{ ansible_switch4 }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 
@@ -414,9 +431,10 @@
       switches:
       - "{{ ansible_switch5 }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 

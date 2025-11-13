@@ -74,7 +74,7 @@
             dst_interface: "{{ intf_1_3 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -82,14 +82,14 @@
               neighbor_ip: 193.168.1.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
             src_interface: "{{ intf_1_4 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
+            ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -97,14 +97,14 @@
               neighbor_ip: 193.168.2.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
               dst_asn: "{{ ansible_unnum_asn }}"                 # BGP ASN in destination fabric
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # Destination fabric
             src_interface: "{{ intf_1_5 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_5 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
+            ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -119,7 +119,7 @@
             dst_interface: "{{ intf_1_6 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
-            template: ext_fabric_setup                           # template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -127,14 +127,14 @@
               neighbor_ip: 193.168.4.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
               dst_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in destination fabric
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
             src_interface: "{{ intf_1_7 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_7 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # template to be applied, choose from 
+            ansible.builtin.template: ext_multisite_underlay_setup               # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -142,14 +142,14 @@
               neighbor_ip: 193.168.5.2                           # IP address of the interface in dst fabric
               src_asn: "{{ ansible_num_asn }}"                   # BGP ASN in source fabric
               dst_asn: "{{ ansible_ipv6_asn }}"                  # BGP ASN in destination fabric
-              mtu: 9216                                          # 
+              mtu: 9216                                          #
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # Destination fabric
             src_interface: "{{ intf_1_8 }}"                      # Interface on the Source fabric
             dst_interface: "{{ intf_1_8 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from 
+            ansible.builtin.template: ext_evpn_multisite_overlay_setup           # template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
             profile:
@@ -181,7 +181,7 @@
 ###############################################
 
     - name: Query Links - with Src Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
       register: result
@@ -191,7 +191,7 @@
           '(result["response"] | length) >= 6'
 
     - name: Query Links - with Src & Dst Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -203,7 +203,7 @@
           '(result["response"] | length) >= 3'
 
     - name: Query Links - with Src & Dst Fabric
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -215,7 +215,7 @@
           '(result["response"] | length) >= 3'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -228,7 +228,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -241,7 +241,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -255,7 +255,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -269,7 +269,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -284,7 +284,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -299,7 +299,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -315,7 +315,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -331,7 +331,7 @@
           '(result["response"] | length) >= 1'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -340,17 +340,17 @@
             dst_interface: "{{ intf_1_3 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
-            template: ext_fabric_setup                           # optional, template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                                    
+
 
           - dst_fabric: "{{ ansible_unnum_fabric }}"             # optional, Destination fabric
             src_interface: "{{ intf_1_4 }}"                      # optional, Interface on the Source fabric
             dst_interface: "{{ intf_1_4 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # optional, template to be applied, choose from
+            ansible.builtin.template: ext_multisite_underlay_setup               # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
 
@@ -359,7 +359,7 @@
             dst_interface: "{{ intf_1_5 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_unnum_switch1 }}"            # optional, Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # optional, template to be applied, choose from
+            ansible.builtin.template: ext_evpn_multisite_overlay_setup           # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
 
@@ -370,7 +370,7 @@
           '(result["response"] | length) >= 3'
 
     - name: Query Links - with Src & Dst Fabric, Src & Dst Intf, Src & Dst Device, Template
-      cisco.dcnm.dcnm_links: 
+      cisco.dcnm.dcnm_links:
         state: query                                             # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_num_fabric }}"
         config:
@@ -379,17 +379,17 @@
             dst_interface: "{{ intf_1_6 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
-            template: ext_fabric_setup                           # optional, template to be applied, choose from 
+            ansible.builtin.template: ext_fabric_setup                           # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
-                                                    
+
 
           - dst_fabric: "{{ ansible_ipv6_fabric }}"              # optional, Destination fabric
             src_interface: "{{ intf_1_7 }}"                      # optional, Interface on the Source fabric
             dst_interface: "{{ intf_1_7 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
-            template: ext_multisite_underlay_setup               # optional, template to be applied, choose from
+            ansible.builtin.template: ext_multisite_underlay_setup               # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
 
@@ -398,7 +398,7 @@
             dst_interface: "{{ intf_1_8 }}"                      # optional, Interface on the Destination fabric
             src_device: "{{ ansible_num_switch1 }}"              # optional, Device on the Source fabric
             dst_device: "{{ ansible_ipv6_switch1 }}"             # optional, Device on the Destination fabric
-            template: ext_evpn_multisite_overlay_setup           # optional, template to be applied, choose from
+            ansible.builtin.template: ext_evpn_multisite_overlay_setup           # optional, template to be applied, choose from
                                                                  #   [ ext_fabric_setup, ext_multisite_underlay_setup,
                                                                  #     ext_evpn_multisite_overlay_setup ]
 
@@ -414,7 +414,7 @@
 
   always:
 
-    - name: Cleanup - Delete Links 
+    - name: Cleanup - Delete Links
       cisco.dcnm.dcnm_links: *links_delete
       register: result
       when: IT_CONTEXT is not defined

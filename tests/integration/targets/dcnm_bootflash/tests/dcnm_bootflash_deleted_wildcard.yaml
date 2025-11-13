@@ -205,11 +205,12 @@
           - ip_address: "{{ switch2 }}"
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
 - name: Prepare assert values filepath deletion
-  set_fact:
+  ansible.builtin.set_fact:
     switch1_filepath1: "bootflash:/{{ switch1_file1 }}"
     switch1_filepath2: "bootflash:/{{ switch1_file2 }}"
     switch1_filepath3: "bootflash:/{{ switch1_file3 }}"
@@ -217,7 +218,8 @@
     switch2_filepath2: "bootflash:/{{ switch2_file2 }}"
     switch2_filepath3: "bootflash:/{{ switch2_file3 }}"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.diff[0][switch1][0].filepath == switch1_filepath1
     - result.diff[0][switch1][1].filepath == switch1_filepath2
@@ -285,10 +287,12 @@
   cisco.dcnm.dcnm_bootflash: *delete_files
   register: result
 
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - result.changed == false
     - result.failed == false

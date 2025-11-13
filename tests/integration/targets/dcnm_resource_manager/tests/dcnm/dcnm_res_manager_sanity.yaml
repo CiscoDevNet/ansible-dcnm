@@ -5,7 +5,7 @@
 - name: SANITY- Remove local log file
   local_action: command rm -f res_mgr.log
   tags: sanity
-  
+
 - name: SANITY- Delete Resources
   cisco.dcnm.dcnm_resource_manager: &rm_delete
     state: deleted                                 # choose form [merged, deleted, query]
@@ -58,7 +58,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -156,7 +157,7 @@
           - '(result["response"] | length) != 0'
 
     - name: SANITY- Creating entity_names
-      set_fact:
+      ansible.builtin.set_fact:
         entity_names:
           - "l3_vni_fabric"
           - "l2_vni_fabric"

@@ -19,7 +19,8 @@
           - ip: "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -182,7 +183,7 @@
         index_var: my_idx
 
     - name: Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         del_policy_list1: "{{ (del_policy_list1 | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
@@ -190,11 +191,11 @@
         index_var: my_idx
 
     - name: Show the policy_list information
-      debug:
+      ansible.builtin.debug:
         var: del_policy_list1
 
     - name: Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         list_len: "{{ del_policy_list1 | length }}"
 
     - name: Delete policies - using policy IDs
@@ -353,7 +354,7 @@
         index_var: my_idx
 
     - name: Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         del_policy_list2: "{{ (del_policy_list2 | default([])) + [item['DATA']['successList'][0]['message'].split(' ')[0]] }}"
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
@@ -361,11 +362,11 @@
         index_var: my_idx
 
     - name: Show the policy_list information
-      debug:
+      ansible.builtin.debug:
         var: del_policy_list2
 
     - name: Setting fact
-      set_fact:
+      ansible.builtin.set_fact:
         list_len: "{{ del_policy_list2 | length }}"
 
     - name: Delete policies with same template name - using policy IDs

@@ -3,16 +3,17 @@
 ##############################################
 
 - name: Initialize the setup
-  cisco.dcnm.dcnm_template: 
+  cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
 
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
 
 - block:
@@ -53,12 +54,12 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
 
     - name: Delete templates along with the template which is already installed on a switch
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_inuse_1
@@ -69,7 +70,7 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
           - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_1" in item["DATA"])'
           - '("Templates in use, not deleted" in item["DATA"]) and ("template_inuse_2" in item["DATA"])'
           - '(result["template-policy-map"] | length == 2)'
@@ -78,7 +79,7 @@
       loop: '{{ result.response }}'
 
     - name: Delete a template which is not existing
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: deleted       # only choose form [merged, deleted, query]
         config:
           - name: template_1000
@@ -87,5 +88,5 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

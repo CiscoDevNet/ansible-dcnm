@@ -8,7 +8,7 @@
         description: "internal template for enabling VPC feature"
         content: |
           ##
-          ##template content
+          ## template content
 
           feature vpc
 
@@ -18,7 +18,7 @@
         description: "internal template for enabling LACP feature"
         content: |
           ##
-          ##template content
+          ## template content
 
           feature lacp
 
@@ -28,7 +28,7 @@
         description: "internal template for enabling interface-vlan feature"
         content: |
           ##
-          ##template content
+          ## template content
 
           feature interface-vlan
 
@@ -38,7 +38,7 @@
         description: "internal template for enabling hsrp feature"
         content: |
           ##
-          ##template content
+          ## template content
 
           feature hsrp
 
@@ -78,7 +78,7 @@
     method: GET
     path: /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric
   register: switch_inventory_result
-  ignore_errors: yes
+  ignore_errors: true
 
 # Fallback for older NDFC versions or different API paths
 - name: Get switch inventory from fabric (fallback)
@@ -87,48 +87,48 @@
     path: /rest/control/fabrics/{{ test_data_common.fabric }}/inventory/switchesByFabric
   register: switch_inventory_result_fallback
   when: switch_inventory_result.failed | default(false)
-  ignore_errors: yes
+  ignore_errors: true
 
 # Use fallback result if primary failed
 - name: Set switch inventory result
-  set_fact:
+  ansible.builtin.set_fact:
     switch_inventory_result: "{{ switch_inventory_result_fallback }}"
   when: switch_inventory_result.failed | default(false) and not switch_inventory_result_fallback.failed | default(false)
-  ignore_errors: yes
+  ignore_errors: true
 
 # Create IP to serial number mapping from switch inventory
 - name: Create IP to serial number mapping
-  set_fact:
+  ansible.builtin.set_fact:
     sw_sn_mapping: "{{ sw_sn_mapping | default({}) | combine({item.ipAddress: item.serialNumber}) }}"
   loop: "{{ switch_inventory_result.response.DATA | default([]) }}"
-  when: 
+  when:
     - switch_inventory_result is defined
     - switch_inventory_result.response is defined
     - switch_inventory_result.response.RETURN_CODE == 200
     - switch_inventory_result.response.DATA is defined
     - item.ipAddress is defined
     - item.serialNumber is defined
-  ignore_errors: yes
+  ignore_errors: true
 
 # Show the created mapping for debugging
 - name: Show IP to Serial Number mapping
-  debug:
+  ansible.builtin.debug:
     var: sw_sn_mapping
   when: sw_sn_mapping is defined
 
 # Update test_data_common with the dynamically created mapping
 - name: Update test_data_common with dynamic sw_sn mapping
-  set_fact:
+  ansible.builtin.set_fact:
     test_data_common: "{{ test_data_common | combine({'sw_sn': sw_sn_mapping}) }}"
   when: sw_sn_mapping is defined
-  ignore_errors: yes
+  ignore_errors: true
 
 # Also set as a global fact for cross-play access
 - name: Set dynamic sw_sn as global fact
-  set_fact:
+  ansible.builtin.set_fact:
     global_sw_sn_mapping: "{{ sw_sn_mapping }}"
   when: sw_sn_mapping is defined
-  ignore_errors: yes
+  ignore_errors: true
 
 # Determine the version of Controller
 - name: Determine version of DCNM or NDFC
@@ -136,41 +136,45 @@
     method: GET
     path: /appcenter/cisco/ndfc/api/about/version
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: "{{ result.response['DATA']['version'][0:2] | int }}"
   when: ( result.response['DATA']['version'] is search("\d\d.\d+") )
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Determine version of DCNM or NDFC
   cisco.dcnm.dcnm_rest:
     method: GET
     path: /fm/fmrest/about/version
   register: result
-  ignore_errors: yes
+  ignore_errors: true
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     controller_version: '11'
   when: ( result.response['DATA']['version'] == 'DEVEL' )
-  ignore_errors: yes
+  ignore_errors: true
 
 ###############################################
 ##                FACTS                      ##
 ###############################################
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_create_path: {}
     vpc_vxlan_deploy_path: {}
     cxt_create_path: {}
@@ -178,47 +182,54 @@
     vxlan_config_save_path: {}
     cxt_config_save_path: {}
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vxlan_config_save_path: "{{ vxlan_config_save_path | combine (item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-save'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-save'}
   when: (test_data_common.vxlan_fabric is defined)
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     cxt_config_save_path: "{{ cxt_config_save_path | combine (item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-save'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-save'}
   when: (test_data_common.cxt_fabric is defined)
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_create_path: "{{ vpc_create_path | combine (item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/vpcpair'}
     - {'11': '/rest/vpcpair'}
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_vxlan_deploy_path: "{{ vpc_vxlan_deploy_path | combine (item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
   when: (test_data_common.vxlan_fabric is defined)
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine (item) }}"
   with_items:
     - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
     - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
   when: (test_data_common.cxt_fabric is defined)
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vxlan_vpc_create: False
     vxlan_vpc_deploy: False
     cxt_vpc_create: False
     cxt_vpc_deploy: False
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_vxlan_data: {
       "peerOneId": "{{ sw_sn_mapping[test_data_common.vxlan_fabric_sw1] | default(test_data_common.vxlan_fabric_sno1) }}",
       "peerTwoId": "{{ sw_sn_mapping[test_data_common.vxlan_fabric_sw2] | default(test_data_common.vxlan_fabric_sno2) }}",
@@ -228,7 +239,8 @@
     vxlan_vpc_deploy: "{{ test_data_common.deploy | bool }}"
   when: (test_data_common.vxlan_fabric is defined and test_data_common.vxlan_fabric_sno1 is defined and test_data_common.vxlan_fabric_sno2 is defined)
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     vpc_cxt_data: {
       "peerOneId": "{{ sw_sn_mapping[test_data_common.cxt_fabric_sw1] | default(test_data_common.cxt_fabric_sno1) }}",
       "peerTwoId": "{{ sw_sn_mapping[test_data_common.cxt_fabric_sw2] | default(test_data_common.cxt_fabric_sno2) }}",
@@ -281,10 +293,10 @@
       "{{ vpc_vxlan_data | to_json}}"
   register: result
   when: (vxlan_vpc_create == True)
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Wait for 10 secs
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 10
   when: (vxlan_vpc_create == True)
 
@@ -298,7 +310,7 @@
     path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
   when: (vxlan_vpc_create == True)
-  ignore_errors: yes
+  ignore_errors: true
 
 ##############################################
 ##          DEPLOY VXLAN VPC PAIR           ##
@@ -311,12 +323,12 @@
   register: result
   with_sequence: count=1
   loop_control:
-    pause: 5
+    ansible.builtin.pause: 5
   when: (vxlan_vpc_deploy == True)
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Wait for 30 secs
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 30
   when: (vxlan_vpc_deploy == True)
 
@@ -332,10 +344,10 @@
       "{{ vpc_cxt_data | to_json}}"
   register: result
   when: (cxt_vpc_create == True)
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Wait for 20 secs
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 10
   when: (cxt_vpc_create == True)
 
@@ -349,7 +361,7 @@
     path: "{{ cxt_config_save_path[controller_version] }}"
   register: result
   when: (cxt_vpc_create == True)
-  ignore_errors: yes
+  ignore_errors: true
 
 ##############################################
 ##          DEPLOY CXT VPC PAIR             ##
@@ -362,11 +374,11 @@
   register: result
   with_sequence: count=1
   loop_control:
-    pause: 5
+    ansible.builtin.pause: 5
   when: (cxt_vpc_deploy == True)
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Wait for 30 secs
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 30
   when: (cxt_vpc_deploy == True)

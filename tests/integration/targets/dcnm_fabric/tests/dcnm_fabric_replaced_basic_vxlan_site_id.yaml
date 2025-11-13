@@ -52,7 +52,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # REPLACED - TEST - Create fabric_name_1 with non-default config
@@ -128,9 +129,11 @@
         UNDERLAY_IS_V6: false
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -263,9 +266,11 @@
         BGP_AS: 65535
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -360,9 +365,11 @@
 - name: REPLACED - TEST - Replace config for fabric_1 with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_1
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -429,9 +436,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

@@ -2,13 +2,15 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version == "11"
   tags: sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version >= "12"
@@ -21,10 +23,11 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
-  tags: sanity  
+  tags: sanity
 
 - name: SANITY- REPLACED - Verify if service fabric is deployed.
   cisco.dcnm.dcnm_rest:
@@ -33,17 +36,18 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
-  tags: sanity  
+  tags: sanity
 
 - name: SANITY- REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
     fabric: "{{ ansible_it_fabric }}"
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
-  tags: sanity  
+  tags: sanity
 
 - name: SANITY- REPLACED -  Query fabric state before proceeding
   cisco.dcnm.dcnm_service_node:
@@ -78,7 +82,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -93,7 +98,7 @@
   tags: sanity
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -113,7 +118,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -127,7 +133,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -136,7 +142,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
   tags: sanity
@@ -157,7 +164,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -172,7 +180,7 @@
   tags: sanity
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -192,7 +200,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -207,7 +216,7 @@
   tags: sanity
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -225,10 +234,11 @@
       switches:
       - "{{ ansible_switch1 }}"
   register: result
-  ignore_errors: yes
+  ignore_errors: true
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -288,7 +298,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -312,7 +323,7 @@
   tags: sanity
 
 - name: SANITY- OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -339,7 +350,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -367,7 +379,7 @@
   tags: sanity
 
 - name: SANITY- OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -376,7 +388,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -422,7 +435,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -437,7 +451,7 @@
   tags: sanity
 
 - name: SANITY- QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
   tags: sanity
 
@@ -457,7 +471,8 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
@@ -477,7 +492,8 @@
     state: query
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'

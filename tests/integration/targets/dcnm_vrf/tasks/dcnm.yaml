@@ -1,31 +1,32 @@
 ---
 - name: collect dcnm test cases
-  find:
+  ansible.builtin.find:
     paths: ["{{ role_path }}/tests/dcnm", "{{ role_path }}/tests/dcnm/self-contained-tests"]
     patterns: "{{ testcase }}.yaml"
   connection: local
   register: dcnm_cases
   tags: sanity
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     test_cases:
       files: "{{ dcnm_cases.files }}"
   tags: sanity
 
 - name: set test_items
-  set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
+  ansible.builtin.set_fact: test_items="{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
 - name: debug
-  debug:
+  ansible.builtin.debug:
      var: test_items
 
 - name: debug
-  debug:
+  ansible.builtin.debug:
      var: testcase
 
 - name: run test cases (connection=httpapi)
-  include_tasks: "{{ test_case_to_run }}"
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
   with_items: "{{ test_items }}"
   loop_control:
     loop_var: test_case_to_run

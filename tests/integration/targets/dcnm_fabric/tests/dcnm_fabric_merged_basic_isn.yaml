@@ -56,7 +56,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Create ISN fabric type with basic config
@@ -120,9 +121,11 @@
         BGP_AS: 65535
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -258,9 +261,11 @@
         LOOPBACK0_IP_RANGE: "10.2.0.0/22"
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -353,9 +358,11 @@
 - name: MERGED - TEST - Merge additional config into fabric_5 - idempotence
   cisco.dcnm.dcnm_fabric: *merge_fabric_5
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -422,9 +429,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

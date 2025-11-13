@@ -2,12 +2,14 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version >= "12"
@@ -18,7 +20,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -28,7 +31,8 @@
     path: "{{ rest_ext_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -66,7 +70,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -80,7 +85,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 ###############################################
@@ -103,7 +108,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
@@ -116,7 +122,7 @@
     - 'result.response[0].name == "SN-11"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: QUERY - Clean up any existing service node
@@ -126,17 +132,20 @@
     state: deleted
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == ""'
   when: controller_version == "11"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == "OK"'
   when: controller_version >= "12"
@@ -168,7 +177,8 @@
       - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -182,7 +192,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: QUERY - Query the - Create Service Node with single switch
@@ -200,7 +210,8 @@
       - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
@@ -213,7 +224,7 @@
     - 'result.response[0].name == "SN-11"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: QUERY - Query without the config element
@@ -222,7 +233,8 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: query
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
@@ -235,7 +247,7 @@
     - 'result.response[0].name == "SN-11"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: QUERY - Clean up any existing service node
@@ -279,7 +291,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -302,7 +315,7 @@
     - 'result.response[1].DATA.name == "SN-12"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: QUERY - Query the - Create Service Node with single/mutiple switch - 2 tasks
@@ -328,7 +341,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
@@ -349,7 +363,7 @@
     - 'result.response[1].name == "SN-12"'
 
 - name: QUERY - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: QUERY - Query without the config element - 2 tasks
@@ -358,7 +372,8 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: query
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
@@ -399,7 +414,8 @@
       - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'

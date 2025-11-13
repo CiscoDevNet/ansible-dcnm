@@ -42,7 +42,8 @@
     run_test: False
   when: (loopback_policy is defined) and (loopback_policy != 'int_mpls_loopback')
 
-- debug: msg="Loopback 101 Data - {{ lpk101_data.response[0]['interfaces'][0]['nvPairs'] }}"
+- name: Debug
+  ansible.builtin.debug: msg="Loopback 101 Data - {{ lpk101_data.response[0]['interfaces'][0]['nvPairs'] }}"
   when: run_test
 
 - block:
@@ -90,7 +91,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) replace results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -117,7 +118,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS fabric loopback interface (loopback101) idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -146,7 +147,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) creation results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -173,7 +174,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -195,7 +196,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -223,7 +224,7 @@
       register: result
 
     - name: ASSERT - Verify MPLS loopback interface (loopback201) deletion idempotence results
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == false'
           - 'result.response is defined'
@@ -250,6 +251,6 @@
 
     - assert:
         that:
-          - 'item["RETURN_CODE"] == 200'  
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
       when: IT_CONTEXT is not defined

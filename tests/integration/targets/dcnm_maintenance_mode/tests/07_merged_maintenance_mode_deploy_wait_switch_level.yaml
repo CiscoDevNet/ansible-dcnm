@@ -111,7 +111,8 @@
                       mode: maintenance
                       wait_for_mode_change: true
   register: result_maintenance_mode
-- debug:
+- name: Debug
+  ansible.builtin.debug:
         var: result_maintenance_mode
 
 ################################################################################
@@ -154,7 +155,8 @@
         - result.diff[2][leaf_1].mode == "maintenance"
         - result.diff[2][leaf_2].mode == "maintenance"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
         that:
               - result_maintenance_mode.failed == false
               - result_maintenance_mode.metadata[2].action == "change_sytem_mode"

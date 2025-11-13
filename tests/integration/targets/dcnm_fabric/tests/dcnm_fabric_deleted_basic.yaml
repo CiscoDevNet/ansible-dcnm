@@ -5,7 +5,7 @@
 # 00:49.83
 ################################################################################
 # DESCRIPTION - BASIC FABRIC DELETED STATE TEST
-# 
+#
 # Test basic deletion of fabrics verify results.
 # - Deletion of populated fabrics not tested here.
 ################################################################################
@@ -73,7 +73,8 @@
       - FABRIC_NAME: "{{ fabric_name_3 }}"
       - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # DELETED - TEST - Create all supported fabric types
@@ -204,9 +205,11 @@
         BGP_AS: "65005"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -343,11 +346,14 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
       - FABRIC_NAME: "{{ fabric_name_2 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     TEST_PHRASE: "is deleted successfully"
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -455,11 +461,14 @@
       - FABRIC_NAME: "{{ fabric_name_3 }}"
       - FABRIC_NAME: "{{ fabric_name_5 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     TEST_PHRASE: "is deleted successfully"
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -536,9 +545,11 @@
 - name: DELETED - TEST - Delete remaining fabrics (fabric_name_3, fabric_name_5) idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false

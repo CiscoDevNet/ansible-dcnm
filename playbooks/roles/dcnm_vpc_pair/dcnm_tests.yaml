@@ -8,7 +8,7 @@
 # setup and uncomment the testcase you want to run.
 #
 - hosts: dcnm
-  gather_facts: no
+  gather_facts: false
   connection: ansible.netcommon.httpapi
 
   vars:

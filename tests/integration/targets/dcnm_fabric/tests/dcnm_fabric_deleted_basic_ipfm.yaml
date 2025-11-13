@@ -5,7 +5,7 @@
 # 00:03.60
 ################################################################################
 # DESCRIPTION - BASIC FABRIC DELETED STATE TEST FOR IPFM
-# 
+#
 # Test basic deletion of fabrics verify results.
 # - Deletion of populated fabrics not tested here.
 ################################################################################
@@ -50,7 +50,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # DELETED - TEST - Create IPFM Fabric
@@ -108,9 +109,11 @@
         FABRIC_TYPE: "{{ fabric_type_4 }}"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -169,9 +172,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -232,9 +237,11 @@
 - name: DELETED - TEST - Delete IPFM Fabric (fabric_name_4) and verify idempotence
   cisco.dcnm.dcnm_fabric: *fabric_deleted
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false

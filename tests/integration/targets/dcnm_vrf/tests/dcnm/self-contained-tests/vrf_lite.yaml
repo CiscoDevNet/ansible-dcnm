@@ -5,7 +5,7 @@
 # A VXLAN_EVPN fabric
 #
 # switch_1
-# 
+#
 # - A vrf-lite capable switch
 #
 # switch_2
@@ -35,11 +35,13 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ fabric_1 }}"
   when: controller_version >= "12"
 
@@ -49,7 +51,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -62,7 +65,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
   # the profile so wait for some time before creating a new vrf, else the switch goes into
   # OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 ###############################################
@@ -103,7 +106,8 @@
   retries: 30
   delay: 2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -124,7 +128,8 @@
   cisco.dcnm.dcnm_vrf: *conf1
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -170,7 +175,8 @@
   retries: 30
   delay: 2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -189,7 +195,8 @@
   cisco.dcnm.dcnm_vrf: *conf2
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -197,7 +204,7 @@
 - name: VRF LITE- Replace VRF LITE Attachment and Deploy by the User in one switch
   cisco.dcnm.dcnm_vrf: &conf3
     fabric: "{{ fabric_1 }}"
-    state: replaced 
+    state: replaced
     config:
     - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
@@ -228,7 +235,8 @@
   retries: 30
   delay: 2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -245,7 +253,8 @@
   cisco.dcnm.dcnm_vrf: *conf3
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -290,7 +299,8 @@
   retries: 30
   delay: 2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -319,7 +329,8 @@
   cisco.dcnm.dcnm_vrf: *conf4
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -333,7 +344,7 @@
   # The vrf lite profile removal returns ok for deployment, but the switch takes time to remove
   # the profile so wait for some time before creating a new vrf, else the switch goes into
   # OUT-OF-SYNC state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 - name: VRF LITE- Create, Attach and Deploy new VRF - VLAN/VRF LITE EXTENSION Provided by the User in multiple switch
@@ -385,7 +396,8 @@
   retries: 30
   delay: 2
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -411,7 +423,8 @@
   cisco.dcnm.dcnm_vrf: *conf5
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'

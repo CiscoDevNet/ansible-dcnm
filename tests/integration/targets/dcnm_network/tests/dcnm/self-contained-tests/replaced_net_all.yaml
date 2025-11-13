@@ -15,15 +15,15 @@
 - name: REPLACED_ALL - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       net1_conf_template: "self-contained-tests/net1_conf.j2"
       net1_conf_file: "{{ role_path }}/files/self_contained_replaced_all_net1_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       net1_changed_conf_template: "self-contained-tests/net1_changed_conf.j2"
       net1_changed_conf_file: "{{ role_path }}/files/self_contained_replaced_all_net1_changed_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
 
 - name: REPLACED_ALL - Create Network Config File using J2 Template
   ansible.builtin.template:
@@ -59,7 +59,7 @@
   register: result
 
 - name: REPLACED_ALL - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
 
@@ -89,7 +89,7 @@
   register: result
 
 - name: REPLACED_ALL - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
     - result.changed == true
 
@@ -111,7 +111,7 @@
   register: result
 
 - name: REPLACED_ALL - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
 

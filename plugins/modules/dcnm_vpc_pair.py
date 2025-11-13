@@ -262,7 +262,7 @@ EXAMPLES = """
         peerTwoId: 192.168.1.2
         templateName: "vpc_pair"
         profile:
-          ADMIN_STATE: True
+          ADMIN_STATE: true
           ALLOWED_VLANS: "all"
           DOMAIN_ID: 100
           FABRIC_NAME: test-fabric
@@ -316,7 +316,7 @@ EXAMPLES = """
         peerTwoId: 192.168.1.2
         templateName: "vpc_pair"
         profile:
-          ADMIN_STATE: True
+          ADMIN_STATE: true
           ALLOWED_VLANS: "all"
           DOMAIN_ID: 100
           FABRIC_NAME: test-fabric
@@ -348,7 +348,7 @@ EXAMPLES = """
         peerTwoId: 192.168.1.2
         templateName: "vpc_pair"
         profile:
-          ADMIN_STATE: True
+          ADMIN_STATE: true
           ALLOWED_VLANS: "all"
           DOMAIN_ID: 100
           FABRIC_NAME: "test-fabric"

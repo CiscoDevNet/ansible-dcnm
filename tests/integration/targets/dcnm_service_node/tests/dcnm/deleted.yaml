@@ -2,12 +2,14 @@
 ##                 SETUP                    ##
 ##############################################
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version == "11"
 
-- set_fact:
+- name: Set fact
+  ansible.builtin.set_fact:
     rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
     rest_ext_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_ext_fabric }}"
   when: controller_version >= "12"
@@ -18,7 +20,8 @@
     path: "{{ rest_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -28,7 +31,8 @@
     path: "{{ rest_ext_path }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response.DATA != None'
 
@@ -66,7 +70,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -80,7 +85,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 ###############################################
@@ -103,30 +108,34 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == ""'
   when: controller_version == "11"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == "OK"'
   when: controller_version == "12"
 
 - name: DELETED - sleep for 40 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 40
 
 - name: DELETED - conf - Idempotence
   cisco.dcnm.dcnm_service_node: *conf
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -159,7 +168,8 @@
       - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -173,7 +183,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: DELETED - Delete Service Node with single switch
@@ -191,30 +201,34 @@
       - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == ""'
   when: controller_version == "11"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == "OK"'
   when: controller_version >= "12"
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: DELETED - conf1 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf1
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -248,7 +262,8 @@
       - "{{ ansible_switch5 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -262,7 +277,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: DELETED - Delete Service Node - WITHOUT ANY CONFIG ELEMENT
@@ -271,30 +286,34 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == ""'
   when: controller_version == "11"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == "OK"'
   when: controller_version >= "12"
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: DELETED - conf2 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf2
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'
@@ -327,7 +346,8 @@
       - "{{ ansible_switch1 }}"
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
@@ -341,7 +361,7 @@
     - 'result.response[0].DATA.name == "SN-11"'
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: DELETED - Delete Service Node - WITHOUT ANY CONFIG ELEMENT
@@ -350,30 +370,34 @@
     service_fabric: "{{ ansible_ext_fabric }}"
     state: deleted
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == true'
     - 'result.response[0].RETURN_CODE == 200'
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == ""'
   when: controller_version == "11"
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.response[0].MESSAGE == "OK"'
   when: controller_version >= "12"
 
 - name: DELETED - sleep for 20 seconds for DCNM to completely update the state
-  wait_for:
+  ansible.builtin.wait_for:
     timeout: 20
 
 - name: DELETED - conf3 - Idempotence
   cisco.dcnm.dcnm_service_node: *conf3
   register: result
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
     - 'result.changed == false'
     - 'result.response|length == 0'

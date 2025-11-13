@@ -25,7 +25,7 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
-    
+
     - name: Set up Python "3.11"
       uses: actions/setup-python@v1
       with:
@@ -105,7 +105,7 @@ jobs:
 
     - name: Install coverage (v7.3.4)
       run: pip install coverage==7.3.4
-    
+
     - name: Install pytest (v7.4.4)
       run: pip install pytest==7.4.4
 
