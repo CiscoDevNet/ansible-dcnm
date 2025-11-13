@@ -42,4 +42,7 @@
     - 'controller_version != "Unable to determine controller version"'
   tags: sanity
 
-- { include: dcnm.yaml, tags: ['dcnm'] }
+- name: Include tasks
+  ansible.builtin.include_tasks:
+    file: dcnm.yaml
+  tags: ['dcnm']
