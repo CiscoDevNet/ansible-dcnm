@@ -333,20 +333,47 @@ All fixes from commit faeae9b0 were already implemented as part of Feature #7 (O
 
 ---
 
-### 10. Response Data "Fail" Message Handling ⬜
+### 10. Response Data "Fail" Message Handling ✅
 
 **Issue:** #324, #457
 **Commit:** 416fa1a9
+**Status:** COMPLETED (2025-11-12)
+**Commit:** 3647b9c9
 
-**Description:** Proper handling of "Fail" messages in response DATA from NDFC.
+**Description:** Proper handling of "Fail" messages in response DATA from NDFC. The controller sometimes returns a 200 OK status but includes "Fail" messages in nested DATA fields, which should be treated as failures.
 
 **Changes Required in dcnm_vrf_v2.py:**
 
-- [ ] Review response handling in all API interactions
-- [ ] Check for "Fail" status in response DATA fields
-- [ ] Raise appropriate errors with meaningful messages
+- [x] Add `search_nested_json()` utility function to dcnm.py
+- [x] Import `search_nested_json` in dcnm_vrf_v12.py
+- [x] Update `handle_response()` to check for "fail" in response DATA
+- [x] Set fail=True and changed=False when "fail" found in DATA
 
-**Reference Code:** `plugins/modules/dcnm_vrf.py` - response handling methods
+**Implementation Details:**
+
+Added `search_nested_json()` utility function to `plugins/module_utils/network/dcnm/dcnm.py`:
+
+- Recursively searches nested dictionaries and lists for a search string
+- Case-insensitive search of all string values
+- Returns True if found, False otherwise
+- Handles dict, list, and str types
+
+Updated `dcnm_vrf_v12.py`:
+
+- Added import for `search_nested_json` at line 46
+- Added check in `handle_response()` at lines 4479-4483:
+
+```python
+if response_model.DATA:
+    resp_val = search_nested_json(response_model.DATA, "fail")
+    if resp_val:
+        fail = True
+        changed = False
+```
+
+**Note:** This prevents the module from incorrectly succeeding when the controller returns a "Fail" status embedded in nested response DATA fields, even if the HTTP status is 200 OK.
+
+**Reference Code:** `plugins/modules/dcnm_vrf.py:4141-4147, plugins/module_utils/network/dcnm/dcnm.py:889-933`
 
 ---
 
@@ -408,9 +435,9 @@ For each ported feature:
 Use this section to track overall progress:
 
 - **Total Features Identified:** 11
-- **Completed:** 9
+- **Completed:** 10
 - **In Progress:** 0
-- **Not Started:** 2
+- **Not Started:** 1
 - **Won't Implement:** 0
 
 ### Completed Features
@@ -424,6 +451,7 @@ Use this section to track overall progress:
 7. ✅ Orphaned Resources Cleanup Enhancement (2025-11-12) - Commit 5f0eba0f
 8. ✅ Attach State Logic Refinement (2025-11-12) - Commit d4b5c4f6
 9. ✅ VRF Deletion Failure Fix (2025-11-12) - Already in Feature #7 (Commit 5f0eba0f)
+10. ✅ Response Data "Fail" Message Handling (2025-11-12) - Commit 3647b9c9
 
 ---
 
