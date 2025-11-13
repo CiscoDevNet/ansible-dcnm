@@ -404,7 +404,7 @@
   cisco.dcnm.dcnm_vrf:
     fabric: "{{ fabric_1 }}"
     state: merged
-    config:
+    config: &conf4
     - vrf_name: ansible-vrf-int1
       vrf_id: 9008011
       vrf_template: Default_VRF_Universal
