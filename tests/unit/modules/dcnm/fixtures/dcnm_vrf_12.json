@@ -1392,6 +1392,12 @@
     "METHOD": "POST",
     "RETURN_CODE": 200
   },
+  "empty_network_data": {
+    "MESSAGE": "OK",
+    "METHOD": "GET",
+    "RETURN_CODE": 200,
+    "DATA": []
+  },
   "get_have_failure": {
     "DATA": "Invalid JSON response: Invalid Fabric: demo-fabric-123",
     "ERROR": "Not Found",
@@ -1570,6 +1576,12 @@
         "switchName": "cvd-1313-leaf"
       }
     ]
+  },
+  "mock_pools_top_down_l3_dot1q": {
+    "ERROR": "",
+    "RETURN_CODE": 200,
+    "MESSAGE":"OK",
+    "DATA": []
   },
   "mock_vrf_lite_obj": {
    "DATA": [

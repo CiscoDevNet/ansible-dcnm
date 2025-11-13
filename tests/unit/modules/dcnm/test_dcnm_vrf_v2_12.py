@@ -52,6 +52,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
     error3 = test_data.get("error3")
     delete_success_resp = test_data.get("delete_success_resp")
     blank_data = test_data.get("blank_data")
+    empty_network_data = test_data.get("empty_network_data")
 
     def init_data(self):
         # Some of the mock data is re-initialized after each test as previous test might have altered portions
@@ -78,6 +79,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
         self.mock_vrf_attach_lite_object = copy.deepcopy(self.test_data.get("mock_vrf_attach_lite_object"))
         self.mock_vrf_lite_obj = copy.deepcopy(self.test_data.get("mock_vrf_lite_obj"))
         self.mock_pools_top_down_vrf_vlan = copy.deepcopy(self.test_data.get("mock_pools_top_down_vrf_vlan"))
+        self.mock_pools_top_down_l3_dot1q = copy.deepcopy(self.test_data.get("mock_pools_top_down_l3_dot1q"))
 
     def setUp(self):
         super(TestDcnmVrfModule12, self).setUp()
@@ -384,6 +386,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_merge_att1_only,
                 self.mock_vrf_attach_get_ext_object_merge_att4_only,
+                self.empty_network_data,  # Network attachment check returns empty
                 self.mock_vrf_lite_obj,
                 self.attach_success_resp,
                 self.deploy_success_resp,
@@ -403,12 +406,14 @@ class TestDcnmVrfModule12(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_ov_att1_only,
                 self.mock_vrf_attach_get_ext_object_ov_att2_only,
+                self.empty_network_data,  # Network attachment check returns empty
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
-                self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_vrf_vlan,  # Resource cleanup - VLAN pool
+                self.mock_pools_top_down_l3_dot1q,  # Resource cleanup - DOT1Q pool
                 self.blank_data,
                 self.attach_success_resp2,
                 self.deploy_success_resp,
@@ -440,12 +445,14 @@ class TestDcnmVrfModule12(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.empty_network_data,  # Network attachment check returns empty
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
                 self.mock_vrf_attach_object_del_ready,
                 self.delete_success_resp,
-                self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_vrf_vlan,  # Resource cleanup - VLAN pool
+                self.mock_pools_top_down_l3_dot1q,  # Resource cleanup - DOT1Q pool
             ]
 
         elif "delete_std_lite" in self._testMethodName:
@@ -456,6 +463,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.empty_network_data,  # Network attachment check returns empty
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
@@ -471,6 +479,7 @@ class TestDcnmVrfModule12(TestDcnmModule):
                 self.mock_vrf_object,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.empty_network_data,  # Network attachment check returns empty
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 self.mock_vrf_attach_object_del_not_ready,
@@ -491,12 +500,14 @@ class TestDcnmVrfModule12(TestDcnmModule):
                 self.mock_vrf_object_dcnm_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att1_only,
                 self.mock_vrf_attach_get_ext_object_dcnm_att2_only,
+                self.empty_network_data,  # Network attachment check returns empty
                 self.attach_success_resp,
                 self.deploy_success_resp,
                 obj1,
                 obj2,
                 self.delete_success_resp,
-                self.mock_pools_top_down_vrf_vlan,
+                self.mock_pools_top_down_vrf_vlan,  # Resource cleanup - VLAN pool
+                self.mock_pools_top_down_l3_dot1q,  # Resource cleanup - DOT1Q pool
             ]
 
         elif "query" in self._testMethodName:
