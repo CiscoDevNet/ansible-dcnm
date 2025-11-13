@@ -7,12 +7,13 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_interface:
-    check_deploy: True
-    fabric: "{{ ansible_it_fabric }}" 
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
   register: result  
 
-- assert:
+- name: ASSERT - Check return codes for setup
+  assert:
     that:
       - 'item["RETURN_CODE"] == 200'  
   loop: '{{ result.response }}'
@@ -20,182 +21,112 @@
 - block:
 
 ##############################################
+##             SETUP VARS                   ##
+##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          merge_conf_template: "templates/dcnm_intf/merge_conf.j2"
+          merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_merge_conf.yaml"
+          query_existing_conf_template: "templates/dcnm_intf/query_existing_conf.j2"
+          query_existing_conf_file: "{{ role_path }}/files/dcnm_interface_intf_query_existing_conf.yaml"
+          query_non_existing_conf_template: "templates/dcnm_intf/query_non_existing_conf.j2"
+          query_non_existing_conf_file: "{{ role_path }}/files/dcnm_interface_intf_query_non_existing_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - merge
+        - query_existing
+        - query_non_existing
+      delegate_to: localhost
+
+##############################################
 ##               MERGE                      ##
 ##############################################
 
+    - name: Load Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_merge_conf: "{{ lookup('file', test_data_interfaces.merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Create a mixture of interfaces
-      cisco.dcnm.dcnm_interface: &lo_merge
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+      cisco.dcnm.dcnm_interface: &intf_merge
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: lo100                       # should be of the form lo<port-id>
-            type: lo                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch where to deploy the config
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: lo                        # choose from [lo]
-              int_vrf: ""                     # VRF name
-              ipv4_addr: 192.168.1.1          # ipv4 address for the loopback interface
-              ipv6_addr: fd06::0201           # ipV6 address for the loopback interface
-              route_tag: ""                   # Routing Tag for the interface
-              cmds:                           # Freeform config
-                - no shutdown
-              description: "loopback interface 100 configuration"
-
-          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            type: sub_int                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: subint                    # choose from [subint]
-              vlan: 100                       # vlan ID [min:2, max:3967]
-              int_vrf: ""                     # VRF name
-              ipv4_addr: 193.168.2.1          # ipv4 address for the sub-interface
-              ipv4_mask_len: 24               # choose between [min:8, max:31]
-              ipv6_addr: fd16::0401           # ipV6 address for the sub-interface
-              ipv6_mask_len: 64               # choose between [min:64, max:127]
-              mtu: 9216                       # choose between [min:576, max:9216]
-              cmds:                           # Freeform config
-                - no shutdown
-              description: "sub interface eth1/1.1 configuration"
-
-          - name: po300                       # should be of the form po<port-id>
-            type: pc                          # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:
-              - "{{ ansible_switch1 }}"       # provide the switch information where the config is to be deployed
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: trunk                     # choose from [trunk, access, l3, monitor]
-              members:                        # member interfaces 
-                - "{{ ansible_eth_intf13 }}"
-              pc_mode: 'on'                   # choose from ['on', 'active', 'passive']
-              bpdu_guard: true                # choose from [true, false, no]
-              port_type_fast: true            # choose from [true, false]
-              mtu: jumbo                      # choose from [default, jumbo]
-              allowed_vlans: none             # choose from [none, all, vlan range] 
-              cmds:                           # Freeform config
-                - no shutdown
-              description: "port channel acting as trunk"
-
-          - name: vpc750                      # should be of the form vpc<port-id>
-            type: vpc                         # choose from this list [pc, vpc, sub_int, lo, eth, svi]
-            switch:                           # provide switches of vPC pair
-              - "{{ ansible_switch1 }}"
-              - "{{ ansible_switch2 }}"
-            deploy: true                      # choose from [true, false]
-            profile:
-              admin_state: true               # choose from [true, false]
-              mode: trunk                     # choose from [trunk, access]
-              peer1_pcid: 310                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer2_pcid: 310                 # choose between [Min:1, Max:4096], if not given, will be VPC port-id
-              peer1_members:                  # member interfaces on peer 1
-                - "{{ ansible_eth_intf6 }}"
-              peer2_members:                  # member interfaces on peer 2
-                - "{{ ansible_eth_intf6 }}"
-              pc_mode: 'active'               # choose from ['on', 'active', 'passive']
-              bpdu_guard: true                # choose from [true, false, 'no']
-              port_type_fast: true            # choose from [true, false]
-              mtu: jumbo                      # choose from [default, jumbo]
-              peer1_allowed_vlans: none       # choose from [none, all, vlan range] 
-              peer2_allowed_vlans: none       # choose from [none, all, vlan range] 
-              peer1_description: "VPC acting as trunk peer1"
-              peer2_description: "VPC acting as trunk peer2"
+        config: "{{ dcnm_interface_merge_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check changed flag is true and return codes
+      assert:
         that:
           - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 4'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 4'
-
-    - assert:
-        that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
 
 ##############################################
 ##               QUERY                      ##
 ##############################################
 
+    - name: Load Query Existing Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_query_existing_conf: "{{ lookup('file', test_data_interfaces.query_existing_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Query interface details - Existing
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: "{{ ansible_eth_intf2 }}"
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: lo100
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: "{{ ansible_sub_intf1 }}"   # should be of the form eth<port-num>.<port-id>
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: po300 
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: vpc750
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+        config: "{{ dcnm_interface_query_existing_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check query result for existing interfaces
+      assert:
         that:
           - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 5'
-
-    - assert:
-        that:
           - '(result["response"] | length) != 0'
 
 ##############################################
 ##               QUERY                      ##
 ##############################################
 
+    - name: Load Query Non-Existing Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_query_non_existing_conf: "{{ lookup('file', test_data_interfaces.query_non_existing_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
     - name: Query interface details - Non-Existing
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: query                        # only choose form [merged, replaced, deleted, overridden, query]
-        config:
-          - name: lo700
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: po333 
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
-          - name: vpc752
-            switch:
-                - "{{ ansible_switch1 }}"   # provide the switch information where the config is to be deployed
+        config: "{{ dcnm_interface_query_non_existing_conf }}"
       register: result
 
-    - assert:
+    - name: ASSERT - Check query result for non-existing interfaces
+      assert:
         that:
           - 'result.changed == false'
-          - '(result["diff"][0]["merged"] | length) == 0'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["replaced"] | length) == 0'
-          - '(result["diff"][0]["overridden"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-
-    - assert:
-        that:
           - '(result["response"] | length) == 0'
 
 ##############################################
@@ -206,13 +137,14 @@
 
     - name: Put fabric to default state
       cisco.dcnm.dcnm_interface:
-        check_deploy: True
-        fabric: "{{ ansible_it_fabric }}" 
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
       when: IT_CONTEXT is not defined
 
-    - assert:
+    - name: ASSERT - Check return codes for cleanup
+      assert:
         that:
           - 'item["RETURN_CODE"] == 200'  
       loop: '{{ result.response }}'

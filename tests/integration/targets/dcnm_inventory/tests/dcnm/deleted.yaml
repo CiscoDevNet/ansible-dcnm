@@ -1,143 +1,202 @@
-##############################################
-##                 SETUP                    ##
-##############################################
+---
 
-- set_fact:
-    rest_path: "/rest/control/fabrics/{{ ansible_it_fabric }}"
-  when: controller_version == "11"
+- name: Import DCNM Inventory Base Tasks
+  import_tasks: ../base_tasks.yaml
+  tags: deleted
 
-- set_fact:
-    rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ ansible_it_fabric }}"
-  when: controller_version >= "12"
-
-- name: DELETED - Verify if fabric is deployed.
-  cisco.dcnm.dcnm_rest:
-    method: GET
-    path: "{{ rest_path }}"
-  register: result
-
-- assert:
-    that:
-    - 'result.response.DATA != None'
-
-- name: DELETED - setup - Clean up any existing devices
+# ----------------------------------------------
+# Run Test Cases
+# ----------------------------------------------
+# TC - 1
+- name: Deleted TC1 - Prepare Switches in Fabric - GreenField Deployment
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ ansible_it_fabric }}"
-    state: deleted
-
-- name: DELETED - Merge a Switch using GreenField Deployment
-  cisco.dcnm.dcnm_inventory:
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_data.test_fabric }}"
     state: merged
-    config:
-    - seed_ip: "{{ ansible_switch1 }}"
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ switch_username }}"
-      password: "{{ switch_password }}"
-      max_hops: 0
-      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
-                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
-      preserve_config: False # boolean, default is  true
+    config: "{{ ndfc_fabric_base_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: merged_result
+  tags: deleted
+
+- name: Deleted TC1 - Query Inventory State in Fabric 
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: deleted
+
+- name: Deleted TC1 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_base_conf }}"
+    changed: "{{merged_result.changed}}"
   register: result
+  tags: deleted
 
-- assert:
-    that:
-    - 'result.changed == true'
-
-- assert:
-    that:
-      - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
-
-#############################################
-#                DELETED                   ##
-#############################################
-
-- name: DELETED - Delete a Switch
+# TC - 2
+- name: Deleted TC2 - Delete a Switch from the Fabric
   cisco.dcnm.dcnm_inventory: &conf_del
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_data.test_fabric }}"
     state: deleted
     config:
-    - seed_ip: "{{ ansible_switch1 }}"
+    - seed_ip: "{{ test_data.sw1 }}"
+  register: delete_result
+  tags: deleted
+
+- name: Deleted TC2 - Prepare Test Data
+  ansible.builtin.set_fact:
+    ndfc_fabric_delete_conf: "{{ ndfc_fabric_base_conf | rejectattr('seed_ip', 'equalto', test_data.sw1) | list }}"
+  delegate_to: localhost
+  tags: deleted
+
+- name: Deleted TC2 - Query Inventory State in Fabric 
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: deleted
+
+- name: Deleted TC2 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_delete_conf }}"
+    changed: "{{ delete_result.changed }}"
   register: result
+  tags: deleted
 
-- assert:
-    that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-
-- name: DELETED - conf1 - DEL - Idempotence
+# TC - 3
+- name: Deleted TC3 - Removing a previously Deleted Switch - Idempotence
   cisco.dcnm.dcnm_inventory: *conf_del
   register: result
+  tags: deleted
 
 - assert:
     that:
     - 'result.changed == false'
     - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
+  tags: deleted
 
-- name: DELETED - Merge a Switch using BrownField Deployment
-  cisco.dcnm.dcnm_inventory:
-    fabric: "{{ ansible_it_fabric }}"
-    state: merged
-    config:
-    - seed_ip: "{{ ansible_switch1 }}"
-      auth_proto: MD5 # choose from [MD5, SHA, MD5_DES, MD5_AES, SHA_DES, SHA_AES]
-      user_name: "{{ switch_username }}"
-      password: "{{ switch_password }}"
-      max_hops: 0
-      role: leaf # default is Leaf - choose from [Leaf, Spine, Border, Border Spine, Border Gateway, Border Gateway Spine
-                       # Super Spine, Border Super Spine, Border Gateway Super Spine]
-      preserve_config: True # boolean, default is  true
-  register: result
-
-- assert:
-    that:
-    - 'result.changed == true'
-
-- assert:
-    that:
-      - 'item["RETURN_CODE"] == 200'
-  loop: '{{ result.response }}'
-
-- name: DELETED - Delete all Switch without config element
+# TC - 4
+- name: Deleted TC4 - Delete all Switches from Fabric
   cisco.dcnm.dcnm_inventory: &conf_del_all
-    fabric: "{{ ansible_it_fabric }}"
+    fabric: "{{ test_data.test_fabric }}"
     state: deleted
-  register: result
+  register: delete_result
+  tags: deleted
 
-- assert:
-    that:
-    - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
+- name: Deleted TC4 - Prepare Test Data
+  ansible.builtin.set_fact:
+    ndfc_fabric_delete_conf: 
+  delegate_to: localhost
+  tags: deleted
 
-- name: DELETED - conf1 - DEL ALL - Idempotence
-  cisco.dcnm.dcnm_inventory: *conf_del_all
-  register: result
-
-- assert:
-    that:
-    - 'result.changed == false'
-    - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
-
-- name: DELETED - Delete a Switch without seed_ip
+- name: Deleted TC4 - Query Inventory State in Fabric 
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ ansible_it_fabric }}"
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: deleted
+
+- name: Deleted TC4 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_delete_conf }}"
+    changed: "{{ delete_result.changed }}"
+  register: result
+  tags: deleted
+
+# TC - 5
+- name: Deleted TC5 - Prepare Config
+  ansible.builtin.set_fact:
+    switch_conf:
+      - seed_ip: "{{ test_data.sw2 }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: true
+  delegate_to: localhost
+  tags: deleted
+
+- name: Import Configuration Prepare Tasks
+  vars:
+    file: delete
+  import_tasks: ../conf_prep_tasks.yaml
+  tags: deleted
+
+- name: Deleted TC5 - Merge a Switch using BrownField Deployment
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: merged
+    config: "{{ ndfc_fabric_delete_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: merged_result
+  tags: deleted
+
+- name: Deleted TC5 - Query Inventory State in Fabric 
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: deleted
+
+- name: Deleted TC5 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_delete_conf }}"
+    changed: "{{ merged_result.changed }}"
+  register: result
+  tags: deleted
+
+# TC - 6
+- name: Deleted TC6 - Delete a Switch without seed_ip
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
     state: deleted
     config:
     - seed_ip:
   register: result
   ignore_errors: yes
+  tags: deleted
 
 - assert:
     that:
     - 'result.changed == false'
     - '"Invalid parameters in playbook: seed_ip : Required parameter not found" in result.msg'
+  tags: deleted
 
-##############################################
-##                 CLEAN-UP                 ##
-##############################################
+# TC - 7
+- name: Deleted TC7 - Prepare Config
+  ansible.builtin.set_fact:
+    ndfc_fabric_delete_conf:
+  delegate_to: localhost
+  tags: deleted
 
-- name: DELETED - setup - Clean up any existing devices
+- name: Deleted TC7 - Delete all Switches from Fabric
+  cisco.dcnm.dcnm_inventory: *conf_del_all
+  register: delete_result
+  tags: deleted
+
+- name: Deleted TC7 - Query Inventory State in Fabric 
   cisco.dcnm.dcnm_inventory:
-    fabric: "{{ ansible_it_fabric }}"
-    state: deleted
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: deleted
+
+- name: Deleted TC7 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_delete_conf }}"
+    changed: "{{ delete_result.changed }}"
+  register: result
+  tags: deleted
+
+# TC - 8
+- name: Deleted TC8 - Delete all Switches from Fabric - Idempotence
+  cisco.dcnm.dcnm_inventory: *conf_del_all
+  register: result
+  tags: deleted
+
+- assert:
+    that:
+    - 'result.changed == false'
+    - 'result.response == "The switch provided is not part of the fabric and cannot be deleted"'
+  tags: deleted

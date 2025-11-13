@@ -1,0 +1,19 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: po160
+  type: st_fex
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    description: "ST FEX if 160 merge"
+    members:
+      - "{{ test_data_common.eth_intf10 }}"
+    mtu: "jumbo"
+    po_description: "PC 160 ST FEX Mrgd"
+    cmds:
+      - no shutdown
+    admin_state: true
+    enable_netflow: false
+    mode: port_channel_st

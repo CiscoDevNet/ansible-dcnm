@@ -93,6 +93,11 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "none",
 				"native_vlan": 10,
+				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown"
 				],
@@ -123,6 +128,7 @@
 					"no shutdown"
 				],
 				"speed": "Auto",
+				"duplex": "auto",
 				"fabric": "test_fabric"
 			},
 			"name": "eth1/31",
@@ -215,6 +221,11 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "all",
 				"native_vlan": 10,
+				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -242,6 +253,7 @@
 				"port_type_fast": "False",
 				"policy": "int_access_host_11_1",
 				"ifname": "Ethernet1/31",
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -462,6 +474,11 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "all",
 				"native_vlan": 10,
+				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"
@@ -491,6 +508,11 @@
 				"policy": "int_trunk_host_11_1",
 				"allowed_vlans": "all",
 				"native_vlan": 10,
+				"orphan_port": false,
+				"enable_pfc": false,
+				"enable_cdp": true,
+				"enable_monitor": false,
+				"duplex": "auto",
 				"cmds": [
 					"no shutdown",
 				"no shutdown"

@@ -47,6 +47,7 @@ dcnm_template_type_xlations = {
     "long": "int",
     "ipV4Address": "ipv4",
     "ipV6Address": "ipv6",
+    "ipAddress": "ipv4",
     "interfaceRange": "list",
     "boolean": "bool",
     "enum": "str",
@@ -81,7 +82,33 @@ def validate_ip_address_format(type, item, invalid_params):
             invalid_params.append("{0} : Invalid {1} address syntax".format(item, addr_type))
 
 
-def validate_list_of_dicts(param_list, spec, module=None):
+def find_extra_params(param_list, spec):
+    """
+    Checks for extra parameters in each dictionary of a list
+    when compared against a specification dictionary.
+
+    Args:
+        param_list: A list of dictionaries containing parameters.
+        spec: A dictionary where keys are the valid parameter names.
+
+    Returns:
+        A list of extra parameters found. If a parameter is found in
+        multiple dictionaries in the list, it will appear multiple
+        times in the result.
+    """
+    invalid_params = []
+    spec_keys = set(spec.keys())
+
+    for params in param_list:
+        param_keys = set(params.keys())
+        extra_keys = param_keys - spec_keys
+        if extra_keys:
+            invalid_params.extend(list(extra_keys))
+
+    return invalid_params
+
+
+def validate_list_of_dicts(param_list, spec, module=None, check_extra_params=False):
     """Validate/Normalize playbook params. Will raise when invalid parameters found.
     param_list: a playbook parameter list of dicts
     spec: an argument spec dict
@@ -92,7 +119,8 @@ def validate_list_of_dicts(param_list, spec, module=None):
     v = validation
     normalized = []
     invalid_params = []
-
+    if check_extra_params:
+        invalid_params = find_extra_params(param_list, spec)
     for list_entry in param_list:
         valid_params_dict = {}
         for param in spec:
@@ -444,6 +472,8 @@ def dcnm_send(module, method, path, data=None, data_type="json"):
 
     if data_type == "json":
         return conn.send_request(method, path, data)
+    elif data_type == "urlencoded":
+        return conn.send_urlencoded_request(method, path, data)
     elif data_type == "text":
         return conn.send_txt_request(method, path, data)
 
@@ -837,3 +867,51 @@ def search_nested_json(obj, search_string):
         if search_string in obj.lower():
             return True
     return False
+
+
+def has_partial_dhcp_config(server):
+    """
+    # Summary
+
+    Check if a DHCP server has incomplete configuration (IP address set but no VRF or vice versa).
+
+    ## Raises
+
+    None
+
+    ## Parameters
+
+    -   server (dict): A dictionary representing the DHCP server configuration.
+
+    ## Returns
+
+    -   bool: True if the server has partial configuration, False otherwise.
+
+    ## Usage
+
+    ```python
+    server1 = {
+        "srvr_ip": "ip_address",
+        "srvr_vrf": "vrf_name"
+        }
+    result1 = has_partial_dhcp_config(server1)
+    print(result1)
+    # -> False (complete configuration)
+
+    server2 = {
+        "srvr_ip": "ip_address"
+        }
+    result2 = has_partial_dhcp_config(server2)
+    print(result2)
+    # -> True (partial configuration)
+
+    server3 = {
+        "srvr_vrf": "vrf_name"
+        }
+    result3 = has_partial_dhcp_config(server3)
+    print(result3)
+    # -> True (partial configuration)
+    """
+    ip = server.get("srvr_ip")
+    vrf = server.get("srvr_vrf")
+    return bool(ip) != bool(vrf)

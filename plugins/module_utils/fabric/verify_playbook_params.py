@@ -13,12 +13,13 @@
 # limitations under the License.
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 __author__ = "Allen Robel"
 
 import inspect
 import json
 import logging
+from typing import Any, Callable, Union
 
 from ..common.conversion import ConversionUtils
 from .param_info import ParamInfo
@@ -122,7 +123,7 @@ class VerifyPlaybookParams:
         """
         self.properties holds property values for the class
         """
-        self.properties = {}
+        self.properties: dict[str, Any] = {}
         self.properties["config_playbook"] = None
         self.properties["config_controller"] = None
         self.properties["template"] = None
@@ -238,6 +239,9 @@ class VerifyPlaybookParams:
             msg += f"'value' not found in parameter {parameter} rule: {rule}"
             raise KeyError(msg)
 
+        # Ensure consistent type conversion for rule_value
+        rule_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(rule_value)))
+
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter: {parameter}, "
         msg += f"user_value: {user_value}, "
@@ -256,14 +260,21 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             raise ValueError(msg)
 
-        eval_string = f"user_value {operator} rule_value"
-        msg = f"{self.class_name}.{method_name}: "
-        msg += f"eval_string {eval_string}"
-        self.log.debug(msg)
-        # While eval() can be dangerous with unknown input, the input
-        # we're feeding it is from a known source and has been pretty
-        # heavily massaged before it gets here.
-        result = eval(eval_string)  # pylint: disable=eval-used
+        operators: dict[str, Callable[[Any, Any], bool]] = {
+            "==": lambda a, b: a == b,
+            "!=": lambda a, b: a != b,
+            ">": lambda a, b: a > b,
+            "<": lambda a, b: a < b,
+            ">=": lambda a, b: a >= b,
+            "<=": lambda a, b: a <= b,
+        }
+
+        if operator not in operators:
+            msg = f"{self.class_name}.{method_name}: "
+            msg += f"Unsupported operator: {operator}"
+            raise ValueError(msg)
+
+        result = operators[operator](user_value, rule_value)
 
         msg = f"{self.class_name}.{method_name}: "
         msg += "EVAL: "
@@ -275,7 +286,7 @@ class VerifyPlaybookParams:
 
         return result
 
-    def controller_param_is_valid(self, item) -> bool:
+    def controller_param_is_valid(self, item) -> Union[bool, None]:
         """
         -   Return None in the following cases
             -   The fabric does not exist on the controller.
@@ -284,14 +295,11 @@ class VerifyPlaybookParams:
             -   The controller fabric config does not contain the dependent
                 parameter (this is not likely)
 
-        Returning One removes the controller result from consideration
+        Returning None removes the controller result from consideration
         when determining parameter validity.
 
         -   Return the evaluated result (True or False) if the controller
-            fabric config does contain the dependent parameter.  The
-            evaluated result is calculated from:
-
-        eval(controller_param_value rule_operator rule_value)
+            fabric config does contain the dependent parameter.
 
         -   raise KeyError if self.eval_parameter_rule() fails
         """
@@ -322,9 +330,7 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        controller_value = self.conversion.make_none(
-            self.conversion.make_boolean(self.config_controller[rule_parameter])
-        )
+        controller_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(self.config_controller[rule_parameter])))
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter {rule_parameter}, "
@@ -345,7 +351,7 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def playbook_param_is_valid(self, item) -> bool:
+    def playbook_param_is_valid(self, item) -> Union[bool, None]:
         """
         -   Return None if the playbook config does not contain the
             dependent parameter. This removes the playbook parameter from
@@ -378,9 +384,7 @@ class VerifyPlaybookParams:
             self.log.debug(msg)
             return None
 
-        playbook_value = self.conversion.make_none(
-            self.conversion.make_boolean(self.config_playbook[rule_parameter])
-        )
+        playbook_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(self.config_playbook[rule_parameter])))
 
         msg = f"{self.class_name}.{method_name}: "
         msg += f"parameter {rule_parameter}, "
@@ -395,7 +399,7 @@ class VerifyPlaybookParams:
         except KeyError as error:
             raise KeyError(f"{error}") from error
 
-    def default_param_is_valid(self, item) -> bool:
+    def default_param_is_valid(self, item) -> Union[bool, None]:
         """
         -   Return None if the fabric defaults (in the fabric template)
             do not contain the dependent parameter. This removes the
@@ -442,6 +446,9 @@ class VerifyPlaybookParams:
             msg += "has no default value. Returning None."
             self.log.debug(msg)
             return None
+
+        # Convert default value to ensure consistent type handling
+        default_value = self.conversion.make_none(self.conversion.make_int(self.conversion.make_boolean(default_value)))
 
         # update item with user's parameter value
         item["user_value"] = default_value
@@ -768,9 +775,9 @@ class VerifyPlaybookParams:
         bad_param["boolean_operator"] = "or"
         self.bad_params[self.fabric_name][self.parameter].append(bad_param)
 
-    def update_decision_set_for_na_rules(self, param_rule) -> str:
+    def update_decision_set_for_na_rules(self, param_rule) -> None:
         """
-        -   eval() a rule that contains the key 'na'
+        -   evaluate a rule that contains the key 'na'
         -   Raise ``KeyError`` if the rule does not contain keys:
             - ["na"]
             - ["na"]["terms")
@@ -851,12 +858,8 @@ class VerifyPlaybookParams:
         self.log.debug(msg)
 
         param_rule = self._ruleset.ruleset[self.parameter]
-        case_and_rule = "and" in param_rule.get("terms") and "or" not in param_rule.get(
-            "terms"
-        )
-        case_or_rule = "or" in param_rule.get("terms") and "and" not in param_rule.get(
-            "terms"
-        )
+        case_and_rule = "and" in param_rule.get("terms") and "or" not in param_rule.get("terms")
+        case_or_rule = "or" in param_rule.get("terms") and "and" not in param_rule.get("terms")
         case_na_rule = "na" in param_rule.get("terms")
         msg = f"{self.class_name}.{method_name}: "
         msg += f"PRE_UPDATE: self.params_are_valid: {self.params_are_valid}"

@@ -1,0 +1,40 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: "{{ test_data_common.sub_intf1 }}"
+  type: sub_int
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: subint
+    vlan: 105
+    int_vrf: ""
+    ipv4_addr: 192.168.33.1
+    ipv4_mask_len: 24
+    ipv6_addr: fd3e::0403
+    ipv6_mask_len: 64
+    mtu: 9216
+    cmds:
+      - no shutdown
+    description: "sub interface eth1/1.1 configuration - replaced"
+
+- name: "{{ test_data_common.sub_intf2 }}"
+  type: sub_int
+  switch:
+    - "{{ test_data_common.switch1 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: subint
+    vlan: 106
+    int_vrf: ""
+    ipv4_addr: 192.168.34.1
+    ipv4_mask_len: 24
+    ipv6_addr: fd4e::0404
+    ipv6_mask_len: 64
+    mtu: 9216
+    cmds:
+      - no shutdown
+    description: "sub interface eth1/1.2 configuration - replaced"

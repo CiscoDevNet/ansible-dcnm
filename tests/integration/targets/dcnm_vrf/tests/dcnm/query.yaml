@@ -401,6 +401,102 @@
     - result_7.changed == false
     - result_7.response|length == 0
 
+- name: TEST.7b - QUERY - [deleted] Delete all VRFs
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: deleted
+
+- name: TEST.7c - QUERY - Wait 60 seconds for controller and switch to sync
+  wait_for:
+    timeout: 60
+
+- name: TEST.8 - QUERY - [merged] Create, Attach VRF+LITE EXTENSION ansible-vrf-int2 on switch_2 (L3VNI W/O VLAN)
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: merged
+    config:
+    - vrf_name: ansible-vrf-int2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+            interface: "{{ interface_2a }}" # mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # optional controller can provide
+      deploy: false
+  register: result_8
+
+- name: TEST.8a - QUERY - [query] query VRF state
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: query
+  register: result_8a
+
+- name: TEST.8b - QUERY - [debug] print result_8
+  debug:
+    var: result_8
+
+- assert:
+    that:
+    - 'result_8.changed == true'
+    - 'result_8.response[0].RETURN_CODE == 200'
+    - 'result_8.response[1].RETURN_CODE == 200'
+    - '(result_8.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+    - '(result_8.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+    - 'result_8.diff[0].attach[0].deploy == true'
+    - '"{{ switch_2 }}" in result_8.diff[0].attach[0].ip_address or "{{ switch_2 }}" in result_8.diff[0].attach[1].ip_address'
+    - '"{{ switch_1 }}" in result_8.diff[0].attach[0].ip_address or "{{ switch_1 }}" in result_8.diff[0].attach[1].ip_address'
+    - 'result_8.diff[0].vrf_name == "ansible-vrf-int2"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_8a.response[0].parent.vrfTemplateConfig'
+
+- name: TEST.9 - QUERY - [query] Query VRF+LITE EXTENSION ansible-vrf-int2 switch_2
+  cisco.dcnm.dcnm_vrf:
+    fabric: "{{ fabric_1 }}"
+    state: query
+    config:
+    - vrf_name: ansible-vrf-int2
+      vrf_id: 9008012
+      vrf_template: Default_VRF_Universal
+      vrf_extension_template: Default_VRF_Extension_Universal
+      l3vni_wo_vlan: true
+      attach:
+      - ip_address: "{{ switch_1 }}"
+      - ip_address: "{{ switch_2 }}"
+        vrf_lite:
+          - peer_vrf: ansible-vrf-int2 # peer_vrf is mandatory
+            interface: "{{ interface_2a }}" # mandatory
+            ipv4_addr: 10.33.0.2/30 # optional
+            neighbor_ipv4: 10.33.0.1 # optional
+            ipv6_addr: 2010::10:34:0:7/64 # optional
+            neighbor_ipv6: 2010::10:34:0:3 # optional
+            dot1q: 2 # optional controller can provide
+      deploy: false
+  register: result_9
+
+- name: TEST.9a - QUERY - [debug] print result_9
+  debug:
+    var: result_9
+
+- assert:
+    that:
+    - 'result_9.changed == false'
+    - 'result_9.response[0].parent.vrfName == "ansible-vrf-int2"'
+    - 'result_9.response[0].parent.vrfId == 9008012'
+    - 'result_9.response[0].parent.vrfStatus == "PENDING"'
+    - '"enableL3VniNoVlan\":\"true\"" in result_9.response[0].parent.vrfTemplateConfig'
+    - 'result_9.response[0].attach[0].switchDetailsList[0].islanAttached == true'
+    - 'result_9.response[0].attach[0].switchDetailsList[0].lanAttachedState == "PENDING"'
+    - 'result_9.response[0].attach[1].switchDetailsList[0].islanAttached == true'
+    - 'result_9.response[0].attach[1].switchDetailsList[0].lanAttachedState == "PENDING"'
+
 ###############################################
 ###                 CLEAN-UP                 ##
 ###############################################

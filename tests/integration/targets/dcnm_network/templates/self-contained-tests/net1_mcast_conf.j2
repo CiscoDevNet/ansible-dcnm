@@ -1,0 +1,23 @@
+---
+# This NDFC test data structure is auto-generated
+# DO NOT EDIT MANUALLY
+#
+
+
+- net_name: "{{ test_data_common.net1 }}"
+  vrf_name: "{{ test_data_common.net1_vrf }}"
+  net_id: "{{ test_data_common.net1_net_id }}"
+  net_template: "{{ test_data_common.net1_default_net_template }}"
+  net_extension_template: "{{ test_data_common.net1_net_extension_template }}"
+  vlan_id: "{{ test_data_common.net1_vlan_id }}"
+  gw_ip_subnet: "{{ test_data_common.net1_gw_ip_subnet }}"
+  mtu_l3intf: 7600
+  arp_suppress: False
+  int_desc: 'test interface'
+  is_l2only: False
+  vlan_name: testvlan
+  multicast_group_address: '224.5.5.5'
+  attach:
+  - ip_address: "{{ test_data_common.sw1 }}"
+    ports: []
+  deploy: {{ test_data_common.deploy | bool }}

@@ -69,7 +69,7 @@ options:
     type: list
     required: false
     elements: str
-    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex"]
+    choices: ["pc", "vpc", "sub_int", "lo", "eth", "svi", "st_fex", "aa_fex", "breakout"]
     default: []
   config:
     description:
@@ -97,7 +97,7 @@ options:
         - Interface type. Example, pc, vpc, sub_int, lo, eth, svi
         type: str
         required: true
-        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex']
+        choices: ['pc', 'vpc', 'sub_int', 'lo', 'eth', 'svi', 'st-fex', 'aa-fex', 'breakout']
       deploy:
         description:
         - Flag indicating if the configuration must be pushed to the switch. If not included
@@ -170,6 +170,51 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          orphan_port:
+            description:
+            - interface orphan port behavior when switch is in vPC
+            type: bool
+            default: false
+          duplex:
+            description:
+            - Duplex of the interface. Speed must be set to use duplex.
+            type: str
+            choices: ['auto', 'full', 'half']
+            default: auto
+          enable_pfc:
+            description:
+            - State of Priority Flow Control (PFC) on the interface
+            type: bool
+            default: false
+          enable_cdp:
+            description:
+            - State of CDP protocol on the interface
+            type: bool
+            default: true
+          enable_monitor:
+            description:
+            - State of Switchport Monitor for SPAN/ERSPAN
+            type: bool
+            default: false
+          disable_lacp_suspend_individual:
+            description:
+            - If disabled, lacp will put the port to individual state and not suspend the port
+              in case the port does not get LACP BPDU from the peer ports in the port-channel
+            type: bool
+            default: false
+          lacp_port_priority:
+            description:
+            - <1-65535> Set LACP port priority on member interfaces, default is 32768
+            type: int
+            default: 32768
+          lacp_rate:
+            description:
+            - Set the rate at which LACP control packets are sent to an LACP-supported
+              interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member
+              interfaces, default is normal
+            type: str
+            choices: ['normal', 'fast']
+            default: normal
       profile_vpc:
         description:
         - Though the key shown here is 'profile_vpc' the actual key to be used in playbook
@@ -298,6 +343,30 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          disable_lacp_suspend_individual:
+            description:
+            - If disabled, lacp will put the port to individual state and not suspend the port
+              in case the port does not get LACP BPDU from the peer ports in the port-channel
+            type: bool
+            default: false
+          enable_lacp_vpc_convergence:
+            description:
+            - Enable lacp convergence for vPC port-channels
+            type: bool
+            default: false
+          lacp_port_priority:
+            description:
+            - <1-65535> Set LACP port priority on member interfaces, default is 32768
+            type: int
+            default: 32768
+          lacp_rate:
+            description:
+            - Set the rate at which LACP control packets are sent to an LACP-supported
+              interface. Normal rate (30 seconds), fast rate (1 second), rate is set on member
+              interfaces, default is normal
+            type: str
+            choices: ['normal', 'fast']
+            default: normal
       profile_subint:
         description:
         - Though the key shown here is 'profile_subint' the actual key to be used in playbook
@@ -366,6 +435,11 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          route_tag:
+            description:
+            - Route tag associated with the interface IP.
+            type: str
+            default: ""
       profile_lo:
         description:
         - Though the key shown here is 'profile_lo' the actual key to be used in playbook
@@ -486,6 +560,17 @@ options:
             - Speed of the interface.
             type: str
             default: Auto
+          orphan_port:
+            description:
+            - interface orphan port behavior when switch is in vPC
+            type: bool
+            default: false
+          duplex:
+            description:
+            - Duplex of the interface. Speed must be set to use duplex.
+            type: str
+            choices: ['auto', 'full', 'half']
+            default: auto
           int_vrf:
             description:
             - Interface VRF name. This object is applicable only if the 'mode' is 'routed'
@@ -537,6 +622,21 @@ options:
             - Administrative state of the interface
             type: bool
             default: true
+          enable_pfc:
+            description:
+            - State of Priority Flow Control (PFC) on the interface
+            type: bool
+            default: false
+          enable_cdp:
+            description:
+            - State of CDP protocol on the interface
+            type: bool
+            default: true
+          enable_monitor:
+            description:
+            - State of Switchport Monitor for SPAN/ERSPAN
+            type: bool
+            default: false
       profile_svi:
         description:
         - Though the key shown here is 'profile_svi' the actual key to be used in playbook
@@ -805,7 +905,19 @@ options:
             - Name of netflow monitor. This parameter is required if "enable_netflow" is True.
             type: str
             default: ""
-
+      profile_breakout:
+        description:
+        - Though the key shown here is 'profile_breakout' the actual key to be used in playbook
+          is 'profile'. The key 'profile_breakout' is used here to logically segregate the interface
+          objects applicable for this profile
+        - "Interface must be parent interface. Ex: Ethernet1/49. Short name is not supported."
+        suboptions:
+          map:
+            description:
+            - type of breakout
+            type: str
+            required: true
+            choices: ["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]
 """
 
 EXAMPLES = """
@@ -1622,6 +1734,53 @@ EXAMPLES = """
         access_vlan: 41
         description: "ETH 1/12 Dot1q Tunnel"
 
+# Breakout interfaces
+
+- name: Configure breakout interface
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_svi_fabric }}"
+    state: merged
+    config:
+      - name: ethernet1/100
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+      - name: ethernet1/101
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+      - name: ethernet1/102
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+        deploy: true
+        profile:
+          map: 10g-4x
+
+- name: Configure breakout interface
+  cisco.dcnm.dcnm_interface:
+    fabric: "{{ ansible_svi_fabric }}"
+    state: deleted
+    config:
+      - name: ethernet1/100
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+      - name: ethernet1/101
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+      - name: ethernet1/102
+        type: breakout
+        switch:
+          - "{{ ansible_switch1 }}"
+
 # QUERY
 
 - name: Query interface details
@@ -1693,6 +1852,7 @@ class DcnmIntf:
             "INTERFACE": "/rest/interface",
             "IF_MARK_DELETE": "/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/rest/control/fabrics/{}/accessmode",
+            "BREAKOUT": "/rest/interface/breakout",
         },
         12: {
             "VPC_SNO": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/vpcpair_serial_number?serial_number={}",
@@ -1703,6 +1863,7 @@ class DcnmIntf:
             "INTERFACE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface",
             "IF_MARK_DELETE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/markdelete",
             "FABRIC_ACCESS_MODE": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{}/accessmode",
+            "BREAKOUT": "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface/breakout",
         },
     }
 
@@ -1723,8 +1884,12 @@ class DcnmIntf:
         self.have_all_list = []
         self.diff_create = []
         self.diff_replace = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
+        self.want_breakout = []
+        self.have_breakout = []
+        self.diff_create_breakout = []
+        self.diff_delete_breakout = []
         self.diff_deploy = []
         self.diff_query = []
         self.fd = None
@@ -1751,6 +1916,8 @@ class DcnmIntf:
         self.dcnm_version = dcnm_version_supported(self.module)
 
         self.inventory_data = {}
+        self.manageable = []
+        self.unmanageable = []
 
         self.paths = self.dcnm_intf_paths[self.dcnm_version]
 
@@ -1804,6 +1971,7 @@ class DcnmIntf:
             "PORTTYPE_FAST_ENABLED": "port_type_fast",
             "MTU": "mtu",
             "SPEED": "speed",
+            "PORT_DUPLEX_MODE": "duplex",
             "ALLOWED_VLANS": "allowed_vlans",
             "NATIVE_VLAN": "native_vlan",
             "ACCESS_VLAN": "access_vlan",
@@ -1826,6 +1994,15 @@ class DcnmIntf:
             "PEER2_ACCESS_VLAN": "peer2_access_vlan",
             "DCI_ROUTING_PROTO": "dci_routing_proto",
             "DCI_ROUTING_TAG": "dci_routing_tag",
+            "ENABLE_ORPHAN_PORT": "orphan_port",
+            "DISABLE_LACP_SUSPEND": "disable_lacp_suspend_individual",
+            "ENABLE_LACP_VPC_CONV": "enable_lacp_vpc_convergence",
+            "LACP_PORT_PRIO": "lacp_port_priority",
+            "LACP_RATE": "lacp_rate",
+            "ENABLE_PFC": "enable_pfc",
+            "ENABLE_MONITOR": "enable_monitor",
+            "CDP_ENABLE": "enable_cdp",
+
         }
 
         # New Interfaces
@@ -1871,6 +2048,7 @@ class DcnmIntf:
                 "svi_vlan_admin_state": "int_vlan_admin_state",
                 "st_fex_port_channel_st": "int_port_channel_fex",
                 "aa_fex_port_channel_aa": "int_port_channel_aa_fex",
+                "breakout": "breakout_interface",
             },
         }
 
@@ -1907,6 +2085,7 @@ class DcnmIntf:
             "svi": "INTERFACE_VLAN",
             "st_fex": "STRAIGHT_TROUGH_FEX",
             "aa_fex": "AA_FEX",
+            "breakout": "BREAKOUT",
         }
 
         # New Interfaces
@@ -1919,10 +2098,53 @@ class DcnmIntf:
             "INTERFACE_VLAN": 5,
             "STRAIGHT_TROUGH_FEX": 6,
             "AA_FEX": 7,
+            "BREAKOUT": 8,
         }
 
         msg = "ENTERED DcnmIntf: "
         self.log.debug(msg)
+
+    def dcnm_intf_breakout_format(self, if_name):
+        # Define the pattern to match '1/x/y' where x and y are integers
+        pattern = r'^ethernet1/\d+/\d+$'
+
+        # Perform the pattern matching
+        if re.match(pattern, if_name.lower()):
+            # Split the interface name into parts
+            intf = if_name.split("/")
+            # Return True and the formatted interface string
+            return True, f"{intf[0]}/{intf[1]}"
+
+        # Return False and None if the pattern does not match
+        return False, None
+
+    def dcnm_intf_get_parent(self, name, switch):
+        """
+        Given an interface name and switch serial number, determine if the parent breakout interface exists in the target config.
+
+        Args:
+            cfg (list): List of interface configuration dictionaries.
+            name (str): Interface name to check (e.g., "Ethernet1/100/1").
+            switch (str): Switch Mgmt IP Address.
+
+        Returns:
+            tuple: (True, type) if parent breakout interface exists, else (False, None).
+        """
+        # Extract the parent interface ID (e.g., "1/100" from "Ethernet1/100/1")
+        match = re.search(r"(\d+/\d+)/\d+", name)
+        if not match:
+            return False, None  # Return early if the pattern doesn't match
+
+        parent_intf = f"Ethernet{match.group(1)}"
+        # Check if the parent interface exists in the config for the given switch
+        for interface in self.config:
+            if (
+                interface["name"].lower() == parent_intf.lower()
+                and interface.get("type", "").lower() == "breakout"
+                and interface["switch"][0] == switch
+            ):
+                return True, interface.get("type", None)
+        return False, None
 
     def dcnm_intf_dump_have_all(self):
 
@@ -1983,8 +2205,13 @@ class DcnmIntf:
             port_id = re.findall(r"\d+", name)
             return ("Loopback" + str(port_id[0]), port_id[0])
         if "eth" == if_type:
-            port_id = re.findall(r"\d+\/\d+", name)
-            return ("Ethernet" + str(port_id[0]), port_id[0])
+            # add regex for breakout Ex: Ethernet1/49/1
+            if re.findall(r"\d+\/\d+\/\d+", name):
+                port_id = re.findall(r"\d+\/\d+\/\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
+            if re.findall(r"\d+\/\d+", name):
+                port_id = re.findall(r"\d+\/\d+", name)
+                return ("Ethernet" + str(port_id[0]), port_id[0])
         if "svi" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vlan" + str(port_id[0]), port_id[0])
@@ -1994,6 +2221,9 @@ class DcnmIntf:
         if "aa_fex" == if_type:
             port_id = re.findall(r"\d+", name)
             return ("vPC" + str(port_id[0]), port_id[0])
+        if "breakout" == if_type:
+            port_id = re.findall(r"\d+\/\d+", name)
+            return ("Ethernet" + str(port_id[0]), port_id[0])
 
     def dcnm_intf_get_vpc_serial_number(self, sw):
 
@@ -2044,7 +2274,9 @@ class DcnmIntf:
                         ifname, port_id = self.dcnm_intf_get_if_name(
                             c["name"], c["type"]
                         )
-
+                        # No need to copy when we break interface, because parent interface will be removed
+                        if "breakout" in cfg["type"]:
+                            continue
                         if "mode" not in cfg["profile"]:
                             self.module.fail_json(
                                 msg="Invalid parameters in playbook: while processing interface "
@@ -2126,6 +2358,15 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
         )
 
         pc_prof_spec_access = dict(
@@ -2140,6 +2381,15 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
         )
 
         pc_prof_spec_l3 = dict(
@@ -2224,6 +2474,10 @@ class DcnmIntf:
             peer1_description=dict(type="str", default=""),
             peer2_description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            disable_lacp_suspend_individual=dict(type="bool", default=False),
+            enable_lacp_vpc_convergence=dict(type="bool", default=False),
+            lacp_port_priority=dict(type="int", default=32768, range_min=1, range_max=65535),
+            lacp_rate=dict(type="str", default="normal"),
         )
 
         vpc_prof_spec_access = dict(
@@ -2282,6 +2536,7 @@ class DcnmIntf:
                 type="int", range_min=64, range_max=127, default=64
             ),
             mtu=dict(type="int", range_min=576, range_max=9216, default=9216),
+            route_tag=dict(type="str", default=""),
             speed=dict(type="str", default="Auto"),
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
@@ -2338,6 +2593,12 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         eth_prof_spec_access = dict(
@@ -2352,6 +2613,12 @@ class DcnmIntf:
             cmds=dict(type="list", elements="str"),
             description=dict(type="str", default=""),
             admin_state=dict(type="bool", default=True),
+            orphan_port=dict(type="bool", default=False),
+            enable_cdp=dict(type="bool", default=True),
+            enable_monitor=dict(type="bool", default=False),
+            enable_pfc=dict(type="bool", default=False),
+            duplex=dict(
+                type="str", default="auto", choices=["auto", "full", "half"]),
         )
 
         eth_prof_spec_routed_host = dict(
@@ -2552,6 +2819,22 @@ class DcnmIntf:
 
         self.dcnm_intf_validate_interface_input(cfg, fex_spec, fex_prof_spec)
 
+    def dcnm_intf_validate_breakout_interface_input(self, cfg):
+        breakout_spec = dict(
+            name=dict(required=True, type="str"),
+            switch=dict(required=True, type="list"),
+            type=dict(required=True, type="str"),
+            deploy=dict(type="str", default=True),
+            profile=dict(required=True, type="dict"),
+        )
+
+        breakout_prof_spec = dict(
+            map=dict(required=True, type="str",
+                     default="",
+                     choices=["10g-4x", "25g-4x", "50g-2x", "50g-4x", "100g-2x", "100g-4x", "200g-2x"]),
+        )
+        self.dcnm_intf_validate_interface_input(cfg, breakout_spec, breakout_prof_spec)
+
     def dcnm_intf_validate_delete_state_input(self, cfg):
 
         del_spec = dict(
@@ -2632,6 +2915,8 @@ class DcnmIntf:
                     self.dcnm_intf_validate_st_fex_interface_input(cfg)
                 if item["type"] == "aa_fex":
                     self.dcnm_intf_validate_aa_fex_interface_input(cfg)
+                if item["type"] == "breakout":
+                    self.dcnm_intf_validate_breakout_interface_input(cfg)
             cfg.remove(citem)
 
     def dcnm_intf_get_pc_payload(self, delem, intf, profile):
@@ -2669,7 +2954,28 @@ class DcnmIntf:
                 "native_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
-
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("disable_lacp_suspend_individual"):
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
+            if delem[profile].get("lacp_port_priority"):
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = 32768
+            if delem[profile].get("lacp_rate"):
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
         if delem[profile]["mode"] == "access":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2693,7 +2999,28 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["PO_ID"] = ifname
-
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
+            if delem[profile].get("disable_lacp_suspend_individual"):
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
+            if delem[profile].get("lacp_port_priority"):
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = 32768
+            if delem[profile].get("lacp_rate"):
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+            else:
+                intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
         if delem[profile]["mode"] == "l3":
             if delem[profile]["members"] is None:
                 intf["interfaces"][0]["nvPairs"]["MEMBER_INTERFACES"] = ""
@@ -2911,6 +3238,22 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["ADMIN_STATE"] = str(
             delem[profile]["admin_state"]
         ).lower()
+        if delem[profile].get("disable_lacp_suspend_individual"):
+            intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = delem[profile]["disable_lacp_suspend_individual"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["DISABLE_LACP_SUSPEND"] = False
+        if delem[profile].get("enable_lacp_vpc_convergence"):
+            intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = delem[profile]["enable_lacp_vpc_convergence"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["ENABLE_LACP_VPC_CONV"] = False
+        if delem[profile].get("lacp_port_priority"):
+            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = delem[profile]["lacp_port_priority"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["LACP_PORT_PRIO"] = 32768
+        if delem[profile].get("lacp_rate"):
+            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = delem[profile]["lacp_rate"]
+        else:
+            intf["interfaces"][0]["nvPairs"]["LACP_RATE"] = "normal"
         intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
         intf["interfaces"][0]["nvPairs"]["SPEED"] = self.dcnm_intf_xlate_speed(
             str(delem[profile].get("speed", ""))
@@ -2935,6 +3278,9 @@ class DcnmIntf:
         intf["interfaces"][0]["nvPairs"]["PREFIX"] = str(
             delem[profile]["ipv4_mask_len"]
         )
+        intf["interfaces"][0]["nvPairs"]["ROUTING_TAG"] = delem[profile][
+            "route_tag"
+        ]
         if delem[profile]["ipv6_addr"]:
             intf["interfaces"][0]["nvPairs"]["IPv6"] = str(
                 delem[profile]["ipv6_addr"]
@@ -3058,6 +3404,16 @@ class DcnmIntf:
                 "native_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "access":
             intf["interfaces"][0]["nvPairs"]["BPDUGUARD_ENABLED"] = delem[
                 profile
@@ -3072,6 +3428,16 @@ class DcnmIntf:
                 "access_vlan"
             ]
             intf["interfaces"][0]["nvPairs"]["INTF_NAME"] = ifname
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_ORPHAN_PORT"] = delem[profile]["orphan_port"]
+            intf["interfaces"][0]["nvPairs"][
+                "CDP_ENABLE"] = delem[profile]["enable_cdp"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_PFC"] = delem[profile]["enable_pfc"]
+            intf["interfaces"][0]["nvPairs"][
+                "ENABLE_MONITOR"] = delem[profile]["enable_monitor"]
+            intf["interfaces"][0]["nvPairs"][
+                "PORT_DUPLEX_MODE"] = delem[profile]["duplex"]
         if delem[profile]["mode"] == "routed":
             intf["interfaces"][0]["nvPairs"]["INTF_VRF"] = delem[profile][
                 "int_vrf"
@@ -3400,6 +3766,26 @@ class DcnmIntf:
         # Monitor ports are not put into diff_deploy, since they don't have any
         # commands to be executed on switch. This will affect the idempotence
         # check
+
+        if delem["type"] == "breakout":
+            ifname, port_id = self.dcnm_intf_get_if_name(delem["name"], delem["type"])
+
+            intf = {
+                "deploy": delem["deploy"],
+                "policy": "breakout_interface",
+                "interfaceType": "breakout_interface",
+                "interfaces": [
+                    {
+                        "serialNumber": str(self.ip_sn[sw]),
+                        "ifName": ifname,
+                        "map": str(delem["profile"]["map"]),
+                        "interfaceType": self.int_types[delem["type"]],
+                        "fabricName": self.fabric,
+                    }
+                ]
+            }
+            return intf
+
         if delem["profile"]["mode"] == "monitor":
             intf.update({"deploy": False})
         else:
@@ -3488,8 +3874,22 @@ class DcnmIntf:
             if any("profile" in key for key in delem):
                 for sw in delem["switch"]:
                     intf_payload = self.dcnm_get_intf_payload(delem, sw)
-                    if intf_payload not in self.want:
-                        self.want.append(intf_payload)
+                    if intf_payload["policy"] == "breakout_interface":
+                        # Add to self.want_breakout if it's a breakout_interface and not already in self.want
+                        if intf_payload not in self.want:
+                            self.want_breakout.append(intf_payload)
+                    else:
+                        # Process non-breakout_interface policies
+                        if intf_payload not in self.want:
+                            intf = intf_payload["interfaces"][0]["ifName"]
+                            is_breakout_format, formatted_interface = self.dcnm_intf_breakout_format(intf)
+                            parent_breakout_found, parent_type = self.dcnm_intf_get_parent(intf, sw)
+                            # Add breakout interface to self.want only if breakout is configured in state overridden
+                            # When state is replaced, we don't check if parent is configured.
+                            if is_breakout_format is False or parent_breakout_found is True and self.params['state'] == "overridden":
+                                self.want.append(intf_payload)
+                            else:
+                                self.want.append(intf_payload)
 
     def dcnm_intf_get_intf_info(self, ifName, serialNumber, ifType):
 
@@ -3538,6 +3938,22 @@ class DcnmIntf:
         if resp and "DATA" in resp and resp["DATA"]:
             self.have_all.extend(resp["DATA"])
 
+    def dcnm_intf_get_have_all_breakout_interfaces(self, sno):
+        # This function will get policies for a given serial number and
+        # populate the breakout interfaces in self.have_breakout
+        path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/policies/switches/{}".format(sno)
+        resp = dcnm_send(self.module, "GET", path)
+
+        breakout = []
+        if resp and "DATA" in resp and resp["DATA"]:
+            for elem in resp["DATA"]:
+                if elem.get('templateName', None) == "breakout_interface":
+                    # Make sure the serial number for this device is a manageable device
+                    # We cannot manage breakout interfaces for pre-provisioned devices
+                    if elem.get('serialNumber') in self.manageable.values():
+                        breakout.append(elem['entityName'])
+            self.have_breakout.append({sno: breakout})
+
     def dcnm_intf_get_have_all(self, sw):
 
         # Check if you have already got the details for this switch
@@ -3554,6 +3970,7 @@ class DcnmIntf:
 
         self.have_all_list.append(sw)
         self.dcnm_intf_get_have_all_with_sno(sno)
+        self.dcnm_intf_get_have_all_breakout_interfaces(sno)
 
     def dcnm_intf_get_have(self):
 
@@ -3571,7 +3988,6 @@ class DcnmIntf:
 
                 # Fetch the information from DCNM w.r.t to the interafce that we have in self.want
                 intf_payload = self.dcnm_intf_get_intf_info_from_dcnm(intf)
-
                 if intf_payload:
                     self.have.append(intf_payload)
 
@@ -3663,6 +4079,19 @@ class DcnmIntf:
                 t_e2 = e2.lower()
             else:
                 t_e2 = e2
+
+        boolean_keys = [
+            "ENABLE_ORPHAN_PORT",
+            "DISABLE_LACP_SUSPEND",
+            "ENABLE_LACP_VPC_CONV",
+            "ENABLE_PFC",
+            "ENABLE_MONITOR",
+            "CDP_ENABLE"
+        ]
+        if k in boolean_keys:
+            # This is a special case where the value is a boolean and we need to compare it as such
+            t_e1 = str(t_e1).lower()
+            t_e2 = str(t_e2).lower()
 
         if t_e1 != t_e2:
 
@@ -3835,6 +4264,43 @@ class DcnmIntf:
                 break
 
         # --------------------------------------------------------------------------------------------------------------------
+
+        # workflow to manage breakout interfaces
+        # Append to self.diff_create_breakout to create breakout
+        # Append to self.diff_delete_breakout to delete breakout
+        if state != "deleted":
+            for want_breakout in self.want_breakout:
+                want_intf = want_breakout["interfaces"][0]["ifName"]
+                want_serialnumber = want_breakout["interfaces"][0]["serialNumber"]
+                match_create = False
+                # Search if interface is in have_breakout
+                for elem in self.have_breakout:
+                    if want_serialnumber == list(elem.keys())[0]:
+                        for interface in elem[want_serialnumber]:
+                            if interface.lower() == want_intf.lower():
+                                # If the breakout interface is already present in have,
+                                # skip adding it to diff_create_breakout
+                                match_create = True
+                                break
+                if not match_create:
+                    self.diff_create_breakout.append(want_breakout["interfaces"])
+
+        if state == "deleted" or state == "overridden":
+            for have_breakout in self.have_breakout:
+                for interface in list(have_breakout.values())[0]:
+                    match_delete_interface = True
+                    for want_breakout in self.want_breakout:
+                        if list(have_breakout.keys())[0] == want_breakout["interfaces"][0]["serialNumber"]:
+                            if want_breakout["interfaces"][0]["ifName"] == interface:
+                                match_delete_interface = False
+                                break
+                    if match_delete_interface:
+                        payload = {
+                            "serialNumber": list(have_breakout.keys())[0],
+                            "ifName": interface + "/1"
+                        }
+                        self.diff_delete_breakout.append(payload)
+
         for want in self.want:
 
             delem = {}
@@ -3855,7 +4321,6 @@ class DcnmIntf:
                     and (sno == d["interfaces"][0]["serialNumber"])
                 )
             ]
-
             if not match_have:
                 changed_dict = copy.deepcopy(want)
 
@@ -3902,13 +4367,27 @@ class DcnmIntf:
                             for ik in if_keys:
                                 if ik == "nvPairs":
                                     nv_keys = list(want[k][0][ik].keys())
-                                    if "SPEED" in nv_keys:
-                                        # Remove 'SPEED' only if it is not included in 'have'.
-                                        if (
-                                            d[k][index][ik].get("SPEED", None)
-                                            is None
-                                        ):
-                                            nv_keys.remove("SPEED")
+                                    # List of keys to check and potentially remove from nv_keys
+                                    # Some keys are not present in the first GET and must be removed
+                                    keys_to_check = [
+                                        "CDP_ENABLE",
+                                        "DISABLE_LACP_SUSPEND",
+                                        "ENABLE_LACP_VPC_CONV",
+                                        "LACP_PORT_PRIO",
+                                        "LACP_RATE",
+                                        "ENABLE_MONITOR",
+                                        "ENABLE_ORPHAN_PORT",
+                                        "ENABLE_PFC",
+                                        "NATIVE_VLAN",
+                                        "PORT_DUPLEX_MODE",
+                                        "SPEED"
+                                    ]
+
+                                    for key in keys_to_check:
+                                        # Remove the key from nv_keys only if it exists and is not present in 'have'
+                                        if key in nv_keys and d[k][index][ik].get(key, None) is None:
+                                            nv_keys.remove(key)
+
                                     for nk in nv_keys:
                                         # HAVE may have an entry with a list # of interfaces. Check all the
                                         # interface entries for a match.  Even if one entry matches do not
@@ -3998,6 +4477,14 @@ class DcnmIntf:
                                 changed_dict.pop(k)
 
             if action == "add":
+                # If E1/x/y do not create. Interface is created with breakout
+                if re.search(r"\d+\/\d+\/\d+", name):
+                    if want.get("interfaceType", None) is not None:
+                        want.pop("interfaceType")
+                    self.dcnm_intf_merge_intf_info(want, self.diff_replace)
+                    self.changed_dict[0][state].append(changed_dict)
+                    intf_changed = True
+                    continue
                 self.dcnm_intf_merge_intf_info(want, self.diff_create)
                 # Add the changed_dict to self.changed_dict
                 self.changed_dict[0][state].append(changed_dict)
@@ -4015,7 +4502,7 @@ class DcnmIntf:
             if str(deploy).lower() == "true":
                 # Add to diff_deploy,
                 #   1. if intf_changed is True
-                #   2. if intf_changed is Flase, then if 'complianceStatus is
+                #   2. if intf_changed is False, then if 'complianceStatus is
                 #      False then add to diff_deploy.
                 #   3. Do not add otherwise
 
@@ -4224,7 +4711,11 @@ class DcnmIntf:
                     self.dcnm_intf_get_if_name(mem, "eth")[0]
                     for mem in item["members"]
                 ]:
-                    return False, item["ifname"]
+                    # Compare have serial_number to item serial_number return if they don't match
+                    if have.get('serialNo') != item.get('sno'):
+                        return True, None
+                    else:
+                        return False, item["ifname"]
             elif (item.get("peer1_members")) or (item.get("peer2_members")):
                 if (
                     have["ifName"]
@@ -4268,8 +4759,8 @@ class DcnmIntf:
 
         deploy = False
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4378,6 +4869,19 @@ class DcnmIntf:
                     self.dcnm_compare_default_payload(uelem, intf)
                     == "DCNM_INTF_MATCH"
                 ):
+                    # In case of breakout, check if parent interface is in cfg
+                    # If a match for Ethernet1/x/y is found, verify if the parent interface Ethernet1/x exists in cfg.
+                    # If the parent doesn't exist or isn't of type "breakout", remove the breakout interface.
+                    if re.search(r"\d+\/\d+\/\d+", name):
+                        found, parent_type = self.dcnm_intf_get_parent(name, have['mgmtIpAddress'])
+                        if not (found and parent_type == "breakout"):
+                            payload = {
+                                "serialNumber": have["serialNo"],
+                                "ifName": have["ifName"]
+                            }
+                            breakout_index = self.int_index[self.int_types["breakout"]]
+                            self.diff_delete[breakout_index].append(payload)
+                            self.changed_dict[0]["deleted"].append(copy.deepcopy(payload))
                     continue
 
                 if uelem is not None:
@@ -4395,10 +4899,15 @@ class DcnmIntf:
                         delem["ifName"] = name
                         delem["fabricName"] = self.fabric
                         if str(deploy).lower() == "true":
-                            self.diff_deploy.append(delem)
-                            self.changed_dict[0]["deploy"].append(
-                                copy.deepcopy(delem)
-                            )
+                            # Do not create interface E1/x/y, interface is created with breakout
+                            pattern = r'^Ethernet1/\d+/\d+$'
+                            if_name = delem.get('ifName')
+
+                            if not re.match(pattern, if_name):
+                                self.diff_deploy.append(delem)
+                                self.changed_dict[0]["deploy"].append(
+                                    copy.deepcopy(delem)
+                                )
             # Sub-interafces are returned as INTERFACE_ETHERNET in have_all. So do an
             # additional check to see if it is physical. If not assume it to be sub-interface
             # for now. We will have to re-visit this check if there are additional non-physical
@@ -4555,8 +5064,8 @@ class DcnmIntf:
     def dcnm_intf_get_diff_deleted(self):
 
         self.diff_create = []
-        self.diff_delete = [[], [], [], [], [], [], [], []]
-        self.diff_delete_deploy = [[], [], [], [], [], [], [], []]
+        self.diff_delete = [[], [], [], [], [], [], [], [], []]
+        self.diff_delete_deploy = [[], [], [], [], [], [], [], [], []]
         self.diff_deploy = []
         self.diff_replace = []
 
@@ -4566,7 +5075,21 @@ class DcnmIntf:
             self.dcnm_intf_get_diff_overridden(self.config)
         elif self.config:
             for cfg in self.config:
-                if cfg.get("name", None) is not None:
+                if cfg.get("name", None) is not None and cfg.get("type") == "breakout":
+                    self.dcnm_intf_get_have_all(cfg["switch"][0])
+
+                    for have in self.have_all:
+                        have_intf = have['ifName']
+                        if re.search(r"\d+\/\d+\/\d+", have_intf):
+                            found, parent_type = self.dcnm_intf_get_parent(have_intf, have['mgmtIpAddress'])
+                            # If have in want breakout and if match to E1/x/1 add to dict
+                            # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
+                            # with the first sub if.
+                            if re.search(r"\d+\/\d+\/1$", have_intf) and found:
+                                payload = {'serialNumber': have['serialNo'],
+                                           'ifName': have['ifName']}
+                                self.diff_delete_breakout.append(payload)
+                elif cfg.get("name", None) is not None:
                     processed = []
                     have_all = []
 
@@ -5006,11 +5529,17 @@ class DcnmIntf:
         # First send deletes and then try create and update. This is because during override, the overriding
         # config may conflict with existing configuration.
 
+        delete_index = 0
         for delem in self.diff_delete:
 
             if delem == []:
+                delete_index = delete_index + 1
                 continue
 
+            # index 8 is used for breakout interface
+            if delete_index == 8:
+                path = "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/interface"
+                break
             json_payload = json.dumps(delem)
 
             resp = dcnm_send(self.module, "DELETE", path, json_payload)
@@ -5053,7 +5582,7 @@ class DcnmIntf:
 
             delete = changed
             self.result["response"].append(resp)
-
+            delete_index = delete_index + 1
         resp = None
 
         path = self.paths["GLOBAL_IF_DEPLOY"]
@@ -5089,10 +5618,25 @@ class DcnmIntf:
 
         resp = None
 
+        # Add Breakout creation from self.want_breakout
+        path = self.paths["BREAKOUT"]
+        for payload in self.diff_create_breakout:
+            json_payload = json.dumps(payload)
+            resp = dcnm_send(self.module, "POST", path, json_payload)
+            self.result["response"].append(resp)
+            if (resp.get("MESSAGE") != "OK") or (
+                resp.get("RETURN_CODE") != 200
+            ):
+                resp["CHANGED"] = self.changed_dict
+                self.module.fail_json(msg=resp)
+            else:
+                create = True
+
+        # Update interfaces
         path = self.paths["INTERFACE"]
         for payload in self.diff_replace:
-
             json_payload = json.dumps(payload)
+
             resp = dcnm_send(self.module, "PUT", path, json_payload)
 
             self.result["response"].append(resp)
@@ -5107,9 +5651,26 @@ class DcnmIntf:
 
         resp = None
 
+        # Delete Breakout interface
+        if len(self.diff_delete_breakout) > 0:
+            json_payload = json.dumps(self.diff_delete_breakout)
+            resp = dcnm_send(self.module, "DELETE", path, json_payload)
+            self.result["response"].append(resp)
+
+            if (resp.get("MESSAGE") != "OK") or (
+                resp.get("RETURN_CODE") != 200
+            ):
+                resp["CHANGED"] = self.changed_dict
+                self.module.fail_json(msg=resp)
+            else:
+                delete = changed
+
+        resp = None
         path = self.paths["GLOBAL_IF"]
         for payload in self.diff_create:
-
+            # Do not create interface E1/x/y directly.
+            if re.search(r"\d+\/\d+\/\d+", payload['interfaces'][0]['ifName']):
+                continue
             json_payload = json.dumps(payload)
             resp = dcnm_send(self.module, "POST", path, json_payload)
 
@@ -5260,22 +5821,26 @@ class DcnmIntf:
 
         if self.module.params["state"] != "query":
 
-            # Get all switches which are managable. Changes must be avoided to all switches which are not part of this list
-            managable_ip = [
-                (key, self.inventory_data[key]["serialNumber"])
-                for key in self.inventory_data
-                if str(self.inventory_data[key]["managable"]).lower() == "true"
-            ]
-            managable_hosts = [
-                (
-                    self.inventory_data[key]["logicalName"],
-                    self.inventory_data[key]["serialNumber"],
-                )
-                for key in self.inventory_data
-                if str(self.inventory_data[key]["managable"]).lower() == "true"
-            ]
+            # Get all switches which are manageable and unmanageable
+            manageable_ip = []
+            manageable_hosts = []
+            unmanageable_ip = []
+            unmanageable_hosts = []
 
-            managable = dict(managable_ip + managable_hosts)
+            for key in self.inventory_data:
+                serial_number = self.inventory_data[key]["serialNumber"]
+                logical_name = self.inventory_data[key]["logicalName"]
+                is_manageable = str(self.inventory_data[key]["managable"]).lower() == "true"
+
+                if is_manageable:
+                    manageable_ip.append((key, serial_number))
+                    manageable_hosts.append((logical_name, serial_number))
+                else:
+                    unmanageable_ip.append((key, serial_number))
+                    unmanageable_hosts.append((logical_name, serial_number))
+
+            self.manageable = dict(manageable_ip + manageable_hosts)
+            self.unmanageable = dict(unmanageable_ip + unmanageable_hosts)
 
             # Build a mapping of serial numbers to switch roles. This will be required to build default ethernet
             # payload during overridden state. for switch role leaf the default policy for ethernet interface must
@@ -5290,13 +5855,13 @@ class DcnmIntf:
                     }
                 )
 
-            # Get all switches which are managable. Deploy must be avoided to all switches which are not part of this list
+            # Get all switches which are manageable. Deploy must be avoided to all switches which are not part of this list
             ronly_sw_list = []
             for cfg in self.config:
-                # Check if there are any switches which are not managable in the config.
+                # Check if there are any switches which are not manageable in the config.
                 if cfg.get("switch", None) is not None:
                     for sw in cfg["switch"]:
-                        if sw not in managable:
+                        if sw not in self.manageable:
                             if sw not in ronly_sw_list:
                                 ronly_sw_list.append(sw)
 
@@ -5396,6 +5961,7 @@ def main():
                 "svi",
                 "st_fex",
                 "aa_fex",
+                "breakout",
             ],
             default=[],
         ),

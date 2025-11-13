@@ -1,0 +1,17 @@
+# This is auto generated. Do not edit this manually
+
+---
+- name: lo0
+  type: lo
+  switch:
+    - "{{ test_data_common.switch2 }}"
+  deploy: {{ test_data_common.deploy | bool }}
+  profile:
+    admin_state: true
+    mode: lo
+    int_vrf: ""
+    ipv4_addr: "{{ lpk0_data.response[0]['interfaces'][0]['nvPairs']['IP'] }}"
+    route_tag: ""
+    cmds:
+      - no shutdown
+    description: "Fabric loopback interface lo0 - replaced by test"

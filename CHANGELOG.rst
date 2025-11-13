@@ -8,6 +8,130 @@ This project adheres to `Semantic Versioning <http://semver.org/>`_.
 
 .. contents:: ``Release Versions``
 
+`3.9.1`_
+=====================
+
+**Release Date:** ``2025-10-27``
+
+Added
+-----
+
+- Added support to increase the number of DHCP servers from 3 to 16 using the dcnm_network module
+- Added documentation to the dcnm_fabric module for `ENABLE_RT_INTF_STATS` and `INTF_STAT_LOAD_INTERVAL` properties
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/518
+
+
+`3.9.0`_
+=====================
+
+**Release Date:** ``2025-09-22``
+
+Added
+-----
+
+- Added support for the following parameters in the dcnm_interface module
+    - `disable_lacp_suspend_individual`
+    - `enable_cdp`
+    - `enable_lacp_vpc_convergence`
+    - `enable_monitor`
+    - `enable_pfc`
+    - `lacp_port_priority`
+    - `lacp_rate`
+- Added support for eBGP fabric type in the dcnm_fabric module
+- Added support for the following parameters in the dcnm_vrf module
+    - `l3vni_wo_vlan`
+    - `v6_redist_direct_rmap`
+- Added support for `x-www-form-urlencoded` encoding in the dcnm_rest module
+- Added httpapi connection plugin support for ND4.1
+- Refactored and improved various module integration tests
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/26
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/51
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/90
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/179
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/210
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/271
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/308
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/324
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/326
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/337
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/366
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/369
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/389
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/404
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/405
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/411
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/422
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/430
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/432
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/446
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/450
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/455
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/466
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/469
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/473
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/482
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/486
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/488
+
+
+`3.8.1`_
+=====================
+
+**Release Date:** ``2025-07-02``
+
+Added
+-----
+
+- Enhanced integration tests for the `dcnm_network` and `dcnm_interface` modules
+- Refactored support for breakout interfaces to fix workflow issues in the dcnm_interface module
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/80
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/149
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/216
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/239
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/279
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/407
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/428
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/436
+
+`3.8.0`_
+=====================
+
+**Release Date:** ``2025-06-02``
+
+Added
+-----
+
+- Updated ``dcnm_interface`` module to support the following
+    - Breakout Interfaces
+    - New properties `native_vlan`, `orphan_port`, `duplex`, `peer1_native_vlan`, `peer2_native_vlan`, `route_tag`
+    - Ability to manage `admin_state`, `description` and `cmds` properties for PortChannel and vPC member interfaces
+
+
+Fixed
+-----
+
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/28
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/350
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/368
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/372
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/379
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/395
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/398
+- https://github.com/CiscoDevNet/ansible-dcnm/issues/412
+
+
 `3.7.0`_
 =====================
 
@@ -536,6 +660,10 @@ The Ansible Cisco Data Center Network Manager (DCNM) collection includes modules
 - cisco.dcnm.dcnm_network	 - Add and remove Networks from a DCNM managed VXLAN fabric.
 - cisco.dcnm.dcnm_interface - DCNM Ansible Module for managing interfaces.
 
+.. _3.9.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.9.0...3.9.1
+.. _3.9.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.8.1...3.9.0
+.. _3.8.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.8.0...3.8.1
+.. _3.8.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.7.0...3.8.0
 .. _3.7.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.6.0...3.7.0
 .. _3.6.0: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.5.1...3.6.0
 .. _3.5.1: https://github.com/CiscoDevNet/ansible-dcnm/compare/3.5.0...3.5.1

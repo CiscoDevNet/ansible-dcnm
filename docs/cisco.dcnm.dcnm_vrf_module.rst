@@ -553,6 +553,28 @@ Parameters
                 </td>
                 <td>
                         <div>Enable IPv6 link-local Option</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>l3vni_wo_vlan</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">boolean</span>
+                    </div>
+                </td>
+                <td>
+                        <ul style="margin: 0; padding: 0"><b>Choices:</b>
+                                    <li>no</li>
+                                    <li>yes</li>
+                        </ul>
+                        <b>Default:</b><br/><div style="color: blue">"Inherited from fabric level settings"</div>
+                </td>
+                <td>
+                        <div>Enable L3 VNI without VLAN</div>
                 </td>
             </tr>
             <tr>
@@ -854,6 +876,23 @@ Parameters
                     <td class="elbow-placeholder"></td>
                 <td colspan="4">
                     <div class="ansibleOptionAnchor" id="parameter-"></div>
+                    <b>v6_redist_direct_rmap</b>
+                    <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
+                    <div style="font-size: small">
+                        <span style="color: purple">string</span>
+                    </div>
+                </td>
+                <td>
+                        <b>Default:</b><br/><div style="color: blue">"FABRIC-RMAP-REDIST-SUBNET"</div>
+                </td>
+                <td>
+                        <div>IPv6 Redistribute Direct Route Map</div>
+                </td>
+            </tr>
+            <tr>
+                    <td class="elbow-placeholder"></td>
+                <td colspan="4">
+                    <div class="ansibleOptionAnchor" id="parameter-"></div>
                     <b>vlan_id</b>
                     <a class="ansibleOptionLink" href="#parameter-" title="Permalink to this option"></a>
                     <div style="font-size: small">
@@ -931,6 +970,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF interface MTU</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
             <tr>
@@ -947,6 +987,7 @@ Parameters
                 </td>
                 <td>
                         <div>VRF Intf Description</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
             <tr>
@@ -998,6 +1039,7 @@ Parameters
                 <td>
                         <div>VRF Vlan Name</div>
                         <div>if &gt; 32 chars enable - system vlan long-name</div>
+                        <div>Not applicable to L3VNI w/o VLAN config</div>
                 </td>
             </tr>
 

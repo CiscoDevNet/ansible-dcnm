@@ -1,4 +1,4 @@
 ansible
+pydantic
 requests
-pydantic==2.9.0
-pydantic_core==2.23.2
+-c constraints.txt

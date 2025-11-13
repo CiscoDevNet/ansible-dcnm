@@ -2,6 +2,10 @@
 ##               SETUP                      ##
 ##############################################
 
+- name: Skip SVI tests if svi_fabric is not defined
+  meta: end_play
+  when: test_data_common.svi_fabric is not defined or test_data_common.svi_fabric == ""
+
 - name: Remove local log file
   local_action: command rm -f dcnm_intf.log
 
@@ -14,13 +18,13 @@
     - name: Create SVI interfaces w/o admin state
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               mode: vlan                                  # choose from [int_vlan, int_vlan_admin_state], default is "int_vlan"   
@@ -36,13 +40,13 @@
     - name: Create SVI interfaces w/o mode
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -58,13 +62,13 @@
     - name: Create SVI interfaces with ipv4_addr but w/o mask length
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -81,13 +85,13 @@
     - name: Create SVI interfaces with HSRP not enabled, but preempt included
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -104,13 +108,13 @@
     - name: Create SVI interfaces with HSRP enabled but w/o HSRP VIP
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -127,13 +131,13 @@
     - name: Create SVI interfaces with HSRP enabled but w/o HSRP Group
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -151,13 +155,13 @@
     - name: Create SVI interfaces with NETFLOW enabled but w/o NETFLOW Monitor
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -174,13 +178,13 @@
     - name: Create SVI interfaces with DHCP1 Server Address but w/o VRF DHCP1
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -197,13 +201,13 @@
     - name: Create SVI interfaces with DHCP2 Server Address but w/o VRF DHCP2
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
@@ -220,13 +224,13 @@
     - name: Create SVI interfaces with DHCP3 Server Address but w/o VRF DHCP3
       cisco.dcnm.dcnm_interface:
         check_deploy: false
-        fabric: "{{ ansible_svi_fabric }}"
+        fabric: "{{ test_data_common.svi_fabric }}"
         state: merged                                     # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: vlan3000                                # should be of the form vlan<vlan-id>
             type: svi                                     # choose from this list [pc, vpc, sub_int, lo, eth, svi]
             switch:
-              - "{{ ansible_switch1 }}"                   # provide the switch information where the config is to be deployed
+              - "{{ test_data_common.switch1 }}"                   # provide the switch information where the config is to be deployed
             deploy: true                                  # choose from [true, false]
             profile:
               admin_state: true                           # Flag to enable/disable Vlan interaface
