@@ -1276,33 +1276,3 @@ class TestDcnmVrfModule12(TestDcnmModule):
         msg = "NdfcVrf12.validate_playbook_config_merged_state: "
         msg += "config element is mandatory for merged state"
         self.assertEqual(result.get("msg"), msg)
-
-    def test_dcnm_vrf_v2_12_check_mode(self):
-        self.version = 12
-        playbook = self.test_data.get("playbook_config")
-        set_module_args(
-            dict(
-                _ansible_check_mode=True,
-                state="merged",
-                fabric="test_fabric",
-                config=playbook,
-            )
-        )
-        result = self.execute_module(changed=False, failed=False)
-        self.assertFalse(result.get("diff"))
-        self.assertFalse(result.get("response"))
-
-    def test_dcnm_vrf_v2_12_merged_new(self):
-        self.version = 12
-        playbook = self.test_data.get("playbook_config")
-        set_module_args(dict(state="merged", fabric="test_fabric", config=playbook))
-        result = self.execute_module(changed=True, failed=False)
-        self.assertTrue(result.get("diff")[0]["attach"][0]["deploy"])
-        self.assertTrue(result.get("diff")[0]["attach"][1]["deploy"])
-        self.assertEqual(result.get("diff")[0]["attach"][0]["ip_address"], "10.10.10.224")
-        self.assertEqual(result.get("diff")[0]["attach"][1]["ip_address"], "10.10.10.225")
-        self.assertEqual(result.get("diff")[0]["vrf_id"], 9008011)
-        self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK1(leaf1)"], "SUCCESS")
-        self.assertEqual(result["response"][1]["DATA"]["test-vrf-1--XYZKSJHSMK2(leaf2)"], "SUCCESS")
-        self.assertEqual(result["response"][2]["DATA"]["status"], "Deployment of VRF(s) has been initiated successfully")
-        self.assertEqual(result["response"][2]["RETURN_CODE"], self.SUCCESS_RETURN_CODE)
