@@ -96,16 +96,16 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[2].RETURN_CODE == 200'
-    - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
-    - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
-    - 'result.diff[0].attach[0].deploy == true'
-    - 'result.diff[0].attach[1].deploy == true'
-    - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
-    - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
-    - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[2].RETURN_CODE == 200'
+      - '(result.response[1].DATA|dict2items)[0].value == "SUCCESS"'
+      - '(result.response[1].DATA|dict2items)[1].value == "SUCCESS"'
+      - 'result.diff[0].attach[0].deploy == true'
+      - 'result.diff[0].attach[1].deploy == true'
+      - '"{{ switch_1 }}" or "{{ switch_2 }}" in result.diff[0].attach[0].ip_address'
+      - '"{{ switch_2 }}" or "{{ switch_1 }}" in result.diff[0].attach[1].ip_address'
+      - 'result.diff[0].vrf_name == "ansible-vrf-int1"'
 
 - name: OVERRIDDEN_ALL - conf - Idempotence
   cisco.dcnm.dcnm_vrf: *conf
@@ -115,7 +115,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 - name: OVERRIDDEN_ALL - Override a existing VRF with a new one
   cisco.dcnm.dcnm_vrf: &conf1
@@ -190,7 +190,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
 
 ###############################################
 ###                 CLEAN-UP                 ##

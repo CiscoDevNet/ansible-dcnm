@@ -74,15 +74,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -112,15 +112,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -159,15 +159,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_vpc1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 40 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -219,15 +219,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -252,15 +252,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -298,15 +298,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "ADC"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "ADC"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -331,15 +331,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -365,15 +365,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc11"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11111111111"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc11"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11111111111"'
 
 - name: REPLACED - Replace Service Node with not supported change of already created svc int name
   cisco.dcnm.dcnm_service_node:

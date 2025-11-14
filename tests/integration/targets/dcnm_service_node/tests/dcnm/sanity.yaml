@@ -86,15 +86,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
   tags: sanity
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
@@ -122,15 +122,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
   ansible.builtin.wait_for:
@@ -168,15 +168,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "ADC"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "ADC"'
+      - 'result.response[0].DATA.name == "SN-11"'
   tags: sanity
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
@@ -204,15 +204,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "VNF"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "VNF"'
+      - 'result.response[0].DATA.name == "SN-11"'
   tags: sanity
 
 - name: SANITY- REPLACED - sleep for 20 seconds for DCNM to completely update the state
@@ -241,15 +241,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Physical"'
-    - 'result.response[0].DATA.interfaceName == "svc11"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11111111111"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Physical"'
+      - 'result.response[0].DATA.interfaceName == "svc11"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11111111111"'
 
 - name: SANITY- REPLACED - Clean up any existing service node
   cisco.dcnm.dcnm_service_node:
@@ -302,24 +302,24 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc11"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[1].DATA.formFactor == "Virtual"'
-    - 'result.response[1].DATA.interfaceName == "svc12"'
-    - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[1].DATA.type == "ADC"'
-    - 'result.response[1].DATA.name == "SN-12"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc11"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[1].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[1].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[1].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[1].DATA.formFactor == "Virtual"'
+      - 'result.response[1].DATA.interfaceName == "svc12"'
+      - 'result.response[1].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[1].DATA.type == "ADC"'
+      - 'result.response[1].DATA.name == "SN-12"'
   tags: sanity
 
 - name: SANITY- OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
@@ -354,28 +354,28 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].METHOD == "DELETE"'
-    - 'result.response[1].RETURN_CODE == 200'
-    - 'result.response[1].METHOD == "DELETE"'
-    - 'result.response[2].RETURN_CODE == 200'
-    - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[2].DATA.formFactor == "Virtual"'
-    - 'result.response[2].DATA.interfaceName == "svc13"'
-    - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[2].DATA.type == "VNF"'
-    - 'result.response[2].DATA.name == "SN-13"'
-    - 'result.response[3].RETURN_CODE == 200'
-    - 'result.response[3].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[3].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[3].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[3].DATA.formFactor == "Virtual"'
-    - 'result.response[3].DATA.interfaceName == "svc14"'
-    - 'result.response[3].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[3].DATA.type == "Firewall"'
-    - 'result.response[3].DATA.name == "SN-14"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].METHOD == "DELETE"'
+      - 'result.response[1].RETURN_CODE == 200'
+      - 'result.response[1].METHOD == "DELETE"'
+      - 'result.response[2].RETURN_CODE == 200'
+      - 'result.response[2].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[2].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[2].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[2].DATA.formFactor == "Virtual"'
+      - 'result.response[2].DATA.interfaceName == "svc13"'
+      - 'result.response[2].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[2].DATA.type == "VNF"'
+      - 'result.response[2].DATA.name == "SN-13"'
+      - 'result.response[3].RETURN_CODE == 200'
+      - 'result.response[3].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[3].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[3].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[3].DATA.formFactor == "Virtual"'
+      - 'result.response[3].DATA.interfaceName == "svc14"'
+      - 'result.response[3].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[3].DATA.type == "Firewall"'
+      - 'result.response[3].DATA.name == "SN-14"'
   tags: sanity
 
 - name: SANITY- OVERRIDDEN - sleep for 20 seconds for DCNM to completely update the state
@@ -392,7 +392,7 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response|length == 0'
+      - 'result.response|length == 0'
   tags: sanity
 
 - name: SANITY- OVERRIDDEN - Clean up any existing service node
@@ -439,15 +439,15 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == true'
-    - 'result.response[0].RETURN_CODE == 200'
-    - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].DATA.formFactor == "Virtual"'
-    - 'result.response[0].DATA.interfaceName == "svc1"'
-    - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].DATA.type == "Firewall"'
-    - 'result.response[0].DATA.name == "SN-11"'
+      - 'result.response[0].RETURN_CODE == 200'
+      - 'result.response[0].DATA.attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].DATA.attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].DATA.fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].DATA.formFactor == "Virtual"'
+      - 'result.response[0].DATA.interfaceName == "svc1"'
+      - 'result.response[0].DATA.linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].DATA.type == "Firewall"'
+      - 'result.response[0].DATA.name == "SN-11"'
   tags: sanity
 
 - name: SANITY- QUERY - sleep for 20 seconds for DCNM to completely update the state
@@ -475,14 +475,14 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].formFactor == "Virtual"'
-    - 'result.response[0].interfaceName == "svc1"'
-    - 'result.response[0].linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].type == "Firewall"'
-    - 'result.response[0].name == "SN-11"'
+      - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].formFactor == "Virtual"'
+      - 'result.response[0].interfaceName == "svc1"'
+      - 'result.response[0].linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].type == "Firewall"'
+      - 'result.response[0].name == "SN-11"'
   tags: sanity
 
 - name: SANITY- QUERY - Query without the config element
@@ -496,14 +496,14 @@
   ansible.builtin.assert:
     that:
       - 'result.changed == false'
-    - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
-    - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
-    - 'result.response[0].fabricName == "{{ ansible_ext_fabric }}"'
-    - 'result.response[0].formFactor == "Virtual"'
-    - 'result.response[0].interfaceName == "svc1"'
-    - 'result.response[0].linkTemplateName == "service_link_trunk"'
-    - 'result.response[0].type == "Firewall"'
-    - 'result.response[0].name == "SN-11"'
+      - 'result.response[0].attachedFabricName == "{{ ansible_it_fabric }}"'
+      - 'result.response[0].attachedSwitchInterfaceName == "{{ ansible_int1 }}"'
+      - 'result.response[0].fabricName == "{{ ansible_ext_fabric }}"'
+      - 'result.response[0].formFactor == "Virtual"'
+      - 'result.response[0].interfaceName == "svc1"'
+      - 'result.response[0].linkTemplateName == "service_link_trunk"'
+      - 'result.response[0].type == "Firewall"'
+      - 'result.response[0].name == "SN-11"'
   tags: sanity
 
 - name: SANITY- QUERY - Clean up any existing service node
