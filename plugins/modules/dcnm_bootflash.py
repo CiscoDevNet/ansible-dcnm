@@ -182,7 +182,6 @@ EXAMPLES = """
 - name: print result
   ansible.builtin.debug:
     var: result
-
 """
 
 import copy

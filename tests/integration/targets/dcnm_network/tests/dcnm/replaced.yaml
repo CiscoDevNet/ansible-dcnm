@@ -16,23 +16,23 @@
 - name: REPLACED - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_replaced:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
-      # TC1 
+      # ----------------------------------
+      # TC1
       double_net_conf_template: "replaced/dcnm_network_replaced_double_net_conf.j2"
       double_net_conf_file: "{{ role_path }}/files/dcnm_network_replaced_double_net_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       double_net_changed_conf_template: "replaced/dcnm_network_replaced_double_net_changed_conf.j2"
       double_net_changed_conf_file: "{{ role_path }}/files/dcnm_network_replaced_double_net_changed_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       # TC3
       l2_l3_net_conf_template: "replaced/dcnm_network_replaced_l2_l3_net_conf.j2"
       l2_l3_net_conf_file: "{{ role_path }}/files/dcnm_network_replaced_l2_l3_net_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
       l2_l3_net_changed_conf_template: "replaced/dcnm_network_replaced_l2_l3_net_changed_conf.j2"
       l2_l3_net_changed_conf_file: "{{ role_path }}/files/dcnm_network_replaced_l2_l3_net_changed_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
   delegate_to: localhost
   tags: replaced
 
@@ -94,9 +94,9 @@
   tags: replaced
 
 - name: REPLACED - TC1 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: replaced
 
 - name: REPLACED - TC1 - QUERY - Get network state in NDFC
@@ -128,9 +128,9 @@
   tags: replaced
 
 - name: REPLACED - TC1 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: replaced
 
 - name: REPLACED - TC1 - QUERY - Get network state in NDFC
@@ -153,9 +153,9 @@
   tags: replaced
 
 - name: REPLACED - TC1 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: replaced
 
 # TC2
@@ -168,9 +168,9 @@
   tags: replaced
 
 - name: REPLACED - TC2 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: replaced
 
 - name: REPLACED - TC2 - QUERY - Get network state in NDFC
@@ -193,9 +193,9 @@
   tags: replaced
 
 - name: REPLACED - TC2 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: replaced
 
 # TC3
@@ -220,9 +220,9 @@
   tags: replaced
 
 - name: REPLACED - TC3 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: replaced
 
 - name: REPLACED - TC3 - QUERY - Get network state in NDFC
@@ -254,9 +254,9 @@
   tags: replaced
 
 - name: REPLACED - TC3 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: replaced
 
 - name: REPLACED - TC3 - QUERY - Get network state in NDFC
@@ -279,9 +279,9 @@
   tags: replaced
 
 - name: REPLACED - TC3 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: replaced
 
 # TC4
@@ -294,9 +294,9 @@
   tags: replaced
 
 - name: REPLACED - TC4 - ASSERT - Check if changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == true
+      - result.changed == true
   tags: replaced
 
 - name: REPLACED - TC4 - QUERY - Get network state in NDFC
@@ -319,9 +319,9 @@
   tags: replaced
 
 - name: REPLACED - TC4 - ASSERT - Check if changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: replaced
 
 ##############################################

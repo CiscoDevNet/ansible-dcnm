@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -440,23 +441,23 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
-    - vrf_name: ansible-vrf-r2
-      vrf_id: 9008012
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
-      - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
+      - vrf_name: ansible-vrf-r2
+        vrf_id: 9008012
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
+          - ip_address: 192.168.1.225
 
 # VRF LITE Extension attached
 - name: Merge vrfs
@@ -464,14 +465,14 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: merged
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       - ip_address: 192.168.1.225
         vrf_lite:
           - peer_vrf: test_vrf_1 # optional
@@ -495,14 +496,14 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: replaced
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       # Delete this attachment
       # - ip_address: 192.168.1.225
       # Create the following attachment
@@ -522,14 +523,14 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: overridden
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
-      attach:
-      - ip_address: 192.168.1.224
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
+        attach:
+          - ip_address: 192.168.1.224
       # Delete this attachment
       # - ip_address: 192.168.1.225
       # Create the following attachment
@@ -550,12 +551,12 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: deleted
     config:
-    - vrf_name: ansible-vrf-r1
-      vrf_id: 9008011
-      vrf_template: Default_VRF_Universal
-      vrf_extension_template: Default_VRF_Extension_Universal
-      vlan_id: 2000
-      service_vrf_template: null
+      - vrf_name: ansible-vrf-r1
+        vrf_id: 9008011
+        vrf_template: Default_VRF_Universal
+        vrf_extension_template: Default_VRF_Extension_Universal
+        vlan_id: 2000
+        service_vrf_template: null
     - vrf_name: ansible-vrf-r2
       vrf_id: 9008012
       vrf_template: Default_VRF_Universal
@@ -573,7 +574,7 @@ EXAMPLES = """
     fabric: vxlan-fabric
     state: query
     config:
-    - vrf_name: ansible-vrf-r1
+      - vrf_name: ansible-vrf-r1
     - vrf_name: ansible-vrf-r2
 """
 import ast
@@ -762,7 +763,7 @@ class DcnmVrf:
             msg = "size must be an integer. "
             msg += f"Got {type(size)}."
             raise ValueError(msg)
-        return [lst[x : x + size] for x in range(0, len(lst), size)]
+        return [lst[x: x + size] for x in range(0, len(lst), size)]
 
     @staticmethod
     def find_dict_in_list_by_key_value(search: list, key: str, value: str):

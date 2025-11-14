@@ -2,12 +2,10 @@
 ##                 SETUP                    ##
 ##############################################
 - block:
-  - set_fact:
-      rest_path: "/rest/control/fabrics/{{ test_ing_fabric }}"
+  - ansible.builtin.set_fact: rest_path: "/rest/control/fabrics/{{ test_ing_fabric }}"
     when: controller_version == "11"
 
-  - set_fact:
-      rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_ing_fabric }}"
+  - ansible.builtin.set_fact: rest_path: "/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_ing_fabric }}"
     when: controller_version >= "12"
 
   - name: ING_REP - Verify if fabric - Fabric1 is deployed.
@@ -16,11 +14,11 @@
       path: "{{ rest_path }}"
     register: result
 
-  - assert:
-      that:
+  - ansible.builtin.assert:
+    that:
       - 'result.response.DATA != None'
 
-  - name: ING_REP - Remove all existing networks to start with a clean state
+      - name: ING_REP - Remove all existing networks to start with a clean state
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_ing_fabric }}"
       state: deleted
@@ -53,7 +51,7 @@
         net_extension_template: Default_Network_Extension_Universal
         vlan_id: 1500
         gw_ip_subnet: '192.168.30.1/24'
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric for creation of Network Object
@@ -68,8 +66,8 @@
     retries: 5
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.diff[0].attach|length == 0'
@@ -77,7 +75,7 @@
       - 'result.diff[0].net_id == 7005'
       - 'result.diff[0].vrf_name == "Tenant-1"'
 
-  - name: ING_REP - setup - Clean up any existing networks
+      - name: ING_REP - setup - Clean up any existing networks
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_ing_fabric }}"
       state: deleted
@@ -97,7 +95,7 @@
         attach:
         - ip_address: "{{ ansible_ing_switch1 }}"
           ports: ["{{ ansible_ing_sw1_int1 }}", "{{ ansible_ing_sw1_int2 }}"]
-        deploy: True
+        deploy: true
     register: result
 
   - name: Query fabric state until networkStatus transitions to DEPLOYED state
@@ -110,8 +108,8 @@
     retries: 30
     delay: 2
 
-  - assert:
-      that:
+  - ansible.builtin.assert:
+    that:
       - 'result.changed == true'
       - 'result.response[0].RETURN_CODE == 200'
       - 'result.response[1].RETURN_CODE == 200'
@@ -127,8 +125,8 @@
 ##                 CLEAN-UP                 ##
 ##############################################
 
-  - name: MERGED - setup - remove any networks
+      - name: MERGED - setup - remove any networks
     cisco.dcnm.dcnm_network:
       fabric: "{{ test_data_common.fabric }}"
       state: deleted
-  when: test_ing_fabric is defined
+    when: test_ing_fabric is defined

@@ -13,6 +13,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 from __future__ import absolute_import, division, print_function
 
 __metaclass__ = type
@@ -1154,8 +1155,6 @@ EXAMPLES = """
     fabric: test-fabric
     service_fabric: external
     config:
-        node_name: IT-SN-1                                # mandatory
-
 """
 
 import re

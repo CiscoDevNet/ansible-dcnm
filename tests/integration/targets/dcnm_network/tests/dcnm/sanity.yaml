@@ -16,11 +16,11 @@
 - name: SANITY - Setup Internal TestCase Variables
   ansible.builtin.set_fact:
     test_data_sanity:
-      #----------------------------------  
+      # ----------------------------------
       # config templates and auto generated file location for test cases
-      #----------------------------------
+      # ----------------------------------
       # TC1 - MERGED - Create, Attach and Deploy Multiple Network with Single Switch Attach
-      merged_conf_template: "sanity/dcnm_network_sanity_merged_conf.j2" 
+      merged_conf_template: "sanity/dcnm_network_sanity_merged_conf.j2"
       merged_conf_file: "{{ role_path }}/files/dcnm_network_sanity_merged_conf.yaml"
       # TC2 - OVERRIDDEN - Create, Attach and Deploy Multiple Network with Single Switch Attach
       overridden_conf_template: "sanity/dcnm_network_sanity_overridden_conf.j2"
@@ -28,7 +28,7 @@
       # TC3 - REPLACED - Update Network using replace - Delete Attachments
       replaced_conf_template: "sanity/dcnm_network_sanity_replaced_conf.j2"
       replaced_conf_file: "{{ role_path }}/files/dcnm_network_sanity_replaced_conf.yaml"
-      #----------------------------------
+      # ----------------------------------
 
   delegate_to: localhost
   tags: sanity
@@ -88,9 +88,9 @@
   tags: sanity
 
 - name: SANITY - TC1 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: sanity
 
 - name: SANITY - TC1 - QUERY - Get network state in NDFC
@@ -126,9 +126,9 @@
   tags: sanity
 
 - name: SANITY - TC2 - ASSERT - Check changed flag is true
-  assert:
+  ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: sanity
 
 - name: SANITY - TC2 - QUERY - Get network state in NDFC
@@ -151,9 +151,9 @@
   tags: sanity
 
 - name: SANITY - TC2 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: sanity
 
 ##############################################
@@ -175,9 +175,9 @@
   tags: sanity
 
 - name: SANITY - TC3 - ASSERT - Check changed flag
-  assert:
+  ansible.builtin.assert:
     that:
-    - 'result.changed == true'
+      - 'result.changed == true'
   tags: sanity
 
 - name: SANITY - TC3 - QUERY - Get network state in NDFC
@@ -230,9 +230,9 @@
   tags: sanity
 
 - name: SANITY - TC3 - ASSERT - Check changed flag is false
-  assert:
+  ansible.builtin.assert:
     that:
-    - result.changed == false
+      - result.changed == false
   tags: sanity
 
 - name: SANITY - END - Clean up any existing networks

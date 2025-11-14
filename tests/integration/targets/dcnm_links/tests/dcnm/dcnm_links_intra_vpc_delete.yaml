@@ -11,8 +11,8 @@
 ##               DELETE                     ##
 ##############################################
 
-    - name: Initial setup - Delete Links 
-      cisco.dcnm.dcnm_links: 
+    - name: Initial setup - Delete Links
+      cisco.dcnm.dcnm_links:
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_vpc_fabric }}"
         config:
@@ -48,9 +48,8 @@
 
       register: result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
       loop: '{{ result.response }}'
 
 ##############################################
@@ -67,11 +66,11 @@
             dst_interface: "{{ intf_1_4 }}"                      # Interface on the Destination fabric
             src_device: "{{ ansible_vpc_switch1 }}"              # Device on the Source fabric
             dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
-            template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from 
-                                                                 #   [ int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
-                                                                 #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
-                                                                 #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link ]
-                                 
+            ansible.builtin.template: int_intra_vpc_peer_keep_alive_link         # template to be applied, choose from
+                                                                #   [int_intra_fabric_ipv6_link_local, int_intra_fabric_num_link,
+                                                                #     int_intra_fabric_unnum_link, int_intra_vpc_peer_keep_alive_link,
+                                                                #     int_pre_provision_intra_fabric_link, ios_xe_int_intra_fabric_num_link]
+
             profile:
               peer1_ipv4_addr: 192.168.1.1                       # IPV4 address of the Source interface
               peer2_ipv4_addr: 192.168.1.2                       # IPV4 address of the Destination interface
@@ -80,17 +79,16 @@
 
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_vpc_fabric }}" ] | length) == 2'
+          - '(result["diff"][0]["deploy"][0]["{{ ansible_vpc_fabric }}"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert:
+          - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -99,7 +97,7 @@
 ##               DELETE                     ##
 ##############################################
 
-    - name: Delete Links 
+    - name: Delete Links
       cisco.dcnm.dcnm_links: &links_delete
         state: deleted                                           # choose from [merged, replaced, deleted, query]
         src_fabric: "{{ ansible_vpc_fabric }}"
@@ -111,17 +109,16 @@
             dst_device: "{{ ansible_vpc_switch2 }}"              # Device on the Destination fabric
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 1'
           - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"][0][ "{{ ansible_vpc_fabric }}" ] | length) == 2'
+          - '(result["diff"][0]["deploy"][0]["{{ ansible_vpc_fabric }}"] | length) == 2'
 
-    - assert:
-        that:
+    - ansible.builtin.assert:
+          - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -133,17 +130,16 @@
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == false'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["modified"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["query"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
+    - ansible.builtin.assert:
+          - ansible.builtin.assert:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
@@ -157,7 +153,6 @@
       cisco.dcnm.dcnm_links: *links_delete
       register: result
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
+- ansible.builtin.assert:    that:
+  - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'

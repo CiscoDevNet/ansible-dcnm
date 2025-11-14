@@ -18,12 +18,11 @@
     check_deploy: "{{ test_data_common.check_deploy | bool }}"
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-  register: result  
+  register: result
 
 - name: ASSERT - Check return codes for setup
-  assert:
-    that:
-      - 'item["RETURN_CODE"] == 200'  
+  ansible.builtin.assert:
+  ansible.builtin.assert:
   loop: '{{ result.response }}'
 
 - block:
@@ -62,14 +61,13 @@
         fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config: "{{ dcnm_interface_delete_conf }}"
-            
+
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
-        that:
-          - 'result.changed == true'
-          - 'item["RETURN_CODE"] == 200'  
+      ansible.builtin.assert:
+      ansible.builtin.assert:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: QUERY - Get interface state in NDFC
@@ -98,18 +96,17 @@
         config: "{{ dcnm_interface_delete_conf }}"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 5'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
+    - ansible.builtin.assert:
+          - ansible.builtin.assert:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
     - name: Delete ethernet interfaces - Idempotence
@@ -117,18 +114,16 @@
       register: result
 
     - name: ASSERT - Check changed flag is false and return codes for idempotence
-      assert:
-        that:
-          - 'result.changed == false'
+      ansible.builtin.assert:
+      ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
       loop: '{{ result.response }}'
 
 ##############################################
@@ -136,9 +131,9 @@
 ##############################################
 
     - name: Create ethernet interfaces
-      cisco.dcnm.dcnm_interface: 
+      cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}" 
+        fabric: "{{ test_data_common.fabric }}"
         state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ test_data_common.eth_intf7 }}"   # should be of the form eth<port-id>
@@ -149,28 +144,27 @@
             profile:
               admin_state: true               # choose from [true, false]
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
               bpdu_guard: true                # choose from [true, false, 'no']
               port_type_fast: true            # choose from [true, false]
               mtu: jumbo                      # choose from [default, jumbo]
-              allowed_vlans: none             # choose from [none, all, vlan range] 
-              cmds:                           # Freeform config
-                - no shutdown
+              allowed_vlans: none             # choose from [none, all, vlan range]
+              cmds: # Freeform config
+                - false shutdown
               description: "eth interface  acting as trunk"
       register: result
 
-    - assert:
-        that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 1'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 0'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 1'
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
+    - ansible.builtin.assert:
+          - ansible.builtin.assert:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -180,7 +174,7 @@
     - name: Delete a single ethernet interface
       cisco.dcnm.dcnm_interface:
         check_deploy: "{{ test_data_common.check_deploy | bool }}"
-        fabric: "{{ test_data_common.fabric }}" 
+        fabric: "{{ test_data_common.fabric }}"
         state: deleted                        # only choose form [merged, replaced, deleted, overridden, query]
         config:
           - name: "{{ test_data_common.eth_intf7 }}"   # should be of the form eth<port-id>
@@ -191,30 +185,28 @@
             profile:
               admin_state: true               # choose from [true, false]
               mode: trunk                     # choose from [trunk, access, routed, monitor, epl_routed]
-              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb' ]
+              speed: 'Auto'                   # choose from ['Auto', '100Mb', '1Gb', '10Gb', '25Gb', '40Gb', '100Gb']
               bpdu_guard: true                # choose from [true, false, no]
               port_type_fast: true            # choose from [true, false]
               mtu: jumbo                      # choose from [default, jumbo]
-              allowed_vlans: none             # choose from [none, all, vlan range] 
-              cmds:                           # Freeform config
-                - no shutdown
+              allowed_vlans: none             # choose from [none, all, vlan range]
+              cmds: # Freeform config
+                - false shutdown
               description: "eth interface  acting as trunk"
       register: result
 
 
-
-    - assert:
-        that:
-          - 'result.changed == true'
+    - ansible.builtin.assert:
+    - ansible.builtin.assert:
           - '(result["diff"][0]["merged"] | length) == 0'
           - '(result["diff"][0]["deleted"] | length) == 0'
           - '(result["diff"][0]["replaced"] | length) == 1'
           - '(result["diff"][0]["overridden"] | length) == 0'
           - '(result["diff"][0]["deploy"] | length) == 0'
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
+    - ansible.builtin.assert:
+          - ansible.builtin.assert:
+          - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
 
 ##############################################
@@ -229,11 +221,10 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
-      assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'  
+      ansible.builtin.assert:
+      ansible.builtin.assert:
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

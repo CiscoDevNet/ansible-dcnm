@@ -11,14 +11,14 @@
     fabric: "{{ test_data_common.fabric }}"
     state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
     deploy: false
-    override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+    override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
       - sub_int
       - lo
       - pc
   register: result
 
 - name: ASSERT - Check return codes for setup
-  assert:
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -65,7 +65,7 @@
       register: result
 
     - name: ASSERT - Check changed flag is true and return codes
-      assert:
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - 'item["RETURN_CODE"] == 200'
@@ -94,12 +94,12 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         deploy: false
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - vpc
       register: result
 
     - name: ASSERT - Check return codes for override vpc
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -118,13 +118,13 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         deploy: false
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - pc
         config: "{{ dcnm_interface_override_specific_types_pc_conf }}"
       register: result
 
     - name: ASSERT - Check return codes for override pc with config
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -138,13 +138,13 @@
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
         deploy: false
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - lo
           - sub_int
       register: result
 
     - name: ASSERT - Check return codes for override sub_int/lo
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
@@ -159,17 +159,17 @@
       cisco.dcnm.dcnm_interface:
         fabric: "{{ test_data_common.fabric }}"
         state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
-        override_intf_types:                  # choose from [pc, vpc, sub_int, lo, eth, svi]
+        override_intf_types: # choose from [pc, vpc, sub_int, lo, eth, svi]
           - lo
           - sub_int
           - pc
         deploy: false
       register: result
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined
 
     - name: ASSERT - Check return codes for cleanup
-      assert:
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
       loop: '{{ result.response }}'
-      when: IT_CONTEXT is not defined
+      when: it_context is not defined

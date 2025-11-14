@@ -56,7 +56,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # MERGED - TEST - Create IPFM fabric type with basic config
@@ -67,23 +68,20 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "IPFM_Fabric",
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "FABRIC_NAME": "IPFM_Fabric"
@@ -95,14 +93,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -114,9 +111,11 @@
         FABRIC_TYPE: "{{ fabric_type_4 }}"
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -141,8 +140,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_MTU: "1500",
 #                 "FABRIC_NAME": "IPFM_Fabric",
 #                 "sequence_number": 1
@@ -153,10 +151,9 @@
 #             {
 #                 "sequence_number": 4
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -174,9 +171,8 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "FABRIC_MTU: "1500",
@@ -199,9 +195,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -216,7 +211,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -229,9 +224,11 @@
         FABRIC_MTU: 1500
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -285,43 +282,41 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "update",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for merged state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
 - name: MERGED - TEST - Merge additional config into fabric_4 - idempotence
   cisco.dcnm.dcnm_fabric: *merge_fabric_4
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -347,23 +342,20 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "IPFM_Fabric",
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": "Fabric 'IPFM_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -371,14 +363,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -388,9 +379,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_4 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

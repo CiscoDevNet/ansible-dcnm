@@ -71,7 +71,8 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # QUERY - TEST - Create all supported fabric types with basic config
@@ -82,8 +83,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "BGP_AS": 65535,
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
@@ -98,10 +98,9 @@
 #                 "IS_READ_ONLY": false,
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -119,9 +118,8 @@
 #                 "sequence_number": 3,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "BGP_AS": "65535",
@@ -160,9 +158,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -177,7 +174,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -198,9 +195,11 @@
         IS_READ_ONLY: false
         DEPLOY: true
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -242,8 +241,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "LAN_CLASSIC_Fabric": {
 #                     "createdOn": 1721954060733,
 #                     "deviceType": "n9k",
@@ -262,7 +260,7 @@
 #                         "ALLOW_NXC_PREV": "true",
 #                         "BOOTSTRAP_CONF": "",
 #                         "BOOTSTRAP_ENABLE": "false",
-#                         "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                         "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                         "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                         "CDP_ENABLE": "false",
 #                         "DCI_SUBNET_RANGE": "10.10.1.0/24",
@@ -384,7 +382,7 @@
 #                         "BOOTSTRAP_CONF": "",
 #                         "BOOTSTRAP_ENABLE": "false",
 #                         "BOOTSTRAP_ENABLE_PREV": "false",
-#                         "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                         "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                         "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                         "BRFIELD_DEBUG_FLAG": "Disable",
 #                         "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
@@ -708,20 +706,17 @@
 #                 },
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_query",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "query"
 #             }
-#         ],
-#         "response": [
-#             {
-#                 "DATA": [
-#                     {
+# ],
+#         "response": [#             {
+#                 "DATA": [#                     {
 #                         "createdOn": 1721954059451,
 #                         "deviceType": "n9k",
 #                         "fabricId": "FABRIC-3",
@@ -809,7 +804,7 @@
 #                             "ALLOW_NXC_PREV": "true",
 #                             "BOOTSTRAP_CONF": "",
 #                             "BOOTSTRAP_ENABLE": "false",
-#                             "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                             "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                             "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                             "CDP_ENABLE": "false",
 #                             "DCI_SUBNET_RANGE": "10.10.1.0/24",
@@ -931,7 +926,7 @@
 #                             "BOOTSTRAP_CONF": "",
 #                             "BOOTSTRAP_ENABLE": "false",
 #                             "BOOTSTRAP_ENABLE_PREV": "false",
-#                             "BOOTSTRAP_MULTISUBNET": "#Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
+#                             "BOOTSTRAP_MULTISUBNET": "# Scope_Start_IP, Scope_End_IP, Scope_Default_Gateway, Scope_Subnet_Prefix",
 #                             "BOOTSTRAP_MULTISUBNET_INTERNAL": "",
 #                             "BRFIELD_DEBUG_FLAG": "Disable",
 #                             "BROWNFIELD_NETWORK_NAME_FORMAT": "Auto_Net_VNI$$VNI$$_VLAN$$VLAN_ID$$",
@@ -1183,21 +1178,20 @@
 #                         "vrfExtensionTemplate": "Default_VRF_Extension_Universal",
 #                         "vrfTemplate": "Default_VRF_Universal"
 #                     }
-#                 ],
+# ],
 #                 "MESSAGE": "OK",
 #                 "METHOD": "GET",
 #                 "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "found": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -1209,9 +1203,11 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -1242,8 +1238,7 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             },
@@ -1255,10 +1250,9 @@
 #                 "FABRIC_NAME": "LAN_CLASSIC_Fabric",
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -1276,9 +1270,8 @@
 #                 "sequence_number": 3,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -1302,9 +1295,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -1319,7 +1311,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -1331,9 +1323,11 @@
       - FABRIC_NAME: "{{ fabric_name_2 }}"
       - FABRIC_NAME: "{{ fabric_name_3 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

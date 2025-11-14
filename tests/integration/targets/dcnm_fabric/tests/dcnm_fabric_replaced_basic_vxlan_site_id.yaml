@@ -52,7 +52,8 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
 ################################################################################
 # REPLACED - TEST - Create fabric_name_1 with non-default config
@@ -63,8 +64,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "ADVERTISE_PIP_BGP": true,
 #                 "ANYCAST_GW_MAC": "00aa.bbcc.ddee",
 #                 "BGP_AS": 65535,
@@ -74,18 +74,16 @@
 #                 "UNDERLAY_IS_V6": false,
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_create",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "merged"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ADVERTISE_PIP_BGP": "true",
@@ -103,14 +101,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -121,16 +118,18 @@
       - FABRIC_NAME: "{{ fabric_name_1 }}"
         FABRIC_TYPE: "{{ fabric_type_1 }}"
         ADVERTISE_PIP_BGP: true
-        ANYCAST_GW_MAC: 00:aa:bb:cc:dd:ee
+        ANYCAST_GW_MAC: "00:aa:bb:cc:dd:ee"
         BGP_AS: 65535
         REPLICATION_MODE: Ingress
         SITE_ID: 65000
         UNDERLAY_IS_V6: false
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -169,8 +168,7 @@
 # ok: [172.22.150.244] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "ADVERTISE_PIP_BGP": "false",
 #                 "ANYCAST_GW_MAC": "2020.0000.00aa",
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
@@ -184,10 +182,9 @@
 #             {
 #                 "sequence_number": 3
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
@@ -205,9 +202,8 @@
 #                 "sequence_number": 3,
 #                 "state": "replaced"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": {
 #                     "nvPairs": {
 #                         "ADVERTISE_PIP_BGP": "false",
@@ -233,9 +229,8 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 3
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
@@ -250,7 +245,7 @@
 #                 "sequence_number": 3,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -263,9 +258,11 @@
         BGP_AS: 65535
         DEPLOY: false
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false
@@ -326,43 +323,41 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": false,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_replace",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "replaced"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "MESSAGE": "No fabrics to update for replaced state.",
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": false,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
 - name: REPLACED - TEST - Replace config for fabric_1 with default config - idempotence
   cisco.dcnm.dcnm_fabric: *replace_fabric_1
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == false
       - result.failed == false
@@ -388,23 +383,20 @@
 # ok: [ndfc1] => {
 #     "result": {
 #         "changed": true,
-#         "diff": [
-#             {
+#         "diff": [#             {
 #                 "FABRIC_NAME": "VXLAN_EVPN_Fabric",
 #                 "sequence_number": 1
 #             }
-#         ],
+# ],
 #         "failed": false,
-#         "metadata": [
-#             {
+#         "metadata": [#             {
 #                 "action": "fabric_delete",
 #                 "check_mode": false,
 #                 "sequence_number": 1,
 #                 "state": "deleted"
 #             }
-#         ],
-#         "response": [
-#             {
+# ],
+#         "response": [#             {
 #                 "DATA": "Fabric 'VXLAN_EVPN_Fabric' is deleted successfully!",
 #                 "MESSAGE": "OK",
 #                 "METHOD": "DELETE",
@@ -412,14 +404,13 @@
 #                 "RETURN_CODE": 200,
 #                 "sequence_number": 1
 #             }
-#         ],
-#         "result": [
-#             {
+# ],
+#         "result": [#             {
 #                 "changed": true,
 #                 "sequence_number": 1,
 #                 "success": true
 #             }
-#         ]
+# ]
 #     }
 # }
 ################################################################################
@@ -429,9 +420,11 @@
     config:
       - FABRIC_NAME: "{{ fabric_name_1 }}"
   register: result
-- debug:
+- name: Debug
+  ansible.builtin.debug:
     var: result
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - result.changed == true
       - result.failed == false

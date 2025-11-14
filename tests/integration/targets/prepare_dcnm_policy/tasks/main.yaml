@@ -20,12 +20,14 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
@@ -46,13 +48,15 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
       - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
-- block:
+- name: Create and deploy templates
+  block:
 
 ##############################################
 ##                MERGE                     ##
@@ -149,7 +153,8 @@
       register: result
       tags: sanity
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 5'
@@ -157,7 +162,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
@@ -172,7 +178,7 @@
             tags: "base_ospf clone"
             description: "template which is a clone of base_ospf"
             content: |
-              ##template variables
+              ## template variables
 
               #    Copyright (c) 2018 by Cisco Systems, Inc.
               #    All rights reserved.
@@ -187,7 +193,7 @@
               ipV4Address LOOPBACK_IP;
 
               ##
-              ##template content
+              ## template content
 
               router ospf $$OSPF_TAG$$
               router-id $$LOOPBACK_IP$$
@@ -195,7 +201,8 @@
               ##
       register: result
       tags: sanity
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
@@ -203,7 +210,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
@@ -222,14 +230,15 @@
             description: "internal template for enabling telemetry feature"
             content: |
               ##
-              ##template content
+              ## template content
 
               feature telemetry
 
               ##
       register: result
       tags: sanity
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 1'
@@ -237,7 +246,8 @@
           - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Template Created" in item["DATA"]["status"]'
@@ -261,7 +271,8 @@
       register: result
       tags: sanity
 
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'result.changed == true'
           - '(result["diff"][0]["merged"] | length) == 2'
@@ -271,7 +282,8 @@
       tags: sanity
 
     # Assert for Create responses
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '"Success" in item["DATA"]["successList"][0]["status"]'
@@ -282,7 +294,8 @@
       tags: sanity
 
     # Assert for deploy responses
-    - assert:
+    - name: Assert
+      ansible.builtin.assert:
         that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'

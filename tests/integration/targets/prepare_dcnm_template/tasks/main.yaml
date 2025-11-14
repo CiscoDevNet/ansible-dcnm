@@ -4,25 +4,26 @@
 
 - name: Put the fabric to default state
   cisco.dcnm.dcnm_policy:
-    fabric: "{{ ansible_it_fabric }}" 
+    fabric: "{{ ansible_it_fabric }}"
     state: deleted                     # only choose form [merged, deleted, query]
-    config: 
+    config:
       - name: template_inuse_1  # name is mandatory
       - name: template_inuse_2  # name is mandatory
       - name: my_feature_telemetry
       - switch:
           - ip: "{{ ansible_switch1 }}"
-  register: result  
+  register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
 - name: Initialize - Delete the templates
-  cisco.dcnm.dcnm_template: 
+  cisco.dcnm.dcnm_template:
     state: deleted       # only choose form [merged, deleted, query]
     config:
       - name: template_101
@@ -36,9 +37,10 @@
   register: result
   tags: sanity
 
-- assert:
+- name: Assert
+  ansible.builtin.assert:
     that:
-      - 'item["RETURN_CODE"] == 200'  
+      - 'item["RETURN_CODE"] == 200'
   loop: '{{ result.response }}'
   tags: sanity
 
@@ -49,7 +51,7 @@
 ##############################################
 
     - name: Create templates to be used by policies below
-      cisco.dcnm.dcnm_template: 
+      cisco.dcnm.dcnm_template:
         state: merged        # only choose form [merged, deleted, query]
         config:
           - name: template_inuse_1
@@ -99,7 +101,7 @@
             description: "internal template for enabling telemetry feature"
             content: |
               ##
-              ##template content
+              ## template content
 
               feature telemetry
 
@@ -107,18 +109,20 @@
       register: result
       tags: sanity
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
       tags: sanity
 
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Template Created" in item["DATA"]["status"]'
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'item["RETURN_CODE"] == 200'
+        - '"Template Created" in item["DATA"]["status"]'
       loop: '{{ result.response }}'
       tags: sanity
 
@@ -138,20 +142,22 @@
       register: result
       tags: sanity
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 1'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 1'
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 1'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 1'
       tags: sanity
 
     # Assert for Create responses
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
       when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -159,10 +165,11 @@
       tags: sanity
 
     # Assert for deploy responses
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'item["RETURN_CODE"] == 200'
+        - '(item["DATA"][0]["successPTIList"].split(",") | length) == 1'
       when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
@@ -170,16 +177,16 @@
       tags: sanity
 
     - name: Create and deploy the policies using created templates
-      cisco.dcnm.dcnm_policy: 
-        fabric: "{{ ansible_it_fabric }}" 
-        config: 
+      cisco.dcnm.dcnm_policy:
+        fabric: "{{ ansible_it_fabric }}"
+        config:
           - name: template_inuse_1  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
-            priority: 101 
+            priority: 101
 
           - name: template_inuse_2  # This must be a valid template name
             create_additional_policy: false  # Do not create a policy if it already exists
-            description: 102 - No piority given
+            description: 102 - false piority given
 
           - switch:
               - ip: "{{ ansible_switch1 }}"
@@ -188,32 +195,34 @@
       register: result
       tags: sanity
 
-    - assert:
-        that:
-          - 'result.changed == true'
-          - '(result["diff"][0]["merged"] | length) == 2'
-          - '(result["diff"][0]["deleted"] | length) == 0'
-          - '(result["diff"][0]["query"] | length) == 0'
-          - '(result["diff"][0]["deploy"] | length) == 2'
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'result.changed == true'
+        - '(result["diff"][0]["merged"] | length) == 2'
+        - '(result["diff"][0]["deleted"] | length) == 0'
+        - '(result["diff"][0]["query"] | length) == 0'
+        - '(result["diff"][0]["deploy"] | length) == 2'
       tags: sanity
 
     # Assert for Create responses
-    - assert:
-        that:
-          - 'item["RETURN_CODE"] == 200'
-          - '"Success" in item["DATA"]["successList"][0]["status"]'
-      when: (my_idx < (result["diff"][0]["merged"] | length))   
+    - name: Assert
+    - ansible.builtin.assert:
+      that:
+        - 'item["RETURN_CODE"] == 200'
+        - '"Success" in item["DATA"]["successList"][0]["status"]'
+      when: (my_idx < (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
       tags: sanity
 
     # Assert for deploy responses
-    - assert:
-        that:
+    - name: Assert
+    - ansible.builtin.assert:        that:
           - 'item["RETURN_CODE"] == 200'
           - '(item["DATA"][0]["successPTIList"].split(",") | length) == 2'
-      when: (my_idx == (result["diff"][0]["merged"] | length))   
+      when: (my_idx == (result["diff"][0]["merged"] | length))
       loop: '{{ result.response }}'
       loop_control:
         index_var: my_idx
