@@ -209,16 +209,26 @@
   ansible.builtin.set_fact:
     vpc_vxlan_deploy_path: "{{ vpc_vxlan_deploy_path | combine(item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
-    - {'11': '/rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{ test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}'}
+    - '12': >-
+        /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{
+        test_data_common.vxlan_fabric }}/config-deploy/{{
+        test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}
+    - '11': >-
+        /rest/control/fabrics/{{ test_data_common.vxlan_fabric }}/config-deploy/{{
+        test_data_common.vxlan_fabric_sno1 }},{{ test_data_common.vxlan_fabric_sno2 }}
   when: (test_data_common.vxlan_fabric is defined)
 
 - name: Set fact
   ansible.builtin.set_fact:
     vpc_cxt_deploy_path: "{{ vpc_cxt_deploy_path | combine(item) }}"
   with_items:
-    - {'12': '/appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
-    - {'11': '/rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{ test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}'}
+    - '12': >-
+        /appcenter/cisco/ndfc/api/v1/lan-fabric/rest/control/fabrics/{{
+        test_data_common.cxt_fabric }}/config-deploy/{{
+        test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}
+    - '11': >-
+        /rest/control/fabrics/{{ test_data_common.cxt_fabric }}/config-deploy/{{
+        test_data_common.cxt_fabric_sno1 }},{{ test_data_common.cxt_fabric_sno2 }}
   when: (test_data_common.cxt_fabric is defined)
 
 - name: Set fact
@@ -290,15 +300,15 @@
     method: POST
     path: "{{ vpc_create_path[controller_version] }}"
     json_data:
-      "{{ vpc_vxlan_data | to_json}}"
+      "{{ vpc_vxlan_data | to_json }}"
   register: result
-  when: (vxlan_vpc_create == True)
+  when: (vxlan_vpc_create | bool)
   ignore_errors: true
 
 - name: Wait for 10 secs
   ansible.builtin.wait_for:
     timeout: 10
-  when: (vxlan_vpc_create == True)
+  when: (vxlan_vpc_create | bool)
 
 ##############################################
 ##          CONFIG SAVE                     ##
@@ -309,7 +319,7 @@
     method: POST
     path: "{{ vxlan_config_save_path[controller_version] }}"
   register: result
-  when: (vxlan_vpc_create == True)
+  when: (vxlan_vpc_create | bool)
   ignore_errors: true
 
 ##############################################
@@ -324,13 +334,13 @@
   with_sequence: count=1
   loop_control:
     pause: 5
-  when: (vxlan_vpc_deploy == True)
+  when: (vxlan_vpc_deploy | bool)
   ignore_errors: true
 
 - name: Wait for 30 secs
   ansible.builtin.wait_for:
     timeout: 30
-  when: (vxlan_vpc_deploy == True)
+  when: (vxlan_vpc_deploy | bool)
 
 ##############################################
 ##          CREATE CXT VPC PAIR             ##
@@ -341,15 +351,15 @@
     method: POST
     path: "{{ vpc_create_path[controller_version] }}"
     json_data:
-      "{{ vpc_cxt_data | to_json}}"
+      "{{ vpc_cxt_data | to_json }}"
   register: result
-  when: (cxt_vpc_create == True)
+  when: (cxt_vpc_create | bool)
   ignore_errors: true
 
 - name: Wait for 20 secs
   ansible.builtin.wait_for:
     timeout: 10
-  when: (cxt_vpc_create == True)
+  when: (cxt_vpc_create | bool)
 
 ##############################################
 ##          CONFIG SAVE                     ##
@@ -360,7 +370,7 @@
     method: POST
     path: "{{ cxt_config_save_path[controller_version] }}"
   register: result
-  when: (cxt_vpc_create == True)
+  when: (cxt_vpc_create | bool)
   ignore_errors: true
 
 ##############################################
@@ -375,10 +385,10 @@
   with_sequence: count=1
   loop_control:
     pause: 5
-  when: (cxt_vpc_deploy == True)
+  when: (cxt_vpc_deploy | bool)
   ignore_errors: true
 
 - name: Wait for 30 secs
   ansible.builtin.wait_for:
     timeout: 30
-  when: (cxt_vpc_deploy == True)
+  when: (cxt_vpc_deploy | bool)

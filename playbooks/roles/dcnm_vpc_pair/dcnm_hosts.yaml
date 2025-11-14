@@ -14,4 +14,3 @@ all:
       hosts:
         nac-ndfc1:
           ansible_host: 10.10.5.1
-

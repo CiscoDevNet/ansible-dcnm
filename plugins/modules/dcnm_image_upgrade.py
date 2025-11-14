@@ -317,63 +317,63 @@ EXAMPLES = """
 # Attach image policy NR3F to two devices
 # Stage and validate the image on two devices but do not upgrade
 - name: stage/validate images
-        cisco.dcnm.dcnm_image_upgrade:
-            state: merged
-            config:
-                policy: NR3F
-                stage: true
-                validate: true
-                upgrade:
-                    nxos: false
-                    epld: false
-                switches:
-                    - ip_address: 192.168.1.1
-                - ip_address: 192.168.1.2
+  cisco.dcnm.dcnm_image_upgrade:
+    state: merged
+    config:
+      policy: NR3F
+      stage: true
+      validate: true
+      upgrade:
+        nxos: false
+        epld: false
+      switches:
+        - ip_address: 192.168.1.1
+        - ip_address: 192.168.1.2
 
 # Attach image policy NR1F to device 192.168.1.1
 # Attach image policy NR2F to device 192.168.1.2
 # Stage the image on device 192.168.1.1, but do not upgrade
 # Stage the image and upgrade device 192.168.1.2
-    - name: stage/upgrade devices
-        cisco.dcnm.dcnm_image_upgrade:
-            state: merged
-            config:
-                validate: false
-                stage: false
-                upgrade:
-                    nxos: false
-                    epld: false
-                options:
-                    nxos:
-                        mode: disruptive
-                    epld:
-                        module: ALL
-                        golden: false
-                switches:
-                    - ip_address: 192.168.1.1
-                        policy: NR1F
-                        stage: true
-                        validate: true
-                        upgrade:
-                            nxos: true
-                            epld: false
-                    - ip_address: 192.168.1.2
-                        policy: NR2F
-                        stage: true
-                        validate: true
-                        upgrade:
-                            nxos: true
-                            epld: true
-                        options:
-                            nxos:
-                                mode: disruptive
-                            epld:
-                                module: ALL
-                                golden: false
+- name: stage/upgrade devices
+  cisco.dcnm.dcnm_image_upgrade:
+    state: merged
+    config:
+      validate: false
+      stage: false
+      upgrade:
+        nxos: false
+        epld: false
+      options:
+        nxos:
+          mode: disruptive
+        epld:
+          module: ALL
+          golden: false
+      switches:
+        - ip_address: 192.168.1.1
+          policy: NR1F
+          stage: true
+          validate: true
+          upgrade:
+            nxos: true
+            epld: false
+        - ip_address: 192.168.1.2
+          policy: NR2F
+          stage: true
+          validate: true
+          upgrade:
+            nxos: true
+            epld: true
+          options:
+            nxos:
+              mode: disruptive
+            epld:
+              module: ALL
+              golden: false
 
 # Detach image policy NR3F from two devices
-    - name: stage/upgrade devices
-        cisco.dcnm.dcnm_image_upgrade:
+  - name: stage/upgrade devices
+      cisco.dcnm.dcnm_image_upgrade:
             state: deleted
             config:
                 policy: NR3F

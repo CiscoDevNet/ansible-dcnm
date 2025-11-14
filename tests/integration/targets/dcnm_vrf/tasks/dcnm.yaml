@@ -18,11 +18,11 @@
     test_items: "{{ test_cases.files | map(attribute='path') | list }}"
   tags: sanity
 
-- name: debug
+- name: Debug test_items
   ansible.builtin.debug:
     var: test_items
 
-- name: debug
+- name: Debug testcase
   ansible.builtin.debug:
     var: testcase
 

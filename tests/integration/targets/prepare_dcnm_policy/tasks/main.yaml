@@ -55,7 +55,8 @@
   loop: '{{ result.response }}'
   tags: sanity
 
-- block:
+- name: Create and deploy templates
+  block:
 
 ##############################################
 ##                MERGE                     ##

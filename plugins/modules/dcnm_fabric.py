@@ -3603,16 +3603,16 @@ EXAMPLES = """
           interface Ethernet1/1-16
             description managed by NDFC
         DEPLOY: false
-    - FABRIC_NAME: BGP_Fabric
+      - FABRIC_NAME: BGP_Fabric
         FABRIC_TYPE: BGP
         BGP_AS: 65001
         SUPER_SPINE_BGP_AS: 65002
         DEPLOY: false
-    - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
         LOOPBACK100_IP_RANGE: 10.22.0.0/24
         DEPLOY: false
-    - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
         BOOTSTRAP_ENABLE: false
         IS_READ_ONLY: false
@@ -3652,14 +3652,14 @@ EXAMPLES = """
         FABRIC_TYPE: VXLAN_EVPN
         BGP_AS: 65000
         DEPLOY: false
-    - FABRIC_NAME: BGP_Fabric
+      - FABRIC_NAME: BGP_Fabric
         FABRIC_TYPE: BGP
         BGP_AS: 65001
         DEPLOY: false
-    - FABRIC_NAME: MSD_Fabric
+      - FABRIC_NAME: MSD_Fabric
         FABRIC_TYPE: VXLAN_EVPN_MSD
         DEPLOY: false
-    - FABRIC_NAME: LAN_Fabric
+      - FABRIC_NAME: LAN_Fabric
         FABRIC_TYPE: LAN_CLASSIC
         DEPLOY: false
   register: result

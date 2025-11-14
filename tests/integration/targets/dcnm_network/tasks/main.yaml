@@ -30,6 +30,7 @@
   ansible.builtin.template:
     src: "{{ test_data_setup.vrf_conf_template }}"
     dest: "{{ test_data_setup.vrf_conf_file }}"
+    mode: "0644"
   delegate_to: localhost
   tags: always
 
