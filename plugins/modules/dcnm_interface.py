@@ -5080,12 +5080,22 @@ class DcnmIntf:
 
                     for have in self.have_all:
                         have_intf = have['ifName']
+                        deletable = have['deletable']
                         if re.search(r"\d+\/\d+\/\d+", have_intf):
                             found, parent_type = self.dcnm_intf_get_parent(have_intf, have['mgmtIpAddress'])
                             # If have in want breakout and if match to E1/x/1 add to dict
                             # Else if match E1/x/2, etc. silently ignore, because we delete the breakout
                             # with the first sub if.
                             if re.search(r"\d+\/\d+\/1$", have_intf) and found:
+                                if deletable is False:
+                                    self.changed_dict[0]["skipped"].append(
+                                        {
+                                            "Name": have_intf,
+                                            "Alias": have.get("alias"),
+                                            "Delete Reason": have["deleteReason"],
+                                        }
+                                    )
+                                    continue
                                 payload = {'serialNumber': have['serialNo'],
                                            'ifName': have['ifName']}
                                 self.diff_delete_breakout.append(payload)
