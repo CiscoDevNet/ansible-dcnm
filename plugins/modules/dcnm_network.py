@@ -1287,7 +1287,7 @@ class DcnmNetwork:
             "vrfDhcp2": net.get("dhcp_srvr2_vrf", ""),
             "vrfDhcp3": net.get("dhcp_srvr3_vrf", ""),
             "dhcpServers": [
-                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr.get("srvr_vrf", "")} for srvr in net.get("dhcp_servers", [])
+                {"srvrAddr": srvr["srvr_ip"], "srvrVrf": srvr["srvr_vrf"]} for srvr in net.get("dhcp_servers", [])
             ],
             "loopbackId": net.get("dhcp_loopback_id", ""),
             "mcastGroup": net.get("multicast_group_address", ""),
@@ -1324,11 +1324,11 @@ class DcnmNetwork:
             template_conf["vrfDhcp3"] = ""
         if template_conf["dhcpServers"] == []:
             dhcp_srvr_list = []
-            if template_conf["dhcpServerAddr1"] != "":
+            if template_conf["dhcpServerAddr1"] != "" and template_conf["vrfDhcp"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr1"], "srvrVrf": template_conf["vrfDhcp"]})
-            if template_conf["dhcpServerAddr2"] != "":
+            if template_conf["dhcpServerAddr2"] != "" and template_conf["vrfDhcp2"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr2"], "srvrVrf": template_conf["vrfDhcp2"]})
-            if template_conf["dhcpServerAddr3"] != "":
+            if template_conf["dhcpServerAddr3"] != "" and template_conf["vrfDhcp3"] != "":
                 dhcp_srvr_list.append({"srvrAddr": template_conf["dhcpServerAddr3"], "srvrVrf": template_conf["vrfDhcp3"]})
             if dhcp_srvr_list != []:
                 template_conf["dhcpServers"] = json.dumps(dict(dhcpServers=dhcp_srvr_list), separators=(",", ":"))
@@ -2904,14 +2904,14 @@ class DcnmNetwork:
                             dict(srvr_ip=net.get("dhcp_srvr2_ip"), srvr_vrf=net.get("dhcp_srvr2_vrf")),
                             dict(srvr_ip=net.get("dhcp_srvr3_ip"), srvr_vrf=net.get("dhcp_srvr3_vrf")),
                         ]):
-                            invalid_params.append("DHCP server VRF should be specified along with DHCP server IP")
+                            invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                         if net.get("dhcp_servers"):
                             dhcp_servers = net.get("dhcp_servers")
                             if len(dhcp_servers) > 16:
                                 invalid_params.append("A maximum of 16 DHCP servers can be specified")
                             if any(has_partial_dhcp_config(srvr) for srvr in dhcp_servers):
-                                invalid_params.append("DHCP server VRF should be specified along with DHCP server IP")
+                                invalid_params.append("DHCP server IP should be specified along with DHCP server VRF")
 
                         if self.dcnm_version == 11:
                             if net.get("netflow_enable") or net.get("intfvlan_nf_monitor") or net.get("vlan_nf_monitor"):
@@ -3088,31 +3088,24 @@ class DcnmNetwork:
             json_to_dict_want["vrfDhcp3"] = json_to_dict_have["vrfDhcp3"]
 
         if cfg.get("dhcp_servers", None) is None:
-            want_dhcp_servers = json.loads(json_to_dict_have["dhcpServers"] or "{}").get("dhcpServers", [])
-            want_dhcp_servers += [None] * (16 - len(want_dhcp_servers))
-            if json_to_dict_have["dhcpServerAddr1"] != "":
-                want_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
+            want_have_dhcp_servers = [None] * 3
             if cfg.get("dhcp_srvr1_ip", None) is not None:
-                want_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=json_to_dict_have["vrfDhcp"])
-                if cfg.get("dhcp_srvr1_vrf", None) is not None:
-                    want_dhcp_servers[0].update({"srvrVrf": cfg.get("dhcp_srvr1_vrf")})
-            if json_to_dict_have["dhcpServerAddr2"] != "":
-                want_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
+                want_have_dhcp_servers[0] = dict(srvrAddr=cfg.get("dhcp_srvr1_ip"), srvrVrf=cfg.get("dhcp_srvr1_vrf"))
+            elif json_to_dict_have["dhcpServerAddr1"] != "":
+                want_have_dhcp_servers[0] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr1"], srvrVrf=json_to_dict_have["vrfDhcp"])
             if cfg.get("dhcp_srvr2_ip", None) is not None:
-                want_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=json_to_dict_have["vrfDhcp2"])
-                if cfg.get("dhcp_srvr2_vrf", None) is not None:
-                    want_dhcp_servers[1].update({"srvrVrf": cfg.get("dhcp_srvr2_vrf")})
-            if json_to_dict_have["dhcpServerAddr3"] != "":
-                want_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
+                want_have_dhcp_servers[1] = dict(srvrAddr=cfg.get("dhcp_srvr2_ip"), srvrVrf=cfg.get("dhcp_srvr2_vrf"))
+            elif json_to_dict_have["dhcpServerAddr2"] != "":
+                want_have_dhcp_servers[1] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr2"], srvrVrf=json_to_dict_have["vrfDhcp2"])
             if cfg.get("dhcp_srvr3_ip", None) is not None:
-                want_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=json_to_dict_have["vrfDhcp3"])
-                if cfg.get("dhcp_srvr3_vrf", None) is not None:
-                    want_dhcp_servers[2].update({"srvrVrf": cfg.get("dhcp_srvr3_vrf")})
-            want_dhcp_servers = [srvr for srvr in want_dhcp_servers[:] if srvr is not None]
-            if want_dhcp_servers == []:
-                json_to_dict_want["dhcpServers"] = ""
+                want_have_dhcp_servers[2] = dict(srvrAddr=cfg.get("dhcp_srvr3_ip"), srvrVrf=cfg.get("dhcp_srvr3_vrf"))
+            elif json_to_dict_have["dhcpServerAddr3"] != "":
+                want_have_dhcp_servers[2] = dict(srvrAddr=json_to_dict_have["dhcpServerAddr3"], srvrVrf=json_to_dict_have["vrfDhcp3"])
+            want_have_dhcp_servers = [srvr for srvr in want_have_dhcp_servers[:] if srvr is not None]
+            if want_have_dhcp_servers != []:
+                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_have_dhcp_servers, separators=(",", ":")))
             else:
-                json_to_dict_want["dhcpServers"] = json.dumps(dict(dhcpServers=want_dhcp_servers), separators=(",", ":"))
+                json_to_dict_want["dhcpServers"] = json_to_dict_have["dhcpServers"]
 
         if cfg.get("dhcp_loopback_id", None) is None:
             json_to_dict_want["loopbackId"] = json_to_dict_have["loopbackId"]
