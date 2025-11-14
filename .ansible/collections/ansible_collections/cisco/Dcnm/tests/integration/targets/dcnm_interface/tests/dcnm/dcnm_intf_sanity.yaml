@@ -1,0 +1,598 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: SANITY- Remove local log file
+  local_action: command rm -f dcnm_intf.log
+  tags: sanity
+
+- name: SANITY- Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+  register: result
+  tags: sanity
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  tags: sanity
+
+- name: Sanity tests - 1
+  tags: sanity
+  block:
+
+##############################################
+##             SETUP VARS                   ##
+##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          sanity_eth_merge_conf_template: "templates/dcnm_intf/sanity_eth_merge_conf.j2"
+          sanity_eth_merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_eth_merge_conf.yaml"
+          sanity_eth_replace_conf_template: "templates/dcnm_intf/sanity_eth_replace_conf.j2"
+          sanity_eth_replace_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_eth_replace_conf.yaml"
+          sanity_pc_merge_conf_template: "templates/dcnm_intf/sanity_pc_merge_conf.j2"
+          sanity_pc_merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_pc_merge_conf.yaml"
+          sanity_pc_replace_conf_template: "templates/dcnm_intf/sanity_pc_replace_conf.j2"
+          sanity_pc_replace_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_pc_replace_conf.yaml"
+          sanity_sub_merge_conf_template: "templates/dcnm_intf/sanity_sub_merge_conf.j2"
+          sanity_sub_merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_sub_merge_conf.yaml"
+          sanity_sub_replace_conf_template: "templates/dcnm_intf/sanity_sub_replace_conf.j2"
+          sanity_sub_replace_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_sub_replace_conf.yaml"
+          multi_intf_merge_conf_template: "templates/dcnm_intf/multi_intf_merge_conf.j2"
+          multi_intf_merge_conf_file: "{{ role_path }}/files/dcnm_interface_intf_multi_intf_merge_conf.yaml"
+          sanity_mixed_modified_conf_template: "templates/dcnm_intf/sanity_mixed_modified_conf.j2"
+          sanity_mixed_modified_conf_file: "{{ role_path }}/files/dcnm_interface_intf_sanity_mixed_modified_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - sanity_eth_merge
+        - sanity_eth_replace
+        - sanity_pc_merge
+        - sanity_pc_replace
+        - sanity_sub_merge
+        - sanity_sub_replace
+        - multi_intf_merge
+        - sanity_mixed_modified
+      delegate_to: localhost
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Load Ethernet Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_eth_merge_conf: "{{ lookup('file', test_data_interfaces.sanity_eth_merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Create ethernet interfaces - 1
+      cisco.dcnm.dcnm_interface: &eth_merge
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_eth_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_eth_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_eth_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##              REPLACE                     ##
+##############################################
+
+    - name: Load Ethernet Replace Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_eth_replace_conf: "{{ lookup('file', test_data_interfaces.sanity_eth_replace_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace ethernet interfaces - 1
+      cisco.dcnm.dcnm_interface: &eth_replace
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_eth_replace_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC after replace
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_eth_replace_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC after replace
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_eth_replace_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace ethernet interfaces - 1 - Idempotence
+      cisco.dcnm.dcnm_interface: *eth_replace
+      register: result
+
+    - name: ASSERT - Check changed flag is false and return codes for idempotence
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == false'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'  # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: SANITY- Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: it_context is not defined
+
+    - name: ASSERT - Check return codes for cleanup
+      ansible.builtin.assert:
+        that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: it_context is not defined
+
+- name: Sanity tests - 2
+  tags: sanity
+  block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: SANITY- Create ethernet interfaces - 2
+      cisco.dcnm.dcnm_interface: &eth_merge2
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_eth_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_eth_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_eth_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##              REPLACE                     ##
+##############################################
+
+    - name: SANITY- Replace ethernet interfaces - 2
+      cisco.dcnm.dcnm_interface: &eth_replace2
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_eth_replace_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC after replace
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_eth_replace_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC after replace
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_eth_replace_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace ethernet interfaces - 2 - Idempotence
+      cisco.dcnm.dcnm_interface: *eth_replace2
+      register: result
+
+    - name: ASSERT - Check changed flag is false and return codes for idempotence
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == false'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'  # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: SANITY- Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: it_context is not defined
+
+    - ansible.builtin.assert:
+      that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: it_context is not defined
+
+- name: Sanity tests - 3
+  tags: sanity
+  block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Load PC Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_pc_merge_conf: "{{ lookup('file', test_data_interfaces.sanity_pc_merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Create port channel interfaces
+      cisco.dcnm.dcnm_interface: &pc_merge
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_pc_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC for PC
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_pc_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC for PC
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_pc_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##                REPLACE                   ##
+##############################################
+
+    - name: Load PC Replace Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_pc_replace_conf: "{{ lookup('file', test_data_interfaces.sanity_pc_replace_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace port channel interfaces
+      cisco.dcnm.dcnm_interface: &pc_replace
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_pc_replace_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes for replace
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC for PC replace
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_pc_replace_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC for PC replace
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_pc_replace_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace port channel interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *pc_replace
+      register: result
+
+    # possible bug
+    # - name: ASSERT - Check changed flag is false and return codes for idempotence
+    #   assert:
+    #     that:
+    #       - 'result.changed == false'
+    #       - 'result.response is defined'
+    #       - 'result.response | length >= 0'  # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: SANITY- Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: it_context is not defined
+
+    - ansible.builtin.assert:
+      that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: it_context is not defined
+
+- name: Sanity tests - 4
+  tags: sanity
+  block:
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Load Sub Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_sub_merge_conf: "{{ lookup('file', test_data_interfaces.sanity_sub_merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Create sub-interfaces
+      cisco.dcnm.dcnm_interface: &sub_merge
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_sub_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes for sub-interfaces
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC for sub-interfaces
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_sub_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC for sub-interfaces
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_sub_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##             REPLACE                      ##
+##############################################
+
+    - name: Load Sub Replace Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_sub_replace_conf: "{{ lookup('file', test_data_interfaces.sanity_sub_replace_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace sub-interfaces
+      cisco.dcnm.dcnm_interface: &sub_replace
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: replaced                       # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_sub_replace_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes for sub-interface replace
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC for sub-interface replace
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_sub_replace_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC for sub-interface replace
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_sub_replace_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: SANITY- Replace sub-interfaces - Idempotence
+      cisco.dcnm.dcnm_interface: *sub_replace
+      register: result
+
+    - name: ASSERT - Check changed flag is false and return codes for sub-interface idempotence
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == false'
+          - 'result.response is defined'
+          - 'result.response | length >= 0'  # Allow empty response for idempotence
+      # Don't loop over response items for idempotence check as they may be empty
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: SANITY- Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: it_context is not defined
+
+    - ansible.builtin.assert:
+      that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: it_context is not defined
+
+- name: Sanity tests - 5
+  tags: sanity
+  block:
+
+##############################################
+##              MERGE                       ##
+##############################################
+
+    - name: Load Multi Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_multi_intf_merge_conf: "{{ lookup('file', test_data_interfaces.multi_intf_merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Create eth/sub/lo interfaces
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_multi_intf_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes for multi-interface creation
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC for multi-interfaces
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_multi_intf_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC for multi-interfaces
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.multi_intf_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+    - name: Load Mixed Modified Interface Config File
+      ansible.builtin.set_fact:
+        dcnm_interface_sanity_mixed_modified_conf: "{{ lookup('file', test_data_interfaces.sanity_mixed_modified_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: SANITY- Modify aggregate members like cmds
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_sanity_mixed_modified_conf }}"
+      register: result
+
+    - name: ASSERT - Check changed flag is true and return codes for mixed modified interfaces
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get interface state in NDFC for mixed modified interfaces
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_sanity_mixed_modified_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify interface state in NDFC for mixed modified interfaces
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.sanity_mixed_modified_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: SANITY- Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: it_context is not defined
+
+    - ansible.builtin.assert:
+      that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: it_context is not defined

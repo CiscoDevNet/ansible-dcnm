@@ -1,0 +1,94 @@
+{
+	"lo_merged_payloads_1" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Loopback100",
+			"DATA": [
+			{
+				"policy": "int_loopback_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_LOOPBACK",
+					"nvPairs": {
+						"ROUTE_MAP_TAG": "",
+						"CONF": "no shutdown",
+						"IP": "100.10.10.1",
+						"INTF_VRF": "",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Loopback100",
+						"SPEED": "auto",
+						"V6IP": "",
+						"DESC": "loopback interface 100 configuration"
+					},
+					"ifName": "Loopback100",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+
+		"lo_merged_payloads_2" :
+		{
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Loopback101",
+			"DATA": [
+			{
+				"policy": "int_loopback_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_LOOPBACK",
+					"nvPairs": {
+						"ROUTE_MAP_TAG": "",
+						"CONF": "no shutdown",
+						"IP": "101.10.10.1",
+						"INTF_VRF": "",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Loopback101",
+						"SPEED": "auto",
+						"V6IP": "",
+						"DESC": "loopback interface 101 configuration"
+					},
+					"ifName": "Loopback101",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+	"lo_merged_payloads_3" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Loopback200",
+			"DATA": [
+			{
+				"policy": "int_loopback_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_LOOPBACK",
+					"nvPairs": {
+						"ROUTE_MAP_TAG": "",
+						"CONF": "no shutdown",
+						"IP": "100.10.10.1",
+						"INTF_VRF": "",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Loopback200",
+						"SPEED": "auto",
+						"V6IP": "",
+						"DESC": "loopback interface 200 configuration"
+					},
+					"ifName": "Loopback200",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	}
+}

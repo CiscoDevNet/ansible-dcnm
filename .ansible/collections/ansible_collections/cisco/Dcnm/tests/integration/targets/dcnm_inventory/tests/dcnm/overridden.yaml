@@ -1,0 +1,169 @@
+---
+- name: Import DCNM Inventory Base Tasks
+  ansible.builtin.import_tasks: ../base_tasks.yaml
+  tags: overridden
+
+# ----------------------------------------------
+# Run Test Cases
+# ----------------------------------------------
+
+# TC - 1
+- name: Overridden TC1 - Prepare Switches in Fabric - GreenField Deployment
+  cisco.dcnm.dcnm_inventory: &conf
+    fabric: "{{ test_data.test_fabric }}"
+    state: merged
+    config: "{{ ndfc_fabric_base_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: merged_result
+  tags: overridden
+
+- name: Overridden TC1 - Query Inventory State in Fabric
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: overridden
+
+- name: Overridden TC1 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_base_conf }}"
+    changed: " {{ merged_result.changed }}"
+  register: result
+  tags: overridden
+
+# TC - 2
+- name: Overridden TC2 - Verify Idempotence
+  cisco.dcnm.dcnm_inventory: *conf
+  register: result
+  tags: overridden
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'result.changed == false'
+  tags: overridden
+
+# TC - 3
+- name: Overridden TC3 - Prepare Config
+  ansible.builtin.set_fact:
+    switch_conf:
+      - seed_ip: "{{ test_data.sw2 }}"
+        max_hops: 0
+        role: spine
+        preserve_config: false
+  delegate_to: localhost
+  tags: overridden
+
+- name: Import Configuration Prepare Tasks
+  vars:
+    ansible.builtin.file: overridden
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
+  tags: overridden
+
+- name: Overridden TC3 - Override Existing Switch - Removes Other Switches from Fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: overridden
+    config: "{{ ndfc_fabric_overridden_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: overridden_result
+  tags: overridden
+
+- name: Overridden TC3 - Query Inventory State in Fabric
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: overridden
+
+- name: Overridden TC3 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_overridden_conf }}"
+    changed: "{{ overridden_result.changed }}"
+  register: result
+  tags: overridden
+
+# TC - 4
+- name: Overridden TC4 - Prepare Config
+  ansible.builtin.set_fact:
+    switch_conf:
+      - seed_ip: "{{ test_data.sw2 }}"
+        max_hops: 0
+        role: leaf
+        preserve_config: false
+  delegate_to: localhost
+  tags: overridden
+
+- name: Import Configuration Prepare Tasks
+  vars:
+    ansible.builtin.file: overridden
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
+  tags: overridden
+
+- name: Overridden TC4 - New Role for the Existing Switch
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: overridden
+    config: "{{ ndfc_fabric_overridden_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: overridden_result
+  tags: overridden
+
+- name: Overridden TC4 - Query Inventory State in Fabric
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: overridden
+
+- name: Overridden TC4 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_overridden_conf }}"
+    changed: "{{ overridden_result.changed }}"
+  register: result
+  tags: overridden
+
+# TC - 5
+- name: Overridden TC5 - Prepare Config
+  ansible.builtin.set_fact:
+    switch_conf:
+      - seed_ip: "{{ test_data.sw2 }}"
+        max_hops: 0
+        preserve_config: false
+  delegate_to: localhost
+  tags: overridden
+
+- name: Import Configuration Prepare Tasks
+  vars:
+    ansible.builtin.file: overridden
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
+  tags: overridden
+
+- name: Overridden TC5 - Unspecified Role for the Existing Switch (Default, Leaf)
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: overridden
+    config: "{{ ndfc_fabric_overridden_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: overridden_result
+  tags: overridden
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'overridden_result.changed == false'
+  tags: overridden
+
+# ----------------------------------------------
+# Cleanup Fabric Switches
+# ----------------------------------------------
+
+- name: Overridden - Cleanup Fabric Switches
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: deleted
+  register: result
+  tags: overridden

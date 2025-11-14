@@ -1,0 +1,329 @@
+################################################################################
+# TESTCASE:
+# merged_override_global_config
+#
+# Description:
+#
+# This test case verifies Ansible merged state for dcnm_image_upgrade.
+# All switches override the image policy specified in the global config
+# stanza, by specifying a different image policy in their individual
+# switch config stanzas.
+# All other upgrade options are specified in the global config stanza.
+################################################################################
+#
+################################################################################
+# RUNTIME
+################################################################################
+#
+# Recent run times (MM:SS.ms):
+# 19:29.43
+#
+################################################################################
+# STEPS
+################################################################################
+#
+# SETUP (these should be run prior to running this playbook)
+#  1. Run 00_setup_create_fabric.yaml
+#  2. Run 01_setup_add_switches_to_fabric
+#  3. Run 02_setup_replace_image_policies
+# PRE_TEST (this playbook)
+#  4. MERGED - PRE_TEST - Upgrade all switches using switch config to override global config.
+#  5. MERGED - PRE_TEST - Wait for controller response for all three switches.
+# TEST (this playbook)
+#  6. MERGED - TEST - switch_config - test idempotence.
+# CLEANUP
+#  7. Run 03_cleanup_remove_devices_from_fabric.yaml
+#  8. Run 04_cleanup_delete_image_policies.yaml
+#  9. Run 05_cleanup_delete_fabric.yaml
+#
+################################################################################
+# REQUIREMENTS
+################################################################################
+#
+# Example vars for dcnm_image_upgrade integration tests
+# Add to cisco/dcnm/playbooks/dcnm_tests.yaml)
+#
+# vars:
+#   # This testcase field can run any test in the tests directory for the role
+#   testcase: merged_global_config
+#    fabric_name: LAN_Classic_Fabric
+#    switch_username: admin
+#    switch_password: "Cisco!2345"
+#    leaf1: 192.168.1.2
+#    leaf2: 192.168.1.3
+#    spine1: 192.168.1.4
+#    # for dcnm_image_policy and dcnm_image_upgrade roles
+#    image_policy_1: "KR5M"
+#    image_policy_2: "NR3F"
+#    # for dcnm_image_policy role
+#    epld_image_1: n9000-epld.10.2.5.M.img
+#    epld_image_2: n9000-epld.10.3.1.F.img
+#    nxos_image_1: n9000-dk9.10.2.5.M.bin
+#    nxos_image_2: n9000-dk9.10.3.1.F.bin
+#    nxos_release_1: 10.2.5_nxos64-cs_64bit
+#    nxos_release_2: 10.3.1_nxos64-cs_64bit
+#    # for dcnm_image_upgrade role
+#    fabric_name_1: "{{ fabric_name }}"
+#    ansible_switch_1: "{{ leaf1 }}"
+#    ansible_switch_2: "{{ leaf2 }}"
+#    ansible_switch_3: "{{ spine1 }}"
+#
+################################################################################
+# MERGED - PRE_TEST - Upgrade all switches using switch config to override global config.
+# NOTES:
+#   1. Depending on whether the switches are already at the desired version, the
+#      upgrade may not be performed.  Hence, we do not check for the upgrade
+#      status in this test.
+################################################################################
+
+- name: MERGED - PRE_TEST - Upgrade all switches to image_policy_2 using switch config to override global config.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: merged
+    config:
+      policy: "{{ image_policy_1}}"
+      reboot: false
+      stage: true
+        validate: true
+        upgrade:
+          nxos: true
+            epld: false
+        options:
+          nxos:
+              mode: disruptive
+                bios_force: false
+            epld:
+              module: ALL
+                golden: false
+            reboot:
+              config_reload: false
+                write_erase: false
+            package:
+              install: false
+                uninstall: false
+        switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+            policy: "{{ image_policy_2 }}"
+          - ip_address: "{{ ansible_switch_2 }}"
+            policy: "{{ image_policy_2 }}"
+          - ip_address: "{{ ansible_switch_3 }}"
+            policy: "{{ image_policy_2 }}"
+  register: result
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result
+
+################################################################################
+# MERGED - PRE_TEST - Wait for controller response for all three switches.
+################################################################################
+
+- name: MERGED - PRE_TEST - Wait for controller response for all three switches.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: query
+    config:
+      switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
+  register: result
+  until:
+    - ansible_switch_1 in result.diff[0]
+    - ansible_switch_2 in result.diff[0]
+    - ansible_switch_3 in result.diff[0]
+  retries: 60
+  delay: 5
+  ignore_errors: true
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result
+
+################################################################################
+# MERGED - TEST - switch_config - test idempotence.
+#
+# Anchor and Alias didn't work for this. I copied the entire config from above
+################################################################################
+# Expected result
+# ok: [dcnm] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [],
+#         "failed": false,
+#         "response": []
+#     }
+# }
+################################################################################
+
+- name: MERGED - TEST - switch_config - test idempotence.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: merged
+    config:
+      policy: "{{ image_policy_1}}"
+        reboot: false
+        stage: true
+        validate: true
+        upgrade:
+          nxos: true
+            epld: false
+        options:
+          nxos:
+              mode: disruptive
+                bios_force: false
+            epld:
+              module: ALL
+                golden: false
+            reboot:
+              config_reload: false
+                write_erase: false
+            package:
+              install: false
+                uninstall: false
+        switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+            policy: "{{ image_policy_2 }}"
+          - ip_address: "{{ ansible_switch_2 }}"
+            policy: "{{ image_policy_2 }}"
+          - ip_address: "{{ ansible_switch_3 }}"
+            policy: "{{ image_policy_2 }}"
+  register: result
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+    - result.failed == false
+    - (result.diff | length) == 6
+    - (result.metadata | length) == 6
+    - (result.response | length) == 6
+    - (result.result | length) == 6
+
+################################################################################
+# MERGED - TEST - Upgrade all switches to image_policy_1 using switch config to override global config.
+################################################################################
+
+- name: MERGED - TEST - Upgrade all switches to image_policy_1 using switch config to override global config.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: merged
+    config:
+      policy: "{{ image_policy_2}}"
+        reboot: false
+        stage: true
+        validate: true
+        upgrade:
+          nxos: true
+            epld: false
+        options:
+          nxos:
+              mode: disruptive
+                bios_force: false
+            epld:
+              module: ALL
+                golden: false
+            reboot:
+              config_reload: false
+                write_erase: false
+            package:
+              install: false
+                uninstall: false
+        switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+            policy: "{{ image_policy_1 }}"
+          - ip_address: "{{ ansible_switch_2 }}"
+            policy: "{{ image_policy_1 }}"
+          - ip_address: "{{ ansible_switch_3 }}"
+            policy: "{{ image_policy_1 }}"
+  register: result
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result
+
+################################################################################
+# MERGED - TEST - Wait for controller response for all three switches.
+################################################################################
+
+- name: MERGED - PRE_TEST - Wait for controller response for all three switches.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: query
+    config:
+      switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+        - ip_address: "{{ ansible_switch_2 }}"
+        - ip_address: "{{ ansible_switch_3 }}"
+  register: result
+  until:
+    - ansible_switch_1 in result.diff[0]
+    - ansible_switch_2 in result.diff[0]
+    - ansible_switch_3 in result.diff[0]
+  retries: 60
+  delay: 5
+  ignore_errors: true
+
+- name: Debug
+  ansible.builtin.debug:
+    var: result
+
+################################################################################
+# MERGED - TEST - switch_config - test idempotence.
+################################################################################
+# Expected result
+# ok: [dcnm] => {
+#     "result": {
+#         "changed": false,
+#         "diff": [],
+#         "failed": false,
+#         "response": []
+#     }
+# }
+################################################################################
+
+- name: MERGED - TEST - switch_config - test idempotence.
+  cisco.dcnm.dcnm_image_upgrade:
+    state: merged
+    config:
+      policy: "{{ image_policy_2}}"
+        reboot: false
+        stage: true
+        validate: true
+        upgrade:
+          nxos: true
+            epld: false
+        options:
+          nxos:
+              mode: disruptive
+                bios_force: false
+            epld:
+              module: ALL
+                golden: false
+            reboot:
+              config_reload: false
+                write_erase: false
+            package:
+              install: false
+                uninstall: false
+        switches:
+          - ip_address: "{{ ansible_switch_1 }}"
+            policy: "{{ image_policy_1 }}"
+          - ip_address: "{{ ansible_switch_2 }}"
+            policy: "{{ image_policy_1 }}"
+          - ip_address: "{{ ansible_switch_3 }}"
+            policy: "{{ image_policy_1 }}"
+  register: result
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - result.changed == false
+    - result.failed == false
+    - (result.diff | length) == 6
+    - (result.metadata | length) == 6
+    - (result.response | length) == 6
+    - (result.result | length) == 6
+
+################################################################################
+# CLEANUP
+################################################################################
+# Run 03_cleanup_remove_devices_from_fabric.yaml
+# Run 04_cleanup_delete_image_policies.yaml
+# Run 05_cleanup_delete_fabric.yaml
+################################################################################

@@ -1,0 +1,379 @@
+
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+
+    "mock_ip_sn" : {
+     "192.168.1.109": "FOX1821H035",
+     "192.168.1.108": "SAL1819SAN8" 
+    },
+
+		"mock_vpc_resp" : {
+			"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+			"DATA": {
+				"vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+			},
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+		},
+
+    "mock_vpc_sno" : {
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+    },
+
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "mock_deploy_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+      "RETURN_CODE": 200
+    },
+
+    "bunched_merged_config" : [
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/9"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel300",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po300",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "description": "port channel acting as trunk",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "jumbo",
+        "pc_mode": "on",
+        "mode": "trunk",
+        "members": [
+          "e1/20"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_trunk_host_11_1",
+        "admin_state": "True",
+        "allowed_vlans": "none",
+        "cmds": [
+          "no shutdown"
+        ],
+        "ifname": "Port-channel400",
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po400",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "access_vlan": 301,
+        "description": "port channel acting as access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "default",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/20"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "False",
+        "ifname": "Port-channel301",
+        "cmds": [
+          "no shutdown"
+        ],
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po301",
+      "deploy": "True"
+    },
+    {
+      "switch": [
+        "192.168.1.108"
+      ],
+      "profile": {
+        "access_vlan": 401,
+        "description": "port channel acting as access",
+        "bpdu_guard": "True",
+        "sno": "SAL1819SAN8",
+        "mtu": "default",
+        "pc_mode": "on",
+        "mode": "access",
+        "members": [
+          "e1/10"
+        ],
+        "port_type_fast": "True",
+        "policy": "int_port_channel_access_host_11_1",
+        "admin_state": "False",
+        "ifname": "Port-channel401",
+        "cmds": [
+          "no shutdown"
+        ],
+        "fabric": "test_fabric"
+      },
+      "type": "pc",
+      "name": "po401",
+      "deploy": "True"
+    },
+		{
+			"type": "eth",
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"int_vrf": "",
+				"route_tag": "",
+				"ipv4_mask_len": 24,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "routed",
+				"policy": "int_routed_host_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/32",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "Auto",
+				"description": "eth interface acting as routed"
+			},
+			"name": "eth1/32",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"int_vrf": "",
+				"route_tag": "",
+				"ipv4_mask_len": 24,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "routed",
+				"policy": "int_routed_host_11_1",
+				"admin_state": "False",
+				"ifname": "Ethernet1/22",
+				"cmds": [
+					"no shutdown"
+				],
+				"speed": "Auto",
+				"description": "eth interface acting as routed"
+			},
+			"name": "eth1/22",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "epl_routed",
+				"policy": "epl_routed_intf",
+				"admin_state": "False",
+				"ifname": "Ethernet1/13",
+				"route_tag": "",
+				"speed": "Auto",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "eth interface acting as epl_routed"
+			},
+			"name": "eth1/13",
+			"deploy": "True"
+		},
+		{
+			"type": "eth",
+			"switch": [
+				"192.168.1.108"
+			],
+			"profile": {
+				"ipv6_addr": "",
+				"int_vrf": "",
+				"ipv4_mask_len": 24,
+				"ipv6_mask_len": 64,
+				"sno": "SAL1819SAN8",
+				"fabric": "test_fabric",
+				"mtu": 9216,
+				"ipv4_addr": "31.1.1.1",
+				"mode": "epl_routed",
+				"policy": "epl_routed_intf",
+				"admin_state": "False",
+				"ifname": "Ethernet1/14",
+				"route_tag": "",
+				"speed": "Auto",
+				"cmds": [
+					"no shutdown"
+				],
+				"description": "eth interface acting as epl_routed"
+			},
+			"name": "eth1/14",
+			"deploy": "True"
+		},
+		{
+			"profile": {
+				"peer2_pcid": 1,
+				"fabric": "test_fabric",
+				"bpdu_guard": "True",
+				"pc_mode": "on",
+				"peer1_members": [
+					"e1/14"
+				],
+				"peer2_members": [
+					"e1/14"
+				],
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_pcid": 1,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"peer1_allowed_vlans": "none",
+				"mode": "trunk",
+				"policy": "int_vpc_trunk_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as trunk peer2",
+				"admin_state": "True",
+				"ifname": "vPC850",
+				"peer1_description": "VPC acting as trunk peer1",
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_allowed_vlans": "none"
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc850",
+			"deploy": "True"
+		},
+		{
+			"profile": {
+				"peer2_pcid": 1,
+				"fabric": "test_fabric",
+				"bpdu_guard": "True",
+				"pc_mode": "on",
+				"peer1_members": [
+					"e1/24"
+				],
+				"peer2_members": [
+					"e1/24"
+				],
+				"peer2_cmds": [
+					"no shutdown"
+				],
+				"peer1_pcid": 1,
+				"mtu": "jumbo",
+				"peer1_cmds": [
+					"no shutdown"
+				],
+				"peer1_allowed_vlans": "none",
+				"mode": "trunk",
+				"policy": "int_vpc_trunk_host_11_1",
+				"port_type_fast": "True",
+				"peer2_description": "VPC acting as trunk peer2",
+				"admin_state": "True",
+				"ifname": "vPC750",
+				"peer1_description": "VPC acting as trunk peer1",
+				"sno": "FOX1821H035~SAL1819SAN8",
+				"peer2_allowed_vlans": "none"
+			},
+			"switch": [
+					"192.168.1.109",
+			    "192.168.1.108"
+			],
+			"type": "vpc",
+			"name": "vpc750",
+			"deploy": "True"
+		}]
+}

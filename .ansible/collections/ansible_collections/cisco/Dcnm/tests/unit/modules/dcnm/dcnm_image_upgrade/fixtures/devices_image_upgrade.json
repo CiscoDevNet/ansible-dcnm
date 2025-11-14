@@ -1,0 +1,338 @@
+{
+    "test_image_upgrade_01010a": [
+        {
+            "TEST_NOTES": [
+                "upgrade.nxos invalid value FOO"
+            ],
+            "policy": "KR5M",
+            "stage": true,
+            "upgrade": {"nxos": "FOO", "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": true},
+                "package": {"install": false, "uninstall": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": false
+        }
+    ],
+    "test_image_upgrade_01020a": [
+        {
+            "TEST_NOTES": [
+                "Non-default values for several options"
+            ],
+            "policy": "KR5M",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": false, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": true},
+                "package": {"install": true, "uninstall": false},
+                "epld": {"module": 1, "golden": true},
+                "reboot": {"config_reload": true, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": false
+        }
+    ],
+    "test_image_upgrade_01030a": [
+        {
+            "TEST_NOTES": [
+                "Default values explicitely set for several options"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": true, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01040a": [
+        {
+            "TEST_NOTES": [
+                "nxos.mode is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "FOO", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01050a": [
+        {
+            "TEST_NOTES": [
+                "nxos.mode == non_disruptive"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "non_disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01060a": [
+        {
+            "TEST_NOTES": [
+                "nxos.mode == force_non_disruptive"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "force_non_disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01070a": [
+        {
+            "TEST_NOTES": [
+                "options.nxos.bios_force is invalid (FOO)"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": "FOO"},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01080a": [
+        {
+            "TEST_NOTES": [
+                "options.epld.golden is true and upgrade.nxos is true"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": true},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01090a": [
+        {
+            "TEST_NOTES": [
+                "options.epld.module is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "FOO", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01100a": [
+        {
+            "TEST_NOTES": [
+                "options.epld.golden is not a boolean"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": "FOO"},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01110a": [
+        {
+            "TEST_NOTES": [
+                "reboot is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": "FOO",
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01120a": [
+        {
+            "TEST_NOTES": [
+                "options.reboot.config_reload is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": true,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": "FOO", "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01130a": [
+        {
+            "TEST_NOTES": [
+                "options.reboot.write_erase is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": true,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": "FOO"}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01140a": [
+        {
+            "TEST_NOTES": [
+                "options.package.uninstall is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": true,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": "FOO"},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01150a": [
+        {
+            "TEST_NOTES": [
+                "options.package.install is invalid"
+            ],
+            "policy": "NR3F",
+            "reboot": true,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": "FOO", "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_01160a": [
+        {
+            "TEST_NOTES": [
+                "upgrade.epld is invalid"
+            ],
+            "policy": "NR3F",
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": "FOO"},
+            "options": {
+                "package": {
+                    "uninstall": false
+                }
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ],
+    "test_image_upgrade_02000a": [
+        {
+            "TEST_NOTES": [
+                "Valid devices"
+            ],
+            "policy": "NR3F",
+            "reboot": false,
+            "stage": true,
+            "upgrade": {"nxos": true, "epld": true},
+            "options": {
+                "nxos": {"mode": "disruptive", "bios_force": false},
+                "package": {"install": false, "uninstall": false},
+                "epld": {"module": "ALL", "golden": false},
+                "reboot": {"config_reload": false, "write_erase": false}
+            },
+            "validate": true,
+            "ip_address": "172.22.150.102",
+            "policy_changed": true
+        }
+    ]
+}

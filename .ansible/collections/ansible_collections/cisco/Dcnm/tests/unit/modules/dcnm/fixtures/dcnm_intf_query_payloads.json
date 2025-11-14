@@ -1,0 +1,293 @@
+{
+	"all_payload" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/10",
+			"DATA": [
+			{
+				"policy": "int_trunk_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_ETHERNET",
+					"nvPairs": {
+						"CONF": "no shutdown",
+						"MTU": "jumbo",
+            "SPEED": "auto",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Ethernet1/10",
+						"BPDUGUARD_ENABLED": "True",
+						"ALLOWED_VLANS": "none",
+						"SPEED": "auto",
+						"DESC": "eth interface  acting as trunk"
+					},
+					"ifName": "Ethernet1/10",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+		"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+	"pc_payload" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel350",
+			"DATA": [
+			{
+				"policy": "int_port_channel_trunk_host_11_1",
+				"interfaces": [
+				{
+					"ifName": "port-channel350",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"MEMBER_INTERFACES": "e1/9",
+						"FABRIC_NAME": "test_fabric",
+						"PO_ID": "Port-channel350",
+						"MTU": "jumbo",
+            "SPEED": "auto",
+						"PRIORITY": "500",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PC_MODE": "on",
+						"POLICY_DESC": "",
+						"CONF": "no shutdown",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"POLICY_ID": "POLICY-1849470",
+						"ALLOWED_VLANS": "none",
+						"DESC": "port channel acting as trunk"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}
+		],
+		"RETURN_CODE": 200,
+		"METHOD": "GET"
+	},
+	"lo_payload" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Loopback450",
+			"DATA": [
+			{
+				"policy": "int_loopback_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_LOOPBACK",
+					"nvPairs": {
+						"ROUTE_MAP_TAG": "",
+						"CONF": "no shutdown",
+						"IP": "100.10.10.1",
+						"INTF_VRF": "",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Loopback450",
+            "SPEED": "auto",
+						"V6IP": "",
+						"DESC": "loopback interface 100 configuration"
+					},
+					"ifName": "Loopback450",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+	"eth_payload" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/1",
+			"DATA": [
+			{
+				"policy": "int_trunk_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_ETHERNET",
+					"nvPairs": {
+						"CONF": "no shutdown",
+						"MTU": "jumbo",
+            "SPEED": "auto",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"INTF_NAME": "Ethernet1/1",
+						"BPDUGUARD_ENABLED": "True",
+						"ALLOWED_VLANS": "none",
+						"SPEED": "auto",
+						"DESC": "eth interface  acting as trunk"
+					},
+					"ifName": "Ethernet1/1",
+					"serialNumber": "SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}],
+        "skipResourceCheck": "True"
+			}],
+		"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+	"subint_payload" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Ethernet1/15.2",
+			"DATA": [
+			{
+				"policy": "int_subif_11_1",
+				"interfaces": [
+				{
+					"ifName": "Ethernet1/15.2",
+					"serialNumber": "SAL1819SAN8",
+					"nvPairs": {
+						"INTF_VRF": "",
+						"CONF": "no shutdown",
+						"FABRIC_NAME": "test_fabric",
+						"IP": "1.1.1.1",
+						"VLAN": "100",
+						"MTU": "9216",
+            "SPEED": "auto",
+						"PRIORITY": "500",
+						"PREFIX": "24",
+						"ADMIN_STATE": "True",
+						"POLICY_DESC": "",
+						"INTF_NAME": "Ethernet1/15.2",
+						"IPv6": "",
+						"IPv6_PREFIX": "",
+						"DESC": "sub interface eth1/15.2 configuration",
+						"POLICY_ID": "POLICY-1901730"
+					}
+				}],
+        "skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+	"vpc_payload" :
+	{
+		"MESSAGE": "OK",
+			"REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=vPC750",
+			"DATA": [
+			{
+				"policy": "int_vpc_trunk_host_11_1",
+				"interfaces": [
+				{
+					"interfaceType": "INTERFACE_VPC",
+					"nvPairs": {
+						"PEER2_MEMBER_INTERFACES": "e1/14",
+						"PEER2_PO_CONF": "no shutdown",
+						"PEER2_PO_DESC": "VPC acting as trunk peer2",
+						"PEER1_PO_CONF": "no shutdown",
+						"PEER1_PCID": "1",
+						"MTU": "jumbo",
+            "SPEED": "auto",
+						"PEER1_PO_DESC": "VPC acting as trunk peer1",
+						"PORTTYPE_FAST_ENABLED": "True",
+						"PEER1_MEMBER_INTERFACES": "e1/14",
+						"PC_MODE": "on",
+						"PEER1_ALLOWED_VLANS": "none",
+						"INTF_NAME": "vPC750",
+						"BPDUGUARD_ENABLED": "True",
+						"ADMIN_STATE": "True",
+						"PEER2_PCID": "1",
+						"PEER2_ALLOWED_VLANS": "none"
+					},
+					"ifName": "vPC750",
+					"serialNumber": "FOX1821H035~SAL1819SAN8",
+					"fabricName": "test_fabric"
+				}
+				],
+				"skipResourceCheck": "True"
+			}],
+			"RETURN_CODE": 200,
+			"METHOD": "GET"
+	},
+
+  "svi_payload":
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=vlan1001",
+      "DATA": [
+      {
+        "interfaceType": "INTERFACE_VLAN",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "vlan1001",
+          "interfaceType": "INTERFACE_VLAN",
+          "nvPairs": {
+            "ADMIN_STATE": "true",
+            "CONF": "no shutdown",
+            "DESC": "Switched vlan interface 1001",
+            "DISABLE_IP_REDIRECTS": "true",
+            "ENABLE_HSRP": "true",
+            "ENABLE_NETFLOW": "false",
+            "HSRP_GROUP": "10",
+            "HSRP_PRIORITY": "5",
+            "HSRP_VERSION": "1",
+            "HSRP_VIP": "192.168.2.100",
+            "INTF_NAME": "vlan1001",
+            "INTF_VRF": "blue",
+            "IP": "192.168.2.1",
+            "MAC": "0000.0101.ac0a",
+            "MTU": "9216",
+            "NETFLOW_MONITOR": "",
+            "PREEMPT": "true",
+            "PREFIX": "24",
+            "ROUTING_TAG": "1001",
+            "advSubnetInUnderlay": "true",
+            "dhcpServerAddr1": "192.200.1.1",
+            "dhcpServerAddr2": "192.200.1.2",
+            "dhcpServerAddr3": "192.200.1.3",
+            "vrfDhcp1": "blue",
+            "vrfDhcp2": "blue",
+            "vrfDhcp3": "blue"
+          },
+          "serialNumber": "SAL1819SAN8"
+        }
+        ],
+        "policy": "int_vlan",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+
+  },
+
+  "st_fex_payload":
+  {
+    "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface?serialNumber=SAL1819SAN8&ifName=Port-channel150",
+      "DATA": [
+      {
+        "interfaceType": "STRAIGHT_TROUGH_FEX",
+        "interfaces": [
+        {
+          "fabricName": "test_fabric",
+          "ifName": "port-channel150",
+          "interfaceType": "STRAIGHT_TROUGH_FEX",
+          "nvPairs": {
+            "FEX_ID": "150",
+            "PRIORITY": "500",
+            "FABRIC_NAME": "mmudigon-svi",
+            "POLICY_ID": "POLICY-8928470",
+            "PO_DESC": "FEX port channel",
+            "DESC": "Port Channel for FEX 150",
+            "MTU": "jumbo",
+            "SPEED": "Auto",
+            "MEMBER_INTERFACES": "e1/10",
+            "PO_ID": "Port-channel150",
+            "ENABLE_NETFLOW": "false",
+            "ADMIN_STATE": "true",
+            "POLICY_DESC": "",
+            "CONF": "no shutdown"
+          },
+          "serialNumber": "SAL1819SAN8"
+        }
+        ],
+        "policy": "int_port_channel_fex_11_1",
+        "skipResourceCheck": "false"
+      }],
+    "RETURN_CODE": 200,
+    "METHOD": "GET"
+
+  }
+}

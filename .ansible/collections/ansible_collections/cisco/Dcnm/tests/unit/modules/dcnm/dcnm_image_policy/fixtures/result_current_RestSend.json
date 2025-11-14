@@ -1,0 +1,38 @@
+{
+
+    "TEST_NOTES": [
+        "Mocked result_current value."
+    ],
+    "test_image_policy_create_00035a": {
+            "changed": true,
+            "success": true
+    },
+    "test_image_policy_create_bulk_00035a": {
+            "changed": true,
+            "success": true
+    },
+    "test_image_policy_replace_bulk_00035a": {
+        "changed": true,
+        "success": true
+    },
+    "test_image_policy_replace_bulk_00036a": {
+        "changed": false,
+        "success": false
+    },
+    "test_image_policy_update_00035a": {
+        "changed": true,
+        "success": true
+    },
+    "test_image_policy_update_00036a": {
+        "changed": false,
+        "success": false
+    },
+    "test_image_policy_update_bulk_00035a": {
+        "changed": true,
+        "success": true
+    },
+    "test_image_policy_update_bulk_00036a": {
+        "changed": false,
+        "success": false
+    }
+}

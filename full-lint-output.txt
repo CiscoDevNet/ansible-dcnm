@@ -1,0 +1,1068 @@
+[2mWARNING  Another version of 'ansible.netcommon' 8.1.0 was found installed in /Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 8.2.0 (/Users/sivakasi/.ansible/collections/ansible_collections).[0m
+[2mWARNING  Another version of 'amazon.aws' 10.1.2 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 10.1.2 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ansible.netcommon' 8.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 8.2.0 (/Users/sivakasi/.ansible/collections/ansible_collections).[0m
+[2mWARNING  Another version of 'ansible.posix' 2.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.1.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ansible.utils' 6.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 6.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ansible.windows' 3.2.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.2.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'arista.eos' 12.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 12.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'awx.awx' 24.6.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 24.6.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'azure.azcollection' 3.9.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.9.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'check_point.mgmt' 6.5.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 6.5.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'chocolatey.chocolatey' 1.5.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.5.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.aci' 2.12.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.12.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.dnac' 6.40.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 6.40.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.intersight' 2.6.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.6.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.ios' 11.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 11.1.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.iosxr' 12.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 12.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.meraki' 2.21.8 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.21.8 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.mso' 2.11.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.11.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.nxos' 11.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 11.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cisco.ucs' 1.16.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.16.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cloudscale_ch.cloud' 2.5.2 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.5.2 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.aws' 10.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 10.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.ciscosmb' 1.0.11 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.0.11 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.crypto' 3.0.4 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.0.4 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.digitalocean' 1.27.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.27.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.dns' 3.3.4 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.3.4 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.docker' 4.8.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.8.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.general' 11.4.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 11.4.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.grafana' 2.3.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.3.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.hashi_vault' 7.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 7.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.hrobot' 2.5.2 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.5.2 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.library_inventory_filtering_v1' 1.1.4 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.1.4 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.libvirt' 2.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.mongodb' 1.7.10 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.7.10 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.mysql' 3.16.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.16.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.okd' 5.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 5.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.postgresql' 4.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.1.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.proxmox' 1.3.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.3.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.proxysql' 1.6.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.6.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.rabbitmq' 1.6.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.6.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.routeros' 3.12.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.12.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.sap_libs' 1.5.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.5.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.sops' 2.2.4 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.2.4 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.vmware' 5.9.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 5.9.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.windows' 3.0.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.0.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'community.zabbix' 4.1.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.1.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'containers.podman' 1.18.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.18.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cyberark.conjur' 1.3.7 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.3.7 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'cyberark.pas' 1.0.35 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.0.35 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'dellemc.enterprise_sonic' 3.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'dellemc.openmanage' 9.12.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 9.12.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'dellemc.powerflex' 2.6.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.6.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'dellemc.unity' 2.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.1.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'f5networks.f5_modules' 1.39.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.39.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'fortinet.fortimanager' 2.11.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.11.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'fortinet.fortios' 2.4.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.4.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'google.cloud' 1.9.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.9.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'grafana.grafana' 6.0.4 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 6.0.4 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'hetzner.hcloud' 5.4.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 5.4.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'hitachivantara.vspone_block' 4.2.2 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.2.2 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'hitachivantara.vspone_object' 1.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ibm.qradar' 4.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ibm.storage_virtualize' 2.7.4 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.7.4 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ieisystem.inmanage' 3.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'infinidat.infinibox' 1.6.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.6.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'infoblox.nios_modules' 1.8.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.8.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'inspur.ispim' 2.2.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.2.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'junipernetworks.junos' 11.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 11.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'kaytus.ksmanage' 2.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'kubernetes.core' 6.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 6.1.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'kubevirt.core' 2.2.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.2.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'lowlydba.sqlserver' 2.7.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.7.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'microsoft.ad' 1.9.2 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.9.2 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'microsoft.iis' 1.0.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.0.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'netapp.cloudmanager' 21.24.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 21.24.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'netapp.ontap' 23.1.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 23.1.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'netapp.storagegrid' 21.15.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 21.15.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'netapp_eseries.santricity' 1.4.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.4.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'netbox.netbox' 3.21.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.21.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ngine_io.cloudstack' 2.5.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.5.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'openstack.cloud' 2.4.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.4.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ovirt.ovirt' 3.2.1 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 3.2.1 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'purestorage.flasharray' 1.39.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.39.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'purestorage.flashblade' 1.21.2 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.21.2 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'ravendb.ravendb' 1.0.3 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.0.3 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'splunk.es' 4.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'telekom_mms.icinga_director' 2.4.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.4.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'theforeman.foreman' 5.6.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 5.6.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'vmware.vmware' 2.4.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 2.4.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'vmware.vmware_rest' 4.9.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 4.9.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'vultr.cloud' 1.13.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.13.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'vyos.vyos' 6.0.0 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 6.0.0 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Another version of 'wti.remote' 1.0.10 was found installed in /Users/sivakasi/.pyenv/versions/ans_2_19_py_3_12/lib/python3.12/site-packages/ansible_collections, only the first one will be used, 1.0.10 (/Users/sivakasi/.pyenv/versions/3.12.3/envs/py_3_12_3/lib/python3.12/site-packages/ansible_collections).[0m
+[2mWARNING  Listing 315 violation(s) that are fatal[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/schema/\schema[galaxy]]8;;\[0m[2m:[0m [31m$.name 'Dcnm' does not match '^[a-z][a-z0-9_]+$'. See https://docs.ansible.com/ansible/latest/dev_guide/collections_galaxy_meta.html[0m
+[35mgalaxy.yml[0m:1 [2m Returned errors will not include exact line numbers, but they will mention
+the schema name being used as a tag, like ``schema[playbook]``,
+``schema[tasks]``.
+
+This rule is not skippable and stops further processing of the file.
+
+If incorrect schema was picked, you might want to either:
+
+* move the file to standard location, so its file is detected correctly.
+* use ``kinds:`` option in linter config to help it pick correct file type.
+[/]
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[play]]8;;\[0m[2m:[0m [31mAll plays should be named.[0m
+[35mplaybooks/roles/dcnm_bootflash/create_files.yaml[0m:2:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[play]]8;;\[0m[2m:[0m [31mAll plays should be named.[0m
+[35mplaybooks/roles/dcnm_bootflash/create_files.yaml[0m:16:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_bootflash/dcnm_tests.yaml[0m:10:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_fabric/dcnm_tests.yaml[0m:17:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_image_policy/dcnm_tests.yaml[0m:10:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_image_upgrade/dcnm_tests.yaml[0m:10:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_interface/dcnm_tests.yaml[0m:9:3
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mplaybooks/roles/dcnm_inventory/dcnm_tests.yml[0m:3:1 [2mdid not find expected <document start>[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_maintenance_mode/dcnm_tests.yaml[0m:17:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_network/dcnm_tests.yaml[0m:12:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_policy/dcnm_tests.yaml[0m:9:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[empty-lines]]8;;\[0m[2m:[0m [31mToo many blank lines (1 > 0)[0m
+[35mplaybooks/roles/dcnm_vpc_pair/dcnm_hosts.yaml[0m:17
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/dcnm_vpc_pair/dcnm_tests.yaml[0m:10:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, roles[0m
+[35mplaybooks/roles/dcnm_vrf/dcnm_tests.yaml[0m:30:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/key-order/\key-order[play]]8;;\[0m[2m:[0m [31mYou can improve the play key order to: name, hosts, gather_facts, connection, vars, roles[0m
+[35mplaybooks/roles/ndfc_interface/ndfc_tests.yaml[0m:9:3
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: expected <block end>, but found '-' (syntax)[0m
+[35mplugins/modules/dcnm_fabric.py[0m:3606
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: mapping values are not allowed here (syntax)[0m
+[35mplugins/modules/dcnm_image_policy.py[0m:153
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: mapping values are not allowed here (syntax)[0m
+[35mplugins/modules/dcnm_image_upgrade.py[0m:320
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[empty-lines]]8;;\[0m[2m:[0m [31mToo many blank lines (1 > 0)[0m
+[35mplugins/modules/dcnm_interface.py[0m:1808
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: expected <block end>, but found '?' (syntax)[0m
+[35mplugins/modules/dcnm_inventory.py[0m:270
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (313 > 160 characters)[0m
+[35mplugins/modules/dcnm_inventory.py[0m:345
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: mapping values are not allowed here (syntax)[0m
+[35mplugins/modules/dcnm_links.py[0m:431
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: expected <block end>, but found '?' (syntax)[0m
+[35mplugins/modules/dcnm_log.py[0m:63
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[empty-lines]]8;;\[0m[2m:[0m [31mToo many blank lines (1 > 0)[0m
+[35mplugins/modules/dcnm_log.py[0m:75
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: mapping values are not allowed here (syntax)[0m
+[35mplugins/modules/dcnm_maintenance_mode.py[0m:112
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[empty-lines]]8;;\[0m[2m:[0m [31mToo many blank lines (1 > 0)[0m
+[35mplugins/modules/dcnm_maintenance_mode.py[0m:142
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: expected <block end>, but found '?' (syntax)[0m
+[35mplugins/modules/dcnm_network.py[0m:343
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (295 > 160 characters)[0m
+[35mplugins/modules/dcnm_rest.py[0m:72
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: expected <block end>, but found '?' (syntax)[0m
+[35mplugins/modules/dcnm_service_node.py[0m:185
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[empty-lines]]8;;\[0m[2m:[0m [31mToo many blank lines (1 > 0)[0m
+[35mplugins/modules/dcnm_service_policy.py[0m:438
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[empty-lines]]8;;\[0m[2m:[0m [31mToo many blank lines (1 > 0)[0m
+[35mplugins/modules/dcnm_service_route_peering.py[0m:1158
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[None]]8;;\[0m[2m:[0m [31mSyntax error: expected <block end>, but found '?' (syntax)[0m
+[35mplugins/modules/dcnm_vrf.py[0m:441
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_bootflash/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_bootflash/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_bootflash/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/fqcn/\fqcn[action-core]]8;;\[0m[2m:[0m [31mUse FQCN for builtin module actions (include_tasks).[0m
+[35mtests/integration/targets/dcnm_bootflash/tasks/main.yaml[0m:2:5 [2mUse `ansible.builtin.include_tasks` or `ansible.legacy.include_tasks` instead.[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[missing]]8;;\[0m[2m:[0m [31mAll tasks should be named.[0m
+[35mtests/integration/targets/dcnm_bootflash/tasks/main.yaml[0m:2 [2mTask/Handler: include_tasks dcnm.yaml[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_specific.yaml[0m:203:17 [2mdid not find expected key[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (191 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:170
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 10 but found 8[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:194
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 12 but found 10[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:195
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 12 but found 10[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:198
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 6 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:204
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 6 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:208
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 6 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:217
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:218
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 6 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:282
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 6 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:286
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 4[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_deleted_wildcard.yaml[0m:287
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_query_specific.yaml[0m:224:17 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_bootflash/tests/dcnm_bootflash_query_wildcard.yaml[0m:237:5 [2mdid not find expected key[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_fabric/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_fabric/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_fabric/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/fqcn/\fqcn[action-core]]8;;\[0m[2m:[0m [31mUse FQCN for builtin module actions (include_tasks).[0m
+[35mtests/integration/targets/dcnm_fabric/tasks/main.yaml[0m:2:5 [2mUse `ansible.builtin.include_tasks` or `ansible.legacy.include_tasks` instead.[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[missing]]8;;\[0m[2m:[0m [31mAll tasks should be named.[0m
+[35mtests/integration/targets/dcnm_fabric/tasks/main.yaml[0m:2 [2mTask/Handler: include_tasks dcnm.yaml[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (163 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_fabric/tests/dcnm_fabric_merged_save_deploy.yaml[0m:386
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (164 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_fabric/tests/dcnm_fabric_merged_save_deploy.yaml[0m:396
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (163 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_fabric/tests/dcnm_fabric_replaced_save_deploy.yaml[0m:354
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (164 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_fabric/tests/dcnm_fabric_replaced_save_deploy.yaml[0m:540
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_policy/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_policy/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_policy/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/fqcn/\fqcn[action-core]]8;;\[0m[2m:[0m [31mUse FQCN for builtin module actions (include_tasks).[0m
+[35mtests/integration/targets/dcnm_image_policy/tasks/main.yaml[0m:2:5 [2mUse `ansible.builtin.include_tasks` or `ansible.legacy.include_tasks` instead.[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[missing]]8;;\[0m[2m:[0m [31mAll tasks should be named.[0m
+[35mtests/integration/targets/dcnm_image_policy/tasks/main.yaml[0m:2 [2mTask/Handler: include_tasks dcnm.yaml[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_policy/tests/dcnm_image_policy_deleted.yaml[0m:81:9 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_policy/tests/dcnm_image_policy_deleted_all_policies.yaml[0m:83:9 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_policy/tests/dcnm_image_policy_merged.yaml[0m:79:9 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_policy/tests/dcnm_image_policy_overridden.yaml[0m:90:9 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_policy/tests/dcnm_image_policy_query.yaml[0m:84:9 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_policy/tests/dcnm_image_policy_replaced.yaml[0m:89:9 [2mdid not find expected key[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/fqcn/\fqcn[action-core]]8;;\[0m[2m:[0m [31mUse FQCN for builtin module actions (include_tasks).[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tasks/main.yaml[0m:2:5 [2mUse `ansible.builtin.include_tasks` or `ansible.legacy.include_tasks` instead.[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[missing]]8;;\[0m[2m:[0m [31mAll tasks should be named.[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tasks/main.yaml[0m:2 [2mTask/Handler: include_tasks dcnm.yaml[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tests/02_setup_replace_image_policies.yaml[0m:31:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tests/deleted.yaml[0m:72:14 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tests/deleted_1x_switch.yaml[0m:72:14 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tests/merged_override_global_config.yaml[0m:85:14 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upgrade/tests/query.yaml[0m:77:14 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_upload/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_upload/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_image_upload/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upload/tests/dcnm/dcnm_image_upload_delete.yaml[0m:250:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upload/tests/dcnm/dcnm_image_upload_merge.yaml[0m:131:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upload/tests/dcnm/dcnm_image_upload_override.yaml[0m:196:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_image_upload/tests/dcnm/dcnm_image_upload_query.yaml[0m:162:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_interface/tasks/main.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_interface/tasks/main.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_interface/tasks/main.yaml[0m:21:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_aa_fex_delete.yaml[0m:125
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_aa_fex_merge.yaml[0m:187
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_aa_fex_override.yaml[0m:172
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_aa_fex_query.yaml[0m:200:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_aa_fex_replace.yaml[0m:73
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_aa_fex_replace.yaml[0m:135
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_delete_deploy.yaml[0m:144
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_delete_deploy.yaml[0m:255
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_delete_diff_options.yaml[0m:296:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:103
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:112
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:131
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:164
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:173
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:207
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_eth_delete.yaml[0m:216
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_intf_sanity.yaml[0m:275
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_intf_sanity.yaml[0m:388
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_intf_sanity.yaml[0m:500
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_intf_sanity.yaml[0m:596
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_lo_delete.yaml[0m:127
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_lo_fabric.yaml[0m:200
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_lo_mpls.yaml[0m:254
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_lo_override.yaml[0m:159
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_old_format_pb.yaml[0m:277:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_pc_delete.yaml[0m:124
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_pc_merge.yaml[0m:116
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_pc_override.yaml[0m:154
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_pc_replace.yaml[0m:154
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_st_fex_delete.yaml[0m:146
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_st_fex_merge.yaml[0m:266
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_st_fex_override.yaml[0m:173
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_st_fex_query.yaml[0m:237:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_st_fex_replace.yaml[0m:170
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_sub_delete.yaml[0m:127
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_sub_merge.yaml[0m:118
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_sub_override.yaml[0m:158
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_sub_replace.yaml[0m:159
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_delete.yaml[0m:142
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_invalid_params.yaml[0m:242:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_merge.yaml[0m:120
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_override.yaml[0m:158
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_query.yaml[0m:103
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_replace.yaml[0m:145
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_interface/tests/dcnm/dcnm_svi_replace.yaml[0m:164
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/deleted.yaml[0m:164:5 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/merged.yaml[0m:129:5 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/poap.yaml[0m:242:17 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/query.yaml[0m:129:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (165 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/rma.yaml[0m:39
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[line-length]]8;;\[0m[2m:[0m [31mLine too long (167 > 160 characters)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/rma.yaml[0m:40
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/rma.yaml[0m:227
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_inventory/tests/dcnm/sanity.yaml[0m:137:5 [2mdid not find expected key[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_links/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_links/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_links/tasks/dcnm.yaml[0m:21:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_ipv6_delete.yaml[0m:262:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_ipv6_merge.yaml[0m:411:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_ipv6_modify.yaml[0m:307:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_ipv6_replace.yaml[0m:357:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_numbered_delete.yaml[0m:360:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_numbered_merge.yaml[0m:553:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_numbered_modify.yaml[0m:475:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_numbered_replace.yaml[0m:527:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_query.yaml[0m:422:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_inter_template_change.yaml[0m:194:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_ipv6_delete.yaml[0m:179:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_ipv6_merge.yaml[0m:280:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_ipv6_modify.yaml[0m:245:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_ipv6_query.yaml[0m:259:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_ipv6_replace.yaml[0m:257:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_missing_params.yaml[0m:136:91 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_numbered_delete.yaml[0m:161:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_numbered_merge.yaml[0m:297:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_numbered_modify.yaml[0m:186:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_numbered_query.yaml[0m:231:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_numbered_replace.yaml[0m:203:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_numbered_template_change.yaml[0m:143:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_unnumbered_delete.yaml[0m:164:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_unnumbered_merge.yaml[0m:229:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_unnumbered_modify.yaml[0m:163:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_unnumbered_query.yaml[0m:231:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_unnumbered_replace.yaml[0m:197:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_unnumbered_template_change.yaml[0m:140:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_vpc_delete.yaml[0m:160:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_vpc_merge.yaml[0m:155:91 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_vpc_modify.yaml[0m:78:91 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_vpc_query.yaml[0m:214:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_intra_vpc_replace.yaml[0m:78:91 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_misc.yaml[0m:881:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/dcnm_links_sanity.yaml[0m:263:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/xe-test-cases/dcnm_links_intra_xe_delete.yaml[0m:151:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/xe-test-cases/dcnm_links_intra_xe_merge.yaml[0m:153:91 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/xe-test-cases/dcnm_links_intra_xe_modify.yaml[0m:80:91 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/xe-test-cases/dcnm_links_intra_xe_query.yaml[0m:212:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_links/tests/dcnm/xe-test-cases/dcnm_links_intra_xe_replace.yaml[0m:78:91 [2mdid not find expected key[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_log/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_log/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_log/tasks/dcnm.yaml[0m:29:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_log/tests/dcnm/test_logging.yaml[0m:70:5 [2mdid not find expected key[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_maintenance_mode/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_maintenance_mode/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_maintenance_mode/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/fqcn/\fqcn[action-core]]8;;\[0m[2m:[0m [31mUse FQCN for builtin module actions (include_tasks).[0m
+[35mtests/integration/targets/dcnm_maintenance_mode/tasks/main.yaml[0m:2:5 [2mUse `ansible.builtin.include_tasks` or `ansible.legacy.include_tasks` instead.[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[missing]]8;;\[0m[2m:[0m [31mAll tasks should be named.[0m
+[35mtests/integration/targets/dcnm_maintenance_mode/tasks/main.yaml[0m:2 [2mTask/Handler: include_tasks dcnm.yaml[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/risky-file-permissions/\risky-file-permissions]8;;\[0m[2m:[0m [31mFile permissions unset or incorrect.[0m
+[35mtests/integration/targets/dcnm_network/tasks/main.yaml[0m:29 [2mTask/Handler: MAIN - Create VRF Config File using J2 Template[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_network/tests/dcnm/deleted.yaml[0m:523:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_network/tests/dcnm/merged.yaml[0m:745:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_network/tests/dcnm/self-contained-tests/ingress_replication_networks.yaml[0m:5:40 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_network/tests/dcnm/self-contained-tests/tor_ports_networks.yaml[0m:6:40 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_policy/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_policy/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_policy/tasks/dcnm.yaml[0m:21:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[missing]]8;;\[0m[2m:[0m [31mAll tasks should be named.[0m
+[35mtests/integration/targets/dcnm_policy/tasks/main.yaml[0m:2 [2mTask/Handler: include_tasks dcnm.yaml[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_delete.yaml[0m:514:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_merge.yaml[0m:509:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_merge_multi_switch.yaml[0m:128:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_merge_same_template.yaml[0m:46
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_merge_same_template.yaml[0m:79
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 14 but found 12[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_merge_same_template.yaml[0m:98
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_merge_same_template.yaml[0m:103
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_modify.yaml[0m:193:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_query.yaml[0m:266:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_sanity.yaml[0m:246:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_policy/tests/dcnm/dcnm_policy_with_vars_merge.yaml[0m:230:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_resource_manager/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_resource_manager/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_resource_manager/tasks/dcnm.yaml[0m:21:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_resource_manager/tests/dcnm/dcnm_res_manager_delete.yaml[0m:269:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_resource_manager/tests/dcnm/dcnm_res_manager_merge.yaml[0m:362:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_resource_manager/tests/dcnm/dcnm_res_manager_query.yaml[0m:326:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_resource_manager/tests/dcnm/dcnm_res_manager_sanity.yaml[0m:214:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_service_node/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_service_node/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_service_node/tasks/dcnm.yaml[0m:21:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_node/tests/dcnm/deleted.yaml[0m:64:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_node/tests/dcnm/merged.yaml[0m:68:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_node/tests/dcnm/overridden.yaml[0m:64:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_node/tests/dcnm/query.yaml[0m:64:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_node/tests/dcnm/replaced.yaml[0m:64:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_node/tests/dcnm/sanity.yaml[0m:76:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tasks/dcnm.yaml[0m:88:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tests/dcnm/dcnm_service_policy_delete.yaml[0m:560:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tests/dcnm/dcnm_service_policy_merge.yaml[0m:397:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tests/dcnm/dcnm_service_policy_overridden.yaml[0m:367:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tests/dcnm/dcnm_service_policy_query.yaml[0m:273:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tests/dcnm/dcnm_service_policy_replace.yaml[0m:189:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_policy/tests/dcnm/dcnm_service_policy_sanity.yaml[0m:374:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tasks/dcnm.yaml[0m:50:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_adc_po_change.yaml[0m:407:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_delete.yaml[0m:533:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_fw_po_change.yaml[0m:260:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_merge.yaml[0m:263
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_merge.yaml[0m:272
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_merge.yaml[0m:281
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_merge.yaml[0m:327
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_merge_existing.yaml[0m:831:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_opt_elems.yaml[0m:152
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_opt_elems.yaml[0m:161
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_opt_elems.yaml[0m:170
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_opt_elems.yaml[0m:216
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_state.yaml[0m:262
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_state.yaml[0m:271
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_state.yaml[0m:280
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_no_state.yaml[0m:326
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_override.yaml[0m:585:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_query.yaml[0m:395:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_replace.yaml[0m:841:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_sanity.yaml[0m:267
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_sanity.yaml[0m:276
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_sanity.yaml[0m:285
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_service_route_peering/tests/dcnm/dcnm_service_route_peering_sanity.yaml[0m:331
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_template/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_template/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_template/tasks/dcnm.yaml[0m:21:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_delete.yaml[0m:103
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_delete.yaml[0m:110
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_delete.yaml[0m:130
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_delete.yaml[0m:136
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_delete.yaml[0m:147
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_merge.yaml[0m:217:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_modify_properties.yaml[0m:261:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+Read [34m]8;;https://ansible.readthedocs.io/projects/lint/configuring/#ignoring-rules-for-entire-files\documentation]8;;\[0m for instructions on how to ignore specific rule violations.
+
+# Rule Violation Summary
+
+131 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\load-failure]8;;\[0m [2mprofile:min tags:core,unskippable[0m
+  2 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\syntax-check]8;;\[0m [2mprofile:min tags:core,unskippable[0m
+ 11 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\key-order]8;;\[0m [2mprofile:min tags:formatting[0m
+  1 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\schema]8;;\[0m [2mprofile:min tags:core[0m
+  6 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\name]8;;\[0m [2mprofile:min tags:idiom[0m
+  2 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\name]8;;\[0m [2mprofile:min tags:idiom[0m
+ 10 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\yaml]8;;\[0m [2mprofile:min tags:formatting,yaml[0m
+  6 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\yaml]8;;\[0m [2mprofile:min tags:formatting,yaml[0m
+ 84 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\yaml]8;;\[0m [2mprofile:min tags:formatting,yaml[0m
+  9 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\yaml]8;;\[0m [2mprofile:min tags:formatting,yaml[0m
+ 47 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\name]8;;\[0m [2mprofile:min tags:idiom[0m
+  1 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\risky-file-permissions]8;;\[0m [2mprofile:min tags:unpredictability[0m
+  5 [34m]8;;https://ansible.readthedocs.io/projects/lint/rules/\fqcn]8;;\[0m [2mprofile:min tags:formatting[0m
+
+[31m[1mFailed[0m[0m: 315 failure(s), 0 warning(s) in 861 files processed of 1067 encountered. Profile 'production' was required.
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_no_delete.yaml[0m:89:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_query.yaml[0m:103
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_query.yaml[0m:111
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_query.yaml[0m:133
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_query.yaml[0m:161
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_query.yaml[0m:167
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_sanity.yaml[0m:449:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_validation_fail.yaml[0m:57
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_validation_fail.yaml[0m:71
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/yaml/\yaml[indentation]]8;;\[0m[2m:[0m [31mWrong indentation: expected 8 but found 10[0m
+[35mtests/integration/targets/dcnm_template/tests/dcnm/dcnm_template_wrong_state.yaml[0m:54
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_vrf/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_vrf/tasks/dcnm.yaml[0m:16:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_vrf/tasks/dcnm.yaml[0m:21:9 [2mTask/Handler: debug[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_vrf/tasks/dcnm.yaml[0m:25:9 [2mTask/Handler: debug[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/dcnm_vrf/tasks/dcnm.yaml[0m:29:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/deleted.yaml[0m:75:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/merged.yaml[0m:93:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/overridden.yaml[0m:89:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/query.yaml[0m:76:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/replaced.yaml[0m:73:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/sanity.yaml[0m:80:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/self-contained-tests/deleted_vrf_all.yaml[0m:60:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/self-contained-tests/merged_vrf_all.yaml[0m:60:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/self-contained-tests/overridden_vrf_all.yaml[0m:60:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/self-contained-tests/replaced_vrf_all.yaml[0m:60:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/self-contained-tests/scale.yaml[0m:103:5 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/dcnm_vrf/tests/dcnm/self-contained-tests/vrf_lite.yaml[0m:81:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/module_integration/tasks/dcnm.yaml[0m:2:9 [2mTask/Handler: collect dcnm test cases[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/module_integration/tasks/dcnm.yaml[0m:14:9 [2mTask/Handler: set test_items[0m
+[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/name/\name[casing]]8;;\[0m[2m:[0m [31mAll names should start with an uppercase letter.[0m
+[35mtests/integration/targets/module_integration/tasks/dcnm.yaml[0m:18:9 [2mTask/Handler: run test cases (connection=httpapi)[0m
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/module_integration/tasks/fabric_setup.yaml[0m:12:5 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/module_integration/tests/spine_leaf_merged.yaml[0m:23:5 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/module_integration/tests/spine_leaf_overridden.yaml[0m:23:5 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/module_integration/tests/spine_leaf_replaced.yaml[0m:23:5 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/module_integration/tests/spine_leaf_replaced_2.yaml[0m:20:5 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/syntax-check/\syntax-check[specific]]8;;\[0m[2m:[0m [31m'ansible.builtin.pause' is not a valid attribute for a LoopControl[0m
+[35mtests/integration/targets/prepare_dcnm_intf/tasks/main.yaml[0m:326:5
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/prepare_dcnm_policy/tasks/main.yaml[0m:297:35 [2mmapping values are not allowed in this context[0m
+[0m[0m
+[31m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/syntax-check/\syntax-check[specific]]8;;\[0m[2m:[0m [31mYAML parsing failed: Colons in unquoted values must be followed by a non-space character.[0m
+[35mtests/integration/targets/prepare_dcnm_policy/tasks/main.yaml[0m:297:29
+[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/prepare_dcnm_service_policy/tasks/main.yaml[0m:180:13 [2mdid not find expected key[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/prepare_dcnm_service_route_peering/tasks/main.yaml[0m:27:7 [2mdid not find expected '-' indicator[0m
+[0m[0m
+[33m[34m]8;;https://ansible.readthedocs.io/projects/lint/rules/load-failure/\load-failure[yaml]]8;;\[0m[2m:[0m [33mFailed to load YAML file[0m [2m[33m(warning)[0m
+[35mtests/integration/targets/prepare_dcnm_template/tasks/main.yaml[0m:222:35 [2mmapping values are not allowed in this context[0m
+[0m[0m

@@ -1,0 +1,9 @@
+nxos_vars:
+    switch1_file1: air.ndfc_ut
+    switch1_file2: earth.ndfc_ut
+    switch1_file3: fire.ndfc_ut
+    switch1_file4: water.ndfc_ut
+    switch2_file1: black.ndfc_ut
+    switch2_file2: blue.ndfc_ut
+    switch2_file3: green.ndfc_ut
+    switch2_file4: red.ndfc_ut

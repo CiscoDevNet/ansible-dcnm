@@ -1,0 +1,240 @@
+##############################################
+##               SETUP                      ##
+##############################################
+
+- name: Remove local log file
+  local_action: command rm -f dcnm_intf.log
+
+- name: Delete any existing ST FEX interfaces (cleanup)
+  cisco.dcnm.dcnm_interface:
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
+    state: deleted
+    config:
+      - name: po150
+        switch:
+          - "{{ test_data_common.switch1 }}"
+      - name: po151
+        switch:
+          - "{{ test_data_common.switch1 }}"
+      - name: po152
+        switch:
+          - "{{ test_data_common.switch1 }}"
+  register: result
+  ignore_errors: true
+
+- name: Put the fabric to default state
+  cisco.dcnm.dcnm_interface:
+    check_deploy: "{{ test_data_common.check_deploy | bool }}"
+    fabric: "{{ test_data_common.fabric }}"
+    state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+  register: result
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+
+- block:
+
+##############################################
+##             SETUP VARS                   ##
+##############################################
+
+    - name: Setup Internal TestCase Variables
+      ansible.builtin.set_fact:
+        test_data_interfaces:
+          query_conf_template: "templates/dcnm_st_fex/query_conf.j2"
+          query_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_query_conf.yaml"
+          query_merge_conf_template: "templates/dcnm_st_fex/query_merge_conf.j2"
+          query_merge_conf_file: "{{ role_path }}/files/dcnm_interface_st_fex_query_merge_conf.yaml"
+      delegate_to: localhost
+
+    - name: Create Interface Config Files using J2 Templates
+      ansible.builtin.template:
+        src: "{{ test_data_interfaces[item ~ '_conf_template'] }}"
+        dest: "{{ test_data_interfaces[item ~ '_conf_file'] }}"
+      with_items:
+        - query
+        - query_merge
+      delegate_to: localhost
+
+##############################################
+##                MERGE                     ##
+##############################################
+
+    - name: Load Interface Config Files
+      ansible.builtin.set_fact:
+        dcnm_interface_query_conf: "{{ lookup('file', test_data_interfaces.query_conf_file) | from_yaml }}"
+        dcnm_interface_query_merge_conf: "{{ lookup('file', test_data_interfaces.query_merge_conf_file) | from_yaml }}"
+      delegate_to: localhost
+
+    - name: Create ST FEX interfaces for query tests
+      cisco.dcnm.dcnm_interface: &fex_merge
+        check_deploy: false
+        fabric: "{{ test_data_common.fabric }}"
+        state: merged                         # only choose form [merged, replaced, deleted, overridden, query]
+        config: "{{ dcnm_interface_query_merge_conf }}"
+      register: result
+
+    - name: ASSERT - Verify ST FEX interface creation results for query tests
+      ansible.builtin.assert:
+        that:
+          - 'result.changed == true'
+          - 'item["RETURN_CODE"] == 200'
+        fail_msg: "Creation of ST FEX interfaces for query tests failed - {{ result }}"
+        success_msg: "Creation of ST FEX interfaces for query tests succeeded"
+      loop: '{{ result.response }}'
+
+    - name: QUERY - Get ST FEX interface state in NDFC (setup verification)
+      cisco.dcnm.dcnm_interface:
+        state: query
+        fabric: "{{ test_data_common.fabric }}"
+        config: "{{ dcnm_interface_query_merge_conf }}"
+      register: verify_result
+
+    - name: VALIDITY CHECK - Verify ST FEX interface state in NDFC (setup verification)
+      cisco.dcnm.tests.integration.ndfc_interface_validate:
+        config_path: "{{ test_data_interfaces.query_merge_conf_file }}"
+        ndfc_data: "{{ verify_result }}"
+        test_data: "{{ test_data_common }}"
+      delegate_to: localhost
+
+##############################################
+##               QUERY                      ##
+##############################################
+
+    - name: Query interface details - Existing
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po150
+            switch:
+              - "{{ test_data_common.switch1 }}"
+          - name: po151
+            switch:
+              - "{{ test_data_common.switch1 }}"
+          - name: po152
+            switch:
+              - "{{ test_data_common.switch1 }}"
+      register: result
+
+    - ansible.builtin.assert:
+      that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 3'
+
+    - ansible.builtin.assert:
+      that:
+          - '(result["response"] | length) != 0'
+
+    - name: Query interface details - Subset of Existing
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po150
+            switch:
+                - "{{ test_data_common.switch1 }}"
+          - name: po152
+            switch:
+                - "{{ test_data_common.switch1 }}"
+      register: result
+
+    - ansible.builtin.assert:
+      that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 2'
+
+    - ansible.builtin.assert:
+      that:
+          - '(result["response"] | length) != 0'
+
+    - name: Query interface details - Existing and Non-Existing
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po151
+            switch:
+                - "{{ test_data_common.switch1 }}"
+          - name: po122
+            switch:
+                - "{{ test_data_common.switch1 }}"
+      register: result
+
+    - ansible.builtin.assert:
+      that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 1'
+
+    - ansible.builtin.assert:
+      that:
+          - '(result["response"] | length) != 0'
+
+    - name: Query interface details - Non-Existing
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: query                        # only choose form [merged, replaced, deleted, overridden, query]
+        config:
+          - name: po121
+            switch:
+                - "{{ test_data_common.switch1 }}"
+          - name: po122
+            switch:
+                - "{{ test_data_common.switch1 }}"
+      register: result
+
+    - ansible.builtin.assert:
+      that:
+          - 'result.changed == false'
+          - '(result["diff"][0]["merged"] | length) == 0'
+          - '(result["diff"][0]["deleted"] | length) == 0'
+          - '(result["diff"][0]["replaced"] | length) == 0'
+          - '(result["diff"][0]["overridden"] | length) == 0'
+          - '(result["diff"][0]["deploy"] | length) == 0'
+          - '(result["diff"][0]["query"] | length) == 0'
+
+    - ansible.builtin.assert:
+      that:
+          - '(result["response"] | length) == 0'
+
+##############################################
+##             CLEANUP                      ##
+##############################################
+
+  always:
+
+    - name: Put fabric to default state
+      cisco.dcnm.dcnm_interface:
+        check_deploy: "{{ test_data_common.check_deploy | bool }}"
+        fabric: "{{ test_data_common.fabric }}"
+        state: overridden                     # only choose form [merged, replaced, deleted, overridden, query]
+      register: result
+      when: it_context is not defined
+
+  - ansible.builtin.assert: that:
+          - 'item["RETURN_CODE"] == 200'
+      loop: '{{ result.response }}'
+      when: it_context is not defined

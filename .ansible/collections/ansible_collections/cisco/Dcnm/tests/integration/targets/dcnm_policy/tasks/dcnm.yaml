@@ -1,0 +1,67 @@
+---
+- name: Collect dcnm test cases
+  ansible.builtin.find:
+    paths: "{{ role_path }}/tests/dcnm"
+    patterns: "{{ testcase }}.yaml"
+  connection: local
+  register: dcnm_cases
+  tags: sanity
+
+- name: Set fact
+  ansible.builtin.set_fact:
+    test_cases:
+      files: "{{ dcnm_cases.files }}"
+  tags: sanity
+
+- name: Set test_items
+  ansible.builtin.set_fact:
+    test_items: "{{ test_cases.files | map(attribute='path') | list }}"
+  tags: sanity
+
+- name: Run test cases (connection=httpapi)
+  ansible.builtin.include_tasks: "{{ test_case_to_run }}"
+  with_items: "{{ test_items }}"
+  loop_control:
+    loop_var: test_case_to_run
+  tags: sanity
+
+- name: Final Cleanup - delete telemetry policy that we created during init
+  cisco.dcnm.dcnm_policy:
+    fabric: "{{ ansible_it_fabric }}"
+    state: deleted                     # only choose form [merged, deleted, query]
+    config:
+      - name: my_feature_telemetry
+      - name: my_base_ospf
+      - switch:
+          - ip: "{{ ansible_switch1 }}"
+          - ip: "{{ ansible_switch2 }}"
+  register: result
+  tags: sanity
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'
+  tags: sanity
+
+- name: Final Cleanup - delete all templates created during init
+  cisco.dcnm.dcnm_template:
+    state: deleted       # only choose form [merged, deleted, query]
+    config:
+      - name: template_101
+      - name: template_102
+      - name: template_103
+      - name: template_104
+      - name: template_105
+      - name: my_base_ospf
+      - name: my_feature_telemetry
+  tags: sanity
+
+  register: result
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - 'item["RETURN_CODE"] == 200'
+  loop: '{{ result.response }}'

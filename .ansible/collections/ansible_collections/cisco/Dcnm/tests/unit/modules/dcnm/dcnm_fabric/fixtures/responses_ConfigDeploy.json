@@ -1,0 +1,25 @@
+{
+    "test_notes": [
+        "Mocked responses for config_deploy requests"
+    ],
+    "test_placeholder_00000a": {
+        "TEST_NOTES": [
+            "Placeholder for DEPLOYMENT_FREEZE test"
+        ],
+        "DATA": "Operation is not allowed as NDFC/Fabric is in freeze mode",
+        "MESSAGE": "Internal Server Error",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/LAN_CLASSIC_1/config-deploy?forceShowRun=false",
+        "RETURN_CODE": 500,
+        "sequence_number": 3
+    },
+    "test_fabric_update_bulk_00035a": {
+        "DATA": {
+            "status": "Configuration deployment completed."
+        },
+        "MESSAGE": "OK",
+        "METHOD": "POST",
+        "REQUEST_PATH": "https://172.22.150.244:443/appcenter/cisco/ndfc/api/v1/rest/control/fabrics/f1/config-deploy?forceShowRun=false",
+        "RETURN_CODE": 200
+    }
+}

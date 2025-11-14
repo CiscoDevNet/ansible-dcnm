@@ -1,0 +1,287 @@
+{
+  "create_response" :
+  {
+     "RETURN_CODE": 200,
+     "METHOD": "POST",
+     "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/sftp-upload",
+     "MESSAGE": "OK",
+     "DATA": "Successfully uploaded selected image file(s)."
+  },
+
+  "delete_response":
+  {
+      "RETURN_CODE": 200,
+      "METHOD": "DELETE",
+      "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/smart-image",
+      "MESSAGE": "OK",
+      "DATA": "Image(s) Deleted Successfully"
+  },
+
+  "image_list_no_images_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [],
+      "message": ""
+    }
+  },
+
+  "image_list_all_images_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.10.bin",
+        "fileVersion": "9.3.10",
+        "version": "9.3.10",
+        "imageName": "nxos.9.3.10.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1966000640",
+        "checksum": "2dcae3f31446213f9a610240796a7826",
+        "osType": "32bit",
+        "refCount": 0
+      },
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "fileVersion": "9.3.6",
+        "version": "1.0.0",
+        "imageName": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "imageType": "rpm",
+        "filetype": "Patch",
+        "size": "19061",
+        "checksum": "678aca6d523a81f38e9ed070ffcee2c9",
+        "osType": "32bit",
+        "refCount": 0
+      },
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.8.bin",
+        "fileVersion": "9.3.8",
+        "version": "9.3.8",
+        "imageName": "nxos.9.3.8.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1956867584",
+        "checksum": "cd21df22e7c4df02e0d5178c0e6f6d48",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  },
+
+  "image_list_9_3_10_image_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.10.bin",
+        "fileVersion": "9.3.10",
+        "version": "9.3.10",
+        "imageName": "nxos.9.3.10.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1966000640",
+        "checksum": "2dcae3f31446213f9a610240796a7826",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  },
+
+  "image_list_rpm_image_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "fileVersion": "9.3.6",
+        "version": "1.0.0",
+        "imageName": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "imageType": "rpm",
+        "filetype": "Patch",
+        "size": "19061",
+        "checksum": "678aca6d523a81f38e9ed070ffcee2c9",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  },
+
+  "image_list_9_3_8_image_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.8.bin",
+        "fileVersion": "9.3.8",
+        "version": "9.3.8",
+        "imageName": "nxos.9.3.8.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1956867584",
+        "checksum": "cd21df22e7c4df02e0d5178c0e6f6d48",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  },
+
+  "image_list_9_3_8_and_9_3_10_image_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.10.bin",
+        "fileVersion": "9.3.10",
+        "version": "9.3.10",
+        "imageName": "nxos.9.3.10.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1966000640",
+        "checksum": "2dcae3f31446213f9a610240796a7826",
+        "osType": "32bit",
+        "refCount": 0
+      },
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.8.bin",
+        "fileVersion": "9.3.8",
+        "version": "9.3.8",
+        "imageName": "nxos.9.3.8.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1956867584",
+        "checksum": "cd21df22e7c4df02e0d5178c0e6f6d48",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  },
+
+  "image_list_9_3_10_and_rpm_image_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.10.bin",
+        "fileVersion": "9.3.10",
+        "version": "9.3.10",
+        "imageName": "nxos.9.3.10.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1966000640",
+        "checksum": "2dcae3f31446213f9a610240796a7826",
+        "osType": "32bit",
+        "refCount": 0
+      },
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "fileVersion": "9.3.6",
+        "version": "1.0.0",
+        "imageName": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "imageType": "rpm",
+        "filetype": "Patch",
+        "size": "19061",
+        "checksum": "678aca6d523a81f38e9ed070ffcee2c9",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  },
+
+  "image_list_9_3_8_and_rpm_image_response":
+  {
+    "RETURN_CODE": 200,
+    "METHOD": "GET",
+    "REQUEST_PATH": "https://10.195.225.193:443/appcenter/cisco/ndfc/api/v1/imagemanagement/rest/imageupload/uploaded-images-table",
+    "MESSAGE": "OK",
+    "DATA":
+    {
+      "status": "SUCCESS",
+      "lastOperDataObject": [
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "fileVersion": "9.3.6",
+        "version": "1.0.0",
+        "imageName": "nxos.CSCvw89875-n9k_ALL-1.0.0-9.3.6.lib32_n9000.rpm",
+        "imageType": "rpm",
+        "filetype": "Patch",
+        "size": "19061",
+        "checksum": "678aca6d523a81f38e9ed070ffcee2c9",
+        "osType": "32bit",
+        "refCount": 0
+      },
+      {
+        "platform": "N9K/N3K",
+        "name": "nxos.9.3.8.bin",
+        "fileVersion": "9.3.8",
+        "version": "9.3.8",
+        "imageName": "nxos.9.3.8.bin",
+        "imageType": "image",
+        "filetype": "nxos",
+        "size": "1956867584",
+        "checksum": "cd21df22e7c4df02e0d5178c0e6f6d48",
+        "osType": "32bit",
+        "refCount": 0
+      }],
+      "message": ""
+    }
+  }
+}

@@ -1,0 +1,240 @@
+---
+- name: Import DCNM Inventory Base Tasks
+  ansible.builtin.import_tasks: ../base_tasks.yaml
+  tags: query
+
+# ----------------------------------------------
+# Run Test Cases
+# ----------------------------------------------
+
+# TC - 1
+- name: Query TC1 - Merge a Switch using GreenField Deployment
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: merged
+    config: "{{ ndfc_fabric_base_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: create_result
+  tags: query
+
+- name: Query TC1 - Query Inventory State in Fabric
+  cisco.dcnm.dcnm_inventory:
+    state: query
+    fabric: "{{ test_data.test_fabric }}"
+  register: query_result
+  tags: query
+
+- name: Query TC1 - Validate Test Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_base_conf }}"
+    changed: "{{ create_result.changed }}"
+  register: result
+  tags: query
+
+# TC - 2
+- name: Query TC2 - Prepare Test Config
+  ansible.builtin.set_fact:
+    ndfc_fabric_query_conf:
+      - seed_ip: "{{ test_data.sw1 }}"
+        role: leaf
+  delegate_to: localhost
+  tags: query
+
+- name: Query TC2 - Query a Switch - Verify HostIP and Role Match
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+    config: "{{ ndfc_fabric_query_conf }}"
+  register: query_result
+  tags: query
+
+- name: Query TC2 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_query_conf }}"
+  register: result
+  tags: query
+
+# TC - 3
+- name: Query TC3 - Query a Switch without a Config element
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+  register: query_result
+  tags: query
+
+- name: Query TC3 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_base_conf }}"
+  register: result
+  tags: query
+
+# TC - 4
+- name: Query TC4 - Prepare Test Config
+  ansible.builtin.set_fact:
+    ndfc_fabric_query_conf:
+      - seed_ip: "{{ test_data.sw1 }}"
+  delegate_to: localhost
+  tags: query
+
+- name: Query TC4 - Query a Switch Without Role - Role Mismatch Ignored
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+    config: "{{ ndfc_fabric_query_conf }}"
+  register: query_result
+  tags: query
+
+- name: Query TC4 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_query_conf }}"
+    mode: "ip"
+  register: result
+  tags: query
+
+# TC - 5
+- name: Query TC5 - Prepare Test Config
+  ansible.builtin.set_fact:
+    ndfc_fabric_query_conf:
+      - role: leaf
+  delegate_to: localhost
+  tags: query
+
+- name: Query TC5 - Query Fabric Without Seed_ip - IP Mismatch Ignored
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+    config: "{{ ndfc_fabric_query_conf }}"
+  register: query_result
+  tags: query
+
+- name: Query TC5 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_query_conf }}"
+    mode: "role"
+  register: result
+  tags: query
+
+# TC - 6
+- name: Query TC6 - Query a Switch with Incorrect Role
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+    config:
+      - seed_ip: "{{ test_data.sw1 }}"
+      role: spine
+  register: query_result
+  tags: query
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - '"The queried switch is not part of the fabric configured" in query_result.response'
+  tags: query
+
+# TC - 7
+- name: Query TC7 - Delete all Switches from Fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: deleted
+  register: deleted_result
+  tags: query
+
+- name: Query TC7 - Prepare Test Config
+  ansible.builtin.set_fact:
+    ndfc_fabric_query_conf:
+  delegate_to: localhost
+  tags: query
+
+- name: Query TC7 - Query Fabric State
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+    config: "{{ ndfc_fabric_query_conf }}"
+  register: query_result
+  tags: query
+
+- name: Query TC7 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_query_conf }}"
+    changed: "{{ deleted_result.changed }}"
+  register: result
+  tags: query
+
+# TC - 8
+- name: Query TC8 - Query a non available Switch
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+    config:
+      - seed_ip: "{{ test_data.sw1 }}"
+      role: leaf
+  register: query_result
+  tags: query
+
+- name: Assert
+  ansible.builtin.assert:
+    that:
+      - '"The queried switch is not part of the fabric configured" in query_result.response'
+  tags: query
+
+# TC - 9
+- name: Query TC9 - Prepare Config
+  ansible.builtin.set_fact:
+    switch_conf:
+      - seed_ip: "{{ test_data.sw1 }}"
+      max_hops: 0
+      auth_proto: MD5
+      role: border_gateway
+    - seed_ip: "{{ test_data.sw2 }}"
+      max_hops: 0
+      auth_proto: MD5
+      role: border_gateway
+  delegate_to: localhost
+  tags: query
+
+- name: Import Configuration Prepare Tasks
+  vars:
+    ansible.builtin.file: query
+  ansible.builtin.import_tasks: ../conf_prep_tasks.yaml
+  tags: query
+
+- name: Query TC9 - Add Switch with Border Gateways to Fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: merged
+    config: "{{ ndfc_fabric_query_conf }}"
+    deploy: "{{ test_data.deploy }}"
+  register: create_result
+  tags: query
+
+- name: Query TC9 - Query Fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: query
+  register: query_result
+  tags: query
+
+- name: Query TC9 - Validate NDFC Data
+  cisco.dcnm.tests.integration.ndfc_inventory_validate:
+    ndfc_data: "{{ query_result }}"
+    test_data: "{{ ndfc_fabric_query_conf }}"
+    changed: "{{ create_result.changed }}"
+  register: result
+  tags: query
+
+# ----------------------------------------------
+# Cleanup Fabric Switches
+# ----------------------------------------------
+
+- name: Query - Cleanup Fabric
+  cisco.dcnm.dcnm_inventory:
+    fabric: "{{ test_data.test_fabric }}"
+    state: deleted
+  register: result
+  tags: query

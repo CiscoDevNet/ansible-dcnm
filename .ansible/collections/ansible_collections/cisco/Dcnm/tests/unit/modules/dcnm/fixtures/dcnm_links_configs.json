@@ -1,0 +1,2376 @@
+{
+  "intra_delete_num_config": [
+  {
+    "dst_device": "192.168.123.161",
+      "dst_fabric": "mmudigon-numbered",
+      "dst_interface": "Ethernet1/1",
+      "src_device": "192.168.123.160",
+      "src_interface": "Ethernet1/1"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/2"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/3"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/4"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/5",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/5"
+  }
+  ],
+
+  "intra_delete_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/2"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/3"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/4"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/5",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/5"
+  }
+  ],
+
+  "intra_delete_unnum_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/2"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/3"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/4"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/5",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/5"
+  }
+  ],
+
+  "intra_delete_vpc_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/1"
+  },
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/2"
+  },
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/3"
+  },
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4"
+  },
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/5",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/5"
+  }
+  ],
+
+  "inter_delete_num_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/4"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/5",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/5"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/6",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/6"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/7",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/7"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/8",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/8"
+  }
+  ],
+
+  "intra_merge_num_no_opts_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": true,
+      "peer1_ipv4_addr": "192.168.2.1",
+      "peer2_ipv4_addr": "192.168.2.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/3",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_merge_unnum_no_opts_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216
+    },
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_unnum_link"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "intra_merge_ipv6_no_opts_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv6_addr": "fe80:0201::01",
+      "peer2_ipv6_addr": "fe80:0201::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_ipv6_link_local"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv6_addr": "fe80:0202::01",
+      "peer2_ipv6_addr": "fe80:0202::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/3",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_merge_vpc_no_opts_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "inter_merge_num_no_opts_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "dst_asn": 1201,
+      "ipv4_subnet": "193.168.2.1/24",
+      "neighbor_ip": "193.168.2.2",
+      "src_asn": 1200
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/4",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/5",
+    "profile": {
+      "dst_asn": 1301,
+      "ipv4_addr": "193.168.3.1",
+      "neighbor_ip": "193.168.3.2",
+      "src_asn": 1300
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/5",
+    "template": "ext_evpn_multisite_overlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/6",
+    "profile": {
+      "dst_asn": 1401,
+      "ipv4_subnet": "193.168.4.1/24",
+      "neighbor_ip": "193.168.4.2",
+      "src_asn": 1400
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/6",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/7",
+    "profile": {
+      "dst_asn": 1501,
+      "ipv4_subnet": "193.168.5.1/24",
+      "neighbor_ip": "193.168.5.2",
+      "src_asn": 1500
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/7",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/8",
+    "profile": {
+      "dst_asn": 1601,
+      "ipv4_addr": "193.168.6.1",
+      "neighbor_ip": "193.168.6.2",
+      "src_asn": 1600
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/8",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "intra_merge_num_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 9216,
+      "peer1_bfd_echo_disable": false,
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_bfd_echo_disable": false,
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 1500,
+      "peer1_bfd_echo_disable": false,
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer1_ipv4_addr": "192.168.2.1",
+      "peer1_ipv6_addr": "fe80:01::01",
+      "peer2_bfd_echo_disable": false,
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "peer2_ipv4_addr": "192.168.2.2",
+      "peer2_ipv6_addr": "fe80:01::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/3",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_merge_unnum_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 9216,
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest"
+    },
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_unnum_link"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "intra_merge_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 9216,
+      "peer1_bfd_echo_disable": false,
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer1_ipv4_addr": "192.169.1.1",
+      "peer1_ipv6_addr": "fe80:0201::01",
+      "peer2_bfd_echo_disable": false,
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "peer2_ipv4_addr": "192.169.1.2",
+      "peer2_ipv6_addr": "fe80:0201::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_ipv6_link_local"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 1500,
+      "peer1_bfd_echo_disable": false,
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer1_ipv4_addr": "192.169.2.1",
+      "peer1_ipv6_addr": "fe80:0202::01",
+      "peer2_bfd_echo_disable": false,
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "peer2_ipv4_addr": "192.169.2.2",
+      "peer2_ipv6_addr": "fe80:0202::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/3",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_merge_vpc_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "intf_vrf": "test_vrf",
+      "mtu": 9216,
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer1_ipv4_addr": "192.170.1.1",
+      "peer1_ipv6_addr": "fe80:2a::01",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "peer2_ipv4_addr": "192.170.1.2",
+      "peer2_ipv6_addr": "fe80:2a::02"
+    },
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "inter_merge_num_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "auto_deploy": false,
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "mtu": 9216,
+      "neighbor_ip": "193.168.1.2",
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "src_asn": 1000
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "deploy_dci_tracking": false,
+      "dst_asn": 1201,
+      "ebgp_auth_key_type": 3,
+      "ebgp_password": 17314053,
+      "ebgp_password_enable": true,
+      "inherit_from_msd": true,
+      "ipv4_subnet": "193.168.2.1/24",
+      "max_paths": 1,
+      "mtu": 9216,
+      "neighbor_ip": "193.168.2.2",
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "route_tag": 12345,
+      "src_asn": 1200
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/4",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/5",
+    "profile": {
+      "bgp_multihop": 5,
+      "dst_asn": 1301,
+      "ebgp_password": 17314053,
+      "ebgp_password_enable": true,
+      "ebpg_auth_key_type": 3,
+      "inherit_from_msd": false,
+      "ipv4_addr": "193.168.3.1",
+      "neighbor_ip": "193.168.3.2",
+      "src_asn": 1300,
+      "trm_enabled": false
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/5",
+    "template": "ext_evpn_multisite_overlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/6",
+    "profile": {
+      "auto_deploy": false,
+      "dst_asn": 1401,
+      "ipv4_subnet": "193.168.4.1/24",
+      "mtu": 9216,
+      "neighbor_ip": "193.168.4.2",
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "src_asn": 1400
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/6",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/7",
+    "profile": {
+      "deploy_dci_tracking": false,
+      "dst_asn": 1501,
+      "ebgp_auth_key_type": 3,
+      "ebgp_password": 17314053,
+      "ebpg_password_enable": true,
+      "inherit_from_msd": true,
+      "ipv4_subnet": "193.168.5.1/24",
+      "max_paths": 1,
+      "mtu": 9216,
+      "neighbor_ip": "193.168.5.2",
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "route_tag": 12345,
+      "src_asn": 1500
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/7",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/8",
+    "profile": {
+      "bgp_multihop": 5,
+      "dst_asn": 1601,
+      "ebgp_password": 17314053,
+      "ebgp_password_enable": true,
+      "ebpg_auth_key_type": 3,
+      "inherit_from_msd": false,
+      "ipv4_addr": "193.168.6.1",
+      "neighbor_ip": "193.168.6.2",
+      "src_asn": 1600,
+      "trm_enabled": false
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/8",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "intra_modify_num_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1000,
+      "peer1_bfd_echo_disable": true,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "MOD - Description of source - 1",
+      "peer1_ipv4_addr": "193.168.1.1",
+      "peer2_bfd_echo_disable": true,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "MOD - Description of dest - 1",
+      "peer2_ipv4_addr": "193.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 2000,
+      "peer1_bfd_echo_disable": true,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "MOD - Description of source - 3",
+      "peer1_ipv4_addr": "193.169.1.1",
+      "peer1_ipv6_addr": "fe89:29::01",
+      "peer2_bfd_echo_disable": true,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "MOD - Description of dest - 3",
+      "peer2_ipv4_addr": "193.169.1.2",
+      "peer2_ipv6_addr": "fe89:29::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/3",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_modify_unnum_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": false,
+      "mtu": 1800
+    },
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_unnum_link"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "intra_modify_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1500,
+      "peer1_bfd_echo_disable": true,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - MOD",
+      "peer1_ipv4_addr": "193.171.1.1",
+      "peer1_ipv6_addr": "fe89:0301::01",
+      "peer2_bfd_echo_disable": true,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "Description of dest - MOD",
+      "peer2_ipv4_addr": "193.171.1.2",
+      "peer2_ipv6_addr": "fe89:0301::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_ipv6_link_local"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1900,
+      "peer1_bfd_echo_disable": true,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - MOD",
+      "peer1_ipv4_addr": "193.172.2.1",
+      "peer1_ipv6_addr": "fe89:0302::01",
+      "peer2_bfd_echo_disable": true,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "Description of dest - MOD",
+      "peer2_ipv4_addr": "193.172.2.2",
+      "peer2_ipv6_addr": "fe89:0302::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/3",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_modify_vpc_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "intf_vrf": "test2_vrf",
+      "mtu": 9216,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - MOD",
+      "peer1_ipv4_addr": "193.170.1.1",
+      "peer1_ipv6_addr": "fe80:29::01",
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "Description of dest - MOD",
+      "peer2_ipv4_addr": "193.170.1.2",
+      "peer2_ipv6_addr": "fe80:29::02"
+    },
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_modify_number_no_template": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/9",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1000,
+      "peer1_bfd_echo_disable": true,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "MOD - Description of source - 1",
+      "peer1_ipv4_addr": "193.168.1.1",
+      "peer1_ipv6_addr": "fe80:29::01",
+      "peer2_ipv6_addr": "fe80:29::02",
+      "peer2_bfd_echo_disable": true,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "MOD - Description of dest - 1",
+      "peer2_ipv4_addr": "193.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/9",
+    "template": "int_intra_fabric_num_link"
+  }],
+
+  "inter_modify_num_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "auto_deploy": true,
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.10.1/24",
+      "mtu": 1216,
+      "neighbor_ip": "193.168.10.2",
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - MOD",
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "Description of dest - MOD",
+      "src_asn": 1000
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "deploy_dci_tracking": true,
+      "dst_asn": 1201,
+      "ebgp_auth_key_type": 7,
+      "ebgp_password": 17043525,
+      "ebgp_password_enable": false,
+      "inherit_from_msd": false,
+      "ipv4_subnet": "193.168.20.1/24",
+      "max_paths": 2,
+      "mtu": 2216,
+      "neighbor_ip": "193.168.20.2",
+      "peer1_description": "Description of source - MOD",
+      "peer2_description": "Description of dest - MOD",
+      "route_tag": 11111,
+      "src_asn": 1200
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/4",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/5",
+    "profile": {
+      "bgp_multihop": 3,
+      "dst_asn": 1301,
+      "ebgp_password": 51130565,
+      "ebgp_password_enable": false,
+      "ebpg_auth_key_type": 7,
+      "inherit_from_msd": true,
+      "ipv4_addr": "193.168.30.1",
+      "neighbor_ip": "193.168.30.2",
+      "src_asn": 1300,
+      "trm_enabled": true
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/5",
+    "template": "ext_evpn_multisite_overlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/6",
+    "profile": {
+      "auto_deploy": true,
+      "dst_asn": 1401,
+      "ipv4_subnet": "193.168.40.1/24",
+      "mtu": 4216,
+      "neighbor_ip": "193.168.40.2",
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest",
+      "src_asn": 1400
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/6",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/7",
+    "profile": {
+      "deploy_dci_tracking": false,
+      "dst_asn": 1501,
+      "ebgp_auth_key_type": 7,
+      "ebgp_password": 17314053,
+      "ebpg_password_enable": true,
+      "inherit_from_msd": false,
+      "ipv4_subnet": "193.168.50.1/24",
+      "max_paths": 1,
+      "mtu": 5216,
+      "neighbor_ip": "193.168.50.2",
+      "peer1_description": "Description of source",
+      "peer2_description": "Description of dest",
+      "route_tag": 12345,
+      "src_asn": 1500
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/7",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/8",
+    "profile": {
+      "bgp_multihop": 6,
+      "dst_asn": 1601,
+      "ebgp_password": 17314053,
+      "ebgp_password_enable": true,
+      "ebpg_auth_key_type": 7,
+      "inherit_from_msd": false,
+      "ipv4_addr": "193.168.60.1",
+      "neighbor_ip": "193.168.60.2",
+      "src_asn": 1600,
+      "trm_enabled": true
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/8",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "intra_replace_num_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1000,
+      "peer1_bfd_echo_disable": true,
+      "peer1_description": "",
+      "peer1_ipv4_addr": "192.169.1.1",
+      "peer2_bfd_echo_disable": true,
+      "peer2_description": "",
+      "peer2_ipv4_addr": "192.169.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 2000,
+      "peer1_bfd_echo_disable": false,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "New Description - Rep",
+      "peer1_ipv4_addr": "192.170.2.1",
+      "peer1_ipv6_addr": "fe80:91::01",
+      "peer2_bfd_echo_disable": false,
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "New Description - Rep",
+      "peer2_ipv4_addr": "192.170.2.2",
+      "peer2_ipv6_addr": "fe80:91::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/3",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_replace_unnum_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": false,
+      "enable_macsec": false,
+      "mtu": 1216,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - MOD",
+      "peer2_description": "Description of dest - MOD"
+    },
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_unnum_link"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "intra_replace_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 3216,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_ipv4_addr": "193.169.1.1",
+      "peer1_ipv6_addr": "fe89:0201::01",
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_ipv4_addr": "193.169.1.2",
+      "peer2_ipv6_addr": "fe89:0201::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_ipv6_link_local"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "mtu": 2000,
+      "peer1_bfd_echo_disable": false,
+      "peer1_description": "Description of source",
+      "peer1_ipv4_addr": "193.169.2.1",
+      "peer1_ipv6_addr": "fe89:0202::01",
+      "peer2_bfd_echo_disable": false,
+      "peer2_description": "Description of dest",
+      "peer2_ipv4_addr": "193.169.2.2",
+      "peer2_ipv6_addr": "fe89:0202::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/3",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_replace_vpc_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "admin_state": true,
+      "enable_macsec": false,
+      "intf_vrf": "test_vrf",
+      "mtu": 9216,
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - REP",
+      "peer1_ipv4_addr": "193.170.1.1",
+      "peer1_ipv6_addr": "fe80:29::01",
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "Description of dest - REP",
+      "peer2_ipv4_addr": "193.170.1.2",
+      "peer2_ipv6_addr": "fe80:29::02"
+    },
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "inter_replace_num_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "auto_deploy": true,
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.10.1/24",
+      "mtu": 1216,
+      "neighbor_ip": "193.168.10.2",
+      "peer1_cmds": [
+        "show version"
+      ],
+      "peer1_description": "Description of source - REP",
+      "peer2_cmds": [
+        "show version"
+      ],
+      "peer2_description": "Description of dest - REP",
+      "src_asn": 1000
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/4",
+    "profile": {
+      "deploy_dci_tracking": true,
+      "dst_asn": 1201,
+      "ebgp_auth_key_type": 7,
+      "ebgp_password": 17043525,
+      "ebgp_password_enable": false,
+      "inherit_from_msd": false,
+      "ipv4_subnet": "193.168.20.1/24",
+      "max_paths": 2,
+      "mtu": 2216,
+      "neighbor_ip": "193.168.20.2",
+      "peer1_description": "Description of source - REP",
+      "peer2_description": "Description of dest - REP",
+      "route_tag": 11111,
+      "src_asn": 1200
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/4",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/5",
+    "profile": {
+      "bgp_multihop": 3,
+      "dst_asn": 1301,
+      "ebgp_password": 51130565,
+      "ebgp_password_enable": false,
+      "ebpg_auth_key_type": 7,
+      "inherit_from_msd": true,
+      "ipv4_addr": "193.168.30.1",
+      "neighbor_ip": "193.168.30.2",
+      "src_asn": 1300,
+      "trm_enabled": true
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/5",
+    "template": "ext_evpn_multisite_overlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/6",
+    "profile": {
+      "auto_deploy": true,
+      "dst_asn": 1401,
+      "ipv4_subnet": "193.168.40.1/24",
+      "mtu": 4216,
+      "neighbor_ip": "193.168.40.2",
+      "peer1_cmds": [
+        "no shutdown"
+      ],
+      "peer1_description": "Description of source - REP",
+      "peer2_cmds": [
+        "no shutdown"
+      ],
+      "peer2_description": "Description of dest - REP",
+      "src_asn": 1400
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/6",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/7",
+    "profile": {
+      "deploy_dci_tracking": false,
+      "dst_asn": 1501,
+      "ebgp_auth_key_type": 7,
+      "ebgp_password": 17043717,
+      "ebpg_password_enable": true,
+      "inherit_from_msd": false,
+      "ipv4_subnet": "193.168.50.1/24",
+      "max_paths": 1,
+      "mtu": 5216,
+      "neighbor_ip": "193.168.50.2",
+      "peer1_description": "Description of source",
+      "peer2_description": "Description of dest",
+      "route_tag": 12345,
+      "src_asn": 1500
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/7",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.225",
+    "dst_fabric": "test_net1",
+    "dst_interface": "Ethernet1/8",
+    "profile": {
+      "bgp_multihop": 6,
+      "dst_asn": 1601,
+      "ebgp_password": 17309829,
+      "ebgp_password_enable": true,
+      "ebpg_auth_key_type": 7,
+      "inherit_from_msd": false,
+      "ipv4_addr": "193.168.60.1",
+      "neighbor_ip": "193.168.60.2",
+      "src_asn": 1600,
+      "trm_enabled": true
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/8",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "intra_modify_num_template_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "peer1_ipv4_addr": "198.168.2.1",
+      "peer2_ipv4_addr": "198.168.2.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_modify_unnum_template_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "inter_modify_num_template_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_addr": "193.168.3.1",
+      "neighbor_ip": "193.168.3.2",
+      "src_asn": 1000,
+      "trm_enabled": false
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "intra_query_num_dest_fabric_config": [
+  {
+    "dst_fabric": "mmudigon-numbered"
+  }
+  ],
+
+  "intra_query_num_src_dev_config": [
+  {
+    "src_device": "192.168.123.160",
+    "dst_fabric": "mmudigon-numbered"
+  }
+  ],
+
+  "intra_query_num_dst_dev_config": [
+  {
+    "dst_fabric": "mmudigon-numbered",
+    "src_device": "192.168.123.160",
+    "dst_device": "192.168.123.161"
+  }
+  ],
+
+  "intra_query_num_src_intf_config": [
+  {
+    "dst_fabric": "mmudigon-numbered",
+    "src_device": "192.168.123.160",
+    "dst_device": "192.168.123.161",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "intra_query_num_dst_intf_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "src_interface": "Ethernet1/1",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.160"
+  }
+  ],
+
+  "intra_query_num_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/3",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_query_vpc_dest_fabric_config": [
+  {
+    "dst_fabric": "mmudigon"
+  }
+  ],
+
+  "intra_query_vpc_src_dev_config": [
+  {
+    "dst_fabric": "mmudigon",
+    "src_device": "192.168.123.150"
+  }
+  ],
+
+  "intra_query_vpc_dst_dev_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "src_device": "192.168.123.150"
+  }
+  ],
+
+  "intra_query_vpc_src_intf_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4"
+  }
+  ],
+
+  "intra_query_vpc_dst_intf_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4"
+  }
+  ],
+
+  "intra_query_vpc_config": [
+  {
+    "dst_device": "192.168.123.151",
+    "dst_fabric": "mmudigon",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "192.168.123.150",
+    "src_interface": "Ethernet1/4",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_query_unnum_dest_fabric_config": [
+  {
+    "dst_fabric": "mmudigon-unnumbered"
+  }
+  ],
+
+  "intra_query_unnum_src_dev_config": [
+  {
+    "dst_fabric": "mmudigon-unnumbered",
+    "src_device": "192.168.123.170"
+  }
+  ],
+
+  "intra_query_unnum_dst_dev_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "src_device": "192.168.123.170"
+  }
+  ],
+
+  "intra_query_unnum_src_intf_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "intra_query_unnum_dst_intf_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "intra_query_unnum_config": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_unnum_link"
+  },
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "intra_query_unnum_not_exist": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/12",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet11/1",
+    "template": "int_pre_provision_intra_fabric_link"
+  }],
+
+  "intra_query_ipv6_dest_fabric_config": [
+  {
+    "dst_fabric": "mmudigon-ipv6-underlay"
+  }
+  ],
+
+  "intra_query_ipv6_src_dev_config": [
+  {
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "src_device": "192.168.123.156"
+  }
+  ],
+
+  "intra_query_ipv6_dst_dev_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "src_device": "192.168.123.156"
+  }
+  ],
+
+  "intra_query_ipv6_src_intf_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "intra_query_ipv6_dst_intf_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "intra_query_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_ipv6_link_local"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/2",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/2",
+    "template": "int_pre_provision_intra_fabric_link"
+  },
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/3",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_query_ipv6_not_exist": [
+  {
+    "dst_device": "192.168.123.171",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/12",
+    "src_device": "192.168.123.170",
+    "src_interface": "Ethernet11/1",
+    "template": "int_pre_provision_intra_fabric_link"
+  }],
+
+  "inter_query_num_dest_fabric_config": [
+  {
+    "dst_fabric": "test_net"
+  }
+  ],
+
+  "inter_query_num_src_intf_config": [
+  {
+    "dst_fabric": "test_net",
+    "src_interface": "Ethernet1/3"
+  }
+  ],
+
+  "inter_query_num_dst_intf_config": [
+  {
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "src_interface": "Ethernet1/3"
+  }
+  ],
+
+  "inter_query_num_src_dev_config": [
+  {
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3"
+  }
+  ],
+
+  "inter_query_num_dst_dev_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3"
+  }
+  ],
+
+  "inter_query_num_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/3",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/3",
+    "template": "ext_fabric_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/4",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/4",
+    "template": "ext_multisite_underlay_setup"
+  },
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet1/5",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/5",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "inter_query_num_not_exist": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "test_net",
+    "dst_interface": "Ethernet12/3",
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet11/3",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "intra_invalid_template_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_invalid_temp"
+  }
+  ],
+
+  "intra_missing_src_fabric_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_missing_dst_fabric_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_missing_src_intf_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "template": "int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_missing_dst_intf_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_pre_provision_intra_fabric_link"
+  }
+  ],
+
+  "intra_missing_src_device_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 1500,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:21::01",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:21::02"
+    },
+    "src_interface": "Ethernet1/1",
+    "template": "ios_xe_int_intra_fabric_num_link"
+  }
+  ],
+
+  "intra_missing_dst_device_config": [
+  {
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_missing_template_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "intra_missing_peer1_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_missing_peer2_ipv6_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv4_addr": "192.168.1.2"
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_missing_mtu_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_missing_peer1_ipv4_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_missing_peer2_ipv4_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "intra_missing_admin_state_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-numbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "mtu": 9216,
+      "peer1_ipv4_addr": "192.168.1.1",
+      "peer1_ipv6_addr": "fe80:11::01",
+      "peer2_ipv4_addr": "192.168.1.2",
+      "peer2_ipv6_addr": "fe80:11::02"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_intra_vpc_peer_keep_alive_link"
+  }
+  ],
+
+  "inter_invalid_template_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "admin_state": true,
+      "mtu": 9216
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "int_inter_fabric_invalid_temp"
+  }
+  ],
+
+  "inter_missing_src_fabric_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_dst_fabric_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_src_intf_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.160",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_dst_intf_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_src_device_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_dst_device_config": [
+  {
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_template_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1"
+  }
+  ],
+
+  "inter_missing_ipv4_subnet_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_neighbor_ip_config": [
+  {
+    "dst_device": "192.168.123.157",
+    "dst_fabric": "mmudigon-ipv6-underlay",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.156",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_src_asn_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2"
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_dst_asn_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }
+  ],
+
+  "inter_missing_ipv4_addr_config": [
+  {
+    "dst_device": "192.168.123.161",
+    "dst_fabric": "mmudigon-unnumbered",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1301,
+      "neighbor_ip": "193.168.3.2",
+      "src_asn": 1300
+    },
+    "src_device": "192.168.123.160",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_evpn_multisite_overlay_setup"
+  }
+  ],
+
+  "inter_src_fab_ro_config": [
+  {
+    "dst_device": "10.64.78.231",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "10.64.78.227",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-num-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_src_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_src_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_ro_src_dst_sw_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-ro",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-unnum-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-num-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_src_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_src_dst_sw_non_mgbl_config": [
+  {
+    "dst_device": "n9kv-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-2",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }],
+
+  "inter_dst_fab_rw_src_dst_sw_mgbl_config": [
+  {
+    "dst_device": "n9kv-num-1",
+    "dst_fabric": "mmudigon-dst-fab-rw",
+    "dst_interface": "Ethernet1/1",
+    "profile": {
+      "dst_asn": 1001,
+      "ipv4_subnet": "193.168.1.1/24",
+      "neighbor_ip": "193.168.1.2",
+      "src_asn": 1000
+    },
+    "src_device": "n9kv-unnum-1",
+    "src_interface": "Ethernet1/1",
+    "template": "ext_fabric_setup"
+  }]
+}

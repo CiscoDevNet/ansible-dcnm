@@ -1,0 +1,229 @@
+{
+  "mock_fab_inv_data": {
+    "192.168.1.108": {
+      "logicalName": "n9kv-108",
+        "serialNumber": "SAL1819SAN8",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+    },
+      "192.168.1.109": {
+        "logicalName": "n9kv-109",
+        "serialNumber": "FOX1821H035",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "Leaf",
+        "managable": "True"
+      },
+      "10.69.69.1": {
+        "logicalName": "n9kv-1",
+        "serialNumber": "TEST-SNO-1",
+        "isVpcConfigured": "True",
+        "vpcDomain": 1,
+        "switchRole": "None",
+        "managable": "False"
+      }
+  },
+    "mock_monitor_true_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "True"
+      }
+    },
+
+    "mock_monitor_false_resp": {
+      "RETURN_CODE": 200,
+      "DATA":{
+        "readonly": "False"
+      }
+    },
+
+    "mock_ip_sn" : {
+      "192.168.1.109": "FOX1821H035",
+      "192.168.1.108": "SAL1819SAN8"
+    },
+
+    "mock_vpc_sno" : {
+      "192.168.1.108" : "FOX1821H035~SAL1819SAN8",
+      "192.168.1.109" : "FOX1821H035~SAL1819SAN8"
+    },
+
+    "mock_vpc_resp" : {
+      "MESSAGE": "OK",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/interface/vpcpair_serial_number?serial_number=FOX1821H035",
+      "DATA": {
+        "vpc_pair_sn": "FOX1821H035~SAL1819SAN8"
+      },
+      "RETURN_CODE": 200,
+      "METHOD": "GET"
+    },
+
+    "mock_succ_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface",
+      "RETURN_CODE": 200
+    },
+
+    "mock_deploy_resp" : {
+      "DATA": {},
+      "MESSAGE": "OK",
+      "METHOD": "POST",
+      "REQUEST_PATH": "https://10.122.197.6:443/rest/globalInterface/deploy",
+      "RETURN_CODE": 200
+    },
+
+    "st_fex_merged_config" : [
+    {
+      "deploy": true,
+      "name": "po150",
+      "profile": {
+        "admin_state": true,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "Port Channel for FEX 150",
+        "enable_netflow": false,
+        "members": [
+          "e1/10"
+        ],
+        "mode": "port_channel_st",
+        "mtu": "jumbo",
+        "po_description": "FEX port channel"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "st_fex"
+    }],
+
+    "st_fex_deleted_existing_config" : [
+    {
+      "name": "po150",
+      "type": "st_fex",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }],
+
+    "st_fex_deleted_non_existing_config" : [
+    {
+      "name": "po111",
+      "type": "st_fex",
+      "switch": [
+        "192.168.1.108"
+      ]
+    }],
+
+    "st_fex_merge_existing_config": [
+    {
+      "deploy": true,
+      "name": "po150",
+      "profile": {
+        "admin_state": false,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "ST FEX I/F 150",
+        "members": [
+          "e1/11"
+        ],
+        "mode": "port_channel_st",
+        "mtu": "default",
+        "po_description": "PC 150 ST FEX - Merge"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "st_fex"
+    }],
+
+    "st_fex_merge_multi_switches_config": [
+    {
+      "deploy": true,
+      "name": "po155",
+      "profile": {
+        "admin_state": true,
+        "mode": "port_channel_st"
+      },
+      "switch": [
+        "192.168.1.108",
+        "192.168.1.109"
+      ],
+      "type": "st_fex"
+    }],
+
+    "st_fex_replaced_config" : [
+    {
+      "deploy": true,
+      "name": "po150",
+      "profile": {
+        "admin_state": false,
+        "cmds": [
+          "ip arp inspection trust"
+        ],
+        "enable_netflow": false,
+        "members": [
+          "e1/11"
+        ],
+        "mode": "port_channel_st",
+        "mtu": "default",
+        "po_description": "PC 150 for ST FEX - REP"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "st_fex"
+    }],
+
+    "st_fex_overridden_new_config" : [
+    {
+      "deploy": true,
+      "name": "po159",
+      "profile": {
+        "admin_state": true,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "ST FEX interface 159",
+        "enable_netflow": false,
+        "members": [
+          "e1/20"
+        ],
+        "mode": "port_channel_st",
+        "mtu": "jumbo",
+        "po_description": "PC 159 for ST FEX"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "st_fex"
+    }],
+
+    "st_fex_overridden_modify_existing_config" : [
+    {
+      "deploy": true,
+      "name": "po150",
+      "profile": {
+        "admin_state": false,
+        "cmds": [
+          "no shutdown"
+        ],
+        "description": "ST FEX interface 150 - MOD",
+        "enable_netflow": false,
+        "members": [
+          "e1/31"
+        ],
+        "mode": "port_channel_st",
+        "mtu": "jumbo",
+        "po_description": "PC 150 for ST FEX - OVR"
+      },
+      "switch": [
+        "192.168.1.108"
+      ],
+      "type": "st_fex"
+    }
+  ]
+}
