@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,19 +20,17 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import inspect
 from datetime import datetime
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import \
-    ConvertFileInfoToTarget
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    does_not_raise, file_info, targets_convert_file_info_to_target)
+from ansible_collections.cisco.dcnm.plugins.module_utils.bootflash.convert_file_info_to_target import ConvertFileInfoToTarget
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import does_not_raise, file_info, targets_convert_file_info_to_target
 
 
 def test_convert_file_info_to_target_00000() -> None:
@@ -227,9 +225,7 @@ def test_convert_file_info_to_target_00210() -> None:
     match += r"Could not convert date to datetime object\.\s+"
     match += r"date: Sep 19 22:20:07 202\.\s+"
     match += r"Error detail:\s+"
-    match += (
-        r"time data 'Sep 19 22:20:07 202' does not match format '%b %d %H:%M:%S %Y'\."
-    )
+    match += r"time data 'Sep 19 22:20:07 202' does not match format '%b %d %H:%M:%S %Y'\."
     with pytest.raises(ValueError, match=match):
         instance.file_info = file_info(f"{key}")
         instance.date  # pylint: disable=pointless-statement

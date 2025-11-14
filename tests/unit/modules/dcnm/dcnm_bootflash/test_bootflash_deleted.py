@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,9 +20,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
@@ -30,24 +30,23 @@ import inspect
 import json
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import \
-    Results
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import \
-    SwitchDetails
-from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import \
-    Deleted
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.results import Results
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.switch_details import SwitchDetails
+from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import Deleted
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_deleted, does_not_raise, params_deleted,
-    responses_ep_all_switches, responses_ep_bootflash_discovery,
-    responses_ep_bootflash_files, responses_ep_bootflash_info)
+    MockAnsibleModule,
+    configs_deleted,
+    does_not_raise,
+    params_deleted,
+    responses_ep_all_switches,
+    responses_ep_bootflash_discovery,
+    responses_ep_bootflash_files,
+    responses_ep_bootflash_info,
+)
 
 
 def test_bootflash_deleted_00000() -> None:
@@ -163,14 +162,8 @@ def test_bootflash_deleted_01000() -> None:
         instance.commit()
 
     assert "File(s) Deleted Successfully." in instance.results.response[0]["DATA"]
-    assert (
-        instance.results.diff[0]["172.22.150.112"][0]["filepath"]
-        == "bootflash:/air.txt"
-    )
-    assert (
-        instance.results.diff[0]["172.22.150.113"][0]["filepath"]
-        == "bootflash:/black.txt"
-    )
+    assert instance.results.diff[0]["172.22.150.112"][0]["filepath"] == "bootflash:/air.txt"
+    assert instance.results.diff[0]["172.22.150.113"][0]["filepath"] == "bootflash:/black.txt"
     assert instance.results.response[0]["MESSAGE"] == "OK"
     assert instance.results.response[0]["RETURN_CODE"] == 200
     assert instance.results.result[0]["success"] is True

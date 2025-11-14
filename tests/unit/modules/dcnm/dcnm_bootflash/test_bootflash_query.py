@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -20,28 +20,29 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
-__copyright__ = "Copyright (c) 2024 Cisco and/or its affiliates."
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
 __author__ = "Allen Robel"
 
 import copy
 import inspect
 
 import pytest
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import \
-    RestSend
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import \
-    Sender
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.rest_send_v2 import RestSend
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.sender_file import Sender
 from ansible_collections.cisco.dcnm.plugins.modules.dcnm_bootflash import Query
-from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import \
-    ResponseGenerator
+from ansible_collections.cisco.dcnm.tests.unit.module_utils.common.common_utils import ResponseGenerator
 from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.utils import (
-    MockAnsibleModule, configs_query, does_not_raise, params_query,
-    responses_ep_all_switches, responses_ep_bootflash_discovery,
-    responses_ep_bootflash_info)
+    MockAnsibleModule,
+    configs_query,
+    does_not_raise,
+    params_query,
+    responses_ep_all_switches,
+    responses_ep_bootflash_discovery,
+    responses_ep_bootflash_info,
+)
 
 
 def test_bootflash_query_00000() -> None:
@@ -155,14 +156,8 @@ def test_bootflash_query_01000() -> None:
         instance.rest_send = rest_send
         instance.commit()
 
-    assert (
-        instance.results.diff[0]["172.22.150.112"][0]["filepath"]
-        == "bootflash:/air.txt"
-    )
-    assert (
-        instance.results.diff[0]["172.22.150.113"][0]["filepath"]
-        == "bootflash:/black.txt"
-    )
+    assert instance.results.diff[0]["172.22.150.112"][0]["filepath"] == "bootflash:/air.txt"
+    assert instance.results.diff[0]["172.22.150.113"][0]["filepath"] == "bootflash:/black.txt"
     assert instance.results.metadata[0]["action"] == "bootflash_info"
     assert instance.results.metadata[0]["check_mode"] is False
     assert instance.results.metadata[0]["sequence_number"] == 1

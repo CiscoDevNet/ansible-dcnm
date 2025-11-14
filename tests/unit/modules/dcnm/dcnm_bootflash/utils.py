@@ -1,4 +1,4 @@
-# Copyright (c) 2024 Cisco and/or its affiliates.
+# Copyright (c) 2024-2025 Cisco and/or its affiliates.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,18 +14,17 @@
 
 from __future__ import absolute_import, division, print_function
 
-__metaclass__ = type
+__metaclass__ = type  # pylint: disable=invalid-name
 
+__copyright__ = "Copyright (c) 2024-2025 Cisco and/or its affiliates."
+__author__ = "Allen Robel"
 
 from contextlib import contextmanager
 
 import pytest
-from ansible_collections.ansible.netcommon.tests.unit.modules.utils import \
-    AnsibleFailJson
-from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import \
-    ResponseHandler
-from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.fixture import \
-    load_fixture
+from ansible_collections.ansible.netcommon.tests.unit.modules.utils import AnsibleFailJson
+from ansible_collections.cisco.dcnm.plugins.module_utils.common.response_handler import ResponseHandler
+from ansible_collections.cisco.dcnm.tests.unit.modules.dcnm.dcnm_bootflash.fixture import load_fixture
 
 params_query = {
     "state": "query",
